@@ -139,8 +139,10 @@ trait Statement {
 
 /**
  * Represents an RDF model consisting of a default graph and/or one or more named graphs.
+ * An [[RdfModel]] is mutable, so don't try to modify it while iterating over its statements
+ * using an iterator.
  */
-trait RdfModel {
+trait RdfModel extends Iterable[Statement] {
     /**
      * Returns an [[RdfNodeFactory]] that can be used create nodes for use with this model.
      */
@@ -160,6 +162,17 @@ trait RdfModel {
      */
     def addStatements(statements: Set[Statement]): Unit = {
         for (statement <- statements) {
+            addStatement(statement)
+        }
+    }
+
+    /**
+     * Adds all the statements from another model to this model.
+     *
+     * @param otherModel another [[RdfModel]].
+     */
+    def addStatementsFromModel(otherModel: RdfModel): Unit = {
+        for (statement <- otherModel) {
             addStatement(statement)
         }
     }
@@ -190,9 +203,15 @@ trait RdfModel {
     def removeStatement(statement: Statement): Unit
 
     /**
-     * Returns the set of all statements in the model.
+     * Removes a set of statements from the model.
+     *
+     * @param statements the statements to remove.
      */
-    def getStatements: Set[Statement]
+    def removeStatements(statements: Set[Statement]): Unit = {
+        for (statement <- statements) {
+            removeStatement(statement)
+        }
+    }
 
     /**
      * Returns statements that match a pattern.
@@ -201,9 +220,20 @@ trait RdfModel {
      * @param pred    the predicate, or `None` to match any predicate.
      * @param obj     the object, or `None` to match any object.
      * @param context the IRI of a named graph, or `None` to match any graph.
-     * @return the statements matching the pattern.
+     * @return an iterator over the statements that match the pattern.
      */
-    def find(subj: Option[RdfResource], pred: Option[IriNode], obj: Option[RdfNode], context: Option[IRI] = None): Set[Statement]
+    def find(subj: Option[RdfResource],
+             pred: Option[IriNode],
+             obj: Option[RdfNode],
+             context: Option[IRI] = None): Iterator[Statement]
+
+    /**
+     * Checks whether the model contains the specified statement.
+     *
+     * @param statement the statement.
+     * @return `true` if the model contains the statement.
+     */
+    def contains(statement: Statement): Boolean
 
     /**
      * Returns a set of all the subjects in the model.
@@ -241,6 +271,21 @@ trait RdfModel {
      * Returns the IRIs of the named graphs in the model.
      */
     def getContexts: Set[IRI]
+
+    /**
+     * @return the number of statements in the model.
+     */
+    def size: Int
+
+    /**
+     * Empties this model.
+     */
+    def clear(): Unit
+
+    /**
+     * Returns an [[RdfRepository]] that can be used to query this model.
+     */
+    def asRepository: RdfRepository
 
     override def hashCode(): Int = super.hashCode()
 
@@ -332,4 +377,23 @@ trait RdfNodeFactory {
  */
 trait RdfModelFactory {
     def makeEmptyModel: RdfModel
+}
+
+/**
+ * Represents a simple in-memory repository based on an [[RdfModel]].
+ */
+trait RdfRepository {
+    /**
+     * Does a SPARQL SELECT query.
+     *
+     * @param selectQuery the query.
+     * @return the query result.
+     */
+    def doSelect(selectQuery: String): SparqlSelectResult
+
+    /**
+     * Shuts down this repository. The underlying [[RdfModel]] may not be usable after its
+     * [[RdfRepository]] has been shut down.
+     */
+    def shutDown(): Unit
 }

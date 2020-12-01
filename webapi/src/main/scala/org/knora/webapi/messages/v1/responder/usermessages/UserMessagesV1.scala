@@ -23,7 +23,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentTriplestoreDataException}
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentRepositoryDataException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionsADMJsonProtocol, PermissionsDataADM}
 import org.knora.webapi.messages.v1.responder.projectmessages.{ProjectInfoV1, ProjectV1JsonProtocol}
@@ -392,7 +392,7 @@ object UserProfileTypeV1 extends Enumeration {
 
     /**
      * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-     * [[InconsistentTriplestoreDataException]].
+     * [[InconsistentRepositoryDataException]].
      *
      * @param name the name of the value.
      * @return the requested value.
@@ -400,7 +400,7 @@ object UserProfileTypeV1 extends Enumeration {
     def lookup(name: String): Value = {
         valueMap.get(name) match {
             case Some(value) => value
-            case None => throw InconsistentTriplestoreDataException(s"User profile type not supported: $name")
+            case None => throw InconsistentRepositoryDataException(s"User profile type not supported: $name")
         }
     }
 }

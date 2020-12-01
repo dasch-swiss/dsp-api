@@ -139,14 +139,14 @@ object StandoffTagUtilV2 {
                             case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.DateTime))) =>
                                 StandoffTagTimeAttributeV2(standoffPropertyIri = standoffTagPropIri, value = stringFormatter.xsdDateTimeStampToInstant(attr.value, throw BadRequestException(s"Invalid timestamp attribute: '${attr.value}'")))
 
-                            case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $standoffTagPropIri")
+                            case None => throw InconsistentRepositoryDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $standoffTagPropIri")
 
-                            case other => throw InconsistentTriplestoreDataException(s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $standoffTagPropIri")
+                            case other => throw InconsistentRepositoryDataException(s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $standoffTagPropIri")
 
                         }
                     } else {
                         // only properties with a `ObjectDatatypeConstraint` are allowed here (linking properties have to be created via data type standoff classes)
-                        throw InconsistentTriplestoreDataException(s"no ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} given for property '$standoffTagPropIri'")
+                        throw InconsistentRepositoryDataException(s"no ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} given for property '$standoffTagPropIri'")
                     }
 
             }.toList
@@ -655,7 +655,7 @@ object StandoffTagUtilV2 {
                         )
 
 
-                    case unknownDataType => throw InconsistentTriplestoreDataException(s"the triplestore returned the data type $unknownDataType for $standoffClassIri that could be handled")
+                    case unknownDataType => throw InconsistentRepositoryDataException(s"the triplestore returned the data type $unknownDataType for $standoffClassIri that could be handled")
 
                 }
         }
@@ -782,7 +782,7 @@ object StandoffTagUtilV2 {
                     val standoffTagSmartIri: SmartIri = standoffTagIri.toSmartIri
 
                     if (!standoffTagSmartIri.isKnoraStandoffIri) {
-                        throw InconsistentTriplestoreDataException(s"Invalid standoff tag IRI: $standoffTagIri")
+                        throw InconsistentRepositoryDataException(s"Invalid standoff tag IRI: $standoffTagIri")
                     }
 
                     // The start index in the tag's IRI should match the one in its assertions.
@@ -791,7 +791,7 @@ object StandoffTagUtilV2 {
                     val startIndexFromAssertions: Int = standoffTagAssertions(OntologyConstants.KnoraBase.StandoffTagHasStartIndex).toInt
 
                     if (startIndexFromAssertions != startIndexFromIri) {
-                        throw InconsistentTriplestoreDataException(s"Standoff tag $standoffTagIri has start index $startIndexFromAssertions (expected $startIndexFromIri)")
+                        throw InconsistentRepositoryDataException(s"Standoff tag $standoffTagIri has start index $startIndexFromAssertions (expected $startIndexFromIri)")
                     }
 
                     // create a sequence of `StandoffTagAttributeV2` from the given attributes
@@ -818,7 +818,7 @@ object StandoffTagUtilV2 {
 
                                         case None =>
                                             // If a v1 SPARQL template was used, we have to get the target node and to get its XML ID.
-                                            standoffAssertions(value).getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentTriplestoreDataException(s"referred standoff $value node has no original XML id"))
+                                            standoffAssertions(value).getOrElse(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID, throw InconsistentRepositoryDataException(s"referred standoff $value node has no original XML id"))
                                     }
 
                                     // recreate the original id reference
@@ -852,13 +852,13 @@ object StandoffTagUtilV2 {
                                     case Some(SmartIriLiteralV2(SmartIri(OntologyConstants.Xsd.Uri))) =>
                                         StandoffTagUriAttributeV2(standoffPropertyIri = propSmartIri, value = value)
 
-                                    case None => throw InconsistentTriplestoreDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $propIri")
+                                    case None => throw InconsistentRepositoryDataException(s"did not find ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} for $propIri")
 
-                                    case other => throw InconsistentTriplestoreDataException(s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $propIri")
+                                    case other => throw InconsistentRepositoryDataException(s"triplestore returned unknown ${OntologyConstants.KnoraBase.ObjectDatatypeConstraint} '$other' for $propIri")
 
                                 }
                             } else {
-                                throw InconsistentTriplestoreDataException(s"no object class or data type constraint found for property '$propIri'")
+                                throw InconsistentRepositoryDataException(s"no object class or data type constraint found for property '$propIri'")
                             }
 
                     }.toVector
@@ -1029,7 +1029,7 @@ object StandoffTagUtilV2 {
 
                     case None => convertStandoffAttributeTags(xmlItemForStandoffClass.attributes, standoffTagV2.attributes)
 
-                    case unknownDataType => throw InconsistentTriplestoreDataException(s"the triplestore returned an unknown data type for ${standoffTagV2.standoffTagClassIri} that could not be handled")
+                    case unknownDataType => throw InconsistentRepositoryDataException(s"the triplestore returned an unknown data type for ${standoffTagV2.standoffTagClassIri} that could not be handled")
                 }
 
 
@@ -1060,7 +1060,7 @@ object StandoffTagUtilV2 {
                         startPosition = standoffTagV2.startPosition,
                         endPosition = standoffTagV2.endPosition,
                         startIndex = standoffTagV2.startIndex,
-                        endIndex = standoffTagV2.endIndex.getOrElse(throw InconsistentTriplestoreDataException(s"end index is missing for a free standoff tag")),
+                        endIndex = standoffTagV2.endIndex.getOrElse(throw InconsistentRepositoryDataException(s"end index is missing for a free standoff tag")),
                         startParentIndex = standoffTagV2.startParentIndex,
                         endParentIndex = standoffTagV2.endParentIndex,
                         attributes = attributesWithClass.toSet

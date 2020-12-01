@@ -31,6 +31,7 @@ import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.{CalendarNameGregorian, DatePrecisionYear, KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.resourcemessages._
@@ -524,7 +525,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         storeManager ! SparqlSelectRequest(sparqlQuery)
 
         expectMsgPF(timeout) {
-            case sparqlSelectResponse: SparqlSelectResponse =>
+            case sparqlSelectResponse: SparqlSelectResult =>
                 sparqlSelectResponse.results.bindings.map {
                     row => row.rowMap("standoffTag")
                 }.toSet
@@ -540,7 +541,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         storeManager ! SparqlSelectRequest(sparqlQuery)
 
         expectMsgPF(timeout) {
-            case sparqlSelectResponse: SparqlSelectResponse =>
+            case sparqlSelectResponse: SparqlSelectResult =>
                 val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
 
                 stringFormatter.xsdDateTimeStampToInstant(
@@ -2329,7 +2330,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             storeManager ! SparqlSelectRequest(isEntityUsedSparql)
 
             expectMsgPF(timeout) {
-                case entityUsedResponse: SparqlSelectResponse =>
+                case entityUsedResponse: SparqlSelectResult =>
                     assert(entityUsedResponse.results.bindings.isEmpty, s"Link value was not erased")
             }
         }

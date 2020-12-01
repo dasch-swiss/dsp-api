@@ -19,7 +19,7 @@
 
 package org.knora.webapi.messages.util
 
-import org.knora.webapi.exceptions.InconsistentTriplestoreDataException
+import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.messages.SmartIri
 
 /**
@@ -42,7 +42,7 @@ object OntologyUtil {
                     baseDefsSequence ++ baseDefsSequence.flatMap {
                         baseDef =>
                             if (baseDef == initialIri) {
-                                throw InconsistentTriplestoreDataException(s"Entity $initialIri has an inheritance cycle with entity $baseDef")
+                                throw InconsistentRepositoryDataException(s"Entity $initialIri has an inheritance cycle with entity $baseDef")
                             } else {
                                 getAllBaseDefsRec(initialIri, baseDef)
                             }

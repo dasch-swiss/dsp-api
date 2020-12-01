@@ -156,6 +156,64 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
     }
 
     /**
+     * Flattens this JSON-LD object by extracting inlined entities with IRIs and replacing them with
+     * references to their IRI.
+     *
+     * @param entitiesToAddToTopLevel inlined entities that have been extracted.
+     * @param isAtTopLevel            `true` if this JSON-LD object is the top level object, or if it is an element
+     *                                of a `@graph`.
+     * @return a flattened copy of this JSON-LD object.
+     */
+    def flattened(entitiesToAddToTopLevel: collection.mutable.Set[JsonLDObject], isAtTopLevel: Boolean): JsonLDObject = {
+        val thisWithFlattenedContent = JsonLDObject {
+            // Flatten the object of each predicate.
+            value.map {
+                case (pred: String, obj: JsonLDValue) =>
+                    // What type of object does this predicate have?
+                    val flatObj: JsonLDValue = obj match {
+                        case jsonLDObject: JsonLDObject =>
+                            // A JSON-LD object. Flatten its content. It's not at the top level, so if it has an IRI,
+                            // add it to the top level and refer to it by IRI here.
+                            jsonLDObject.flattened(
+                                entitiesToAddToTopLevel = entitiesToAddToTopLevel,
+                                isAtTopLevel = false
+                            )
+
+                        case jsonLDArray: JsonLDArray =>
+                            // An array. Flatten its elements. If the array is the object of @graph, don't
+                            // move its elements to the top level, because they're already at the top level.
+                            jsonLDArray.flattened(
+                                entitiesToAddToTopLevel = entitiesToAddToTopLevel,
+                                isAtTopLevel = pred == JsonLDKeywords.GRAPH
+                            )
+
+                        case _ =>
+                            // Something else. Leave it as is.
+                            obj
+                    }
+
+                    pred -> flatObj
+            }
+        }
+
+        // Is this JSON-LD object already at the top level?
+        if (isAtTopLevel) {
+            // Yes. Just return it with flattened content.
+            thisWithFlattenedContent
+        } else {
+            // No. Does it have an IRI?
+            if (isEntityWithIri) {
+                // Yes. Add it to the top level, and return a reference to its IRI.
+                entitiesToAddToTopLevel += thisWithFlattenedContent
+                JsonLDUtil.iriToJsonLDObject(thisWithFlattenedContent.requireString(JsonLDKeywords.ID))
+            } else {
+                // No, it's a blank node or some other type of data. Just return it with flattened content.
+                thisWithFlattenedContent
+            }
+        }
+    }
+
+    /**
      * Recursively adds the contents of a JSON-LD entity to an [[RdfModel]].
      *
      * @param model the model being constructed.
@@ -184,10 +242,9 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         addGraphToModel(model)
 
         // Add the IRI predicates and their objects.
+        val iriPredicates: Set[IRI] = value.keySet -- JsonLDKeywords.allSupported
 
-        val predicates = value.keySet -- JsonLDKeywords.allSupported
-
-        for (pred <- predicates) {
+        for (pred: IRI <- iriPredicates) {
             val rdfPred: IriNode = nodeFactory.makeIriNode(pred)
             val obj: JsonLDValue = value(pred)
 
@@ -380,6 +437,13 @@ case class JsonLDObject(value: Map[String, JsonLDValue]) extends JsonLDValue {
         }
     }
 
+    /**
+     * Returns `true` if this JSON-LD object represents an RDF entity with an IRI,
+     * i.e. if it has an `@id` and a `@type`.
+     */
+    def isEntityWithIri: Boolean = {
+        Set(JsonLDKeywords.ID, JsonLDKeywords.TYPE).subsetOf(value.keySet)
+    }
 
     /**
      * Returns `true` if this JSON-LD object represents an IRI value.
@@ -825,6 +889,38 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
     }
 
     /**
+     * Flattens this JSON-LD array by extracting inlined entities with IRIs and replacing them with
+     * references to their IRI.
+     *
+     * @param entitiesToAddToTopLevel inlined entities that have been extracted.
+     * @param isAtTopLevel            `true` if this array is the object of `@graph` at the top level of the document.
+     * @return a flattened copy of this JSON-LD array.
+     */
+    def flattened(entitiesToAddToTopLevel: collection.mutable.Set[JsonLDObject], isAtTopLevel: Boolean = false): JsonLDArray = {
+        JsonLDArray {
+            // Flatten the JSON-LD objects that are elements of the array.
+            value.map {
+                elem: JsonLDValue =>
+                    // What type of element is it?
+                    elem match {
+                        case jsonLDObject: JsonLDObject =>
+                            // A JSON-LD object. Flatten its content. If it has an IRI, move it to the top level,
+                            // unless this array is a @graph, meaning that the JSON-LD object is already
+                            // at the top level.
+                            jsonLDObject.flattened(
+                                entitiesToAddToTopLevel = entitiesToAddToTopLevel,
+                                isAtTopLevel = isAtTopLevel
+                            )
+
+                        case _ =>
+                            // Something else. Leave it as is.
+                            elem
+                    }
+            }
+        }
+    }
+
+    /**
      * Tries to interpret the elements of this array as JSON-LD objects containing `@language` and `@value`,
      * and returns the results as a set of [[StringLiteralV2]]. Throws [[BadRequestException]]
      * if the array can't be interpreted in this way.
@@ -855,8 +951,12 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
  *
  * @param body    the body of the JSON-LD document.
  * @param context the context of the JSON-LD document.
+ * @param isFlat  `true` if this JSON-LD document has been constructed as a flat document, i.e.
+ *                without inlining entities that have IRIs.
  */
-case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObject(Map.empty[String, JsonLDValue])) {
+case class JsonLDDocument(body: JsonLDObject,
+                          context: JsonLDObject = JsonLDObject(Map.empty[String, JsonLDValue]),
+                          isFlat: Boolean = false) {
     /**
      * A convenience function that calls `body.requireString`.
      */
@@ -973,10 +1073,70 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
     def maybeUUID(key: String): Option[UUID] = body.maybeUUID(key: String)
 
     /**
-     * Converts this JSON-LD document to its compacted representation.
+     * Flattens this JSON-LD document by moving inlined entities with IRIs to the top level.
+     *
+     * @return a flattened copy of this JSON-LD document.
      */
-    private def makeCompactedJavaxJsonObject: JsonObject = {
-        val bodyAsTitaniumJsonDocument: JsonDocument = JsonDocument.of(body.toJavaxJsonValue)
+    def flattened: JsonLDDocument = {
+        // Is this JSON-LD document already flat?
+        if (isFlat) {
+            // Yes. Just return it.
+            this
+        } else {
+            // No. Make a mutable Set to collect inlined entities that will be moved to the top level.
+            val entitiesToAddToTopLevel: collection.mutable.Set[JsonLDObject] = collection.mutable.Set.empty
+
+            // Flatten the content of the document.
+            val flattenedContent: JsonLDObject = body.flattened(
+                entitiesToAddToTopLevel = entitiesToAddToTopLevel,
+                isAtTopLevel = true
+            )
+
+            // Are there any entities to add to the top level?
+            val allContent = if (entitiesToAddToTopLevel.nonEmpty) {
+                // Yes. Is there a top-level entity, i.e. does the flattened top level have any content
+                // besides @graph?
+
+                val topLevelWithoutGraph: Map[String, JsonLDValue] = flattenedContent.value - JsonLDKeywords.GRAPH
+
+                val maybeTopLevelObject: Vector[JsonLDObject] = if (topLevelWithoutGraph.nonEmpty) {
+                    // Yes. Make a JsonLDObject for that content.
+                    Vector(JsonLDObject(topLevelWithoutGraph))
+                } else {
+                    // No.
+                    Vector.empty
+                }
+
+                // Make a @graph containing the entities to add to the top level, the elements of the existing @graph
+                // if there is one, and the existing top-level entity if there is one.
+                val existingGraphElements: Seq[JsonLDValue] = flattenedContent.maybeArray(JsonLDKeywords.GRAPH).map(_.value).getOrElse(Seq.empty)
+                JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(maybeTopLevelObject ++ existingGraphElements ++ entitiesToAddToTopLevel)))
+            } else {
+                // No. Just keep the existing @graph, if there is one, with the existing top-level entity.
+                flattenedContent
+            }
+
+            copy(
+                body = allContent,
+                isFlat = true
+            )
+        }
+    }
+
+    /**
+     * Converts this JSON-LD document to its compacted representation.
+     *
+     * @param flatten `true` if a flat JSON-LD document should be returned.
+     */
+    private def makeCompactedJavaxJsonObject(flatten: Boolean): JsonObject = {
+        // Flatten the document if requested.
+        val documentFlattenedIfRequested: JsonLDDocument = if (flatten) {
+            flattened
+        } else {
+            this
+        }
+
+        val bodyAsTitaniumJsonDocument: JsonDocument = JsonDocument.of(documentFlattenedIfRequested.body.toJavaxJsonValue)
         val contextAsTitaniumJsonDocument: JsonDocument = JsonDocument.of(context.toJavaxJsonValue)
         JsonLd.compact(bodyAsTitaniumJsonDocument, contextAsTitaniumJsonDocument).get
     }
@@ -985,10 +1145,11 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
      * Formats this JSON-LD document as a string, using the specified [[JsonWriterFactory]].
      *
      * @param jsonWriterFactory a [[JsonWriterFactory]] configured with the desired options.
+     * @param flatten           `true` if a flat JSON-LD document should be returned.
      * @return the formatted document.
      */
-    private def formatWithJsonWriterFactory(jsonWriterFactory: JsonWriterFactory): String = {
-        val compactedJavaxJsonObject: JsonObject = makeCompactedJavaxJsonObject
+    private def formatWithJsonWriterFactory(jsonWriterFactory: JsonWriterFactory, flatten: Boolean): String = {
+        val compactedJavaxJsonObject: JsonObject = makeCompactedJavaxJsonObject(flatten)
         val stringWriter = new StringWriter()
         val jsonWriter = jsonWriterFactory.createWriter(stringWriter)
         jsonWriter.write(compactedJavaxJsonObject)
@@ -999,24 +1160,26 @@ case class JsonLDDocument(body: JsonLDObject, context: JsonLDObject = JsonLDObje
     /**
      * Converts this JSON-LD document to a pretty-printed JSON-LD string.
      *
+     * @param flatten `true` if a flat JSON-LD document should be returned.
      * @return the formatted document.
      */
-    def toPrettyString: String = {
+    def toPrettyString(flatten: Boolean = false): String = {
         val config = new util.HashMap[String, Boolean]()
         config.put(JsonGenerator.PRETTY_PRINTING, true)
         val jsonWriterFactory: JsonWriterFactory = Json.createWriterFactory(config)
-        formatWithJsonWriterFactory(jsonWriterFactory)
+        formatWithJsonWriterFactory(jsonWriterFactory = jsonWriterFactory, flatten = flatten)
     }
 
     /**
      * Converts this [[JsonLDDocument]] to a compact JSON-LD string.
      *
+     * @param flatten `true` if a flat JSON-LD document should be returned.
      * @return the formatted document.
      */
-    def toCompactString: String = {
+    def toCompactString(flatten: Boolean = false): String = {
         val config = new util.HashMap[String, Boolean]()
         val jsonWriterFactory: JsonWriterFactory = Json.createWriterFactory(config)
-        formatWithJsonWriterFactory(jsonWriterFactory)
+        formatWithJsonWriterFactory(jsonWriterFactory = jsonWriterFactory, flatten = flatten)
     }
 
     /**
@@ -1090,8 +1253,8 @@ object JsonLDUtil {
 
             // Are there still conflicts?
             if (hasPrefixConflicts(longKnoraPrefixes)) {
-                // Yes. This shouldn't happen, so throw InconsistentTriplestoreDataException.
-                throw InconsistentTriplestoreDataException(s"Can't make distinct prefixes for ontologies: ${(fixedPrefixes.values ++ knoraOntologiesNeedingPrefixes.map(_.toString)).mkString(", ")}")
+                // Yes. This shouldn't happen, so throw InconsistentRepositoryDataException.
+                throw InconsistentRepositoryDataException(s"Can't make distinct prefixes for ontologies: ${(fixedPrefixes.values ++ knoraOntologiesNeedingPrefixes.map(_.toString)).mkString(", ")}")
             } else {
                 // No. Use the long prefixes.
                 longKnoraPrefixes.toMap
@@ -1177,9 +1340,10 @@ object JsonLDUtil {
      * Parses a JSON-LD string as a [[JsonLDDocument]] with an empty context.
      *
      * @param jsonLDString the string to be parsed.
+     * @param flatten      `true` if a flat JSON-LD document should be returned.
      * @return a [[JsonLDDocument]].
      */
-    def parseJsonLD(jsonLDString: String): JsonLDDocument = {
+    def parseJsonLD(jsonLDString: String, flatten: Boolean = false): JsonLDDocument = {
         // Parse the string into a javax.json.JsonStructure.
         val stringReader = new StringReader(jsonLDString)
         val jsonReader: JsonReader = Json.createReader(stringReader)
@@ -1193,7 +1357,16 @@ object JsonLDUtil {
         val compactedJsonObject: JsonObject = JsonLd.compact(titaniumDocument, emptyContext).get
 
         // Convert the resulting javax.json.JsonObject to a JsonLDDocument.
-        javaxJsonObjectToJsonLDDocument(compactedJsonObject)
+        val jsonLDDocument: JsonLDDocument = javaxJsonObjectToJsonLDDocument(compactedJsonObject)
+
+        // Was flat JSON-LD requested?
+        if (flatten) {
+            // Yes. Flatten the document.
+            jsonLDDocument.flattened
+        } else {
+            // No. Leave it as is.
+            jsonLDDocument
+        }
     }
 
     /**
@@ -1252,15 +1425,17 @@ object JsonLDUtil {
      *
      * - Inline blank nodes wherever they are used.
      * - Nest each entity in the first encountered entity that refers to it, and refer to it by IRI elsewhere.
-     * - Do not nest Knora ontology entities.
+     * - Don't nest an entity with an IRI inside a blank node.
+     * - Don't inline Knora ontology entities.
      * - After nesting, if more than one top-level entity remains, wrap them all in a `@graph`.
      *
      * An error is returned if the same blank node is used more than once.
      *
-     * @param model the [[RdfModel]] to be read.
+     * @param model      the [[RdfModel]] to be read.
+     * @param flatJsonLD if `true`, produce a flat JSON-LD document.
      * @return the corresponding [[JsonLDDocument]].
      */
-    def fromRdfModel(model: RdfModel): JsonLDDocument = {
+    def fromRdfModel(model: RdfModel, flatJsonLD: Boolean = false): JsonLDDocument = {
         if (model.getContexts.nonEmpty) {
             throw BadRequestException("Named graphs in JSON-LD are not supported")
         }
@@ -1295,7 +1470,7 @@ object JsonLDUtil {
                 // Have we already processed this subject?
                 if (!processedSubjects.contains(subj)) {
                     // No. Get the statements about it.
-                    val statements: Set[Statement] = model.find(Some(subj), None, None)
+                    val statements: Set[Statement] = model.find(Some(subj), None, None).toSet
 
                     // Make a JsonLDObject representing the entity and any nested entities.
                     val jsonLDObject: JsonLDObject = entityToJsonLDObject(
@@ -1303,7 +1478,8 @@ object JsonLDUtil {
                         statements = statements,
                         model = model,
                         topLevelEntities = topLevelEntities,
-                        processedSubjects = processedSubjects
+                        processedSubjects = processedSubjects,
+                        flatJsonLD = flatJsonLD
                     )
 
                     // Add it to the collection of top-level entities.
@@ -1317,11 +1493,11 @@ object JsonLDUtil {
                 topLevelEntities.values.head
             } else {
                 // No. Make a @graph.
-                JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(topLevelEntities.values.toVector)))
+                JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(topLevelEntities.values.toSeq)))
             }
         }
 
-        JsonLDDocument(body = body, context = context)
+        JsonLDDocument(body = body, context = context, isFlat = flatJsonLD)
     }
 
     /**
@@ -1332,13 +1508,15 @@ object JsonLDUtil {
      * @param model             the [[RdfModel]] that is being read.
      * @param topLevelEntities  the top-level entities that have been constructed so far.
      * @param processedSubjects the subjects that have already been processed.
+     * @param flatJsonLD        if `true`, produce flat JSON-LD.
      * @return the JSON-LD object that was constructed.
      */
     private def entityToJsonLDObject(subj: RdfResource,
                                      statements: Set[Statement],
                                      model: RdfModel,
                                      topLevelEntities: collection.mutable.Map[RdfResource, JsonLDObject],
-                                     processedSubjects: collection.mutable.Set[RdfResource])
+                                     processedSubjects: collection.mutable.Set[RdfResource],
+                                     flatJsonLD: Boolean)
                                     (implicit stringFormatter: StringFormatter): JsonLDObject = {
         // Mark the subject as processed.
         processedSubjects += subj
@@ -1384,7 +1562,9 @@ object JsonLDUtil {
                                 resource = resource,
                                 model = model,
                                 topLevelEntities = topLevelEntities,
-                                processedSubjects = processedSubjects
+                                referrerIsBlankNode = idContent.isEmpty,
+                                processedSubjects = processedSubjects,
+                                flatJsonLD = flatJsonLD
                             )
 
                         case literal: RdfLiteral => rdfLiteralToJsonLDValue(literal)
@@ -1445,62 +1625,82 @@ object JsonLDUtil {
      * represent the referenced resource. This will be either a complete entity for nesting, or just
      * the referenced resource's IRI.
      *
-     * @param resource          the resource to be converted.
-     * @param model             the [[RdfModel]] that is being read.
-     * @param topLevelEntities  the top-level entities that have been constructed so far.
-     * @param processedSubjects the subjects that have already been processed.
+     * @param resource            the resource to be converted.
+     * @param model               the [[RdfModel]] that is being read.
+     * @param topLevelEntities    the top-level entities that have been constructed so far.
+     * @param referrerIsBlankNode `true` if the referrer is a blank node. If the referenced resource has an IRI,
+     *                            it will not be inlined.
+     * @param processedSubjects   the subjects that have already been processed.
+     * @param flatJsonLD          if `true` and the resource has an IRI, do not inline it, regardless of the referrer.
      * @return a JSON-LD value representing the resource.
      */
     private def referencedRdfResourceToJsonLDValue(resource: RdfResource,
                                                    model: RdfModel,
                                                    topLevelEntities: collection.mutable.Map[RdfResource, JsonLDObject],
-                                                   processedSubjects: collection.mutable.Set[RdfResource])
+                                                   referrerIsBlankNode: Boolean,
+                                                   processedSubjects: collection.mutable.Set[RdfResource],
+                                                   flatJsonLD: Boolean)
                                                   (implicit stringFormatter: StringFormatter): JsonLDValue = {
-        // How we deal with circular references: the referenced resource is not yet in topLevelEntities, but it
-        // is already marked as processed. Therefore we will return its IRI rather than inlining it.
+        /**
+         * Inlines a resource if possible, otherwise calls the specified function.
+         *
+         * @param nonInliningFunction a function to be called if the resource cannot be inlined.
+         * @return a [[JsonLDValue]] representing the resource.
+         */
+        def inlineResource(nonInliningFunction: => JsonLDValue): JsonLDValue = {
+            // How we deal with circular references: the referenced resource is not yet in topLevelEntities, but it
+            // is already marked as processed. Therefore we will return its IRI rather than inlining it.
 
-        // Is this entity already in topLevelEntities?
-        topLevelEntities.get(resource) match {
-            case Some(jsonLDObject) =>
-                // Yes. Remove it from the top level so it can be inlined.
-                topLevelEntities -= resource
-                jsonLDObject
+            // Is this entity already in topLevelEntities?
+            topLevelEntities.get(resource) match {
+                case Some(jsonLDObject) =>
+                    // Yes. Remove it from the top level so it can be inlined.
+                    topLevelEntities -= resource
+                    jsonLDObject
 
-            case None =>
-                // No. Is it a Knora ontology entity?
-                resource match {
-                    case iriNode: IriNode if iriNode.iri.toSmartIri.isKnoraDefinitionIri =>
-                        // Yes. Just use its IRI, because we don't inline ontology entities.
-                        iriToJsonLDObject(iriNode.iri)
+                case None =>
+                    // No. See if it's in the model.
+                    val resourceStatements: Set[Statement] = model.find(Some(resource), None, None).toSet
 
-                    case _ =>
-                        // It's not a Knora ontology entity. See if it's in the model.
-                        val resourceStatements: Set[Statement] = model.find(Some(resource), None, None)
+                    // Is it in the model and not yet marked as processed?
+                    if (resourceStatements.nonEmpty && !processedSubjects.contains(resource)) {
+                        // Yes. Recurse to get it so it can be inlined.
+                        entityToJsonLDObject(
+                            subj = resource,
+                            statements = resourceStatements,
+                            model = model,
+                            topLevelEntities = topLevelEntities,
+                            processedSubjects = processedSubjects,
+                            flatJsonLD = flatJsonLD
+                        )
+                    } else {
+                        // No. Do something else with it.
+                        nonInliningFunction
+                    }
+            }
+        }
 
-                        // Is it in the model and not yet marked as processed?
-                        if (resourceStatements.nonEmpty && !processedSubjects.contains(resource)) {
-                            // Yes. Recurse to get it so it can be inlined.
-                            entityToJsonLDObject(
-                                subj = resource,
-                                statements = resourceStatements,
-                                model = model,
-                                topLevelEntities = topLevelEntities,
-                                processedSubjects = processedSubjects
-                            )
-                        } else {
-                            // No. Maybe it was already inlined, or maybe it wasn't provided
-                            // in the model. Does it have an IRI?
-                            resource match {
-                                case iriNode: IriNode =>
-                                    // Yes. Just use that.
-                                    iriToJsonLDObject(iriNode.iri)
-
-                                case blankNode: BlankNode =>
-                                    // No, it's a blank node. This shouldn't happen.
-                                    throw InvalidRdfException(s"Blank node ${blankNode.id} was not found or is referenced in more than one place")
-                            }
-                        }
+        // Is this resource an IRI?
+        resource match {
+            case iriNode: IriNode =>
+                // Yes. Are any of the following true?
+                // - We were asked for flat JSON-LD.
+                // - The resource IRI is a Knora definition IRI.
+                // - The referrer is a blank node.
+                if (flatJsonLD ||
+                    iriNode.iri.toSmartIri.isKnoraDefinitionIri ||
+                    referrerIsBlankNode) {
+                    // Yes. Don't try to inline the resource, just return its IRI.
+                    iriToJsonLDObject(iriNode.iri)
+                } else {
+                    // No. Try to inline it.
+                    inlineResource(iriToJsonLDObject(iriNode.iri))
                 }
+
+            case blankNode: BlankNode =>
+                // It's a blank node. It should be possible to inline it. If not, the input model is invalid;
+                // return an error.
+                inlineResource(throw InvalidRdfException(s"Blank node ${blankNode.id} was not found or is referenced in more than one place"))
         }
     }
 }

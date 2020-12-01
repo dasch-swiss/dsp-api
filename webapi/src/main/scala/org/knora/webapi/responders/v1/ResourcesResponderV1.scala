@@ -35,6 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
 import org.knora.webapi.messages.util.GroupedProps._
 import org.knora.webapi.messages.util._
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.messages.v1.responder.projectmessages._
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -172,7 +173,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                 // _ = println(sparql)
 
-                response: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResponse]
+                response: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResult]
                 rows = response.results.bindings
 
                 // Did we get any results?
@@ -306,7 +307,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             // _ = println(sparql)
 
-            response: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResponse]
+            response: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparql)).mapTo[SparqlSelectResult]
             rows = response.results.bindings
 
             _ = if (rows.isEmpty) {
@@ -368,7 +369,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     val resourceClassLabel = entityInfoResponse.resourceClassInfoMap(node.nodeClass).getPredicateObject(
                         predicateIri = OntologyConstants.Rdfs.Label,
                         preferredLangs = Some(graphDataGetRequest.userADM.lang, settings.fallbackLanguage)
-                    ).getOrElse(throw InconsistentTriplestoreDataException(s"Resource class ${node.nodeClass} has no rdfs:label"))
+                    ).getOrElse(throw InconsistentRepositoryDataException(s"Resource class ${node.nodeClass} has no rdfs:label"))
 
                     GraphNodeV1(
                         resourceIri = node.nodeIri,
@@ -385,7 +386,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     val propertyLabel = entityInfoResponse.propertyInfoMap(edge.linkProp).getPredicateObject(
                         predicateIri = OntologyConstants.Rdfs.Label,
                         preferredLangs = Some(graphDataGetRequest.userADM.lang, settings.fallbackLanguage)
-                    ).getOrElse(throw InconsistentTriplestoreDataException(s"Property ${edge.linkProp} has no rdfs:label"))
+                    ).getOrElse(throw InconsistentRepositoryDataException(s"Property ${edge.linkProp} has no rdfs:label"))
 
                     GraphEdgeV1(
                         source = edge.sourceNodeIri,
@@ -457,13 +458,13 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         )
 
         // Get information about the references pointing from other resources to this resource.
-        val maybeIncomingRefsFuture: Future[Option[SparqlSelectResponse]] = if (getIncoming) {
+        val maybeIncomingRefsFuture: Future[Option[SparqlSelectResult]] = if (getIncoming) {
             for {
                 incomingRefsSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getIncomingReferences(
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceIri
                 ).toString())
-                response <- (storeManager ? SparqlSelectRequest(incomingRefsSparql)).mapTo[SparqlSelectResponse]
+                response <- (storeManager ? SparqlSelectRequest(incomingRefsSparql)).mapTo[SparqlSelectResult]
             } yield Some(response)
         } else {
             Future(None)
@@ -483,7 +484,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                             val resType = objMap.literalData.get(OntologyConstants.Rdf.Type) match {
                                 case Some(value: ValueLiterals) => value.literals
-                                case None => throw InconsistentTriplestoreDataException(s"$obj has no rdf:type")
+                                case None => throw InconsistentRepositoryDataException(s"$obj has no rdf:type")
                             }
 
                             resTypeAcc ++ resType
@@ -495,7 +496,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             // Group incoming reference rows by the IRI of the referring resource, and construct an IncomingV1 for each one.
 
-            maybeIncomingRefsResponse: Option[SparqlSelectResponse] <- maybeIncomingRefsFuture
+            maybeIncomingRefsResponse: Option[SparqlSelectResult] <- maybeIncomingRefsFuture
 
             incomingRefFutures: Vector[Future[Vector[IncomingV1]]] = maybeIncomingRefsResponse match {
                 case Some(incomingRefsResponse) =>
@@ -508,7 +509,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                         case (incomingIri: IRI, rows: Seq[VariableResultsRow]) =>
                             // Make a resource info for each referring resource, and check the permissions on the referring resource.
 
-                            val rowsForResInfo = rows.filterNot(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isLinkValue"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}")))
+                            val rowsForResInfo = rows.filterNot(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isLinkValue"), throw InconsistentRepositoryDataException(s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}")))
 
                             for {
                                 (incomingResPermission, incomingResInfo) <- makeResourceInfoV1(
@@ -525,7 +526,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                         // Yes. For each link from the referring resource, check whether the user has permission to see the link. If so, make an IncomingV1 for the link.
 
                                         // Filter to get only the rows representing LinkValues.
-                                        val rowsWithLinkValues = rows.filter(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isLinkValue"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}")))
+                                        val rowsWithLinkValues = rows.filter(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isLinkValue"), throw InconsistentRepositoryDataException(s"Invalid boolean for isLinkValue: ${row.rowMap.get("isLinkValue")}")))
 
                                         // Group them by LinkValue IRI.
                                         val groupedByLinkValue: Map[String, Seq[VariableResultsRow]] = rowsWithLinkValues.groupBy(_.rowMap("obj"))
@@ -549,7 +550,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                                                     linkValueV1: LinkValueV1 = apiValueV1 match {
                                                         case linkValueV1: LinkValueV1 => linkValueV1
-                                                        case _ => throw InconsistentTriplestoreDataException(s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1.valueTypeIri}")
+                                                        case _ => throw InconsistentRepositoryDataException(s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1.valueTypeIri}")
                                                     }
 
                                                     // Check the permissions on the LinkValue.
@@ -698,7 +699,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                             guielement = propertyEntityInfo.getPredicateObject(OntologyConstants.SalsahGui.GuiElementProp).map(guiElementIri => SalsahGuiConversions.iri2SalsahGuiElement(guiElementIri)),
                             label = propertyEntityInfo.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label, preferredLangs = Some(userProfile.lang, settings.fallbackLanguage)),
                             occurrence = Some(propsAndCardinalities(propertyIri).cardinality.toString),
-                            attributes = (propertyEntityInfo.getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))).mkString(";"),
+                            attributes = (propertyEntityInfo.getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(propertyEntityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentRepositoryDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))).mkString(";"),
                             value_rights = Nil
                         )
 
@@ -896,7 +897,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri
             ).toString()
-            isPartOfResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isPartOfSparqlQuery)).mapTo[SparqlSelectResponse]
+            isPartOfResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isPartOfSparqlQuery)).mapTo[SparqlSelectResult]
 
             (containingResourceIriOption: Option[IRI], containingResInfoV1Option: Option[ResourceInfoV1]) <- isPartOfResponse.results.bindings match {
                 case rows if rows.nonEmpty =>
@@ -943,14 +944,14 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                     // _ = println(contextSparqlQuery)
 
-                    contextQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(contextSparqlQuery)).mapTo[SparqlSelectResponse]
+                    contextQueryResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(contextSparqlQuery)).mapTo[SparqlSelectResult]
                     rows: Seq[VariableResultsRow] = contextQueryResponse.results.bindings
 
                     // The results consist of one row per source object.
                     sourceObjects: Seq[SourceObject] = rows.map {
                         row: VariableResultsRow =>
                             val sourceObject: IRI = row.rowMap("sourceObject")
-                            val projectShortcode: String = sourceObject.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid resource IRI: $sourceObject"))
+                            val projectShortcode: String = sourceObject.toSmartIri.getProjectCode.getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI: $sourceObject"))
                             createSourceObjectFromResultRow(projectShortcode, row)
                     }
 
@@ -992,7 +993,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                         triplestore = settings.triplestoreType,
                         resourceIri = resourceIri
                     ).toString())
-                    regionQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(regionSparqlQuery)).mapTo[SparqlSelectResponse]
+                    regionQueryResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(regionSparqlQuery)).mapTo[SparqlSelectResult]
                     regionRows = regionQueryResponse.results.bindings
 
                     regionPropertiesSequencedFutures: Seq[Future[PropsGetForRegionV1]] = regionRows.filter {
@@ -1038,7 +1039,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                                 resClassIcon: Option[String] = regionInfo.predicates.get(OntologyConstants.KnoraBase.ResourceIcon) match {
                                     case Some(predicateInfo: PredicateInfoV1) =>
-                                        Some(valueUtilV1.makeResourceClassIconURL(resClass, predicateInfo.objects.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"resourceClass $resClass has no value for ${OntologyConstants.KnoraBase.ResourceIcon}"))))
+                                        Some(valueUtilV1.makeResourceClassIconURL(resClass, predicateInfo.objects.headOption.getOrElse(throw InconsistentRepositoryDataException(s"resourceClass $resClass has no value for ${OntologyConstants.KnoraBase.ResourceIcon}"))))
                                     case None => None
                                 }
 
@@ -1153,7 +1154,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
             // _ = println(searchResourcesSparql)
 
-            searchResponse <- (storeManager ? SparqlSelectRequest(searchResourcesSparql)).mapTo[SparqlSelectResponse]
+            searchResponse <- (storeManager ? SparqlSelectRequest(searchResourcesSparql)).mapTo[SparqlSelectResult]
 
             resultFutures: Seq[Future[ResourceSearchResultRowV1]] = searchResponse.results.bindings.map {
                 row: VariableResultsRow =>
@@ -1323,7 +1324,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(resourceClassOntologyIris, requestingUser)).mapTo[ReadOntologyMetadataV2]
 
             _ = for (ontologyMetadata <- readOntologyMetadataV2.ontologies) {
-                val ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentTriplestoreDataException(s"Ontology ${ontologyMetadata.ontologyIri} has no project")).toString
+                val ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentRepositoryDataException(s"Ontology ${ontologyMetadata.ontologyIri} has no project")).toString
 
                 if (resourceProjectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)) {
                     throw BadRequestException(s"Cannot create a resource in project $resourceProjectIri with a resource class from ontology ${ontologyMetadata.ontologyIri}, which belongs to another project and is not shared")
@@ -1580,7 +1581,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     case (acc, (propertyIri, valuesWithComments)) =>
                         val propertyInfo = propertyInfoMap.getOrElse(propertyIri, throw NotFoundException(s"Property not found: $propertyIri"))
                         val propertyObjectClassConstraint = propertyInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse {
-                            throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
+                            throw InconsistentRepositoryDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                         }
 
                         acc ++ valuesWithComments.map {
@@ -1771,7 +1772,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 resourceIri = resourceIri
             ).toString())
 
-            createdResourceResponse <- (storeManager ? SparqlSelectRequest(createdResourcesSparql)).mapTo[SparqlSelectResponse]
+            createdResourceResponse <- (storeManager ? SparqlSelectRequest(createdResourcesSparql)).mapTo[SparqlSelectResult]
 
             _ = if (createdResourceResponse.results.bindings.isEmpty) {
                 log.error(s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$createNewResourceSparql")
@@ -2011,7 +2012,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             resourceClassOntologyIri: SmartIri = resourceClassIri.toSmartIri.getOntologyFromEntity
             readOntologyMetadataV2: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByIriRequestV2(Set(resourceClassOntologyIri), userProfile)).mapTo[ReadOntologyMetadataV2]
             ontologyMetadata: OntologyMetadataV2 = readOntologyMetadataV2.ontologies.headOption.getOrElse(throw BadRequestException(s"Ontology $resourceClassOntologyIri not found"))
-            ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentTriplestoreDataException(s"Ontology $resourceClassOntologyIri has no project")).toString
+            ontologyProjectIri: IRI = ontologyMetadata.projectIri.getOrElse(throw InconsistentRepositoryDataException(s"Ontology $resourceClassOntologyIri has no project")).toString
 
             _ = if (resourceProjectIri != ontologyProjectIri && !(ontologyMetadata.ontologyIri.isKnoraBuiltInDefinitionIri || ontologyMetadata.ontologyIri.isKnoraSharedDefinitionIri)) {
                 throw BadRequestException(s"Cannot create a resource in project $resourceProjectIri with resource class $resourceClassIri, which is defined in a non-shared ontology in another project")
@@ -2097,10 +2098,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     triplestore = settings.triplestoreType,
                     resourceIri = resourceDeleteRequest.resourceIri
                 ).toString()
-                sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+                sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
                 rows = sparqlSelectResponse.results.bindings
 
-                _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
+                _ = if (rows.isEmpty || !stringFormatter.optionStringToBoolean(rows.head.rowMap.get("isDeleted"), throw InconsistentRepositoryDataException(s"Invalid boolean for isDeleted: ${rows.head.rowMap.get("isDeleted")}"))) {
                     throw UpdateNotPerformedException(s"Resource ${resourceDeleteRequest.resourceIri} was not marked as deleted. Please report this as a possible bug.")
                 }
             } yield ResourceDeleteResponseV1(id = resourceDeleteRequest.resourceIri)
@@ -2229,7 +2230,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     label = label
                 ).toString()
 
-                sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+                sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
                 rows = sparqlSelectResponse.results.bindings
 
                 // we expect exactly one row to be returned if the label was updated correctly in the data.
@@ -2283,7 +2284,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 triplestore = settings.triplestoreType,
                 resourceIri = resourceIri
             ).toString())
-            resInfoResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            resInfoResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
             resInfoResponseRows = resInfoResponse.results.bindings
 
             resInfo: (Option[Int], ResourceInfoV1) <- makeResourceInfoV1(
@@ -2317,8 +2318,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 resourceIri = resourceIri
             ).toString())
 
-            resclassQueryResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(resclassSparqlQuery)).mapTo[SparqlSelectResponse]
-            resclass = resclassQueryResponse.results.bindings.headOption.getOrElse(throw InconsistentTriplestoreDataException(s"No resource class given for $resourceIri"))
+            resclassQueryResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(resclassSparqlQuery)).mapTo[SparqlSelectResult]
+            resclass = resclassQueryResponse.results.bindings.headOption.getOrElse(throw InconsistentRepositoryDataException(s"No resource class given for $resourceIri"))
 
             properties: Seq[PropertyV1] <- getResourceProperties(
                 resourceIri = resourceIri,
@@ -2379,7 +2380,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     Future((Map.empty[IRI, PropertyInfoV1], Map.empty[IRI, ClassInfoV1], Map.empty[IRI, KnoraCardinalityInfo]))
             }
 
-            projectShortcode = resourceIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid resource IRI: $resourceIri"))
+            projectShortcode = resourceIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI: $resourceIri"))
 
             queryResult <- queryResults2PropertyV1s(
                 containingResourceIri = resourceIri,
@@ -2426,11 +2427,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                     case (subject, predicate) => subject == OntologyConstants.KnoraBase.AttachedToProject
                 }
 
-                resourceProject = maybeResourceProjectStatement.getOrElse(throw InconsistentTriplestoreDataException(s"Resource $resourceIri has no knora-base:attachedToProject"))._2
-                projectShortcode: String = resourceIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentTriplestoreDataException(s"Invalid resource IRI $resourceIri"))
+                resourceProject = maybeResourceProjectStatement.getOrElse(throw InconsistentRepositoryDataException(s"Resource $resourceIri has no knora-base:attachedToProject"))._2
+                projectShortcode: String = resourceIri.toSmartIri.getProjectCode.getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI $resourceIri"))
 
                 // Get the rows describing file values from the query results, grouped by file value IRI.
-                fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] = resInfoResponseRows.filter(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isFileValue"), throw InconsistentTriplestoreDataException(s"Invalid boolean for isFileValue: ${row.rowMap.get("isFileValue")}"))).groupBy(row => row.rowMap("obj")).toVector
+                fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] = resInfoResponseRows.filter(row => stringFormatter.optionStringToBoolean(row.rowMap.get("isFileValue"), throw InconsistentRepositoryDataException(s"Invalid boolean for isFileValue: ${row.rowMap.get("isFileValue")}"))).groupBy(row => row.rowMap("obj")).toVector
 
                 // Convert the file value rows to ValueProps objects, and filter out the ones that the user doesn't have permission to see.
                 valuePropsForFileValues: Seq[(IRI, ValueProps)] = fileValueGroupedRows.map {
@@ -2460,7 +2461,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                         } yield valueV1 match {
                             case fileValueV1: FileValueV1 => fileValueV1
-                            case otherValueV1 => throw InconsistentTriplestoreDataException(s"Value $fileValueIri is not a knora-base:FileValue, it is an instance of ${otherValueV1.valueTypeIri}")
+                            case otherValueV1 => throw InconsistentRepositoryDataException(s"Value $fileValueIri is not a knora-base:FileValue, it is an instance of ${otherValueV1.valueTypeIri}")
                         }
                 }
 
@@ -2551,7 +2552,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 resourceIri = resourceIri
             ).toString())
             // _ = println(sparqlQuery)
-            resPropsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResponse]
+            resPropsResponse <- (storeManager ? SparqlSelectRequest(sparqlQuery)).mapTo[SparqlSelectResult]
 
             // Partition the property result rows into rows with value properties and rows with link properties.
             (rowsWithLinks: Seq[VariableResultsRow], rowsWithValues: Seq[VariableResultsRow]) = resPropsResponse.results.bindings.partition(_.rowMap.get("isLinkProp").exists(_.toBoolean))
@@ -2615,7 +2616,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 attributes = propertyEntityInfo match {
                     case Some(entityInfo) =>
                         if (entityInfo.isLinkProp) {
-                            (entityInfo.getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))).mkString(";")
+                            (entityInfo.getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute) + valueUtilV1.makeAttributeRestype(entityInfo.getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint).getOrElse(throw InconsistentRepositoryDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")))).mkString(";")
                         } else {
                             entityInfo.getPredicateStringObjectsWithoutLang(OntologyConstants.SalsahGui.GuiAttribute).mkString(";")
                         }
@@ -2653,7 +2654,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 val valueObjectsV1WithFuture: Iterable[Future[ValueObjectV1]] = valueObject.valueObjects.map {
                     case (valObjIri: IRI, valueProps: ValueProps) =>
                         // Make sure the value object has an rdf:type.
-                        valueProps.literalData.getOrElse(OntologyConstants.Rdf.Type, throw InconsistentTriplestoreDataException(s"$valObjIri has no rdf:type"))
+                        valueProps.literalData.getOrElse(OntologyConstants.Rdf.Type, throw InconsistentRepositoryDataException(s"$valObjIri has no rdf:type"))
 
                         for {
                             // Convert the SPARQL query results to a ValueV1.
@@ -2764,10 +2765,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                             // Get the details of the link value that's pointed to by that link value property, and that has the target resource as its rdf:object.
                             val (linkValueIri, linkValueProps) = groupedPropertiesByType.groupedLinkValueProperties.groupedProperties.getOrElse(linkValuePropertyIri,
-                                throw InconsistentTriplestoreDataException(s"Resource $containingResourceIri has link property $propertyIri but does not have a corresponding link value property")).valueObjects.find {
+                                throw InconsistentRepositoryDataException(s"Resource $containingResourceIri has link property $propertyIri but does not have a corresponding link value property")).valueObjects.find {
                                 case (someLinkValueIri, someLinkValueProps) =>
-                                    someLinkValueProps.literalData.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentTriplestoreDataException(s"Link value $someLinkValueIri has no rdf:object")).literals.head == targetResourceIri
-                            }.getOrElse(throw InconsistentTriplestoreDataException(s"Link property $propertyIri of resource $containingResourceIri points to resource $targetResourceIri, but there is no corresponding link value with the target resource as its rdf:object"))
+                                    someLinkValueProps.literalData.getOrElse(OntologyConstants.Rdf.Object, throw InconsistentRepositoryDataException(s"Link value $someLinkValueIri has no rdf:object")).literals.head == targetResourceIri
+                            }.getOrElse(throw InconsistentRepositoryDataException(s"Link property $propertyIri of resource $containingResourceIri points to resource $targetResourceIri, but there is no corresponding link value with the target resource as its rdf:object"))
 
                             val linkValueOrder = linkValueProps.literalData.get(OntologyConstants.KnoraBase.ValueHasOrder) match {
                                 // this should not be necessary as an order should always be given (also if there is only one value)
@@ -2786,7 +2787,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
                                 linkValueV1: LinkValueV1 = apiValueV1ForLinkValue match {
                                     case linkValueV1: LinkValueV1 => linkValueV1
-                                    case _ => throw InconsistentTriplestoreDataException(s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1ForLinkValue.valueTypeIri}")
+                                    case _ => throw InconsistentRepositoryDataException(s"Expected $linkValueIri to be a knora-base:LinkValue, but its type is ${apiValueV1ForLinkValue.valueTypeIri}")
                                 }
 
                                 // Check the permissions on the LinkValue.

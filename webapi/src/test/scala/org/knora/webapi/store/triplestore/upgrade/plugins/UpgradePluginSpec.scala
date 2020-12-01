@@ -19,101 +19,42 @@
 
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
-import java.io.{BufferedReader, File, FileReader}
+import java.io.{BufferedInputStream, FileInputStream}
 
-import org.eclipse.rdf4j.model.Model
-import org.eclipse.rdf4j.model.impl.LinkedHashModel
-import org.eclipse.rdf4j.query.{Binding, TupleQuery, TupleQueryResult}
-import org.eclipse.rdf4j.repository.sail.{SailRepository, SailRepositoryConnection}
-import org.eclipse.rdf4j.rio.helpers.StatementCollector
-import org.eclipse.rdf4j.rio.{RDFFormat, RDFParser, Rio}
-import org.eclipse.rdf4j.sail.memory.MemoryStore
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectResponse, SparqlSelectResponseBody, SparqlSelectResponseHeader, VariableResultsRow}
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.util.ErrorHandlingMap
-import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
-
-import scala.collection.JavaConverters._
-import scala.collection.mutable.ArrayBuffer
+import org.knora.webapi.messages.util.rdf._
 
 /**
   * Provides helper methods for specs that test upgrade plugins.
   */
-abstract class UpgradePluginSpec extends AnyWordSpecLike with Matchers {
+abstract class UpgradePluginSpec extends CoreSpec() {
+    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+
     /**
-      * Parses a TriG file and returns it as an RDF4J [[Model]].
+      * Parses a TriG file and returns it as an [[RdfModel]].
       *
       * @param path the file path of the TriG file.
-      * @return a [[Model]].
+      * @return an [[RdfModel]].
       */
-    def trigFileToModel(path: String): Model = {
-        val trigParser: RDFParser = Rio.createParser(RDFFormat.TRIG)
-        println("trigFileToModel - file path: {}", path)
-        val fileReader = new BufferedReader(new FileReader(new File(path)))
-        val model = new LinkedHashModel()
-        trigParser.setRDFHandler(new StatementCollector(model))
-        trigParser.parse(fileReader, "")
-        model
+    def trigFileToModel(path: String): RdfModel = {
+        val fileInputStream = new BufferedInputStream(new FileInputStream(path))
+        val rdfModel: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = TriG)
+        fileInputStream.close()
+        rdfModel
     }
 
     /**
-      * Makes an in-memory RDF4J [[SailRepository]] containing a [[Model]].
-      *
-      * @param model the model to be added to the repository.
-      * @return the repository.
-      */
-    def makeRepository(model: Model): SailRepository = {
-        val repository = new SailRepository(new MemoryStore())
-        repository.init()
-        val connection: SailRepositoryConnection = repository.getConnection
-        connection.add(model)
-        connection.close()
-        repository
-    }
-
-    /**
-      * Wraps expected SPARQL SELECT results in a [[SparqlSelectResponseBody]].
+      * Wraps expected SPARQL SELECT results in a [[SparqlSelectResultBody]].
       *
       * @param rows the expected results.
-      * @return a [[SparqlSelectResponseBody]] containing the expected results.
+      * @return a [[SparqlSelectResultBody]] containing the expected results.
       */
-    def expectedResult(rows: Seq[Map[String, String]]): SparqlSelectResponseBody = {
+    def expectedResult(rows: Seq[Map[String, String]]): SparqlSelectResultBody = {
         val rowMaps = rows.map {
             mapToWrap => VariableResultsRow(new ErrorHandlingMap[String, String](mapToWrap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" }))
         }
 
-        SparqlSelectResponseBody(bindings = rowMaps)
-    }
-
-    /**
-      * Does a SPARQL SELECT query using a connection to an RDF4J [[SailRepository]].
-      *
-      * @param selectQuery the query.
-      * @param connection a connection to the repository.
-      * @return a [[SparqlSelectResponse]] containing the query results.
-      */
-    def doSelect(selectQuery: String, connection: SailRepositoryConnection): SparqlSelectResponse = {
-        val tupleQuery: TupleQuery = connection.prepareTupleQuery(selectQuery)
-        val tupleQueryResult: TupleQueryResult = tupleQuery.evaluate
-
-        val header = SparqlSelectResponseHeader(tupleQueryResult.getBindingNames.asScala)
-        val rowBuffer = ArrayBuffer.empty[VariableResultsRow]
-
-        while (tupleQueryResult.hasNext) {
-            val bindings: Iterable[Binding] = tupleQueryResult.next.asScala
-
-            val rowMap: Map[String, String] = bindings.map {
-                binding => binding.getName -> binding.getValue.stringValue
-            }.toMap
-
-            rowBuffer.append(VariableResultsRow(new ErrorHandlingMap[String, String](rowMap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" })))
-        }
-
-        tupleQueryResult.close()
-
-        SparqlSelectResponse(
-            head = header,
-            results = SparqlSelectResponseBody(bindings = rowBuffer)
-        )
+        SparqlSelectResultBody(bindings = rowMaps)
     }
 }

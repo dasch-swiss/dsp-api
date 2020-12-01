@@ -27,8 +27,9 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{DuplicateValueException, UnexpectedMessageException}
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlSelectRequest, SparqlSelectResponse}
+import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 
@@ -126,7 +127,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
                 ignoreRdfSubjectAndObject = ignoreRdfSubjectAndObject
             ).toString())
 
-            isEntityUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql)).mapTo[SparqlSelectResponse]
+            isEntityUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql)).mapTo[SparqlSelectResult]
 
             _ = if (isEntityUsedResponse.results.bindings.nonEmpty) {
                 errorFun

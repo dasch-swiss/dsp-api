@@ -31,6 +31,7 @@ import org.knora.webapi.messages.StringFormatter.{SalsahGuiAttribute, SalsahGuiA
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 import org.knora.webapi.messages.util.{ErrorHandlingMap, KnoraSystemInstances, OntologyUtil, ResponderData}
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
@@ -151,14 +152,14 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
             // Get all ontology metadata.
             allOntologyMetadataSparql <- FastFuture.successful(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getAllOntologyMetadata(triplestore = settings.triplestoreType).toString())
-            allOntologyMetadataResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(allOntologyMetadataSparql)).mapTo[SparqlSelectResponse]
+            allOntologyMetadataResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(allOntologyMetadataSparql)).mapTo[SparqlSelectResult]
             allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] = buildOntologyMetadata(allOntologyMetadataResponse)
 
-            knoraBaseOntologyMetadata: OntologyMetadataV2 = allOntologyMetadata.getOrElse(OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri, throw InconsistentTriplestoreDataException(s"No knora-base ontology found"))
-            knoraBaseOntologyVersion: String = knoraBaseOntologyMetadata.ontologyVersion.getOrElse(throw InconsistentTriplestoreDataException("The knora-base ontology in the repository is not up to date. See the Knora documentation on repository updates."))
+            knoraBaseOntologyMetadata: OntologyMetadataV2 = allOntologyMetadata.getOrElse(OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri, throw InconsistentRepositoryDataException(s"No knora-base ontology found"))
+            knoraBaseOntologyVersion: String = knoraBaseOntologyMetadata.ontologyVersion.getOrElse(throw InconsistentRepositoryDataException("The knora-base ontology in the repository is not up to date. See the Knora documentation on repository updates."))
 
             _ = if (knoraBaseOntologyVersion != KnoraBaseVersion) {
-                throw InconsistentTriplestoreDataException(s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates.")
+                throw InconsistentRepositoryDataException(s"The knora-base ontology in the repository has version '$knoraBaseOntologyVersion', but this version of Knora requires '$KnoraBaseVersion'. See the Knora documentation on repository updates.")
             }
 
             // Get the contents of each named graph containing an ontology.
@@ -428,7 +429,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             constraintValueToBeChecked = subjectClassConstraint,
                             allSuperPropertyIris = allSuperPropertyIris,
                             errorSchema = InternalSchema,
-                            errorFun = { msg: String => throw InconsistentTriplestoreDataException(msg) }
+                            errorFun = { msg: String => throw InconsistentRepositoryDataException(msg) }
                         )
 
                         // If the property is defined in a project-specific ontology, its subject class constraint, if provided, must be a Knora resource or standoff class.
@@ -437,7 +438,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                             if (!(baseClassesOfSubjectClassConstraint.contains(OntologyConstants.KnoraBase.Resource.toSmartIri) ||
                                 baseClassesOfSubjectClassConstraint.contains(OntologyConstants.KnoraBase.StandoffTag.toSmartIri))) {
-                                throw InconsistentTriplestoreDataException(s"Property $propertyIri is defined in a project-specific ontology, but its knora-base:subjectClassConstraint, $subjectClassConstraint, is not a subclass of knora-base:Resource or knora-base:StandoffTag")
+                                throw InconsistentRepositoryDataException(s"Property $propertyIri is defined in a project-specific ontology, but its knora-base:subjectClassConstraint, $subjectClassConstraint, is not a subclass of knora-base:Resource or knora-base:StandoffTag")
                             }
                         }
 
@@ -454,13 +455,13 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             constraintValueToBeChecked = objectClassConstraint,
                             allSuperPropertyIris = allSuperPropertyIris,
                             errorSchema = InternalSchema,
-                            errorFun = { msg: String => throw InconsistentTriplestoreDataException(msg) }
+                            errorFun = { msg: String => throw InconsistentRepositoryDataException(msg) }
                         )
 
                     case None =>
                         // A resource property must have an object class constraint, unless it's knora-base:resourceProperty.
                         if (readPropertyInfo.isResourceProp && propertyIri != OntologyConstants.KnoraBase.ResourceProperty.toSmartIri) {
-                            throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
+                            throw InconsistentRepositoryDataException(s"Property $propertyIri has no knora-base:objectClassConstraint")
                         }
                 }
         }
@@ -581,7 +582,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 checkOntologyReferencesInPropertyDef(
                     ontologyCacheData = ontologyCacheData,
                     propertyDef = propertyInfo.entityInfoContent,
-                    errorFun = { msg: String => throw InconsistentTriplestoreDataException(msg) }
+                    errorFun = { msg: String => throw InconsistentRepositoryDataException(msg) }
                 )
             }
 
@@ -589,7 +590,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 checkOntologyReferencesInClassDef(
                     ontologyCacheData = ontologyCacheData,
                     classDef = classInfo.entityInfoContent,
-                    errorFun = { msg: String => throw InconsistentTriplestoreDataException(msg) }
+                    errorFun = { msg: String => throw InconsistentRepositoryDataException(msg) }
                 )
             }
         }
@@ -609,7 +610,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             ontologyGraph =>
                 val entityIrisInGraph: Set[SmartIri] = ontologyGraph.constructResponse.statements.foldLeft(Set.empty[SmartIri]) {
                     case (acc, (subjectIri: IriSubjectV2, subjectStatements: Map[SmartIri, Seq[LiteralV2]])) =>
-                        val subjectTypeLiterals: Seq[IriLiteralV2] = subjectStatements.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"Subject $subjectIri has no rdf:type")).collect {
+                        val subjectTypeLiterals: Seq[IriLiteralV2] = subjectStatements.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentRepositoryDataException(s"Subject $subjectIri has no rdf:type")).collect {
                             case iriLiteral: IriLiteralV2 => iriLiteral
                         }
 
@@ -633,31 +634,31 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
      * @param allOntologyMetadataResponse the triplestore's response to the SPARQL query `getAllOntologyMetadata.scala.txt`.
      * @return a map of ontology IRIs to ontology metadata.
      */
-    private def buildOntologyMetadata(allOntologyMetadataResponse: SparqlSelectResponse): Map[SmartIri, OntologyMetadataV2] = {
+    private def buildOntologyMetadata(allOntologyMetadataResponse: SparqlSelectResult): Map[SmartIri, OntologyMetadataV2] = {
         allOntologyMetadataResponse.results.bindings.groupBy(_.rowMap("ontologyGraph")).map {
             case (ontologyGraph: IRI, rows: Seq[VariableResultsRow]) =>
                 val ontologyIri = rows.head.rowMap("ontologyIri")
 
                 if (ontologyIri != ontologyGraph) {
-                    throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri must be stored in named graph $ontologyIri, but it is in $ontologyGraph")
+                    throw InconsistentRepositoryDataException(s"Ontology $ontologyIri must be stored in named graph $ontologyIri, but it is in $ontologyGraph")
                 }
 
                 val ontologySmartIri = ontologyIri.toSmartIri
 
                 if (!ontologySmartIri.isKnoraOntologyIri) {
-                    throw InconsistentTriplestoreDataException(s"Ontology $ontologySmartIri is not a Knora ontology")
+                    throw InconsistentRepositoryDataException(s"Ontology $ontologySmartIri is not a Knora ontology")
                 }
 
                 val ontologyMetadataMap: Map[IRI, String] = rows.map {
                     row =>
-                        val pred = row.rowMap.getOrElse("ontologyPred", throw InconsistentTriplestoreDataException(s"Empty predicate in ontology $ontologyIri"))
-                        val obj = row.rowMap.getOrElse("ontologyObj", throw InconsistentTriplestoreDataException(s"Empty object for predicate $pred in ontology $ontologyIri"))
+                        val pred = row.rowMap.getOrElse("ontologyPred", throw InconsistentRepositoryDataException(s"Empty predicate in ontology $ontologyIri"))
+                        val obj = row.rowMap.getOrElse("ontologyObj", throw InconsistentRepositoryDataException(s"Empty object for predicate $pred in ontology $ontologyIri"))
                         pred -> obj
                 }.toMap
 
-                val projectIri: SmartIri = ontologyMetadataMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Ontology $ontologyIri has no knora-base:attachedToProject")).toSmartIri
+                val projectIri: SmartIri = ontologyMetadataMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentRepositoryDataException(s"Ontology $ontologyIri has no knora-base:attachedToProject")).toSmartIri
                 val ontologyLabel: String = ontologyMetadataMap.getOrElse(OntologyConstants.Rdfs.Label, ontologySmartIri.getOntologyName)
-                val lastModificationDate: Option[Instant] = ontologyMetadataMap.get(OntologyConstants.KnoraBase.LastModificationDate).map(instant => stringFormatter.xsdDateTimeStampToInstant(instant, throw InconsistentTriplestoreDataException(s"Invalid UTC instant: $instant")))
+                val lastModificationDate: Option[Instant] = ontologyMetadataMap.get(OntologyConstants.KnoraBase.LastModificationDate).map(instant => stringFormatter.xsdDateTimeStampToInstant(instant, throw InconsistentRepositoryDataException(s"Invalid UTC instant: $instant")))
                 val ontologyVersion: Option[String] = ontologyMetadataMap.get(OntologyConstants.KnoraBase.OntologyVersion)
 
                 ontologySmartIri -> OntologyMetadataV2(
@@ -720,7 +721,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 val missingLinkValueProps = linkPropsInClass.map(_.fromLinkPropToLinkValueProp) -- linkValuePropsInClass
 
                 if (missingLinkValueProps.nonEmpty) {
-                    throw InconsistentTriplestoreDataException(s"Resource class $classIri has cardinalities for one or more link properties without corresponding link value properties. The missing (or incorrectly defined) property or properties: ${missingLinkValueProps.mkString(", ")}")
+                    throw InconsistentRepositoryDataException(s"Resource class $classIri has cardinalities for one or more link properties without corresponding link value properties. The missing (or incorrectly defined) property or properties: ${missingLinkValueProps.mkString(", ")}")
                 }
 
                 // Make sure there is a link property for each link value property.
@@ -728,7 +729,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 val missingLinkProps = linkValuePropsInClass.map(_.fromLinkValuePropToLinkProp) -- linkPropsInClass
 
                 if (missingLinkProps.nonEmpty) {
-                    throw InconsistentTriplestoreDataException(s"Resource class $classIri has cardinalities for one or more link value properties without corresponding link properties. The missing (or incorrectly defined) property or properties: ${missingLinkProps.mkString(", ")}")
+                    throw InconsistentRepositoryDataException(s"Resource class $classIri has cardinalities for one or more link value properties without corresponding link properties. The missing (or incorrectly defined) property or properties: ${missingLinkProps.mkString(", ")}")
                 }
 
                 // Make sure that the cardinality for each link property is the same as the cardinality for the corresponding link value property.
@@ -738,7 +739,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     val linkValuePropCardinality: OwlCardinalityInfo = allOwlCardinalitiesForClass(linkValueProp)
 
                     if (!linkPropCardinality.equalsWithoutGuiOrder(linkValuePropCardinality)) {
-                        throw InconsistentTriplestoreDataException(s"In class $classIri, the cardinality for $linkProp is different from the cardinality for $linkValueProp")
+                        throw InconsistentRepositoryDataException(s"In class $classIri, the cardinality for $linkProp is different from the cardinality for $linkValueProp")
                     }
                 }
 
@@ -759,14 +760,14 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 if (!ontologyIri.isKnoraBuiltInDefinitionIri) {
                     // It must be either a resource class or a standoff class, but not both.
                     if (!(isKnoraResourceClass ^ isStandoffClass)) {
-                        throw InconsistentTriplestoreDataException(s"Class $classIri must be a subclass either of knora-base:Resource or of knora-base:StandoffTag (but not both)")
+                        throw InconsistentRepositoryDataException(s"Class $classIri must be a subclass either of knora-base:Resource or of knora-base:StandoffTag (but not both)")
                     }
 
                     // All its cardinalities must be on properties that are defined.
                     val cardinalitiesOnMissingProps = directCardinalityPropertyIris.filterNot(allPropertyDefs.keySet)
 
                     if (cardinalitiesOnMissingProps.nonEmpty) {
-                        throw InconsistentTriplestoreDataException(s"Class $classIri has one or more cardinalities on undefined properties: ${cardinalitiesOnMissingProps.mkString(", ")}")
+                        throw InconsistentRepositoryDataException(s"Class $classIri has one or more cardinalities on undefined properties: ${cardinalitiesOnMissingProps.mkString(", ")}")
                     }
 
                     // It cannot have cardinalities both on property P and on a subproperty of P.
@@ -778,7 +779,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                     maybePropertyAndSubproperty match {
                         case Some((basePropertyIri, propertyIri)) =>
-                            throw InconsistentTriplestoreDataException(s"Class $classIri has a cardinality on property $basePropertyIri and on its subproperty $propertyIri")
+                            throw InconsistentRepositoryDataException(s"Class $classIri has a cardinality on property $basePropertyIri and on its subproperty $propertyIri")
 
                         case None => ()
                     }
@@ -789,13 +790,13 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                         val cardinalitiesOnInvalidProps = directCardinalityPropertyIris.filterNot(allKnoraResourceProps)
 
                         if (cardinalitiesOnInvalidProps.nonEmpty) {
-                            throw InconsistentTriplestoreDataException(s"Resource class $classIri has one or more cardinalities on properties that are not Knora resource properties: ${cardinalitiesOnInvalidProps.mkString(", ")}")
+                            throw InconsistentRepositoryDataException(s"Resource class $classIri has one or more cardinalities on properties that are not Knora resource properties: ${cardinalitiesOnInvalidProps.mkString(", ")}")
                         }
 
                         Set(OntologyConstants.KnoraBase.ResourceProperty, OntologyConstants.KnoraBase.HasValue).foreach {
                             invalidProp =>
                                 if (directCardinalityPropertyIris.contains(invalidProp.toSmartIri)) {
-                                    throw InconsistentTriplestoreDataException(s"Class $classIri has a cardinality on property $invalidProp, which is not allowed")
+                                    throw InconsistentRepositoryDataException(s"Class $classIri has a cardinality on property $invalidProp, which is not allowed")
                                 }
                         }
 
@@ -803,26 +804,26 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                         val invalidCardinalitiesOnBooleanProps: Set[SmartIri] = directCardinalities.filter {
                             case (propertyIri, knoraCardinalityInfo) =>
-                                val propertyObjectClassConstraint: SmartIri = allPropertyDefs(propertyIri).requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentTriplestoreDataException(s"Property $propertyIri has no knora-base:objectClassConstraint"))
+                                val propertyObjectClassConstraint: SmartIri = allPropertyDefs(propertyIri).requireIriObject(OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri, throw InconsistentRepositoryDataException(s"Property $propertyIri has no knora-base:objectClassConstraint"))
                                 propertyObjectClassConstraint == OntologyConstants.KnoraBase.BooleanValue.toSmartIri &&
                                     !(knoraCardinalityInfo.cardinality == Cardinality.MustHaveOne || knoraCardinalityInfo.cardinality == Cardinality.MayHaveOne)
                         }.keySet
 
                         if (invalidCardinalitiesOnBooleanProps.nonEmpty) {
-                            throw InconsistentTriplestoreDataException(s"Class $classIri has one or more invalid cardinalities on boolean properties: ${invalidCardinalitiesOnBooleanProps.mkString(", ")}")
+                            throw InconsistentRepositoryDataException(s"Class $classIri has one or more invalid cardinalities on boolean properties: ${invalidCardinalitiesOnBooleanProps.mkString(", ")}")
                         }
 
 
                         // All its base classes with Knora IRIs must also be resource classes.
                         for (baseClass <- classDef.subClassOf) {
                             if (baseClass.isKnoraDefinitionIri && !allSubClassOfRelations(baseClass).contains(OntologyConstants.KnoraBase.Resource.toSmartIri)) {
-                                throw InconsistentTriplestoreDataException(s"Class $classIri is a subclass of knora-base:Resource, but its base class $baseClass is not")
+                                throw InconsistentRepositoryDataException(s"Class $classIri is a subclass of knora-base:Resource, but its base class $baseClass is not")
                             }
                         }
 
                         // It must have an rdfs:label.
                         if (!classDef.predicates.contains(OntologyConstants.Rdfs.Label.toSmartIri)) {
-                            throw InconsistentTriplestoreDataException(s"Class $classIri has no rdfs:label")
+                            throw InconsistentRepositoryDataException(s"Class $classIri has no rdfs:label")
                         }
                     } else {
                         // If it's a standoff class, none of its cardinalities must be on Knora resource properties.
@@ -830,14 +831,14 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                         val cardinalitiesOnInvalidProps = directCardinalityPropertyIris.filter(allKnoraResourceProps)
 
                         if (cardinalitiesOnInvalidProps.nonEmpty) {
-                            throw InconsistentTriplestoreDataException(s"Standoff class $classIri has one or more cardinalities on properties that are Knora resource properties: ${cardinalitiesOnInvalidProps.mkString(", ")}")
+                            throw InconsistentRepositoryDataException(s"Standoff class $classIri has one or more cardinalities on properties that are Knora resource properties: ${cardinalitiesOnInvalidProps.mkString(", ")}")
                         }
 
                         // All its base classes with Knora IRIs must also be standoff classes.
                         for (baseClass <- classDef.subClassOf) {
                             if (baseClass.isKnoraDefinitionIri) {
                                 if (isStandoffClass && !allSubClassOfRelations(baseClass).contains(OntologyConstants.KnoraBase.StandoffTag.toSmartIri)) {
-                                    throw InconsistentTriplestoreDataException(s"Class $classIri is a subclass of knora-base:StandoffTag, but its base class $baseClass is not")
+                                    throw InconsistentRepositoryDataException(s"Class $classIri is a subclass of knora-base:StandoffTag, but its base class $baseClass is not")
                                 }
                             }
                         }
@@ -850,7 +851,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     allBaseClassIris = allBaseClasses.toSet,
                     allClassCardinalityKnoraPropertyDefs = allPropertyDefs.filterKeys(allOwlCardinalitiesForClass.keySet),
                     errorSchema = InternalSchema,
-                    errorFun = { msg: String => throw InconsistentTriplestoreDataException(msg) }
+                    errorFun = { msg: String => throw InconsistentRepositoryDataException(msg) }
                 )
 
                 val inheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = allOwlCardinalitiesForClass.filterNot {
@@ -866,7 +867,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 val standoffDataType: Set[SmartIri] = allSubClassOfRelations(classIri).toSet.intersect(StandoffDataTypeClasses.getStandoffClassIris.map(_.toSmartIri))
 
                 if (standoffDataType.size > 1) {
-                    throw InconsistentTriplestoreDataException(s"Class $classIri is a subclass of more than one standoff datatype: ${standoffDataType.mkString(", ")}")
+                    throw InconsistentRepositoryDataException(s"Class $classIri is a subclass of more than one standoff datatype: ${standoffDataType.mkString(", ")}")
                 }
 
                 // A class can be instantiated if it's in a built-in ontology and marked with knora-base:canBeInstantiated, or if it's
@@ -895,7 +896,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     standoffDataType = standoffDataType.headOption match {
                         case Some(dataType: SmartIri) =>
                             Some(StandoffDataTypeClasses.lookup(dataType.toString,
-                                throw InconsistentTriplestoreDataException(s"$dataType is not a valid standoff datatype")))
+                                throw InconsistentRepositoryDataException(s"$dataType is not a valid standoff datatype")))
 
                         case None => None
                     }
@@ -936,7 +937,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 validateGuiAttributes(
                     propertyInfoContent = propertyDef,
                     allGuiAttributeDefinitions = allGuiAttributeDefinitions,
-                    errorFun = { msg: String => throw InconsistentTriplestoreDataException(msg) }
+                    errorFun = { msg: String => throw InconsistentRepositoryDataException(msg) }
                 )
 
                 val isResourceProp = allKnoraResourceProps.contains(propertyIri)
@@ -949,24 +950,24 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 if (!propertyIri.isKnoraBuiltInDefinitionIri && isResourceProp) {
                     // The property must be a subproperty of knora-base:hasValue or knora-base:hasLinkTo, but not both.
                     if (isValueProp && isLinkProp) {
-                        throw InconsistentTriplestoreDataException(s"Property $propertyIri cannot be a subproperty of both knora-base:hasValue and knora-base:hasLinkTo")
+                        throw InconsistentRepositoryDataException(s"Property $propertyIri cannot be a subproperty of both knora-base:hasValue and knora-base:hasLinkTo")
                     }
 
                     // It can't be a subproperty of knora-base:hasFileValue.
                     if (isFileValueProp) {
-                        throw InconsistentTriplestoreDataException(s"Property $propertyIri cannot be a subproperty of knora-base:hasFileValue")
+                        throw InconsistentRepositoryDataException(s"Property $propertyIri cannot be a subproperty of knora-base:hasFileValue")
                     }
 
                     // Each of its base properties that has a Knora IRI must also be a Knora resource property.
                     for (baseProperty <- propertyDef.subPropertyOf) {
                         if (baseProperty.isKnoraDefinitionIri && !allKnoraResourceProps.contains(baseProperty)) {
-                            throw InconsistentTriplestoreDataException(s"Property $propertyIri is a subproperty of knora-base:hasValue or knora-base:hasLinkTo, but its base property $baseProperty is not")
+                            throw InconsistentRepositoryDataException(s"Property $propertyIri is a subproperty of knora-base:hasValue or knora-base:hasLinkTo, but its base property $baseProperty is not")
                         }
                     }
 
                     // It must have an rdfs:label.
                     if (!propertyDef.predicates.contains(OntologyConstants.Rdfs.Label.toSmartIri)) {
-                        throw InconsistentTriplestoreDataException(s"Property $propertyIri has no rdfs:label")
+                        throw InconsistentRepositoryDataException(s"Property $propertyIri has no rdfs:label")
                     }
                 }
 
@@ -1028,11 +1029,11 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                             case StringLiteralV2(attributeDefStr, None) =>
                                 stringFormatter.toSalsahGuiAttributeDefinition(
                                     attributeDefStr,
-                                    throw InconsistentTriplestoreDataException(s"Invalid salsah-gui:guiAttributeDefinition in $guiElementIri: $attributeDefStr")
+                                    throw InconsistentRepositoryDataException(s"Invalid salsah-gui:guiAttributeDefinition in $guiElementIri: $attributeDefStr")
                                 )
 
                             case other =>
-                                throw InconsistentTriplestoreDataException(s"Invalid salsah-gui:guiAttributeDefinition in $guiElementIri: $other")
+                                throw InconsistentRepositoryDataException(s"Invalid salsah-gui:guiAttributeDefinition in $guiElementIri: $other")
                         }.toSet
 
                     case None => Set.empty[SalsahGuiAttributeDefinition]
@@ -1055,7 +1056,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Find out which salsah-gui:Guielement the property uses, if any.
         val maybeGuiElementPred: Option[PredicateInfoV2] = predicates.get(OntologyConstants.SalsahGui.GuiElementProp.toSmartIri)
-        val maybeGuiElementIri: Option[SmartIri] = maybeGuiElementPred.map(_.requireIriObject(throw InconsistentTriplestoreDataException(s"Property $propertyIri has an invalid object for ${OntologyConstants.SalsahGui.GuiElementProp}")))
+        val maybeGuiElementIri: Option[SmartIri] = maybeGuiElementPred.map(_.requireIriObject(throw InconsistentRepositoryDataException(s"Property $propertyIri has an invalid object for ${OntologyConstants.SalsahGui.GuiElementProp}")))
 
         // Get that Guielement's attribute definitions, if any.
         val guiAttributeDefs: Set[SalsahGuiAttributeDefinition] = maybeGuiElementIri match {
@@ -1413,7 +1414,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                         label = classInfo.entityInfoContent.getPredicateStringLiteralObject(
                             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
                             preferredLangs = Some(requestingUser.lang, settings.fallbackLanguage)
-                        ).getOrElse(throw InconsistentTriplestoreDataException(s"Resource class $subClassIri has no rdfs:label"))
+                        ).getOrElse(throw InconsistentRepositoryDataException(s"Resource class $subClassIri has no rdfs:label"))
                     )
             }
         } yield SubClassesGetResponseV2(
@@ -1647,29 +1648,29 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                                 }
                         }
 
-                        val projectIris: Seq[String] = statementMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has no knora-base:attachedToProject"))
+                        val projectIris: Seq[String] = statementMap.getOrElse(OntologyConstants.KnoraBase.AttachedToProject, throw InconsistentRepositoryDataException(s"Ontology $internalOntologyIri has no knora-base:attachedToProject"))
                         val labels: Seq[String] = statementMap.getOrElse(OntologyConstants.Rdfs.Label, Seq.empty[String])
                         val comments: Seq[String] = statementMap.getOrElse(OntologyConstants.Rdfs.Comment, Seq.empty[String])
                         val lastModDates: Seq[String] = statementMap.getOrElse(OntologyConstants.KnoraBase.LastModificationDate, Seq.empty[String])
 
                         val projectIri = if (projectIris.size > 1) {
-                            throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one knora-base:attachedToProject")
+                            throw InconsistentRepositoryDataException(s"Ontology $internalOntologyIri has more than one knora-base:attachedToProject")
                         } else {
                             projectIris.head.toSmartIri
                         }
 
                         if (!internalOntologyIri.isKnoraBuiltInDefinitionIri) {
                             if (projectIri.toString == OntologyConstants.KnoraAdmin.SystemProject) {
-                                throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri cannot be in project ${OntologyConstants.KnoraAdmin.SystemProject}")
+                                throw InconsistentRepositoryDataException(s"Ontology $internalOntologyIri cannot be in project ${OntologyConstants.KnoraAdmin.SystemProject}")
                             }
 
                             if (internalOntologyIri.isKnoraSharedDefinitionIri && projectIri.toString != OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject) {
-                                throw InconsistentTriplestoreDataException(s"Shared ontology $internalOntologyIri must be in project ${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}")
+                                throw InconsistentRepositoryDataException(s"Shared ontology $internalOntologyIri must be in project ${OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject}")
                             }
                         }
 
                         val label: String = if (labels.size > 1) {
-                            throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one rdfs:label")
+                            throw InconsistentRepositoryDataException(s"Ontology $internalOntologyIri has more than one rdfs:label")
                         } else if (labels.isEmpty) {
                             internalOntologyIri.getOntologyName
                         } else {
@@ -1677,16 +1678,16 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                         }
 
                         val comment: Option[String] = if (comments.size > 1) {
-                            throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one rdfs:comment")
+                            throw InconsistentRepositoryDataException(s"Ontology $internalOntologyIri has more than one rdfs:comment")
                         } else comments.headOption
 
                         val lastModificationDate: Option[Instant] = if (lastModDates.size > 1) {
-                            throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has more than one ${OntologyConstants.KnoraBase.LastModificationDate}")
+                            throw InconsistentRepositoryDataException(s"Ontology $internalOntologyIri has more than one ${OntologyConstants.KnoraBase.LastModificationDate}")
                         } else if (lastModDates.isEmpty) {
                             None
                         } else {
                             val dateStr = lastModDates.head
-                            Some(stringFormatter.xsdDateTimeStampToInstant(dateStr, throw InconsistentTriplestoreDataException(s"Invalid ${OntologyConstants.KnoraBase.LastModificationDate}: $dateStr")))
+                            Some(stringFormatter.xsdDateTimeStampToInstant(dateStr, throw InconsistentRepositoryDataException(s"Invalid ${OntologyConstants.KnoraBase.LastModificationDate}: $dateStr")))
                         }
 
                         Some(OntologyMetadataV2(
@@ -2050,7 +2051,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 )
 
                 _ = if (loadedClassDef != unescapedClassDefWithLinkValueProps) {
-                    throw InconsistentTriplestoreDataException(s"Attempted to save class definition $unescapedClassDefWithLinkValueProps, but $loadedClassDef was saved")
+                    throw InconsistentRepositoryDataException(s"Attempted to save class definition $unescapedClassDefWithLinkValueProps, but $loadedClassDef was saved")
                 }
 
                 // Update the cache.
@@ -2270,7 +2271,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             case (propertyIri, propertyDef) =>
                 propertyDef.predicates.get(OntologyConstants.KnoraBase.SubjectClassConstraint.toSmartIri) match {
                     case Some(subjectClassConstraintPred) =>
-                        val subjectClassConstraint = subjectClassConstraintPred.requireIriObject(throw InconsistentTriplestoreDataException(s"Property $propertyIri has an invalid object for ${OntologyConstants.KnoraBase.SubjectClassConstraint}"))
+                        val subjectClassConstraint = subjectClassConstraintPred.requireIriObject(throw InconsistentRepositoryDataException(s"Property $propertyIri has an invalid object for ${OntologyConstants.KnoraBase.SubjectClassConstraint}"))
 
                         if (!allBaseClassIris.contains(subjectClassConstraint)) {
                             val hasOrWouldInherit = if (internalClassDef.directCardinalities.contains(propertyIri)) {
@@ -2425,7 +2426,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 )
 
                 _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
-                    throw InconsistentTriplestoreDataException(s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, but $loadedClassDef was saved")
+                    throw InconsistentRepositoryDataException(s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, but $loadedClassDef was saved")
                 }
 
                 // Update the cache.
@@ -2600,7 +2601,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 )
 
                 _ = if (loadedClassDef != newInternalClassDefWithLinkValueProps) {
-                    throw InconsistentTriplestoreDataException(s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, but $loadedClassDef was saved")
+                    throw InconsistentRepositoryDataException(s"Attempted to save class definition $newInternalClassDefWithLinkValueProps, but $loadedClassDef was saved")
                 }
 
                 // Update the cache.
@@ -2911,7 +2912,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                     propertyIris = ontology.properties.keySet
                 ).toString()
 
-                isOntologyUsedResponse: SparqlSelectResponse <- (storeManager ? SparqlSelectRequest(isOntologyUsedSparql)).mapTo[SparqlSelectResponse]
+                isOntologyUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isOntologyUsedSparql)).mapTo[SparqlSelectResult]
 
                 _ = if (isOntologyUsedResponse.results.bindings.nonEmpty) {
                     val subjects: Seq[String] = isOntologyUsedResponse.results.bindings.map {
@@ -3189,7 +3190,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 unescapedInputPropertyDef = internalPropertyDef.unescape
 
                 _ = if (loadedPropertyDef != unescapedInputPropertyDef) {
-                    throw InconsistentTriplestoreDataException(s"Attempted to save property definition $unescapedInputPropertyDef, but $loadedPropertyDef was saved")
+                    throw InconsistentRepositoryDataException(s"Attempted to save property definition $unescapedInputPropertyDef, but $loadedPropertyDef was saved")
                 }
 
                 maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] = maybeLinkValuePropertyDef.map {
@@ -3206,7 +3207,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 _ = (maybeLoadedLinkValuePropertyDef, maybeUnescapedNewLinkValuePropertyDef) match {
                     case (Some(loadedLinkValuePropertyDef), Some(unescapedNewLinkPropertyDef)) =>
                         if (loadedLinkValuePropertyDef != unescapedNewLinkPropertyDef) {
-                            throw InconsistentTriplestoreDataException(s"Attempted to save link value property definition $unescapedNewLinkPropertyDef, but $loadedLinkValuePropertyDef was saved")
+                            throw InconsistentRepositoryDataException(s"Attempted to save link value property definition $unescapedNewLinkPropertyDef, but $loadedLinkValuePropertyDef was saved")
                         }
 
                     case _ => ()
@@ -3318,7 +3319,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                 maybeCurrentLinkValueReadPropertyInfo: Option[ReadPropertyInfoV2] = if (currentReadPropertyInfo.isLinkProp) {
                     val linkValuePropertyIri = internalPropertyIri.fromLinkPropToLinkValueProp
-                    Some(ontology.properties.getOrElse(linkValuePropertyIri, throw InconsistentTriplestoreDataException(s"Link value property $linkValuePropertyIri not found")))
+                    Some(ontology.properties.getOrElse(linkValuePropertyIri, throw InconsistentRepositoryDataException(s"Link value property $linkValuePropertyIri not found")))
                 } else {
                     None
                 }
@@ -3367,7 +3368,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 )
 
                 _ = if (loadedPropertyDef != unescapedNewPropertyDef) {
-                    throw InconsistentTriplestoreDataException(s"Attempted to save property definition $unescapedNewPropertyDef, but $loadedPropertyDef was saved")
+                    throw InconsistentRepositoryDataException(s"Attempted to save property definition $unescapedNewPropertyDef, but $loadedPropertyDef was saved")
                 }
 
                 maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] = maybeCurrentLinkValueReadPropertyInfo.map {
@@ -3387,7 +3388,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                         )
 
                         if (loadedLinkValuePropertyDef != unescapedNewLinkPropertyDef) {
-                            throw InconsistentTriplestoreDataException(s"Attempted to save link value property definition $unescapedNewLinkPropertyDef, but $loadedLinkValuePropertyDef was saved")
+                            throw InconsistentRepositoryDataException(s"Attempted to save link value property definition $unescapedNewLinkPropertyDef, but $loadedLinkValuePropertyDef was saved")
                         }
 
                         unescapedNewLinkPropertyDef
@@ -3533,7 +3534,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 )
 
                 _ = if (loadedClassDef != unescapedNewClassDef) {
-                    throw InconsistentTriplestoreDataException(s"Attempted to save class definition $unescapedNewClassDef, but $loadedClassDef was saved")
+                    throw InconsistentRepositoryDataException(s"Attempted to save class definition $unescapedNewClassDef, but $loadedClassDef was saved")
                 }
 
                 // Update the ontology cache, using the unescaped definition(s).
@@ -3660,7 +3661,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
                         case ontoLiteral: OntologyLiteralV2 => ontoLiteral
 
-                        case other => throw InconsistentTriplestoreDataException(s"Predicate $predicateIri has an invalid object: $other")
+                        case other => throw InconsistentRepositoryDataException(s"Predicate $predicateIri has an invalid object: $other")
                     }
                 )
 
@@ -3698,7 +3699,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         val ontologyIri = propertyIri.getOntologyFromEntity
 
         if (!ontologyIri.isKnoraOntologyIri) {
-            throw InconsistentTriplestoreDataException(s"Property $propertyIri is not in a Knora ontology")
+            throw InconsistentRepositoryDataException(s"Property $propertyIri is not in a Knora ontology")
         }
 
         val statements = constructResponse.statements
@@ -3710,7 +3711,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             case Some(baseProperties) =>
                 baseProperties.map {
                     case iriLiteral: IriLiteralV2 => iriLiteral.value.toSmartIri
-                    case other => throw InconsistentTriplestoreDataException(s"Unexpected object for rdfs:subPropertyOf: $other")
+                    case other => throw InconsistentRepositoryDataException(s"Unexpected object for rdfs:subPropertyOf: $other")
                 }.toSet
 
             case None => Set.empty[SmartIri]
@@ -3720,7 +3721,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // salsah-gui:guiOrder isn't allowed here.
         if (otherPreds.contains(OntologyConstants.SalsahGui.GuiOrder.toSmartIri)) {
-            throw InconsistentTriplestoreDataException(s"Property $propertyIri contains salsah-gui:guiOrder")
+            throw InconsistentRepositoryDataException(s"Property $propertyIri contains salsah-gui:guiOrder")
         }
 
         val propertyDef = PropertyInfoContentV2(
@@ -3731,7 +3732,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         )
 
         if (!propertyIri.isKnoraBuiltInDefinitionIri && propertyDef.getRdfTypes.contains(OntologyConstants.Owl.TransitiveProperty.toSmartIri)) {
-            throw InconsistentTriplestoreDataException(s"Project-specific property $propertyIri cannot be an owl:TransitiveProperty")
+            throw InconsistentRepositoryDataException(s"Project-specific property $propertyIri cannot be an owl:TransitiveProperty")
         }
 
         propertyDef
@@ -3831,7 +3832,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         val ontologyIri = classIri.getOntologyFromEntity
 
         if (!ontologyIri.isKnoraOntologyIri) {
-            throw InconsistentTriplestoreDataException(s"Class $classIri is not in a Knora ontology")
+            throw InconsistentRepositoryDataException(s"Class $classIri is not in a Knora ontology")
         }
 
         val statements = constructResponse.statements
@@ -3855,20 +3856,20 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         val directCardinalities: Map[SmartIri, KnoraCardinalityInfo] = restrictionBlankNodeIDs.map {
             blankNodeID =>
-                val blankNode: Map[SmartIri, Seq[LiteralV2]] = statements.getOrElse(BlankNodeSubjectV2(blankNodeID.value), throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' not found in construct query result"))
+                val blankNode: Map[SmartIri, Seq[LiteralV2]] = statements.getOrElse(BlankNodeSubjectV2(blankNodeID.value), throw InconsistentRepositoryDataException(s"Blank node '${blankNodeID.value}' not found in construct query result"))
 
-                val blankNodeTypeObjs: Seq[LiteralV2] = blankNode.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' has no rdf:type"))
+                val blankNodeTypeObjs: Seq[LiteralV2] = blankNode.getOrElse(OntologyConstants.Rdf.Type.toSmartIri, throw InconsistentRepositoryDataException(s"Blank node '${blankNodeID.value}' has no rdf:type"))
 
                 blankNodeTypeObjs match {
                     case Seq(IriLiteralV2(OntologyConstants.Owl.Restriction)) => ()
-                    case _ => throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' is not an owl:Restriction")
+                    case _ => throw InconsistentRepositoryDataException(s"Blank node '${blankNodeID.value}' is not an owl:Restriction")
                 }
 
-                val onPropertyObjs: Seq[LiteralV2] = blankNode.getOrElse(OntologyConstants.Owl.OnProperty.toSmartIri, throw InconsistentTriplestoreDataException(s"Blank node '${blankNodeID.value}' has no owl:onProperty"))
+                val onPropertyObjs: Seq[LiteralV2] = blankNode.getOrElse(OntologyConstants.Owl.OnProperty.toSmartIri, throw InconsistentRepositoryDataException(s"Blank node '${blankNodeID.value}' has no owl:onProperty"))
 
                 val propertyIri: SmartIri = onPropertyObjs match {
                     case Seq(propertyIri: IriLiteralV2) => propertyIri.value.toSmartIri
-                    case other => throw InconsistentTriplestoreDataException(s"Invalid object for owl:onProperty: $other")
+                    case other => throw InconsistentRepositoryDataException(s"Invalid object for owl:onProperty: $other")
                 }
 
                 val owlCardinalityPreds: Set[SmartIri] = blankNode.keySet.filter {
@@ -3876,30 +3877,30 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 }
 
                 if (owlCardinalityPreds.size != 1) {
-                    throw InconsistentTriplestoreDataException(s"Expected one cardinality predicate in blank node '${blankNodeID.value}', got ${owlCardinalityPreds.size}")
+                    throw InconsistentRepositoryDataException(s"Expected one cardinality predicate in blank node '${blankNodeID.value}', got ${owlCardinalityPreds.size}")
                 }
 
                 val owlCardinalityIri = owlCardinalityPreds.head
 
                 val owlCardinalityValue: Int = blankNode(owlCardinalityIri) match {
                     case Seq(IntLiteralV2(intVal)) => intVal
-                    case other => throw InconsistentTriplestoreDataException(s"Expected one integer object for predicate $owlCardinalityIri in blank node '${blankNodeID.value}', got $other")
+                    case other => throw InconsistentRepositoryDataException(s"Expected one integer object for predicate $owlCardinalityIri in blank node '${blankNodeID.value}', got $other")
                 }
 
                 val guiOrder: Option[Int] = blankNode.get(OntologyConstants.SalsahGui.GuiOrder.toSmartIri) match {
                     case Some(Seq(IntLiteralV2(intVal))) => Some(intVal)
                     case None => None
-                    case other => throw InconsistentTriplestoreDataException(s"Expected one integer object for predicate ${OntologyConstants.SalsahGui.GuiOrder} in blank node '${blankNodeID.value}', got $other")
+                    case other => throw InconsistentRepositoryDataException(s"Expected one integer object for predicate ${OntologyConstants.SalsahGui.GuiOrder} in blank node '${blankNodeID.value}', got $other")
                 }
 
                 // salsah-gui:guiElement and salsah-gui:guiAttribute aren't allowed here.
 
                 if (blankNode.contains(OntologyConstants.SalsahGui.GuiElementProp.toSmartIri)) {
-                    throw InconsistentTriplestoreDataException(s"Class $classIri contains salsah-gui:guiElement in an owl:Restriction")
+                    throw InconsistentRepositoryDataException(s"Class $classIri contains salsah-gui:guiElement in an owl:Restriction")
                 }
 
                 if (blankNode.contains(OntologyConstants.SalsahGui.GuiAttribute.toSmartIri)) {
-                    throw InconsistentTriplestoreDataException(s"Class $classIri contains salsah-gui:guiAttribute in an owl:Restriction")
+                    throw InconsistentRepositoryDataException(s"Class $classIri contains salsah-gui:guiAttribute in an owl:Restriction")
                 }
 
                 propertyIri -> Cardinality.owlCardinality2KnoraCardinality(
@@ -3968,7 +3969,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // make a map of superproperty IRIs to superproperty constraint values.
         val superPropertyConstraintValues: Map[SmartIri, SmartIri] = superPropertyInfos.flatMap {
             superPropertyInfo =>
-                superPropertyInfo.entityInfoContent.predicates.get(constraintPredicateIri).map(_.requireIriObject(throw InconsistentTriplestoreDataException(s"Property ${superPropertyInfo.entityInfoContent.propertyIri} has an invalid object for $constraintPredicateIri"))).map {
+                superPropertyInfo.entityInfoContent.predicates.get(constraintPredicateIri).map(_.requireIriObject(throw InconsistentRepositoryDataException(s"Property ${superPropertyInfo.entityInfoContent.propertyIri} has an invalid object for $constraintPredicateIri"))).map {
                     superPropertyConstraintValue => superPropertyInfo.entityInfoContent.propertyIri -> superPropertyConstraintValue
                 }
         }.toMap
@@ -4052,7 +4053,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                                 errorFun
                             }
 
-                        case None => throw InconsistentTriplestoreDataException(s"Ontology $internalOntologyIri has no ${OntologyConstants.KnoraBase.LastModificationDate}")
+                        case None => throw InconsistentRepositoryDataException(s"Ontology $internalOntologyIri has no ${OntologyConstants.KnoraBase.LastModificationDate}")
                     }
 
                 case None => throw NotFoundException(s"Ontology $internalOntologyIri (corresponding to ${internalOntologyIri.toOntologySchema(ApiV2Complex)}) not found")
@@ -4304,7 +4305,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             inheritableCardinalities = cardinalitiesAvailableToInherit,
             allSubPropertyOfRelations = allSubPropertyOfRelations,
             errorSchema = InternalSchema,
-            { msg: String => throw InconsistentTriplestoreDataException(msg) }
+            { msg: String => throw InconsistentRepositoryDataException(msg) }
         )
     }
 
