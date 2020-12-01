@@ -87,10 +87,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         // log.debug("listsGetRequestV2")
 
         for {
-            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getLists(
-                triplestore = settings.triplestoreType,
-                maybeProjectIri = projectIri
-            ).toString()
+            sparqlQuery <- Future(
+                org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getLists(
+                    triplestore = settings.triplestoreType,
+                    maybeProjectIri = projectIri
+                ).toString()
             )
 
             listsResponse <- (storeManager ? SparqlExtendedConstructRequest(
@@ -265,10 +266,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                    featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM): Future[Option[ListNodeInfoADM]] = {
         for {
-            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getListNode(
-                triplestore = settings.triplestoreType,
-                nodeIri = nodeIri
-            ).toString()
+            sparqlQuery <- Future(
+                org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getListNode(
+                    triplestore = settings.triplestoreType,
+                    nodeIri = nodeIri
+                ).toString()
             )
 
             // _ = log.debug("listNodeInfoGetADM - sparqlQuery: {}", sparqlQuery)
@@ -396,10 +398,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                requestingUser: UserADM): Future[Option[ListNodeADM]] = {
         for {
             // this query will give us only the information about the root node.
-            sparqlQuery <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getListNode(
-                triplestore = settings.triplestoreType,
-                nodeIri = nodeIri
-            ).toString()
+            sparqlQuery <- Future(
+                org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getListNode(
+                    triplestore = settings.triplestoreType,
+                    nodeIri = nodeIri
+                ).toString()
             )
 
             listInfoResponse <- (storeManager ? SparqlExtendedConstructRequest(
@@ -565,6 +568,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                     startNodeIri = ofNodeIri
                 ).toString()
             }
+
             nodeWithChildrenResponse <- (storeManager ? SparqlExtendedConstructRequest(
                 sparql = nodeChildrenQuery,
                 featureFactoryConfig = featureFactoryConfig,
@@ -1728,7 +1732,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     private def projectByIriExists(projectIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri).toString)
+            askString <- Future(
+                org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkProjectExistsByIri(projectIri).toString
+            )
             //_ = log.debug("projectByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1745,7 +1751,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     private def rootNodeByIriExists(rootNodeIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListRootNodeExistsByIri(rootNodeIri).toString)
+            askString <- Future(
+                org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListRootNodeExistsByIri(rootNodeIri).toString
+            )
             // _ = log.debug("rootNodeByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1762,7 +1770,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     private def nodeByIriExists(nodeIri: IRI): Future[Boolean] = {
         for {
-            askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(nodeIri).toString)
+            askString <- Future(
+                org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeExistsByIri(nodeIri).toString
+            )
             // _ = log.debug("rootNodeByIriExists - query: {}", askString)
 
             askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1783,7 +1793,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         listNodeName match {
             case Some(name) =>
                 for {
-                    askString <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeNameIsProjectUnique(projectIri = projectIri, listNodeName = name).toString)
+                    askString <- Future(
+                        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkListNodeNameIsProjectUnique(
+                            projectIri = projectIri,
+                            listNodeName = name
+                        ).toString
+                    )
                     //_ = log.debug("listNodeNameIsProjectUnique - query: {}", askString)
 
                     askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -1891,10 +1906,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     protected def isNodeUsed(nodeIri: IRI,
                              errorFun: => Nothing): Future[Unit] = for {
-        isNodeUsedSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.isNodeUsed(
-            triplestore = settings.triplestoreType,
-            nodeIri = nodeIri
-        ).toString()
+        isNodeUsedSparql <- Future(
+            org.knora.webapi.messages.twirl.queries.sparql.admin.txt.isNodeUsed(
+                triplestore = settings.triplestoreType,
+                nodeIri = nodeIri
+            ).toString()
         )
 
         isNodeUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isNodeUsedSparql)).mapTo[SparqlSelectResult]
@@ -1939,10 +1955,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     protected def getParentNodeIRI(nodeIri: IRI, featureFactoryConfig: FeatureFactoryConfig): Future[IRI] = for {
         // query statement
-        getParentNodeSparqlString: String <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getParentNode(
-            triplestore = settings.triplestoreType,
-            nodeIri = nodeIri
-        ).toString
+        getParentNodeSparqlString: String <- Future(
+            org.knora.webapi.messages.twirl.queries.sparql.admin.txt.getParentNode(
+                triplestore = settings.triplestoreType,
+                nodeIri = nodeIri
+            ).toString
         )
 
         parentNodeResponse <- (storeManager ? SparqlExtendedConstructRequest(
@@ -1969,12 +1986,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     protected def deleteNode(dataNamedGraph: IRI, nodeIri: IRI, isRootNode: Boolean): Future[Unit] = for {
 
         // Generate SPARQL for erasing a node.
-        sparqlDeleteNode: String <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.deleteNode(
-            triplestore = settings.triplestoreType,
-            dataNamedGraph = dataNamedGraph,
-            nodeIri = nodeIri,
-            isRootNode = isRootNode
-        ).toString()
+        sparqlDeleteNode: String <- Future(
+            org.knora.webapi.messages.twirl.queries.sparql.admin.txt.deleteNode(
+                triplestore = settings.triplestoreType,
+                dataNamedGraph = dataNamedGraph,
+                nodeIri = nodeIri,
+                isRootNode = isRootNode
+            ).toString()
         )
 
         // Do the update.
@@ -2003,12 +2021,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                        dataNamedGraph: IRI,
                                        featureFactoryConfig: FeatureFactoryConfig): Future[ListChildNodeADM] = for {
         // Generate SPARQL for erasing a node.
-        sparqlUpdateNodePosition: String <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateNodePosition(
-            triplestore = settings.triplestoreType,
-            dataNamedGraph = dataNamedGraph,
-            nodeIri = nodeIri,
-            newPosition = newPosition
-        ).toString()
+        sparqlUpdateNodePosition: String <- Future(
+            org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateNodePosition(
+                triplestore = settings.triplestoreType,
+                dataNamedGraph = dataNamedGraph,
+                nodeIri = nodeIri,
+                newPosition = newPosition
+            ).toString()
         )
 
         _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdateNodePosition)).mapTo[SparqlUpdateResponse]
@@ -2086,13 +2105,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                                    featureFactoryConfig: FeatureFactoryConfig): Future[Unit] = for {
 
         // Generate SPARQL for changing the parent node of the node.
-        sparqlChangeParentNode: String <- Future(org.knora.webapi.messages.twirl.queries.sparql.admin.txt.changeParentNode(
-            triplestore = settings.triplestoreType,
-            dataNamedGraph = dataNamedGraph,
-            nodeIri = nodeIri,
-            currentParentIri = oldParentIri,
-            newParentIri = newParentIri
-        ).toString()
+        sparqlChangeParentNode: String <- Future(
+            org.knora.webapi.messages.twirl.queries.sparql.admin.txt.changeParentNode(
+                triplestore = settings.triplestoreType,
+                dataNamedGraph = dataNamedGraph,
+                nodeIri = nodeIri,
+                currentParentIri = oldParentIri,
+                newParentIri = newParentIri
+            ).toString()
         )
 
         _ <- (storeManager ? SparqlUpdateRequest(sparqlChangeParentNode)).mapTo[SparqlUpdateResponse]
