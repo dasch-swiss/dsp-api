@@ -19,6 +19,7 @@
 
 package org.knora.webapi
 
+import java.net.InetAddress
 import com.typesafe.config.{Config, ConfigFactory}
 import org.testcontainers.containers.{BindMode, GenericContainer}
 
@@ -26,6 +27,10 @@ import org.testcontainers.containers.{BindMode, GenericContainer}
   * Provides all containers necessary for running tests.
   */
 object TestContainers {
+
+    // get local IP address, which we need for SIPI
+    val localhost: InetAddress = InetAddress.getLocalHost
+    val localIpAddress: String = localhost.getHostAddress
 
     val FusekiContainer = new GenericContainer("bazel/docker/knora-jena-fuseki:image")
     FusekiContainer.withExposedPorts(3030)
@@ -35,7 +40,7 @@ object TestContainers {
 
     val SipiContainer = new GenericContainer("bazel/docker/knora-sipi:image")
     SipiContainer.withExposedPorts(1024)
-    SipiContainer.withEnv("SIPI_WEBAPI_HOSTNAME", "api")
+    SipiContainer.withEnv("SIPI_WEBAPI_HOSTNAME", localIpAddress)
     SipiContainer.withEnv("SIPI_WEBAPI_PORT", "3333")
     SipiContainer.withCommand("--config=/sipi/config/sipi.knora-docker-config.lua")
     SipiContainer.withClasspathResourceMapping(
