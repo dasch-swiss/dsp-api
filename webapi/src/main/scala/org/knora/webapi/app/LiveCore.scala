@@ -27,8 +27,8 @@ import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettings
 import scala.concurrent.ExecutionContext
 import scala.language.postfixOps
 import scala.languageFeature.postfixOps
-
 import org.knora.webapi.core.Core
+import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 
 
 /**
@@ -57,8 +57,10 @@ trait LiveCore extends Core {
     implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
 
-    // Initialise StringFormatter with the system settings. This must happen before any responders are constructed.
+    // Initialise StringFormatter and RdfFeatureFactory with the system settings.
+    // This must happen before any responders are constructed.
     StringFormatter.init(settings)
+    RdfFeatureFactory.init(settings)
 
     /**
      * The main application supervisor actor which is at the top of the actor

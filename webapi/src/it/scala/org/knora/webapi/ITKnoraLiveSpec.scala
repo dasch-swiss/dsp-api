@@ -36,7 +36,7 @@ import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil, RdfFeatureFactory}
 import org.knora.webapi.settings._
 import org.knora.webapi.util.StartupUtils
 import org.scalatest.matchers.should.Matchers
@@ -75,6 +75,7 @@ class ITKnoraLiveSpec(_system: ActorSystem) extends Core with StartupUtils with 
 
     /* Needs to be initialized before any responders */
     StringFormatter.initForTest()
+    RdfFeatureFactory.init(settings)
 
     val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 

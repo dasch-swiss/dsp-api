@@ -62,6 +62,9 @@ class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest 
 
     implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(_system)
 
+    StringFormatter.initForTest()
+    RdfFeatureFactory.init(settings)
+
     protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
         testToggles = Set.empty,
         parent = new KnoraSettingsFeatureFactoryConfig(settings)
@@ -73,8 +76,6 @@ class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest 
     override def createActorSystem(): ActorSystem = _system
 
     def actorRefFactory: ActorSystem = _system
-
-    StringFormatter.initForTest()
 
     implicit val knoraExceptionHandler: ExceptionHandler = handler.KnoraExceptionHandler(settings)
 
