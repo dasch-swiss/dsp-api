@@ -19,20 +19,18 @@
 
 package org.knora.webapi.util.rdf
 
-import java.io.{BufferedInputStream, ByteArrayInputStream, ByteArrayOutputStream, File, FileInputStream}
+import java.io._
 
-import org.knora.webapi.{CoreSpec, IRI}
 import org.knora.webapi.feature.{FeatureFactoryConfig, FeatureToggle, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
+import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.util.FileUtil
+import org.knora.webapi.{CoreSpec, IRI}
 
 /**
  * Tests implementations of [[RdfFormatUtil]].
  */
 abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
-    StringFormatter.initForTest()
-
     private val featureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
         testToggles = Set(featureToggle),
         parent = new KnoraSettingsFeatureFactoryConfig(settings)

@@ -20,6 +20,7 @@
 package org.knora.webapi
 
 import akka.actor.ActorSystem
+import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.client.RequestBuilding
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, StatusCodes}
@@ -33,6 +34,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{BeforeAndAfterAll, Suite}
 import spray.json.{JsObject, _}
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 
 import scala.concurrent.duration.{Duration, _}
 import scala.concurrent.{Await, ExecutionContext}
@@ -63,8 +65,9 @@ class ITKnoraFakeSpec(_system: ActorSystem) extends Core with KnoraFakeCore with
 
     /* Needs to be initialized before any responders */
     StringFormatter.initForTest()
+    RdfFeatureFactory.init(settings)
 
-    val log = akka.event.Logging(system, this.getClass)
+    val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
     protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
     protected val baseInternalSipiUrl: String = settings.internalSipiBaseUrl

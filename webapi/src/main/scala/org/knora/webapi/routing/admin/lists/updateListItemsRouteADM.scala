@@ -48,18 +48,17 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(rout
     def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
         updateNodeName(featureFactoryConfig) ~
         updateNodeLabels(featureFactoryConfig) ~
-        updateNodeComments(featureFactoryConfig)
+        updateNodeComments(featureFactoryConfig) ~
+        updateNodePosition(featureFactoryConfig)
 
     /**
      * update node name
      */
     @Path("/{IRI}/name")
-    @ApiOperation(value = "Update Node Name", nickname = "newPutNodeName", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
+    @ApiOperation(value = "Update Node Name", nickname = "putNodeName", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"node name\" to update", required = true,
-            dataTypeClass = classOf[ChangeNodeNameApiRequestADM], paramType = "body"),
-        new ApiImplicitParam(name = "X-Knora-Feature-Toggles", value = "new-list-admin-routes:1 = on/off", required = true,
-            dataType = "string", paramType = "header")
+            dataTypeClass = classOf[ChangeNodeNameApiRequestADM], paramType = "body")
     ))
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
@@ -96,12 +95,10 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(rout
      * update node labels
      */
     @Path("/{IRI}/labels")
-    @ApiOperation(value = "Update Node Labels", nickname = "newPutNodeLabels", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
+    @ApiOperation(value = "Update Node Labels", nickname = "putNodeLabels", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"node labels\" to update", required = true,
-            dataTypeClass = classOf[ChangeNodeLabelsApiRequestADM], paramType = "body"),
-        new ApiImplicitParam(name = "X-Knora-Feature-Toggles", value = "new-list-admin-routes:1 = on/off", required = true,
-            dataType = "string", paramType = "header")
+            dataTypeClass = classOf[ChangeNodeLabelsApiRequestADM], paramType = "body")
     ))
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
@@ -134,16 +131,15 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(rout
             }
         }
     }
+
     /**
      * update node comments
      */
     @Path("/{IRI}/comments")
-    @ApiOperation(value = "Update Node Comments", nickname = "newPutNodeComments", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
+    @ApiOperation(value = "Update Node Comments", nickname = "putNodeComments", httpMethod = "PUT", response = classOf[NodeInfoGetResponseADM])
     @ApiImplicitParams(Array(
         new ApiImplicitParam(name = "body", value = "\"node comments\" to update", required = true,
             dataTypeClass = classOf[ChangeNodeCommentsApiRequestADM], paramType = "body"),
-        new ApiImplicitParam(name = "X-Knora-Feature-Toggles", value = "new-list-admin-routes:1 = on/off", required = true,
-            dataType = "string", paramType = "header")
     ))
     @ApiResponses(Array(
         new ApiResponse(code = 500, message = "Internal server error")
@@ -177,4 +173,44 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(rout
         }
     }
 
+    /**
+     * update node position
+     */
+    @Path("/{IRI}/position")
+    @ApiOperation(value = "Update Node Position", nickname = "putNodePosition", httpMethod = "PUT", response = classOf[ListGetResponseADM])
+    @ApiImplicitParams(Array(
+        new ApiImplicitParam(name = "body", value = "\"node position\" to update", required = true,
+            dataTypeClass = classOf[ChangeNodeCommentsApiRequestADM], paramType = "body")
+    ))
+    @ApiResponses(Array(
+        new ApiResponse(code = 500, message = "Internal server error")
+    ))
+    private def updateNodePosition(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment / "position") { iri =>
+        put {
+            /* update labels of an existing list node (either root or child) */
+            entity(as[ChangeNodePositionApiRequestADM]) { apiRequest =>
+                requestContext =>
+                    val nodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
+
+                    val requestMessage: Future[NodePositionChangeRequestADM] = for {
+                        requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+                    } yield NodePositionChangeRequestADM(
+                        nodeIri = nodeIri,
+                        changeNodePositionRequest = apiRequest,
+                        featureFactoryConfig = featureFactoryConfig,
+                        requestingUser = requestingUser,
+                        apiRequestID = UUID.randomUUID()
+                    )
+
+                    RouteUtilADM.runJsonRoute(
+                        requestMessageF = requestMessage,
+                        requestContext = requestContext,
+                        featureFactoryConfig = featureFactoryConfig,
+                        settings = settings,
+                        responderManager = responderManager,
+                        log = log
+                    )
+            }
+        }
+    }
 }

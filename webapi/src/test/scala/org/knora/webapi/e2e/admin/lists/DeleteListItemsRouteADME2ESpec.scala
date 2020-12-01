@@ -45,8 +45,8 @@ object DeleteListItemsRouteADME2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing  endpoint.
-  */
+ * End-to-End (E2E) test specification for testing  endpoint.
+ */
 class DeleteListItemsRouteADME2ESpec extends E2ESpec(DeleteListItemsRouteADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListADMJsonProtocol {
 
     implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
@@ -102,14 +102,14 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec(DeleteListItemsRouteADME2ES
                 response.status should be(StatusCodes.OK)
                 val node = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
                 val children = node.getChildren
-                children.size should be (2)
+                children.size should be(2)
                 // last child must be shifted one place to left
                 val lastChild = children.last
-                lastChild.id should be ("http://rdfh.ch/lists/0001/notUsedList03")
-                lastChild.position should be (1)
+                lastChild.id should be("http://rdfh.ch/lists/0001/notUsedList03")
+                lastChild.position should be(1)
                 // first child must have its child
                 val firstChild = children.head
-                firstChild.children.size should be (1)
+                firstChild.children.size should be(5)
 
                 clientTestDataCollector.addFile(
                     TestDataFileContent(
@@ -129,7 +129,7 @@ class DeleteListItemsRouteADME2ESpec extends E2ESpec(DeleteListItemsRouteADME2ES
                 val response: HttpResponse = singleAwaitingRequest(request)
                 response.status should be(StatusCodes.OK)
                 val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
-                deletedStatus.convertTo[Boolean] should be (true)
+                deletedStatus.convertTo[Boolean] should be(true)
 
                 clientTestDataCollector.addFile(
                     TestDataFileContent(

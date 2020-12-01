@@ -49,10 +49,12 @@ The API is in the package `org.knora.webapi.messages.util.rdf`. It includes:
 - `JsonLDUtil`, which provides specialised functionality for working
   with RDF in JSON-LD format, and for converting between RDF models
   and JSON-LD documents. `RdfFormatUtil` uses `JsonLDUtil` when appropriate.
+  
+- `ShaclValidator`, which validates RDF models using SHACL shapes.
 
 To work with RDF models, start with `RdfFeatureFactory`, which returns instances
-of `RdfNodeFactory`, `RdfModelFactory`, and `RdfFormatUtil`, using feature toggle
-configuration. `JsonLDUtil` does not need a feature factory.
+of `RdfNodeFactory`, `RdfModelFactory`, `RdfFormatUtil`, and `ShaclValidator`,
+using feature toggle configuration. `JsonLDUtil` does not need a feature factory.
 
 To iterate efficiently over the statements in an `RdfModel`, use its `iterator` method.
 An `RdfModel` cannot be modified while you are iterating over it.
@@ -83,6 +85,15 @@ construct one of these.
 In tests, it can be useful to run SPARQL queries to check the content of
 an `RdfModel`. To do this, use the `RdfModel.asRepository` method, which
 returns an `RdfRepository` that can run `SELECT` queries.
+
+
+## SHACL validation
+
+On startup, graphs of SHACL shapes are loaded from Turtle files in a directory specified
+by `app.shacl.shapes-dir` in `application.conf`, and in subdirectories of
+that directory. To validate the default graph of an `RdfModel` using a graph of
+SHACL shapes, call `ShaclValidator.validate`, specifying the relative path of the
+Turtle file containing the graph of shapes.
 
 
 ## Implementations

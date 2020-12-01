@@ -33,6 +33,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
+import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
@@ -88,6 +89,7 @@ abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core
 
     // needs to be initialized early on
     StringFormatter.initForTest()
+    RdfFeatureFactory.init(settings)
 
     val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
