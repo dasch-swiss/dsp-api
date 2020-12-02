@@ -199,7 +199,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     groupIri = OntologyConstants.KnoraAdmin.ProjectMember,
                     requestingUser = rootUser
                 )
-                expectMsg(AdministrativePermissionForProjectGroupGetResponseADM(perm002_a1.p))
+                expectMsg(AdministrativePermissionGetResponseADM(perm002_a1.p))
             }
 
             "return AdministrativePermission for IRI " in {
@@ -208,7 +208,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     requestingUser = rootUser,
                     apiRequestID = UUID.randomUUID()
                 )
-                expectMsg(AdministrativePermissionForIriGetResponseADM(perm002_a1.p))
+                expectMsg(AdministrativePermissionGetResponseADM(perm002_a1.p))
             }
 
         }
@@ -287,7 +287,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     requestingUser = rootUser,
                     apiRequestID = UUID.randomUUID()
                 )
-                expectMsg(DefaultObjectAccessPermissionForIriGetResponseADM(
+                expectMsg(DefaultObjectAccessPermissionGetResponseADM(
                     defaultObjectAccessPermission = perm002_d1.p
                 ))
             }

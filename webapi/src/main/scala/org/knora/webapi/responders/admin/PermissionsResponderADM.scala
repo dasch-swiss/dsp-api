@@ -387,7 +387,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     private def administrativePermissionForIriGetRequestADM(administrativePermissionIri: IRI,
                                                             requestingUser: UserADM,
                                                             apiRequestID: UUID
-                                                           ): Future[AdministrativePermissionForIriGetResponseADM] = {
+                                                           ): Future[AdministrativePermissionGetResponseADM] = {
         for {
             sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getAdministrativePermissionByIri(
                 triplestore = settings.triplestoreType,
@@ -418,7 +418,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             permission = permissionsmessages.AdministrativePermissionADM(iri = administrativePermissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentRepositoryDataException(s"Permission $administrativePermissionIri has no project attached")).head, forGroup = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForGroup, throw InconsistentRepositoryDataException(s"Permission $administrativePermissionIri has no group attached")).head, hasPermissions = hasPermissions)
 
             /* construct the response object */
-            response = AdministrativePermissionForIriGetResponseADM(permission)
+            response = AdministrativePermissionGetResponseADM(permission)
 
         } yield response
     }
@@ -477,17 +477,17 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
      * @param projectIri     the project.
      * @param groupIri       the group.
      * @param requestingUser the requesting user.
-     * @return an [[AdministrativePermissionForProjectGroupGetResponseADM]]
+     * @return an [[AdministrativePermissionGetResponseADM]]
      */
     private def administrativePermissionForProjectGroupGetRequestADM(projectIri: IRI,
                                                                      groupIri: IRI,
                                                                      requestingUser: UserADM
-                                                                    ): Future[AdministrativePermissionForProjectGroupGetResponseADM] = {
+                                                                    ): Future[AdministrativePermissionGetResponseADM] = {
 
         for {
             ap <- administrativePermissionForProjectGroupGetADM(projectIri, groupIri, requestingUser = KnoraSystemInstances.Users.SystemUser)
             result = ap match {
-                case Some(ap) => permissionsmessages.AdministrativePermissionForProjectGroupGetResponseADM(ap)
+                case Some(ap) => permissionsmessages.AdministrativePermissionGetResponseADM(ap)
                 case None => throw NotFoundException(s"No Administrative Permission found for project: $projectIri, group: $groupIri combination")
             }
         } yield result
@@ -729,7 +729,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     private def defaultObjectAccessPermissionForIriGetRequestADM(permissionIri: IRI,
                                                                  requestingUser: UserADM,
                                                                  apiRequestID: UUID
-                                                                ): Future[DefaultObjectAccessPermissionForIriGetResponseADM] = {
+                                                                ): Future[DefaultObjectAccessPermissionGetResponseADM] = {
 
         for {
             sparqlQueryString <- Future(org.knora.webapi.messages.twirl.queries.sparql.v1.txt.getDefaultObjectAccessPermissionByIri(
@@ -756,7 +756,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
             defaultObjectAccessPermission = permissionsmessages.DefaultObjectAccessPermissionADM(iri = permissionIri, forProject = groupedPermissionsQueryResponse.getOrElse(OntologyConstants.KnoraAdmin.ForProject, throw InconsistentRepositoryDataException(s"Permission $permissionIri has no project.")).head, forGroup = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForGroup).map(_.head), forResourceClass = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForResourceClass).map(_.head), forProperty = groupedPermissionsQueryResponse.get(OntologyConstants.KnoraAdmin.ForProperty).map(_.head), hasPermissions = hasPermissions)
 
-            result = DefaultObjectAccessPermissionForIriGetResponseADM(defaultObjectAccessPermission)
+            result = DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermission)
 
         } yield result
     }
