@@ -374,10 +374,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     }
 
     /**
-     * Given a SPARQL CONSTRUCT query string, runs the query, saving the result as an N-Quads file.
+     * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
      *
      * @param sparql     the SPARQL CONSTRUCT query string.
-     * @param graphIri   the named graph IRI to be used in the N-Quads file.
+     * @param graphIri   the named graph IRI to be used in the output file.
      * @param outputFile the output file.
      * @param outputFormat the output file format.
      * @return a [[FileWrittenResponse]].
@@ -394,7 +394,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                 rdfSource = RdfStringSource(turtleStr),
                 graphIri = graphIri,
                 outputFile = outputFile,
-                outputFormat = NQuads,
+                outputFormat = outputFormat,
                 featureFactoryConfig = featureFactoryConfig
             )
         } yield FileWrittenResponse()
