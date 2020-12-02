@@ -178,10 +178,28 @@ case class PermissionsForProjectGetRequestADM(projectIri: IRI,
 }
 
 /**
+ * A message that requests a permission (ap or doap) with IRI
+ * A successful response will be a [[PermissionGetResponseADM]].
+ *
+ * @param permissionIri        the IRI of the permission.
+ * @param requestingUser       the user initiation the request.
+ */
+case class PermissionGetRequestADM(permissionIri: IRI,
+                                   requestingUser: UserADM
+                                  ) extends PermissionsResponderRequestADM {
+
+  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+  if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
+    throw BadRequestException(s"Invalid IRI is given: $permissionIri.")
+  }
+}
+
+
+/**
  * A message that requests update of a permission's group.
  * A successful response will be a [[PermissionItemADM]].
  *
- * @param permissionIri        the project for which the permissions are queried.
+ * @param permissionIri        the IRI of the permission to be updated.
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user initiation the request.
  * @param apiRequestID         the API request ID.
@@ -228,7 +246,7 @@ case class AdministrativePermissionsForProjectGetRequestADM(projectIri: IRI,
 
 /**
  * A message that requests an administrative permission object identified through his IRI.
- * A successful response will be a [[AdministrativePermissionsForProjectGetResponseADM]] object.
+ * A successful response will be a [[AdministrativePermissionGetResponseADM]] object.
  *
  * @param administrativePermissionIri the iri of the administrative permission object.
  * @param requestingUser              the user initiating the request.
@@ -254,7 +272,7 @@ case class AdministrativePermissionForIriGetRequestADM(administrativePermissionI
 
 /**
  * A message that requests an administrative permission object identified by project and group.
- * A response will contain an optional [[AdministrativePermissionADM]] object.
+ * A response will contain an optional [[AdministrativePermissionGetResponseADM]] object.
  *
  * @param projectIri     the project.
  * @param groupIri       the group.
@@ -401,19 +419,19 @@ case class DefaultObjectAccessPermissionsForProjectGetRequestADM(projectIri: IRI
 
 /**
  * A message that requests an object access permission identified by project and either group / resource class / property.
- * A successful response will be a [[DefaultObjectAccessPermissionADM]].
+ * A successful response will be a [[DefaultObjectAccessPermissionGetResponseADM]].
  *
  * @param projectIri       the project.
  * @param groupIri         the group.
  * @param resourceClassIri the resource class.
  * @param propertyIri      the property.
+ * @param requestingUser   the user initiating this request.
  */
-// TODO: this is not used, remove it and add all checks to DefaultObjectAccessPermissionGetRequestADM
-case class DefaultObjectAccessPermissionGetADM(projectIri: IRI,
-                                               groupIri: Option[IRI] = None,
-                                               resourceClassIri: Option[IRI] = None,
-                                               propertyIri: Option[IRI] = None,
-                                               requestingUser: UserADM) extends PermissionsResponderRequestADM {
+case class DefaultObjectAccessPermissionGetRequestADM(projectIri: IRI,
+                                                      groupIri: Option[IRI] = None,
+                                                      resourceClassIri: Option[IRI] = None,
+                                                      propertyIri: Option[IRI] = None,
+                                                      requestingUser: UserADM) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
   stringFormatter.validateProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI"))
@@ -454,22 +472,6 @@ case class DefaultObjectAccessPermissionGetADM(projectIri: IRI,
     case None => None
   }
 }
-
-/**
- * A message that requests an object access permission identified by project and either group / resource class / property.
- * A successful response will be a [[DefaultObjectAccessPermissionGetResponseADM]].
- *
- * @param projectIri       the project.
- * @param groupIri         the group.
- * @param resourceClassIri the resource class.
- * @param propertyIri      the property.
- * @param requestingUser   the user initiating this request.
- */
-case class DefaultObjectAccessPermissionGetRequestADM(projectIri: IRI,
-                                                      groupIri: Option[IRI],
-                                                      resourceClassIri: Option[IRI],
-                                                      propertyIri: Option[IRI],
-                                                      requestingUser: UserADM) extends PermissionsResponderRequestADM
 
 /**
  * A message that requests a default object access permission object identified through his IRI.
@@ -657,12 +659,12 @@ case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermis
 }
 
 /**
- *  Represents an answer to a request for getting an administrative permission.
+ * Represents an answer to a request for getting an administrative permission.
  *
  * @param administrativePermission the retrieved [[AdministrativePermissionADM]].
  */
 case class AdministrativePermissionGetResponseADM(administrativePermission: AdministrativePermissionADM
-                                                 ) extends KnoraResponseADM with PermissionsADMJsonProtocol {
+                                                 ) extends PermissionGetResponseADM(administrativePermission) {
   def toJsValue = administrativePermissionGetResponseADMFormat.write(this)
 }
 

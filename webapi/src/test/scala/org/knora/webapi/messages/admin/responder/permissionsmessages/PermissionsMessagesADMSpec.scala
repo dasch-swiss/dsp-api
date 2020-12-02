@@ -215,7 +215,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
         "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionGetADM is not valid" in {
             val caught = intercept[BadRequestException](
-                DefaultObjectAccessPermissionGetADM(
+                DefaultObjectAccessPermissionGetRequestADM(
                     projectIri = "invalid-project-IRI",
                     groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
                     requestingUser = SharedTestDataADM.imagesUser01
@@ -226,7 +226,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
         "return 'BadRequest' if the supplied resourceClass IRI for DefaultObjectAccessPermissionGetADM is not valid" in {
             val caught = intercept[BadRequestException](
-                DefaultObjectAccessPermissionGetADM(
+                DefaultObjectAccessPermissionGetRequestADM(
                     projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
                     resourceClassIri = Some(SharedTestDataADM.customResourceIRI),
                     requestingUser = SharedTestDataADM.imagesUser01
@@ -238,7 +238,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
         "return 'BadRequest' if the supplied property IRI for DefaultObjectAccessPermissionGetADM is not valid" in {
             val caught = intercept[BadRequestException](
-                DefaultObjectAccessPermissionGetADM(
+                DefaultObjectAccessPermissionGetRequestADM(
                     projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
                     propertyIri = Some(SharedTestDataADM.customValueIRI),
                     requestingUser = SharedTestDataADM.imagesUser01
@@ -250,7 +250,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
         "return 'BadRequest' if both group and resource class are supplied for DefaultObjectAccessPermissionGetADM is not valid" in {
             val caught = intercept[BadRequestException](
-                DefaultObjectAccessPermissionGetADM(
+                DefaultObjectAccessPermissionGetRequestADM(
                     projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
                     groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
                     resourceClassIri = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
@@ -262,7 +262,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
         "return 'BadRequest' if both group and property are supplied for DefaultObjectAccessPermissionGetADM is not valid" in {
             val caught = intercept[BadRequestException](
-                DefaultObjectAccessPermissionGetADM(
+                DefaultObjectAccessPermissionGetRequestADM(
                     projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
                     groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
                     propertyIri = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY_LocalHost),
@@ -274,7 +274,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
         "return 'BadRequest' if no group, resourceClassIri or propertyIri are supplied for DefaultObjectAccessPermissionGetADM is not valid" in {
             val caught = intercept[BadRequestException](
-                DefaultObjectAccessPermissionGetADM(
+                DefaultObjectAccessPermissionGetRequestADM(
                     projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
                     requestingUser = SharedTestDataADM.imagesUser01
                 )
