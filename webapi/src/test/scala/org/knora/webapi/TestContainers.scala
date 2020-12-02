@@ -23,6 +23,7 @@ import java.net.InetAddress
 
 import com.typesafe.config.{Config, ConfigFactory}
 import org.testcontainers.containers.{BindMode, GenericContainer}
+import org.testcontainers.utility.DockerImageName
 
 /**
   * Provides all containers necessary for running tests.
@@ -33,13 +34,15 @@ object TestContainers {
     val localhost: InetAddress = InetAddress.getLocalHost
     val localIpAddress: String = localhost.getHostAddress
 
-    val FusekiContainer = new GenericContainer("bazel/docker/knora-jena-fuseki:image")
+    val FusekiImageName: DockerImageName = DockerImageName.parse("bazel/docker/knora-jena-fuseki:image")
+    val FusekiContainer = new GenericContainer(FusekiImageName)
     FusekiContainer.withExposedPorts(3030)
     FusekiContainer.withEnv("ADMIN_PASSWORD", "test")
     FusekiContainer.withEnv("JVM_ARGS", "-Xmx3G")
     FusekiContainer.start()
 
-    val SipiContainer = new GenericContainer("bazel/docker/knora-sipi:image")
+    val SipiImageName: DockerImageName = DockerImageName.parse("bazel/docker/knora-sipi:image")
+    val SipiContainer = new GenericContainer(SipiImageName)
     SipiContainer.withExposedPorts(1024)
     SipiContainer.withEnv("SIPI_EXTERNAL_PROTOCOL", "http")
     SipiContainer.withEnv("SIPI_EXTERNAL_HOSTNAME", "sipi")
@@ -53,7 +56,8 @@ object TestContainers {
         BindMode.READ_ONLY)
     SipiContainer.start()
 
-    val RedisContainer = new GenericContainer("redis:5")
+    val RedisImageName: DockerImageName = DockerImageName.parse("redis:5")
+    val RedisContainer = new GenericContainer(RedisImageName)
     RedisContainer.withExposedPorts(6379)
     RedisContainer.start()
 
