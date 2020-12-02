@@ -82,6 +82,7 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory) extends RdfForm
             case Turtle => jena.riot.RDFLanguages.TURTLE
             case TriG => jena.riot.RDFLanguages.TRIG
             case RdfXml => jena.riot.RDFLanguages.RDFXML
+            case NQuads => jena.riot.RDFLanguages.NQUADS
         }
     }
 
@@ -130,6 +131,9 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory) extends RdfForm
                 }
 
                 jena.riot.RDFDataMgr.write(stringWriter, datasetGraph, jenaRdfFormat)
+
+            case NQuads =>
+                jena.riot.RDFDataMgr.write(stringWriter, datasetGraph, jena.riot.RDFFormat.NQUADS)
         }
 
         stringWriter.toString
@@ -194,6 +198,9 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory) extends RdfForm
 
             case TriG =>
                 jena.riot.RDFDataMgr.write(outputStream, datasetGraph, jena.riot.RDFFormat.TRIG_FLAT)
+
+            case NQuads =>
+                jena.riot.RDFDataMgr.write(outputStream, datasetGraph, jena.riot.RDFFormat.NQUADS)
         }
     }
 }

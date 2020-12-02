@@ -32,11 +32,6 @@ import scala.util.{Failure, Success, Try}
  */
 sealed trait RdfFormat {
     /**
-     * `true` if this format supports named graphs.
-     */
-    val supportsNamedGraphs: Boolean
-
-    /**
      * The [[MediaType]] that represents this format.
      */
     val toMediaType: MediaType
@@ -45,7 +40,17 @@ sealed trait RdfFormat {
 /**
  * A trait for formats other than JSON-LD.
  */
-sealed trait NonJsonLD extends RdfFormat
+sealed trait NonJsonLD extends RdfFormat {
+    /**
+     * `true` if this format supports pretty-printing.
+     */
+    def supportsPrettyPrinting: Boolean
+}
+
+/**
+ * Represents a format that supports quads.
+ */
+sealed trait QuadFormat extends NonJsonLD
 
 object RdfFormat {
     /**
@@ -60,6 +65,7 @@ object RdfFormat {
             case RdfMediaTypes.`text/turtle` => Turtle
             case RdfMediaTypes.`application/trig` => TriG
             case RdfMediaTypes.`application/rdf+xml` => RdfXml
+            case RdfMediaTypes.`application/n-quads` => NQuads
             case other => throw InvalidRdfException(s"Unsupported RDF media type: $other")
         }
     }
@@ -72,9 +78,6 @@ case object JsonLD extends RdfFormat {
     override def toString: String = "JSON-LD"
 
     override val toMediaType: MediaType = RdfMediaTypes.`application/ld+json`
-
-    // We don't support named graphs in JSON-LD.
-    override val supportsNamedGraphs: Boolean = false
 }
 
 /**
@@ -85,18 +88,18 @@ case object Turtle extends NonJsonLD {
 
     override val toMediaType: MediaType = RdfMediaTypes.`text/turtle`
 
-    override val supportsNamedGraphs: Boolean = false
+    override val supportsPrettyPrinting: Boolean = true
 }
 
 /**
  * Represents TriG format.
  */
-case object TriG extends NonJsonLD {
+case object TriG extends QuadFormat {
     override def toString: String = "TriG"
 
     override val toMediaType: MediaType = RdfMediaTypes.`application/trig`
 
-    override val supportsNamedGraphs: Boolean = true
+    override val supportsPrettyPrinting: Boolean = true
 }
 
 /**
@@ -107,7 +110,18 @@ case object RdfXml extends NonJsonLD {
 
     override val toMediaType: MediaType = RdfMediaTypes.`application/rdf+xml`
 
-    override val supportsNamedGraphs: Boolean = false
+    override val supportsPrettyPrinting: Boolean = true
+}
+
+/**
+ * Represents N-Quads format.
+ */
+case object NQuads extends QuadFormat {
+    override def toString: String = "N-Quads"
+
+    override val toMediaType: MediaType = RdfMediaTypes.`application/n-quads`
+
+    override val supportsPrettyPrinting: Boolean = false
 }
 
 /**
@@ -237,8 +251,11 @@ trait RdfFormatUtil {
 
             case nonJsonLD: NonJsonLD =>
                 // Some formats can't represent named graphs.
-                if (rdfModel.getContexts.nonEmpty && !nonJsonLD.supportsNamedGraphs) {
-                    throw BadRequestException(s"Named graphs are not supported in $rdfFormat")
+                if (rdfModel.getContexts.nonEmpty) {
+                    nonJsonLD match {
+                        case _: QuadFormat => ()
+                        case _ => throw BadRequestException(s"Named graphs are not supported in $rdfFormat")
+                    }
                 }
 
                 // Use an implementation-specific function to convert to formats other than JSON-LD.

@@ -165,8 +165,8 @@ class RepositoryUpdater(system: ActorSystem,
         }
 
         // The file to save the repository in.
-        val downloadedRepositoryFile = new File(downloadDir, "downloaded-repository.trig")
-        val transformedRepositoryFile = new File(downloadDir, "transformed-repository.trig")
+        val downloadedRepositoryFile = new File(downloadDir, "downloaded-repository.nq")
+        val transformedRepositoryFile = new File(downloadDir, "transformed-repository.nq")
         log.info("Downloading repository file...")
 
         for {
@@ -209,7 +209,7 @@ class RepositoryUpdater(system: ActorSystem,
                                   pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]): Unit = {
         // Parse the input file.
         log.info("Reading repository file...")
-        val model = rdfFormatUtil.fileToRdfModel(file = downloadedRepositoryFile, rdfFormat = TriG)
+        val model = rdfFormatUtil.fileToRdfModel(file = downloadedRepositoryFile, rdfFormat = NQuads)
         log.info(s"Read ${model.size} statements.")
 
         // Run the update plugins.
@@ -227,7 +227,7 @@ class RepositoryUpdater(system: ActorSystem,
         rdfFormatUtil.rdfModelToFile(
             rdfModel = model,
             file = transformedRepositoryFile,
-            rdfFormat = TriG
+            rdfFormat = NQuads
         )
     }
 
