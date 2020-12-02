@@ -366,7 +366,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
             assert(savedImage.width == marblesWidth)
             assert(savedImage.height == marblesHeight)
         }
-/*
+
         "reject an image file with the wrong file extension" in {
             val exception = intercept[AssertionException] {
                 uploadToSipi(
@@ -377,7 +377,7 @@ class KnoraSipiIntegrationV2ITSpec extends ITKnoraLiveSpec(KnoraSipiIntegrationV
 
             assert(exception.getMessage.contains("MIME type and/or file extension are inconsistent"))
         }
-*/
+
         "change a still image file value" in {
             // Upload the image to Sipi.
             val sipiUploadResponse: SipiUploadResponse =
