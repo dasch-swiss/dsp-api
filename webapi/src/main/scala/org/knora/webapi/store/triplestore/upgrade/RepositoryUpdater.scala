@@ -63,14 +63,12 @@ class RepositoryUpdater(system: ActorSystem,
     private val log: Logger = logger
 
     /**
-     * A map of version strings to plugins.
+     * A list of available plugins.
      */
-    private val pluginsForVersionsMap: Map[String, PluginForKnoraBaseVersion] = RepositoryUpdatePlan.makePluginsForVersions(
+    private val plugins: Seq[PluginForKnoraBaseVersion] = RepositoryUpdatePlan.makePluginsForVersions(
         featureFactoryConfig = featureFactoryConfig,
         log = log
-    ).map {
-        knoraBaseVersion => knoraBaseVersion.versionString -> knoraBaseVersion
-    }.toMap
+    )
 
     /**
      * Updates the repository, if necessary, to work with the current version of Knora.
@@ -125,19 +123,26 @@ class RepositoryUpdater(system: ActorSystem,
      * @return the plugins needed to update the repository.
      */
     private def selectPluginsForNeededUpdates(maybeRepositoryVersionString: Option[String]): Seq[PluginForKnoraBaseVersion] = {
+        // Make a map of version strings to plugins.
+        val versionsToPluginsMap: Map[String, PluginForKnoraBaseVersion] = plugins.map {
+            plugin => plugin.versionString -> plugin
+        }.toMap
+
         maybeRepositoryVersionString match {
             case Some(repositoryVersion) =>
                 // The repository has a version string. Get the plugins for all subsequent versions.
-                val pluginForRepositoryVersion: PluginForKnoraBaseVersion = pluginsForVersionsMap.getOrElse(
+                val pluginForRepositoryVersion: PluginForKnoraBaseVersion = versionsToPluginsMap.getOrElse(
                     repositoryVersion,
                     throw InconsistentRepositoryDataException(s"No such repository version $repositoryVersion")
                 )
 
-                pluginsForVersionsMap.values.filter(_.versionNumber > pluginForRepositoryVersion.versionNumber).toSeq
+                plugins.filter {
+                    plugin => plugin.versionNumber > pluginForRepositoryVersion.versionNumber
+                }
 
             case None =>
                 // The repository has no version string. Include all updates.
-                pluginsForVersionsMap.values.toSeq
+                plugins
         }
     }
 
