@@ -25,7 +25,7 @@ import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.exceptions.DuplicateValueException
+import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, ForbiddenException}
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -588,6 +588,31 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 val f: Future[Set[PermissionADM]] = responderUnderTest invokePrivate defaultObjectAccessPermissionsForGroupsGetADM(IMAGES_PROJECT_IRI, groups)
                 val result: Set[PermissionADM] = Await.result(f, 1.seconds)
                 result should equal(expected)
+            }
+        }
+        "request to get the permission by IRI" should {
+            "not return the permission if requesting user does not have permission to see it" in {
+                responderManager ! PermissionByIriGetRequestADM(
+                    permissionIri = perm002_a1.iri,
+                    requestingUser = SharedTestDataADM.imagesUser02
+                )
+                expectMsg(Failure(ForbiddenException(s"Permission ${perm002_a1.iri} can only be queried by system or project admin.")))
+            }
+
+            "return an administrative permission" in {
+                responderManager ! PermissionByIriGetRequestADM(
+                    permissionIri = perm002_a1.iri,
+                    requestingUser = rootUser
+                )
+                expectMsg(AdministrativePermissionGetResponseADM(perm002_a1.p))
+            }
+
+            "return a default object access permission" in {
+                responderManager ! PermissionByIriGetRequestADM(
+                    permissionIri = perm002_d1.iri,
+                    requestingUser = rootUser
+                )
+                expectMsg(DefaultObjectAccessPermissionGetResponseADM(perm002_d1.p))
             }
         }
     }

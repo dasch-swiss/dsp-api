@@ -74,7 +74,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     case DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri, resourceClassIri, propertyTypeIri, targetUser, requestingUser) => defaultObjectAccessPermissionsStringForEntityGetADM(projectIri, resourceClassIri, Some(propertyTypeIri), PropertyEntityType, targetUser, requestingUser)
     case DefaultObjectAccessPermissionCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID) => defaultObjectAccessPermissionCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID)
     case PermissionsForProjectGetRequestADM(projectIri, groupIri, featureFactoryConfig, requestingUser) => permissionsForProjectGetRequestADM(projectIri, groupIri, featureFactoryConfig, requestingUser)
-    case PermissionGetRequestADM(permissionIri, requestingUser) => permissionGetADM(permissionIri, requestingUser)
+    case PermissionByIriGetRequestADM(permissionIri, requestingUser) => permissionByIriGetRequestADM(permissionIri, requestingUser)
     //    case PermissionChangeGroupRequestADM(permissionIri, changePermissionGroupRequest, featureFactoryConfig, requestingUser, apiRequestID) => changePermissionGroup(permissionIri, changePermissionGroupRequest, featureFactoryConfig, requestingUser, apiRequestID)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
@@ -1219,6 +1219,29 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       }
       _ = logger.debug(s"defaultObjectAccessPermissionsStringForEntityGetADM (result) - project: $projectIri, precedence: ${permissionsListBuffer.head._1}, defaultObjectAccessPermissions: $result")
     } yield permissionsmessages.DefaultObjectAccessPermissionsStringResponseADM(result)
+  }
+
+  /**
+   * Gets a single permission identified by its IRI.
+   *
+   * @param permissionIri  the IRI of the permission.
+   * @param requestingUser the [[UserADM]] of the requesting user.
+   * @return a single [[DefaultObjectAccessPermissionADM]] object.
+   */
+  private def permissionByIriGetRequestADM(permissionIri: IRI,
+                                           requestingUser: UserADM
+                                          ): Future[PermissionGetResponseADM] = {
+
+    for {
+      permission <- permissionGetADM(permissionIri, requestingUser)
+      result = permission match {
+        case doap: DefaultObjectAccessPermissionADM =>
+          DefaultObjectAccessPermissionGetResponseADM(doap)
+        case ap: AdministrativePermissionADM =>
+          AdministrativePermissionGetResponseADM(ap)
+        case _ => throw BadRequestException(s"$permissionIri is not a default object access or an administrative permission.")
+      }
+    } yield result
   }
 
   private def defaultObjectAccessPermissionCreateRequestADM(createRequest: CreateDefaultObjectAccessPermissionAPIRequestADM,

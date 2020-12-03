@@ -178,24 +178,6 @@ case class PermissionsForProjectGetRequestADM(projectIri: IRI,
 }
 
 /**
- * A message that requests a permission (ap or doap) with IRI
- * A successful response will be a [[PermissionGetResponseADM]].
- *
- * @param permissionIri        the IRI of the permission.
- * @param requestingUser       the user initiation the request.
- */
-case class PermissionGetRequestADM(permissionIri: IRI,
-                                   requestingUser: UserADM
-                                  ) extends PermissionsResponderRequestADM {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
-    throw BadRequestException(s"Invalid IRI is given: $permissionIri.")
-  }
-}
-
-
-/**
  * A message that requests update of a permission's group.
  * A successful response will be a [[PermissionItemADM]].
  *
@@ -608,6 +590,20 @@ case class DefaultObjectAccessPermissionCreateRequestADM(createRequest: CreateDe
   }
 }
 
+/**
+ * A message that requests a permission (doap or ap) by its IRI.
+ * A successful response will be an [[PermissionGetResponseADM]] object.
+ *
+ * @param permissionIri  the iri of the default object access permission object.
+ * @param requestingUser the user initiation the request.
+ */
+case class PermissionByIriGetRequestADM(permissionIri: IRI,
+                                        requestingUser: UserADM
+                                       ) extends PermissionsResponderRequestADM {
+
+  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+  stringFormatter.validatePermissionIri(permissionIri, throw BadRequestException(s"Invalid permission IRI $permissionIri is given."))
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
