@@ -24,6 +24,7 @@ import java.io.File
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature._
+import org.knora.webapi.messages.util.MessageUtil
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.FileUtil
 import spray.json.{JsValue, JsonParser}
@@ -361,11 +362,11 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
             assert(flatJsonLD.body == expectedFlatJsonLD)
         }
 
-        "reject input that results in an empty blank node" in {
+        "correctly process input that results in an empty blank node" in {
             // The JSON-LD parser ignores statements with invalid IRIs, and this can produce an empty
             // blank node.
 
-            val invalidJsonLDStr =
+            val jsonLDWithInvalidProperties =
                 """{
                   |   "http://ns.dasch.swiss/repository#hasLicense":{
                   |      "type": "https://schema.org/URL",
@@ -373,8 +374,25 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
                   |   }
                   |}""".stripMargin
 
-            val ex: BadRequestException = intercept[BadRequestException](JsonLDUtil.parseJsonLD(invalidJsonLDStr))
-            assert(ex.message.contains("the input contains an empty blank node"))
+            // Parse the JSON-LD and check the parsed data structure.
+
+            val jsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDWithInvalidProperties)
+
+            val expectedJsonLDDocument = JsonLDDocument(
+                body = JsonLDObject(Map("http://ns.dasch.swiss/repository#hasLicense" -> JsonLDObject(Map.empty))),
+                context = JsonLDObject(Map.empty)
+            )
+
+            assert(jsonLDDocument == expectedJsonLDDocument)
+
+            // Convert it to an RdfModel and check the result.
+            val rdfModel = jsonLDDocument.toRdfModel(rdfModelFactory)
+            val expectedRdfModel = rdfFormatUtil.parseToRdfModel("[] <http://ns.dasch.swiss/repository#hasLicense> [] .", Turtle)
+            assert(rdfModel == expectedRdfModel)
+
+            // Convert back to JSON-LD and check that it's the same.
+            val jsonLDDocumentFromRdfModel = JsonLDUtil.fromRdfModel(rdfModel)
+            assert(jsonLDDocumentFromRdfModel == expectedJsonLDDocument)
         }
     }
 }
