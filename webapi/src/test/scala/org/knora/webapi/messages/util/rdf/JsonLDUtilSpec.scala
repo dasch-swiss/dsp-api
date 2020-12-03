@@ -22,9 +22,7 @@ package org.knora.webapi.util.rdf
 import java.io.File
 
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature._
-import org.knora.webapi.messages.util.MessageUtil
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.FileUtil
 import spray.json.{JsValue, JsonParser}
