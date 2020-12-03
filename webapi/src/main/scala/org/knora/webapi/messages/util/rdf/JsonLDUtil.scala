@@ -1399,6 +1399,10 @@ object JsonLDUtil {
                             key -> jsonValueToJsonLDValue(jsonObject.get(key))
                     }.toMap
 
+                    if (content.isEmpty) {
+                        throw BadRequestException("After parsing, the input contains an empty blank node, perhaps because of an invalid property IRI")
+                    }
+
                     JsonLDObject(content)
 
                 case jsonArray: JsonArray =>

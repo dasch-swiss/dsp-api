@@ -22,6 +22,7 @@ package org.knora.webapi.util.rdf
 import java.io.File
 
 import org.knora.webapi.CoreSpec
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.FileUtil
@@ -358,6 +359,22 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
             ))))
 
             assert(flatJsonLD.body == expectedFlatJsonLD)
+        }
+
+        "reject input that results in an empty blank node" in {
+            // The JSON-LD parser ignores statements with invalid IRIs, and this can produce an empty
+            // blank node.
+
+            val invalidJsonLDStr =
+                """{
+                  |   "http://ns.dasch.swiss/repository#hasLicense":{
+                  |      "type": "https://schema.org/URL",
+                  |      "value": "https://creativecommons.org/licenses/by/3.0"
+                  |   }
+                  |}""".stripMargin
+
+            val ex: BadRequestException = intercept[BadRequestException](JsonLDUtil.parseJsonLD(invalidJsonLDStr))
+            assert(ex.message.contains("the input contains an empty blank node"))
         }
     }
 }
