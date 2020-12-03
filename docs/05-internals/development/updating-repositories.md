@@ -49,14 +49,14 @@ it to `org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater`.
 2. Consult `org.knora.webapi.store.triplestore.upgrade.RepositoryUpdatePlan` to see which
    transformations are needed.
 
-3. Download the entire repository from the triplestore into a TriG file.
+3. Download the entire repository from the triplestore into an N-Quads file.
 
-4. Read the TriG file into an `RdfModel`.
+4. Read the N-Quads file into an `RdfModel`.
 
 5. Update the `RdfModel` by running the necessary transformations, and replacing the
    built-in Knora ontologies with the current ones.
 
-6. Save the `RdfModel` to a new TriG file.
+6. Save the `RdfModel` to a new N-Quads file.
 
 7. Empty the repository in the triplestore.
 
@@ -115,6 +115,6 @@ has been carried out. If the requirement is not met, the plugin can throw
 ## Testing Update Plugins
 
 Each plugin should have a unit test that extends `UpgradePluginSpec`. A typical
-test loads a TriG file containing test data into a `RdfModel`, runs the plugin,
+test loads a file containing RDF test data into a `RdfModel`, runs the plugin,
 makes an `RdfRepository` containing the transformed `RdfModel`, and uses
 SPARQL to check the result.

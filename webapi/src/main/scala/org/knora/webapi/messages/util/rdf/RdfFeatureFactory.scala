@@ -37,7 +37,7 @@ object RdfFeatureFactory extends FeatureFactory {
     // Jena singletons.
     private val jenaNodeFactory = new JenaNodeFactory
     private val jenaModelFactory = new JenaModelFactory(jenaNodeFactory)
-    private val jenaFormatUtil = new JenaFormatUtil(jenaModelFactory)
+    private val jenaFormatUtil = new JenaFormatUtil(modelFactory = jenaModelFactory, nodeFactory = jenaNodeFactory)
     private var jenaShaclValidator: Option[JenaShaclValidator] = None
 
     // RDF4J singletons.

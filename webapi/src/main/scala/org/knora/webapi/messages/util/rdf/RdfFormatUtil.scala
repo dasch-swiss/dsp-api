@@ -32,11 +32,6 @@ import scala.util.{Failure, Success, Try}
  */
 sealed trait RdfFormat {
     /**
-     * `true` if this format supports named graphs.
-     */
-    val supportsNamedGraphs: Boolean
-
-    /**
      * The [[MediaType]] that represents this format.
      */
     val toMediaType: MediaType
@@ -45,7 +40,17 @@ sealed trait RdfFormat {
 /**
  * A trait for formats other than JSON-LD.
  */
-sealed trait NonJsonLD extends RdfFormat
+sealed trait NonJsonLD extends RdfFormat {
+    /**
+     * `true` if this format supports pretty-printing.
+     */
+    def supportsPrettyPrinting: Boolean
+}
+
+/**
+ * Represents a format that supports quads.
+ */
+sealed trait QuadFormat extends NonJsonLD
 
 object RdfFormat {
     /**
@@ -60,6 +65,7 @@ object RdfFormat {
             case RdfMediaTypes.`text/turtle` => Turtle
             case RdfMediaTypes.`application/trig` => TriG
             case RdfMediaTypes.`application/rdf+xml` => RdfXml
+            case RdfMediaTypes.`application/n-quads` => NQuads
             case other => throw InvalidRdfException(s"Unsupported RDF media type: $other")
         }
     }
@@ -72,9 +78,6 @@ case object JsonLD extends RdfFormat {
     override def toString: String = "JSON-LD"
 
     override val toMediaType: MediaType = RdfMediaTypes.`application/ld+json`
-
-    // We don't support named graphs in JSON-LD.
-    override val supportsNamedGraphs: Boolean = false
 }
 
 /**
@@ -85,18 +88,18 @@ case object Turtle extends NonJsonLD {
 
     override val toMediaType: MediaType = RdfMediaTypes.`text/turtle`
 
-    override val supportsNamedGraphs: Boolean = false
+    override val supportsPrettyPrinting: Boolean = true
 }
 
 /**
  * Represents TriG format.
  */
-case object TriG extends NonJsonLD {
+case object TriG extends QuadFormat {
     override def toString: String = "TriG"
 
     override val toMediaType: MediaType = RdfMediaTypes.`application/trig`
 
-    override val supportsNamedGraphs: Boolean = true
+    override val supportsPrettyPrinting: Boolean = true
 }
 
 /**
@@ -107,7 +110,18 @@ case object RdfXml extends NonJsonLD {
 
     override val toMediaType: MediaType = RdfMediaTypes.`application/rdf+xml`
 
-    override val supportsNamedGraphs: Boolean = false
+    override val supportsPrettyPrinting: Boolean = true
+}
+
+/**
+ * Represents N-Quads format.
+ */
+case object NQuads extends QuadFormat {
+    override def toString: String = "N-Quads"
+
+    override val toMediaType: MediaType = RdfMediaTypes.`application/n-quads`
+
+    override val supportsPrettyPrinting: Boolean = false
 }
 
 /**
@@ -237,8 +251,11 @@ trait RdfFormatUtil {
 
             case nonJsonLD: NonJsonLD =>
                 // Some formats can't represent named graphs.
-                if (rdfModel.getContexts.nonEmpty && !nonJsonLD.supportsNamedGraphs) {
-                    throw BadRequestException(s"Named graphs are not supported in $rdfFormat")
+                if (rdfModel.getContexts.nonEmpty) {
+                    nonJsonLD match {
+                        case _: QuadFormat => ()
+                        case _ => throw BadRequestException(s"Named graphs are not supported in $rdfFormat")
+                    }
                 }
 
                 // Use an implementation-specific function to convert to formats other than JSON-LD.
@@ -258,16 +275,10 @@ trait RdfFormatUtil {
      * @return a [[RdfModel]] representing the contents of the file.
      */
     def fileToRdfModel(file: File, rdfFormat: NonJsonLD): RdfModel = {
-        var maybeFileInputStream: Option[InputStream] = None
-
-        val modelTry = Try {
-            val fileInputStream = new BufferedInputStream(new FileInputStream(file))
-            maybeFileInputStream = Some(fileInputStream)
-            inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = rdfFormat)
-        }
-
-        maybeFileInputStream.foreach(_.close())
-        modelTry.get
+        inputStreamToRdfModel(
+            inputStream = new BufferedInputStream(new FileInputStream(file)),
+            rdfFormat = rdfFormat
+        )
     }
 
     /**
@@ -278,29 +289,17 @@ trait RdfFormatUtil {
      * @param rdfFormat the file format.
      */
     def rdfModelToFile(rdfModel: RdfModel, file: File, rdfFormat: NonJsonLD): Unit = {
-        var maybeFileOutputStream: Option[OutputStream] = None
-
-        val writeTry: Try[Unit] = Try {
-            val fileOutputStream = new BufferedOutputStream(new FileOutputStream(file))
-            maybeFileOutputStream = Some(fileOutputStream)
-
-            rdfModelToOutputStream(
-                rdfModel = rdfModel,
-                outputStream = fileOutputStream,
-                rdfFormat = rdfFormat
-            )
-        }
-
-        maybeFileOutputStream.foreach(_.close())
-
-        writeTry match {
-            case Success(()) => ()
-            case Failure(ex) => throw ex
-        }
+        rdfModelToOutputStream(
+            rdfModel = rdfModel,
+            outputStream = new BufferedOutputStream(new FileOutputStream(file)),
+            rdfFormat = rdfFormat
+        )
     }
 
     /**
-     * Parses RDF input, processing it with an [[RdfStreamProcessor]].
+     * Parses RDF input, processing it with an [[RdfStreamProcessor]].  If the source is an input
+     * stream, this method closes it before returning. The caller must close any output stream
+     * used by the [[RdfStreamProcessor]].
      *
      * @param rdfSource          the input source from which the RDF data should be read.
      * @param rdfFormat          the input format.
@@ -311,7 +310,8 @@ trait RdfFormatUtil {
                                  rdfStreamProcessor: RdfStreamProcessor): Unit
 
     /**
-     * Reads RDF data from an [[InputStream]] and returns it as an [[RdfModel]].
+     * Reads RDF data from an [[InputStream]] and returns it as an [[RdfModel]]. Closes the input stream
+     * before returning.
      *
      * @param inputStream the input stream.
      * @param rdfFormat   the data format.
@@ -320,7 +320,8 @@ trait RdfFormatUtil {
     def inputStreamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel
 
     /**
-     * Formats an [[RdfModel]], writing the output to an [[OutputStream]].
+     * Formats an [[RdfModel]], writing the output to an [[OutputStream]]. Closes the output stream before
+     * returning.
      *
      * @param rdfModel     the model to be written.
      * @param outputStream the output stream.
@@ -338,9 +339,89 @@ trait RdfFormatUtil {
     def makeFormattingStreamProcessor(outputStream: OutputStream, rdfFormat: NonJsonLD): RdfStreamProcessor
 
     /**
+     * Adds a context IRI to RDF statements.
+     *
+     * @param graphIri                  the IRI of the named graph.
+     * @param formattingStreamProcessor an [[RdfStreamProcessor]] for writing the result.
+     */
+    private class ContextAddingProcessor(graphIri: IRI,
+                                         formattingStreamProcessor: RdfStreamProcessor) extends RdfStreamProcessor {
+        private val nodeFactory: RdfNodeFactory = getRdfNodeFactory
+
+        override def start(): Unit = formattingStreamProcessor.start()
+
+        override def processNamespace(prefix: String, namespace: IRI): Unit = {
+            formattingStreamProcessor.processNamespace(prefix = prefix, namespace = namespace)
+        }
+
+        override def processStatement(statement: Statement): Unit = {
+            val outputStatement = nodeFactory.makeStatement(
+                subj = statement.subj,
+                pred = statement.pred,
+                obj = statement.obj,
+                context = Some(graphIri)
+            )
+
+            formattingStreamProcessor.processStatement(outputStatement)
+        }
+
+        override def finish(): Unit = formattingStreamProcessor.finish()
+    }
+
+    /**
+     * Reads RDF data in Turtle format from an [[RdfSource]], adds a named graph IRI to each statement,
+     * and writes the result to a file in a format that supports quads. If the source is an input
+     * stream, this method closes it before returning.
+     *
+     * @param rdfSource    the RDF data source.
+     * @param graphIri     the named graph IRI to be added.
+     * @param outputFile   the output file.
+     * @param outputFormat the output file format.
+     */
+    def turtleToQuadsFile(rdfSource: RdfSource,
+                          graphIri: IRI,
+                          outputFile: File,
+                          outputFormat: QuadFormat): Unit = {
+        var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
+
+        val processingTry: Try[Unit] = Try {
+            val bufferedFileOutputStream = new BufferedOutputStream(new FileOutputStream(outputFile))
+            maybeBufferedFileOutputStream = Some(bufferedFileOutputStream)
+
+            val formattingStreamProcessor: RdfStreamProcessor = makeFormattingStreamProcessor(
+                outputStream = bufferedFileOutputStream,
+                rdfFormat = outputFormat
+            )
+
+            val contextAddingProcessor = new ContextAddingProcessor(
+                graphIri = graphIri,
+                formattingStreamProcessor = formattingStreamProcessor
+            )
+
+            parseWithStreamProcessor(
+                rdfSource = rdfSource,
+                rdfFormat = Turtle,
+                rdfStreamProcessor = contextAddingProcessor
+            )
+        }
+
+        maybeBufferedFileOutputStream.foreach(_.close)
+
+        processingTry match {
+            case Success(_) => ()
+            case Failure(ex) => throw ex
+        }
+    }
+
+    /**
      * Returns an [[RdfModelFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
      */
     def getRdfModelFactory: RdfModelFactory
+
+    /**
+     * Returns an [[RdfNodeFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
+     */
+    def getRdfNodeFactory: RdfNodeFactory
 
     /**
      * Parses RDF in a format other than JSON-LD to an [[RdfModel]].

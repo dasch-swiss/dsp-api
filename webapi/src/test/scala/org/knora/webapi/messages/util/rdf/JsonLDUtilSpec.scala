@@ -359,5 +359,38 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
             assert(flatJsonLD.body == expectedFlatJsonLD)
         }
+
+        "correctly process input that results in an empty blank node" in {
+            // The JSON-LD parser ignores statements with invalid IRIs, and this can produce an empty
+            // blank node.
+
+            val jsonLDWithInvalidProperties =
+                """{
+                  |   "http://ns.dasch.swiss/repository#hasLicense":{
+                  |      "type": "https://schema.org/URL",
+                  |      "value": "https://creativecommons.org/licenses/by/3.0"
+                  |   }
+                  |}""".stripMargin
+
+            // Parse the JSON-LD and check the parsed data structure.
+
+            val jsonLDDocument = JsonLDUtil.parseJsonLD(jsonLDWithInvalidProperties)
+
+            val expectedJsonLDDocument = JsonLDDocument(
+                body = JsonLDObject(Map("http://ns.dasch.swiss/repository#hasLicense" -> JsonLDObject(Map.empty))),
+                context = JsonLDObject(Map.empty)
+            )
+
+            assert(jsonLDDocument == expectedJsonLDDocument)
+
+            // Convert it to an RdfModel and check the result.
+            val rdfModel = jsonLDDocument.toRdfModel(rdfModelFactory)
+            val expectedRdfModel = rdfFormatUtil.parseToRdfModel("[] <http://ns.dasch.swiss/repository#hasLicense> [] .", Turtle)
+            assert(rdfModel == expectedRdfModel)
+
+            // Convert back to JSON-LD and check that it's the same.
+            val jsonLDDocumentFromRdfModel = JsonLDUtil.fromRdfModel(rdfModel)
+            assert(jsonLDDocumentFromRdfModel == expectedJsonLDDocument)
+        }
     }
 }
