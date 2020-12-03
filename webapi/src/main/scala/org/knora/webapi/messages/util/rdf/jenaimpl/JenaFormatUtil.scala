@@ -26,6 +26,8 @@ import org.knora.webapi.IRI
 import org.knora.webapi.feature.Feature
 import org.knora.webapi.messages.util.rdf._
 
+import scala.util.{Failure, Success, Try}
+
 /**
  * Wraps an [[RdfStreamProcessor]] in a [[jena.riot.system.StreamRDF]].
  */
@@ -74,8 +76,11 @@ class StreamRDFAsStreamProcessor(streamRDF: jena.riot.system.StreamRDF) extends 
 /**
  * An implementation of [[RdfFormatUtil]] that uses the Jena API.
  */
-class JenaFormatUtil(private val modelFactory: JenaModelFactory) extends RdfFormatUtil with Feature {
+class JenaFormatUtil(private val modelFactory: JenaModelFactory,
+                     private val nodeFactory: JenaNodeFactory) extends RdfFormatUtil with Feature {
     override def getRdfModelFactory: RdfModelFactory = modelFactory
+
+    override def getRdfNodeFactory: RdfNodeFactory = nodeFactory
 
     private def rdfFormatToJenaParsingLang(rdfFormat: NonJsonLD): jena.riot.Lang = {
         rdfFormat match {
@@ -154,10 +159,22 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory) extends RdfForm
             case RdfInputStreamSource(inputStream) => parser.source(inputStream)
         }
 
-        // Add the other configuration and run the parser.
-        parser.lang(rdfFormatToJenaParsingLang(rdfFormat))
-            .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
-            .parse(streamRDF)
+        val parseTry: Try[Unit] = Try {
+            // Add the other configuration and run the parser.
+            parser.lang(rdfFormatToJenaParsingLang(rdfFormat))
+                .errorHandler(jena.riot.system.ErrorHandlerFactory.errorHandlerStrictNoLogging)
+                .parse(streamRDF)
+        }
+
+        rdfSource match {
+            case RdfInputStreamSource(inputStream) => inputStream.close()
+            case _ => ()
+        }
+
+        parseTry match {
+            case Success(_) => ()
+            case Failure(ex) => throw ex
+        }
     }
 
     override def inputStreamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel = {

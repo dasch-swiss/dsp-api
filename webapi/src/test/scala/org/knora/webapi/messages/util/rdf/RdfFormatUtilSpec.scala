@@ -20,6 +20,7 @@
 package org.knora.webapi.util.rdf
 
 import java.io._
+import java.nio.file.Files
 
 import org.knora.webapi.feature.{FeatureFactoryConfig, FeatureToggle, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
 import org.knora.webapi.messages.OntologyConstants
@@ -83,11 +84,12 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
         }
     }
 
-    private def checkModelForRdfTypeBook(rdfModel: RdfModel): Unit = {
+    private def checkModelForRdfTypeBook(rdfModel: RdfModel, context: Option[IRI] = None): Unit = {
         val statements: Set[Statement] = rdfModel.find(
             subj = Some(rdfNodeFactory.makeIriNode("http://rdfh.ch/0803/2a6221216701")),
             pred = Some(rdfNodeFactory.makeIriNode(OntologyConstants.Rdf.Type)),
-            obj = None
+            obj = None,
+            context = context
         ).toSet
 
         assert(statements.size == 1)
@@ -151,6 +153,52 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
             val rdfXmlOutputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = outputRdfXml, rdfFormat = RdfXml)
             checkModelForRdfTypeBook(rdfXmlOutputModel)
             assert(rdfXmlOutputModel == inputModel)
+        }
+
+        "parse RDF in TriG format" in {
+            val graphIri = "http://example.org/data#"
+            val inputTrig = FileUtil.readTextFile(new File("test_data/rdfFormatUtil/BookReiseInsHeiligeLand.trig"))
+            val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = inputTrig, rdfFormat = TriG)
+            checkModelForRdfTypeBook(rdfModel = inputModel, context = Some(graphIri))
+        }
+
+        "parse RDF in N-Quads format" in {
+            val graphIri = "http://example.org/data#"
+            val inputTrig = FileUtil.readTextFile(new File("test_data/rdfFormatUtil/BookReiseInsHeiligeLand.nq"))
+            val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = inputTrig, rdfFormat = NQuads)
+            checkModelForRdfTypeBook(rdfModel = inputModel, context = Some(graphIri))
+        }
+
+        "read Turtle, add a graph IRI to it, write it to a TriG file, and read back the TriG file" in {
+            val graphIri = "http://example.org/data#"
+            val rdfSource = RdfInputStreamSource(new BufferedInputStream(new FileInputStream(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))))
+            val outputFile: File =  Files.createTempFile("test", ".trig").toFile
+
+            rdfFormatUtil.turtleToQuadsFile(
+                rdfSource = rdfSource,
+                graphIri = graphIri,
+                outputFile = outputFile,
+                outputFormat = TriG
+            )
+
+            val quadsModel: RdfModel = rdfFormatUtil.fileToRdfModel(file = outputFile, rdfFormat = TriG)
+            checkModelForRdfTypeBook(rdfModel = quadsModel, context = Some(graphIri))
+        }
+
+        "read Turtle, add a graph IRI to it, write it to an N-Quads file, and read back the N-Quads file" in {
+            val graphIri = "http://example.org/data#"
+            val rdfSource = RdfInputStreamSource(new BufferedInputStream(new FileInputStream(new File("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))))
+            val outputFile: File =  Files.createTempFile("test", ".trig").toFile
+
+            rdfFormatUtil.turtleToQuadsFile(
+                rdfSource = rdfSource,
+                graphIri = graphIri,
+                outputFile = outputFile,
+                outputFormat = NQuads
+            )
+
+            val quadsModel: RdfModel = rdfFormatUtil.fileToRdfModel(file = outputFile, rdfFormat = NQuads)
+            checkModelForRdfTypeBook(rdfModel = quadsModel, context = Some(graphIri))
         }
 
         "parse RDF in JSON-LD format, producing a JsonLDDocument, then format it as JSON-LD again" in {

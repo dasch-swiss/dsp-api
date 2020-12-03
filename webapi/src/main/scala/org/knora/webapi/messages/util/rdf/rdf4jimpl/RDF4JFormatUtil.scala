@@ -26,6 +26,8 @@ import org.knora.webapi.IRI
 import org.knora.webapi.feature.Feature
 import org.knora.webapi.messages.util.rdf._
 
+import scala.util.{Failure, Success, Try}
+
 /**
  * Wraps an [[RdfStreamProcessor]] in an [[rdf4j.rio.RDFHandler]].
  */
@@ -71,6 +73,8 @@ class RDFHandlerAsStreamProcessor(rdfWriter: rdf4j.rio.RDFHandler) extends RdfSt
 class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory,
                       private val nodeFactory: RDF4JNodeFactory) extends RdfFormatUtil with Feature {
     override def getRdfModelFactory: RdfModelFactory = modelFactory
+
+    override def getRdfNodeFactory: RdfNodeFactory = nodeFactory
 
     private def rdfFormatToRDF4JFormat(rdfFormat: NonJsonLD): rdf4j.rio.RDFFormat = {
         rdfFormat match {
@@ -118,10 +122,22 @@ class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory,
         // Wrap the RdfStreamProcessor in a StreamProcessorAsRDFHandler and set it as the parser's RDFHandler.
         parser.setRDFHandler(new StreamProcessorAsRDFHandler(rdfStreamProcessor))
 
-        // Parse from the input source.
+        val parseTry: Try[Unit] = Try {
+            // Parse from the input source.
+            rdfSource match {
+                case RdfStringSource(rdfStr) => parser.parse(new StringReader(rdfStr), "")
+                case RdfInputStreamSource(inputStream) => parser.parse(inputStream, "")
+            }
+        }
+
         rdfSource match {
-            case RdfStringSource(rdfStr) => parser.parse(new StringReader(rdfStr), "")
-            case RdfInputStreamSource(inputStream) => parser.parse(inputStream, "")
+            case RdfInputStreamSource(inputStream) => inputStream.close()
+            case _ => ()
+        }
+
+        parseTry match {
+            case Success(_) => ()
+            case Failure(ex) => throw ex
         }
     }
 

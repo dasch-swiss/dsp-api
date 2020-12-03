@@ -355,9 +355,87 @@ trait RdfFormatUtil {
     def makeFormattingStreamProcessor(outputStream: OutputStream, rdfFormat: NonJsonLD): RdfStreamProcessor
 
     /**
+     * Adds a context IRI to RDF statements.
+     *
+     * @param graphIri                  the IRI of the named graph.
+     * @param formattingStreamProcessor an [[RdfStreamProcessor]] for writing the result.
+     */
+    private class ContextAddingProcessor(graphIri: IRI,
+                                         formattingStreamProcessor: RdfStreamProcessor) extends RdfStreamProcessor {
+        private val nodeFactory: RdfNodeFactory = getRdfNodeFactory
+
+        override def start(): Unit = formattingStreamProcessor.start()
+
+        override def processNamespace(prefix: String, namespace: IRI): Unit = {
+            formattingStreamProcessor.processNamespace(prefix = prefix, namespace = namespace)
+        }
+
+        override def processStatement(statement: Statement): Unit = {
+            val outputStatement = nodeFactory.makeStatement(
+                subj = statement.subj,
+                pred = statement.pred,
+                obj = statement.obj,
+                context = Some(graphIri)
+            )
+
+            formattingStreamProcessor.processStatement(outputStatement)
+        }
+
+        override def finish(): Unit = formattingStreamProcessor.finish()
+    }
+
+    /**
+     * Reads RDF data in Turtle format from an [[RdfSource]], adds a named graph IRI to each statement,
+     * and writes the result to a file in a format that supports quads.
+     *
+     * @param rdfSource    the RDF data source.
+     * @param graphIri     the named graph IRI to be added.
+     * @param outputFile   the output file.
+     * @param outputFormat the output file format.
+     */
+    def turtleToQuadsFile(rdfSource: RdfSource,
+                          graphIri: IRI,
+                          outputFile: File,
+                          outputFormat: QuadFormat): Unit = {
+        var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
+
+        val processingTry: Try[Unit] = Try {
+            maybeBufferedFileOutputStream = Some(new BufferedOutputStream(new FileOutputStream(outputFile)))
+
+            val formattingStreamProcessor: RdfStreamProcessor = makeFormattingStreamProcessor(
+                outputStream = maybeBufferedFileOutputStream.get,
+                rdfFormat = outputFormat
+            )
+
+            val contextAddingProcessor = new ContextAddingProcessor(
+                graphIri = graphIri,
+                formattingStreamProcessor = formattingStreamProcessor
+            )
+
+            parseWithStreamProcessor(
+                rdfSource = rdfSource,
+                rdfFormat = Turtle,
+                rdfStreamProcessor = contextAddingProcessor
+            )
+        }
+
+        maybeBufferedFileOutputStream.foreach(_.close)
+
+        processingTry match {
+            case Success(_) => ()
+            case Failure(ex) => throw ex
+        }
+    }
+
+    /**
      * Returns an [[RdfModelFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
      */
     def getRdfModelFactory: RdfModelFactory
+
+    /**
+     * Returns an [[RdfNodeFactory]] with the same underlying implementation as this [[RdfFormatUtil]].
+     */
+    def getRdfNodeFactory: RdfNodeFactory
 
     /**
      * Parses RDF in a format other than JSON-LD to an [[RdfModel]].

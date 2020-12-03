@@ -295,90 +295,11 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     }
 
     /**
-     * Adds a context IRI to RDF statements.
-     *
-     * @param graphIri                  the IRI of the named graph.
-     * @param formattingStreamProcessor an [[RdfStreamProcessor]] for writing the result.
-     * @param featureFactoryConfig      the feature factory configuration.
-     */
-    private class ContextAddingProcessor(graphIri: IRI,
-                                         formattingStreamProcessor: RdfStreamProcessor,
-                                         featureFactoryConfig: FeatureFactoryConfig) extends RdfStreamProcessor {
-        private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
-
-        override def start(): Unit = formattingStreamProcessor.start()
-
-        override def processNamespace(prefix: String, namespace: IRI): Unit = {
-            formattingStreamProcessor.processNamespace(prefix = prefix, namespace = namespace)
-        }
-
-        override def processStatement(statement: Statement): Unit = {
-            val outputStatement = nodeFactory.makeStatement(
-                subj = statement.subj,
-                pred = statement.pred,
-                obj = statement.obj,
-                context = Some(graphIri)
-            )
-
-            formattingStreamProcessor.processStatement(outputStatement)
-        }
-
-        override def finish(): Unit = formattingStreamProcessor.finish()
-    }
-
-    /**
-     * Reads RDF data in Turtle format from an [[RdfSource]], adds a named graph IRI to each statement,
-     * and writes the result to a file a format that supports quads.
-     *
-     * @param rdfSource            the RDF data source.
-     * @param graphIri             the named graph IRI to be added.
-     * @param outputFile           the output file.
-     * @param outputFormat         the output file format.
-     * @param featureFactoryConfig the feature factory configuration.
-     */
-    private def turtleToQuads(rdfSource: RdfSource,
-                              graphIri: IRI,
-                              outputFile: File,
-                              outputFormat: QuadFormat,
-                              featureFactoryConfig: FeatureFactoryConfig): Unit = {
-        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
-        var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
-
-        val parseTry: Try[Unit] = Try {
-            maybeBufferedFileOutputStream = Some(new BufferedOutputStream(new FileOutputStream(outputFile)))
-
-            val formattingStreamProcessor: RdfStreamProcessor = rdfFormatUtil.makeFormattingStreamProcessor(
-                outputStream = maybeBufferedFileOutputStream.get,
-                rdfFormat = outputFormat
-            )
-
-            val contextAddingProcessor = new ContextAddingProcessor(
-                graphIri = graphIri,
-                formattingStreamProcessor = formattingStreamProcessor,
-                featureFactoryConfig = featureFactoryConfig
-            )
-
-            rdfFormatUtil.parseWithStreamProcessor(
-                rdfSource = rdfSource,
-                rdfFormat = Turtle,
-                rdfStreamProcessor = contextAddingProcessor
-            )
-        }
-
-        maybeBufferedFileOutputStream.foreach(_.close)
-
-        parseTry match {
-            case Success(_) => ()
-            case Failure(ex) => throw ex
-        }
-    }
-
-    /**
      * Given a SPARQL CONSTRUCT query string, runs the query, saving the result in a file.
      *
-     * @param sparql     the SPARQL CONSTRUCT query string.
-     * @param graphIri   the named graph IRI to be used in the output file.
-     * @param outputFile the output file.
+     * @param sparql       the SPARQL CONSTRUCT query string.
+     * @param graphIri     the named graph IRI to be used in the output file.
+     * @param outputFile   the output file.
      * @param outputFormat the output file format.
      * @return a [[FileWrittenResponse]].
      */
@@ -387,15 +308,16 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                                         outputFile: File,
                                         outputFormat: QuadFormat,
                                         featureFactoryConfig: FeatureFactoryConfig): Try[FileWrittenResponse] = {
+        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+
         for {
             turtleStr <- getSparqlHttpResponse(sparql, isUpdate = false, acceptMimeType = mimeTypeTextTurtle)
 
-            _ = turtleToQuads(
+            _ = rdfFormatUtil.turtleToQuadsFile(
                 rdfSource = RdfStringSource(turtleStr),
                 graphIri = graphIri,
                 outputFile = outputFile,
-                outputFormat = outputFormat,
-                featureFactoryConfig = featureFactoryConfig
+                outputFormat = outputFormat
             )
         } yield FileWrittenResponse()
     }
@@ -1083,7 +1005,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     /**
      * Represents a named graph IRI and the file format that the graph should be written in.
      *
-     * @param graphIri the named graph IRI.
+     * @param graphIri   the named graph IRI.
      * @param quadFormat the file format.
      */
     case class GraphIriAndFormat(graphIri: IRI, quadFormat: QuadFormat)
@@ -1114,18 +1036,18 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
                         // Convert the Turtle to the output format.
 
+                        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
                         var maybeBufferedInputStream: Option[BufferedInputStream] = None
 
                         val processFileTry: Try[Unit] = Try {
                             val bufferedInputStream = new BufferedInputStream(new FileInputStream(turtleFile))
                             maybeBufferedInputStream = Some(bufferedInputStream)
 
-                            turtleToQuads(
+                            rdfFormatUtil.turtleToQuadsFile(
                                 rdfSource = RdfInputStreamSource(bufferedInputStream),
                                 graphIri = graphIri,
                                 outputFile = outputFile,
-                                outputFormat = quadFormat,
-                                featureFactoryConfig = featureFactoryConfig
+                                outputFormat = quadFormat
                             )
                         }
 
