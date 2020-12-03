@@ -123,14 +123,15 @@ class RepositoryUpdater(system: ActorSystem,
      * @return the plugins needed to update the repository.
      */
     private def selectPluginsForNeededUpdates(maybeRepositoryVersionString: Option[String]): Seq[PluginForKnoraBaseVersion] = {
-        // Make a map of version strings to plugins.
-        val versionsToPluginsMap: Map[String, PluginForKnoraBaseVersion] = plugins.map {
-            plugin => plugin.versionString -> plugin
-        }.toMap
-
         maybeRepositoryVersionString match {
             case Some(repositoryVersion) =>
                 // The repository has a version string. Get the plugins for all subsequent versions.
+
+                // Make a map of version strings to plugins.
+                val versionsToPluginsMap: Map[String, PluginForKnoraBaseVersion] = plugins.map {
+                    plugin => plugin.versionString -> plugin
+                }.toMap
+
                 val pluginForRepositoryVersion: PluginForKnoraBaseVersion = versionsToPluginsMap.getOrElse(
                     repositoryVersion,
                     throw InconsistentRepositoryDataException(s"No such repository version $repositoryVersion")
