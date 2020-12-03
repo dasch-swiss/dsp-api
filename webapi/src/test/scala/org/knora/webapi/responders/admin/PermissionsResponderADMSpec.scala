@@ -629,10 +629,10 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     featureFactoryConfig = defaultFeatureFactoryConfig,
                     apiRequestID = UUID.randomUUID()
                 )
-                val received: AdministrativePermissionADM = expectMsgType[AdministrativePermissionADM]
-                println(received.forGroup)
-                assert(received.iri == permissionIri)
-                assert(received.forGroup == newGroupIri)
+                val received: AdministrativePermissionGetResponseADM = expectMsgType[AdministrativePermissionGetResponseADM]
+                val ap = received.administrativePermission
+                assert(ap.iri == permissionIri)
+                assert(ap.forGroup == newGroupIri)
             }
 
             "update group of a default object access permission" in {
@@ -647,9 +647,10 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     featureFactoryConfig = defaultFeatureFactoryConfig,
                     apiRequestID = UUID.randomUUID()
                 )
-                val received: DefaultObjectAccessPermissionADM = expectMsgType[DefaultObjectAccessPermissionADM]
-                assert(received.iri == permissionIri)
-                assert(received.forGroup.get == newGroupIri)
+                val received: DefaultObjectAccessPermissionGetResponseADM = expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
+                val doap = received.defaultObjectAccessPermission
+                assert(doap.iri == permissionIri)
+                assert(doap.forGroup.get == newGroupIri)
             }
 
             "update group of a default object access permission, resource class must be deleted" in {
@@ -664,10 +665,11 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     featureFactoryConfig = defaultFeatureFactoryConfig,
                     apiRequestID = UUID.randomUUID()
                 )
-                val received: DefaultObjectAccessPermissionADM = expectMsgType[DefaultObjectAccessPermissionADM]
-                assert(received.iri == permissionIri)
-                assert(received.forGroup.get == newGroupIri)
-                assert(received.forResourceClass.isEmpty)
+                val received: DefaultObjectAccessPermissionGetResponseADM = expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
+                val doap = received.defaultObjectAccessPermission
+                assert(doap.iri == permissionIri)
+                assert(doap.forGroup.get == newGroupIri)
+                assert(doap.forResourceClass.isEmpty)
             }
 
             "update group of a default object access permission, property must be deleted" in {
@@ -682,10 +684,11 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                     featureFactoryConfig = defaultFeatureFactoryConfig,
                     apiRequestID = UUID.randomUUID()
                 )
-                val received: DefaultObjectAccessPermissionADM = expectMsgType[DefaultObjectAccessPermissionADM]
-                assert(received.iri == permissionIri)
-                assert(received.forGroup.get == newGroupIri)
-                assert(received.forProperty.isEmpty)
+                val received: DefaultObjectAccessPermissionGetResponseADM = expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
+                val doap = received.defaultObjectAccessPermission
+                assert(doap.iri == permissionIri)
+                assert(doap.forGroup.get == newGroupIri)
+                assert(doap.forProperty.isEmpty)
             }
         }
     }
