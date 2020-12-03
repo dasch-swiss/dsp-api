@@ -120,9 +120,7 @@ case class ChangePermissionGroupApiRequestADM(groupIri: IRI) extends Permissions
   if (groupIri.isEmpty) {
     throw BadRequestException(s"IRI of new group cannot be empty.")
   }
-  if (!stringFormatter.isKnoraGroupIriStr(groupIri)) {
-    throw BadRequestException(s"Invalid IRI is given: $groupIri.")
-  }
+  stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid IRI $groupIri is given."))
 
   def toJsValue: JsValue = changePermissionGroupApiRequestADMFormat.write(this)
 }

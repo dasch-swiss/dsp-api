@@ -75,7 +75,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     case DefaultObjectAccessPermissionCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID) => defaultObjectAccessPermissionCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID)
     case PermissionsForProjectGetRequestADM(projectIri, groupIri, featureFactoryConfig, requestingUser) => permissionsForProjectGetRequestADM(projectIri, groupIri, featureFactoryConfig, requestingUser)
     case PermissionByIriGetRequestADM(permissionIri, requestingUser) => permissionByIriGetRequestADM(permissionIri, requestingUser)
-    //    case PermissionChangeGroupRequestADM(permissionIri, changePermissionGroupRequest, featureFactoryConfig, requestingUser, apiRequestID) => changePermissionGroup(permissionIri, changePermissionGroupRequest, featureFactoryConfig, requestingUser, apiRequestID)
+    case PermissionChangeGroupRequestADM(permissionIri, changePermissionGroupRequest, featureFactoryConfig, requestingUser, apiRequestID) => permissionGroupChangeRequestADM(permissionIri, changePermissionGroupRequest, featureFactoryConfig, requestingUser, apiRequestID)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -585,7 +585,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
         // Create the administrative permission.
         createAdministrativePermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewAdministrativePermission(
-          adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+          namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
           triplestore = settings.triplestoreType,
           permissionClassIri = OntologyConstants.KnoraAdmin.AdministrativePermission,
           permissionIri = newPermissionIri,
@@ -1280,7 +1280,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
         // Create the default object access permission.
         createNewDefaultObjectAccessPermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt.createNewDefaultObjectAccessPermission(
-          adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+          namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
           triplestore = settings.triplestoreType,
           permissionIri = newPermissionIri,
           permissionClassIri = OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
@@ -1362,35 +1362,125 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     } yield response
   }
 
-  //  private def changePermissionGroup(permissioniri: IRI,
-  //                                    changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
-  //                                    featureFactoryConfig: FeatureFactoryConfig,
-  //                                    requestingUser: UserADM,
-  //                                    apiRequestID: UUID
-  //                                   ): Future[PermissionItemADM] = {
-  //    /**
-  //     * The actual task run with an IRI lock.
-  //     */
-  //    def permissionGroupChangeTask(permissioniri: IRI,
-  //                                  changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
-  //                                  featureFactoryConfig: FeatureFactoryConfig,
-  //                                  requestingUser: UserADM,
-  //                                  apiRequestID: UUID): Future[PermissionItemADM] = {
-  //    // get permission project
-  //
-  //
-  //    } yield response
-  //
-  //    for {
-  //      // run list info update with an local IRI lock
-  //      taskResult <- IriLocker.runWithIriLock(
-  //        apiRequestID,
-  //        permissioniri,
-  //        () => permissionGroupChangeTask(permissioniri, changePermissionGroupRequest, featureFactoryConfig, requestingUser, apiRequestID)
-  //      )
-  //    } yield taskResult
-  //  }
+  /**
+   * Update a permission's group
+   *
+   * @param permissionIri                the IRI of the permission.
+   * @param changePermissionGroupRequest the request to change group.
+   * @param featureFactoryConfig         the feature factory configuration.
+   * @param requestingUser               the [[UserADM]] of the requesting user.
+   * @param apiRequestID                 the API request ID.
+   * @return [[PermissionGetResponseADM]].
+   * @throw UpdateNotPerformed if something has gone wrong.
+   */
+  private def permissionGroupChangeRequestADM(permissionIri: IRI,
+                                              changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
+                                              featureFactoryConfig: FeatureFactoryConfig,
+                                              requestingUser: UserADM,
+                                              apiRequestID: UUID
+                                             ): Future[PermissionGetResponseADM] = {
+    /**
+     * The actual task run with an IRI lock.
+     */
+    def permissionGroupChangeTask(permissioniri: IRI,
+                                  changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
+                                  featureFactoryConfig: FeatureFactoryConfig,
+                                  requestingUser: UserADM,
+                                  apiRequestID: UUID): Future[PermissionGetResponseADM] = for {
+      // get permission
+      permission <- permissionGetADM(permissioniri, requestingUser)
+      response <- permission match {
+        // Is permission an administrative permission?
+        case ap: AdministrativePermissionADM =>
+          // Yes. Update the group
+          for {
+            updatedPermission <- changePermissionGroup(
+              permissionIri = ap.iri,
+              newGroupIri = changePermissionGroupRequest.groupIri,
+              isAdministrative = true,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser
+            )
+          } yield AdministrativePermissionGetResponseADM(updatedPermission.asInstanceOf[AdministrativePermissionADM])
+        case doap: DefaultObjectAccessPermissionADM =>
+          //No. It is a default object access permission
+          for {
+            // if a doap permission has a group defined, it cannot have either resourceClass or property
+            updatedPermission <- changePermissionGroup(
+              permissionIri = doap.iri,
+              newGroupIri = changePermissionGroupRequest.groupIri,
+              isAdministrative = false,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser
+            )
 
+          } yield DefaultObjectAccessPermissionGetResponseADM(updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM])
+      }
+    } yield response
+
+    for {
+      // run list info update with an local IRI lock
+      taskResult <- IriLocker.runWithIriLock(
+        apiRequestID,
+        permissionIri,
+        () => permissionGroupChangeTask(permissionIri, changePermissionGroupRequest, featureFactoryConfig, requestingUser, apiRequestID)
+      )
+    } yield taskResult
+  }
+
+  /*Helper Methods*/
+
+  /**
+   * Helper method to change group of a permission. If permission is an administrative one, only updates its group.
+   * If permission is a default object access one which already had a group, updates it. If no group was previously defined,
+   * but a property, or a resource class or both of them, then deletes these members and adds the new group.
+   *
+   * @param permissionIri        the IRI of the permission.
+   * @param newGroupIri          the IRI of the new group.
+   * @param isAdministrative     the flag to identify the type of admission.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the requesting user.
+   * @return [[PermissionItemADM]]
+   * @throws UpdateNotPerformedException if something has gone wrong and the permission could not be updated.
+   */
+  protected def changePermissionGroup(permissionIri: IRI,
+                                      newGroupIri: IRI,
+                                      isAdministrative: Boolean,
+                                      featureFactoryConfig: FeatureFactoryConfig,
+                                      requestingUser: UserADM
+                                     ): Future[PermissionItemADM] = for {
+
+    // Generate SPARQL for changing the group of a permission.
+    sparqlChangePermissionGroup: String <- Future(
+      org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updatePermissionGroup(
+        namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
+        triplestore = settings.triplestoreType,
+        permissionIri = permissionIri,
+        newGroup = newGroupIri,
+        isAdministrative = isAdministrative
+      ).toString()
+    )
+
+    _ <- (storeManager ? SparqlUpdateRequest(sparqlChangePermissionGroup)).mapTo[SparqlUpdateResponse]
+
+    /* verify that the permission group is updated */
+    permission <- permissionGetADM(
+      permissionIri = permissionIri,
+      requestingUser = requestingUser
+    )
+    _ = permission match {
+      case ap: AdministrativePermissionADM =>
+        if (ap.forGroup != newGroupIri)
+          throw UpdateNotPerformedException(s"The group of permission $permissionIri was not updated. Please report this as a bug.")
+      case doap: DefaultObjectAccessPermissionADM =>
+        if (doap.forGroup.get != newGroupIri) {
+          throw UpdateNotPerformedException(s"The group of permission $permissionIri was not updated. Please report this as a bug.")
+        } else {
+          if (doap.forProperty.isDefined || doap.forResourceClass.isDefined)
+            throw UpdateNotPerformedException(s"The $permissionIri is not correctly updated. Please report this as a bug.")
+        }
+    }
+  } yield permission
 
 }
 

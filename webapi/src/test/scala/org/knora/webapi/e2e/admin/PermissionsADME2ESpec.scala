@@ -147,7 +147,6 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
                     )
                 )
             }
-
         }
 
         "creating permissions" should {
@@ -327,6 +326,84 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
                         filePath = TestDataFilePath(
                             directoryPath = clientTestDataPath,
                             filename = "create-defaultObjectAccess-permission-withCustomIRI-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+        }
+
+        "updating permissions" should {
+            "change the group of an administrative permission" in {
+                val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+                val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+                val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
+                val updatePermissionGroup =
+                    s"""{
+                       |    "groupIri": "$newGroupIri"
+                       |}""".stripMargin
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-administrative-permission-group-request",
+                            fileExtension = "json"
+                        ),
+                        text = updatePermissionGroup
+                    )
+                )
+                val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/group", HttpEntity(ContentTypes.`application/json`, updatePermissionGroup)) ~> addCredentials(BasicHttpCredentials(
+                    SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                assert(response.status === StatusCodes.OK)
+                val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
+                val groupIri = result.getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing.")).convertTo[String]
+                assert(groupIri == newGroupIri)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-administrative-permission-group-response",
+                            fileExtension = "json"
+                        ),
+                        text = responseToString(response)
+                    )
+                )
+            }
+
+            "change the group of a default object access permission" in {
+                val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
+                val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+                val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
+                val updatePermissionGroup =
+                    s"""{
+                       |    "groupIri": "$newGroupIri"
+                       |}""".stripMargin
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-default-object-access-permission-group-request",
+                            fileExtension = "json"
+                        ),
+                        text = updatePermissionGroup
+                    )
+                )
+                val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/group", HttpEntity(ContentTypes.`application/json`, updatePermissionGroup)) ~> addCredentials(BasicHttpCredentials(
+                    SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+                val response: HttpResponse = singleAwaitingRequest(request)
+                assert(response.status === StatusCodes.OK)
+                val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
+                val groupIri = result.getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing.")).convertTo[String]
+                assert(groupIri == newGroupIri)
+
+                clientTestDataCollector.addFile(
+                    TestDataFileContent(
+                        filePath = TestDataFilePath(
+                            directoryPath = clientTestDataPath,
+                            filename = "update-default-object-access-permission-group-response",
                             fileExtension = "json"
                         ),
                         text = responseToString(response)

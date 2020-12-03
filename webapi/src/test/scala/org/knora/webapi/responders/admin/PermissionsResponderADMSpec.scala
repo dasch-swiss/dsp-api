@@ -615,5 +615,78 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 expectMsg(DefaultObjectAccessPermissionGetResponseADM(perm002_d1.p))
             }
         }
+
+        "request to update a permission" should {
+            "update group of an administrative permission" in {
+                val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+                val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
+                responderManager ! PermissionChangeGroupRequestADM(
+                    permissionIri = permissionIri,
+                    changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
+                        groupIri = newGroupIri
+                    ),
+                    requestingUser = rootUser,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received: AdministrativePermissionADM = expectMsgType[AdministrativePermissionADM]
+                println(received.forGroup)
+                assert(received.iri == permissionIri)
+                assert(received.forGroup == newGroupIri)
+            }
+
+            "update group of a default object access permission" in {
+                val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+                val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
+                responderManager ! PermissionChangeGroupRequestADM(
+                    permissionIri = permissionIri,
+                    changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
+                        groupIri = newGroupIri
+                    ),
+                    requestingUser = rootUser,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received: DefaultObjectAccessPermissionADM = expectMsgType[DefaultObjectAccessPermissionADM]
+                assert(received.iri == permissionIri)
+                assert(received.forGroup.get == newGroupIri)
+            }
+
+            "update group of a default object access permission, resource class must be deleted" in {
+                val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
+                val newGroupIri = "http://www.knora.org/ontology/knora-admin#ProjectMember"
+                responderManager ! PermissionChangeGroupRequestADM(
+                    permissionIri = permissionIri,
+                    changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
+                        groupIri = newGroupIri
+                    ),
+                    requestingUser = rootUser,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received: DefaultObjectAccessPermissionADM = expectMsgType[DefaultObjectAccessPermissionADM]
+                assert(received.iri == permissionIri)
+                assert(received.forGroup.get == newGroupIri)
+                assert(received.forResourceClass.isEmpty)
+            }
+
+            "update group of a default object access permission, property must be deleted" in {
+                val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
+                val newGroupIri = "http://www.knora.org/ontology/knora-admin#ProjectMember"
+                responderManager ! PermissionChangeGroupRequestADM(
+                    permissionIri = permissionIri,
+                    changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
+                        groupIri = newGroupIri
+                    ),
+                    requestingUser = rootUser,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received: DefaultObjectAccessPermissionADM = expectMsgType[DefaultObjectAccessPermissionADM]
+                assert(received.iri == permissionIri)
+                assert(received.forGroup.get == newGroupIri)
+                assert(received.forProperty.isEmpty)
+            }
+        }
     }
 }
