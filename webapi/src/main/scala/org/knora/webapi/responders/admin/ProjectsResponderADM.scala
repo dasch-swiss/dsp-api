@@ -505,21 +505,15 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                 formattingStreamProcessor.start()
 
                 for (namedGraphTrigFile: NamedGraphTrigFile <- namedGraphTrigFiles) {
-                    var maybeBufferedFileInputStream: Option[BufferedInputStream] = None
-
                     val namedGraphTry: Try[Unit] = Try {
-                        maybeBufferedFileInputStream = Some(new BufferedInputStream(new FileInputStream(namedGraphTrigFile.dataFile)))
-
                         rdfFormatUtil.parseWithStreamProcessor(
-                            rdfSource = RdfInputStreamSource(maybeBufferedFileInputStream.get),
+                            rdfSource = RdfInputStreamSource(new BufferedInputStream(new FileInputStream(namedGraphTrigFile.dataFile))),
                             rdfFormat = TriG,
                             rdfStreamProcessor = combiningRdfProcessor
                         )
-
-                        namedGraphTrigFile.dataFile.delete
                     }
 
-                    maybeBufferedFileInputStream.foreach(_.close)
+                    namedGraphTrigFile.dataFile.delete
 
                     namedGraphTry match {
                         case Success(_) => ()

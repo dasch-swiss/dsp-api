@@ -178,15 +178,20 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory,
     }
 
     override def inputStreamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel = {
-        val model: JenaModel = modelFactory.makeEmptyModel
+        val parseTry: Try[RdfModel] = Try {
+            val model: JenaModel = modelFactory.makeEmptyModel
 
-        jena.riot.RDFDataMgr.read(
-            model.getDataset.asDatasetGraph,
-            inputStream,
-            rdfFormatToJenaParsingLang(rdfFormat)
-        )
+            jena.riot.RDFDataMgr.read(
+                model.getDataset.asDatasetGraph,
+                inputStream,
+                rdfFormatToJenaParsingLang(rdfFormat)
+            )
 
-        model
+            model
+        }
+
+        inputStream.close()
+        parseTry.get
     }
 
     override def makeFormattingStreamProcessor(outputStream: OutputStream,
@@ -204,20 +209,29 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory,
     override def rdfModelToOutputStream(rdfModel: RdfModel, outputStream: OutputStream, rdfFormat: NonJsonLD): Unit = {
         import JenaConversions._
 
-        val datasetGraph: jena.sparql.core.DatasetGraph = rdfModel.asJenaDataset.asDatasetGraph
+        val formatTry: Try[Unit] = Try {
+            val datasetGraph: jena.sparql.core.DatasetGraph = rdfModel.asJenaDataset.asDatasetGraph
 
-        rdfFormat match {
-            case Turtle =>
-                jena.riot.RDFDataMgr.write(outputStream, datasetGraph.getDefaultGraph, jena.riot.RDFFormat.TURTLE_FLAT)
+            rdfFormat match {
+                case Turtle =>
+                    jena.riot.RDFDataMgr.write(outputStream, datasetGraph.getDefaultGraph, jena.riot.RDFFormat.TURTLE_FLAT)
 
-            case RdfXml =>
-                jena.riot.RDFDataMgr.write(outputStream, datasetGraph.getDefaultGraph, jena.riot.RDFFormat.RDFXML_PLAIN)
+                case RdfXml =>
+                    jena.riot.RDFDataMgr.write(outputStream, datasetGraph.getDefaultGraph, jena.riot.RDFFormat.RDFXML_PLAIN)
 
-            case TriG =>
-                jena.riot.RDFDataMgr.write(outputStream, datasetGraph, jena.riot.RDFFormat.TRIG_FLAT)
+                case TriG =>
+                    jena.riot.RDFDataMgr.write(outputStream, datasetGraph, jena.riot.RDFFormat.TRIG_FLAT)
 
-            case NQuads =>
-                jena.riot.RDFDataMgr.write(outputStream, datasetGraph, jena.riot.RDFFormat.NQUADS)
+                case NQuads =>
+                    jena.riot.RDFDataMgr.write(outputStream, datasetGraph, jena.riot.RDFFormat.NQUADS)
+            }
+        }
+
+        outputStream.close()
+
+        formatTry match {
+            case Success(_) => ()
+            case Failure(ex) => throw ex
         }
     }
 }

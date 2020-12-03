@@ -142,16 +142,21 @@ class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory,
     }
 
     override def inputStreamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel = {
-        val model: rdf4j.model.Model = rdf4j.rio.Rio.parse(
-            inputStream,
-            "",
-            rdfFormatToRDF4JFormat(rdfFormat)
-        )
+        val parseTry: Try[RdfModel] = Try {
+            val model: rdf4j.model.Model = rdf4j.rio.Rio.parse(
+                inputStream,
+                "",
+                rdfFormatToRDF4JFormat(rdfFormat)
+            )
 
-        new RDF4JModel(
-            model = model,
-            nodeFactory = nodeFactory
-        )
+            new RDF4JModel(
+                model = model,
+                nodeFactory = nodeFactory
+            )
+        }
+
+        inputStream.close()
+        parseTry.get
     }
 
     override def makeFormattingStreamProcessor(outputStream: OutputStream,
@@ -166,10 +171,19 @@ class RDF4JFormatUtil(private val modelFactory: RDF4JModelFactory,
     override def rdfModelToOutputStream(rdfModel: RdfModel, outputStream: OutputStream, rdfFormat: NonJsonLD): Unit = {
         import RDF4JConversions._
 
-        // Construct an RDF4J writer for the requested format.
-        val rdfWriter: rdf4j.rio.RDFWriter = rdf4j.rio.Rio.createWriter(rdfFormatToRDF4JFormat(rdfFormat), outputStream)
+        val formatTry: Try[Unit] = Try {
+            // Construct an RDF4J writer for the requested format.
+            val rdfWriter: rdf4j.rio.RDFWriter = rdf4j.rio.Rio.createWriter(rdfFormatToRDF4JFormat(rdfFormat), outputStream)
 
-        // Format the RDF.
-        rdf4j.rio.Rio.write(rdfModel.asRDF4JModel, rdfWriter)
+            // Format the RDF.
+            rdf4j.rio.Rio.write(rdfModel.asRDF4JModel, rdfWriter)
+        }
+
+        outputStream.close()
+
+        formatTry match {
+            case Success(_) => ()
+            case Failure(ex) => throw ex
+        }
     }
 }

@@ -245,7 +245,6 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
                 rdfStreamProcessor = testStreamProcessor
             )
 
-            inputStream.close()
             testStreamProcessor.check()
         }
 
@@ -267,7 +266,7 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
                 rdfStreamProcessor = formattingStreamProcessor
             )
 
-            fileInputStream.close()
+            byteArrayOutputStream.close()
 
             // Read back the ByteArrayOutputStream and check that it's correct.
 
@@ -280,7 +279,6 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
                 rdfStreamProcessor = testStreamProcessor
             )
 
-            byteArrayInputStream.close()
             testStreamProcessor.check()
         }
 

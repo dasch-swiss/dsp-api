@@ -1037,21 +1037,16 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
                         // Convert the Turtle to the output format.
 
                         val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
-                        var maybeBufferedInputStream: Option[BufferedInputStream] = None
 
                         val processFileTry: Try[Unit] = Try {
-                            val bufferedInputStream = new BufferedInputStream(new FileInputStream(turtleFile))
-                            maybeBufferedInputStream = Some(bufferedInputStream)
-
                             rdfFormatUtil.turtleToQuadsFile(
-                                rdfSource = RdfInputStreamSource(bufferedInputStream),
+                                rdfSource = RdfInputStreamSource(new BufferedInputStream(new FileInputStream(turtleFile))),
                                 graphIri = graphIri,
                                 outputFile = outputFile,
                                 outputFormat = quadFormat
                             )
                         }
 
-                        maybeBufferedInputStream.foreach(_.close())
                         turtleFile.delete()
 
                         processFileTry match {

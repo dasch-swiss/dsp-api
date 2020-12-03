@@ -275,16 +275,10 @@ trait RdfFormatUtil {
      * @return a [[RdfModel]] representing the contents of the file.
      */
     def fileToRdfModel(file: File, rdfFormat: NonJsonLD): RdfModel = {
-        var maybeFileInputStream: Option[InputStream] = None
-
-        val modelTry = Try {
-            val fileInputStream = new BufferedInputStream(new FileInputStream(file))
-            maybeFileInputStream = Some(fileInputStream)
-            inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = rdfFormat)
-        }
-
-        maybeFileInputStream.foreach(_.close())
-        modelTry.get
+        inputStreamToRdfModel(
+            inputStream = new BufferedInputStream(new FileInputStream(file)),
+            rdfFormat = rdfFormat
+        )
     }
 
     /**
@@ -295,29 +289,17 @@ trait RdfFormatUtil {
      * @param rdfFormat the file format.
      */
     def rdfModelToFile(rdfModel: RdfModel, file: File, rdfFormat: NonJsonLD): Unit = {
-        var maybeFileOutputStream: Option[OutputStream] = None
-
-        val writeTry: Try[Unit] = Try {
-            val fileOutputStream = new BufferedOutputStream(new FileOutputStream(file))
-            maybeFileOutputStream = Some(fileOutputStream)
-
-            rdfModelToOutputStream(
-                rdfModel = rdfModel,
-                outputStream = fileOutputStream,
-                rdfFormat = rdfFormat
-            )
-        }
-
-        maybeFileOutputStream.foreach(_.close())
-
-        writeTry match {
-            case Success(()) => ()
-            case Failure(ex) => throw ex
-        }
+        rdfModelToOutputStream(
+            rdfModel = rdfModel,
+            outputStream = new BufferedOutputStream(new FileOutputStream(file)),
+            rdfFormat = rdfFormat
+        )
     }
 
     /**
-     * Parses RDF input, processing it with an [[RdfStreamProcessor]].
+     * Parses RDF input, processing it with an [[RdfStreamProcessor]].  If the source is an input
+     * stream, this method closes it before returning. The caller must close any output stream
+     * used by the [[RdfStreamProcessor]].
      *
      * @param rdfSource          the input source from which the RDF data should be read.
      * @param rdfFormat          the input format.
@@ -328,7 +310,8 @@ trait RdfFormatUtil {
                                  rdfStreamProcessor: RdfStreamProcessor): Unit
 
     /**
-     * Reads RDF data from an [[InputStream]] and returns it as an [[RdfModel]].
+     * Reads RDF data from an [[InputStream]] and returns it as an [[RdfModel]]. Closes the input stream
+     * before returning.
      *
      * @param inputStream the input stream.
      * @param rdfFormat   the data format.
@@ -337,7 +320,8 @@ trait RdfFormatUtil {
     def inputStreamToRdfModel(inputStream: InputStream, rdfFormat: NonJsonLD): RdfModel
 
     /**
-     * Formats an [[RdfModel]], writing the output to an [[OutputStream]].
+     * Formats an [[RdfModel]], writing the output to an [[OutputStream]]. Closes the output stream before
+     * returning.
      *
      * @param rdfModel     the model to be written.
      * @param outputStream the output stream.
@@ -386,7 +370,8 @@ trait RdfFormatUtil {
 
     /**
      * Reads RDF data in Turtle format from an [[RdfSource]], adds a named graph IRI to each statement,
-     * and writes the result to a file in a format that supports quads.
+     * and writes the result to a file in a format that supports quads. If the source is an input
+     * stream, this method closes it before returning.
      *
      * @param rdfSource    the RDF data source.
      * @param graphIri     the named graph IRI to be added.
@@ -400,10 +385,11 @@ trait RdfFormatUtil {
         var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
 
         val processingTry: Try[Unit] = Try {
-            maybeBufferedFileOutputStream = Some(new BufferedOutputStream(new FileOutputStream(outputFile)))
+            val bufferedFileOutputStream = new BufferedOutputStream(new FileOutputStream(outputFile))
+            maybeBufferedFileOutputStream = Some(bufferedFileOutputStream)
 
             val formattingStreamProcessor: RdfStreamProcessor = makeFormattingStreamProcessor(
-                outputStream = maybeBufferedFileOutputStream.get,
+                outputStream = bufferedFileOutputStream,
                 rdfFormat = outputFormat
             )
 
