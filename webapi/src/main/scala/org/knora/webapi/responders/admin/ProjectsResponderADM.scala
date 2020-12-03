@@ -505,21 +505,15 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                 formattingStreamProcessor.start()
 
                 for (namedGraphTrigFile: NamedGraphTrigFile <- namedGraphTrigFiles) {
-                    var maybeBufferedFileInputStream: Option[BufferedInputStream] = None
-
                     val namedGraphTry: Try[Unit] = Try {
-                        maybeBufferedFileInputStream = Some(new BufferedInputStream(new FileInputStream(namedGraphTrigFile.dataFile)))
-
                         rdfFormatUtil.parseWithStreamProcessor(
-                            rdfSource = RdfInputStreamSource(maybeBufferedFileInputStream.get),
+                            rdfSource = RdfInputStreamSource(new BufferedInputStream(new FileInputStream(namedGraphTrigFile.dataFile))),
                             rdfFormat = TriG,
                             rdfStreamProcessor = combiningRdfProcessor
                         )
-
-                        namedGraphTrigFile.dataFile.delete
                     }
 
-                    maybeBufferedFileInputStream.foreach(_.close)
+                    namedGraphTrigFile.dataFile.delete
 
                     namedGraphTry match {
                         case Success(_) => ()
@@ -571,6 +565,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                                 NamedGraphFileRequest(
                                     graphIri = trigFile.graphIri,
                                     outputFile = trigFile.dataFile,
+                                    outputFormat = TriG,
                                     featureFactoryConfig = featureFactoryConfig
                                 )
                             ).mapTo[FileWrittenResponse]
@@ -592,6 +587,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                 sparql = adminDataSparql,
                 graphIri = adminDataNamedGraphTrigFile.graphIri,
                 outputFile = adminDataNamedGraphTrigFile.dataFile,
+                outputFormat = TriG,
                 featureFactoryConfig = featureFactoryConfig
             )).mapTo[FileWrittenResponse]
 
@@ -608,6 +604,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                 sparql = permissionDataSparql,
                 graphIri = permissionDataNamedGraphTrigFile.graphIri,
                 outputFile = permissionDataNamedGraphTrigFile.dataFile,
+                outputFormat = TriG,
                 featureFactoryConfig = featureFactoryConfig
             )).mapTo[FileWrittenResponse]
 

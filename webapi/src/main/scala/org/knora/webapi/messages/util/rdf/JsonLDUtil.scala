@@ -1698,9 +1698,8 @@ object JsonLDUtil {
                 }
 
             case blankNode: BlankNode =>
-                // It's a blank node. It should be possible to inline it. If not, the input model is invalid;
-                // return an error.
-                inlineResource(throw InvalidRdfException(s"Blank node ${blankNode.id} was not found or is referenced in more than one place"))
+                // It's a blank node. It should be possible to inline it. If not, return an empty blank node.
+                inlineResource(JsonLDObject(Map.empty))
         }
     }
 }
