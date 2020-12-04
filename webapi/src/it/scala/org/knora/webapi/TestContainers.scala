@@ -19,10 +19,9 @@
 
 package org.knora.webapi
 
-import java.net.NetworkInterface
+import java.net.{NetworkInterface, UnknownHostException}
 
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.exceptions.TestConfigurationException
 import org.testcontainers.containers.{BindMode, GenericContainer}
 import org.testcontainers.utility.DockerImageName
 
@@ -37,7 +36,7 @@ object TestContainers {
     val localIpAddress: String = NetworkInterface.getNetworkInterfaces
         .asScala.toSeq.filter(!_.isLoopback)
         .flatMap(_.getInetAddresses.asScala.toSeq.filter(_.getAddress.length == 4).map(_.toString))
-        .headOption.getOrElse(throw TestConfigurationException(s"No suitable network interface found"))
+        .headOption.getOrElse(throw new UnknownHostException("No suitable network interface found"))
 
     val FusekiImageName: DockerImageName = DockerImageName.parse("bazel/docker/knora-jena-fuseki:image")
     val FusekiContainer = new GenericContainer(FusekiImageName)
@@ -59,7 +58,7 @@ object TestContainers {
     SipiContainer.start()
 
     // Container needs to be started to get the random IP
-    val sipiIp: IRI = SipiContainer.getHost
+    val sipiIp: String = SipiContainer.getHost
     val sipiPort: Int = SipiContainer.getFirstMappedPort
 
     val RedisImageName: DockerImageName = DockerImageName.parse("redis:5")
