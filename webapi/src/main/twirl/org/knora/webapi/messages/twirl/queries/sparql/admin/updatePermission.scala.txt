@@ -23,19 +23,21 @@
 @**
  * Updates an existing permission's properties.
  *
- * @param namedGraphIri     the named graph to update.
- * @param triplestore       the name of the triplestore being used. The template uses this value to exclude
-                            inferred results from the WHERE clause of the update.
- * @param permissionIri     the IRI of the permission we want to update.
- * @param newGroup          the IRI of the new group.
- * @param hasPermissions    the new set of permission values as string.
+ * @param namedGraphIri           the named graph to update.
+ * @param triplestore             the name of the triplestore being used. The template uses this value to exclude
+                                  inferred results from the WHERE clause of the update.
+ * @param permissionIri           the IRI of the permission we want to update.
+ * @param maybeGroup              the IRI of the new group.
+ * @param maybeHasPermissions     the new set of permission values as string.
+ * @param maybeResourceClass   the resource's class IRI.
  *@
 
 @(namedGraphIri: IRI,
   triplestore: String,
   permissionIri: IRI,
-  newGroup: Option[IRI],
-  hasPermissions: Option[String]
+  maybeGroup: Option[IRI],
+  maybeHasPermissions: Option[String],
+  maybeResourceClass: Option[IRI]
   )
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -46,20 +48,32 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 WITH <@namedGraphIri>
 DELETE {
-    @if(newGroup.isDefined){
-    ?permissionIri knora-admin:forGroup ?currentGroup .
-  	?permissionIri knora-admin:forResourceClass ?currentResourceClass .
-  	?permissionIri knora-admin:forProperty ?currentProperty .
+    @if(maybeGroup.isDefined){
+        ?permissionIri knora-admin:forGroup ?currentGroup .
+        ?permissionIri knora-admin:forResourceClass ?currentResourceClass .
+        ?permissionIri knora-admin:forProperty ?currentProperty .
   	}
-  	@if(hasPermissions.isDefined){
-    ?permissionIri knora-base:hasPermissions ?currentHasPermissions .
+
+  	@if(maybeHasPermissions.isDefined){
+        ?permissionIri knora-base:hasPermissions ?currentHasPermissions .
     }
+
+    @if(maybeResourceClass.isDefined){
+        ?permissionIri knora-admin:forResourceClass ?currentResourceClass .
+        ?permissionIri knora-admin:forGroup ?currentGroup .
+    }
+
 } INSERT {
-    @if(newGroup.isDefined){
-    ?permissionIri knora-admin:forGroup "@newGroup.get" .
+    @if(maybeGroup.isDefined){
+        ?permissionIri knora-admin:forGroup <@maybeGroup.get> .
     }
-    @if(hasPermissions.isDefined){
-    ?permissionIri knora-base:hasPermissions "@hasPermissions.get"^^xsd:string .
+
+    @if(maybeHasPermissions.isDefined){
+        ?permissionIri knora-base:hasPermissions "@maybeHasPermissions.get"^^xsd:string .
+    }
+
+    @if(maybeResourceClass.isDefined){
+       ?permissionIri knora-admin:forResourceClass <@maybeResourceClass.get> .
     }
 }
 

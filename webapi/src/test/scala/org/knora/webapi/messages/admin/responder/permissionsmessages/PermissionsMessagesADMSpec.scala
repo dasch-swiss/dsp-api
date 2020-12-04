@@ -766,5 +766,34 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       )
       assert(caught.getMessage === s"hasPermissions cannot be empty.")
     }
+
+    "not update resource class of a doap if invalid permission IRI given" in {
+      val permissionIri = "invalid-permission-iri"
+      val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
+      val caught = intercept[BadRequestException](
+        PermissionChangeResourceClassRequestADM(
+          permissionIri = permissionIri,
+          changePermissionResourceClassRequest = ChangePermissionResourceClassApiRequestADM(resourceClassIri),
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === s"Invalid IRI is given: $permissionIri.")
+    }
+
+    "not update resource class of a doap if invalid iri is given for resource" in {
+      val permissionIri = SharedPermissionsTestData.perm001_d1.iri
+      val resourceClassIri = "invalid-iri"
+      val caught = intercept[BadRequestException](
+        PermissionChangeResourceClassRequestADM(
+          permissionIri = permissionIri,
+          changePermissionResourceClassRequest = ChangePermissionResourceClassApiRequestADM(resourceClassIri),
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === s"Invalid resource class IRI $resourceClassIri is given.")
+    }
+
   }
 }

@@ -112,15 +112,15 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(id: Option[IRI] = No
 /**
  * Represents an API request payload that asks the Knora API server to update the group of a permission.
  *
- * @param groupIri the new group IRI.
+ * @param forGroup the new group IRI.
  */
-case class ChangePermissionGroupApiRequestADM(groupIri: IRI) extends PermissionsADMJsonProtocol {
+case class ChangePermissionGroupApiRequestADM(forGroup: IRI) extends PermissionsADMJsonProtocol {
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
 
-  if (groupIri.isEmpty) {
+  if (forGroup.isEmpty) {
     throw BadRequestException(s"IRI of new group cannot be empty.")
   }
-  stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid IRI $groupIri is given."))
+  stringFormatter.validateAndEscapeIri(forGroup, throw BadRequestException(s"Invalid IRI $forGroup is given."))
 
   def toJsValue: JsValue = changePermissionGroupApiRequestADMFormat.write(this)
 }
@@ -134,7 +134,23 @@ case class ChangePermissionHasPermissionsApiRequestADM(hasPermissions: Set[Permi
   if (hasPermissions.isEmpty) {
     throw BadRequestException(s"hasPermissions cannot be empty.")
   }
+
   def toJsValue: JsValue = changePermissionHasPermissionsApiRequestADMFormat.write(this)
+}
+
+/**
+ * Represents an API request payload that asks the Knora API server to update resourceClassIri of a doap permission.
+ *
+ * @param forResourceClass the new resource class IRI of the doap permission.
+ */
+case class ChangePermissionResourceClassApiRequestADM(forResourceClass: IRI) extends PermissionsADMJsonProtocol {
+  if (forResourceClass.isEmpty) {
+    throw BadRequestException(s"forResourceClass cannot be empty.")
+  }
+  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+  stringFormatter.validateAndEscapeIri(forResourceClass, throw BadRequestException(s"Invalid resource class IRI $forResourceClass is given."))
+
+  def toJsValue: JsValue = changePermissionResourceClassApiRequestADMFormat.write(this)
 }
 
 /**
@@ -191,9 +207,10 @@ case class PermissionsForProjectGetRequestADM(projectIri: IRI,
  * A message that requests update of a permission's group.
  * A successful response will be a [[PermissionItemADM]].
  *
- * @param permissionIri        the IRI of the permission to be updated.
- * @param requestingUser       the user initiation the request.
- * @param apiRequestID         the API request ID.
+ * @param permissionIri                the IRI of the permission to be updated.
+ * @param changePermissionGroupRequest the request to update permission's group.
+ * @param requestingUser               the user initiation the request.
+ * @param apiRequestID                 the API request ID.
  */
 case class PermissionChangeGroupRequestADM(permissionIri: IRI,
                                            changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
@@ -212,21 +229,43 @@ case class PermissionChangeGroupRequestADM(permissionIri: IRI,
  * A message that requests update of a permission's hasPermissions property.
  * A successful response will be a [[PermissionItemADM]].
  *
- * @param permissionIri        the IRI of the permission to be updated.
- * @param requestingUser       the user initiation the request.
- * @param apiRequestID         the API request ID.
+ * @param permissionIri                         the IRI of the permission to be updated.
+ * @param changePermissionHasPermissionsRequest the request to update hasPermissions.
+ * @param requestingUser                        the user initiation the request.
+ * @param apiRequestID                          the API request ID.
  */
 case class PermissionChangeHasPermissionsRequestADM(permissionIri: IRI,
                                                     changePermissionHasPermissionsRequest: ChangePermissionHasPermissionsApiRequestADM,
                                                     requestingUser: UserADM,
                                                     apiRequestID: UUID
-                                          ) extends PermissionsResponderRequestADM {
+                                                   ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
   if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
     throw BadRequestException(s"Invalid IRI is given: $permissionIri.")
   }
 
+}
+
+/**
+ * A message that requests update of a doap permission's resource class.
+ * A successful response will be a [[PermissionItemADM]].
+ *
+ * @param permissionIri                        the IRI of the permission to be updated.
+ * @param changePermissionResourceClassRequest the request to update permission's resource class.
+ * @param requestingUser                       the user initiation the request.
+ * @param apiRequestID                         the API request ID.
+ */
+case class PermissionChangeResourceClassRequestADM(permissionIri: IRI,
+                                                   changePermissionResourceClassRequest: ChangePermissionResourceClassApiRequestADM,
+                                                   requestingUser: UserADM,
+                                                   apiRequestID: UUID
+                                                  ) extends PermissionsResponderRequestADM {
+
+  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+  if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
+    throw BadRequestException(s"Invalid IRI is given: $permissionIri.")
+  }
 }
 
 // Administrative Permissions
@@ -1132,6 +1171,7 @@ trait PermissionsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtoc
   implicit val administrativePermissionCreateResponseADMFormat: RootJsonFormat[AdministrativePermissionCreateResponseADM] = rootFormat(lazyFormat(jsonFormat(AdministrativePermissionCreateResponseADM, "administrative_permission")))
   implicit val defaultObjectAccessPermissionCreateResponseADMFormat: RootJsonFormat[DefaultObjectAccessPermissionCreateResponseADM] = jsonFormat(DefaultObjectAccessPermissionCreateResponseADM, "default_object_access_permission")
 
-  implicit val changePermissionGroupApiRequestADMFormat: RootJsonFormat[ChangePermissionGroupApiRequestADM] = jsonFormat(ChangePermissionGroupApiRequestADM, "groupIri")
+  implicit val changePermissionGroupApiRequestADMFormat: RootJsonFormat[ChangePermissionGroupApiRequestADM] = jsonFormat(ChangePermissionGroupApiRequestADM, "forGroup")
   implicit val changePermissionHasPermissionsApiRequestADMFormat: RootJsonFormat[ChangePermissionHasPermissionsApiRequestADM] = jsonFormat(ChangePermissionHasPermissionsApiRequestADM, "hasPermissions")
+  implicit val changePermissionResourceClassApiRequestADMFormat: RootJsonFormat[ChangePermissionResourceClassApiRequestADM] = jsonFormat(ChangePermissionResourceClassApiRequestADM, "forResourceClass")
 }

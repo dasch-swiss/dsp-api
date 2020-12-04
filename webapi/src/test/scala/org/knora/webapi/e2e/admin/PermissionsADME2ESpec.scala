@@ -341,7 +341,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
         val updatePermissionGroup =
           s"""{
-             |    "groupIri": "$newGroupIri"
+             |    "forGroup": "$newGroupIri"
              |}""".stripMargin
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -379,7 +379,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
         val updatePermissionGroup =
           s"""{
-             |    "groupIri": "$newGroupIri"
+             |    "forGroup": "$newGroupIri"
              |}""".stripMargin
         clientTestDataCollector.addFile(
           TestDataFileContent(
