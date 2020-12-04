@@ -24,20 +24,20 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
- * Transforms a repository for Knora PR 1615.
- */
+  * Transforms a repository for Knora PR 1615.
+  */
 class UpgradePluginPR1615(featureFactoryConfig: FeatureFactoryConfig) extends UpgradePlugin {
-    private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
+  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
 
-    // IRI objects representing the IRIs used in this transformation.
-    private val ForbiddenResourceIri: IriNode = nodeFactory.makeIriNode("http://rdfh.ch/0000/forbiddenResource")
+  // IRI objects representing the IRIs used in this transformation.
+  private val ForbiddenResourceIri: IriNode = nodeFactory.makeIriNode("http://rdfh.ch/0000/forbiddenResource")
 
-    override def transform(model: RdfModel): Unit = {
-        // Remove the singleton instance of knora-base:ForbiddenResource.
-        model.remove(
-            subj = Some(ForbiddenResourceIri),
-            pred = None,
-            obj = None
-        )
-    }
+  override def transform(model: RdfModel): Unit = {
+    // Remove the singleton instance of knora-base:ForbiddenResource.
+    model.remove(
+      subj = Some(ForbiddenResourceIri),
+      pred = None,
+      obj = None
+    )
+  }
 }

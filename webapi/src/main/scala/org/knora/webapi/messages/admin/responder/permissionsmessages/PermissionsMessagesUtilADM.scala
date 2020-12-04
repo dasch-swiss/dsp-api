@@ -24,62 +24,68 @@ import org.knora.webapi.exceptions.ApplicationCacheException
 import org.knora.webapi.util.cache.CacheUtil
 
 /**
- * Providing helper methods.
- */
+  * Providing helper methods.
+  */
 object PermissionsMessagesUtilADM {
 
-    val PermissionsCacheName = "permissionsCache"
+  val PermissionsCacheName = "permissionsCache"
 
-    ////////////////////
-    // Helper Methods //
-    ////////////////////
+  ////////////////////
+  // Helper Methods //
+  ////////////////////
 
-    /**
-     * Creates a key representing the supplied parameters.
-     *
-     * @param projectIri       the project IRI
-     * @param groupIri         the group IRI
-     * @param resourceClassIri the resource class IRI
-     * @param propertyIri      the property IRI
-     * @return a string.
-     */
-    def getDefaultObjectAccessPermissionADMKey(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI]): String = {
+  /**
+    * Creates a key representing the supplied parameters.
+    *
+    * @param projectIri       the project IRI
+    * @param groupIri         the group IRI
+    * @param resourceClassIri the resource class IRI
+    * @param propertyIri      the property IRI
+    * @return a string.
+    */
+  def getDefaultObjectAccessPermissionADMKey(projectIri: IRI,
+                                             groupIri: Option[IRI],
+                                             resourceClassIri: Option[IRI],
+                                             propertyIri: Option[IRI]): String = {
 
-        projectIri.toString + " | " + groupIri.toString + " | " + resourceClassIri.toString + " | " + propertyIri.toString
+    projectIri.toString + " | " + groupIri.toString + " | " + resourceClassIri.toString + " | " + propertyIri.toString
+  }
+
+  /**
+    * Writes a [[DefaultObjectAccessPermissionADM]] object to cache.
+    *
+    * @param doap a [[DefaultObjectAccessPermissionADM]].
+    * @return true if writing was successful.
+    * @throws ApplicationCacheException when there is a problem with writing to cache.
+    */
+  def writeDefaultObjectAccessPermissionADMToCache(doap: DefaultObjectAccessPermissionADM): Boolean = {
+
+    val key = doap.cacheKey
+
+    CacheUtil.put(PermissionsCacheName, key, doap)
+
+    if (CacheUtil.get(PermissionsCacheName, key).isEmpty) {
+      throw ApplicationCacheException("Writing the permission to cache was not successful.")
     }
 
-    /**
-     * Writes a [[DefaultObjectAccessPermissionADM]] object to cache.
-     *
-     * @param doap a [[DefaultObjectAccessPermissionADM]].
-     * @return true if writing was successful.
-     * @throws ApplicationCacheException when there is a problem with writing to cache.
-     */
-    def writeDefaultObjectAccessPermissionADMToCache(doap: DefaultObjectAccessPermissionADM): Boolean = {
+    true
+  }
 
-        val key = doap.cacheKey
+  /**
+    * Removes a [[DefaultObjectAccessPermissionADM]] object from cache.
+    *
+    * @param projectIri       the project IRI
+    * @param groupIri         the group IRI
+    * @param resourceClassIri the resource class IRI
+    * @param propertyIri      the property IRI
+    */
+  def invalidateCachedDefaultObjectAccessPermissionADM(projectIri: IRI,
+                                                       groupIri: Option[IRI],
+                                                       resourceClassIri: Option[IRI],
+                                                       propertyIri: Option[IRI]): Unit = {
 
-        CacheUtil.put(PermissionsCacheName, key, doap)
+    val key = getDefaultObjectAccessPermissionADMKey(projectIri, groupIri, resourceClassIri, propertyIri)
 
-        if (CacheUtil.get(PermissionsCacheName, key).isEmpty) {
-            throw ApplicationCacheException("Writing the permission to cache was not successful.")
-        }
-
-        true
-    }
-
-    /**
-     * Removes a [[DefaultObjectAccessPermissionADM]] object from cache.
-     *
-     * @param projectIri       the project IRI
-     * @param groupIri         the group IRI
-     * @param resourceClassIri the resource class IRI
-     * @param propertyIri      the property IRI
-     */
-    def invalidateCachedDefaultObjectAccessPermissionADM(projectIri: IRI, groupIri: Option[IRI], resourceClassIri: Option[IRI], propertyIri: Option[IRI]): Unit = {
-
-        val key = getDefaultObjectAccessPermissionADMKey(projectIri, groupIri, resourceClassIri, propertyIri)
-
-        CacheUtil.remove(PermissionsCacheName, key)
-    }
+    CacheUtil.remove(PermissionsCacheName, key)
+  }
 }

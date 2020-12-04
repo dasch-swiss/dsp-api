@@ -26,49 +26,50 @@ import org.apache.commons.io.FileUtils
 import org.knora.webapi.util.FileUtil
 
 /**
- * A fake triplestore for use in performance testing. This feature is activated in `application.conf`.
- */
+  * A fake triplestore for use in performance testing. This feature is activated in `application.conf`.
+  */
 object FakeTriplestore {
 
-    private var fakeTriplestoreDir: Option[File] = None
+  private var fakeTriplestoreDir: Option[File] = None
 
-    private var queryNum = 0
+  private var queryNum = 0
 
-    var data = Map.empty[String, String]
+  var data = Map.empty[String, String]
 
-    def init(dataDir: File): Unit = {
-        fakeTriplestoreDir = Some(dataDir)
+  def init(dataDir: File): Unit = {
+    fakeTriplestoreDir = Some(dataDir)
+  }
+
+  def clear(): Unit = {
+    FileUtils.deleteDirectory(fakeTriplestoreDir.get)
+    fakeTriplestoreDir.get.mkdirs()
+    ()
+  }
+
+  def load(): Unit = {
+    val dataToWrap = fakeTriplestoreDir.get.listFiles.map { queryDir =>
+      val sparql = FileUtil.readTextFile(queryDir.listFiles.filter(_.getName.endsWith(".rq")).head)
+      val result = FileUtil.readTextFile(queryDir.listFiles.filter(_.getName.endsWith(".json")).head)
+      sparql -> result
+    }.toMap
+
+    data = new ErrorHandlingMap(dataToWrap, { key: String =>
+      s"No result has been stored in the fake triplestore for this query: $key"
+    })
+  }
+
+  def add(sparql: String, result: String, log: LoggingAdapter): Unit = {
+    this.synchronized {
+      log.info("Collecting data for fake triplestore")
+      val paddedQueryNum = f"$queryNum%04d"
+      val queryDir = new File(fakeTriplestoreDir.get, paddedQueryNum)
+      queryDir.mkdirs()
+      val sparqlFile = new File(queryDir, s"query-$paddedQueryNum.rq")
+      FileUtil.writeTextFile(sparqlFile, sparql)
+      val resultFile = new File(queryDir, s"response-$paddedQueryNum.json")
+      FileUtil.writeTextFile(resultFile, result)
+      queryNum += 1
     }
-
-    def clear(): Unit = {
-        FileUtils.deleteDirectory(fakeTriplestoreDir.get)
-        fakeTriplestoreDir.get.mkdirs()
-        ()
-    }
-
-    def load(): Unit = {
-        val dataToWrap = fakeTriplestoreDir.get.listFiles.map {
-            queryDir =>
-                val sparql = FileUtil.readTextFile(queryDir.listFiles.filter(_.getName.endsWith(".rq")).head)
-                val result = FileUtil.readTextFile(queryDir.listFiles.filter(_.getName.endsWith(".json")).head)
-                sparql -> result
-        }.toMap
-
-        data = new ErrorHandlingMap(dataToWrap, { key: String => s"No result has been stored in the fake triplestore for this query: $key" })
-    }
-
-    def add(sparql: String, result: String, log: LoggingAdapter): Unit = {
-        this.synchronized {
-            log.info("Collecting data for fake triplestore")
-            val paddedQueryNum = f"$queryNum%04d"
-            val queryDir = new File(fakeTriplestoreDir.get, paddedQueryNum)
-            queryDir.mkdirs()
-            val sparqlFile = new File(queryDir, s"query-$paddedQueryNum.rq")
-            FileUtil.writeTextFile(sparqlFile, sparql)
-            val resultFile = new File(queryDir, s"response-$paddedQueryNum.json")
-            FileUtil.writeTextFile(resultFile, result)
-            queryNum += 1
-        }
-    }
+  }
 
 }

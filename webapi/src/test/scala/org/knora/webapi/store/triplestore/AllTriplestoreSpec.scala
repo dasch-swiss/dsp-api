@@ -21,19 +21,17 @@ package org.knora.webapi.store.triplestore
 
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.CoreSpec
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.settings.TriplestoreTypes
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
 object AllTriplestoreSpec {
 
-    private val config = ConfigFactory.parseString(
-        """
+  private val config = ConfigFactory.parseString("""
          # akka.loglevel = "DEBUG"
          # akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
@@ -52,18 +50,19 @@ object AllTriplestoreSpec {
  */
 class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with ImplicitSender {
 
-    private val timeout = 30.seconds
-    private val tsType = settings.triplestoreType
+  private val timeout = 30.seconds
+  private val tsType = settings.triplestoreType
 
-    // println(system.settings.config.getConfig("app").root().render())
-    // println(system.settings.config.getConfig("app.triplestore").root().render())
+  // println(system.settings.config.getConfig("app").root().render())
+  // println(system.settings.config.getConfig("app.triplestore").root().render())
 
-    override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
-    )
+  override lazy val rdfDataObjects = List(
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+  )
 
-    val countTriplesQuery: String = if (tsType.startsWith("graphdb"))
-        """
+  val countTriplesQuery: String =
+    if (tsType.startsWith("graphdb"))
+      """
         SELECT (COUNT(*) AS ?no)
         FROM <http://www.ontotext.com/explicit>
         WHERE
@@ -72,7 +71,7 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
             }
         """
     else
-        """
+      """
         SELECT (COUNT(*) AS ?no)
         WHERE
             {
@@ -80,8 +79,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
             }
         """
 
-    val namedGraphQuery: String =
-        """
+  val namedGraphQuery: String =
+    """
         SELECT ?namedGraph ?s ?p ?o ?lang
         WHERE {
                 {
@@ -95,8 +94,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
         """.stripMargin
 
-    val insertQuery: String =
-        """
+  val insertQuery: String =
+    """
         prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         prefix sub: <http://subotic.org/#>
 
@@ -111,8 +110,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
         """
 
-    val graphDataContent: String =
-        """
+  val graphDataContent: String =
+    """
         prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         prefix jedi: <http://jedi.org/#>
 
@@ -121,8 +120,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
                       rdf:type jedi:Skywalker .
         """
 
-    val checkInsertQuery: String =
-        """
+  val checkInsertQuery: String =
+    """
         prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         prefix sub: <http://subotic.org/#>
 
@@ -136,8 +135,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
         """
 
-    val revertInsertQuery: String =
-        """
+  val revertInsertQuery: String =
+    """
         prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
         prefix sub: <http://subotic.org/#>
 
@@ -150,15 +149,15 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
         """
 
-    val searchURI: String = if (tsType == TriplestoreTypes.HttpFuseki || tsType == TriplestoreTypes.EmbeddedJenaTdb) {
-        "<http://jena.apache.org/text#query>"
-    } else {
-        //GraphDB
-        "<http://www.ontotext.com/owlim/lucene#fullTextSearchIndex>"
-    }
+  val searchURI: String = if (tsType == TriplestoreTypes.HttpFuseki || tsType == TriplestoreTypes.EmbeddedJenaTdb) {
+    "<http://jena.apache.org/text#query>"
+  } else {
+    //GraphDB
+    "<http://www.ontotext.com/owlim/lucene#fullTextSearchIndex>"
+  }
 
-    val textSearchQueryGraphDBValueHasString: String =
-        s"""
+  val textSearchQueryGraphDBValueHasString: String =
+    s"""
         PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
         SELECT DISTINCT *
@@ -168,8 +167,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
     """
 
-    val textSearchQueryGraphDBRDFLabel: String =
-        s"""
+  val textSearchQueryGraphDBRDFLabel: String =
+    s"""
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
         SELECT DISTINCT *
@@ -179,8 +178,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
     """
 
-    val textSearchQueryFusekiValueHasString: String =
-        s"""
+  val textSearchQueryFusekiValueHasString: String =
+    s"""
         PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
         SELECT DISTINCT *
@@ -190,8 +189,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
     """
 
-    val textSearchQueryFusekiDRFLabel: String =
-        s"""
+  val textSearchQueryFusekiDRFLabel: String =
+    s"""
         PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
         SELECT DISTINCT *
@@ -201,182 +200,175 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         }
     """
 
-    var afterLoadCount: Int = -1
-    var afterChangeCount: Int = -1
-    var afterChangeRevertCount: Int = -1
+  var afterLoadCount: Int = -1
+  var afterChangeCount: Int = -1
+  var afterChangeRevertCount: Int = -1
 
-    /*
-    * Send message to actor under test and check the result.
-    * All must complete under 1 second or the test will fail
-    * The Akka documentation describes a bunch of other methods
-    * but this is the one I the most
-    */
-    s"The Triplestore ($tsType) Actor " when {
-        "started " should {
-            "only start answering after initialization has finished " in {
-                storeManager ! CheckTriplestoreRequest()
-                val response = expectMsgType[CheckTriplestoreResponse](1.second)
+  /*
+   * Send message to actor under test and check the result.
+   * All must complete under 1 second or the test will fail
+   * The Akka documentation describes a bunch of other methods
+   * but this is the one I the most
+   */
+  s"The Triplestore ($tsType) Actor " when {
+    "started " should {
+      "only start answering after initialization has finished " in {
+        storeManager ! CheckTriplestoreRequest()
+        val response = expectMsgType[CheckTriplestoreResponse](1.second)
 
-                response.triplestoreStatus should be(TriplestoreStatus.ServiceAvailable)
-            }
-        }
-
-        "receiving a Hello " should {
-            "reply " in {
-                within(1.seconds) {
-                    storeManager ! HelloTriplestore(tsType)
-                    expectMsg(HelloTriplestore(tsType))
-                }
-            }
-        }
-        "receiving a 'ResetTriplestoreContent' request " should {
-            "reset the data " in {
-                //println("==>> Reset test case start")
-                storeManager ! ResetRepositoryContent(rdfDataObjects)
-                expectMsg(5 minutes, ResetRepositoryContentACK())
-                //println("==>> Reset test case end")
-
-                storeManager ! SparqlSelectRequest(countTriplesQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResult =>
-                        //println(msg)
-                        afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
-                        (afterLoadCount > 0) should ===(true)
-                }
-            }
-        }
-        "receiving a Named Graph request " should {
-            "provide data " in {
-                //println("==>> Named Graph test case start")
-                storeManager ! SparqlSelectRequest(namedGraphQuery)
-                //println(result)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResult =>
-                        //println(msg)
-                        msg.results.bindings.nonEmpty should ===(true)
-                }
-                //println("==>> Named Graph test case end")
-            }
-        }
-        "receiving an update request " should {
-            "execute the update " in {
-                //println("==>> Update 1 test case start")
-
-
-                storeManager ! SparqlSelectRequest(countTriplesQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResult =>
-                        //println("vor insert: " + msg)
-                        msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
-                }
-
-
-                storeManager ! SparqlUpdateRequest(insertQuery)
-                expectMsg(SparqlUpdateResponse())
-
-                storeManager ! SparqlSelectRequest(checkInsertQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResult =>
-                        //println(msg)
-                        msg.results.bindings.size should ===(3)
-                }
-
-
-                storeManager ! SparqlSelectRequest(countTriplesQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResult =>
-                        //println("nach instert" + msg)
-                        afterChangeCount = msg.results.bindings.head.rowMap("no").toInt
-                        (afterChangeCount - afterLoadCount) should ===(3)
-                }
-
-
-
-                //println("==>> Update 1 test case end")
-            }
-            "revert back " in {
-                //println("==>> Update 2 test case start")
-
-
-                storeManager ! SparqlSelectRequest(countTriplesQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResult =>
-                        //println("vor revert: " + msg)
-                        msg.results.bindings.head.rowMap("no").toInt should ===(afterChangeCount)
-                }
-
-                storeManager ! SparqlUpdateRequest(revertInsertQuery)
-                expectMsg(SparqlUpdateResponse())
-
-                storeManager ! SparqlSelectRequest(countTriplesQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResult =>
-                        //println("nach revert: " + msg)
-                        msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
-                }
-
-
-                storeManager ! SparqlSelectRequest(checkInsertQuery)
-                expectMsgPF(timeout) {
-                    case msg: SparqlSelectResult =>
-                        //println("check: " + msg)
-                        msg.results.bindings.size should ===(0)
-                }
-
-                //println("==>> Update 2 test case end")
-            }
-        }
-        "receiving a search request " should {
-            "execute the search with the lucene index for 'knora-base:valueHasString' properties" in {
-                within(1000.millis) {
-                    tsType match {
-                        case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBValueHasString)
-                        case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
-                    }
-                    expectMsgPF(timeout) {
-                        case msg: SparqlSelectResult =>
-                            //println(msg)
-                            msg.results.bindings.size should ===(3)
-                    }
-                }
-            }
-
-            "execute the search with the lucene index for 'rdfs:label' properties" in {
-                within(1000.millis) {
-                    tsType match {
-                        case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree => storeManager ! SparqlSelectRequest(textSearchQueryGraphDBRDFLabel)
-                        case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
-                    }
-                    expectMsgPF(timeout) {
-                        case msg: SparqlSelectResult =>
-                            //println(msg)
-                            msg.results.bindings.size should ===(1)
-                    }
-                }
-            }
-        }
-
-
-        "receiving insert rdf data objects request" should {
-            "insert RDF DataObjects" in {
-                storeManager ! InsertRepositoryContent(rdfDataObjects)
-                expectMsg(5 minutes, InsertTriplestoreContentACK())
-            }
-
-        }
-
-        "receiving named graph data requests" should {
-            "put the graph data as turtle" in {
-                storeManager ! InsertGraphDataContentRequest(graphContent = graphDataContent, "http://jedi.org/graph")
-                expectMsgType[InsertGraphDataContentResponse](10.second)
-            }
-
-            "read the graph data as turtle" in {
-                storeManager ! NamedGraphDataRequest(graphIri = "http://jedi.org/graph")
-                val response = expectMsgType[NamedGraphDataResponse](1.second)
-                response.turtle.length should be >0
-            }
-        }
+        response.triplestoreStatus should be(TriplestoreStatus.ServiceAvailable)
+      }
     }
+
+    "receiving a Hello " should {
+      "reply " in {
+        within(1.seconds) {
+          storeManager ! HelloTriplestore(tsType)
+          expectMsg(HelloTriplestore(tsType))
+        }
+      }
+    }
+    "receiving a 'ResetTriplestoreContent' request " should {
+      "reset the data " in {
+        //println("==>> Reset test case start")
+        storeManager ! ResetRepositoryContent(rdfDataObjects)
+        expectMsg(5 minutes, ResetRepositoryContentACK())
+        //println("==>> Reset test case end")
+
+        storeManager ! SparqlSelectRequest(countTriplesQuery)
+        expectMsgPF(timeout) {
+          case msg: SparqlSelectResult =>
+            //println(msg)
+            afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
+            (afterLoadCount > 0) should ===(true)
+        }
+      }
+    }
+    "receiving a Named Graph request " should {
+      "provide data " in {
+        //println("==>> Named Graph test case start")
+        storeManager ! SparqlSelectRequest(namedGraphQuery)
+        //println(result)
+        expectMsgPF(timeout) {
+          case msg: SparqlSelectResult =>
+            //println(msg)
+            msg.results.bindings.nonEmpty should ===(true)
+        }
+        //println("==>> Named Graph test case end")
+      }
+    }
+    "receiving an update request " should {
+      "execute the update " in {
+        //println("==>> Update 1 test case start")
+
+        storeManager ! SparqlSelectRequest(countTriplesQuery)
+        expectMsgPF(timeout) {
+          case msg: SparqlSelectResult =>
+            //println("vor insert: " + msg)
+            msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
+        }
+
+        storeManager ! SparqlUpdateRequest(insertQuery)
+        expectMsg(SparqlUpdateResponse())
+
+        storeManager ! SparqlSelectRequest(checkInsertQuery)
+        expectMsgPF(timeout) {
+          case msg: SparqlSelectResult =>
+            //println(msg)
+            msg.results.bindings.size should ===(3)
+        }
+
+        storeManager ! SparqlSelectRequest(countTriplesQuery)
+        expectMsgPF(timeout) {
+          case msg: SparqlSelectResult =>
+            //println("nach instert" + msg)
+            afterChangeCount = msg.results.bindings.head.rowMap("no").toInt
+            (afterChangeCount - afterLoadCount) should ===(3)
+        }
+        //println("==>> Update 1 test case end")
+      }
+      "revert back " in {
+        //println("==>> Update 2 test case start")
+
+        storeManager ! SparqlSelectRequest(countTriplesQuery)
+        expectMsgPF(timeout) {
+          case msg: SparqlSelectResult =>
+            //println("vor revert: " + msg)
+            msg.results.bindings.head.rowMap("no").toInt should ===(afterChangeCount)
+        }
+
+        storeManager ! SparqlUpdateRequest(revertInsertQuery)
+        expectMsg(SparqlUpdateResponse())
+
+        storeManager ! SparqlSelectRequest(countTriplesQuery)
+        expectMsgPF(timeout) {
+          case msg: SparqlSelectResult =>
+            //println("nach revert: " + msg)
+            msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
+        }
+
+        storeManager ! SparqlSelectRequest(checkInsertQuery)
+        expectMsgPF(timeout) {
+          case msg: SparqlSelectResult =>
+            //println("check: " + msg)
+            msg.results.bindings.size should ===(0)
+        }
+
+        //println("==>> Update 2 test case end")
+      }
+    }
+    "receiving a search request " should {
+      "execute the search with the lucene index for 'knora-base:valueHasString' properties" in {
+        within(1000.millis) {
+          tsType match {
+            case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree =>
+              storeManager ! SparqlSelectRequest(textSearchQueryGraphDBValueHasString)
+            case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
+          }
+          expectMsgPF(timeout) {
+            case msg: SparqlSelectResult =>
+              //println(msg)
+              msg.results.bindings.size should ===(3)
+          }
+        }
+      }
+
+      "execute the search with the lucene index for 'rdfs:label' properties" in {
+        within(1000.millis) {
+          tsType match {
+            case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree =>
+              storeManager ! SparqlSelectRequest(textSearchQueryGraphDBRDFLabel)
+            case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
+          }
+          expectMsgPF(timeout) {
+            case msg: SparqlSelectResult =>
+              //println(msg)
+              msg.results.bindings.size should ===(1)
+          }
+        }
+      }
+    }
+
+    "receiving insert rdf data objects request" should {
+      "insert RDF DataObjects" in {
+        storeManager ! InsertRepositoryContent(rdfDataObjects)
+        expectMsg(5 minutes, InsertTriplestoreContentACK())
+      }
+
+    }
+
+    "receiving named graph data requests" should {
+      "put the graph data as turtle" in {
+        storeManager ! InsertGraphDataContentRequest(graphContent = graphDataContent, "http://jedi.org/graph")
+        expectMsgType[InsertGraphDataContentResponse](10.second)
+      }
+
+      "read the graph data as turtle" in {
+        storeManager ! NamedGraphDataRequest(graphIri = "http://jedi.org/graph")
+        val response = expectMsgType[NamedGraphDataResponse](1.second)
+        response.turtle.length should be > 0
+      }
+    }
+  }
 
 }

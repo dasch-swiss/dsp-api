@@ -43,8 +43,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
 object ProjectsADME2ESpec {
-    val config: Config = ConfigFactory.parseString(
-        """
+  val config: Config = ConfigFactory.parseString("""
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
@@ -53,138 +52,151 @@ object ProjectsADME2ESpec {
 /**
   * End-to-End (E2E) test specification for testing groups endpoint.
   */
-class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with SessionJsonProtocol with ProjectsADMJsonProtocol with TriplestoreJsonProtocol {
+class ProjectsADME2ESpec
+    extends E2ESpec(ProjectsADME2ESpec.config)
+    with SessionJsonProtocol
+    with ProjectsADMJsonProtocol
+    with TriplestoreJsonProtocol {
 
-    private implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
+  private implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
 
-    private val rootEmail = SharedTestDataADM.rootUser.email
-    private val testPass = SharedTestDataADM.testPass
-    private val projectIri = SharedTestDataADM.imagesProject.id
-    private val projectIriEnc = URLEncoder.encode(projectIri, "utf-8")
-    private val projectShortname = SharedTestDataADM.imagesProject.shortname
-    private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
+  private val rootEmail = SharedTestDataADM.rootUser.email
+  private val testPass = SharedTestDataADM.testPass
+  private val projectIri = SharedTestDataADM.imagesProject.id
+  private val projectIriEnc = URLEncoder.encode(projectIri, "utf-8")
+  private val projectShortname = SharedTestDataADM.imagesProject.shortname
+  private val projectShortcode = SharedTestDataADM.imagesProject.shortcode
 
-    // Directory path for generated client test data
-    private val clientTestDataPath: Seq[String] = Seq("admin", "projects")
+  // Directory path for generated client test data
+  private val clientTestDataPath: Seq[String] = Seq("admin", "projects")
 
-    // Collects client test data
-    private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  // Collects client test data
+  private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+  )
 
-    override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
-    )
+  "The Projects Route ('admin/projects')" when {
 
-    "The Projects Route ('admin/projects')" when {
+    "used to query for project information" should {
 
-        "used to query for project information" should {
+      "return all projects" in {
+        val request = Get(baseApiUrl + s"/admin/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
 
-            "return all projects" in {
-                val request = Get(baseApiUrl + s"/admin/projects") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
+        // log.debug("projects as objects: {}", AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]])
 
-                // log.debug("projects as objects: {}", AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectInfoV1]])
+        val projects: Seq[ProjectADM] =
+          AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
+        projects.size should be(8)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-projects-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
 
-                val projects: Seq[ProjectADM] = AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
-                projects.size should be (8)
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "get-projects-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
+      "return the information for a single project identified by iri" in {
+        val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-project-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
 
-            "return the information for a single project identified by iri" in {
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "get-project-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
+      "return the information for a single project identified by shortname" in {
+        val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
+      }
 
-            "return the information for a single project identified by shortname" in {
-                val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-            }
+      "return the information for a single project identified by shortcode" in {
+        val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
+      }
 
-            "return the information for a single project identified by shortcode" in {
-                val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-            }
+      "return the project's restricted view settings using its IRI" in {
+        val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/RestrictedViewSettings") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        logger.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
 
-            "return the project's restricted view settings using its IRI" in {
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/RestrictedViewSettings") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                logger.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
+        val settings: ProjectRestrictedViewSettingsADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
+        settings.size should be(Some("!512,512"))
+        settings.watermark should be(Some("path_to_image"))
 
-                val settings: ProjectRestrictedViewSettingsADM = AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
-                settings.size should be (Some("!512,512"))
-                settings.watermark should be (Some("path_to_image"))
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-project-restricted-view-settings-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "get-project-restricted-view-settings-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
+      "return the project's restricted view settings using its shortname" in {
+        val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname/RestrictedViewSettings") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        logger.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
 
-            "return the project's restricted view settings using its shortname" in {
-                val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname/RestrictedViewSettings") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                logger.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
+        val settings: ProjectRestrictedViewSettingsADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
+        settings.size should be(Some("!512,512"))
+        settings.watermark should be(Some("path_to_image"))
+      }
 
-                val settings: ProjectRestrictedViewSettingsADM = AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
-                settings.size should be (Some("!512,512"))
-                settings.watermark should be (Some("path_to_image"))
-            }
+      "return the project's restricted view settings using its shortcode" in {
+        val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/RestrictedViewSettings") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        logger.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
 
-            "return the project's restricted view settings using its shortcode" in {
-                val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/RestrictedViewSettings") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                logger.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
+        val settings: ProjectRestrictedViewSettingsADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
+        settings.size should be(Some("!512,512"))
+        settings.watermark should be(Some("path_to_image"))
+      }
+    }
 
-                val settings: ProjectRestrictedViewSettingsADM = AkkaHttpUtils.httpResponseToJson(response).fields("settings").convertTo[ProjectRestrictedViewSettingsADM]
-                settings.size should be (Some("!512,512"))
-                settings.watermark should be (Some("path_to_image"))
-            }
-        }
+    "given a custom Iri" should {
 
-        "given a custom Iri" should {
+      "CREATE a new project with the provided custom Iri" in {
 
-            "CREATE a new project with the provided custom Iri" in {
+        val customProjectIri: IRI = "http://rdfh.ch/projects/3333"
 
-                val customProjectIri: IRI = "http://rdfh.ch/projects/3333"
-
-                val createProjectWithCustomIRIRequest: String =
-                    s"""{
+        val createProjectWithCustomIRIRequest: String =
+          s"""{
                        |    "id": "$customProjectIri",
                        |    "shortname": "newprojectWithIri",
                        |    "shortcode": "3333",
@@ -196,49 +208,53 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |    "selfjoin": false
                        |}""".stripMargin
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "create-project-with-custom-Iri-request",
-                            fileExtension = "json"
-                        ),
-                        text = createProjectWithCustomIRIRequest
-                    )
-                )
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-project-with-custom-Iri-request",
+              fileExtension = "json"
+            ),
+            text = createProjectWithCustomIRIRequest
+          )
+        )
 
-                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, createProjectWithCustomIRIRequest)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be (StatusCodes.OK)
+        val request = Post(
+          baseApiUrl + s"/admin/projects",
+          HttpEntity(ContentTypes.`application/json`, createProjectWithCustomIRIRequest)) ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
 
-                val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
 
-                //check that the custom IRI is correctly assigned
-                result.id should be (customProjectIri)
+        //check that the custom IRI is correctly assigned
+        result.id should be(customProjectIri)
 
-                //check the rest of project info
-                result.shortcode should be ("3333")
-                result.shortname should be ("newprojectWithIri")
-                result.longname should be (Some("new project with a custom IRI"))
-                result.keywords should be (Seq("projectIRI"))
-                result.description should be (Seq(StringLiteralV2(value = "a project created with a custom IRI", language = Some("en"))))
+        //check the rest of project info
+        result.shortcode should be("3333")
+        result.shortname should be("newprojectWithIri")
+        result.longname should be(Some("new project with a custom IRI"))
+        result.keywords should be(Seq("projectIRI"))
+        result.description should be(
+          Seq(StringLiteralV2(value = "a project created with a custom IRI", language = Some("en"))))
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "create-project-with-custom-Iri-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-project-with-custom-Iri-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
 
-            }
+      }
 
-            "return 'BadRequest' if the supplied project IRI is not unique" in {
-                val params =
-                    s"""{
+      "return 'BadRequest' if the supplied project IRI is not unique" in {
+        val params =
+          s"""{
                        |    "id": "http://rdfh.ch/projects/3333",
                        |    "shortname": "newprojectWithDuplicateIri",
                        |    "shortcode": "2222",
@@ -250,24 +266,25 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |    "selfjoin": false
                        |}""".stripMargin
 
+        val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.BadRequest)
 
-                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be (StatusCodes.BadRequest)
+        val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+        val invalidIri: Boolean =
+          errorMessage.contains(s"IRI: 'http://rdfh.ch/projects/3333' already exists, try another one.")
+        invalidIri should be(true)
+      }
+    }
 
-                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
-                val invalidIri: Boolean = errorMessage.contains(s"IRI: 'http://rdfh.ch/projects/3333' already exists, try another one.")
-                invalidIri should be(true)
-            }
-        }
+    "used to modify project information" should {
 
-        "used to modify project information" should {
+      val newProjectIri = new MutableTestIri
 
-            val newProjectIri = new MutableTestIri
-
-            "CREATE a new project and return the project info if the supplied shortname is unique" in {
-                val createProjectRequest: String =
-                    s"""{
+      "CREATE a new project and return the project info if the supplied shortname is unique" in {
+        val createProjectRequest: String =
+          s"""{
                        |    "shortname": "newproject",
                        |    "shortcode": "1111",
                        |    "longname": "project longname",
@@ -278,48 +295,50 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |    "selfjoin": false
                        |}""".stripMargin
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "create-project-request",
-                            fileExtension = "json"
-                        ),
-                        text = createProjectRequest
-                    )
-                )
-                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, createProjectRequest)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                logger.debug(s"response: {}", response)
-                response.status should be (StatusCodes.OK)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-project-request",
+              fileExtension = "json"
+            ),
+            text = createProjectRequest
+          )
+        )
+        val request = Post(baseApiUrl + s"/admin/projects",
+                           HttpEntity(ContentTypes.`application/json`, createProjectRequest)) ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        logger.debug(s"response: {}", response)
+        response.status should be(StatusCodes.OK)
 
-                val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
-                result.shortname should be ("newproject")
-                result.shortcode should be ("1111")
-                result.longname should be (Some("project longname"))
-                result.description should be (Seq(StringLiteralV2(value = "project description", language = Some("en"))))
-                result.keywords should be (Seq("keywords"))
-                result.logo should be (Some("/fu/bar/baz.jpg"))
-                result.status should be (true)
-                result.selfjoin should be (false)
+        val result = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        result.shortname should be("newproject")
+        result.shortcode should be("1111")
+        result.longname should be(Some("project longname"))
+        result.description should be(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+        result.keywords should be(Seq("keywords"))
+        result.logo should be(Some("/fu/bar/baz.jpg"))
+        result.status should be(true)
+        result.selfjoin should be(false)
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "create-project-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-project-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
 
-                newProjectIri.set(result.id)
-            }
+        newProjectIri.set(result.id)
+      }
 
-            "return a 'BadRequest' if the supplied project shortname during creation is not unique" in {
-                val params =
-                    s"""
+      "return a 'BadRequest' if the supplied project shortname during creation is not unique" in {
+        val params =
+          s"""
                        |{
                        |    "shortname": "newproject",
                        |    "shortcode": "1112",
@@ -332,16 +351,16 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |}
                 """.stripMargin
 
+        val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
 
-                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.BadRequest)
+      }
 
-                response.status should be (StatusCodes.BadRequest)
-            }
-
-            "return 'BadRequest' if 'shortname' during creation is missing" in {
-                val params =
-                    s"""
+      "return 'BadRequest' if 'shortname' during creation is missing" in {
+        val params =
+          s"""
                        |{
                        |    "shortcode": "1112",
                        |    "longname": "project longname",
@@ -353,14 +372,15 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |}
                 """.stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be (StatusCodes.BadRequest)
-            }
+        val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.BadRequest)
+      }
 
-            "return 'BadRequest' if 'shortcode' during creation is missing" in {
-                val params =
-                    s"""
+      "return 'BadRequest' if 'shortcode' during creation is missing" in {
+        val params =
+          s"""
                        |{
                        |    "shortname": "newproject2",
                        |    "longname": "project longname",
@@ -372,14 +392,15 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |}
                 """.stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be (StatusCodes.BadRequest)
-            }
+        val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.BadRequest)
+      }
 
-            "return 'BadRequest' if 'project description' during creation is missing" in {
-                val params =
-                    s"""
+      "return 'BadRequest' if 'project description' during creation is missing" in {
+        val params =
+          s"""
                        |{
                        |    "shortcode": "1114",
                        |    "shortname": "newproject5",
@@ -392,15 +413,16 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |}
                 """.stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be (StatusCodes.BadRequest)
-            }
+        val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.BadRequest)
+      }
 
-            "UPDATE a project" in {
+      "UPDATE a project" in {
 
-                val updateProjectRequest: String =
-                    s"""{
+        val updateProjectRequest: String =
+          s"""{
                        |    "shortname": "newproject",
                        |    "longname": "updated project longname",
                        |    "description": [{"value": "updated project description", "language": "en"}],
@@ -410,314 +432,338 @@ class ProjectsADME2ESpec extends E2ESpec(ProjectsADME2ESpec.config) with Session
                        |    "selfjoin": true
                        |}""".stripMargin
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "update-project-request",
-                            fileExtension = "json"
-                        ),
-                        text = updateProjectRequest
-                    )
-                )
-                val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
-                val request = Put(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded, HttpEntity(ContentTypes.`application/json`, updateProjectRequest)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be (StatusCodes.OK)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-project-request",
+              fileExtension = "json"
+            ),
+            text = updateProjectRequest
+          )
+        )
+        val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
+        val request = Put(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded,
+                          HttpEntity(ContentTypes.`application/json`, updateProjectRequest)) ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
 
-                val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
-                result.shortname should be ("newproject")
-                result.shortcode should be ("1111")
-                result.longname should be (Some("updated project longname"))
-                result.description should be (Seq(StringLiteralV2(value = "updated project description", language = Some("en"))))
-                result.keywords.sorted should be (Seq("updated", "keywords").sorted)
-                result.logo should be (Some("/fu/bar/baz-updated.jpg"))
-                result.status should be (true)
-                result.selfjoin should be (true)
+        val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        result.shortname should be("newproject")
+        result.shortcode should be("1111")
+        result.longname should be(Some("updated project longname"))
+        result.description should be(Seq(StringLiteralV2(value = "updated project description", language = Some("en"))))
+        result.keywords.sorted should be(Seq("updated", "keywords").sorted)
+        result.logo should be(Some("/fu/bar/baz-updated.jpg"))
+        result.status should be(true)
+        result.selfjoin should be(true)
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "update-project-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-project-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
 
-            "UPDATE a project with multiple description" in {
-                val updateProjectMultipleDescriptionRequest: String =
-                    s"""{
+      "UPDATE a project with multiple description" in {
+        val updateProjectMultipleDescriptionRequest: String =
+          s"""{
                        |    "description": [
                        |                    {"value": "Test Project", "language": "en"},
                        |                    {"value": "Test Project", "language": "se"}
                        |                    ]
                        |}""".stripMargin
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "update-project-with-multiple-description-request",
-                            fileExtension = "json"
-                        ),
-                        text = updateProjectMultipleDescriptionRequest
-                    )
-                )
-                val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
-                val request = Put(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded, HttpEntity(ContentTypes.`application/json`, updateProjectMultipleDescriptionRequest)) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be (StatusCodes.OK)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-project-with-multiple-description-request",
+              fileExtension = "json"
+            ),
+            text = updateProjectMultipleDescriptionRequest
+          )
+        )
+        val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
+        val request = Put(
+          baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded,
+          HttpEntity(ContentTypes.`application/json`, updateProjectMultipleDescriptionRequest)) ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
 
-                val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
-                result.description.size should be (2)
-                result.description should contain (StringLiteralV2(value = "Test Project", language = Some("en")))
-                result.description should contain (StringLiteralV2(value = "Test Project", language = Some("se")))
+        val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        result.description.size should be(2)
+        result.description should contain(StringLiteralV2(value = "Test Project", language = Some("en")))
+        result.description should contain(StringLiteralV2(value = "Test Project", language = Some("se")))
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "update-project-with-multiple-description-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-project-with-multiple-description-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
 
-            "DELETE a project" in {
+      "DELETE a project" in {
 
-                val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
-                val request = Delete(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded) ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                response.status should be (StatusCodes.OK)
+        val projectIriEncoded = URLEncoder.encode(newProjectIri.get, "utf-8")
+        val request = Delete(baseApiUrl + s"/admin/projects/iri/" + projectIriEncoded) ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        response.status should be(StatusCodes.OK)
 
-                val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
-                result.status should be (false)
+        val result: ProjectADM = AkkaHttpUtils.httpResponseToJson(response).fields("project").convertTo[ProjectADM]
+        result.status should be(false)
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "delete-project-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "delete-project-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
 
-        }
-
-        "used to query members [FUNCTIONALITY]" should {
-
-            "return all members of a project identified by iri" in {
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-
-                val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
-                members.size should be (4)
-
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "get-project-members-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
-
-            "return all members of a project identified by shortname" in {
-                val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname/members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-
-                val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
-                members.size should be (4)
-            }
-
-           "return all members of a project identified by shortcode" in {
-                val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-
-                val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
-                members.size should be (4)
-            }
-
-           "return all admin members of a project identified by iri" in {
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/admin-members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-
-                val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
-                members.size should be (2)
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "get-project-admin-members-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-           }
-
-            "return all admin members of a project identified by shortname" in {
-                val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname/admin-members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-
-                val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
-                members.size should be (2)
-            }
-
-            "return all admin members of a project identified by shortcode" in {
-                val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/admin-members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-
-                val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
-                members.size should be (2)
-            }
-        }
-
-        "used to query members [PERMISSIONS]" should {
-
-            "return members of a project to a SystemAdmin" in {
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                assert(response.status === StatusCodes.OK)
-            }
-
-            "return members of a project to a ProjectAdmin" in {
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                assert(response.status === StatusCodes.OK)
-            }
-
-            "return `Forbidden` for members of a project to a normal user" in {
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                assert(response.status === StatusCodes.Forbidden)
-            }
-
-            "return admin-members of a project to a SystemAdmin" in {
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/admin-members") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                assert(response.status === StatusCodes.OK)
-            }
-
-            "return admin-members of a project to a ProjectAdmin" in {
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/admin-members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                assert(response.status === StatusCodes.OK)
-            }
-
-            "return `Forbidden` for admin-members of a project to a normal user" in {
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/admin-members") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                assert(response.status === StatusCodes.Forbidden)
-            }
-        }
-
-        "used to query keywords" should {
-
-            "return all unique keywords for all projects" in {
-                val request = Get(baseApiUrl + s"/admin/projects/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-
-                val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
-                keywords.size should be (21)
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "get-keywords-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
-
-            "return all keywords for a single project" in {
-                val incunabulaIriEnc = URLEncoder.encode(SharedTestDataADM.incunabulaProject.id, "utf-8")
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$incunabulaIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-
-                val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
-                keywords should be (SharedTestDataADM.incunabulaProject.keywords)
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "get-project-keywords-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
-
-            "return empty list for a project without keywords" in {
-                val dokubibIriEnc = URLEncoder.encode(SharedTestDataADM.dokubibProject.id, "utf-8")
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$dokubibIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.OK)
-
-                val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
-                keywords should be (Seq.empty[String])
-            }
-
-            "return 'NotFound' when the project IRI is unknown" in {
-                val notexistingIriEnc = URLEncoder.encode("http://rdfh.ch/projects/notexisting", "utf-8")
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$notexistingIriEnc/Keywords") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: {}", response)
-                assert(response.status === StatusCodes.NotFound)
-            }
-        }
-
-        "used to dump project data" should {
-            "return a TriG file containing all data from a project" in {
-                val anythingProjectIriEnc = URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
-                val request = Get(baseApiUrl + s"/admin/projects/iri/$anythingProjectIriEnc/AllData") ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, testPass))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                assert(response.status === StatusCodes.OK)
-                val trigStrFuture: Future[String] = Unmarshal(response.entity).to[String]
-                val trigStr: String = Await.result(trigStrFuture, Timeout(5.seconds).duration)
-                val parsedTrig: RdfModel = parseTrig(trigStr)
-                val contextIris: Set[IRI] = parsedTrig.getContexts
-
-                assert(contextIris == Set(
-                    "http://www.knora.org/ontology/0001/something",
-                    "http://www.knora.org/ontology/0001/anything",
-                    "http://www.knora.org/data/0001/anything",
-                    "http://www.knora.org/data/permissions",
-                    "http://www.knora.org/data/admin"
-                ))
-            }
-        }
     }
+
+    "used to query members [FUNCTIONALITY]" should {
+
+      "return all members of a project identified by iri" in {
+        val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
+
+        val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
+        members.size should be(4)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-project-members-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "return all members of a project identified by shortname" in {
+        val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname/members") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
+
+        val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
+        members.size should be(4)
+      }
+
+      "return all members of a project identified by shortcode" in {
+        val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/members") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
+
+        val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
+        members.size should be(4)
+      }
+
+      "return all admin members of a project identified by iri" in {
+        val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/admin-members") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
+
+        val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
+        members.size should be(2)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-project-admin-members-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "return all admin members of a project identified by shortname" in {
+        val request = Get(baseApiUrl + s"/admin/projects/shortname/$projectShortname/admin-members") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
+
+        val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
+        members.size should be(2)
+      }
+
+      "return all admin members of a project identified by shortcode" in {
+        val request = Get(baseApiUrl + s"/admin/projects/shortcode/$projectShortcode/admin-members") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
+
+        val members: Seq[UserADM] = AkkaHttpUtils.httpResponseToJson(response).fields("members").convertTo[Seq[UserADM]]
+        members.size should be(2)
+      }
+    }
+
+    "used to query members [PERMISSIONS]" should {
+
+      "return members of a project to a SystemAdmin" in {
+        val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.OK)
+      }
+
+      "return members of a project to a ProjectAdmin" in {
+        val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.OK)
+      }
+
+      "return `Forbidden` for members of a project to a normal user" in {
+        val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/members") ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.Forbidden)
+      }
+
+      "return admin-members of a project to a SystemAdmin" in {
+        val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/admin-members") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.OK)
+      }
+
+      "return admin-members of a project to a ProjectAdmin" in {
+        val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/admin-members") ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.imagesUser01.email, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.OK)
+      }
+
+      "return `Forbidden` for admin-members of a project to a normal user" in {
+        val request = Get(baseApiUrl + s"/admin/projects/iri/$projectIriEnc/admin-members") ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.imagesUser02.email, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.Forbidden)
+      }
+    }
+
+    "used to query keywords" should {
+
+      "return all unique keywords for all projects" in {
+        val request = Get(baseApiUrl + s"/admin/projects/Keywords") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
+
+        val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
+        keywords.size should be(21)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-keywords-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "return all keywords for a single project" in {
+        val incunabulaIriEnc = URLEncoder.encode(SharedTestDataADM.incunabulaProject.id, "utf-8")
+        val request = Get(baseApiUrl + s"/admin/projects/iri/$incunabulaIriEnc/Keywords") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
+
+        val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
+        keywords should be(SharedTestDataADM.incunabulaProject.keywords)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-project-keywords-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "return empty list for a project without keywords" in {
+        val dokubibIriEnc = URLEncoder.encode(SharedTestDataADM.dokubibProject.id, "utf-8")
+        val request = Get(baseApiUrl + s"/admin/projects/iri/$dokubibIriEnc/Keywords") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.OK)
+
+        val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
+        keywords should be(Seq.empty[String])
+      }
+
+      "return 'NotFound' when the project IRI is unknown" in {
+        val notexistingIriEnc = URLEncoder.encode("http://rdfh.ch/projects/notexisting", "utf-8")
+        val request = Get(baseApiUrl + s"/admin/projects/iri/$notexistingIriEnc/Keywords") ~> addCredentials(
+          BasicHttpCredentials(rootEmail, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: {}", response)
+        assert(response.status === StatusCodes.NotFound)
+      }
+    }
+
+    "used to dump project data" should {
+      "return a TriG file containing all data from a project" in {
+        val anythingProjectIriEnc = URLEncoder.encode(SharedTestDataADM.anythingProject.id, "utf-8")
+        val request = Get(baseApiUrl + s"/admin/projects/iri/$anythingProjectIriEnc/AllData") ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.OK)
+        val trigStrFuture: Future[String] = Unmarshal(response.entity).to[String]
+        val trigStr: String = Await.result(trigStrFuture, Timeout(5.seconds).duration)
+        val parsedTrig: RdfModel = parseTrig(trigStr)
+        val contextIris: Set[IRI] = parsedTrig.getContexts
+
+        assert(
+          contextIris == Set(
+            "http://www.knora.org/ontology/0001/something",
+            "http://www.knora.org/ontology/0001/anything",
+            "http://www.knora.org/data/0001/anything",
+            "http://www.knora.org/data/permissions",
+            "http://www.knora.org/data/admin"
+          ))
+      }
+    }
+  }
 }

@@ -25,18 +25,18 @@ import akka.http.scaladsl.server.Route
 import org.knora.webapi.http.version.versioninfo.VersionInfo
 
 /**
- * This object provides methods that can be used to add the [[Server]] header
- * to an [[akka.http.scaladsl.model.HttpResponse]].
- */
+  * This object provides methods that can be used to add the [[Server]] header
+  * to an [[akka.http.scaladsl.model.HttpResponse]].
+  */
 object ServerVersion {
 
-    private val ApiNameAndVersion = s"${VersionInfo.name}/${VersionInfo.webapiVersion}"
-    private val AkkaNameAndVersion = s"akka-http/${VersionInfo.akkaHttpVersion}"
-    private val AllProducts = ApiNameAndVersion + " " + AkkaNameAndVersion
+  private val ApiNameAndVersion = s"${VersionInfo.name}/${VersionInfo.webapiVersion}"
+  private val AkkaNameAndVersion = s"akka-http/${VersionInfo.akkaHttpVersion}"
+  private val AllProducts = ApiNameAndVersion + " " + AkkaNameAndVersion
 
-    def serverVersionHeader: Server = Server(products = AllProducts)
+  def serverVersionHeader: Server = Server(products = AllProducts)
 
-    def addServerHeader(route: Route): Route = respondWithHeader(serverVersionHeader) {
-        route
-    }
+  def addServerHeader(route: Route): Route = respondWithHeader(serverVersionHeader) {
+    route
+  }
 }

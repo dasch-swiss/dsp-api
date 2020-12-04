@@ -37,65 +37,62 @@ import org.knora.webapi.util.FileUtil
 
 import scala.concurrent.ExecutionContextExecutor
 
-
 /**
   * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
   * here: http://spray.io/documentation/1.2.2/spray-testkit/
   */
 class StandoffRouteV2R2RSpec extends R2RSpec {
 
-    override def testConfigSource: String =
-        """
+  override def testConfigSource: String =
+    """
           |# akka.loglevel = "DEBUG"
           |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val standoffPath = new StandoffRouteV2(routeData).knoraApiPath
+  private val standoffPath = new StandoffRouteV2(routeData).knoraApiPath
 
-    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
-    implicit val ec: ExecutionContextExecutor = system.dispatcher
+  implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    private val anythingUser = SharedTestDataADM.anythingUser1
-    private val anythingUserEmail = anythingUser.email
+  private val anythingUser = SharedTestDataADM.anythingUser1
+  private val anythingUserEmail = anythingUser.email
 
-    private val password = SharedTestDataADM.testPass
+  private val password = SharedTestDataADM.testPass
 
-    object RequestParams {
+  object RequestParams {
 
-        val pathToLetterMapping = "test_data/test_route/texts/mappingForLetter.xml"
+    val pathToLetterMapping = "test_data/test_route/texts/mappingForLetter.xml"
 
-        val pathToLetterXML = "test_data/test_route/texts/letter.xml"
+    val pathToLetterXML = "test_data/test_route/texts/letter.xml"
 
-        val pathToLetter2XML = "test_data/test_route/texts/letter2.xml"
+    val pathToLetter2XML = "test_data/test_route/texts/letter2.xml"
 
-        val pathToLetter3XML = "test_data/test_route/texts/letter3.xml"
+    val pathToLetter3XML = "test_data/test_route/texts/letter3.xml"
 
-        // Standard HTML is the html code that can be translated into Standoff markup with the OntologyConstants.KnoraBase.StandardMapping
-        val pathToStandardHTML = "test_data/test_route/texts/StandardHTML.xml"
+    // Standard HTML is the html code that can be translated into Standoff markup with the OntologyConstants.KnoraBase.StandardMapping
+    val pathToStandardHTML = "test_data/test_route/texts/StandardHTML.xml"
 
-        val pathToHTMLMapping = "test_data/test_route/texts/mappingForHTML.xml"
+    val pathToHTMLMapping = "test_data/test_route/texts/mappingForHTML.xml"
 
-        val pathToHTML = "test_data/test_route/texts/HTML.xml"
+    val pathToHTML = "test_data/test_route/texts/HTML.xml"
 
-    }
+  }
 
-    override lazy val rdfDataObjects: List[RdfDataObject] = List(
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
+    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
+    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+  )
 
-        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
+  "The Standoff v2 Endpoint" should {
 
-    )
+    "create a mapping from a XML" in {
 
-    "The Standoff v2 Endpoint" should {
+      val xmlFileToSend = new File(RequestParams.pathToLetterMapping)
 
-        "create a mapping from a XML" in {
-
-            val xmlFileToSend = new File(RequestParams.pathToLetterMapping)
-
-            val mappingParams =
-                s"""
+      val mappingParams =
+        s"""
                    |{
                    |    "knora-api:mappingHasName": "LetterMapping",
                    |    "knora-api:attachedToProject": {
@@ -109,27 +106,30 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
                    |}
                 """.stripMargin
 
-            val formDataMapping = Multipart.FormData(
-                Multipart.FormData.BodyPart(
-                    "json",
-                    HttpEntity(ContentTypes.`application/json`, mappingParams)
-                ),
-                Multipart.FormData.BodyPart(
-                    "xml",
-                    HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), xmlFileToSend.toPath),
-                    Map("filename" -> "brokenMapping.xml")
-                )
-            )
+      val formDataMapping = Multipart.FormData(
+        Multipart.FormData.BodyPart(
+          "json",
+          HttpEntity(ContentTypes.`application/json`, mappingParams)
+        ),
+        Multipart.FormData.BodyPart(
+          "xml",
+          HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), xmlFileToSend.toPath),
+          Map("filename" -> "brokenMapping.xml")
+        )
+      )
 
-            // create standoff from XML
-            Post("/v2/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+      // create standoff from XML
+      Post("/v2/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
 
-                assert(status == StatusCodes.OK, "creation of a mapping returned a non successful HTTP status code: " + responseAs[String])
+        assert(status == StatusCodes.OK,
+               "creation of a mapping returned a non successful HTTP status code: " + responseAs[String])
 
-                val expectedAnswerJSONLD = FileUtil.readTextFile(new File("test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
+        val expectedAnswerJSONLD =
+          FileUtil.readTextFile(new File("test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
 
-                compareJSONLDForMappingCreationResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
-            }
-        }
+        compareJSONLDForMappingCreationResponse(expectedJSONLD = expectedAnswerJSONLD,
+                                                receivedJSONLD = responseAs[String])
+      }
     }
+  }
 }

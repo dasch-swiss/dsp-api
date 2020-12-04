@@ -30,48 +30,50 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import scala.concurrent.duration._
 
 object SipiResponderADMSpec {
-    val config: Config = ConfigFactory.parseString(
-        """
+  val config: Config = ConfigFactory.parseString("""
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
 
 /**
- * Tests [[SipiResponderADM]].
- */
+  * Tests [[SipiResponderADM]].
+  */
 class SipiResponderADMSpec extends CoreSpec(SipiResponderADMSpec.config) with ImplicitSender {
 
-    override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
-    )
+  override lazy val rdfDataObjects = List(
+    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
+  )
 
-    // The default timeout for receiving reply messages from actors.
-    private val timeout = 20.seconds
+  // The default timeout for receiving reply messages from actors.
+  private val timeout = 20.seconds
 
-    "The Sipi responder" should {
-        "return details of a full quality file value" in {
-            // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
-            responderManager ! SipiFileInfoGetRequestADM(
-                projectID = "0803",
-                filename = "incunabula_0000003328.jp2",
-                featureFactoryConfig = defaultFeatureFactoryConfig,
-                requestingUser = SharedTestDataADM.incunabulaMemberUser
-            )
+  "The Sipi responder" should {
+    "return details of a full quality file value" in {
+      // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
+      responderManager ! SipiFileInfoGetRequestADM(
+        projectID = "0803",
+        filename = "incunabula_0000003328.jp2",
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.incunabulaMemberUser
+      )
 
-            expectMsg(timeout, SipiFileInfoGetResponseADM(permissionCode = 6, None))
-        }
-
-        "return details of a restricted view file value" in {
-            // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
-            responderManager ! SipiFileInfoGetRequestADM(
-                projectID = "0803",
-                filename = "incunabula_0000003328.jp2",
-                featureFactoryConfig = defaultFeatureFactoryConfig,
-                requestingUser = SharedTestDataADM.anonymousUser
-            )
-
-            expectMsg(timeout, SipiFileInfoGetResponseADM(permissionCode = 1, Some(ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = Some("path_to_image")))))
-        }
+      expectMsg(timeout, SipiFileInfoGetResponseADM(permissionCode = 6, None))
     }
+
+    "return details of a restricted view file value" in {
+      // http://localhost:3333/v1/files/http%3A%2F%2Frdfh.ch%2F8a0b1e75%2Freps%2F7e4ba672
+      responderManager ! SipiFileInfoGetRequestADM(
+        projectID = "0803",
+        filename = "incunabula_0000003328.jp2",
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.anonymousUser
+      )
+
+      expectMsg(timeout,
+                SipiFileInfoGetResponseADM(
+                  permissionCode = 1,
+                  Some(ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = Some("path_to_image")))))
+    }
+  }
 }

@@ -26,16 +26,16 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import scala.concurrent.ExecutionContext
 
 /**
- * Knora Core abstraction.
- */
+  * Knora Core abstraction.
+  */
 trait Core {
-    implicit val system: ActorSystem
+  implicit val system: ActorSystem
 
-    implicit val settings: KnoraSettingsImpl
+  implicit val settings: KnoraSettingsImpl
 
-    implicit val materializer: Materializer
+  implicit val materializer: Materializer
 
-    implicit val executionContext: ExecutionContext
+  implicit val executionContext: ExecutionContext
 
-    val appActor: ActorRef
+  val appActor: ActorRef
 }

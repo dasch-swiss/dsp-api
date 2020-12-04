@@ -26,8 +26,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 object CacheSerializationSpec {
-    val config = ConfigFactory.parseString(
-        """
+  val config = ConfigFactory.parseString("""
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
@@ -38,24 +37,23 @@ object CacheSerializationSpec {
   */
 class CacheSerializationSpec extends CoreSpec(CacheSerializationSpec.config) {
 
-    "serialize and deserialize" should {
+  "serialize and deserialize" should {
 
-        "work with the UserADM case class" in {
-            val user = SharedTestDataADM.imagesUser01
-            for {
-                serialized <- CacheSerialization.serialize(user)
-                deserialized: Option[UserADM] <- CacheSerialization.deserialize[UserADM](serialized)
-            } yield deserialized shouldBe Some(user)
-        }
-
-        "work with the ProjectADM case class" in {
-            val project = SharedTestDataADM.imagesProject
-            for {
-                serialized <- CacheSerialization.serialize(project)
-                deserialized: Option[ProjectADM] <- CacheSerialization.deserialize[ProjectADM](serialized)
-            } yield deserialized shouldBe Some(project)
-        }
-
-
+    "work with the UserADM case class" in {
+      val user = SharedTestDataADM.imagesUser01
+      for {
+        serialized <- CacheSerialization.serialize(user)
+        deserialized: Option[UserADM] <- CacheSerialization.deserialize[UserADM](serialized)
+      } yield deserialized shouldBe Some(user)
     }
+
+    "work with the ProjectADM case class" in {
+      val project = SharedTestDataADM.imagesProject
+      for {
+        serialized <- CacheSerialization.serialize(project)
+        deserialized: Option[ProjectADM] <- CacheSerialization.deserialize[ProjectADM](serialized)
+      } yield deserialized shouldBe Some(project)
+    }
+
+  }
 }

@@ -35,11 +35,11 @@ import scala.util.{Failure, Success, Try}
   */
 object MockSipiConnector {
 
-    /**
-      * A request to [[MockSipiConnector]] with this filename will always cause the responder to simulate a Sipi
-      * error.
-      */
-    val FAILURE_FILENAME: String = "failure.jp2"
+  /**
+    * A request to [[MockSipiConnector]] with this filename will always cause the responder to simulate a Sipi
+    * error.
+    */
+  val FAILURE_FILENAME: String = "failure.jp2"
 }
 
 /**
@@ -48,42 +48,47 @@ object MockSipiConnector {
   */
 class MockSipiConnector extends Actor with ActorLogging {
 
-    implicit val system: ActorSystem = context.system
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+  implicit val system: ActorSystem = context.system
+  implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    def receive = {
-        case getFileMetadataRequest: GetFileMetadataRequest => try2Message(sender(), getFileMetadata(getFileMetadataRequest), log)
-        case moveTemporaryFileToPermanentStorageRequest: MoveTemporaryFileToPermanentStorageRequest => try2Message(sender(), moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequest), log)
-        case deleteTemporaryFileRequest: DeleteTemporaryFileRequest => try2Message(sender(), deleteTemporaryFile(deleteTemporaryFileRequest), log)
-        case IIIFServiceGetStatus => future2Message(sender(), FastFuture.successful(IIIFServiceStatusOK), log)
-        case other => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+  def receive = {
+    case getFileMetadataRequest: GetFileMetadataRequest =>
+      try2Message(sender(), getFileMetadata(getFileMetadataRequest), log)
+    case moveTemporaryFileToPermanentStorageRequest: MoveTemporaryFileToPermanentStorageRequest =>
+      try2Message(sender(), moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequest), log)
+    case deleteTemporaryFileRequest: DeleteTemporaryFileRequest =>
+      try2Message(sender(), deleteTemporaryFile(deleteTemporaryFileRequest), log)
+    case IIIFServiceGetStatus => future2Message(sender(), FastFuture.successful(IIIFServiceStatusOK), log)
+    case other                => handleUnexpectedMessage(sender(), other, log, this.getClass.getName)
+  }
+
+  private def getFileMetadata(getFileMetadataRequestV2: GetFileMetadataRequest): Try[GetFileMetadataResponse] =
+    Success {
+      GetFileMetadataResponse(
+        originalFilename = Some("test2.tiff"),
+        originalMimeType = Some("image/tiff"),
+        internalMimeType = "image/jp2",
+        width = Some(512),
+        height = Some(256),
+        pageCount = None
+      )
     }
 
-    private def getFileMetadata(getFileMetadataRequestV2: GetFileMetadataRequest): Try[GetFileMetadataResponse] =
-        Success {
-            GetFileMetadataResponse(
-                originalFilename = Some("test2.tiff"),
-                originalMimeType = Some("image/tiff"),
-                internalMimeType = "image/jp2",
-                width = Some(512),
-                height = Some(256),
-                pageCount = None
-            )
-        }
-
-    private def moveTemporaryFileToPermanentStorage(moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest): Try[SuccessResponseV2] = {
-        if (moveTemporaryFileToPermanentStorageRequestV2.internalFilename == MockSipiConnector.FAILURE_FILENAME) {
-            Failure(SipiException("Sipi failed to move file to permanent storage"))
-        } else {
-            Success(SuccessResponseV2("Moved file to permanent storage"))
-        }
+  private def moveTemporaryFileToPermanentStorage(
+      moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest)
+    : Try[SuccessResponseV2] = {
+    if (moveTemporaryFileToPermanentStorageRequestV2.internalFilename == MockSipiConnector.FAILURE_FILENAME) {
+      Failure(SipiException("Sipi failed to move file to permanent storage"))
+    } else {
+      Success(SuccessResponseV2("Moved file to permanent storage"))
     }
+  }
 
-    private def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Try[SuccessResponseV2] = {
-        if (deleteTemporaryFileRequestV2.internalFilename == MockSipiConnector.FAILURE_FILENAME) {
-            Failure(SipiException("Sipi failed to delete temporary file"))
-        } else {
-            Success(SuccessResponseV2("Deleted temporary file"))
-        }
+  private def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Try[SuccessResponseV2] = {
+    if (deleteTemporaryFileRequestV2.internalFilename == MockSipiConnector.FAILURE_FILENAME) {
+      Failure(SipiException("Sipi failed to delete temporary file"))
+    } else {
+      Success(SuccessResponseV2("Deleted temporary file"))
     }
+  }
 }

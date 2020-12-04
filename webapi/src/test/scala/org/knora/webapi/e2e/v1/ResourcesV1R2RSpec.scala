@@ -48,161 +48,165 @@ import scala.concurrent.ExecutionContextExecutor
   */
 class ResourcesV1R2RSpec extends R2RSpec {
 
-    override def testConfigSource: String =
-        """
+  override def testConfigSource: String =
+    """
           |# akka.loglevel = "DEBUG"
           |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-    private val resourcesPathV1 = new ResourcesRouteV1(routeData).knoraApiPath
-    private val resourcesPathV2 = new ResourcesRouteV2(routeData).knoraApiPath
-    private val valuesPathV1 = new ValuesRouteV1(routeData).knoraApiPath
+  private val resourcesPathV1 = new ResourcesRouteV1(routeData).knoraApiPath
+  private val resourcesPathV2 = new ResourcesRouteV2(routeData).knoraApiPath
+  private val valuesPathV1 = new ValuesRouteV1(routeData).knoraApiPath
 
-    private val superUser = SharedTestDataADM.superUser
-    private val superUserEmail = superUser.email
+  private val superUser = SharedTestDataADM.superUser
+  private val superUserEmail = superUser.email
 
-    private val imagesUser = SharedTestDataADM.imagesUser01
-    private val imagesUserEmail = imagesUser.email
+  private val imagesUser = SharedTestDataADM.imagesUser01
+  private val imagesUserEmail = imagesUser.email
 
-    private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
-    private val incunabulaUserEmail = incunabulaUser.email
+  private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
+  private val incunabulaUserEmail = incunabulaUser.email
 
-    private val incunabulaUser2 = SharedTestDataADM.incunabulaCreatorUser
-    private val incunabulaUserEmail2 = incunabulaUser2.email
+  private val incunabulaUser2 = SharedTestDataADM.incunabulaCreatorUser
+  private val incunabulaUserEmail2 = incunabulaUser2.email
 
-    private val anythingUser = SharedTestDataADM.anythingUser1
-    private val anythingUserEmail = anythingUser.email
+  private val anythingUser = SharedTestDataADM.anythingUser1
+  private val anythingUserEmail = anythingUser.email
 
-    private val anythingAdmin = SharedTestDataADM.anythingAdminUser
-    private val anythingAdminEmail = anythingAdmin.email
+  private val anythingAdmin = SharedTestDataADM.anythingAdminUser
+  private val anythingAdminEmail = anythingAdmin.email
 
-    private val beolUser = SharedTestDataADM.beolUser
-    private val beolUserEmail = beolUser.email
+  private val beolUser = SharedTestDataADM.beolUser
+  private val beolUserEmail = beolUser.email
 
-    private val password = SharedTestDataADM.testPass
+  private val password = SharedTestDataADM.testPass
 
-    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout * 2)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout * 2)
 
-    implicit val ec: ExecutionContextExecutor = system.dispatcher
+  implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-    override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "test_data/ontologies/example-box.ttl", name = "http://www.knora.org/ontology/shared/example-box"),
-        RdfDataObject(path = "test_data/ontologies/example-ibox.ttl", name = "http://www.knora.org/ontology/shared/example-ibox"),
-        RdfDataObject(path = "test_data/ontologies/empty-thing-onto.ttl", name = "http://www.knora.org/ontology/0001/empty-thing"),
-        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
-        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
-    )
+  override lazy val rdfDataObjects = List(
+    RdfDataObject(path = "test_data/ontologies/example-box.ttl",
+                  name = "http://www.knora.org/ontology/shared/example-box"),
+    RdfDataObject(path = "test_data/ontologies/example-ibox.ttl",
+                  name = "http://www.knora.org/ontology/shared/example-ibox"),
+    RdfDataObject(path = "test_data/ontologies/empty-thing-onto.ttl",
+                  name = "http://www.knora.org/ontology/0001/empty-thing"),
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula")
+  )
 
-    private val firstThingIri = new MutableTestIri
-    private val firstTextValueIRI = new MutableTestIri
-    private val secondThingIri = new MutableTestIri
-    private val thirdThingIri = new MutableTestIri
-    private val fourthThingIri = new MutableTestIri
-    private val fifthThingIri = new MutableTestIri
-    private val sixthThingIri = new MutableTestIri
-    private val seventhThingIri = new MutableTestIri
-    private val eighthThingIri = new MutableTestIri
-    private val abelAuthorIri = new MutableTestIri
-    private val mathIntelligencerIri = new MutableTestIri
-    private val deutschesDingIri = new MutableTestIri
-    private val standoffLangDingIri = new MutableTestIri
-    private val thingWithString = new MutableTestIri
-    private val thingWithCreationDate = new MutableTestIri
+  private val firstThingIri = new MutableTestIri
+  private val firstTextValueIRI = new MutableTestIri
+  private val secondThingIri = new MutableTestIri
+  private val thirdThingIri = new MutableTestIri
+  private val fourthThingIri = new MutableTestIri
+  private val fifthThingIri = new MutableTestIri
+  private val sixthThingIri = new MutableTestIri
+  private val seventhThingIri = new MutableTestIri
+  private val eighthThingIri = new MutableTestIri
+  private val abelAuthorIri = new MutableTestIri
+  private val mathIntelligencerIri = new MutableTestIri
+  private val deutschesDingIri = new MutableTestIri
+  private val standoffLangDingIri = new MutableTestIri
+  private val thingWithString = new MutableTestIri
+  private val thingWithCreationDate = new MutableTestIri
 
-    // incunabula book with title "Eyn biechlin ..."
-    private val incunabulaBookBiechlin = "http://rdfh.ch/0803/9935159f67"
+  // incunabula book with title "Eyn biechlin ..."
+  private val incunabulaBookBiechlin = "http://rdfh.ch/0803/9935159f67"
 
-    // incunabula book with title Quadragesimale
-    private val incunabulaBookQuadra = "http://rdfh.ch/0803/861b5644b302"
+  // incunabula book with title Quadragesimale
+  private val incunabulaBookQuadra = "http://rdfh.ch/0803/861b5644b302"
 
-    private val notTheMostBoringComment = "This is not the most boring comment I have seen."
+  private val notTheMostBoringComment = "This is not the most boring comment I have seen."
 
-    private val mappingIri = OntologyConstants.KnoraBase.StandardMapping
+  private val mappingIri = OntologyConstants.KnoraBase.StandardMapping
 
-    private val xml1 =
-        """<?xml version="1.0" encoding="UTF-8"?>
+  private val xml1 =
+    """<?xml version="1.0" encoding="UTF-8"?>
           |<text><strong>Test</strong><br/>text</text>
         """.stripMargin
 
-    private val xml2 =
-        """<?xml version="1.0" encoding="UTF-8"?>
+  private val xml2 =
+    """<?xml version="1.0" encoding="UTF-8"?>
           |<text>a <strong>new</strong> value</text>
         """.stripMargin
 
-    private val xml3 =
-        s"""<?xml version="1.0" encoding="UTF-8"?>
+  private val xml3 =
+    s"""<?xml version="1.0" encoding="UTF-8"?>
            |<text>
            |    This text links to <a href="http://www.google.ch">Google</a> and a Knora <a class="salsah-link" href="$incunabulaBookBiechlin">resource</a>.
            |</text>
          """.stripMargin
 
-    private val xml4 =
-        s"""<?xml version="1.0" encoding="UTF-8"?>
+  private val xml4 =
+    s"""<?xml version="1.0" encoding="UTF-8"?>
            |<text>
            |    This text links to <a href="http://www.google.ch">Google</a> and a Knora <a class="salsah-link" href="$incunabulaBookBiechlin">resource</a> and another Knora resource <a class="salsah-link" href="$incunabulaBookQuadra">resource</a>.
            |</text>
          """.stripMargin
 
-    /**
-      * Gets the field `res_id` from a JSON response to resource creation.
-      *
-      * @param response the response sent back from the API.
-      * @return the value of `res_id`.
-      */
-    private def getResIriFromJsonResponse(response: HttpResponse) = {
-        AkkaHttpUtils.httpResponseToJson(response).fields.get("res_id") match {
-            case Some(JsString(resourceId)) => resourceId
-            case None => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
-            case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but ${other}")
-        }
+  /**
+    * Gets the field `res_id` from a JSON response to resource creation.
+    *
+    * @param response the response sent back from the API.
+    * @return the value of `res_id`.
+    */
+  private def getResIriFromJsonResponse(response: HttpResponse) = {
+    AkkaHttpUtils.httpResponseToJson(response).fields.get("res_id") match {
+      case Some(JsString(resourceId)) => resourceId
+      case None                       => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
+      case other =>
+        throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but ${other}")
     }
+  }
 
-    /**
-      * Gets the field `id` from a JSON response to value creation (new value).
-      *
-      * @param response the response sent back from the API.
-      * @return the value of `res_id`.
-      */
-    private def getNewValueIriFromJsonResponse(response: HttpResponse) = {
-        AkkaHttpUtils.httpResponseToJson(response).fields.get("id") match {
-            case Some(JsString(resourceId)) => resourceId
-            case None => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
-            case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but $other")
-        }
+  /**
+    * Gets the field `id` from a JSON response to value creation (new value).
+    *
+    * @param response the response sent back from the API.
+    * @return the value of `res_id`.
+    */
+  private def getNewValueIriFromJsonResponse(response: HttpResponse) = {
+    AkkaHttpUtils.httpResponseToJson(response).fields.get("id") match {
+      case Some(JsString(resourceId)) => resourceId
+      case None                       => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
+      case other =>
+        throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but $other")
     }
+  }
 
-    /**
-      * Gets the given property's values from a resource full response.
-      *
-      * @param response the response to a resource full request.
-      * @param prop     the given property IRI.
-      * @return the property's values.
-      */
-    private def getValuesForProp(response: HttpResponse, prop: IRI): JsValue = {
-        AkkaHttpUtils.httpResponseToJson(response).fields("props").asJsObject.fields(prop).asJsObject.fields("values")
-    }
+  /**
+    * Gets the given property's values from a resource full response.
+    *
+    * @param response the response to a resource full request.
+    * @param prop     the given property IRI.
+    * @return the property's values.
+    */
+  private def getValuesForProp(response: HttpResponse, prop: IRI): JsValue = {
+    AkkaHttpUtils.httpResponseToJson(response).fields("props").asJsObject.fields(prop).asJsObject.fields("values")
+  }
 
+  /**
+    * Gets the given property's comments from a resource full response.
+    *
+    * @param response the response to a resource full request.
+    * @param prop     the given property IRI.
+    * @return the property's comments.
+    */
+  private def getCommentsForProp(response: HttpResponse, prop: IRI): JsValue = {
+    AkkaHttpUtils.httpResponseToJson(response).fields("props").asJsObject.fields(prop).asJsObject.fields("comments")
+  }
 
-    /**
-      * Gets the given property's comments from a resource full response.
-      *
-      * @param response the response to a resource full request.
-      * @param prop     the given property IRI.
-      * @return the property's comments.
-      */
-    private def getCommentsForProp(response: HttpResponse, prop: IRI): JsValue = {
-        AkkaHttpUtils.httpResponseToJson(response).fields("props").asJsObject.fields(prop).asJsObject.fields("comments")
-    }
-
-    /**
-      * Creates a SPARQL query string to get the standoff links (direct links) for a given resource.
-      *
-      * @param resIri the resource whose standoff links are to be queried.
-      * @return SPARQL query string.
-      */
-    private def getDirectLinksSPARQL(resIri: IRI): String = {
-        s"""
+  /**
+    * Creates a SPARQL query string to get the standoff links (direct links) for a given resource.
+    *
+    * @param resIri the resource whose standoff links are to be queried.
+    * @return SPARQL query string.
+    */
+  private def getDirectLinksSPARQL(resIri: IRI): String = {
+    s"""
            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
            |
            |SELECT ?referredResourceIRI WHERE {
@@ -210,16 +214,16 @@ class ResourcesV1R2RSpec extends R2RSpec {
            |    ?resIRI knora-base:hasStandoffLinkTo ?referredResourceIRI .
            |}
          """.stripMargin
-    }
+  }
 
-    /**
-      * Creates a SPARQL query to get the standoff links reifications to check for the target resource and the reference count.
-      *
-      * @param resIri the resource whose standoff reifications are to be queried.
-      * @return SPARQL query string.
-      */
-    private def getRefCountsSPARQL(resIri: IRI): String = {
-        s"""
+  /**
+    * Creates a SPARQL query to get the standoff links reifications to check for the target resource and the reference count.
+    *
+    * @param resIri the resource whose standoff reifications are to be queried.
+    * @return SPARQL query string.
+    */
+  private def getRefCountsSPARQL(resIri: IRI): String = {
+    s"""
            |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
            |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
            |
@@ -230,108 +234,108 @@ class ResourcesV1R2RSpec extends R2RSpec {
            |    ?reificationIRI knora-base:valueHasRefCount ?refCnt .
            |}
          """.stripMargin
+  }
+
+  private val search = "/v1/resources?restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23Thing"
+  private val filter = "&searchstr=value*"
+
+  /**
+    * Test the result of two subsequent requests nearly identical requests
+    * (used here for requesting different number of properties to be displayed)
+    * @param search : search query as a string
+    * @return : nothing, assert is called within this function
+    */
+  private def checkSearchWithDifferentNumberOfProperties(search: String): Assertion = {
+
+    Get(search) ~> resourcesPathV1 ~> check {
+
+      assert(status == StatusCodes.OK, response.toString)
+
+      val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+      val resources = responseJson
+        .fields("resources")
+        .asInstanceOf[JsArray]
+        .elements
+
+      val labels: Set[String] = resources.map { element =>
+        element.asJsObject.fields("value").asInstanceOf[JsArray].elements.head.asInstanceOf[JsString].value
+      }.toSet
+
+      val expectedLabels = Set(
+        "A thing that has a BCE date value",
+        "A thing that has a list value",
+        "A thing that has two list values",
+        "visible thing with hidden int values"
+      )
+
+      assert(expectedLabels.subsetOf(labels))
+    }
+  }
+
+  "The Resources Endpoint" should {
+    "provide a HTML representation of the resource properties " in {
+      /* Incunabula resources*/
+
+      /* A Book without a preview image */
+      Get("/v1/resources.html/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a?noresedit=true&reqtype=properties") ~> resourcesPathV1 ~> check {
+        //log.debug("==>> " + responseAs[String])
+        assert(status === StatusCodes.OK)
+        assert(responseAs[String] contains "Physical description")
+        assert(responseAs[String] contains "Location")
+        assert(responseAs[String] contains "Publication location")
+        assert(responseAs[String] contains "URI")
+        assert(responseAs[String] contains "Title")
+        assert(responseAs[String] contains "Datum der Herausgabe")
+        assert(responseAs[String] contains "Citation/reference")
+        assert(responseAs[String] contains "Publisher")
+      }
+
+      /* A Page with a preview image */
+      Get("/v1/resources.html/http%3A%2F%2Frdfh.ch%2F0803%2Fde6c38ce3401?noresedit=true&reqtype=properties") ~> resourcesPathV1 ~> check {
+        //log.debug("==>> " + responseAs[String])
+        assert(status === StatusCodes.OK)
+        assert(responseAs[String] contains "preview")
+        assert(responseAs[String] contains "Original filename")
+        assert(responseAs[String] contains "Page identifier")
+      }
     }
 
+    "get the regions of a page when doing a context query with resinfo set to true" in {
 
-    private val search = "/v1/resources?restype_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23Thing"
-    private val filter = "&searchstr=value*"
+      Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F9d626dc76c03?resinfo=true&reqtype=context") ~> resourcesPathV1 ~> check {
 
-    /**
-      * Test the result of two subsequent requests nearly identical requests
-      * (used here for requesting different number of properties to be displayed)
-      * @param search : search query as a string
-      * @return : nothing, assert is called within this function
-      */
-    private def checkSearchWithDifferentNumberOfProperties(search: String): Assertion = {
+        assert(status == StatusCodes.OK, response.toString)
 
-        Get(search) ~> resourcesPathV1 ~> check {
+        val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
+        val resourceContext: Map[String, JsValue] = responseJson("resource_context").asJsObject.fields
+        val resinfo: Map[String, JsValue] = resourceContext("resinfo").asJsObject.fields
 
-            assert(status == StatusCodes.OK, response.toString)
+        resinfo.get("regions") match {
+          case Some(JsArray(regionsVector)) =>
+            val regions: Vector[PropsGetForRegionV1] = regionsVector.map(_.convertTo[PropsGetForRegionV1])
 
-            val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
-            val resources = responseJson.fields("resources")
-                .asInstanceOf[JsArray].elements
+            val region1 = regions.filter { region =>
+              region.res_id == "http://rdfh.ch/0803/021ec18f1735"
+            }
 
-            val labels: Set[String] = resources.map {
-                element => element.asJsObject.fields("value").asInstanceOf[JsArray].elements.head.asInstanceOf[JsString].value
-            }.toSet
+            val region2 = regions.filter { region =>
+              region.res_id == "http://rdfh.ch/0803/b6b64a62b006"
+            }
 
-            val expectedLabels = Set(
-                "A thing that has a BCE date value",
-                "A thing that has a list value",
-                "A thing that has two list values",
-                "visible thing with hidden int values"
-            )
+            assert(region1.length == 1, "No region found with Iri 'http://rdfh.ch/0803/021ec18f1735'")
 
-            assert(expectedLabels.subsetOf(labels))
+            assert(region2.length == 1, "No region found with Iri 'http://rdfh.ch/0803/b6b64a62b006'")
+
+          case None => assert(false, "No regions given, but 2 were expected")
+          case _    => assert(false, "No valid regions given")
         }
+      }
     }
 
+    "create a resource of type 'images:person' in 'images' project" in {
 
-    "The Resources Endpoint" should {
-        "provide a HTML representation of the resource properties " in {
-            /* Incunabula resources*/
-
-            /* A Book without a preview image */
-            Get("/v1/resources.html/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a?noresedit=true&reqtype=properties") ~> resourcesPathV1 ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
-                assert(responseAs[String] contains "Physical description")
-                assert(responseAs[String] contains "Location")
-                assert(responseAs[String] contains "Publication location")
-                assert(responseAs[String] contains "URI")
-                assert(responseAs[String] contains "Title")
-                assert(responseAs[String] contains "Datum der Herausgabe")
-                assert(responseAs[String] contains "Citation/reference")
-                assert(responseAs[String] contains "Publisher")
-            }
-
-            /* A Page with a preview image */
-            Get("/v1/resources.html/http%3A%2F%2Frdfh.ch%2F0803%2Fde6c38ce3401?noresedit=true&reqtype=properties") ~> resourcesPathV1 ~> check {
-                //log.debug("==>> " + responseAs[String])
-                assert(status === StatusCodes.OK)
-                assert(responseAs[String] contains "preview")
-                assert(responseAs[String] contains "Original filename")
-                assert(responseAs[String] contains "Page identifier")
-            }
-        }
-
-        "get the regions of a page when doing a context query with resinfo set to true" in {
-
-            Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F9d626dc76c03?resinfo=true&reqtype=context") ~> resourcesPathV1 ~> check {
-
-                assert(status == StatusCodes.OK, response.toString)
-
-                val responseJson: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
-                val resourceContext: Map[String, JsValue] = responseJson("resource_context").asJsObject.fields
-                val resinfo: Map[String, JsValue] = resourceContext("resinfo").asJsObject.fields
-
-                resinfo.get("regions") match {
-                    case Some(JsArray(regionsVector)) =>
-                        val regions: Vector[PropsGetForRegionV1] = regionsVector.map(_.convertTo[PropsGetForRegionV1])
-
-                        val region1 = regions.filter {
-                            region => region.res_id == "http://rdfh.ch/0803/021ec18f1735"
-                        }
-
-                        val region2 = regions.filter {
-                            region => region.res_id == "http://rdfh.ch/0803/b6b64a62b006"
-                        }
-
-                        assert(region1.length == 1, "No region found with Iri 'http://rdfh.ch/0803/021ec18f1735'")
-
-                        assert(region2.length == 1, "No region found with Iri 'http://rdfh.ch/0803/b6b64a62b006'")
-
-                    case None => assert(false, "No regions given, but 2 were expected")
-                    case _ => assert(false, "No valid regions given")
-                }
-            }
-        }
-
-        "create a resource of type 'images:person' in 'images' project" in {
-
-            val params =
-                s"""
+      val params =
+        s"""
                    |{
                    |    "restype_id": "$IMAGES_ONTOLOGY_IRI#person",
                    |    "label": "Testperson",
@@ -343,111 +347,114 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                 """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(imagesUserEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
-            }
-        }
+      Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(imagesUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+      }
+    }
 
-        "get a resource of type 'knora-base:Resource' with text with standoff" in {
+    "get a resource of type 'knora-base:Resource' with text with standoff" in {
 
-            val expectedXML =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val expectedXML =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<text><p>Derselbe Holzschnitt wird auf Seite <a href="http://rdfh.ch/0803/c9824353ae06" class="salsah-link">c7r</a> der lateinischen Ausgabe des Narrenschiffs verwendet.</p></text>
                 """.stripMargin
 
-            Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F047db418ae06") ~> resourcesPathV1 ~> check {
+      Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F047db418ae06") ~> resourcesPathV1 ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
 
-                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/knora-base#hasComment")
+        val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/knora-base#hasComment")
 
-                val xml: String = text match {
-                    case vals: JsArray =>
-                        vals.elements.head.asJsObject.fields("xml") match {
-                            case JsString(xml: String) => xml
-                            case _ => throw new InvalidApiJsonException("member 'xml' not given")
-                        }
-                    case _ =>
-                        throw new InvalidApiJsonException("values is not an array")
-                }
-
-                // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(expectedXML)).withTest(Input.fromString(xml)).build()
-
-                xmlDiff.hasDifferences should be(false)
+        val xml: String = text match {
+          case vals: JsArray =>
+            vals.elements.head.asJsObject.fields("xml") match {
+              case JsString(xml: String) => xml
+              case _                     => throw new InvalidApiJsonException("member 'xml' not given")
             }
+          case _ =>
+            throw new InvalidApiJsonException("values is not an array")
         }
 
-        "get a resource of type 'anything:thing' with two text with standoff" in {
+        // Compare the original XML with the regenerated XML.
+        val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(expectedXML)).withTest(Input.fromString(xml)).build()
 
-            val expectedXML1 =
-                """<?xml version="1.0" encoding="UTF-8"?>
+        xmlDiff.hasDifferences should be(false)
+      }
+    }
+
+    "get a resource of type 'anything:thing' with two text with standoff" in {
+
+      val expectedXML1 =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<text>Na ja, die <a href="http://rdfh.ch/0001/a-thing" class="salsah-link">Dinge</a> sind OK.</text>
                 """.stripMargin
 
-            val expectedXML2 =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val expectedXML2 =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<text>Ich liebe die <a href="http://rdfh.ch/0001/a-thing" class="salsah-link">Dinge</a>, sie sind alles für mich.</text>
                 """.stripMargin
 
+      Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F0001%2Fa-thing-with-text-values") ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-            Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F0001%2Fa-thing-with-text-values") ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
 
-                assert(status == StatusCodes.OK, response.toString)
+        val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
 
-                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
-
-                val textValues: Seq[JsValue] = text match {
-                    case vals: JsArray =>
-                        vals.elements
-                    case _ =>
-                        throw new InvalidApiJsonException("values is not an array")
-                }
-
-                val xmlStrings: Seq[String] = textValues.map {
-                    textVal: JsValue =>
-                        textVal.asJsObject.fields("xml") match {
-                            case JsString(xml: String) => xml
-                            case _ => throw new InvalidApiJsonException("member 'xml' not given")
-                        }
-                }
-
-                assert(xmlStrings.length == 2)
-
-                // determine the index of the first and the second expected text value
-                val (dingeOk: Int, allesFuerMich: Int) = if (xmlStrings.head.contains("sind OK")) {
-
-                    // expectedXML1 comes first, expectedXML2 comes second
-                    (0, 1)
-
-                } else {
-
-                    // expectedXML1 comes second, expectedXML2 comes first
-                    (1, 0)
-                }
-
-                // Compare the original XML with the regenerated XML.
-                val xmlDiff1: Diff = DiffBuilder.compare(Input.fromString(expectedXML1)).withTest(Input.fromString(xmlStrings(dingeOk))).build()
-                val xmlDiff2: Diff = DiffBuilder.compare(Input.fromString(expectedXML2)).withTest(Input.fromString(xmlStrings(allesFuerMich))).build()
-
-                xmlDiff1.hasDifferences should be(false)
-                xmlDiff2.hasDifferences should be(false)
-            }
+        val textValues: Seq[JsValue] = text match {
+          case vals: JsArray =>
+            vals.elements
+          case _ =>
+            throw new InvalidApiJsonException("values is not an array")
         }
 
-
-        "perform a search for an anything:Thing matching 'thing'" in {
-
-            checkSearchWithDifferentNumberOfProperties(search + filter)
-
+        val xmlStrings: Seq[String] = textValues.map { textVal: JsValue =>
+          textVal.asJsObject.fields("xml") match {
+            case JsString(xml: String) => xml
+            case _                     => throw new InvalidApiJsonException("member 'xml' not given")
+          }
         }
 
-        "perform a search for an anything:Thing matching 'thing' with 2 numprops displayed" in {
+        assert(xmlStrings.length == 2)
 
-            checkSearchWithDifferentNumberOfProperties(search + filter + "&numprops=2")
+        // determine the index of the first and the second expected text value
+        val (dingeOk: Int, allesFuerMich: Int) = if (xmlStrings.head.contains("sind OK")) {
 
+          // expectedXML1 comes first, expectedXML2 comes second
+          (0, 1)
+
+        } else {
+
+          // expectedXML1 comes second, expectedXML2 comes first
+          (1, 0)
         }
-/*
+
+        // Compare the original XML with the regenerated XML.
+        val xmlDiff1: Diff =
+          DiffBuilder.compare(Input.fromString(expectedXML1)).withTest(Input.fromString(xmlStrings(dingeOk))).build()
+        val xmlDiff2: Diff = DiffBuilder
+          .compare(Input.fromString(expectedXML2))
+          .withTest(Input.fromString(xmlStrings(allesFuerMich)))
+          .build()
+
+        xmlDiff1.hasDifferences should be(false)
+        xmlDiff2.hasDifferences should be(false)
+      }
+    }
+
+    "perform a search for an anything:Thing matching 'thing'" in {
+
+      checkSearchWithDifferentNumberOfProperties(search + filter)
+
+    }
+
+    "perform a search for an anything:Thing matching 'thing' with 2 numprops displayed" in {
+
+      checkSearchWithDifferentNumberOfProperties(search + filter + "&numprops=2")
+
+    }
+    /*
         "create a first resource of type anything:Thing" in {
 
             val params =
@@ -2106,6 +2113,6 @@ class ResourcesV1R2RSpec extends R2RSpec {
             }
 
         }*/
-    }
+  }
 
 }

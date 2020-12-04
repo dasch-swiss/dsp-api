@@ -31,190 +31,192 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 
 import scala.concurrent.Future
 
-
 object PermissionsRouteADM {
-    val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
+  val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
 }
-
-
 @Api(value = "permissions", produces = "application/json")
 @Path("/admin/permissions")
-class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator with PermissionsADMJsonProtocol {
+class PermissionsRouteADM(routeData: KnoraRouteData)
+    extends KnoraRoute(routeData)
+    with Authenticator
+    with PermissionsADMJsonProtocol {
 
-    import PermissionsRouteADM._
+  import PermissionsRouteADM._
 
-    /**
-     * Returns the route.
-     */
-    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-        getAdministrativePermissionForProjectGroup(featureFactoryConfig) ~
-            getAdministrativePermissionsForProject(featureFactoryConfig) ~
-            getDefaultObjectAccessPermissionsForProject(featureFactoryConfig) ~
-            getPermissionsForProject(featureFactoryConfig) ~
-            createAdministrativePermission(featureFactoryConfig) ~
-            createDefaultObjectAccessPermission(featureFactoryConfig)
+  /**
+    * Returns the route.
+    */
+  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+    getAdministrativePermissionForProjectGroup(featureFactoryConfig) ~
+      getAdministrativePermissionsForProject(featureFactoryConfig) ~
+      getDefaultObjectAccessPermissionsForProject(featureFactoryConfig) ~
+      getPermissionsForProject(featureFactoryConfig) ~
+      createAdministrativePermission(featureFactoryConfig) ~
+      createDefaultObjectAccessPermission(featureFactoryConfig)
 
+  private def getAdministrativePermissionForProjectGroup(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(PermissionsBasePath / "ap" / Segment / Segment) { (projectIri, groupIri) =>
+      get { requestContext =>
+        val requestMessage = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
 
-    private def getAdministrativePermissionForProjectGroup(featureFactoryConfig: FeatureFactoryConfig): Route = path(PermissionsBasePath / "ap" / Segment / Segment) {
-        (projectIri, groupIri) =>
-            get {
-                requestContext =>
-                    val requestMessage = for {
-                        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                        )
-                    } yield AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log
-                    )
-            }
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
     }
 
-    private def getAdministrativePermissionsForProject(featureFactoryConfig: FeatureFactoryConfig): Route = path(PermissionsBasePath / "ap" / Segment) { projectIri =>
-        get {
-            requestContext =>
-                val requestMessage = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield AdministrativePermissionsForProjectGetRequestADM(
-                    projectIri = projectIri,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID()
-                )
+  private def getAdministrativePermissionsForProject(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(PermissionsBasePath / "ap" / Segment) { projectIri =>
+      get { requestContext =>
+        val requestMessage = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          AdministrativePermissionsForProjectGetRequestADM(
+            projectIri = projectIri,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
+    }
+
+  private def getDefaultObjectAccessPermissionsForProject(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(PermissionsBasePath / "doap" / Segment) { projectIri =>
+      get { requestContext =>
+        val requestMessage = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          DefaultObjectAccessPermissionsForProjectGetRequestADM(
+            projectIri = projectIri,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
+
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
+    }
+
+  private def getPermissionsForProject(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(PermissionsBasePath / Segment) { projectIri =>
+      get { requestContext =>
+        val requestMessage = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          PermissionsForProjectGetRequestADM(
+            projectIri = projectIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
+
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
+    }
+
+  /**
+    * Create a new administrative permission
+    */
+  private def createAdministrativePermission(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(PermissionsBasePath / "ap") {
+      post {
+        /* create a new administrative permission */
+        entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest => requestContext =>
+          val requestMessage = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield
+            AdministrativePermissionCreateRequestADM(
+              createRequest = apiRequest,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser,
+              apiRequestID = UUID.randomUUID()
+            )
+
+          RouteUtilADM.runJsonRoute(
+            requestMessageF = requestMessage,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log
+          )
         }
+      }
     }
 
-    private def getDefaultObjectAccessPermissionsForProject(featureFactoryConfig: FeatureFactoryConfig): Route = path(PermissionsBasePath / "doap" / Segment) { projectIri =>
-        get {
-            requestContext =>
-                val requestMessage = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield DefaultObjectAccessPermissionsForProjectGetRequestADM(
-                    projectIri = projectIri,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID()
-                )
+  /**
+    * Create default object access permission
+    */
+  private def createDefaultObjectAccessPermission(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(PermissionsBasePath / "doap") {
+      post {
+        /* create a new default object access permission */
+        entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest => requestContext =>
+          val requestMessage: Future[DefaultObjectAccessPermissionCreateRequestADM] = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield
+            DefaultObjectAccessPermissionCreateRequestADM(
+              createRequest = apiRequest,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser,
+              apiRequestID = UUID.randomUUID()
+            )
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
+          RouteUtilADM.runJsonRoute(
+            requestMessageF = requestMessage,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log
+          )
         }
-    }
-
-    private def getPermissionsForProject(featureFactoryConfig: FeatureFactoryConfig): Route = path(PermissionsBasePath / Segment) {
-        projectIri =>
-            get {
-                requestContext =>
-                    val requestMessage = for {
-                        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                        )
-                    } yield PermissionsForProjectGetRequestADM(
-                        projectIri = projectIri,
-                        featureFactoryConfig = featureFactoryConfig,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log
-                    )
-            }
-    }
-
-    /**
-     * Create a new administrative permission
-     */
-    private def createAdministrativePermission(featureFactoryConfig: FeatureFactoryConfig): Route = path(PermissionsBasePath / "ap") {
-        post {
-            /* create a new administrative permission */
-            entity(as[CreateAdministrativePermissionAPIRequestADM]) { apiRequest =>
-                requestContext =>
-                    val requestMessage = for {
-                        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                        )
-                    } yield AdministrativePermissionCreateRequestADM(
-                        createRequest = apiRequest,
-                        featureFactoryConfig = featureFactoryConfig,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log
-                    )
-            }
-        }
-    }
-
-    /**
-     * Create default object access permission
-     */
-    private def createDefaultObjectAccessPermission(featureFactoryConfig: FeatureFactoryConfig): Route = path(PermissionsBasePath / "doap") {
-        post {
-            /* create a new default object access permission */
-            entity(as[CreateDefaultObjectAccessPermissionAPIRequestADM]) { apiRequest =>
-                requestContext =>
-                    val requestMessage: Future[DefaultObjectAccessPermissionCreateRequestADM] = for {
-                        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                        )
-                    } yield DefaultObjectAccessPermissionCreateRequestADM(
-                        createRequest = apiRequest,
-                        featureFactoryConfig = featureFactoryConfig,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log
-                    )
-            }
-        }
+      }
     }
 }
