@@ -728,6 +728,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
         doap.hasPermissions.size should be(2)
         assert(doap.hasPermissions.equals(hasPermissions))
       }
+
       "update resource class of a default object access permission" in {
         val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
@@ -745,6 +746,21 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
         assert(doap.iri == permissionIri)
         doap.hasPermissions.size should be(2)
         assert(doap.forResourceClass.get == resourceClassIri)
+      }
+
+      "not update resource class of an administrative permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/0803/003-a2"
+        val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
+
+        responderManager ! PermissionChangeResourceClassRequestADM(
+          permissionIri = permissionIri,
+          changePermissionResourceClassRequest = ChangePermissionResourceClassApiRequestADM(
+            forResourceClass = resourceClassIri
+          ),
+          requestingUser = rootUser,
+          apiRequestID = UUID.randomUUID()
+        )
+        expectMsg(Failure(BadRequestException(s"Permission $permissionIri is of type administrative permission which does not have a resource class.")))
       }
     }
   }
