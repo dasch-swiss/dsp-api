@@ -112,6 +112,8 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
 
                 case _ => FastFuture.successful(SipiFileInfoGetResponseADM(permissionCode = permissionCode, restrictedViewSettings = None))
             }
+
+            _ = println(s"SipiResponderADM returning permission code $permissionCode")
         } yield response
     }
 }

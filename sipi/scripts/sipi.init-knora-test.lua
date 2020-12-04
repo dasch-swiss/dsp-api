@@ -33,12 +33,20 @@ require "get_knora_session"
 --       'deny' : no access!
 --    filepath: server-path where the master file is located
 -------------------------------------------------------------------------------
-function pre_flight(prefix, identifier, cookie)
+function pre_flight(prefix,identifier,cookie)
+    server.log("pre_flight called in sipi.init-knora-test.lua", server.loglevel.LOG_DEBUG)
+
+
+    --
+    -- For Knora Sipi integration testing
+    -- Always the same test file is served
+    -- Make sure that this image file exists in config.imgroot
+    --
 
     if config.prefix_as_path then
-        filepath = config.imgroot .. '/' .. prefix .. '/' .. identifier
+        filepath = config.imgroot .. '/' .. prefix .. '/' .. 'Leaves.jp2'
     else
-        filepath = config.imgroot .. '/' .. identifier
+        filepath = config.imgroot .. '/' .. 'Leaves.jp2'
     end
 
     if prefix == "thumbs" then
@@ -63,35 +71,14 @@ function pre_flight(prefix, identifier, cookie)
         if session_id == nil then
             -- no session_id could be extracted
             print("cookie key is invalid: " .. cookie)
-            server.log("cookie key is invalid: " .. cookie, server.loglevel.LOG_ERR)
         else
             knora_cookie_header = { Cookie = "KnoraAuthentication=" .. session_id }
         end
     end
 
-    --
-    -- Allows to set SIPI_WEBAPI_HOSTNAME environment variable and use its value.
-    --
-    local webapi_hostname = os.getenv("SIPI_WEBAPI_HOSTNAME")
-    if webapi_hostname == nil then
-        webapi_hostname = config.knora_path
-    end
-    server.log("webapi_hostname: " .. webapi_hostname, server.loglevel.LOG_DEBUG)
+    knora_url = 'http://' .. config.knora_path .. ':' .. config.knora_port .. '/admin/files/' .. prefix .. '/' .. identifier
 
-    --
-    -- Allows to set SIPI_WEBAPI_PORT environment variable and use its value.
-    --
-    local webapi_port = os.getenv("SIPI_WEBAPI_PORT")
-    if webapi_port == nil then
-        webapi_port = config.knora_port
-    end
-    server.log("webapi_port: " .. webapi_port, server.loglevel.LOG_DEBUG)
-
-    knora_url = 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' ..  identifier
-
-    -- print("knora_url: " .. knora_url)
-    server.log("pre_flight - knora_url: " .. knora_url, server.loglevel.LOG_DEBUG)
-    server.log("pre_flight - knora_cookie_header: " .. tostring(knora_cookie_header), server.loglevel.LOG_DEBUG)
+    --print("knora_url: " .. knora_url)
 
     success, result = server.http("GET", knora_url, knora_cookie_header, 5000)
 
@@ -102,12 +89,10 @@ function pre_flight(prefix, identifier, cookie)
     end
 
     if result.status_code ~= 200 then
-        server.log("Knora returned HTTP status code " .. result.status_code, server.loglevel.LOG_ERR)
-        server.log(result.body, server.loglevel.LOG_ERR)
+        server.log("Knora returned HTTP status code " .. result.status_code)
+        server.log(result.body)
         return 'deny'
     end
-
-    server.log("pre_flight - response body: " .. tostring(result.body), server.loglevel.LOG_DEBUG)
 
     success, response_json = server.json_to_table(result.body)
     if not success then
@@ -115,13 +100,7 @@ function pre_flight(prefix, identifier, cookie)
         return 'deny'
     end
 
-    server.log("pre_flight - status: " .. response_json.status, server.loglevel.LOG_DEBUG)
     server.log("pre_flight - permission code: " .. response_json.permissionCode, server.loglevel.LOG_DEBUG)
-
-    if response_json.status ~= 0 then
-        -- something went wrong with the request, Knora returned a non zero status
-        return 'deny'
-    end
 
     if response_json.permissionCode == 0 then
         -- no view permission on file
@@ -131,11 +110,20 @@ function pre_flight(prefix, identifier, cookie)
         -- either watermark or size (depends on project, should be returned with permission code by Sipi responder)
         -- currently, only size is used
 
-        server.log("pre_flight - restricted view settings - size: " .. tostring(response_json.restrictedViewSettings.size), server.loglevel.LOG_DEBUG)
-        server.log("pre_flight - restricted view settings - watermark: " .. tostring(response_json.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
+        local restrictedViewSize
 
-        local restrictedViewSize = response_json.restrictedViewSettings.size
-        if restrictedViewSize == nil then
+        if response_json.restrictedViewSettings ~= nil then
+            -- server.log("pre_flight - restricted view settings - watermark: " .. tostring(response_json.restrictedViewSettings.watermark), server.loglevel.LOG_DEBUG)
+
+            if response_json.restrictedViewSettings.size ~= nil then
+                server.log("pre_flight - restricted view settings - size: " .. tostring(response_json.restrictedViewSettings.size), server.loglevel.LOG_DEBUG)
+                restrictedViewSize = response_json.restrictedViewSettings.size
+            else
+                server.log("pre_flight - using default restricted view size", server.loglevel.LOG_DEBUG)
+                restrictedViewSize = config.thumb_size
+            end
+        else
+            server.log("pre_flight - using default restricted view size", server.loglevel.LOG_DEBUG)
             restrictedViewSize = config.thumb_size
         end
 
