@@ -126,6 +126,18 @@ case class ChangePermissionGroupApiRequestADM(groupIri: IRI) extends Permissions
 }
 
 /**
+ * Represents an API request payload that asks the Knora API server to update hasPermissions property of a permission.
+ *
+ * @param hasPermissions the new set of permission values.
+ */
+case class ChangePermissionHasPermissionsApiRequestADM(hasPermissions: Set[PermissionADM]) extends PermissionsADMJsonProtocol {
+  if (hasPermissions.isEmpty) {
+    throw BadRequestException(s"hasPermissions cannot be empty.")
+  }
+  def toJsValue: JsValue = changePermissionHasPermissionsApiRequestADMFormat.write(this)
+}
+
+/**
  * An abstract trait representing message that can be sent to `PermissionsResponderV1`.
  */
 sealed trait PermissionsResponderRequestADM extends KnoraRequestADM
@@ -189,6 +201,29 @@ case class PermissionChangeGroupRequestADM(permissionIri: IRI,
                                            featureFactoryConfig: FeatureFactoryConfig,
                                            requestingUser: UserADM,
                                            apiRequestID: UUID
+                                          ) extends PermissionsResponderRequestADM {
+
+  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+  if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
+    throw BadRequestException(s"Invalid IRI is given: $permissionIri.")
+  }
+
+}
+
+/**
+ * A message that requests update of a permission's hasPermissions property.
+ * A successful response will be a [[PermissionItemADM]].
+ *
+ * @param permissionIri        the IRI of the permission to be updated.
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user initiation the request.
+ * @param apiRequestID         the API request ID.
+ */
+case class PermissionChangeHasPermissionsRequestADM(permissionIri: IRI,
+                                                    changePermissionHasPermissionsRequest: ChangePermissionHasPermissionsApiRequestADM,
+                                                    featureFactoryConfig: FeatureFactoryConfig,
+                                                    requestingUser: UserADM,
+                                                    apiRequestID: UUID
                                           ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
@@ -511,10 +546,6 @@ case class DefaultObjectAccessPermissionsStringForResourceClassGetADM(projectIri
   }
 
   if (targetUser.isAnonymousUser) throw BadRequestException("Anonymous Users are not allowed.")
-
-  //    if (!requestingUser.projects.containsSlice(targetUser.projects)) {
-  //        throw ForbiddenException(s"Target user is not a member of the same project as the requesting user.")
-  //    }
 }
 
 /**
@@ -556,11 +587,6 @@ case class DefaultObjectAccessPermissionsStringForPropertyGetADM(projectIri: IRI
   }
 
   if (targetUser.isAnonymousUser) throw BadRequestException("Anonymous Users are not allowed.")
-
-
-  //    if (!requestingUser.projects.containsSlice(targetUser.projects)) {
-  //        throw ForbiddenException(s"Target user is not a member of the same project as the requesting user.")
-  //    }
 }
 
 /**
@@ -1111,4 +1137,5 @@ trait PermissionsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtoc
   implicit val defaultObjectAccessPermissionCreateResponseADMFormat: RootJsonFormat[DefaultObjectAccessPermissionCreateResponseADM] = jsonFormat(DefaultObjectAccessPermissionCreateResponseADM, "default_object_access_permission")
 
   implicit val changePermissionGroupApiRequestADMFormat: RootJsonFormat[ChangePermissionGroupApiRequestADM] = jsonFormat(ChangePermissionGroupApiRequestADM, "groupIri")
+  implicit val changePermissionHasPermissionsApiRequestADMFormat: RootJsonFormat[ChangePermissionHasPermissionsApiRequestADM] = jsonFormat(ChangePermissionHasPermissionsApiRequestADM, "hasPermissions")
 }

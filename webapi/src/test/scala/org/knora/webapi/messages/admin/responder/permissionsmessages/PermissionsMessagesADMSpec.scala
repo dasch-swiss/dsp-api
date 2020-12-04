@@ -710,5 +710,65 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             )
             assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
         }
+
+        "not update permission group if invalid permission IRI given" in {
+            val permissionIri = "invalid-permission-iri"
+            val newGroupIri = SharedTestDataADM.imagesReviewerGroup.id
+            val caught = intercept[BadRequestException](
+                PermissionChangeGroupRequestADM(
+                    permissionIri = permissionIri,
+                    changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(newGroupIri),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser02,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === s"Invalid IRI is given: $permissionIri.")
+        }
+
+        "not update permission group if invalid group IRI given" in {
+            val permissionIri = SharedPermissionsTestData.perm001_d1.iri
+            val newGroupIri = "invalid-group-iri"
+            val caught = intercept[BadRequestException](
+                PermissionChangeGroupRequestADM(
+                    permissionIri = permissionIri,
+                    changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(newGroupIri),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser02,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === s"Invalid IRI $newGroupIri is given.")
+        }
+
+        "not update hasPermissions set of a permission if invalid permission IRI given" in {
+            val permissionIri = "invalid-permission-iri"
+            val hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
+            val caught = intercept[BadRequestException](
+                PermissionChangeHasPermissionsRequestADM(
+                    permissionIri = permissionIri,
+                    changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(hasPermissions),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser02,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === s"Invalid IRI is given: $permissionIri.")
+        }
+
+        "not update hasPermissions set of a permission if invalid empty set given" in {
+            val permissionIri = SharedPermissionsTestData.perm001_d1.iri
+            val hasPermissions = Set.empty[PermissionADM]
+            val caught = intercept[BadRequestException](
+                PermissionChangeHasPermissionsRequestADM(
+                    permissionIri = permissionIri,
+                    changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(hasPermissions),
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    requestingUser = SharedTestDataADM.imagesUser02,
+                    apiRequestID = UUID.randomUUID()
+                )
+            )
+            assert(caught.getMessage === s"hasPermissions cannot be empty.")
+        }
     }
 }
