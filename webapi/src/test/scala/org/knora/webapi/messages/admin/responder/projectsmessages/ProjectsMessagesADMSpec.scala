@@ -16,15 +16,15 @@
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
-import com.typesafe.config.ConfigFactory
-import org.knora.webapi.exceptions.{BadRequestException, OntologyConstraintException}
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.exceptions.{BadRequestException, OntologyConstraintException}
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 object ProjectsMessagesADMSpec {
-    val config = ConfigFactory.parseString(
+    val config: Config = ConfigFactory.parseString(
         """
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -32,24 +32,11 @@ object ProjectsMessagesADMSpec {
 }
 
 /**
-  *  This spec is used to test subclasses of the [[ProjectsMessagesADM]] class.
-  */
+ * This spec is used to test subclasses of the [[ProjectsResponderRequestADM]] trait.
+ */
 class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
 
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    private val id = SharedTestDataADM.rootUser.id
-    private val email = SharedTestDataADM.rootUser.email
-    private val password = SharedTestDataADM.rootUser.password
-    private val token = SharedTestDataADM.rootUser.token
-    private val givenName = SharedTestDataADM.rootUser.givenName
-    private val familyName = SharedTestDataADM.rootUser.familyName
-    private val status = SharedTestDataADM.rootUser.status
-    private val lang = SharedTestDataADM.rootUser.lang
-    private val groups = SharedTestDataADM.rootUser.groups
-    private val projects = SharedTestDataADM.rootUser.projects
-    private val sessionId = SharedTestDataADM.rootUser.sessionId
-    private val permissions = SharedTestDataADM.rootUser.permissions
 
     "The CreateProjectApiRequestADM case class" should {
 

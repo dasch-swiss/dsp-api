@@ -55,6 +55,13 @@ object RdfMediaTypes {
         fileExtensions = List("trig")
     )
 
+    val `application/n-quads`: MediaType.WithFixedCharset = MediaType.customWithFixedCharset(
+        mainType = "application",
+        subType = "n-quads",
+        charset = HttpCharsets.`UTF-8`,
+        fileExtensions = List("nq")
+    )
+
     /**
      * A map of MIME types (strings) to supported RDF media types.
      */
@@ -63,7 +70,8 @@ object RdfMediaTypes {
         `application/ld+json`,
         `text/turtle`,
         `application/trig`,
-        `application/rdf+xml`
+        `application/rdf+xml`,
+        `application/n-quads`
     ).map {
         mediaType => mediaType.toString -> mediaType
     }.toMap
