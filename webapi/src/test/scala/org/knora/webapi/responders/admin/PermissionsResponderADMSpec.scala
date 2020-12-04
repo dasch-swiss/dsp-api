@@ -590,6 +590,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 result should equal(expected)
             }
         }
+        
         "request to get the permission by IRI" should {
             "not return the permission if requesting user does not have permission to see it" in {
                 responderManager ! PermissionByIriGetRequestADM(
@@ -689,6 +690,49 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
                 assert(doap.iri == permissionIri)
                 assert(doap.forGroup.get == newGroupIri)
                 assert(doap.forProperty.isEmpty)
+            }
+
+            "update hasPermissions of an administrative permission" in {
+                val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+                val hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
+
+                responderManager ! PermissionChangeHasPermissionsRequestADM(
+                    permissionIri = permissionIri,
+                    changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
+                        hasPermissions = hasPermissions
+                    ),
+                    requestingUser = rootUser,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received: AdministrativePermissionGetResponseADM = expectMsgType[AdministrativePermissionGetResponseADM]
+                val ap = received.administrativePermission
+                assert(ap.iri == permissionIri)
+                ap.hasPermissions.size should be(1)
+                assert(ap.hasPermissions.equals(hasPermissions))
+            }
+
+            "update hasPermissions of a default object access permission" in {
+                val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+                val hasPermissions = Set(
+                    PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
+                    PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+                )
+
+                responderManager ! PermissionChangeHasPermissionsRequestADM(
+                    permissionIri = permissionIri,
+                    changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
+                        hasPermissions = hasPermissions
+                    ),
+                    requestingUser = rootUser,
+                    featureFactoryConfig = defaultFeatureFactoryConfig,
+                    apiRequestID = UUID.randomUUID()
+                )
+                val received: DefaultObjectAccessPermissionGetResponseADM = expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
+                val doap = received.defaultObjectAccessPermission
+                assert(doap.iri == permissionIri)
+                doap.hasPermissions.size should be(2)
+                assert(doap.hasPermissions.equals(hasPermissions))
             }
         }
     }
