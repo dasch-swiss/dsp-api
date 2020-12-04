@@ -347,7 +347,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           TestDataFileContent(
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
-              filename = "update-administrative-permission-group-request",
+              filename = "update-administrative-permission-forGroup-request",
               fileExtension = "json"
             ),
             text = updatePermissionGroup
@@ -365,7 +365,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           TestDataFileContent(
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
-              filename = "update-administrative-permission-group-response",
+              filename = "update-administrative-permission-forGroup-response",
               fileExtension = "json"
             ),
             text = responseToString(response)
@@ -385,7 +385,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           TestDataFileContent(
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
-              filename = "update-default-object-access-permission-group-request",
+              filename = "update-defaultObjectAccess-permission-forGroup-request",
               fileExtension = "json"
             ),
             text = updatePermissionGroup
@@ -403,7 +403,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           TestDataFileContent(
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
-              filename = "update-default-object-access-permission-group-response",
+              filename = "update-defaultObjectAccess-permission-forGroup-response",
               fileExtension = "json"
             ),
             text = responseToString(response)
@@ -459,7 +459,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           TestDataFileContent(
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
-              filename = "update-default-object-access-permission-hasPermissions-request",
+              filename = "update-defaultObjectAccess-permission-hasPermissions-request",
               fileExtension = "json"
             ),
             text = updateHasPermissions
@@ -477,7 +477,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           TestDataFileContent(
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
-              filename = "update-default-object-access-permission-hasPermissions-response",
+              filename = "update-defaultObjectAccess-permission-hasPermissions-response",
               fileExtension = "json"
             ),
             text = responseToString(response)
@@ -497,7 +497,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           TestDataFileContent(
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
-              filename = "update-default-object-access-permission-resourceClass-request",
+              filename = "update-defaultObjectAccess-permission-forResourceClass-request",
               fileExtension = "json"
             ),
             text = updateResourceClass
@@ -515,7 +515,45 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           TestDataFileContent(
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
-              filename = "update-default-object-access-permission-resourceClass-response",
+              filename = "update-defaultObjectAccess-permission-forResourceClass-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "change the property of a default object access permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val propertyClassIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
+        val updateResourceClass =
+          s"""{
+             |   "forProperty":"$propertyClassIri"
+             |}""".stripMargin
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-defaultObjectAccess-permission-forProperty-request",
+              fileExtension = "json"
+            ),
+            text = updateResourceClass
+          )
+        )
+        val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/property", HttpEntity(ContentTypes.`application/json`, updateResourceClass)) ~> addCredentials(BasicHttpCredentials(
+          SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.OK)
+        val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
+        val forProperty = result.getOrElse("forProperty", throw DeserializationException("The expected field 'forProperty' is missing.")).convertTo[String]
+        assert(forProperty == propertyClassIri)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-defaultObjectAccess-permission-forProperty-response",
               fileExtension = "json"
             ),
             text = responseToString(response)
