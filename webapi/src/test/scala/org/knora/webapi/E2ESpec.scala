@@ -48,140 +48,154 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
 
 object E2ESpec {
-    val defaultConfig: Config = ConfigFactory.load()
+  val defaultConfig: Config = ConfigFactory.load()
 }
 
 /**
- * This class can be used in End-to-End testing. It starts the Knora-API server
- * and provides access to settings and logging.
- */
-class E2ESpec(_system: ActorSystem) extends Core with StartupUtils with TriplestoreJsonProtocol with Suite with AnyWordSpecLike with Matchers with BeforeAndAfterAll with RequestBuilding with LazyLogging {
+  * This class can be used in End-to-End testing. It starts the Knora-API server
+  * and provides access to settings and logging.
+  */
+class E2ESpec(_system: ActorSystem)
+    extends Core
+    with StartupUtils
+    with TriplestoreJsonProtocol
+    with Suite
+    with AnyWordSpecLike
+    with Matchers
+    with BeforeAndAfterAll
+    with RequestBuilding
+    with LazyLogging {
 
-    /* constructors */
-    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
+  /* constructors */
+  def this(name: String, config: Config) =
+    this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
-    def this(config: Config) = this(ActorSystem("E2ETest", TestContainers.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
+  def this(config: Config) =
+    this(ActorSystem("E2ETest", TestContainers.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
-    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(E2ESpec.defaultConfig)))
+  def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
-    def this() = this(ActorSystem("E2ETest", TestContainers.PortConfig.withFallback(E2ESpec.defaultConfig)))
+  def this() = this(ActorSystem("E2ETest", TestContainers.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
-    /* needed by the core trait */
+  /* needed by the core trait */
 
-    implicit lazy val system: ActorSystem = _system
-    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-    implicit val materializer: Materializer = Materializer.matFromSystem(system)
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+  implicit lazy val system: ActorSystem = _system
+  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
+  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+  implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    // can be overridden in individual spec
-    lazy val rdfDataObjects = Seq.empty[RdfDataObject]
+  // can be overridden in individual spec
+  lazy val rdfDataObjects = Seq.empty[RdfDataObject]
 
-    /* Needs to be initialized before any responders */
-    StringFormatter.initForTest()
-    RdfFeatureFactory.init(settings)
+  /* Needs to be initialized before any responders */
+  StringFormatter.initForTest()
+  RdfFeatureFactory.init(settings)
 
-    val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
+  val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
-    lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
+  lazy val appActor: ActorRef =
+    system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
-    protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
+  protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
 
-    protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
-        testToggles = Set.empty,
-        parent = new KnoraSettingsFeatureFactoryConfig(settings)
-    )
+  protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
+    testToggles = Set.empty,
+    parent = new KnoraSettingsFeatureFactoryConfig(settings)
+  )
 
-    override def beforeAll: Unit = {
+  override def beforeAll: Unit = {
 
-        // set allow reload over http
-        appActor ! SetAllowReloadOverHTTPState(true)
+    // set allow reload over http
+    appActor ! SetAllowReloadOverHTTPState(true)
 
-        // start the knora service, loading data from the repository
-        appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
+    // start the knora service, loading data from the repository
+    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
 
-        // waits until knora is up and running
-        applicationStateRunning()
+    // waits until knora is up and running
+    applicationStateRunning()
 
-        // loadTestData
-        loadTestData(rdfDataObjects)
+    // loadTestData
+    loadTestData(rdfDataObjects)
+  }
+
+  override def afterAll: Unit = {
+    /* Stop the server when everything else has finished */
+    appActor ! AppStop()
+  }
+
+  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+    logger.info("Loading test data started ...")
+    val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent",
+                       HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+    singleAwaitingRequest(request, 479999.milliseconds)
+    logger.info("... loading test data done.")
+  }
+
+  // duration is intentionally like this, so that it could be found with search if seen in a stack trace
+  protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15999.milliseconds): HttpResponse = {
+    val responseFuture = Http().singleRequest(request)
+    Await.result(responseFuture, duration)
+  }
+
+  protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
+    val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
+    val responseBodyStr = Await.result(responseBodyFuture, 10.seconds)
+    JsonLDUtil.parseJsonLD(responseBodyStr)
+  }
+
+  protected def responseToString(httpResponse: HttpResponse): String = {
+    val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
+    Await.result(responseBodyFuture, 10.seconds)
+  }
+
+  protected def doGetRequest(urlPath: String): String = {
+    val request = Get(s"$baseApiUrl$urlPath")
+    val response: HttpResponse = singleAwaitingRequest(request)
+    responseToString(response)
+  }
+
+  protected def parseTrig(trigStr: String): RdfModel = {
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+    rdfFormatUtil.parseToRdfModel(rdfStr = trigStr, rdfFormat = TriG)
+  }
+
+  protected def parseTurtle(turtleStr: String): RdfModel = {
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+    rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
+  }
+
+  protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+    rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
+  }
+
+  protected def getResponseEntityBytes(httpResponse: HttpResponse): Array[Byte] = {
+    val responseBodyFuture: Future[Array[Byte]] = httpResponse.entity.toStrict(10.seconds).map(_.data.toArray)
+    Await.result(responseBodyFuture, 10.seconds)
+  }
+
+  /**
+    * Reads or writes a test data file.
+    * The written test data files can be found under:
+    * ./bazel-out/darwin-fastbuild/testlogs/<package-name>/<target-name>/test.outputs/outputs.zip
+    *
+    * @param responseAsString the API response received from Knora.
+    * @param file             the file in which the expected API response is stored.
+    * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
+    * @return the expected response.
+    */
+  protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
+    if (writeFile) {
+      // Per default only read access is allowed in the bazel sandbox.
+      // This workaround allows to save test output.
+      val testOutputDir = sys.env("TEST_UNDECLARED_OUTPUTS_DIR")
+      val newOutputFile = new File(testOutputDir, file.getPath)
+      newOutputFile.getParentFile.mkdirs()
+      FileUtil.writeTextFile(newOutputFile,
+                             responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
+      responseAsString
+    } else {
+      FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
     }
-
-    override def afterAll: Unit = {
-        /* Stop the server when everything else has finished */
-        appActor ! AppStop()
-    }
-
-    protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-        logger.info("Loading test data started ...")
-        val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-        singleAwaitingRequest(request, 479999.milliseconds)
-        logger.info("... loading test data done.")
-    }
-
-    // duration is intentionally like this, so that it could be found with search if seen in a stack trace
-    protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15999.milliseconds): HttpResponse = {
-        val responseFuture = Http().singleRequest(request)
-        Await.result(responseFuture, duration)
-    }
-
-    protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
-        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
-        val responseBodyStr = Await.result(responseBodyFuture, 10.seconds)
-        JsonLDUtil.parseJsonLD(responseBodyStr)
-    }
-
-    protected def responseToString(httpResponse: HttpResponse): String = {
-        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
-        Await.result(responseBodyFuture, 10.seconds)
-    }
-
-    protected def doGetRequest(urlPath: String): String = {
-        val request = Get(s"$baseApiUrl$urlPath")
-        val response: HttpResponse = singleAwaitingRequest(request)
-        responseToString(response)
-    }
-
-    protected def parseTrig(trigStr: String): RdfModel = {
-        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
-        rdfFormatUtil.parseToRdfModel(rdfStr = trigStr, rdfFormat = TriG)
-    }
-
-    protected def parseTurtle(turtleStr: String): RdfModel = {
-        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
-        rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
-    }
-
-    protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
-        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
-        rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
-    }
-
-    protected def getResponseEntityBytes(httpResponse: HttpResponse): Array[Byte] = {
-        val responseBodyFuture: Future[Array[Byte]] = httpResponse.entity.toStrict(10.seconds).map(_.data.toArray)
-        Await.result(responseBodyFuture, 10.seconds)
-    }
-
-    /**
-     * Reads or writes a test data file.
-     * The written test data files can be found under:
-     * ./bazel-out/darwin-fastbuild/testlogs/<package-name>/<target-name>/test.outputs/outputs.zip
-     *
-     * @param responseAsString the API response received from Knora.
-     * @param file             the file in which the expected API response is stored.
-     * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
-     * @return the expected response.
-     */
-    protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
-        if (writeFile) {
-            // Per default only read access is allowed in the bazel sandbox.
-            // This workaround allows to save test output.
-            val testOutputDir = sys.env("TEST_UNDECLARED_OUTPUTS_DIR")
-            val newOutputFile = new File(testOutputDir, file.getPath)
-            newOutputFile.getParentFile.mkdirs()
-            FileUtil.writeTextFile(newOutputFile, responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
-            responseAsString
-        } else {
-            FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
-        }
-    }
+  }
 }

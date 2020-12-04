@@ -37,11 +37,9 @@ import org.knora.webapi.util.MutableTestIri
 
 import scala.concurrent.duration._
 
-
 object GroupsResponderADMSpec {
 
-    val config: Config = ConfigFactory.parseString(
-        """
+  val config: Config = ConfigFactory.parseString("""
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
@@ -52,245 +50,244 @@ object GroupsResponderADMSpec {
   */
 class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) with ImplicitSender {
 
-    private val timeout = 5.seconds
+  private val timeout = 5.seconds
 
-    private val imagesProject = SharedTestDataADM.imagesProject
-    private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
+  private val imagesProject = SharedTestDataADM.imagesProject
+  private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
 
-    private val rootUser = SharedTestDataADM.rootUser
+  private val rootUser = SharedTestDataADM.rootUser
 
-    "The GroupsResponder " when {
+  "The GroupsResponder " when {
 
-        "asked about all groups" should {
-            "return a list" in {
-                responderManager ! GroupsGetRequestADM(
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.rootUser
-                )
+    "asked about all groups" should {
+      "return a list" in {
+        responderManager ! GroupsGetRequestADM(
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.rootUser
+        )
 
-                val response = expectMsgType[GroupsGetResponseADM](timeout)
-                // println(response.users)
-                response.groups.nonEmpty should be (true)
-                response.groups.size should be (2)
-            }
-        }
-
-        "asked about a group identified by 'iri' " should {
-            "return group info if the group is known " in {
-                responderManager ! GroupGetRequestADM(
-                    groupIri = imagesReviewerGroup.id,
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = rootUser
-                )
-
-                expectMsg(GroupGetResponseADM(imagesReviewerGroup))
-            }
-            "return 'NotFoundException' when the group is unknown " in {
-                responderManager ! GroupGetRequestADM(
-                    groupIri = "http://rdfh.ch/groups/notexisting",
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = rootUser
-                )
-
-                expectMsgPF(timeout) {
-                    case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
-                }
-            }
-        }
-
-        "used to modify group information" should {
-
-            val newGroupIri = new MutableTestIri
-
-            "CREATE the group and return the group's info if the supplied group name is unique" in {
-                responderManager ! GroupCreateRequestADM(
-                    createRequest = CreateGroupApiRequestADM(
-                        name= "NewGroup",
-                        description = Some("""NewGroupDescription with "quotes" and <html tag>"""),
-                        project = SharedTestDataADM.IMAGES_PROJECT_IRI,
-                        status = true,
-                        selfjoin = false),
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser01,
-                    apiRequestID = UUID.randomUUID
-                )
-
-                val received: GroupOperationResponseADM = expectMsgType[GroupOperationResponseADM](timeout)
-                val newGroupInfo = received.group
-
-                newGroupInfo.name should equal ("NewGroup")
-                newGroupInfo.description should equal ("""NewGroupDescription with "quotes" and <html tag>""")
-                newGroupInfo.project should equal (imagesProject)
-                newGroupInfo.status should equal (true)
-                newGroupInfo.selfjoin should equal (false)
-
-                // store for later usage
-                newGroupIri.set(newGroupInfo.id)
-            }
-
-            "return a 'DuplicateValueException' if the supplied group name is not unique" in {
-                responderManager ! GroupCreateRequestADM(
-                    createRequest = CreateGroupApiRequestADM(
-                        name = "NewGroup",
-                        description = Some("NewGroupDescription"),
-                        project = SharedTestDataADM.IMAGES_PROJECT_IRI,
-                        status = true,
-                        selfjoin = false),
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser01,
-                    apiRequestID = UUID.randomUUID
-                )
-
-                expectMsgPF(timeout) {
-                    case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
-                }
-            }
-
-            "return 'BadRequestException' if group name or project IRI are missing" in {
-
-                /* missing group name */
-                responderManager ! GroupCreateRequestADM(
-                    createRequest = CreateGroupApiRequestADM(
-                        name = "",
-                        description = Some("NoNameGroupDescription"),
-                        project = SharedTestDataADM.IMAGES_PROJECT_IRI,
-                        status = true,
-                        selfjoin = false),
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser01,
-                    apiRequestID = UUID.randomUUID
-                )
-                expectMsg(Failure(BadRequestException("Group name cannot be empty")))
-
-                /* missing project */
-                responderManager ! GroupCreateRequestADM(
-                    createRequest = CreateGroupApiRequestADM(
-                        name = "OtherNewGroup",
-                        description = Some("OtherNewGroupDescription"),
-                        project = "",
-                        status = true,
-                        selfjoin = false),
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser01,
-                    apiRequestID = UUID.randomUUID
-                )
-                expectMsg(Failure(BadRequestException("Project IRI cannot be empty")))
-            }
-
-            "UPDATE a group" in {
-                responderManager ! GroupChangeRequestADM(
-                    groupIri = newGroupIri.get,
-                    changeGroupRequest = ChangeGroupApiRequestADM(Some("UpdatedGroupName"), Some("""UpdatedDescription with "quotes" and <html tag>""")),
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser01,
-                    apiRequestID = UUID.randomUUID
-                )
-
-                val received: GroupOperationResponseADM = expectMsgType[GroupOperationResponseADM](timeout)
-                val updatedGroupInfo = received.group
-
-                updatedGroupInfo.name should equal ("UpdatedGroupName")
-                updatedGroupInfo.description should equal ("""UpdatedDescription with "quotes" and <html tag>""")
-                updatedGroupInfo.project should equal (imagesProject)
-                updatedGroupInfo.status should equal (true)
-                updatedGroupInfo.selfjoin should equal (false)
-            }
-
-            "return 'NotFound' if a not-existing group IRI is submitted during update" in {
-                responderManager ! GroupChangeRequestADM(
-                    groupIri = "http://rdfh.ch/groups/notexisting",
-                    ChangeGroupApiRequestADM(Some("UpdatedGroupName"), Some("UpdatedDescription")),
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser01,
-                    apiRequestID = UUID.randomUUID
-                )
-
-                expectMsgPF(timeout) {
-                    case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
-                }
-            }
-
-            "return 'BadRequest' if the new group name already exists inside the project" in {
-                responderManager ! GroupChangeRequestADM(
-                    groupIri = newGroupIri.get,
-                    changeGroupRequest = ChangeGroupApiRequestADM(Some("Image reviewer"), Some("UpdatedDescription")),
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser01,
-                    apiRequestID = UUID.randomUUID
-                )
-
-                expectMsgPF(timeout) {
-                    case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
-                }
-            }
-
-            "return 'BadRequest' if nothing would be changed during the update" in {
-                an [BadRequestException] should be thrownBy ChangeGroupApiRequestADM(None, None, None, None)
-            }
-
-        }
-
-        "used to query members" should {
-
-            "return all members of a group identified by IRI" in {
-                responderManager ! GroupMembersGetRequestADM(
-                    groupIri = SharedTestDataADM.imagesReviewerGroup.id,
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.rootUser
-                )
-
-                val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
-
-                received.members.map(_.id) should contain allElementsOf Seq(
-                    SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.RESTRICTED),
-                    SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.RESTRICTED)
-                ).map(_.id)
-            }
-
-            "remove all members when group is deactivated" in {
-                responderManager ! GroupMembersGetRequestADM(
-                    groupIri = SharedTestDataADM.imagesReviewerGroup.id,
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.rootUser
-                )
-
-                val membersBeforeStatusChange: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
-                membersBeforeStatusChange.members.size shouldBe 2
-
-                responderManager ! GroupChangeStatusRequestADM(
-                    groupIri = SharedTestDataADM.imagesReviewerGroup.id,
-                    changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.imagesUser01,
-                    apiRequestID = UUID.randomUUID
-                )
-
-                val statusChangeResponse = expectMsgType[GroupOperationResponseADM](timeout)
-
-                statusChangeResponse.group.status shouldBe false
-
-                responderManager ! GroupMembersGetRequestADM(
-                    groupIri = SharedTestDataADM.imagesReviewerGroup.id,
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.rootUser
-                )
-
-                expectMsg(Failure(NotFoundException("No members found.")))
-            }
-
-            "return 'NotFound' when the group IRI is unknown" in {
-                responderManager ! GroupMembersGetRequestADM(
-                    groupIri = "http://rdfh.ch/groups/notexisting",
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.rootUser
-                )
-
-                expectMsgPF(timeout) {
-                    case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
-                }
-
-            }
-        }
+        val response = expectMsgType[GroupsGetResponseADM](timeout)
+        // println(response.users)
+        response.groups.nonEmpty should be(true)
+        response.groups.size should be(2)
+      }
     }
+
+    "asked about a group identified by 'iri' " should {
+      "return group info if the group is known " in {
+        responderManager ! GroupGetRequestADM(
+          groupIri = imagesReviewerGroup.id,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = rootUser
+        )
+
+        expectMsg(GroupGetResponseADM(imagesReviewerGroup))
+      }
+      "return 'NotFoundException' when the group is unknown " in {
+        responderManager ! GroupGetRequestADM(
+          groupIri = "http://rdfh.ch/groups/notexisting",
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = rootUser
+        )
+
+        expectMsgPF(timeout) {
+          case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+        }
+      }
+    }
+
+    "used to modify group information" should {
+
+      val newGroupIri = new MutableTestIri
+
+      "CREATE the group and return the group's info if the supplied group name is unique" in {
+        responderManager ! GroupCreateRequestADM(
+          createRequest = CreateGroupApiRequestADM(
+            name = "NewGroup",
+            description = Some("""NewGroupDescription with "quotes" and <html tag>"""),
+            project = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            status = true,
+            selfjoin = false
+          ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID
+        )
+
+        val received: GroupOperationResponseADM = expectMsgType[GroupOperationResponseADM](timeout)
+        val newGroupInfo = received.group
+
+        newGroupInfo.name should equal("NewGroup")
+        newGroupInfo.description should equal("""NewGroupDescription with "quotes" and <html tag>""")
+        newGroupInfo.project should equal(imagesProject)
+        newGroupInfo.status should equal(true)
+        newGroupInfo.selfjoin should equal(false)
+
+        // store for later usage
+        newGroupIri.set(newGroupInfo.id)
+      }
+
+      "return a 'DuplicateValueException' if the supplied group name is not unique" in {
+        responderManager ! GroupCreateRequestADM(
+          createRequest = CreateGroupApiRequestADM(name = "NewGroup",
+                                                   description = Some("NewGroupDescription"),
+                                                   project = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                                                   status = true,
+                                                   selfjoin = false),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID
+        )
+
+        expectMsgPF(timeout) {
+          case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+        }
+      }
+
+      "return 'BadRequestException' if group name or project IRI are missing" in {
+
+        /* missing group name */
+        responderManager ! GroupCreateRequestADM(
+          createRequest = CreateGroupApiRequestADM(name = "",
+                                                   description = Some("NoNameGroupDescription"),
+                                                   project = SharedTestDataADM.IMAGES_PROJECT_IRI,
+                                                   status = true,
+                                                   selfjoin = false),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID
+        )
+        expectMsg(Failure(BadRequestException("Group name cannot be empty")))
+
+        /* missing project */
+        responderManager ! GroupCreateRequestADM(
+          createRequest = CreateGroupApiRequestADM(name = "OtherNewGroup",
+                                                   description = Some("OtherNewGroupDescription"),
+                                                   project = "",
+                                                   status = true,
+                                                   selfjoin = false),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID
+        )
+        expectMsg(Failure(BadRequestException("Project IRI cannot be empty")))
+      }
+
+      "UPDATE a group" in {
+        responderManager ! GroupChangeRequestADM(
+          groupIri = newGroupIri.get,
+          changeGroupRequest = ChangeGroupApiRequestADM(Some("UpdatedGroupName"),
+                                                        Some("""UpdatedDescription with "quotes" and <html tag>""")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID
+        )
+
+        val received: GroupOperationResponseADM = expectMsgType[GroupOperationResponseADM](timeout)
+        val updatedGroupInfo = received.group
+
+        updatedGroupInfo.name should equal("UpdatedGroupName")
+        updatedGroupInfo.description should equal("""UpdatedDescription with "quotes" and <html tag>""")
+        updatedGroupInfo.project should equal(imagesProject)
+        updatedGroupInfo.status should equal(true)
+        updatedGroupInfo.selfjoin should equal(false)
+      }
+
+      "return 'NotFound' if a not-existing group IRI is submitted during update" in {
+        responderManager ! GroupChangeRequestADM(
+          groupIri = "http://rdfh.ch/groups/notexisting",
+          ChangeGroupApiRequestADM(Some("UpdatedGroupName"), Some("UpdatedDescription")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID
+        )
+
+        expectMsgPF(timeout) {
+          case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+        }
+      }
+
+      "return 'BadRequest' if the new group name already exists inside the project" in {
+        responderManager ! GroupChangeRequestADM(
+          groupIri = newGroupIri.get,
+          changeGroupRequest = ChangeGroupApiRequestADM(Some("Image reviewer"), Some("UpdatedDescription")),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID
+        )
+
+        expectMsgPF(timeout) {
+          case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+        }
+      }
+
+      "return 'BadRequest' if nothing would be changed during the update" in {
+        an[BadRequestException] should be thrownBy ChangeGroupApiRequestADM(None, None, None, None)
+      }
+
+    }
+
+    "used to query members" should {
+
+      "return all members of a group identified by IRI" in {
+        responderManager ! GroupMembersGetRequestADM(
+          groupIri = SharedTestDataADM.imagesReviewerGroup.id,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.rootUser
+        )
+
+        val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
+
+        received.members.map(_.id) should contain allElementsOf Seq(
+          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.RESTRICTED),
+          SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.RESTRICTED)
+        ).map(_.id)
+      }
+
+      "remove all members when group is deactivated" in {
+        responderManager ! GroupMembersGetRequestADM(
+          groupIri = SharedTestDataADM.imagesReviewerGroup.id,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.rootUser
+        )
+
+        val membersBeforeStatusChange: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
+        membersBeforeStatusChange.members.size shouldBe 2
+
+        responderManager ! GroupChangeStatusRequestADM(
+          groupIri = SharedTestDataADM.imagesReviewerGroup.id,
+          changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID
+        )
+
+        val statusChangeResponse = expectMsgType[GroupOperationResponseADM](timeout)
+
+        statusChangeResponse.group.status shouldBe false
+
+        responderManager ! GroupMembersGetRequestADM(
+          groupIri = SharedTestDataADM.imagesReviewerGroup.id,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.rootUser
+        )
+
+        expectMsg(Failure(NotFoundException("No members found.")))
+      }
+
+      "return 'NotFound' when the group IRI is unknown" in {
+        responderManager ! GroupMembersGetRequestADM(
+          groupIri = "http://rdfh.ch/groups/notexisting",
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.rootUser
+        )
+
+        expectMsgPF(timeout) {
+          case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+        }
+
+      }
+    }
+  }
 
 }

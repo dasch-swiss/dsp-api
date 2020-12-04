@@ -26,49 +26,49 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 
 /**
- * This object represents built-in User and Project instances.
- */
+  * This object represents built-in User and Project instances.
+  */
 object KnoraSystemInstances {
 
-    object Users {
+  object Users {
 
-        /**
-         * Represents the anonymous user.
-         */
-        val AnonymousUser = UserADM(
-            id = OntologyConstants.KnoraAdmin.AnonymousUser,
-            username = "anonymous",
-            email = "anonymous@localhost",
-            password = None,
-            token = None,
-            givenName = "Knora",
-            familyName = "Anonymous",
-            status = true,
-            lang = "en",
-            groups = Seq.empty[GroupADM],
-            projects = Seq.empty[ProjectADM],
-            sessionId = None,
-            permissions = PermissionsDataADM()
-        )
+    /**
+      * Represents the anonymous user.
+      */
+    val AnonymousUser = UserADM(
+      id = OntologyConstants.KnoraAdmin.AnonymousUser,
+      username = "anonymous",
+      email = "anonymous@localhost",
+      password = None,
+      token = None,
+      givenName = "Knora",
+      familyName = "Anonymous",
+      status = true,
+      lang = "en",
+      groups = Seq.empty[GroupADM],
+      projects = Seq.empty[ProjectADM],
+      sessionId = None,
+      permissions = PermissionsDataADM()
+    )
 
-        /**
-         * Represents the system user used internally.
-         */
-        val SystemUser = UserADM(
-            id = OntologyConstants.KnoraAdmin.SystemUser,
-            username = "system",
-            email = "system@localhost",
-            password = None,
-            token = None,
-            givenName = "Knora",
-            familyName = "System",
-            status = true,
-            lang = "en",
-            groups = Seq.empty[GroupADM],
-            projects = Seq.empty[ProjectADM],
-            sessionId = None,
-            permissions = PermissionsDataADM()
-        )
-    }
+    /**
+      * Represents the system user used internally.
+      */
+    val SystemUser = UserADM(
+      id = OntologyConstants.KnoraAdmin.SystemUser,
+      username = "system",
+      email = "system@localhost",
+      password = None,
+      token = None,
+      givenName = "Knora",
+      familyName = "System",
+      status = true,
+      lang = "en",
+      groups = Seq.empty[GroupADM],
+      projects = Seq.empty[ProjectADM],
+      sessionId = None,
+      permissions = PermissionsDataADM()
+    )
+  }
 
 }

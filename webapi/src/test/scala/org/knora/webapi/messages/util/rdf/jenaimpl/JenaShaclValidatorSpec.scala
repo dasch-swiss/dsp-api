@@ -23,6 +23,6 @@ import org.knora.webapi.feature.{FeatureToggle, ToggleStateOn}
 import org.knora.webapi.util.rdf.ShaclValidatorSpec
 
 /**
- * Tests [[org.knora.webapi.messages.util.rdf.ShaclValidator]] using the Jena API.
- */
+  * Tests [[org.knora.webapi.messages.util.rdf.ShaclValidator]] using the Jena API.
+  */
 class JenaShaclValidatorSpec extends ShaclValidatorSpec(FeatureToggle("jena-rdf-library", ToggleStateOn(1)))

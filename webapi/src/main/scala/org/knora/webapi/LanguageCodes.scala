@@ -20,18 +20,18 @@
 package org.knora.webapi
 
 /**
- * Constants for language codes.
- */
+  * Constants for language codes.
+  */
 object LanguageCodes {
-    val DE: String = "de"
-    val EN: String = "en"
-    val FR: String = "fr"
-    val IT: String = "it"
+  val DE: String = "de"
+  val EN: String = "en"
+  val FR: String = "fr"
+  val IT: String = "it"
 
-    val SupportedLanguageCodes: Set[String] = Set(
-        DE,
-        EN,
-        FR,
-        IT
-    )
+  val SupportedLanguageCodes: Set[String] = Set(
+    DE,
+    EN,
+    FR,
+    IT
+  )
 }

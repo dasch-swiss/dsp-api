@@ -35,109 +35,107 @@ import scala.concurrent.Future
 import scala.io.Source
 
 object Main extends App {
-    implicit val system = ActorSystem("salsah-system")
-    implicit val materializer = Materializer.matFromSystem(system)
-    implicit val ec = system.dispatcher
+  implicit val system = ActorSystem("salsah-system")
+  implicit val materializer = Materializer.matFromSystem(system)
+  implicit val ec = system.dispatcher
 
-    /**
-      * The application's configuration.
-      */
-    val settings: SettingsImpl = Settings(system)
+  /**
+    * The application's configuration.
+    */
+  val settings: SettingsImpl = Settings(system)
 
-    val log = akka.event.Logging(system, this.getClass)
+  val log = akka.event.Logging(system, this.getClass)
 
-    log.info(s"Deployed: ${settings.deployed}")
+  log.info(s"Deployed: ${settings.deployed}")
 
-    val handler = if (settings.deployed) {
-        // deployed state
-        val workdir = settings.workingDirectory
-        log.info(s"Working Directory: $workdir")
-        val publicDir = workdir + "/public"
-        log.info(s"Public Directory: $publicDir")
+  val handler = if (settings.deployed) {
+    // deployed state
+    val workdir = settings.workingDirectory
+    log.info(s"Working Directory: $workdir")
+    val publicDir = workdir + "/public"
+    log.info(s"Public Directory: $publicDir")
 
-        val webapiUrl = settings.webapiUrl
-        log.info("webapiUrl: {}", webapiUrl)
+    val webapiUrl = settings.webapiUrl
+    log.info("webapiUrl: {}", webapiUrl)
 
-        val sipiUrl = settings.sipiUrl
-        log.info("sipiUrl: {}", sipiUrl)
+    val sipiUrl = settings.sipiUrl
+    log.info("sipiUrl: {}", sipiUrl)
 
-        //create /tmp directory if it does not exist
-        val tmpDir = new File("/tmp")
-        if (!tmpDir.exists()) {
-            tmpDir.mkdir()
-        }
+    //create /tmp directory if it does not exist
+    val tmpDir = new File("/tmp")
+    if (!tmpDir.exists()) {
+      tmpDir.mkdir()
+    }
 
-        /* rewriting webapi and sipi url in public/js/00_init_javascript.js */
-        val originalFile = new File(s"$publicDir/js/00_init_javascript.js") // Original File
-        val tempFile = new File("/tmp/00_init_javascript.js") // Temporary File
-        val printWriter = new PrintWriter(tempFile)
+    /* rewriting webapi and sipi url in public/js/00_init_javascript.js */
+    val originalFile = new File(s"$publicDir/js/00_init_javascript.js") // Original File
+    val tempFile = new File("/tmp/00_init_javascript.js") // Temporary File
+    val printWriter = new PrintWriter(tempFile)
 
-        val origSource = Source.fromFile(originalFile)("UTF-8")
-        origSource.getLines
-          .map { line =>
-              if (line.contains("http://0.0.0.0:3333")) {
-                  s"var API_URL = '$webapiUrl';"
-              } else if (line.contains("http://0.0.0.0:1024")) {
-                  s"var SIPI_URL = '$sipiUrl';"
-              } else {
-                  line.toString
-              }
-          }
-          .foreach(x => printWriter.println(x))
-
-        origSource.close()
-        printWriter.close()
-        tempFile.renameTo(originalFile)
-
-        serveFromPublicDir(publicDir)
-    } else {
-        // undeployed state (default when run from sbt or from bazel)
-        val wherami = System.getProperty("user.dir")
-        log.info(s"user.dir: $wherami")
-
-        val publicDir = if (wherami.contains("bazel")) {
-            // started through bazel
-            wherami + "/salsah1/public"
+    val origSource = Source.fromFile(originalFile)("UTF-8")
+    origSource.getLines
+      .map { line =>
+        if (line.contains("http://0.0.0.0:3333")) {
+          s"var API_URL = '$webapiUrl';"
+        } else if (line.contains("http://0.0.0.0:1024")) {
+          s"var SIPI_URL = '$sipiUrl';"
         } else {
-            // started through sbt
-            wherami + "/public"
+          line.toString
         }
-        log.info(s"serving files from: $publicDir")
+      }
+      .foreach(x => printWriter.println(x))
 
-        serveFromPublicDir(publicDir)
+    origSource.close()
+    printWriter.close()
+    tempFile.renameTo(originalFile)
+
+    serveFromPublicDir(publicDir)
+  } else {
+    // undeployed state (default when run from sbt or from bazel)
+    val wherami = System.getProperty("user.dir")
+    log.info(s"user.dir: $wherami")
+
+    val publicDir = if (wherami.contains("bazel")) {
+      // started through bazel
+      wherami + "/salsah1/public"
+    } else {
+      // started through sbt
+      wherami + "/public"
     }
+    log.info(s"serving files from: $publicDir")
 
-    val (host, port) = (settings.hostName, settings.httpPort)
+    serveFromPublicDir(publicDir)
+  }
 
-    log.info(s"Salsah online at http://$host:$port/index.html")
+  val (host, port) = (settings.hostName, settings.httpPort)
 
-    val bindingFuture: Future[ServerBinding] = Http().bindAndHandle(handler, host, port)
+  log.info(s"Salsah online at http://$host:$port/index.html")
 
-    bindingFuture onFailure {
-        case ex: Exception =>
-            log.error(ex, s"Failed to bind to $host:$port")
+  val bindingFuture: Future[ServerBinding] = Http().bindAndHandle(handler, host, port)
+
+  bindingFuture onFailure {
+    case ex: Exception =>
+      log.error(ex, s"Failed to bind to $host:$port")
+  }
+
+  private def serveFromPublicDir(publicDir: String): Route = get {
+    entity(as[HttpRequest]) { requestData =>
+      val fullPath: Path = requestData.uri.path.toString match {
+        case "/" => Paths.get(publicDir + "/index.html")
+        case ""  => Paths.get(publicDir + "/index.html")
+        case _   => Paths.get(publicDir + requestData.uri.path.toString)
+      }
+
+      getFromFile(fullPath.toString)
     }
+  }
 
-    private def serveFromPublicDir(publicDir: String): Route = get {
-        entity(as[HttpRequest]) { requestData =>
+  private def getExtensions(fileName: String): String = {
 
-            val fullPath: Path = requestData.uri.path.toString match {
-                case "/" => Paths.get(publicDir + "/index.html")
-                case "" => Paths.get(publicDir + "/index.html")
-                case _ => Paths.get(publicDir + requestData.uri.path.toString)
-            }
-
-            getFromFile(fullPath.toString)
-        }
-    }
-
-    private def getExtensions(fileName: String): String = {
-
-        val index = fileName.lastIndexOf('.')
-        if (index != 0) {
-            fileName.drop(index + 1)
-        } else
-            ""
-    }
+    val index = fileName.lastIndexOf('.')
+    if (index != 0) {
+      fileName.drop(index + 1)
+    } else
+      ""
+  }
 }
-

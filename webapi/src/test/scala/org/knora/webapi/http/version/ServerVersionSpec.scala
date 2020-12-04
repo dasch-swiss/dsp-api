@@ -24,17 +24,16 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
 /**
- * This spec is used to test 'ListAdminMessages'.
- */
+  * This spec is used to test 'ListAdminMessages'.
+  */
 class ServerVersionSpec extends AnyWordSpecLike with Matchers {
 
-    "The server version header" should {
+  "The server version header" should {
 
-        "contain the necessary information" in {
-            val header: Server = ServerVersion.serverVersionHeader
-            header.toString() should include("webapi/")
-            header.toString() should include("akka-http/")
-        }
+    "contain the necessary information" in {
+      val header: Server = ServerVersion.serverVersionHeader
+      header.toString() should include("webapi/")
+      header.toString() should include("akka-http/")
     }
+  }
 }
-

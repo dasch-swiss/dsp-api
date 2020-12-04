@@ -22,10 +22,9 @@ package org.knora.webapi.messages.util
 import akka.actor.{ActorRef, ActorSystem}
 
 /**
- * Data needed to be passed to each responder.
- *
- * @param system   the actor system.
- * @param appActor the main application actor.
- */
-case class ResponderData(system: ActorSystem,
-                         appActor: ActorRef)
+  * Data needed to be passed to each responder.
+  *
+  * @param system   the actor system.
+  * @param appActor the main application actor.
+  */
+case class ResponderData(system: ActorSystem, appActor: ActorRef)

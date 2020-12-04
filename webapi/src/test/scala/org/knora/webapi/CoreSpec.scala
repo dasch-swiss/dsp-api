@@ -48,109 +48,127 @@ import scala.language.postfixOps
 
 object CoreSpec {
 
-    /*
+  /*
         Loads the following (first-listed are higher priority):
             - system properties (e.g., -Dconfig.resource=fuseki.conf)
             - test/resources/application.conf
             - main/resources/application.conf
-    */
-    val defaultConfig: Config = ConfigFactory.load()
+   */
+  val defaultConfig: Config = ConfigFactory.load()
 
-    /* Copied from: akka/akka-testkit/src/test/scala/akka/testkit/AkkaSpec.scala */
-    def getCallerName(clazz: Class[_]): String = {
-        val s = (Thread.currentThread.getStackTrace map (_.getClassName) drop 1)
-            .dropWhile(_ matches "(java.lang.Thread|.*CoreSpec.?$)")
-        val reduced = s.lastIndexWhere(_ == clazz.getName) match {
-            case -1 ⇒ s
-            case z ⇒ s drop (z + 1)
-        }
-        reduced.head.replaceFirst(""".*\.""", "").replaceAll("[^a-zA-Z_0-9]", "_")
+  /* Copied from: akka/akka-testkit/src/test/scala/akka/testkit/AkkaSpec.scala */
+  def getCallerName(clazz: Class[_]): String = {
+    val s = (Thread.currentThread.getStackTrace map (_.getClassName) drop 1)
+      .dropWhile(_ matches "(java.lang.Thread|.*CoreSpec.?$)")
+    val reduced = s.lastIndexWhere(_ == clazz.getName) match {
+      case -1 ⇒ s
+      case z ⇒ s drop (z + 1)
     }
+    reduced.head.replaceFirst(""".*\.""", "").replaceAll("[^a-zA-Z_0-9]", "_")
+  }
 }
 
-abstract class CoreSpec(_system: ActorSystem) extends TestKit(_system) with Core with StartupUtils with AnyWordSpecLike with Matchers with BeforeAndAfterAll with ImplicitSender {
+abstract class CoreSpec(_system: ActorSystem)
+    extends TestKit(_system)
+    with Core
+    with StartupUtils
+    with AnyWordSpecLike
+    with Matchers
+    with BeforeAndAfterAll
+    with ImplicitSender {
 
-    /* constructors - individual tests can override the configuration by giving their own */
-    def this(name: String, config: Config) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))))
+  /* constructors - individual tests can override the configuration by giving their own */
+  def this(name: String, config: Config) =
+    this(
+      ActorSystem(
+        name,
+        TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))))
 
-    def this(config: Config) = this(ActorSystem(CoreSpec.getCallerName(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))))
+  def this(config: Config) =
+    this(
+      ActorSystem(
+        CoreSpec.getCallerName(getClass),
+        TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))))
 
-    def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ConfigFactory.load())))
+  def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ConfigFactory.load())))
 
-    def this() = this(ActorSystem(CoreSpec.getCallerName(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load())))
+  def this() =
+    this(ActorSystem(CoreSpec.getCallerName(getClass), TestContainers.PortConfig.withFallback(ConfigFactory.load())))
 
-    /* needed by the core trait */
-    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-    implicit val materializer: Materializer = Materializer.matFromSystem(system)
-    implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+  /* needed by the core trait */
+  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
+  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+  implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    // can be overridden in individual spec
-    lazy val rdfDataObjects = Seq.empty[RdfDataObject]
+  // can be overridden in individual spec
+  lazy val rdfDataObjects = Seq.empty[RdfDataObject]
 
-    // needs to be initialized early on
-    StringFormatter.initForTest()
-    RdfFeatureFactory.init(settings)
+  // needs to be initialized early on
+  StringFormatter.initForTest()
+  RdfFeatureFactory.init(settings)
 
-    val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
+  val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
-    lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
+  lazy val appActor: ActorRef =
+    system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
-    // The main application actor forwards messages to the responder manager and the store manager.
-    val responderManager: ActorRef = appActor
-    val storeManager: ActorRef = appActor
+  // The main application actor forwards messages to the responder manager and the store manager.
+  val responderManager: ActorRef = appActor
+  val storeManager: ActorRef = appActor
 
-    val responderData: ResponderData = ResponderData(
-        system = system,
-        appActor = appActor
-    )
+  val responderData: ResponderData = ResponderData(
+    system = system,
+    appActor = appActor
+  )
 
-    protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
-        testToggles = Set.empty,
-        parent = new KnoraSettingsFeatureFactoryConfig(settings)
-    )
+  protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
+    testToggles = Set.empty,
+    parent = new KnoraSettingsFeatureFactoryConfig(settings)
+  )
 
-    final override def beforeAll() {
-        // set allow reload over http
-        appActor ! SetAllowReloadOverHTTPState(true)
+  final override def beforeAll() {
+    // set allow reload over http
+    appActor ! SetAllowReloadOverHTTPState(true)
 
-        // Start Knora, without reading data from the repository
-        appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
+    // Start Knora, without reading data from the repository
+    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
 
-        // waits until knora is up and running
-        applicationStateRunning()
+    // waits until knora is up and running
+    applicationStateRunning()
 
-        loadTestData(rdfDataObjects)
+    loadTestData(rdfDataObjects)
 
-        // memusage()
-    }
+    // memusage()
+  }
 
-    final override def afterAll() {
-        appActor ! AppStop()
-        // memusage()
-    }
+  final override def afterAll() {
+    appActor ! AppStop()
+    // memusage()
+  }
 
-    protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-        logger.info("Loading test data started ...")
-        implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-        Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds)
+  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+    logger.info("Loading test data started ...")
+    implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
+    Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds)
 
-        Await.result(appActor ? LoadOntologiesRequestV2(
-            featureFactoryConfig = defaultFeatureFactoryConfig,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-        ), 1 minute)
+    Await.result(appActor ? LoadOntologiesRequestV2(
+                   featureFactoryConfig = defaultFeatureFactoryConfig,
+                   requestingUser = KnoraSystemInstances.Users.SystemUser
+                 ),
+                 1 minute)
 
-        Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)
-        logger.info("... loading test data done.")
-    }
+    Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)
+    logger.info("... loading test data done.")
+  }
 
-    def memusage(): Unit = {
-        // memory info
-        val mb = 1024 * 1024
-        val runtime = Runtime.getRuntime
-        println("** Used Memory:  " + (runtime.totalMemory - runtime.freeMemory) / mb)
-        println("** Free Memory:  " + runtime.freeMemory / mb)
-        println("** Total Memory: " + runtime.totalMemory / mb)
-        println("** Max Memory:   " + runtime.maxMemory / mb)
-    }
+  def memusage(): Unit = {
+    // memory info
+    val mb = 1024 * 1024
+    val runtime = Runtime.getRuntime
+    println("** Used Memory:  " + (runtime.totalMemory - runtime.freeMemory) / mb)
+    println("** Free Memory:  " + runtime.freeMemory / mb)
+    println("** Total Memory: " + runtime.totalMemory / mb)
+    println("** Max Memory:   " + runtime.maxMemory / mb)
+  }
 
 }

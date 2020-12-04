@@ -32,10 +32,11 @@ import org.knora.webapi.settings.SipiConnectorActorName
   */
 class MockableIIIFManager(mockStoreConnectors: Map[String, ActorRef]) extends IIIFManager with LiveActorMaker {
 
-    /**
-      * Initialised to the value of the key 'SipiConnectorActorName' in `mockStoreConnectors` if provided, otherwise
-      * the default SipiConnector is used.
-      */
-    override lazy val sipiConnector: ActorRef = mockStoreConnectors.getOrElse(SipiConnectorActorName, makeDefaultSipiConnector)
+  /**
+    * Initialised to the value of the key 'SipiConnectorActorName' in `mockStoreConnectors` if provided, otherwise
+    * the default SipiConnector is used.
+    */
+  override lazy val sipiConnector: ActorRef =
+    mockStoreConnectors.getOrElse(SipiConnectorActorName, makeDefaultSipiConnector)
 
 }

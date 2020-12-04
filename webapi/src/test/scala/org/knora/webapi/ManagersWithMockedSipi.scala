@@ -31,11 +31,16 @@ import org.knora.webapi.store.iiif.MockSipiConnector
   * Mixin trait for running the application with mocked Sipi
   */
 trait ManagersWithMockedSipi extends Managers {
-    this: Actor =>
+  this: Actor =>
 
-    lazy val mockStoreConnectors: Map[String, ActorRef] = Map(SipiConnectorActorName -> context.actorOf(Props(new MockSipiConnector)))
-    lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
+  lazy val mockStoreConnectors: Map[String, ActorRef] = Map(
+    SipiConnectorActorName -> context.actorOf(Props(new MockSipiConnector)))
+  lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
 
-    lazy val storeManager: ActorRef = context.actorOf(Props(new MockableStoreManager(mockStoreConnectors = mockStoreConnectors, appActor = self) with LiveActorMaker), name = StoreManagerActorName)
-    lazy val responderManager: ActorRef = context.actorOf(Props(new MockableResponderManager(mockRespondersOrStoreConnectors = mockResponders, appActor = self)), name = RESPONDER_MANAGER_ACTOR_NAME)
+  lazy val storeManager: ActorRef = context.actorOf(
+    Props(new MockableStoreManager(mockStoreConnectors = mockStoreConnectors, appActor = self) with LiveActorMaker),
+    name = StoreManagerActorName)
+  lazy val responderManager: ActorRef = context.actorOf(
+    Props(new MockableResponderManager(mockRespondersOrStoreConnectors = mockResponders, appActor = self)),
+    name = RESPONDER_MANAGER_ACTOR_NAME)
 }

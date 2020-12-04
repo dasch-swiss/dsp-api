@@ -24,34 +24,33 @@ import org.knora.webapi.feature.{FeatureFactory, FeatureFactoryConfig}
 import org.knora.webapi.routing.{KnoraRouteData, KnoraRouteFactory}
 
 /**
- * A [[FeatureFactory]] that constructs list admin routes.
- *
- * @param routeData the [[KnoraRouteData]] to be used in constructing the routes.
- */
-class ListsRouteADMFeatureFactory(routeData: KnoraRouteData) extends KnoraRouteFactory(routeData)
-    with FeatureFactory {
+  * A [[FeatureFactory]] that constructs list admin routes.
+  *
+  * @param routeData the [[KnoraRouteData]] to be used in constructing the routes.
+  */
+class ListsRouteADMFeatureFactory(routeData: KnoraRouteData) extends KnoraRouteFactory(routeData) with FeatureFactory {
 
-    /**
-     * The old lists route feature.
-     */
-    private val oldListsRouteADMFeature = new OldListsRouteADMFeature(routeData)
+  /**
+    * The old lists route feature.
+    */
+  private val oldListsRouteADMFeature = new OldListsRouteADMFeature(routeData)
 
-    /**
-     * The new lists route feature.
-     */
-    private val newListsRouteADMFeature = new NewListsRouteADMFeature(routeData)
+  /**
+    * The new lists route feature.
+    */
+  private val newListsRouteADMFeature = new NewListsRouteADMFeature(routeData)
 
-    /**
-     * Returns a lists route reflecting the specified feature factory configuration.
-     *
-     * @param featureFactoryConfig a [[FeatureFactoryConfig]].
-     * @return a lists route.
-     */
-    def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
-        if (featureFactoryConfig.getToggle("new-list-admin-routes").isEnabled) {
-            newListsRouteADMFeature.makeRoute(featureFactoryConfig)
-        } else {
-            oldListsRouteADMFeature.makeRoute(featureFactoryConfig)
-        }
+  /**
+    * Returns a lists route reflecting the specified feature factory configuration.
+    *
+    * @param featureFactoryConfig a [[FeatureFactoryConfig]].
+    * @return a lists route.
+    */
+  def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
+    if (featureFactoryConfig.getToggle("new-list-admin-routes").isEnabled) {
+      newListsRouteADMFeature.makeRoute(featureFactoryConfig)
+    } else {
+      oldListsRouteADMFeature.makeRoute(featureFactoryConfig)
     }
+  }
 }

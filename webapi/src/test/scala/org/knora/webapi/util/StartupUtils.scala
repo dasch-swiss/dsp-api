@@ -35,39 +35,39 @@ import scala.concurrent.{Await, Future}
   * after the KnoraService is ready.
   */
 trait StartupUtils extends LazyLogging {
-    this: Core =>
+  this: Core =>
 
-    /**
-      * Returns only when the application state is 'Running'.
-      */
-    def applicationStateRunning(): Unit = {
+  /**
+    * Returns only when the application state is 'Running'.
+    */
+  def applicationStateRunning(): Unit = {
 
-        implicit val timeout: Timeout = Timeout(5.second)
-        val state: AppState = Await.result(appActor ? GetAppState(), timeout.duration).asInstanceOf[AppState]
+    implicit val timeout: Timeout = Timeout(5.second)
+    val state: AppState = Await.result(appActor ? GetAppState(), timeout.duration).asInstanceOf[AppState]
 
-        if (state != AppStates.Running) {
-            // not in running state
-            // we should wait a bit before we call ourselves again
-            Await.result(blockingFuture(), 3.5.second)
-            applicationStateRunning()
-        }
+    if (state != AppStates.Running) {
+      // not in running state
+      // we should wait a bit before we call ourselves again
+      Await.result(blockingFuture(), 3.5.second)
+      applicationStateRunning()
     }
+  }
 
-    /**
-      * A blocking future running on the blocking dispatcher.
-      */
-    private def blockingFuture(): Future[Unit] = {
+  /**
+    * A blocking future running on the blocking dispatcher.
+    */
+  private def blockingFuture(): Future[Unit] = {
 
-        val delay: Long = 3.second.toMillis
+    val delay: Long = 3.second.toMillis
 
-        implicit val ctx: MessageDispatcher = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
+    implicit val ctx: MessageDispatcher = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
 
-        Future {
-            // uses the good "blocking dispatcher" that we configured,
-            // instead of the default dispatcher to isolate the blocking.
-            Thread.sleep(delay)
-            Future.successful(())
-        }
+    Future {
+      // uses the good "blocking dispatcher" that we configured,
+      // instead of the default dispatcher to isolate the blocking.
+      Thread.sleep(delay)
+      Future.successful(())
     }
+  }
 
 }

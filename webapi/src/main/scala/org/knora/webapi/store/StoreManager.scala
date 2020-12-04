@@ -35,59 +35,69 @@ import org.knora.webapi.store.triplestore.TriplestoreManager
 import scala.concurrent.ExecutionContext
 
 /**
- * This actor receives messages for different stores, and forwards them to the corresponding store manager.
- * At the moment only triple stores and Sipi are implemented, but in the future, support for different
- * remote repositories will probably be needed. This place would then be the crossroad for these different kinds
- * of 'stores' and their requests.
- *
- * @param appActor a reference to the main application actor.
- */
+  * This actor receives messages for different stores, and forwards them to the corresponding store manager.
+  * At the moment only triple stores and Sipi are implemented, but in the future, support for different
+  * remote repositories will probably be needed. This place would then be the crossroad for these different kinds
+  * of 'stores' and their requests.
+  *
+  * @param appActor a reference to the main application actor.
+  */
 class StoreManager(appActor: ActorRef) extends Actor with ActorLogging {
-    this: ActorMaker =>
+  this: ActorMaker =>
 
-    /**
-     * The Knora Akka actor system.
-     */
-    protected implicit val system: ActorSystem = context.system
+  /**
+    * The Knora Akka actor system.
+    */
+  protected implicit val system: ActorSystem = context.system
 
-    /**
-     * The Akka actor system's execution context for futures.
-     */
-    protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+  /**
+    * The Akka actor system's execution context for futures.
+    */
+  protected implicit val executionContext: ExecutionContext =
+    system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    /**
-     * The Knora settings.
-     */
-    protected val settings: KnoraSettingsImpl = KnoraSettings(system)
+  /**
+    * The Knora settings.
+    */
+  protected val settings: KnoraSettingsImpl = KnoraSettings(system)
 
-    /**
-     * The default feature factory configuration.
-     */
-    protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(settings)
+  /**
+    * The default feature factory configuration.
+    */
+  protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(settings)
 
-    /**
-     * Starts the Triplestore Manager Actor
-     */
-    protected lazy val triplestoreManager: ActorRef = makeActor(Props(new TriplestoreManager(
+  /**
+    * Starts the Triplestore Manager Actor
+    */
+  protected lazy val triplestoreManager: ActorRef = makeActor(
+    Props(
+      new TriplestoreManager(
         appActor = appActor,
         settings = settings,
         defaultFeatureFactoryConfig = defaultFeatureFactoryConfig
-    ) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), TriplestoreManagerActorName)
+      ) with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+    TriplestoreManagerActorName
+  )
 
-    /**
-     * Starts the IIIF Manager Actor
-     */
-    protected lazy val iiifManager: ActorRef = makeActor(Props(new IIIFManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), IIIFManagerActorName)
+  /**
+    * Starts the IIIF Manager Actor
+    */
+  protected lazy val iiifManager: ActorRef = makeActor(
+    Props(new IIIFManager with LiveActorMaker).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+    IIIFManagerActorName)
 
-    /**
-     * Instantiates the Redis Manager
-     */
-    protected lazy val redisManager: ActorRef = makeActor(Props(new CacheServiceManager).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), RedisManagerActorName)
+  /**
+    * Instantiates the Redis Manager
+    */
+  protected lazy val redisManager: ActorRef = makeActor(
+    Props(new CacheServiceManager).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+    RedisManagerActorName)
 
-    def receive: Receive = LoggingReceive {
-        case tripleStoreMessage: TriplestoreRequest => triplestoreManager forward tripleStoreMessage
-        case iiifMessages: IIIFRequest => iiifManager forward iiifMessages
-        case redisMessages: CacheServiceRequest => redisManager forward redisMessages
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"StoreManager received an unexpected message: $other"))
-    }
+  def receive: Receive = LoggingReceive {
+    case tripleStoreMessage: TriplestoreRequest => triplestoreManager forward tripleStoreMessage
+    case iiifMessages: IIIFRequest              => iiifManager forward iiifMessages
+    case redisMessages: CacheServiceRequest     => redisManager forward redisMessages
+    case other =>
+      sender ! Status.Failure(UnexpectedMessageException(s"StoreManager received an unexpected message: $other"))
+  }
 }

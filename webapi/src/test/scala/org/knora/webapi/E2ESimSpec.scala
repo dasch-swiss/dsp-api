@@ -51,9 +51,9 @@ object E2ESimSpec {
 }
 
 /**
-  * This class can be used in End-to-End testing. It starts the Knora server and
-  * provides access to settings and logging.
-  */
+ * This class can be used in End-to-End testing. It starts the Knora server and
+ * provides access to settings and logging.
+ */
 abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core with TriplestoreJsonProtocol with RequestBuilding with LazyLogging {
 
     /* constructors */
@@ -109,4 +109,4 @@ abstract class E2ESimSpec(_system: ActorSystem) extends Simulation with Core wit
         Await.result(responseFuture, duration)
     }
 }
-*/
+ */

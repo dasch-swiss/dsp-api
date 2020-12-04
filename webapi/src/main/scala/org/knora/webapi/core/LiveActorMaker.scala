@@ -22,12 +22,12 @@ package org.knora.webapi.core
 import akka.actor.{Actor, Props}
 
 /**
- * This trait is part of the cake pattern used in the creation of actors. This trait provides an implementation of the
- * makeActor method that creates actors as a child actor.
- */
+  * This trait is part of the cake pattern used in the creation of actors. This trait provides an implementation of the
+  * makeActor method that creates actors as a child actor.
+  */
 trait LiveActorMaker extends ActorMaker {
-    this: Actor =>
+  this: Actor =>
 
-    def makeActor(props: Props, name: String) = context.actorOf(props, name)
+  def makeActor(props: Props, name: String) = context.actorOf(props, name)
 
 }

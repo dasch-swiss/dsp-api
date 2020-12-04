@@ -35,64 +35,70 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object DrawingsGodsV1ITSpec {
-    val config: Config = ConfigFactory.parseString(
-        """
+  val config: Config = ConfigFactory.parseString("""
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
 
 /**
- * End-to-End (E2E) test specification for additional testing of permissions.
- */
-class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) with AuthenticationV2JsonProtocol with TriplestoreJsonProtocol {
+  * End-to-End (E2E) test specification for additional testing of permissions.
+  */
+class DrawingsGodsV1ITSpec
+    extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config)
+    with AuthenticationV2JsonProtocol
+    with TriplestoreJsonProtocol {
 
-    override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl", name = "http://www.knora.org/data/admin"),
-        RdfDataObject(path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions-data.ttl", name = "http://www.knora.org/data/permissions"),
-        RdfDataObject(path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology.ttl", name = "http://www.knora.org/ontology/0105/drawings-gods"),
-        RdfDataObject(path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl", name = "http://www.knora.org/data/0105/drawings-gods")
-    )
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
+    RdfDataObject(path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl",
+                  name = "http://www.knora.org/data/admin"),
+    RdfDataObject(path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions-data.ttl",
+                  name = "http://www.knora.org/data/permissions"),
+    RdfDataObject(path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology.ttl",
+                  name = "http://www.knora.org/ontology/0105/drawings-gods"),
+    RdfDataObject(path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl",
+                  name = "http://www.knora.org/data/0105/drawings-gods")
+  )
 
-    "issue: https://github.com/dhlab-basel/Knora/issues/408" should {
+  "issue: https://github.com/dhlab-basel/Knora/issues/408" should {
 
-        val drawingsOfGodsUserEmail = "ddd1@unil.ch"
-        val testPass = "test"
-        val pathToChlaus = "test_data/test_route/images/Chlaus.jpg"
-        var loginToken: String = ""
+    val drawingsOfGodsUserEmail = "ddd1@unil.ch"
+    val testPass = "test"
+    val pathToChlaus = "test_data/test_route/images/Chlaus.jpg"
+    var loginToken: String = ""
 
-        "log in as a Knora user" in {
-            /* Correct username and correct password */
+    "log in as a Knora user" in {
+      /* Correct username and correct password */
 
-            val params =
-                s"""
+      val params =
+        s"""
                    |{
                    |    "email": "$drawingsOfGodsUserEmail",
                    |    "password": "$testPass"
                    |}
                 """.stripMargin
 
-            val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
-            val response: HttpResponse = singleAwaitingRequest(request)
-            assert(response.status == StatusCodes.OK)
+      val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val response: HttpResponse = singleAwaitingRequest(request)
+      assert(response.status == StatusCodes.OK)
 
-            val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
-            loginToken = lr.token
+      val lr: LoginResponse = Await.result(Unmarshal(response.entity).to[LoginResponse], 1.seconds)
+      loginToken = lr.token
 
-            loginToken.nonEmpty should be(true)
-        }
+      loginToken.nonEmpty should be(true)
+    }
 
-        "be able to create a resource, only find one DOAP (with combined resource class / property), and have permission to access the image" in {
-            // Upload the image to Sipi.
-            val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
-                loginToken = loginToken,
-                filesToUpload = Seq(FileToUpload(path = pathToChlaus, mimeType = MediaTypes.`image/tiff`))
-            )
+    "be able to create a resource, only find one DOAP (with combined resource class / property), and have permission to access the image" in {
+      // Upload the image to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToChlaus, mimeType = MediaTypes.`image/tiff`))
+      )
 
-            val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
 
-            val params =
-                s"""
+      val params =
+        s"""
                    |{
                    |    "restype_id":"http://www.knora.org/ontology/0105/drawings-gods#Verso",
                    |    "properties":{
@@ -111,42 +117,44 @@ class DrawingsGodsV1ITSpec extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config) 
                    |}
              """.stripMargin
 
-            // Send the JSON in a POST request to the Knora API server.
-            val knoraPostRequest = Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
-            val knoraPostResponseJson = getResponseJson(knoraPostRequest)
+      // Send the JSON in a POST request to the Knora API server.
+      val knoraPostRequest = Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
+      val knoraPostResponseJson = getResponseJson(knoraPostRequest)
 
-            // Get the IRI of the newly created resource.
-            val resourceIri: String = knoraPostResponseJson.fields("res_id").asInstanceOf[JsString].value
+      // Get the IRI of the newly created resource.
+      val resourceIri: String = knoraPostResponseJson.fields("res_id").asInstanceOf[JsString].value
 
-            // Request the resource from the Knora API server.
-            val knoraRequestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
-            val knoraNewResourceJson = getResponseJson(knoraRequestNewResource)
+      // Request the resource from the Knora API server.
+      val knoraRequestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
+      val knoraNewResourceJson = getResponseJson(knoraRequestNewResource)
 
-            // Get the URL of the image that was uploaded.
-            val iiifUrl = knoraNewResourceJson.fields.get("resinfo") match {
-                case Some(resinfo: JsObject) =>
-                    resinfo.fields.get("locdata") match {
-                        case Some(locdata: JsObject) =>
-                            locdata.fields.get("path") match {
-                                case Some(JsString(path)) => path
-                                case None => throw InvalidApiJsonException("no 'path' given")
-                                case other => throw InvalidApiJsonException("'path' could not pe parsed correctly")
-                            }
-                        case None => throw InvalidApiJsonException("no 'locdata' given")
+      // Get the URL of the image that was uploaded.
+      val iiifUrl = knoraNewResourceJson.fields.get("resinfo") match {
+        case Some(resinfo: JsObject) =>
+          resinfo.fields.get("locdata") match {
+            case Some(locdata: JsObject) =>
+              locdata.fields.get("path") match {
+                case Some(JsString(path)) => path
+                case None                 => throw InvalidApiJsonException("no 'path' given")
+                case other                => throw InvalidApiJsonException("'path' could not pe parsed correctly")
+              }
+            case None => throw InvalidApiJsonException("no 'locdata' given")
 
-                        case _ => throw InvalidApiJsonException("'locdata' could not pe parsed correctly")
-                    }
+            case _ => throw InvalidApiJsonException("'locdata' could not pe parsed correctly")
+          }
 
-                case None => throw InvalidApiJsonException("no 'resinfo' given")
+        case None => throw InvalidApiJsonException("no 'resinfo' given")
 
-                case _ => throw InvalidApiJsonException("'resinfo' could not pe parsed correctly")
-            }
-            println("=====>>>> iiiURL: {}", iiifUrl)
+        case _ => throw InvalidApiJsonException("'resinfo' could not pe parsed correctly")
+      }
+      println("=====>>>> iiiURL: {}", iiifUrl)
 
-            // Request the image from Sipi.
-            val sipiGetRequest = Get(iiifUrl) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
-            checkResponseOK(sipiGetRequest)
-        }
+      // Request the image from Sipi.
+      val sipiGetRequest = Get(iiifUrl) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
+      checkResponseOK(sipiGetRequest)
     }
+  }
 
 }

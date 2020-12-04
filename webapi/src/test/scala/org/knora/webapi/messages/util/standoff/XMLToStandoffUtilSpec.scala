@@ -22,98 +22,114 @@ package org.knora.webapi.util.standoff
 import java.util.UUID
 
 import org.knora.webapi.CoreSpec
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.util.standoff._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.util.standoff.{StandoffDiff, StandoffTag, TextWithStandoff, XMLTagSeparatorRequired, XMLToStandoffUtil}
 
 /**
   * Tests [[XMLToStandoffUtil]].
   */
 class XMLToStandoffUtilSpec extends CoreSpec {
 
-    "The XML to standoff utility" should {
+  "The XML to standoff utility" should {
 
-        "convert an XML document to text with standoff, then back to an equivalent XML document" in {
-            val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
+    "convert an XML document to text with standoff, then back to an equivalent XML document" in {
+      val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
 
-            // Convert the XML document to text with standoff.
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDoc, log = log)
+      // Convert the XML document to text with standoff.
+      val textWithStandoff: TextWithStandoff =
+        standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDoc, log = log)
 
-            // Convert the text with standoff back to XML.
-            val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
+      // Convert the text with standoff back to XML.
+      val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
 
-            // Compare the original XML with the regenerated XML.
-            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDoc)).withTest(Input.fromString(backToXml)).build()
-            xmlDiff.hasDifferences should be(false)
-        }
+      // Compare the original XML with the regenerated XML.
+      val xmlDiff: Diff = DiffBuilder
+        .compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDoc))
+        .withTest(Input.fromString(backToXml))
+        .build()
+      xmlDiff.hasDifferences should be(false)
+    }
 
-        "convert an XML document with one nested empty tag to text with standoff, then back to an equivalent XML document" in {
-            val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
+    "convert an XML document with one nested empty tag to text with standoff, then back to an equivalent XML document" in {
+      val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
 
-            // Convert the XML document to text with standoff.
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTag, log = log)
+      // Convert the XML document to text with standoff.
+      val textWithStandoff: TextWithStandoff =
+        standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTag, log = log)
 
-            // Convert the text with standoff back to XML.
-            val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
+      // Convert the text with standoff back to XML.
+      val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
 
-            // Compare the original XML with the regenerated XML.
-            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTag)).withTest(Input.fromString(backToXml)).build()
-            // println(xmlDiff.getDifferences)
-            xmlDiff.hasDifferences should be(false)
-        }
+      // Compare the original XML with the regenerated XML.
+      val xmlDiff: Diff = DiffBuilder
+        .compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTag))
+        .withTest(Input.fromString(backToXml))
+        .build()
+      // println(xmlDiff.getDifferences)
+      xmlDiff.hasDifferences should be(false)
+    }
 
-        "convert an XML document with multiple nested empty tags to text with standoff, then back to an equivalent XML document" in {
-            val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
+    "convert an XML document with multiple nested empty tags to text with standoff, then back to an equivalent XML document" in {
+      val standoffUtil = new XMLToStandoffUtil(writeUuidsToXml = false)
 
-            // Convert the XML document to text with standoff.
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTags, log = log)
+      // Convert the XML document to text with standoff.
+      val textWithStandoff: TextWithStandoff =
+        standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTags, log = log)
 
-            // Convert the text with standoff back to XML.
-            val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
+      // Convert the text with standoff back to XML.
+      val backToXml: String = standoffUtil.textWithStandoff2Xml(textWithStandoff)
 
-            // Compare the original XML with the regenerated XML.
-            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTags)).withTest(Input.fromString(backToXml)).build()
-            // println(xmlDiff.getDifferences)
-            xmlDiff.hasDifferences should be(false)
-        }
+      // Compare the original XML with the regenerated XML.
+      val xmlDiff: Diff = DiffBuilder
+        .compare(Input.fromString(XMLToStandoffUtilSpec.simpleXmlDocWithNestedEmptyTags))
+        .withTest(Input.fromString(backToXml))
+        .build()
+      // println(xmlDiff.getDifferences)
+      xmlDiff.hasDifferences should be(false)
+    }
 
-        "convert an XML document with namespaces and CLIX milestones to standoff, then back to an equivalent XML document" in {
-            val documentSpecificIDs = Map(
-                "s02" -> UUID.randomUUID,
-                "s03" -> UUID.randomUUID,
-                "s04" -> UUID.randomUUID
-            )
+    "convert an XML document with namespaces and CLIX milestones to standoff, then back to an equivalent XML document" in {
+      val documentSpecificIDs = Map(
+        "s02" -> UUID.randomUUID,
+        "s03" -> UUID.randomUUID,
+        "s04" -> UUID.randomUUID
+      )
 
-            val standoffUtil = new XMLToStandoffUtil(
-                defaultXmlNamespace = Some("http://www.example.org/ns1"),
-                xmlNamespaces = Map("ns2" -> "http://www.example.org/ns2"),
-                writeUuidsToXml = false,
-                documentSpecificIDs = documentSpecificIDs
-            )
+      val standoffUtil = new XMLToStandoffUtil(
+        defaultXmlNamespace = Some("http://www.example.org/ns1"),
+        xmlNamespaces = Map("ns2" -> "http://www.example.org/ns2"),
+        writeUuidsToXml = false,
+        documentSpecificIDs = documentSpecificIDs
+      )
 
-            // Convert the XML document to text with standoff.
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.xmlDocWithClix, log = log)
+      // Convert the XML document to text with standoff.
+      val textWithStandoff: TextWithStandoff =
+        standoffUtil.xml2TextWithStandoff(XMLToStandoffUtilSpec.xmlDocWithClix, log = log)
 
-            // Convert the text with standoff back to XML.
-            val backToXml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
+      // Convert the text with standoff back to XML.
+      val backToXml = standoffUtil.textWithStandoff2Xml(textWithStandoff)
 
-            // Compare the original XML with the regenerated XML.
-            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(XMLToStandoffUtilSpec.xmlDocWithClix)).withTest(Input.fromString(backToXml)).build()
-            xmlDiff.hasDifferences should be(false)
-        }
+      // Compare the original XML with the regenerated XML.
+      val xmlDiff: Diff = DiffBuilder
+        .compare(Input.fromString(XMLToStandoffUtilSpec.xmlDocWithClix))
+        .withTest(Input.fromString(backToXml))
+        .build()
+      xmlDiff.hasDifferences should be(false)
+    }
 
-        "calculate the diffs between a critical text and a diplomatic transcription (1)" in {
-            val regionID = UUID.randomUUID
+    "calculate the diffs between a critical text and a diplomatic transcription (1)" in {
+      val regionID = UUID.randomUUID
 
-            val documentSpecificIDs = Map(
-                "1" -> regionID
-            )
+      val documentSpecificIDs = Map(
+        "1" -> regionID
+      )
 
-            val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
+      val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
 
-            val diplomaticTranscription =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val diplomaticTranscription =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<region id="1">
                   |<center><underline>CLI</underline></center>.
                   |<underline>Examen modi Renaldiniani inscribendi q&#780;vis polygona regularia in circulo,
@@ -122,8 +138,8 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                   |</region>
                 """.stripMargin
 
-            val criticalText =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val criticalText =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<region id="1">
                   |<center>
                   |<bold>CLI</bold><medskip/>
@@ -134,22 +150,23 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                   |</region>
                 """.stripMargin
 
-            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = log)
-            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = log)
+      val diploTextWithStandoff: TextWithStandoff =
+        standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = log)
+      val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = log)
 
-            val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
-                baseText = diploTextWithStandoff.text,
-                derivedText = criticalTextWithStandoff.text
-            )
+      val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
+        baseText = diploTextWithStandoff.text,
+        derivedText = criticalTextWithStandoff.text
+      )
 
-            val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
-                baseText = diploTextWithStandoff.text,
-                derivedText = criticalTextWithStandoff.text,
-                standoffDiffs = criticalTextDiffs
-            )
+      val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
+        baseText = diploTextWithStandoff.text,
+        derivedText = criticalTextWithStandoff.text,
+        standoffDiffs = criticalTextDiffs
+      )
 
-            val expectedCriticalTextDiffsAsXml =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val expectedCriticalTextDiffsAsXml =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<diffs><ins>
                   |</ins>
                   |CLI<del>.</del>
@@ -161,30 +178,33 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                   |</ins></diffs>
                 """.stripMargin
 
-            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(expectedCriticalTextDiffsAsXml)).withTest(Input.fromString(criticalTextDiffsAsXml)).build()
-            xmlDiff.hasDifferences should be(false)
+      val xmlDiff: Diff = DiffBuilder
+        .compare(Input.fromString(expectedCriticalTextDiffsAsXml))
+        .withTest(Input.fromString(criticalTextDiffsAsXml))
+        .build()
+      xmlDiff.hasDifferences should be(false)
 
-            val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
-                oldStandoff = diploTextWithStandoff.standoff,
-                newStandoff = criticalTextWithStandoff.standoff
-            )
+      val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
+        oldStandoff = diploTextWithStandoff.standoff,
+        newStandoff = criticalTextWithStandoff.standoff
+      )
 
-            standoffAdded.exists(_.uuid == regionID) should be(false)
-            standoffRemoved.exists(_.uuid == regionID) should be(false)
-        }
+      standoffAdded.exists(_.uuid == regionID) should be(false)
+      standoffRemoved.exists(_.uuid == regionID) should be(false)
+    }
 
-        "calculate the diffs between a critical text and a diplomatic transcription (2)" in {
+    "calculate the diffs between a critical text and a diplomatic transcription (2)" in {
 
-            val regionID = UUID.randomUUID
+      val regionID = UUID.randomUUID
 
-            val documentSpecificIDs = Map(
-                "2" -> regionID
-            )
+      val documentSpecificIDs = Map(
+        "2" -> regionID
+      )
 
-            val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
+      val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
 
-            val diplomaticTranscription =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val diplomaticTranscription =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<region id="2">
                   |Modus hic est: Fiat triang: æquil: <math>ABD</math>, divisâq́  diametro <math>AB</math> in tot partes æquales,
                   |quot laterum est figura inscribenda, duabusq́  earum p̃termissis <strike>et</strike> à <math>B</math> versùs <math>A</math>, ducat,
@@ -194,33 +214,33 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                   |</region>
                 """.stripMargin
 
-            val criticalText =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val criticalText =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<region id="2">
                   |Modus hic est: Fiat triang[ulum] aequil[aterum] <math>ABD</math> divisaque diametro <math>AB</math> in tot partes aequales, quot laterum est figura inscribenda, duabusque earum praetermissis a <math>B</math> versus <math>A</math>, ducatur per initium tertiae recta <math>DF</math>, &amp; hinc recta <math>FB</math>, quam putat esse latus polygoni optati.
                   |<italic>Anal[ysis]</italic>: Sit secta diameter utcunque in <math>E</math>, <math>e</math>, ductaeque <math>DEF</math>, <math>FA</math>, &amp; <math>FB</math> &amp; demissa in diametrum perpendicularis <math>FG</math>, fiat <math>CB=a</math>, <math>CE</math> vel <math>Ce=b</math>, <math>FB=x</math>, unde <math>AF=\sqrt{4aa-xx}</math>
                   |</region>
                 """.stripMargin
 
+      val diploTextWithStandoff: TextWithStandoff =
+        standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = log)
+      val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = log)
 
-            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = log)
-            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = log)
+      val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
+        baseText = diploTextWithStandoff.text,
+        derivedText = criticalTextWithStandoff.text
+      )
 
-            val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
-                baseText = diploTextWithStandoff.text,
-                derivedText = criticalTextWithStandoff.text
-            )
+      val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
+        baseText = diploTextWithStandoff.text,
+        derivedText = criticalTextWithStandoff.text,
+        standoffDiffs = criticalTextDiffs
+      )
 
-            val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
-                baseText = diploTextWithStandoff.text,
-                derivedText = criticalTextWithStandoff.text,
-                standoffDiffs = criticalTextDiffs
-            )
+      //println(ScalaPrettyPrinter.prettyPrint(criticalTextDiffsAsXml))
 
-            //println(ScalaPrettyPrinter.prettyPrint(criticalTextDiffsAsXml))
-
-            val expectedCriticalTextDiffsAsXml =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val expectedCriticalTextDiffsAsXml =
+        """<?xml version="1.0" encoding="UTF-8"?>
                 |<diffs>
                 |Modus hic est: Fiat triang<del>: æquil:</del><ins>[ulum] aequil[aterum]</ins> ABD<del>,</del> divis<del>âq́ </del><ins>aque</ins> diametro AB in tot partes <del>æ</del><ins>ae</ins>quales,<del>
                 |</del><ins> </ins>quot laterum est figura inscribenda, duabusq<del>́ </del><ins>ue</ins> earum p<del>̃</del><ins>rae</ins>termissis <del>et à</del><ins>a</ins> B vers<del>ù</del><ins>u</ins>s A, ducat<del>,
@@ -230,175 +250,192 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                 |</diffs>
                 """.stripMargin
 
+      val xmlDiff: Diff = DiffBuilder
+        .compare(Input.fromString(expectedCriticalTextDiffsAsXml))
+        .withTest(Input.fromString(criticalTextDiffsAsXml))
+        .build()
+      xmlDiff.hasDifferences should be(false)
 
-            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(expectedCriticalTextDiffsAsXml)).withTest(Input.fromString(criticalTextDiffsAsXml)).build()
-            xmlDiff.hasDifferences should be(false)
+      val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
+        oldStandoff = diploTextWithStandoff.standoff,
+        newStandoff = criticalTextWithStandoff.standoff
+      )
 
-            val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
-                oldStandoff = diploTextWithStandoff.standoff,
-                newStandoff = criticalTextWithStandoff.standoff
-            )
+      standoffAdded.exists(_.uuid == regionID) should be(false)
+      standoffRemoved.exists(_.uuid == regionID) should be(false)
 
-            standoffAdded.exists(_.uuid == regionID) should be(false)
-            standoffRemoved.exists(_.uuid == regionID) should be(false)
+    }
 
-        }
+    "calculate the diffs in a workflow with two versions of a diplomatic transcription and two versions of an editorial text" in {
+      val paragraphID = UUID.randomUUID
+      val strikeID = UUID.randomUUID
+      val blueID = UUID.randomUUID
 
-        "calculate the diffs in a workflow with two versions of a diplomatic transcription and two versions of an editorial text" in {
-            val paragraphID = UUID.randomUUID
-            val strikeID = UUID.randomUUID
-            val blueID = UUID.randomUUID
+      val documentSpecificIDs = Map(
+        "1" -> paragraphID,
+        "2" -> strikeID,
+        "3" -> blueID
+      )
 
-            val documentSpecificIDs = Map(
-                "1" -> paragraphID,
-                "2" -> strikeID,
-                "3" -> blueID
-            )
+      val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
 
-            val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
-
-            // The diplomatic transcription has a structural tag (paragraph), an abbreviation ('d' for 'den'), a
-            // strikethrough, and a repeated word (which could be the author's mistake or the transcriber's mistake).
-            val diplomaticTranscription1 =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      // The diplomatic transcription has a structural tag (paragraph), an abbreviation ('d' for 'den'), a
+      // strikethrough, and a repeated word (which could be the author's mistake or the transcriber's mistake).
+      val diplomaticTranscription1 =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<paragraph id="1">Ich habe d Bus <strike id="2">heute </strike>genommen, weil ich ich verspätet war.</paragraph>
                 """.stripMargin
 
-            // Convert the markup in the transcription to standoff and back again to check that it's correct.
+      // Convert the markup in the transcription to standoff and back again to check that it's correct.
 
-            val diplo1TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription1, log = log)
+      val diplo1TextWithStandoff: TextWithStandoff =
+        standoffUtil.xml2TextWithStandoff(diplomaticTranscription1, log = log)
 
-            val diplo1TextBackTtoXml: String = standoffUtil.textWithStandoff2Xml(diplo1TextWithStandoff)
+      val diplo1TextBackTtoXml: String = standoffUtil.textWithStandoff2Xml(diplo1TextWithStandoff)
 
-            val diplo1XmlDiff: Diff = DiffBuilder.compare(Input.fromString(diplomaticTranscription1)).withTest(Input.fromString(diplo1TextBackTtoXml)).build()
-            diplo1XmlDiff.hasDifferences should be(false)
+      val diplo1XmlDiff: Diff = DiffBuilder
+        .compare(Input.fromString(diplomaticTranscription1))
+        .withTest(Input.fromString(diplo1TextBackTtoXml))
+        .build()
+      diplo1XmlDiff.hasDifferences should be(false)
 
-            // The editor keeps the <paragraph> tag, expands the abbreviation, deletes the text marked with strikethrough,
-            // and corrects the repeated word.
-            val editorialText1 =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      // The editor keeps the <paragraph> tag, expands the abbreviation, deletes the text marked with strikethrough,
+      // and corrects the repeated word.
+      val editorialText1 =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<paragraph id="1">Ich habe den Bus genommen, weil ich verspätet war.</paragraph>
                 """.stripMargin
 
-            val edito1TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText1, log = log)
+      val edito1TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText1, log = log)
 
-            // Find the differences between the version 1 of the transcription and version 1 of the editorial text,
-            // so they can be linked together.
+      // Find the differences between the version 1 of the transcription and version 1 of the editorial text,
+      // so they can be linked together.
 
-            val editorialStandoffDiffs1: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
-                baseText = diplo1TextWithStandoff.text,
-                derivedText = edito1TextWithStandoff.text
-            )
+      val editorialStandoffDiffs1: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
+        baseText = diplo1TextWithStandoff.text,
+        derivedText = edito1TextWithStandoff.text
+      )
 
-            // Check that the editor's diffs are correct, by converting them to XML (which makes the test more readable).
+      // Check that the editor's diffs are correct, by converting them to XML (which makes the test more readable).
 
-            val expectedEditorialDiffs1AsXml =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val expectedEditorialDiffs1AsXml =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<diffs>Ich habe d<ins>en</ins> Bus <del>heute </del>genommen, weil ich <del>ich </del>verspätet war.</diffs>
                 """.stripMargin
 
-            val editorialDiffs1AsXml: String = standoffUtil.standoffDiffs2Xml(
-                baseText = diplo1TextWithStandoff.text,
-                derivedText = edito1TextWithStandoff.text,
-                standoffDiffs = editorialStandoffDiffs1
-            )
+      val editorialDiffs1AsXml: String = standoffUtil.standoffDiffs2Xml(
+        baseText = diplo1TextWithStandoff.text,
+        derivedText = edito1TextWithStandoff.text,
+        standoffDiffs = editorialStandoffDiffs1
+      )
 
-            val xmlDiff1: Diff = DiffBuilder.compare(Input.fromString(expectedEditorialDiffs1AsXml)).withTest(Input.fromString(editorialDiffs1AsXml)).build()
-            xmlDiff1.hasDifferences should be(false)
+      val xmlDiff1: Diff = DiffBuilder
+        .compare(Input.fromString(expectedEditorialDiffs1AsXml))
+        .withTest(Input.fromString(editorialDiffs1AsXml))
+        .build()
+      xmlDiff1.hasDifferences should be(false)
 
-            // Now suppose the transcription has been updated. The new transcription changes 'Bus' to 'Bahn', corrects
-            // the repeated word, which turns out to have been a transcription error, and adds a <blue> tag for ink
-            // colour.
-            val diplomaticTranscription2 =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      // Now suppose the transcription has been updated. The new transcription changes 'Bus' to 'Bahn', corrects
+      // the repeated word, which turns out to have been a transcription error, and adds a <blue> tag for ink
+      // colour.
+      val diplomaticTranscription2 =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<paragraph id="1">Ich habe d Bahn <strike id="2">heute </strike>genommen, weil ich <blue id="3">verspätet</blue> war.</paragraph>
                 """.stripMargin
 
-            // The editor now rebases the editorial text against the revised transcription, by making new diffs.
-            // Find the differences between the version 2 of the transcription and version 1 of the editorial text.
+      // The editor now rebases the editorial text against the revised transcription, by making new diffs.
+      // Find the differences between the version 2 of the transcription and version 1 of the editorial text.
 
-            val diplo2TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription2, log = log)
-            val blueTag = diplo2TextWithStandoff.standoff.find(_.uuid == blueID).getOrElse("<blue> tag not in standoff")
+      val diplo2TextWithStandoff: TextWithStandoff =
+        standoffUtil.xml2TextWithStandoff(diplomaticTranscription2, log = log)
+      val blueTag = diplo2TextWithStandoff.standoff.find(_.uuid == blueID).getOrElse("<blue> tag not in standoff")
 
-            val editorialStandoffDiffs2: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
-                baseText = diplo2TextWithStandoff.text,
-                derivedText = edito1TextWithStandoff.text
-            )
+      val editorialStandoffDiffs2: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
+        baseText = diplo2TextWithStandoff.text,
+        derivedText = edito1TextWithStandoff.text
+      )
 
-            // Check that the editor's diffs are correct. Since the transcriber and editor now agree that 'ich' should
-            // not be repeated, there should be no diff for that. However, the change from 'Bus' to 'Bahn' should show
-            // up as a deletion and an insertion.
+      // Check that the editor's diffs are correct. Since the transcriber and editor now agree that 'ich' should
+      // not be repeated, there should be no diff for that. However, the change from 'Bus' to 'Bahn' should show
+      // up as a deletion and an insertion.
 
-            val expectedEditorialDiffs2AsXml =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val expectedEditorialDiffs2AsXml =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<diffs>Ich habe d<del> Bahn heute</del><ins>en Bus</ins> genommen, weil ich verspätet war.</diffs>
                 """.stripMargin
 
-            val editorialDiffs2AsXml: String = standoffUtil.standoffDiffs2Xml(
-                baseText = diplo2TextWithStandoff.text,
-                derivedText = edito1TextWithStandoff.text,
-                standoffDiffs = editorialStandoffDiffs2
-            )
+      val editorialDiffs2AsXml: String = standoffUtil.standoffDiffs2Xml(
+        baseText = diplo2TextWithStandoff.text,
+        derivedText = edito1TextWithStandoff.text,
+        standoffDiffs = editorialStandoffDiffs2
+      )
 
-            val xmlDiff2: Diff = DiffBuilder.compare(Input.fromString(expectedEditorialDiffs2AsXml)).withTest(Input.fromString(editorialDiffs2AsXml)).build()
-            xmlDiff2.hasDifferences should be(false)
+      val xmlDiff2: Diff = DiffBuilder
+        .compare(Input.fromString(expectedEditorialDiffs2AsXml))
+        .withTest(Input.fromString(editorialDiffs2AsXml))
+        .build()
+      xmlDiff2.hasDifferences should be(false)
 
-            // Also find out which standoff tags have changed in the new version of the transcription.
+      // Also find out which standoff tags have changed in the new version of the transcription.
 
-            val (addedTags, removedTags) = standoffUtil.findChangedStandoffTags(diplo1TextWithStandoff.standoff, diplo2TextWithStandoff.standoff)
+      val (addedTags, removedTags) =
+        standoffUtil.findChangedStandoffTags(diplo1TextWithStandoff.standoff, diplo2TextWithStandoff.standoff)
 
-            addedTags should be(Set(blueTag)) // Just the <blue> tag was added.
-            removedTags should be(Set()) // No tags were removed.
+      addedTags should be(Set(blueTag)) // Just the <blue> tag was added.
+      removedTags should be(Set()) // No tags were removed.
 
-            // The editor now corrects the editorial text to take into account the change from 'Bus' to 'Bahn'. This
-            // means that the abbreviation 'd' in the transcription now has to be expanded as 'die' rather than 'der'.
-            // The editor also takes the <blue> tag.
+      // The editor now corrects the editorial text to take into account the change from 'Bus' to 'Bahn'. This
+      // means that the abbreviation 'd' in the transcription now has to be expanded as 'die' rather than 'der'.
+      // The editor also takes the <blue> tag.
 
-            val editorialText2 =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val editorialText2 =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<paragraph id="1">Ich habe die Bahn genommen, weil ich <blue id="3">verspätet</blue> war.</paragraph>
                 """.stripMargin
 
-            val edito2TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText2, log = log)
+      val edito2TextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(editorialText2, log = log)
 
-            // We now rebase the revised editorial text against the revised transcription, so they can be linked
-            // together.
+      // We now rebase the revised editorial text against the revised transcription, so they can be linked
+      // together.
 
-            val editorialStandoffDiffs3: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
-                baseText = diplo2TextWithStandoff.text,
-                derivedText = edito2TextWithStandoff.text
-            )
+      val editorialStandoffDiffs3: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
+        baseText = diplo2TextWithStandoff.text,
+        derivedText = edito2TextWithStandoff.text
+      )
 
-            // Check that the editor's diffs are correct.
+      // Check that the editor's diffs are correct.
 
-            val expectedEditorialDiffs3AsXml =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val expectedEditorialDiffs3AsXml =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<diffs>Ich habe d<ins>ie</ins> Bahn <del>heute </del>genommen, weil ich verspätet war.</diffs>
                 """.stripMargin
 
-            val editorialDiffs3AsXml: String = standoffUtil.standoffDiffs2Xml(
-                baseText = diplo2TextWithStandoff.text,
-                derivedText = edito2TextWithStandoff.text,
-                standoffDiffs = editorialStandoffDiffs3
-            )
+      val editorialDiffs3AsXml: String = standoffUtil.standoffDiffs2Xml(
+        baseText = diplo2TextWithStandoff.text,
+        derivedText = edito2TextWithStandoff.text,
+        standoffDiffs = editorialStandoffDiffs3
+      )
 
-            val xmlDiff3: Diff = DiffBuilder.compare(Input.fromString(expectedEditorialDiffs3AsXml)).withTest(Input.fromString(editorialDiffs3AsXml)).build()
-            xmlDiff3.hasDifferences should be(false)
+      val xmlDiff3: Diff = DiffBuilder
+        .compare(Input.fromString(expectedEditorialDiffs3AsXml))
+        .withTest(Input.fromString(editorialDiffs3AsXml))
+        .build()
+      xmlDiff3.hasDifferences should be(false)
 
-        }
+    }
 
-        "calculate diffs in markup for two versions that are identical on the literal (content) level (1)" in {
+    "calculate diffs in markup for two versions that are identical on the literal (content) level (1)" in {
 
-            val regionID = UUID.randomUUID
+      val regionID = UUID.randomUUID
 
-            val documentSpecificIDs = Map(
-                "1" -> regionID
-            )
+      val documentSpecificIDs = Map(
+        "1" -> regionID
+      )
 
-            val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
+      val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
 
-            val diplomaticTranscription =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val diplomaticTranscription =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<region id="1">
                   |<rendition type="center underline">CLI</rendition>.<lb/><lb/>
                   |<rendition type="underline">Examen modi Renaldiniani inscribendi q&#780;vis polygona regularia in circulo,<lb/>
@@ -407,8 +444,8 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                   |</region>
                 """.stripMargin
 
-            val criticalText =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val criticalText =
+        """<?xml version="1.0" encoding="UTF-8"?>
                 |<region id="1">
                 |CLI<corr repl="">.</corr><lb/><lb/>
                 |Examen modi Renaldiniani inscribendi <corr repl="quaevis">q&#780;vis</corr> polygona regularia in circulo,<lb/>
@@ -417,44 +454,45 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                 |</region>
                 """.stripMargin
 
-            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = log)
-            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = log)
+      val diploTextWithStandoff: TextWithStandoff =
+        standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = log)
+      val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = log)
 
-            val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
-                baseText = diploTextWithStandoff.text,
-                derivedText = criticalTextWithStandoff.text
-            )
+      val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
+        baseText = diploTextWithStandoff.text,
+        derivedText = criticalTextWithStandoff.text
+      )
 
-            val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
-                baseText = diploTextWithStandoff.text,
-                derivedText = criticalTextWithStandoff.text,
-                standoffDiffs = criticalTextDiffs
-            )
+      val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
+        baseText = diploTextWithStandoff.text,
+        derivedText = criticalTextWithStandoff.text,
+        standoffDiffs = criticalTextDiffs
+      )
 
-            assert(diploTextWithStandoff.text == criticalTextWithStandoff.text)
+      assert(diploTextWithStandoff.text == criticalTextWithStandoff.text)
 
-            val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
-                oldStandoff = diploTextWithStandoff.standoff,
-                newStandoff = criticalTextWithStandoff.standoff
-            )
+      val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
+        oldStandoff = diploTextWithStandoff.standoff,
+        newStandoff = criticalTextWithStandoff.standoff
+      )
 
-            standoffAdded.exists(_.uuid == regionID) should be(false)
-            standoffRemoved.exists(_.uuid == regionID) should be(false)
+      standoffAdded.exists(_.uuid == regionID) should be(false)
+      standoffRemoved.exists(_.uuid == regionID) should be(false)
 
-        }
+    }
 
-        "calculate diffs in markup for two versions that are identical on the literal (content) level (2)" in {
+    "calculate diffs in markup for two versions that are identical on the literal (content) level (2)" in {
 
-            val regionID = UUID.randomUUID
+      val regionID = UUID.randomUUID
 
-            val documentSpecificIDs = Map(
-                "2" -> regionID
-            )
+      val documentSpecificIDs = Map(
+        "2" -> regionID
+      )
 
-            val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
+      val standoffUtil = new XMLToStandoffUtil(documentSpecificIDs = documentSpecificIDs)
 
-            val diplomaticTranscription =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val diplomaticTranscription =
+        """<?xml version="1.0" encoding="UTF-8"?>
                    |<region id="2">
                   |Modus hic est: Fiat triang: æquil: <formula notation="TeX">ABD</formula>, divisâq́ diametro <formula notation="TeX">AB</formula> in tot partes æquales,<lb/>
                   |quot laterum est figura inscribenda, duabusq́ earum p̃termissis <rendition type="strike">et</rendition> à <formula notation="TeX">B</formula> versùs <formula notation="TeX">A</formula>, ducat,<lb/>
@@ -464,8 +502,8 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                    |</region>
                 """.stripMargin
 
-            val criticalText =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val criticalText =
+        """<?xml version="1.0" encoding="UTF-8"?>
                    |<region id="2">
                   |Modus hic est: Fiat <abbr expan="triangulum">triang:</abbr> <corr repl="ae">æ</corr>quil: <formula notation="TeX">ABD</formula>, <corr repl="diviasque">divisâq́</corr> diametro <formula notation="TeX">AB</formula> in tot partes <corr repl="ae">æ</corr>quales,<lb/>
                   |quot laterum est figura inscribenda, <corr repl="duabusque">duabusq́</corr> earum <corr repl="praetermissis">p̃termissis</corr> <del>et</del> <corr repl="a">à</corr> <formula notation="TeX">B</formula> vers<corr repl="u">ù</corr>s <formula notation="TeX">A</formula>, <corr repl="ducatur">ducat</corr>,<lb/>
@@ -475,36 +513,37 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                    |</region>
                 """.stripMargin
 
-            val diploTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = log)
-            val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = log)
+      val diploTextWithStandoff: TextWithStandoff =
+        standoffUtil.xml2TextWithStandoff(diplomaticTranscription, log = log)
+      val criticalTextWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(criticalText, log = log)
 
-            val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
-                baseText = diploTextWithStandoff.text,
-                derivedText = criticalTextWithStandoff.text
-            )
+      val criticalTextDiffs: Seq[StandoffDiff] = standoffUtil.makeStandoffDiffs(
+        baseText = diploTextWithStandoff.text,
+        derivedText = criticalTextWithStandoff.text
+      )
 
-            val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
-                baseText = diploTextWithStandoff.text,
-                derivedText = criticalTextWithStandoff.text,
-                standoffDiffs = criticalTextDiffs
-            )
+      val criticalTextDiffsAsXml: String = standoffUtil.standoffDiffs2Xml(
+        baseText = diploTextWithStandoff.text,
+        derivedText = criticalTextWithStandoff.text,
+        standoffDiffs = criticalTextDiffs
+      )
 
-            assert(diploTextWithStandoff.text == criticalTextWithStandoff.text)
+      assert(diploTextWithStandoff.text == criticalTextWithStandoff.text)
 
-            val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
-                oldStandoff = diploTextWithStandoff.standoff,
-                newStandoff = criticalTextWithStandoff.standoff
-            )
+      val (standoffAdded: Set[StandoffTag], standoffRemoved: Set[StandoffTag]) = standoffUtil.findChangedStandoffTags(
+        oldStandoff = diploTextWithStandoff.standoff,
+        newStandoff = criticalTextWithStandoff.standoff
+      )
 
-            standoffAdded.exists(_.uuid == regionID) should be(false)
-            standoffRemoved.exists(_.uuid == regionID) should be(false)
+      standoffAdded.exists(_.uuid == regionID) should be(false)
+      standoffRemoved.exists(_.uuid == regionID) should be(false)
 
-        }
+    }
 
-        "convert an XML document to a TextWithStandoff and check that information separator two has been inserted in the string" in {
+    "convert an XML document to a TextWithStandoff and check that information separator two has been inserted in the string" in {
 
-            val BEBBXML =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val BEBBXML =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |   <text>
                   |      <p>
                   |         <facsimile src="http://www.ub.unibas.ch/digi/bez/bernoullibriefe/jpg/bernoulli-jpg/BAU_5_000057165_321.jpg"/> Vir Celeberrime, Fautor et Amice Honoratissime. </p>
@@ -514,24 +553,23 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                   |
                 """.stripMargin
 
+      val standoffUtil = new XMLToStandoffUtil()
 
-            val standoffUtil = new XMLToStandoffUtil()
+      // after every paragraph, information separator two should be inserted
+      val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(
+        BEBBXML,
+        tagsWithSeparator = List(XMLTagSeparatorRequired(maybeNamespace = None, tagname = "p", maybeClassname = None)),
+        log = log)
 
-            // after every paragraph, information separator two should be inserted
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(BEBBXML,
-                tagsWithSeparator = List(XMLTagSeparatorRequired(maybeNamespace = None, tagname = "p", maybeClassname = None)),
-                log = log)
+      // make sure that there are as many information separator two as there are paragraphs (there are three paragraphs)
+      assert(StringFormatter.INFORMATION_SEPARATOR_TWO.toString.r.findAllIn(textWithStandoff.text).length == 3)
 
-            // make sure that there are as many information separator two as there are paragraphs (there are three paragraphs)
-            assert(StringFormatter.INFORMATION_SEPARATOR_TWO.toString.r.findAllIn(textWithStandoff.text).length == 3)
+    }
 
+    "convert an XML document containing elements with classes to a TextWithStandoff and check that information separator two has been inserted in the string" in {
 
-        }
-
-        "convert an XML document containing elements with classes to a TextWithStandoff and check that information separator two has been inserted in the string" in {
-
-            val testXML =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val testXML =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |   <text>
                   |      <text documentType="html">
                   |                    <div class="paragraph">
@@ -542,26 +580,26 @@ class XMLToStandoffUtilSpec extends CoreSpec {
                   |
                 """.stripMargin
 
+      val standoffUtil = new XMLToStandoffUtil()
 
-            val standoffUtil = new XMLToStandoffUtil()
+      // after every <div class="paragraph">, information separator two should be inserted
+      val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(
+        testXML,
+        tagsWithSeparator =
+          List(XMLTagSeparatorRequired(maybeNamespace = None, tagname = "div", maybeClassname = Some("paragraph"))),
+        log = log)
 
-            // after every <div class="paragraph">, information separator two should be inserted
-            val textWithStandoff: TextWithStandoff = standoffUtil.xml2TextWithStandoff(testXML,
-                tagsWithSeparator = List(XMLTagSeparatorRequired(maybeNamespace = None, tagname = "div", maybeClassname = Some("paragraph"))),
-                log = log)
+      // make sure that there are as many information separator two as there are paragraphs (there are three paragraphs)
+      assert(StringFormatter.INFORMATION_SEPARATOR_TWO.toString.r.findAllIn(textWithStandoff.text).length == 1)
 
-            // make sure that there are as many information separator two as there are paragraphs (there are three paragraphs)
-            assert(StringFormatter.INFORMATION_SEPARATOR_TWO.toString.r.findAllIn(textWithStandoff.text).length == 1)
-
-
-        }
     }
+  }
 }
 
 object XMLToStandoffUtilSpec {
 
-    val simpleXmlDoc: String =
-        """<?xml version="1.0" encoding="UTF-8"?>
+  val simpleXmlDoc: String =
+    """<?xml version="1.0" encoding="UTF-8"?>
           |<article id="first">
           |    <title>Special Relativity</title>
           |
@@ -587,8 +625,8 @@ object XMLToStandoffUtilSpec {
           |    </paragraph>
           |</article>""".stripMargin
 
-    val simpleXmlDocWithNestedEmptyTag: String =
-        """<?xml version="1.0" encoding="UTF-8"?>
+  val simpleXmlDocWithNestedEmptyTag: String =
+    """<?xml version="1.0" encoding="UTF-8"?>
           |<article id="first">
           |    <title>Special Relativity</title>
           |
@@ -614,8 +652,8 @@ object XMLToStandoffUtilSpec {
           |    </paragraph>
           |</article>""".stripMargin
 
-    val simpleXmlDocWithNestedEmptyTags: String =
-        """<?xml version="1.0" encoding="UTF-8"?>
+  val simpleXmlDocWithNestedEmptyTags: String =
+    """<?xml version="1.0" encoding="UTF-8"?>
           |<article id="first">
           |    <title>Special Relativity</title>
           |
@@ -641,8 +679,8 @@ object XMLToStandoffUtilSpec {
           |    </paragraph>
           |</article>""".stripMargin
 
-    val xmlDocWithClix: String =
-        """<?xml version="1.0" encoding="UTF-8"?>
+  val xmlDocWithClix: String =
+    """<?xml version="1.0" encoding="UTF-8"?>
           |<lg xmlns="http://www.example.org/ns1" xmlns:ns2="http://www.example.org/ns2">
           | <l>
           |  <seg foo="x" ns2:bar="y">Scorn not the sonnet;</seg>

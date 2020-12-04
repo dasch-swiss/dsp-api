@@ -32,165 +32,163 @@ import resource._
 import scala.io.{BufferedSource, Codec, Source}
 
 /**
- * Functions for reading and writing files.
- */
+  * Functions for reading and writing files.
+  */
 object FileUtil {
-    /**
-     * Writes a string to a file.
-     *
-     * @param file    the destination file.
-     * @param content the string to write.
-     */
-    def writeTextFile(file: File, content: String): Unit = {
-        writeBinaryFile(file, content.getBytes(StandardCharsets.UTF_8))
+
+  /**
+    * Writes a string to a file.
+    *
+    * @param file    the destination file.
+    * @param content the string to write.
+    */
+  def writeTextFile(file: File, content: String): Unit = {
+    writeBinaryFile(file, content.getBytes(StandardCharsets.UTF_8))
+  }
+
+  /**
+    * Reads a text file into a string.
+    *
+    * @param file the source file.
+    * @return the contents of the file.
+    */
+  def readTextFile(file: File): String = {
+    // TODO: provide apt error handling
+
+    val source = Source.fromFile(file)(Codec.UTF8)
+
+    try {
+      source.mkString
+    } finally {
+      source.close()
     }
+  }
 
-    /**
-     * Reads a text file into a string.
-     *
-     * @param file the source file.
-     * @return the contents of the file.
-     */
-    def readTextFile(file: File): String = {
-        // TODO: provide apt error handling
+  /**
+    * Reads a file from the classpath into a string.
+    *
+    * @param filename the name of the file.
+    * @return the contents of the file.
+    */
+  def readTextResource(filename: String): String = {
+    // https://alvinalexander.com/scala/scala-exception-handling-try-catch-finally#toc_0
 
-        val source = Source.fromFile(file)(Codec.UTF8)
+    var sourceOption = None: Option[BufferedSource]
 
-        try {
-            source.mkString
-        } finally {
-            source.close()
-        }
+    try {
+      val source: BufferedSource = Source.fromResource(filename)(Codec.UTF8)
+
+      if (source.nonEmpty) {
+        sourceOption = Some(source)
+      }
+
+      source.mkString
+    } catch {
+      case ex: Exception =>
+        throw NotFoundException(s"The requested file could not be read: $filename")
+    } finally {
+      if (sourceOption.nonEmpty) {
+        sourceOption.get.close
+      }
+
     }
+  }
 
-    /**
-     * Reads a file from the classpath into a string.
-     *
-     * @param filename the name of the file.
-     * @return the contents of the file.
-     */
-    def readTextResource(filename: String): String = {
-        // https://alvinalexander.com/scala/scala-exception-handling-try-catch-finally#toc_0
+  /**
+    * Writes a byte array to a file.
+    *
+    * @param file    the destination file.
+    * @param content the binary data to write.
+    */
+  def writeBinaryFile(file: File, content: Array[Byte]): Unit = {
+    Files.write(Paths.get(file.getCanonicalPath), content)
+  }
 
-        var sourceOption = None: Option[BufferedSource]
-
-        try {
-            val source: BufferedSource = Source.fromResource(filename)(Codec.UTF8)
-
-            if (source.nonEmpty) {
-                sourceOption = Some(source)
-            }
-
-            source.mkString
-        } catch {
-            case ex: Exception =>
-                throw NotFoundException(s"The requested file could not be read: $filename")
-        } finally {
-            if (sourceOption.nonEmpty) {
-                sourceOption.get.close
-            }
-
-        }
-    }
-
-    /**
-     * Writes a byte array to a file.
-     *
-     * @param file    the destination file.
-     * @param content the binary data to write.
-     */
-    def writeBinaryFile(file: File, content: Array[Byte]): Unit = {
-        Files.write(Paths.get(file.getCanonicalPath), content)
-    }
-
-    /**
-     * Generates a byte array representing a Zip file containing the specified data. The Zip file data is
-     * generated in memory only; no disk access is performed.
-     *
-     * @param contents a map of file names to byte arrays representing file contents.
-     * @return a byte array containing the Zip file data.
-     */
-    def createZipFileBytes(contents: Map[String, Array[Byte]]): Array[Byte] = {
-        val managedBytes: ExtractableManagedResource[Array[Byte]] = managed(new ByteArrayOutputStream()).map {
-            byteArrayOutputStream =>
-                for (zipOutputStream <- managed(new ZipOutputStream(byteArrayOutputStream))) {
-                    contents.foreach {
-                        case (filename: String, content: Array[Byte]) =>
-                            val entry: ZipEntry = new ZipEntry(filename)
-                            zipOutputStream.putNextEntry(entry)
-                            zipOutputStream.write(content)
-                            zipOutputStream.closeEntry()
-                    }
-                }
-
-                byteArrayOutputStream.toByteArray
+  /**
+    * Generates a byte array representing a Zip file containing the specified data. The Zip file data is
+    * generated in memory only; no disk access is performed.
+    *
+    * @param contents a map of file names to byte arrays representing file contents.
+    * @return a byte array containing the Zip file data.
+    */
+  def createZipFileBytes(contents: Map[String, Array[Byte]]): Array[Byte] = {
+    val managedBytes: ExtractableManagedResource[Array[Byte]] = managed(new ByteArrayOutputStream()).map {
+      byteArrayOutputStream =>
+        for (zipOutputStream <- managed(new ZipOutputStream(byteArrayOutputStream))) {
+          contents.foreach {
+            case (filename: String, content: Array[Byte]) =>
+              val entry: ZipEntry = new ZipEntry(filename)
+              zipOutputStream.putNextEntry(entry)
+              zipOutputStream.write(content)
+              zipOutputStream.closeEntry()
+          }
         }
 
-        managedBytes.tried.get
+        byteArrayOutputStream.toByteArray
     }
 
+    managedBytes.tried.get
+  }
 
-    /**
-     * Saves data to a temporary file.
-     *
-     * @param settings   Knora application settings.
-     * @param binaryData the binary file data to be saved.
-     * @return the location where the file has been written to.
-     */
-    def saveFileToTmpLocation(settings: KnoraSettingsImpl, binaryData: Array[Byte]): File = {
+  /**
+    * Saves data to a temporary file.
+    *
+    * @param settings   Knora application settings.
+    * @param binaryData the binary file data to be saved.
+    * @return the location where the file has been written to.
+    */
+  def saveFileToTmpLocation(settings: KnoraSettingsImpl, binaryData: Array[Byte]): File = {
 
-        val fileName = createTempFile(settings)
-        // write given file to disk
-        Files.write(fileName.toPath, binaryData)
+    val fileName = createTempFile(settings)
+    // write given file to disk
+    Files.write(fileName.toPath, binaryData)
 
-        fileName
+    fileName
+  }
+
+  /**
+    * Creates an empty file in the default temporary-file directory specified in Knora's application settings.
+    *
+    * @param settings      Knora's application settings.
+    * @param fileExtension the extension to be used for the temporary file name, if any,
+    * @return the location where the file has been written to.
+    */
+  def createTempFile(settings: KnoraSettingsImpl, fileExtension: Option[String] = None): File = {
+
+    // check if the location for writing temporary files exists
+    if (!Files.exists(Paths.get(settings.tmpDataDir))) {
+      throw FileWriteException(s"Data directory ${settings.tmpDataDir} does not exist on server")
     }
 
-    /**
-     * Creates an empty file in the default temporary-file directory specified in Knora's application settings.
-     *
-     * @param settings      Knora's application settings.
-     * @param fileExtension the extension to be used for the temporary file name, if any,
-     * @return the location where the file has been written to.
-     */
-    def createTempFile(settings: KnoraSettingsImpl, fileExtension: Option[String] = None): File = {
-
-        // check if the location for writing temporary files exists
-        if (!Files.exists(Paths.get(settings.tmpDataDir))) {
-            throw FileWriteException(s"Data directory ${
-                settings.tmpDataDir
-            } does not exist on server")
-        }
-
-        val extension = if (fileExtension.nonEmpty) {
-            fileExtension.get
-        } else {
-            "bin"
-        }
-
-        val file: File = File.createTempFile("tmp_", "." + extension, new File(settings.tmpDataDir))
-
-        if (!file.canWrite)
-            throw FileWriteException(s"File $file cannot be written.")
-        file
+    val extension = if (fileExtension.nonEmpty) {
+      fileExtension.get
+    } else {
+      "bin"
     }
 
-    /**
-     * Deletes a temporary file.
-     *
-     * @param fileName the file to be deleted.
-     * @param log      a logging adapter.
-     * @return `true` if the file was deleted by this method.
-     */
-    def deleteFileFromTmpLocation(fileName: File, log: Logger): Boolean = {
+    val file: File = File.createTempFile("tmp_", "." + extension, new File(settings.tmpDataDir))
 
-        val path = fileName.toPath
+    if (!file.canWrite)
+      throw FileWriteException(s"File $file cannot be written.")
+    file
+  }
 
-        if (!fileName.canWrite) {
-            val ex = FileWriteException(s"File $path cannot be deleted.")
-            log.error(ex.getMessage, ex)
-        }
+  /**
+    * Deletes a temporary file.
+    *
+    * @param fileName the file to be deleted.
+    * @param log      a logging adapter.
+    * @return `true` if the file was deleted by this method.
+    */
+  def deleteFileFromTmpLocation(fileName: File, log: Logger): Boolean = {
 
-        Files.deleteIfExists(path)
+    val path = fileName.toPath
+
+    if (!fileName.canWrite) {
+      val ex = FileWriteException(s"File $path cannot be deleted.")
+      log.error(ex.getMessage, ex)
     }
+
+    Files.deleteIfExists(path)
+  }
 }

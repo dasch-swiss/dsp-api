@@ -52,113 +52,127 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
 
 /**
- * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
- */
-class R2RSpec extends Core with StartupUtils with Suite with ScalatestRouteTest with AnyWordSpecLike with Matchers with BeforeAndAfterAll with LazyLogging {
+  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
+  */
+class R2RSpec
+    extends Core
+    with StartupUtils
+    with Suite
+    with ScalatestRouteTest
+    with AnyWordSpecLike
+    with Matchers
+    with BeforeAndAfterAll
+    with LazyLogging {
 
-    /* needed by the core trait */
-    implicit lazy val _system: ActorSystem = ActorSystem(actorSystemNameFrom(getClass),
-        TestContainers.PortConfig.withFallback(ConfigFactory.parseString(testConfigSource).withFallback(ConfigFactory.load())))
+  /* needed by the core trait */
+  implicit lazy val _system: ActorSystem = ActorSystem(
+    actorSystemNameFrom(getClass),
+    TestContainers.PortConfig.withFallback(
+      ConfigFactory.parseString(testConfigSource).withFallback(ConfigFactory.load())))
 
-    implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(_system)
+  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(_system)
 
-    StringFormatter.initForTest()
-    RdfFeatureFactory.init(settings)
+  StringFormatter.initForTest()
+  RdfFeatureFactory.init(settings)
 
-    protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
-        testToggles = Set.empty,
-        parent = new KnoraSettingsFeatureFactoryConfig(settings)
-    )
+  protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
+    testToggles = Set.empty,
+    parent = new KnoraSettingsFeatureFactoryConfig(settings)
+  )
 
-    lazy val executionContext: ExecutionContext = _system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+  lazy val executionContext: ExecutionContext = _system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    // override so that we can use our own system
-    override def createActorSystem(): ActorSystem = _system
+  // override so that we can use our own system
+  override def createActorSystem(): ActorSystem = _system
 
-    def actorRefFactory: ActorSystem = _system
+  def actorRefFactory: ActorSystem = _system
 
-    implicit val knoraExceptionHandler: ExceptionHandler = handler.KnoraExceptionHandler(settings)
+  implicit val knoraExceptionHandler: ExceptionHandler = handler.KnoraExceptionHandler(settings)
 
+  implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
+
+  lazy val appActor: ActorRef = system.actorOf(
+    Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+    name = APPLICATION_MANAGER_ACTOR_NAME)
+
+  // The main application actor forwards messages to the responder manager and the store manager.
+  val responderManager: ActorRef = appActor
+  val storeManager: ActorRef = appActor
+
+  val routeData: KnoraRouteData = KnoraRouteData(
+    system = system,
+    appActor = appActor
+  )
+
+  lazy val rdfDataObjects = List.empty[RdfDataObject]
+
+  val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
+
+  override def beforeAll {
+    // set allow reload over http
+    appActor ! SetAllowReloadOverHTTPState(true)
+
+    // start the knora service, loading data from the repository
+    appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
+
+    // waits until knora is up and running
+    applicationStateRunning()
+
+    loadTestData(rdfDataObjects)
+  }
+
+  override def afterAll {
+    /* Stop the server when everything else has finished */
+    appActor ! AppStop()
+  }
+
+  protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
+    val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
+    val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
+    JsonLDUtil.parseJsonLD(responseBodyStr)
+  }
+
+  protected def parseTurtle(turtleStr: String): RdfModel = {
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+    rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
+  }
+
+  protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
+    val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+    rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
+  }
+
+  protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
     implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
+    Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 5 minutes)
 
-    lazy val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = APPLICATION_MANAGER_ACTOR_NAME)
+    Await.result(appActor ? LoadOntologiesRequestV2(
+                   featureFactoryConfig = defaultFeatureFactoryConfig,
+                   requestingUser = KnoraSystemInstances.Users.SystemUser
+                 ),
+                 30 seconds)
+  }
 
-    // The main application actor forwards messages to the responder manager and the store manager.
-    val responderManager: ActorRef = appActor
-    val storeManager: ActorRef = appActor
-
-    val routeData: KnoraRouteData = KnoraRouteData(
-        system = system,
-        appActor = appActor
-    )
-
-    lazy val rdfDataObjects = List.empty[RdfDataObject]
-
-    val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
-
-    override def beforeAll {
-        // set allow reload over http
-        appActor ! SetAllowReloadOverHTTPState(true)
-
-        // start the knora service, loading data from the repository
-        appActor ! AppStart(ignoreRepository = true, requiresIIIFService = false)
-
-        // waits until knora is up and running
-        applicationStateRunning()
-
-        loadTestData(rdfDataObjects)
+  /**
+    * Reads or writes a test data file.
+    *
+    * @param responseAsString the API response received from Knora.
+    * @param file             the file in which the expected API response is stored.
+    * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
+    * @return the expected response.
+    */
+  protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
+    if (writeFile) {
+      // Per default only read access is allowed in the bazel sandbox.
+      // This workaround allows to save test output.
+      val testOutputDir = sys.env("TEST_UNDECLARED_OUTPUTS_DIR")
+      val newOutputFile = new File(testOutputDir, file.getPath)
+      newOutputFile.getParentFile.mkdirs()
+      FileUtil.writeTextFile(newOutputFile,
+                             responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
+      responseAsString
+    } else {
+      FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
     }
-
-    override def afterAll {
-        /* Stop the server when everything else has finished */
-        appActor ! AppStop()
-    }
-
-    protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
-        val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-        val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
-        JsonLDUtil.parseJsonLD(responseBodyStr)
-    }
-
-    protected def parseTurtle(turtleStr: String): RdfModel = {
-        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
-        rdfFormatUtil.parseToRdfModel(rdfStr = turtleStr, rdfFormat = Turtle)
-    }
-
-    protected def parseRdfXml(rdfXmlStr: String): RdfModel = {
-        val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
-        rdfFormatUtil.parseToRdfModel(rdfStr = rdfXmlStr, rdfFormat = RdfXml)
-    }
-
-    protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-        implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-        Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 5 minutes)
-
-        Await.result(appActor ? LoadOntologiesRequestV2(
-            featureFactoryConfig = defaultFeatureFactoryConfig,
-            requestingUser = KnoraSystemInstances.Users.SystemUser
-        ), 30 seconds)
-    }
-
-    /**
-     * Reads or writes a test data file.
-     *
-     * @param responseAsString the API response received from Knora.
-     * @param file             the file in which the expected API response is stored.
-     * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
-     * @return the expected response.
-     */
-    protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
-        if (writeFile) {
-            // Per default only read access is allowed in the bazel sandbox.
-            // This workaround allows to save test output.
-            val testOutputDir = sys.env("TEST_UNDECLARED_OUTPUTS_DIR")
-            val newOutputFile = new File(testOutputDir, file.getPath)
-            newOutputFile.getParentFile.mkdirs()
-            FileUtil.writeTextFile(newOutputFile, responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
-            responseAsString
-        } else {
-            FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
-        }
-    }
+  }
 }
