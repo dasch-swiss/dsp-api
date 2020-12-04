@@ -35,5 +35,5 @@ case class SessionResponse(status: Int, message: String, sid: String)
   * 'v1/session' route into a case classes for easier testing.
   */
 trait SessionJsonProtocol extends DefaultJsonProtocol {
-    implicit val SessionResponseFormat: RootJsonFormat[SessionResponse] = jsonFormat3(SessionResponse.apply)
+  implicit val SessionResponseFormat: RootJsonFormat[SessionResponse] = jsonFormat3(SessionResponse.apply)
 }

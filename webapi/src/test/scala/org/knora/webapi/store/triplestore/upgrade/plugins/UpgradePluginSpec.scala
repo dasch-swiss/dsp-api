@@ -29,32 +29,34 @@ import org.knora.webapi.messages.util.rdf._
   * Provides helper methods for specs that test upgrade plugins.
   */
 abstract class UpgradePluginSpec extends CoreSpec() {
-    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
 
-    /**
-      * Parses a TriG file and returns it as an [[RdfModel]].
-      *
-      * @param path the file path of the TriG file.
-      * @return an [[RdfModel]].
-      */
-    def trigFileToModel(path: String): RdfModel = {
-        val fileInputStream = new BufferedInputStream(new FileInputStream(path))
-        val rdfModel: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = TriG)
-        fileInputStream.close()
-        rdfModel
+  /**
+    * Parses a TriG file and returns it as an [[RdfModel]].
+    *
+    * @param path the file path of the TriG file.
+    * @return an [[RdfModel]].
+    */
+  def trigFileToModel(path: String): RdfModel = {
+    val fileInputStream = new BufferedInputStream(new FileInputStream(path))
+    val rdfModel: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = TriG)
+    fileInputStream.close()
+    rdfModel
+  }
+
+  /**
+    * Wraps expected SPARQL SELECT results in a [[SparqlSelectResultBody]].
+    *
+    * @param rows the expected results.
+    * @return a [[SparqlSelectResultBody]] containing the expected results.
+    */
+  def expectedResult(rows: Seq[Map[String, String]]): SparqlSelectResultBody = {
+    val rowMaps = rows.map { mapToWrap =>
+      VariableResultsRow(new ErrorHandlingMap[String, String](mapToWrap, { key: String =>
+        s"No value found for SPARQL query variable '$key' in query result row"
+      }))
     }
 
-    /**
-      * Wraps expected SPARQL SELECT results in a [[SparqlSelectResultBody]].
-      *
-      * @param rows the expected results.
-      * @return a [[SparqlSelectResultBody]] containing the expected results.
-      */
-    def expectedResult(rows: Seq[Map[String, String]]): SparqlSelectResultBody = {
-        val rowMaps = rows.map {
-            mapToWrap => VariableResultsRow(new ErrorHandlingMap[String, String](mapToWrap, { key: String => s"No value found for SPARQL query variable '$key' in query result row" }))
-        }
-
-        SparqlSelectResultBody(bindings = rowMaps)
-    }
+    SparqlSelectResultBody(bindings = rowMaps)
+  }
 }

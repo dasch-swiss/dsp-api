@@ -37,36 +37,37 @@ import scala.concurrent.{Await, ExecutionContextExecutor}
   */
 abstract class SalsahSpec extends AnyWordSpecLike with Matchers with RequestBuilding {
 
-    implicit private val system = ActorSystem()
+  implicit private val system = ActorSystem()
 
-    protected val settings = new SettingsImpl(ConfigFactory.load())
+  protected val settings = new SettingsImpl(ConfigFactory.load())
 
-    implicit private val timeout = Timeout(180.seconds)
-    implicit private val dispatcher = system.dispatcher
-    implicit protected val ec: ExecutionContextExecutor = dispatcher
-    implicit protected val materializer = Materializer.matFromSystem(system)
+  implicit private val timeout = Timeout(180.seconds)
+  implicit private val dispatcher = system.dispatcher
+  implicit protected val ec: ExecutionContextExecutor = dispatcher
+  implicit protected val materializer = Materializer.matFromSystem(system)
 
-    /**
-      * Loads test data and populates the ontology cache.
-      *
-      * @param rdfDataObjectsJsonList a JSON array specifying data files to be loaded into the triplestore.
-      */
-    protected def loadTestData(rdfDataObjectsJsonList: String): Unit = {
+  /**
+    * Loads test data and populates the ontology cache.
+    *
+    * @param rdfDataObjectsJsonList a JSON array specifying data files to be loaded into the triplestore.
+    */
+  protected def loadTestData(rdfDataObjectsJsonList: String): Unit = {
 
-        val request = Post(settings.webapiUrl + "/admin/store/ResetTriplestoreContent", HttpEntity(ContentTypes.`application/json`, rdfDataObjectsJsonList))
-        singleAwaitingRequest(request, 300.seconds)
-    }
+    val request = Post(settings.webapiUrl + "/admin/store/ResetTriplestoreContent",
+                       HttpEntity(ContentTypes.`application/json`, rdfDataObjectsJsonList))
+    singleAwaitingRequest(request, 300.seconds)
+  }
 
-    /**
-      * Makes a single HTTP request, waits for the result and chekcs that the response is HTTP 200 (OK)
-      * @param request the request to send.
-      * @param duration the max wait time.
-      */
-    def singleAwaitingRequest(request: HttpRequest, duration: Duration = 3.seconds): HttpResponse = {
-        val responseFuture = Http().singleRequest(request)
-        val response = Await.result(responseFuture, duration)
+  /**
+    * Makes a single HTTP request, waits for the result and chekcs that the response is HTTP 200 (OK)
+    * @param request the request to send.
+    * @param duration the max wait time.
+    */
+  def singleAwaitingRequest(request: HttpRequest, duration: Duration = 3.seconds): HttpResponse = {
+    val responseFuture = Http().singleRequest(request)
+    val response = Await.result(responseFuture, duration)
 
-        assert(response.status == StatusCodes.OK)
-        response
-    }
+    assert(response.status == StatusCodes.OK)
+    response
+  }
 }

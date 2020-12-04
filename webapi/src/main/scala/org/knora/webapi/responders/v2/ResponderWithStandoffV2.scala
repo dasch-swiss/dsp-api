@@ -25,74 +25,81 @@ import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
 import org.knora.webapi.messages.util.{ConstructResponseUtilV2, ResponderData}
-import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2, GetXSLTransformationRequestV2, GetXSLTransformationResponseV2}
+import org.knora.webapi.messages.v2.responder.standoffmessages.{
+  GetMappingRequestV2,
+  GetMappingResponseV2,
+  GetXSLTransformationRequestV2,
+  GetXSLTransformationResponseV2
+}
 import org.knora.webapi.responders.Responder
 
 import scala.concurrent.Future
 
 /**
- * An abstract class with standoff utility methods for v2 responders.
- */
+  * An abstract class with standoff utility methods for v2 responders.
+  */
 abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Responder(responderData) {
 
-    /**
-     * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
-     *
-     * @param queryResultsSeparated query results referring to mappings.
-     * @param featureFactoryConfig  the feature factory configuration.
-     * @param requestingUser        the user making the request.
-     * @return the referred mappings.
-     */
-    protected def getMappingsFromQueryResultsSeparated(queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
-                                                       featureFactoryConfig: FeatureFactoryConfig,
-                                                       requestingUser: UserADM): Future[Map[IRI, MappingAndXSLTransformation]] = {
+  /**
+    * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
+    *
+    * @param queryResultsSeparated query results referring to mappings.
+    * @param featureFactoryConfig  the feature factory configuration.
+    * @param requestingUser        the user making the request.
+    * @return the referred mappings.
+    */
+  protected def getMappingsFromQueryResultsSeparated(
+      queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
+      featureFactoryConfig: FeatureFactoryConfig,
+      requestingUser: UserADM): Future[Map[IRI, MappingAndXSLTransformation]] = {
 
-        // collect the Iris of the mappings referred to in the resources' text values
-        val mappingIris: Set[IRI] = queryResultsSeparated.flatMap {
-            case (_, assertions: ResourceWithValueRdfData) =>
-                ConstructResponseUtilV2.getMappingIrisFromValuePropertyAssertions(assertions.valuePropertyAssertions)
-        }.toSet
+    // collect the Iris of the mappings referred to in the resources' text values
+    val mappingIris: Set[IRI] = queryResultsSeparated.flatMap {
+      case (_, assertions: ResourceWithValueRdfData) =>
+        ConstructResponseUtilV2.getMappingIrisFromValuePropertyAssertions(assertions.valuePropertyAssertions)
+    }.toSet
 
-        // get all the mappings
-        val mappingResponsesFuture: Vector[Future[GetMappingResponseV2]] = mappingIris.map {
-            mappingIri: IRI =>
-                for {
-                    mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
-                        mappingIri = mappingIri,
-                        featureFactoryConfig = featureFactoryConfig,
-                        requestingUser = requestingUser
-                    )).mapTo[GetMappingResponseV2]
-                } yield mappingResponse
-        }.toVector
+    // get all the mappings
+    val mappingResponsesFuture: Vector[Future[GetMappingResponseV2]] = mappingIris.map { mappingIri: IRI =>
+      for {
+        mappingResponse: GetMappingResponseV2 <- (responderManager ? GetMappingRequestV2(
+          mappingIri = mappingIri,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
+        )).mapTo[GetMappingResponseV2]
+      } yield mappingResponse
+    }.toVector
 
-        for {
-            mappingResponses: Vector[GetMappingResponseV2] <- Future.sequence(mappingResponsesFuture)
+    for {
+      mappingResponses: Vector[GetMappingResponseV2] <- Future.sequence(mappingResponsesFuture)
 
-            // get the default XSL transformations
-            mappingsWithFuture: Vector[Future[(IRI, MappingAndXSLTransformation)]] = mappingResponses.map {
-                mapping: GetMappingResponseV2 =>
-
-                    for {
-                        // if given, get the default XSL transformation
-                        xsltOption: Option[String] <- if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
-                            for {
-                                xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(
-                                    mapping.mapping.defaultXSLTransformation.get,
-                                    featureFactoryConfig = featureFactoryConfig,
-                                    requestingUser = requestingUser
-                                )).mapTo[GetXSLTransformationResponseV2]
-                            } yield Some(xslTransformation.xslt)
-                        } else {
-                            Future(None)
-                        }
-                    } yield mapping.mappingIri -> MappingAndXSLTransformation(mapping = mapping.mapping, standoffEntities = mapping.standoffEntities, XSLTransformation = xsltOption)
-
+      // get the default XSL transformations
+      mappingsWithFuture: Vector[Future[(IRI, MappingAndXSLTransformation)]] = mappingResponses.map {
+        mapping: GetMappingResponseV2 =>
+          for {
+            // if given, get the default XSL transformation
+            xsltOption: Option[String] <- if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
+              for {
+                xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(
+                  mapping.mapping.defaultXSLTransformation.get,
+                  featureFactoryConfig = featureFactoryConfig,
+                  requestingUser = requestingUser
+                )).mapTo[GetXSLTransformationResponseV2]
+              } yield Some(xslTransformation.xslt)
+            } else {
+              Future(None)
             }
+          } yield
+            mapping.mappingIri -> MappingAndXSLTransformation(mapping = mapping.mapping,
+                                                              standoffEntities = mapping.standoffEntities,
+                                                              XSLTransformation = xsltOption)
 
-            mappings: Vector[(IRI, MappingAndXSLTransformation)] <- Future.sequence(mappingsWithFuture)
-            mappingsAsMap: Map[IRI, MappingAndXSLTransformation] = mappings.toMap
-        } yield mappingsAsMap
+      }
 
-    }
+      mappings: Vector[(IRI, MappingAndXSLTransformation)] <- Future.sequence(mappingsWithFuture)
+      mappingsAsMap: Map[IRI, MappingAndXSLTransformation] = mappings.toMap
+    } yield mappingsAsMap
+
+  }
 
 }

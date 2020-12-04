@@ -20,8 +20,8 @@
 package org.knora.webapi.messages.traits
 
 /**
- * A request message that knows the name of the sender.
- */
+  * A request message that knows the name of the sender.
+  */
 trait RequestWithSender {
-    val senderName: String
+  val senderName: String
 }

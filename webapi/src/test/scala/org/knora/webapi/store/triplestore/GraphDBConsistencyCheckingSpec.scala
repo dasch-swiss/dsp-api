@@ -2,9 +2,14 @@ package org.knora.webapi.store.triplestore
 
 import akka.testkit.ImplicitSender
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent, ResetRepositoryContentACK, SparqlUpdateRequest}
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.TriplestoreResponseException
+import org.knora.webapi.messages.store.triplestoremessages.{
+  RdfDataObject,
+  ResetRepositoryContent,
+  ResetRepositoryContentACK,
+  SparqlUpdateRequest
+}
 
 import scala.concurrent.duration._
 import scala.language.postfixOps
@@ -13,131 +18,135 @@ import scala.language.postfixOps
   * Tests the GraphDB triplestore consistency checking rules in webapi/scripts/KnoraRules.pie.
   */
 class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyCheckingSpec.config) with ImplicitSender {
-    import GraphDBConsistencyCheckingSpec._
+  import GraphDBConsistencyCheckingSpec._
 
-    private val timeout = 30.seconds
+  private val timeout = 30.seconds
 
-    override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "test_data/store.triplestore.GraphDBConsistencyCheckingSpec/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
-    )
+  override lazy val rdfDataObjects = List(
+    RdfDataObject(path = "test_data/store.triplestore.GraphDBConsistencyCheckingSpec/incunabula-data.ttl",
+                  name = "http://www.knora.org/data/0803/incunabula"),
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+  )
 
-    override def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
-        storeManager ! ResetRepositoryContent(rdfDataObjects)
-        expectMsg(5 minutes, ResetRepositoryContentACK())
+  override def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
+    storeManager ! ResetRepositoryContent(rdfDataObjects)
+    expectMsg(5 minutes, ResetRepositoryContentACK())
+  }
+
+  if (settings.triplestoreType.startsWith("graphdb")) {
+
+    "not create a new resource with a missing property that has owl:cardinality 1" in {
+      storeManager ! SparqlUpdateRequest(missingPartOf)
+
+      expectMsgPF(timeout) {
+        case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+          (msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_less_any_object") &&
+            msg.trim.endsWith(
+              "http://rdfh.ch/0803/missingPartOf http://www.knora.org/ontology/0803/incunabula#partOf *")) should ===(
+            true)
+      }
     }
 
-    if (settings.triplestoreType.startsWith("graphdb")) {
+    "not create a new resource with a missing property that has owl:minCardinality 1" in {
+      storeManager ! SparqlUpdateRequest(missingComment)
 
-        "not create a new resource with a missing property that has owl:cardinality 1" in {
-            storeManager ! SparqlUpdateRequest(missingPartOf)
-
-            expectMsgPF(timeout) {
-                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    (msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_less_any_object") &&
-                        msg.trim.endsWith("http://rdfh.ch/0803/missingPartOf http://www.knora.org/ontology/0803/incunabula#partOf *")) should ===(true)
-            }
-        }
-
-        "not create a new resource with a missing property that has owl:minCardinality 1" in {
-            storeManager ! SparqlUpdateRequest(missingComment)
-
-            expectMsgPF(timeout) {
-                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    (msg.contains(s"$CONSISTENCY_CHECK_ERROR min_cardinality_1_any_object") &&
-                        msg.trim.endsWith("http://rdfh.ch/0803/missingComment http://www.knora.org/ontology/knora-base#hasComment *")) should ===(true)
-            }
-        }
-
-        "not create a new resource with two values for a property that has owl:maxCardinality 1" in {
-            storeManager ! SparqlUpdateRequest(tooManyPublocs)
-
-            expectMsgPF(timeout) {
-                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    msg.contains(s"$CONSISTENCY_CHECK_ERROR max_cardinality_1_with_deletion_flag") should ===(true)
-            }
-        }
-
-        "not create a new resource with more than one lastModificationDate" in {
-            storeManager ! SparqlUpdateRequest(tooManyLastModificationDates)
-
-            expectMsgPF(timeout) {
-                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    msg.contains(s"$CONSISTENCY_CHECK_ERROR max_cardinality_1_without_deletion_flag") should ===(true)
-            }
-        }
-
-        "not create a new resource with a property that cannot have a resource as a subject" in {
-            storeManager ! SparqlUpdateRequest(wrongSubjectClass)
-
-            expectMsgPF(timeout) {
-                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    msg.contains(s"$CONSISTENCY_CHECK_ERROR subject_class_constraint") should ===(true)
-            }
-        }
-
-        "not create a new resource with properties whose objects have the wrong types" in {
-            storeManager ! SparqlUpdateRequest(wrongObjectClass)
-
-            expectMsgPF(timeout) {
-                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    msg.contains(s"$CONSISTENCY_CHECK_ERROR object_class_constraint") should ===(true)
-            }
-        }
-
-        "not create a new resource with a link to a resource of the wrong class" in {
-            storeManager ! SparqlUpdateRequest(wrongLinkTargetClass)
-
-            expectMsgPF(timeout) {
-                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    msg.contains(s"$CONSISTENCY_CHECK_ERROR object_class_constraint") should ===(true)
-            }
-        }
-
-        "not create a new resource with a property for which there is no cardinality" in {
-            storeManager ! SparqlUpdateRequest(resourcePropWithNoCardinality)
-
-            expectMsgPF(timeout) {
-                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    msg.contains(s"$CONSISTENCY_CHECK_ERROR resource_prop_cardinality_any") should ===(true)
-            }
-        }
-
-        "not create a new resource containing a value with a property for which there is no cardinality" in {
-            storeManager ! SparqlUpdateRequest(valuePropWithNoCardinality)
-
-            expectMsgPF(timeout) {
-                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    msg.contains(s"$CONSISTENCY_CHECK_ERROR value_prop_cardinality_any") should ===(true)
-            }
-        }
-
-        "not create a new resource with two labels" in {
-            storeManager ! SparqlUpdateRequest(twoLabels)
-
-            expectMsgPF(timeout) {
-                case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
-                    msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_greater_rdfs_label") should ===(true)
-            }
-        }
-    } else {
-        s"Not running GraphDBConsistencyCheckingSpec with triplestore type ${settings.triplestoreType}" in {}
+      expectMsgPF(timeout) {
+        case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+          (msg.contains(s"$CONSISTENCY_CHECK_ERROR min_cardinality_1_any_object") &&
+            msg.trim.endsWith(
+              "http://rdfh.ch/0803/missingComment http://www.knora.org/ontology/knora-base#hasComment *")) should ===(
+            true)
+      }
     }
+
+    "not create a new resource with two values for a property that has owl:maxCardinality 1" in {
+      storeManager ! SparqlUpdateRequest(tooManyPublocs)
+
+      expectMsgPF(timeout) {
+        case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+          msg.contains(s"$CONSISTENCY_CHECK_ERROR max_cardinality_1_with_deletion_flag") should ===(true)
+      }
+    }
+
+    "not create a new resource with more than one lastModificationDate" in {
+      storeManager ! SparqlUpdateRequest(tooManyLastModificationDates)
+
+      expectMsgPF(timeout) {
+        case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+          msg.contains(s"$CONSISTENCY_CHECK_ERROR max_cardinality_1_without_deletion_flag") should ===(true)
+      }
+    }
+
+    "not create a new resource with a property that cannot have a resource as a subject" in {
+      storeManager ! SparqlUpdateRequest(wrongSubjectClass)
+
+      expectMsgPF(timeout) {
+        case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+          msg.contains(s"$CONSISTENCY_CHECK_ERROR subject_class_constraint") should ===(true)
+      }
+    }
+
+    "not create a new resource with properties whose objects have the wrong types" in {
+      storeManager ! SparqlUpdateRequest(wrongObjectClass)
+
+      expectMsgPF(timeout) {
+        case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+          msg.contains(s"$CONSISTENCY_CHECK_ERROR object_class_constraint") should ===(true)
+      }
+    }
+
+    "not create a new resource with a link to a resource of the wrong class" in {
+      storeManager ! SparqlUpdateRequest(wrongLinkTargetClass)
+
+      expectMsgPF(timeout) {
+        case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+          msg.contains(s"$CONSISTENCY_CHECK_ERROR object_class_constraint") should ===(true)
+      }
+    }
+
+    "not create a new resource with a property for which there is no cardinality" in {
+      storeManager ! SparqlUpdateRequest(resourcePropWithNoCardinality)
+
+      expectMsgPF(timeout) {
+        case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+          msg.contains(s"$CONSISTENCY_CHECK_ERROR resource_prop_cardinality_any") should ===(true)
+      }
+    }
+
+    "not create a new resource containing a value with a property for which there is no cardinality" in {
+      storeManager ! SparqlUpdateRequest(valuePropWithNoCardinality)
+
+      expectMsgPF(timeout) {
+        case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+          msg.contains(s"$CONSISTENCY_CHECK_ERROR value_prop_cardinality_any") should ===(true)
+      }
+    }
+
+    "not create a new resource with two labels" in {
+      storeManager ! SparqlUpdateRequest(twoLabels)
+
+      expectMsgPF(timeout) {
+        case akka.actor.Status.Failure(TriplestoreResponseException(msg: String, _)) =>
+          msg.contains(s"$CONSISTENCY_CHECK_ERROR cardinality_1_not_greater_rdfs_label") should ===(true)
+      }
+    }
+  } else {
+    s"Not running GraphDBConsistencyCheckingSpec with triplestore type ${settings.triplestoreType}" in {}
+  }
 }
 
 object GraphDBConsistencyCheckingSpec {
-    // A string that's found in all consistency check error messages from GraphDB.
-    private val CONSISTENCY_CHECK_ERROR = "Consistency check"
+  // A string that's found in all consistency check error messages from GraphDB.
+  private val CONSISTENCY_CHECK_ERROR = "Consistency check"
 
-    private val config = ConfigFactory.parseString(
-        """
+  private val config = ConfigFactory.parseString("""
          # akka.loglevel = "DEBUG"
          # akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 
-    // Tries to create a new incunabula:page with a missing incunabula:partOf link.
-    private val missingPartOf =
-        """
+  // Tries to create a new incunabula:page with a missing incunabula:partOf link.
+  private val missingPartOf =
+    """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -536,9 +545,9 @@ object GraphDBConsistencyCheckingSpec {
           |}
         """.stripMargin
 
-    // Tries to create a knora-base:Annotation with a missing knora-base:hasComment.
-    private val missingComment =
-        """
+  // Tries to create a knora-base:Annotation with a missing knora-base:hasComment.
+  private val missingComment =
+    """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -635,9 +644,9 @@ object GraphDBConsistencyCheckingSpec {
           |}
         """.stripMargin
 
-    // Tries to create an incunabula:book with two incunabula:publoc values (at most one is allowed).
-    private val tooManyPublocs =
-        """
+  // Tries to create an incunabula:book with two incunabula:publoc values (at most one is allowed).
+  private val tooManyPublocs =
+    """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -1138,9 +1147,8 @@ object GraphDBConsistencyCheckingSpec {
           |}
         """.stripMargin
 
-
-    private val tooManyLastModificationDates =
-        """
+  private val tooManyLastModificationDates =
+    """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -1347,9 +1355,8 @@ object GraphDBConsistencyCheckingSpec {
           |}
         """.stripMargin
 
-
-    private val wrongSubjectClass =
-        """
+  private val wrongSubjectClass =
+    """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -1555,9 +1562,8 @@ object GraphDBConsistencyCheckingSpec {
           |}
         """.stripMargin
 
-
-    private val wrongObjectClass =
-        """
+  private val wrongObjectClass =
+    """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -1758,9 +1764,8 @@ object GraphDBConsistencyCheckingSpec {
           |}
         """.stripMargin
 
-
-    private val resourcePropWithNoCardinality =
-        """
+  private val resourcePropWithNoCardinality =
+    """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -2026,9 +2031,8 @@ object GraphDBConsistencyCheckingSpec {
           |}
         """.stripMargin
 
-
-    private val valuePropWithNoCardinality =
-        """
+  private val valuePropWithNoCardinality =
+    """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -2239,8 +2243,8 @@ object GraphDBConsistencyCheckingSpec {
           |}
         """.stripMargin
 
-    private val wrongLinkTargetClass =
-        """
+  private val wrongLinkTargetClass =
+    """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -2343,9 +2347,8 @@ object GraphDBConsistencyCheckingSpec {
           |}
         """.stripMargin
 
-
-    private val twoLabels =
-        """
+  private val twoLabels =
+    """
           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
           |PREFIX owl: <http://www.w3.org/2002/07/owl#>

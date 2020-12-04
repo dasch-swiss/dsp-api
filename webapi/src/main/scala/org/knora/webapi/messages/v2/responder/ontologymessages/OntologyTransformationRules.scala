@@ -19,65 +19,67 @@
 
 package org.knora.webapi.messages.v2.responder.ontologymessages
 
-import org.knora.webapi.{ApiV2Complex, ApiV2Schema, ApiV2Simple}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import org.knora.webapi.{ApiV2Complex, ApiV2Schema, ApiV2Simple}
 
 /**
- * A trait for objects that provide rules for converting an ontology from the internal schema to an external schema.
- * * See also [[OntologyConstants.CorrespondingIris]].
- */
+  * A trait for objects that provide rules for converting an ontology from the internal schema to an external schema.
+  * * See also [[OntologyConstants.CorrespondingIris]].
+  */
 trait OntologyTransformationRules {
-    /**
-     * The metadata to be used for the transformed ontology.
-     */
-    val ontologyMetadata: OntologyMetadataV2
 
-    /**
-     * Properties to remove from the ontology before converting it to the target schema.
-     * See also [[OntologyConstants.CorrespondingIris]].
-     */
-    val internalPropertiesToRemove: Set[SmartIri]
+  /**
+    * The metadata to be used for the transformed ontology.
+    */
+  val ontologyMetadata: OntologyMetadataV2
 
-    /**
-     * Classes to remove from the ontology before converting it to the target schema.
-     */
-    val internalClassesToRemove: Set[SmartIri]
+  /**
+    * Properties to remove from the ontology before converting it to the target schema.
+    * See also [[OntologyConstants.CorrespondingIris]].
+    */
+  val internalPropertiesToRemove: Set[SmartIri]
 
-    /**
-     * After the ontology has been converted to the target schema, these cardinalities must be
-     * added to the specified classes.
-     */
-    val externalCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]]
+  /**
+    * Classes to remove from the ontology before converting it to the target schema.
+    */
+  val internalClassesToRemove: Set[SmartIri]
 
-    /**
-     * Classes that need to be added to the ontology after converting it to the target schema.
-     */
-    val externalClassesToAdd: Map[SmartIri, ReadClassInfoV2]
+  /**
+    * After the ontology has been converted to the target schema, these cardinalities must be
+    * added to the specified classes.
+    */
+  val externalCardinalitiesToAdd: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]]
 
-    /**
-     * Properties that need to be added to the ontology after converting it to the target schema.
-     * See also [[OntologyConstants.CorrespondingIris]].
-     */
-    val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2]
+  /**
+    * Classes that need to be added to the ontology after converting it to the target schema.
+    */
+  val externalClassesToAdd: Map[SmartIri, ReadClassInfoV2]
+
+  /**
+    * Properties that need to be added to the ontology after converting it to the target schema.
+    * See also [[OntologyConstants.CorrespondingIris]].
+    */
+  val externalPropertiesToAdd: Map[SmartIri, ReadPropertyInfoV2]
 }
 
 /**
- * Finds the appropriate [[OntologyTransformationRules]] for an ontology and a target schema.
- */
+  * Finds the appropriate [[OntologyTransformationRules]] for an ontology and a target schema.
+  */
 object OntologyTransformationRules {
-    /**
-     * Given an ontology IRI and a target ontology schema, returns the [[OntologyTransformationRules]] describing how to
-     * convert the ontology to the target schema.
-     *
-     * @param ontologyIri  the IRI of the ontology being transformed.
-     * @param targetSchema the target ontology schema.
-     * @return the appropriate [[OntologyTransformationRules]].
-     */
-    def getTransformationRules(ontologyIri: SmartIri, targetSchema: ApiV2Schema): OntologyTransformationRules = {
-        targetSchema match {
-            case ApiV2Simple => KnoraBaseToApiV2SimpleTransformationRules
-            case ApiV2Complex => KnoraBaseToApiV2ComplexTransformationRules
-        }
+
+  /**
+    * Given an ontology IRI and a target ontology schema, returns the [[OntologyTransformationRules]] describing how to
+    * convert the ontology to the target schema.
+    *
+    * @param ontologyIri  the IRI of the ontology being transformed.
+    * @param targetSchema the target ontology schema.
+    * @return the appropriate [[OntologyTransformationRules]].
+    */
+  def getTransformationRules(ontologyIri: SmartIri, targetSchema: ApiV2Schema): OntologyTransformationRules = {
+    targetSchema match {
+      case ApiV2Simple  => KnoraBaseToApiV2SimpleTransformationRules
+      case ApiV2Complex => KnoraBaseToApiV2ComplexTransformationRules
     }
+  }
 }

@@ -35,27 +35,27 @@ import scala.concurrent.{Await, ExecutionContext, Future}
   */
 object AkkaHttpUtils extends LazyLogging {
 
-    /**
-      * Given an [[HttpResponse]] containing json, return the said json.
-      *
-      * @param response the [[HttpResponse]] containing json
-      * @return an [[JsObject]]
-      */
-    def httpResponseToJson(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem): JsObject = {
+  /**
+    * Given an [[HttpResponse]] containing json, return the said json.
+    *
+    * @param response the [[HttpResponse]] containing json
+    * @return an [[JsObject]]
+    */
+  def httpResponseToJson(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem): JsObject = {
 
-        import DefaultJsonProtocol._
-        import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+    import DefaultJsonProtocol._
+    import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 
-        implicit val materializer: Materializer = Materializer.matFromSystem(system)
+    implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
-        val jsonFuture: Future[JsObject] = response match {
-            case HttpResponse(StatusCodes.OK, _, entity, _) =>
-                Unmarshal(entity).to[JsObject]
-            case other =>
-                throw new Exception(other.toString())
-        }
-
-        //FIXME: There is probably a better non blocking way of doing it.
-        Await.result(jsonFuture, Timeout(10.seconds).duration)
+    val jsonFuture: Future[JsObject] = response match {
+      case HttpResponse(StatusCodes.OK, _, entity, _) =>
+        Unmarshal(entity).to[JsObject]
+      case other =>
+        throw new Exception(other.toString())
     }
+
+    //FIXME: There is probably a better non blocking way of doing it.
+    Await.result(jsonFuture, Timeout(10.seconds).duration)
+  }
 }

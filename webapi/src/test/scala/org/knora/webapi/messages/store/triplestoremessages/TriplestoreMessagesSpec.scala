@@ -30,40 +30,39 @@ import spray.json._
   */
 class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADMJsonProtocol {
 
-    "Conversion from case class to JSON and back" should {
+  "Conversion from case class to JSON and back" should {
 
-        "work for a 'StringLiteralV2' without language tag" in {
+    "work for a 'StringLiteralV2' without language tag" in {
 
-            val string = StringLiteralV2("stringwithoutlang", None)
-            val json = string.toJson.compactPrint
+      val string = StringLiteralV2("stringwithoutlang", None)
+      val json = string.toJson.compactPrint
 
-            json should be("{\"value\":\"stringwithoutlang\"}")
+      json should be("{\"value\":\"stringwithoutlang\"}")
 
-            val converted: StringLiteralV2 = json.parseJson.convertTo[StringLiteralV2]
+      val converted: StringLiteralV2 = json.parseJson.convertTo[StringLiteralV2]
 
-            converted should be(string)
-        }
-
-
-        "work for a 'StringLiteralV2' with language tag" in {
-
-            val string = StringLiteralV2("stringwithlang", Some("de"))
-            val json = string.toJson.compactPrint
-
-            json should be("{\"value\":\"stringwithlang\",\"language\":\"de\"}")
-
-            val converted = json.parseJson.convertTo[StringLiteralV2]
-
-            converted should be(string)
-        }
+      converted should be(string)
     }
 
-    "Creating a `StringLiteralV2`" should {
-        "fail when language tag is given but value is missing" in {
-            val caught = intercept[BadRequestException](
-                StringLiteralV2("", Some("de"))
-            )
-            assert(caught.getMessage === "String value is missing.")
-        }
+    "work for a 'StringLiteralV2' with language tag" in {
+
+      val string = StringLiteralV2("stringwithlang", Some("de"))
+      val json = string.toJson.compactPrint
+
+      json should be("{\"value\":\"stringwithlang\",\"language\":\"de\"}")
+
+      val converted = json.parseJson.convertTo[StringLiteralV2]
+
+      converted should be(string)
     }
+  }
+
+  "Creating a `StringLiteralV2`" should {
+    "fail when language tag is given but value is missing" in {
+      val caught = intercept[BadRequestException](
+        StringLiteralV2("", Some("de"))
+      )
+      assert(caught.getMessage === "String value is missing.")
+    }
+  }
 }

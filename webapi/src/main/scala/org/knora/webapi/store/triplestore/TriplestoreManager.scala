@@ -36,61 +36,67 @@ import org.knora.webapi.util.ActorUtil._
 import scala.concurrent.ExecutionContext
 
 /**
- * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured
- * triple stores.
- *
- * @param appActor                    a reference to the main application actor.
- * @param settings                    the application settings.
- * @param defaultFeatureFactoryConfig the application's default feature factory configuration.
- */
+  * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured
+  * triple stores.
+  *
+  * @param appActor                    a reference to the main application actor.
+  * @param settings                    the application settings.
+  * @param defaultFeatureFactoryConfig the application's default feature factory configuration.
+  */
 class TriplestoreManager(appActor: ActorRef,
                          settings: KnoraSettingsImpl,
-                         defaultFeatureFactoryConfig: FeatureFactoryConfig) extends Actor with ActorLogging {
-    this: ActorMaker =>
+                         defaultFeatureFactoryConfig: FeatureFactoryConfig)
+    extends Actor
+    with ActorLogging {
+  this: ActorMaker =>
 
-    protected implicit val executionContext: ExecutionContext = context.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+  protected implicit val executionContext: ExecutionContext =
+    context.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    private var storeActorRef: ActorRef = _
+  private var storeActorRef: ActorRef = _
 
-    // TODO: run the fake triple store as an actor (the fake triple store will not be needed anymore, once the embedded triple store is implemented)
-    FakeTriplestore.init(settings.fakeTriplestoreDataDir)
+  // TODO: run the fake triple store as an actor (the fake triple store will not be needed anymore, once the embedded triple store is implemented)
+  FakeTriplestore.init(settings.fakeTriplestoreDataDir)
 
-    if (settings.useFakeTriplestore) {
-        FakeTriplestore.load()
-        log.info("Loaded fake triplestore")
-    } else {
-        log.debug(s"Using triplestore: ${settings.triplestoreType}")
+  if (settings.useFakeTriplestore) {
+    FakeTriplestore.load()
+    log.info("Loaded fake triplestore")
+  } else {
+    log.debug(s"Using triplestore: ${settings.triplestoreType}")
+  }
+
+  if (settings.prepareFakeTriplestore) {
+    FakeTriplestore.clear()
+    log.info("About to prepare fake triplestore")
+  }
+
+  log.debug(settings.triplestoreType)
+
+  // A RepositoryUpdater for processing requests to update the repository.
+  private val repositoryUpdater: RepositoryUpdater = new RepositoryUpdater(
+    system = context.system,
+    appActor = appActor,
+    settings = settings,
+    featureFactoryConfig = defaultFeatureFactoryConfig
+  )
+
+  override def preStart() {
+    log.debug("TriplestoreManagerActor: start with preStart")
+
+    storeActorRef = settings.triplestoreType match {
+      case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree | TriplestoreTypes.HttpFuseki =>
+        makeActor(
+          FromConfig.props(Props[HttpTriplestoreConnector]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+          name = HttpTriplestoreActorName)
+      case TriplestoreTypes.EmbeddedJenaTdb => makeActor(Props[JenaTDBActor], name = EmbeddedJenaActorName)
+      case unknownType                      => throw UnsupportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
     }
 
-    if (settings.prepareFakeTriplestore) {
-        FakeTriplestore.clear()
-        log.info("About to prepare fake triplestore")
-    }
+    log.debug("TriplestoreManagerActor: finished with preStart")
+  }
 
-    log.debug(settings.triplestoreType)
-
-    // A RepositoryUpdater for processing requests to update the repository.
-    private val repositoryUpdater: RepositoryUpdater = new RepositoryUpdater(
-        system = context.system,
-        appActor = appActor,
-        settings = settings,
-        featureFactoryConfig = defaultFeatureFactoryConfig
-    )
-
-    override def preStart() {
-        log.debug("TriplestoreManagerActor: start with preStart")
-
-        storeActorRef = settings.triplestoreType match {
-            case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree | TriplestoreTypes.HttpFuseki => makeActor(FromConfig.props(Props[HttpTriplestoreConnector]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), name = HttpTriplestoreActorName)
-            case TriplestoreTypes.EmbeddedJenaTdb => makeActor(Props[JenaTDBActor], name = EmbeddedJenaActorName)
-            case unknownType => throw UnsupportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
-        }
-
-        log.debug("TriplestoreManagerActor: finished with preStart")
-    }
-
-    def receive: Receive = LoggingReceive {
-        case UpdateRepositoryRequest() => future2Message(sender(), repositoryUpdater.maybeUpdateRepository, log)
-        case other => storeActorRef.forward(other)
-    }
+  def receive: Receive = LoggingReceive {
+    case UpdateRepositoryRequest() => future2Message(sender(), repositoryUpdater.maybeUpdateRepository, log)
+    case other                     => storeActorRef.forward(other)
+  }
 }

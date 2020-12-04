@@ -36,10 +36,21 @@ case class GraphDBRepository(externalUrl: String,
                              typeOf: String,
                              unsupported: Boolean,
                              uri: String,
-                             writable: Boolean
-                            ) extends GraphDBAPI
+                             writable: Boolean)
+    extends GraphDBAPI
 
 object GraphDBJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-    // 'typeOf' in the case class is 'type' in json
-    implicit val graphDBRepositoryFormat: RootJsonFormat[GraphDBRepository] = jsonFormat(GraphDBRepository, "externalUrl", "id", "local", "location", "readable", "sesameType", "title", "type", "unsupported", "uri", "writable")
+  // 'typeOf' in the case class is 'type' in json
+  implicit val graphDBRepositoryFormat: RootJsonFormat[GraphDBRepository] = jsonFormat(GraphDBRepository,
+                                                                                       "externalUrl",
+                                                                                       "id",
+                                                                                       "local",
+                                                                                       "location",
+                                                                                       "readable",
+                                                                                       "sesameType",
+                                                                                       "title",
+                                                                                       "type",
+                                                                                       "unsupported",
+                                                                                       "uri",
+                                                                                       "writable")
 }

@@ -33,47 +33,49 @@ import scala.concurrent.duration.FiniteDuration
   * A fake Knora service that Sipi can use to get file permissions.
   */
 trait KnoraFakeCore {
-    this: Core =>
+  this: Core =>
 
-    // need to create an actor to conform to Core but never send AppStart()
-    override val appActor: ActorRef = system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
+  // need to create an actor to conform to Core but never send AppStart()
+  override val appActor: ActorRef =
+    system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
-    /**
-      * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
-      */
-    implicit private val timeout: FiniteDuration = settings.defaultTimeout
+  /**
+    * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
+    */
+  implicit private val timeout: FiniteDuration = settings.defaultTimeout
 
-    /**
-      * Faked `webapi` routes
-      */
-    private val apiRoutes = {
-        path("admin" / "files" / Segments(2)) { projectIDAndFile =>
-            get {
-                complete(
-                    """
+  /**
+    * Faked `webapi` routes
+    */
+  private val apiRoutes = {
+    path("admin" / "files" / Segments(2)) { projectIDAndFile =>
+      get {
+        complete(
+          """
                     {
                         "permissionCode": 2,
                         "status": 0
                     }
                     """
-                )
-            }
-        }
+        )
+      }
     }
+  }
 
-    /**
-      * Starts the Faked Knora API server.
-      */
-    def startService(): Unit = {
-        Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
-        println(s"Faked Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}.")
-    }
+  /**
+    * Starts the Faked Knora API server.
+    */
+  def startService(): Unit = {
+    Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
+    println(
+      s"Faked Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}.")
+  }
 
-    /**
-      * Stops Knora.
-      */
-    def stopService(): Unit = {
-        system.terminate()
-    }
+  /**
+    * Stops Knora.
+    */
+  def stopService(): Unit = {
+    system.terminate()
+  }
 
 }

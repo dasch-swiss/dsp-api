@@ -28,11 +28,11 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import scala.concurrent.duration._
 
 /**
-  * Simulation Scenario for testing the groups endpoints.
-  *
-  * This simulation scenario accesses the groups endpoint with
-  * 1000 users concurrently.
-  */
+ * Simulation Scenario for testing the groups endpoints.
+ *
+ * This simulation scenario accesses the groups endpoint with
+ * 1000 users concurrently.
+ */
 class GroupsADME2ESimSpec extends E2ESimSpec {
 
     override lazy val rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]
@@ -61,4 +61,4 @@ class GroupsADME2ESimSpec extends E2ESimSpec {
 }
 
 
-*/
+ */

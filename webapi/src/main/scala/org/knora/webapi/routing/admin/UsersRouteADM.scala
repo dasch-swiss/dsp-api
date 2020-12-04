@@ -35,702 +35,751 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 
 import scala.concurrent.Future
 
-
 object UsersRouteADM {
-    val UsersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
+  val UsersBasePath: PathMatcher[Unit] = PathMatcher("admin" / "users")
 }
 
 /**
- * Provides an akka-http-routing function for API routes that deal with users.
- */
+  * Provides an akka-http-routing function for API routes that deal with users.
+  */
 @Api(value = "users", produces = "application/json")
 @Path("/admin/users")
 class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    import UsersRouteADM._
+  import UsersRouteADM._
 
-    /**
-     * Returns the route.
-     */
-    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-        getUsers(featureFactoryConfig) ~
-            addUser(featureFactoryConfig) ~
-            getUserByIri(featureFactoryConfig) ~
-            getUserByEmail(featureFactoryConfig) ~
-            getUserByUsername(featureFactoryConfig) ~
-            changeUserBasicInformation(featureFactoryConfig) ~
-            changeUserPassword(featureFactoryConfig) ~
-            changeUserStatus(featureFactoryConfig) ~
-            deleteUser(featureFactoryConfig) ~
-            changeUserSytemAdminMembership(featureFactoryConfig) ~
-            getUsersProjectMemberships(featureFactoryConfig) ~
-            addUserToProjectMembership(featureFactoryConfig) ~
-            removeUserFromProjectMembership(featureFactoryConfig) ~
-            getUsersProjectAdminMemberships(featureFactoryConfig) ~
-            addUserToProjectAdminMembership(featureFactoryConfig) ~
-            removeUserFromProjectAdminMembership(featureFactoryConfig) ~
-            getUsersGroupMemberships(featureFactoryConfig) ~
-            addUserToGroupMembership(featureFactoryConfig) ~
-            removeUserFromGroupMembership(featureFactoryConfig)
-
-
-    @ApiOperation(value = "Get users", nickname = "getUsers", httpMethod = "GET", response = classOf[UsersGetResponseADM])
-    @ApiResponses(Array(
-        new ApiResponse(code = 500, message = "Internal server error")
+  /**
+    * Returns the route.
+    */
+  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+    getUsers(featureFactoryConfig) ~
+      addUser(featureFactoryConfig) ~
+      getUserByIri(featureFactoryConfig) ~
+      getUserByEmail(featureFactoryConfig) ~
+      getUserByUsername(featureFactoryConfig) ~
+      changeUserBasicInformation(featureFactoryConfig) ~
+      changeUserPassword(featureFactoryConfig) ~
+      changeUserStatus(featureFactoryConfig) ~
+      deleteUser(featureFactoryConfig) ~
+      changeUserSytemAdminMembership(featureFactoryConfig) ~
+      getUsersProjectMemberships(featureFactoryConfig) ~
+      addUserToProjectMembership(featureFactoryConfig) ~
+      removeUserFromProjectMembership(featureFactoryConfig) ~
+      getUsersProjectAdminMemberships(featureFactoryConfig) ~
+      addUserToProjectAdminMembership(featureFactoryConfig) ~
+      removeUserFromProjectAdminMembership(featureFactoryConfig) ~
+      getUsersGroupMemberships(featureFactoryConfig) ~
+      addUserToGroupMembership(featureFactoryConfig) ~
+      removeUserFromGroupMembership(featureFactoryConfig)
+  @ApiOperation(value = "Get users", nickname = "getUsers", httpMethod = "GET", response = classOf[UsersGetResponseADM])
+  @ApiResponses(
+    Array(
+      new ApiResponse(code = 500, message = "Internal server error")
     ))
-    /* return all users */
-    def getUsers(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath) {
-        get {
-            requestContext =>
-                val requestMessage: Future[UsersGetRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield UsersGetRequestADM(
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser
-                )
+  /* return all users */
+  def getUsers(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath) {
+    get { requestContext =>
+      val requestMessage: Future[UsersGetRequestADM] = for {
+        requestingUser <- getUserADM(
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig
+        )
+      } yield
+        UsersGetRequestADM(
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
+        )
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
-        }
+      RouteUtilADM.runJsonRoute(
+        requestMessageF = requestMessage,
+        requestContext = requestContext,
+        featureFactoryConfig = featureFactoryConfig,
+        settings = settings,
+        responderManager = responderManager,
+        log = log
+      )
     }
+  }
 
-    @ApiOperation(value = "Add new user", nickname = "addUser", httpMethod = "POST", response = classOf[UserOperationResponseADM])
-    @ApiImplicitParams(Array(
-        new ApiImplicitParam(name = "body", value = "\"user\" to create", required = true,
-            dataTypeClass = classOf[CreateUserApiRequestADM], paramType = "body")
+  @ApiOperation(value = "Add new user",
+                nickname = "addUser",
+                httpMethod = "POST",
+                response = classOf[UserOperationResponseADM])
+  @ApiImplicitParams(
+    Array(
+      new ApiImplicitParam(name = "body",
+                           value = "\"user\" to create",
+                           required = true,
+                           dataTypeClass = classOf[CreateUserApiRequestADM],
+                           paramType = "body")
     ))
-    @ApiResponses(Array(
-        new ApiResponse(code = 500, message = "Internal server error")
+  @ApiResponses(
+    Array(
+      new ApiResponse(code = 500, message = "Internal server error")
     ))
-    /* create a new user */
-    def addUser(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath) {
-        post {
-            entity(as[CreateUserApiRequestADM]) { apiRequest =>
-                requestContext =>
-                    val requestMessage: Future[UserCreateRequestADM] = for {
-                        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                        )
-                    } yield UserCreateRequestADM(
-                        createRequest = apiRequest,
-                        featureFactoryConfig = featureFactoryConfig,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
+  /* create a new user */
+  def addUser(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath) {
+    post {
+      entity(as[CreateUserApiRequestADM]) { apiRequest => requestContext =>
+        val requestMessage: Future[UserCreateRequestADM] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          UserCreateRequestADM(
+            createRequest = apiRequest,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
-                    RouteUtilADM.runJsonRoute(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log
-                    )
-            }
-        }
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
+    }
+  }
+
+  /**
+    * return a single user identified by iri
+    */
+  private def getUserByIri(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment) {
+    value =>
+      get { requestContext =>
+        val requestMessage: Future[UserGetRequestADM] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          UserGetRequestADM(
+            identifier = UserIdentifierADM(maybeIri = Some(value)),
+            userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
+
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
+  }
+
+  /**
+    * return a single user identified by email
+    */
+  private def getUserByEmail(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "email" / Segment) { value =>
+      get { requestContext =>
+        val requestMessage: Future[UserGetRequestADM] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          UserGetRequestADM(
+            identifier = UserIdentifierADM(maybeEmail = Some(value)),
+            userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
+
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
     }
 
-    /**
-     * return a single user identified by iri
-     */
-    private def getUserByIri(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment) { value =>
-        get {
-            requestContext =>
-                val requestMessage: Future[UserGetRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield UserGetRequestADM(
-                    identifier = UserIdentifierADM(maybeIri = Some(value)),
-                    userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser
-                )
+  /**
+    * return a single user identified by username
+    */
+  private def getUserByUsername(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "username" / Segment) { value =>
+      get { requestContext =>
+        val requestMessage: Future[UserGetRequestADM] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          UserGetRequestADM(
+            identifier = UserIdentifierADM(maybeUsername = Some(value)),
+            userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
-        }
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
     }
 
-    /**
-     * return a single user identified by email
-     */
-    private def getUserByEmail(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "email" / Segment) { value =>
-        get {
-            requestContext =>
-                val requestMessage: Future[UserGetRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield UserGetRequestADM(
-                    identifier = UserIdentifierADM(maybeEmail = Some(value)),
-                    userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser
-                )
+  /**
+    * API MAY CHANGE: Change existing user's basic information.
+    */
+  @ApiMayChange
+  private def changeUserBasicInformation(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "iri" / Segment / "BasicUserInformation") { value =>
+      put {
+        entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
+          val userIri =
+            stringFormatter.validateAndEscapeUserIri(value, throw BadRequestException(s"Invalid user IRI $value"))
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
+          if (userIri.equals(KnoraSystemInstances.Users.SystemUser.id) || userIri.equals(
+                KnoraSystemInstances.Users.AnonymousUser.id)) {
+            throw BadRequestException("Changes to built-in users are not allowed.")
+          }
+
+          /* the api request is already checked at time of creation. see case class. */
+
+          val requestMessage: Future[UsersResponderRequestADM] = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield
+            UserChangeBasicUserInformationRequestADM(
+              userIri = userIri,
+              changeUserRequest = apiRequest,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser,
+              apiRequestID = UUID.randomUUID()
+            )
+
+          RouteUtilADM.runJsonRoute(
+            requestMessageF = requestMessage,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log
+          )
         }
+      }
     }
 
-    /**
-     * return a single user identified by username
-     */
-    private def getUserByUsername(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "username" / Segment) { value =>
-        get {
-            requestContext =>
-                val requestMessage: Future[UserGetRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield UserGetRequestADM(
-                    identifier = UserIdentifierADM(maybeUsername = Some(value)),
-                    userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser
-                )
+  /**
+    * API MAY CHANGE: Change user's password.
+    */
+  @ApiMayChange
+  private def changeUserPassword(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "iri" / Segment / "Password") { value =>
+      put {
+        entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
+          val userIri =
+            stringFormatter.validateAndEscapeUserIri(value, throw BadRequestException(s"Invalid user IRI $value"))
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
+          if (userIri.equals(KnoraSystemInstances.Users.SystemUser.id) || userIri.equals(
+                KnoraSystemInstances.Users.AnonymousUser.id)) {
+            throw BadRequestException("Changes to built-in users are not allowed.")
+          }
+
+          /* the api request is already checked at time of creation. see case class. */
+
+          val requestMessage: Future[UsersResponderRequestADM] = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield
+            UserChangePasswordRequestADM(
+              userIri = userIri,
+              changeUserRequest = apiRequest,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser,
+              apiRequestID = UUID.randomUUID()
+            )
+
+          RouteUtilADM.runJsonRoute(
+            requestMessageF = requestMessage,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log
+          )
         }
+      }
     }
 
-    /**
-     * API MAY CHANGE: Change existing user's basic information.
-     */
-    @ApiMayChange
-    private def changeUserBasicInformation(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "BasicUserInformation") { value =>
-        put {
-            entity(as[ChangeUserApiRequestADM]) { apiRequest =>
-                requestContext =>
+  /**
+    * API MAY CHANGE: Change user's status.
+    */
+  @ApiMayChange
+  private def changeUserStatus(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "iri" / Segment / "Status") { value =>
+      put {
+        entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
+          val userIri =
+            stringFormatter.validateAndEscapeUserIri(value, throw BadRequestException(s"Invalid user IRI $value"))
 
-                    val userIri = stringFormatter.validateAndEscapeUserIri(value, throw BadRequestException(s"Invalid user IRI $value"))
+          if (userIri.equals(KnoraSystemInstances.Users.SystemUser.id) || userIri.equals(
+                KnoraSystemInstances.Users.AnonymousUser.id)) {
+            throw BadRequestException("Changes to built-in users are not allowed.")
+          }
 
-                    if (userIri.equals(KnoraSystemInstances.Users.SystemUser.id) || userIri.equals(KnoraSystemInstances.Users.AnonymousUser.id)) {
-                        throw BadRequestException("Changes to built-in users are not allowed.")
-                    }
+          /* the api request is already checked at time of creation. see case class. */
 
-                    /* the api request is already checked at time of creation. see case class. */
+          val requestMessage: Future[UsersResponderRequestADM] = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield
+            UserChangeStatusRequestADM(
+              userIri = userIri,
+              changeUserRequest = apiRequest,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser,
+              apiRequestID = UUID.randomUUID()
+            )
 
-                    val requestMessage: Future[UsersResponderRequestADM] = for {
-                        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                        )
-                    } yield UserChangeBasicUserInformationRequestADM(
-                        userIri = userIri,
-                        changeUserRequest = apiRequest,
-                        featureFactoryConfig = featureFactoryConfig,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log
-                    )
-            }
+          RouteUtilADM.runJsonRoute(
+            requestMessageF = requestMessage,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log
+          )
         }
+      }
     }
 
-    /**
-     * API MAY CHANGE: Change user's password.
-     */
-    @ApiMayChange
-    private def changeUserPassword(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "Password") { value =>
-        put {
-            entity(as[ChangeUserApiRequestADM]) { apiRequest =>
-                requestContext =>
+  /**
+    * API MAY CHANGE: delete a user identified by iri (change status to false).
+    */
+  @ApiMayChange
+  private def deleteUser(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment) {
+    value =>
+      delete { requestContext =>
+        {
+          val userIri =
+            stringFormatter.validateAndEscapeUserIri(value, throw BadRequestException(s"Invalid user IRI $value"))
 
-                    val userIri = stringFormatter.validateAndEscapeUserIri(value, throw BadRequestException(s"Invalid user IRI $value"))
+          if (userIri.equals(KnoraSystemInstances.Users.SystemUser.id) || userIri.equals(
+                KnoraSystemInstances.Users.AnonymousUser.id)) {
+            throw BadRequestException("Changes to built-in users are not allowed.")
+          }
 
-                    if (userIri.equals(KnoraSystemInstances.Users.SystemUser.id) || userIri.equals(KnoraSystemInstances.Users.AnonymousUser.id)) {
-                        throw BadRequestException("Changes to built-in users are not allowed.")
-                    }
+          /* update existing user's status to false */
+          val requestMessage: Future[UserChangeStatusRequestADM] = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield
+            UserChangeStatusRequestADM(
+              userIri = userIri,
+              changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser,
+              apiRequestID = UUID.randomUUID()
+            )
 
-                    /* the api request is already checked at time of creation. see case class. */
-
-                    val requestMessage: Future[UsersResponderRequestADM] = for {
-                        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                        )
-                    } yield UserChangePasswordRequestADM(
-                        userIri = userIri,
-                        changeUserRequest = apiRequest,
-                        featureFactoryConfig = featureFactoryConfig,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log
-                    )
-            }
+          RouteUtilADM.runJsonRoute(
+            requestMessageF = requestMessage,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log
+          )
         }
+      }
+  }
+
+  /**
+    * API MAY CHANGE: Change user's SystemAdmin membership.
+    */
+  @ApiMayChange
+  private def changeUserSytemAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "iri" / Segment / "SystemAdmin") { value =>
+      put {
+        entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
+          val userIri =
+            stringFormatter.validateAndEscapeUserIri(value, throw BadRequestException(s"Invalid user IRI $value"))
+
+          if (userIri.equals(KnoraSystemInstances.Users.SystemUser.id) || userIri.equals(
+                KnoraSystemInstances.Users.AnonymousUser.id)) {
+            throw BadRequestException("Changes to built-in users are not allowed.")
+          }
+
+          /* the api request is already checked at time of creation. see case class. */
+
+          val requestMessage: Future[UsersResponderRequestADM] = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield
+            UserChangeSystemAdminMembershipStatusRequestADM(
+              userIri = userIri,
+              changeUserRequest = apiRequest,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser,
+              apiRequestID = UUID.randomUUID()
+            )
+
+          RouteUtilADM.runJsonRoute(
+            requestMessageF = requestMessage,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log
+          )
+        }
+      }
     }
 
-    /**
-     * API MAY CHANGE: Change user's status.
-     */
-    @ApiMayChange
-    private def changeUserStatus(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "Status") { value =>
-        put {
-            entity(as[ChangeUserApiRequestADM]) { apiRequest =>
-                requestContext =>
+  /**
+    * API MAY CHANGE: get user's project memberships
+    */
+  @ApiMayChange
+  private def getUsersProjectMemberships(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "iri" / Segment / "project-memberships") { userIri =>
+      get { requestContext =>
+        val checkedUserIri =
+          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
-                    val userIri = stringFormatter.validateAndEscapeUserIri(value, throw BadRequestException(s"Invalid user IRI $value"))
+        val requestMessage: Future[UserProjectMembershipsGetRequestADM] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          UserProjectMembershipsGetRequestADM(
+            userIri = checkedUserIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
 
-                    if (userIri.equals(KnoraSystemInstances.Users.SystemUser.id) || userIri.equals(KnoraSystemInstances.Users.AnonymousUser.id)) {
-                        throw BadRequestException("Changes to built-in users are not allowed.")
-                    }
-
-                    /* the api request is already checked at time of creation. see case class. */
-
-                    val requestMessage: Future[UsersResponderRequestADM] = for {
-                        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                        )
-                    } yield UserChangeStatusRequestADM(
-                        userIri = userIri,
-                        changeUserRequest = apiRequest,
-                        featureFactoryConfig = featureFactoryConfig,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log
-                    )
-            }
-        }
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
     }
 
-    /**
-     * API MAY CHANGE: delete a user identified by iri (change status to false).
-     */
-    @ApiMayChange
-    private def deleteUser(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment) { value =>
-        delete {
-            requestContext => {
-                val userIri = stringFormatter.validateAndEscapeUserIri(value, throw BadRequestException(s"Invalid user IRI $value"))
+  /**
+    * API MAY CHANGE: add user to project
+    */
+  @ApiMayChange
+  private def addUserToProjectMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
+      post { requestContext =>
+        val checkedUserIri =
+          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+        val checkedProjectIri =
+          stringFormatter.validateAndEscapeProjectIri(projectIri,
+                                                      throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                if (userIri.equals(KnoraSystemInstances.Users.SystemUser.id) || userIri.equals(KnoraSystemInstances.Users.AnonymousUser.id)) {
-                    throw BadRequestException("Changes to built-in users are not allowed.")
-                }
+        val requestMessage: Future[UserProjectMembershipAddRequestADM] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          UserProjectMembershipAddRequestADM(
+            userIri = checkedUserIri,
+            projectIri = checkedProjectIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
-                /* update existing user's status to false */
-                val requestMessage: Future[UserChangeStatusRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield UserChangeStatusRequestADM(
-                    userIri = userIri,
-                    changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID()
-                )
-
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
-            }
-        }
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
     }
 
-    /**
-     * API MAY CHANGE: Change user's SystemAdmin membership.
-     */
-    @ApiMayChange
-    private def changeUserSytemAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "SystemAdmin") { value =>
-        put {
-            entity(as[ChangeUserApiRequestADM]) { apiRequest =>
-                requestContext =>
+  /**
+    * API MAY CHANGE: remove user from project (and all groups belonging to this project)
+    */
+  @ApiMayChange
+  private def removeUserFromProjectMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
+      delete { requestContext =>
+        val checkedUserIri =
+          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+        val checkedProjectIri =
+          stringFormatter.validateAndEscapeProjectIri(projectIri,
+                                                      throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                    val userIri = stringFormatter.validateAndEscapeUserIri(value, throw BadRequestException(s"Invalid user IRI $value"))
+        val requestMessage: Future[UserProjectMembershipRemoveRequestADM] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          UserProjectMembershipRemoveRequestADM(
+            userIri = checkedUserIri,
+            projectIri = checkedProjectIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
-                    if (userIri.equals(KnoraSystemInstances.Users.SystemUser.id) || userIri.equals(KnoraSystemInstances.Users.AnonymousUser.id)) {
-                        throw BadRequestException("Changes to built-in users are not allowed.")
-                    }
-
-                    /* the api request is already checked at time of creation. see case class. */
-
-                    val requestMessage: Future[UsersResponderRequestADM] = for {
-                        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                        )
-                    } yield UserChangeSystemAdminMembershipStatusRequestADM(
-                        userIri = userIri,
-                        changeUserRequest = apiRequest,
-                        featureFactoryConfig = featureFactoryConfig,
-                        requestingUser = requestingUser,
-                        apiRequestID = UUID.randomUUID()
-                    )
-
-                    RouteUtilADM.runJsonRoute(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log
-                    )
-            }
-        }
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
     }
 
-    /**
-     * API MAY CHANGE: get user's project memberships
-     */
-    @ApiMayChange
-    private def getUsersProjectMemberships(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "project-memberships") { userIri =>
-        get {
-            requestContext =>
-                val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+  /**
+    * API MAY CHANGE: get user's project admin memberships
+    */
+  @ApiMayChange
+  private def getUsersProjectAdminMemberships(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
+      get { requestContext =>
+        val checkedUserIri =
+          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
-                val requestMessage: Future[UserProjectMembershipsGetRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield UserProjectMembershipsGetRequestADM(
-                    userIri = checkedUserIri,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser
-                )
+        val requestMessage: Future[UserProjectAdminMembershipsGetRequestADM] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          UserProjectAdminMembershipsGetRequestADM(
+            userIri = checkedUserIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
-        }
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
     }
 
-    /**
-     * API MAY CHANGE: add user to project
-     */
-    @ApiMayChange
-    private def addUserToProjectMembership(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
-        post {
-            requestContext =>
-                val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-                val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  /**
+    * API MAY CHANGE: add user to project admin
+    */
+  @ApiMayChange
+  private def addUserToProjectAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
+      post {
+        /*  */
+        requestContext =>
+          val checkedUserIri =
+            stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+          val checkedProjectIri =
+            stringFormatter.validateAndEscapeProjectIri(projectIri,
+                                                        throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-                val requestMessage: Future[UserProjectMembershipAddRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield UserProjectMembershipAddRequestADM(
-                    userIri = checkedUserIri,
-                    projectIri = checkedProjectIri,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID()
-                )
+          val requestMessage: Future[UserProjectAdminMembershipAddRequestADM] = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield
+            UserProjectAdminMembershipAddRequestADM(
+              userIri = checkedUserIri,
+              projectIri = checkedProjectIri,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser,
+              apiRequestID = UUID.randomUUID()
+            )
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
-        }
+          RouteUtilADM.runJsonRoute(
+            requestMessageF = requestMessage,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log
+          )
+      }
     }
 
-    /**
-     * API MAY CHANGE: remove user from project (and all groups belonging to this project)
-     */
-    @ApiMayChange
-    private def removeUserFromProjectMembership(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "project-memberships" / Segment) { (userIri, projectIri) =>
+  /**
+    * API MAY CHANGE: remove user from project admin membership
+    */
+  @ApiMayChange
+  private def removeUserFromProjectAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
+      delete { requestContext =>
+        val checkedUserIri =
+          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+        val checkedProjectIri =
+          stringFormatter.validateAndEscapeProjectIri(projectIri,
+                                                      throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-        delete {
-            requestContext =>
-                val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-                val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+        val requestMessage: Future[UserProjectAdminMembershipRemoveRequestADM] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          UserProjectAdminMembershipRemoveRequestADM(
+            userIri = checkedUserIri,
+            projectIri = checkedProjectIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
-                val requestMessage: Future[UserProjectMembershipRemoveRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield UserProjectMembershipRemoveRequestADM(
-                    userIri = checkedUserIri,
-                    projectIri = checkedProjectIri,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID()
-                )
-
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
-        }
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
     }
 
-    /**
-     * API MAY CHANGE: get user's project admin memberships
-     */
-    @ApiMayChange
-    private def getUsersProjectAdminMemberships(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships") { userIri =>
-        get {
-            requestContext =>
-                val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+  /**
+    * API MAY CHANGE: get user's group memberships
+    */
+  @ApiMayChange
+  private def getUsersGroupMemberships(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "iri" / Segment / "group-memberships") { userIri =>
+      get { requestContext =>
+        val checkedUserIri =
+          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
 
-                val requestMessage: Future[UserProjectAdminMembershipsGetRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield UserProjectAdminMembershipsGetRequestADM(
-                    userIri = checkedUserIri,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID()
-                )
+        val requestMessage: Future[UserGroupMembershipsGetRequestADM] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          UserGroupMembershipsGetRequestADM(
+            userIri = checkedUserIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
-        }
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
     }
 
-    /**
-     * API MAY CHANGE: add user to project admin
-     */
-    @ApiMayChange
-    private def addUserToProjectAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
-        post {
-            /*  */
-            requestContext =>
-                val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-                val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  /**
+    * API MAY CHANGE: add user to group
+    */
+  @ApiMayChange
+  private def addUserToGroupMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
+      post { requestContext =>
+        val checkedUserIri =
+          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+        val checkedGroupIri =
+          stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid group IRI $groupIri"))
 
-                val requestMessage: Future[UserProjectAdminMembershipAddRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield UserProjectAdminMembershipAddRequestADM(
-                    userIri = checkedUserIri,
-                    projectIri = checkedProjectIri,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID()
-                )
+        val requestMessage: Future[UserGroupMembershipAddRequestADM] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          UserGroupMembershipAddRequestADM(
+            userIri = checkedUserIri,
+            groupIri = checkedGroupIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
-        }
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
     }
 
-    /**
-     * API MAY CHANGE: remove user from project admin membership
-     */
-    @ApiMayChange
-    private def removeUserFromProjectAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
-        delete {
-            requestContext =>
-                val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-                val checkedProjectIri = stringFormatter.validateAndEscapeProjectIri(projectIri, throw BadRequestException(s"Invalid project IRI $projectIri"))
+  /**
+    * API MAY CHANGE: remove user from group
+    */
+  @ApiMayChange
+  private def removeUserFromGroupMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
+      delete { requestContext =>
+        val checkedUserIri =
+          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+        val checkedGroupIri =
+          stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid group IRI $groupIri"))
 
-                val requestMessage: Future[UserProjectAdminMembershipRemoveRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield UserProjectAdminMembershipRemoveRequestADM(
-                    userIri = checkedUserIri,
-                    projectIri = checkedProjectIri,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID()
-                )
+        val requestMessage: Future[UserGroupMembershipRemoveRequestADM] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          UserGroupMembershipRemoveRequestADM(
+            userIri = checkedUserIri,
+            groupIri = checkedGroupIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
-        }
-    }
-
-    /**
-     * API MAY CHANGE: get user's group memberships
-     */
-    @ApiMayChange
-    private def getUsersGroupMemberships(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "group-memberships") { userIri =>
-        get {
-            requestContext =>
-                val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-
-                val requestMessage: Future[UserGroupMembershipsGetRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield UserGroupMembershipsGetRequestADM(
-                    userIri = checkedUserIri,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser
-                )
-
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
-        }
-    }
-
-    /**
-     * API MAY CHANGE: add user to group
-     */
-    @ApiMayChange
-    private def addUserToGroupMembership(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
-        post {
-            requestContext =>
-                val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-                val checkedGroupIri = stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid group IRI $groupIri"))
-
-                val requestMessage: Future[UserGroupMembershipAddRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield UserGroupMembershipAddRequestADM(
-                    userIri = checkedUserIri,
-                    groupIri = checkedGroupIri,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID()
-                )
-
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
-        }
-    }
-
-    /**
-     * API MAY CHANGE: remove user from group
-     */
-    @ApiMayChange
-    private def removeUserFromGroupMembership(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath / "iri" / Segment / "group-memberships" / Segment) { (userIri, groupIri) =>
-        delete {
-            requestContext =>
-                val checkedUserIri = stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-                val checkedGroupIri = stringFormatter.validateAndEscapeIri(groupIri, throw BadRequestException(s"Invalid group IRI $groupIri"))
-
-                val requestMessage: Future[UserGroupMembershipRemoveRequestADM] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield UserGroupMembershipRemoveRequestADM(
-                    userIri = checkedUserIri,
-                    groupIri = checkedGroupIri,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID()
-                )
-
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
-        }
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
     }
 }

@@ -23,6 +23,6 @@ import org.knora.webapi.feature.{FeatureToggle, ToggleStateOff}
 import org.knora.webapi.util.rdf.RdfFormatUtilSpec
 
 /**
- * Tests [[org.knora.webapi.messages.util.rdf.rdf4jimpl.RDF4JFormatUtil]].
- */
+  * Tests [[org.knora.webapi.messages.util.rdf.rdf4jimpl.RDF4JFormatUtil]].
+  */
 class RDF4JFormatUtilSpec extends RdfFormatUtilSpec(FeatureToggle("jena-rdf-library", ToggleStateOff))

@@ -20,5 +20,6 @@
 package org.knora.webapi
 
 package object exceptions {
-    def deserializationError(msg: String, cause: Throwable = null, fieldNames: List[String] = Nil) = throw InvalidJsonLDException(msg, cause)
+  def deserializationError(msg: String, cause: Throwable = null, fieldNames: List[String] = Nil) =
+    throw InvalidJsonLDException(msg, cause)
 }
