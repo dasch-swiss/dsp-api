@@ -484,6 +484,44 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           )
         )
       }
+
+      "change the resource class of a default object access permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
+        val updateResourceClass =
+          s"""{
+             |   "forResourceClass":"$resourceClassIri"
+             |}""".stripMargin
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-default-object-access-permission-resourceClass-request",
+              fileExtension = "json"
+            ),
+            text = updateResourceClass
+          )
+        )
+        val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/resourceClass", HttpEntity(ContentTypes.`application/json`, updateResourceClass)) ~> addCredentials(BasicHttpCredentials(
+          SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.OK)
+        val result = AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
+        val forResourceClassIRI = result.getOrElse("forResourceClass", throw DeserializationException("The expected field 'forResourceClass' is missing.")).convertTo[String]
+        assert(forResourceClassIRI == resourceClassIri)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-default-object-access-permission-resourceClass-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
     }
   }
 }

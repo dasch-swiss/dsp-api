@@ -46,8 +46,9 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData) extends KnoraRoute(rou
    * Returns the route.
    */
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-      updatePermissionGroup(featureFactoryConfig) ~
-        updatePermissionHasPermissions(featureFactoryConfig)
+    updatePermissionGroup(featureFactoryConfig) ~
+      updatePermissionHasPermissions(featureFactoryConfig) ~
+      updatePermissionResourceClass(featureFactoryConfig)
 
   /**
    * Update a permission's group
@@ -101,6 +102,40 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData) extends KnoraRoute(rou
           } yield PermissionChangeHasPermissionsRequestADM(
             permissionIri = permissionIri,
             changePermissionHasPermissionsRequest = apiRequest,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
+
+          RouteUtilADM.runJsonRoute(
+            requestMessageF = requestMessage,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log
+          )
+      }
+    }
+  }
+
+  /**
+   * Update a doap permission's resource class
+   */
+  private def updatePermissionResourceClass(featureFactoryConfig: FeatureFactoryConfig): Route = path(PermissionsBasePath / Segment / "resourceClass") { iri =>
+    put {
+      /* create a new administrative permission */
+      entity(as[ChangePermissionResourceClassApiRequestADM]) { apiRequest =>
+        requestContext =>
+          val permissionIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
+
+          val requestMessage = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield PermissionChangeResourceClassRequestADM(
+            permissionIri = permissionIri,
+            changePermissionResourceClassRequest = apiRequest,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
