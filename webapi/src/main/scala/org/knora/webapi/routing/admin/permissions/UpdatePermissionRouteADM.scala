@@ -67,7 +67,6 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData) extends KnoraRoute(rou
           } yield PermissionChangeGroupRequestADM(
             permissionIri = permissionIri,
             changePermissionGroupRequest = apiRequest,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )
@@ -102,7 +101,6 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData) extends KnoraRoute(rou
           } yield PermissionChangeHasPermissionsRequestADM(
             permissionIri = permissionIri,
             changePermissionHasPermissionsRequest = apiRequest,
-            featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
           )

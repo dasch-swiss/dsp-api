@@ -21,19 +21,21 @@
 @import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 @**
- * Updates an existing permission's set of hasPermissions.
+ * Updates an existing permission's properties.
  *
  * @param namedGraphIri     the named graph to update.
  * @param triplestore       the name of the triplestore being used. The template uses this value to exclude
                             inferred results from the WHERE clause of the update.
  * @param permissionIri     the IRI of the permission we want to update.
+ * @param newGroup          the IRI of the new group.
  * @param hasPermissions    the new set of permission values as string.
  *@
 
 @(namedGraphIri: IRI,
   triplestore: String,
   permissionIri: IRI,
-  hasPermissions: String
+  newGroup: Option[IRI],
+  hasPermissions: Option[String]
   )
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -44,10 +46,21 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 WITH <@namedGraphIri>
 DELETE {
+    @if(newGroup.isDefined){
+    ?permissionIri knora-admin:forGroup ?currentGroup .
+  	?permissionIri knora-admin:forResourceClass ?currentResourceClass .
+  	?permissionIri knora-admin:forProperty ?currentProperty .
+  	}
+  	@if(hasPermissions.isDefined){
     ?permissionIri knora-base:hasPermissions ?currentHasPermissions .
+    }
 } INSERT {
-
-    ?permissionIri knora-base:hasPermissions "@hasPermissions"^^xsd:string .
+    @if(newGroup.isDefined){
+    ?permissionIri knora-admin:forGroup "@newGroup.get" .
+    }
+    @if(hasPermissions.isDefined){
+    ?permissionIri knora-base:hasPermissions "@hasPermissions.get"^^xsd:string .
+    }
 }
 
 @*
@@ -68,11 +81,15 @@ explicit statements in the WHERE clause here.
 
 WHERE {
     BIND(IRI("@permissionIri") AS ?permissionIri)
+
     {
     ?permissionIri rdf:type knora-admin:AdministrativePermission .
     } UNION {
     ?permissionIri rdf:type knora-admin:DefaultObjectAccessPermission .
     }
 
-    ?permissionIri knora-base:hasPermissions ?currentHasPermissions .
+    optional{?permissionIri knora-admin:forGroup ?currentGroup .}
+    optional{?permissionIri knora-admin:forResourceClass ?currentResourceClass .}
+    optional{?permissionIri knora-admin:forProperty ?currentProperty .}
+    optional{?permissionIri knora-base:hasPermissions ?currentHasPermissions .}
 }

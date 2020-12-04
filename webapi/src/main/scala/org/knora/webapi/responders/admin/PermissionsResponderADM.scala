@@ -75,8 +75,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     case DefaultObjectAccessPermissionCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID) => defaultObjectAccessPermissionCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID)
     case PermissionsForProjectGetRequestADM(projectIri, groupIri, featureFactoryConfig, requestingUser) => permissionsForProjectGetRequestADM(projectIri, groupIri, featureFactoryConfig, requestingUser)
     case PermissionByIriGetRequestADM(permissionIri, requestingUser) => permissionByIriGetRequestADM(permissionIri, requestingUser)
-    case PermissionChangeGroupRequestADM(permissionIri, changePermissionGroupRequest, featureFactoryConfig, requestingUser, apiRequestID) => permissionGroupChangeRequestADM(permissionIri, changePermissionGroupRequest, featureFactoryConfig, requestingUser, apiRequestID)
-    case PermissionChangeHasPermissionsRequestADM(permissionIri, changePermissionHasPermissionsRequest, featureFactoryConfig, requestingUser, apiRequestID) => permissionHasPermissionsChangeRequestADM(permissionIri, changePermissionHasPermissionsRequest, featureFactoryConfig, requestingUser, apiRequestID)
+    case PermissionChangeGroupRequestADM(permissionIri, changePermissionGroupRequest, requestingUser, apiRequestID) => permissionGroupChangeRequestADM(permissionIri, changePermissionGroupRequest, requestingUser, apiRequestID)
+    case PermissionChangeHasPermissionsRequestADM(permissionIri, changePermissionHasPermissionsRequest, requestingUser, apiRequestID) => permissionHasPermissionsChangeRequestADM(permissionIri, changePermissionHasPermissionsRequest, requestingUser, apiRequestID)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -1310,7 +1310,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
    *
    * @param permissionIri                the IRI of the permission.
    * @param changePermissionGroupRequest the request to change group.
-   * @param featureFactoryConfig         the feature factory configuration.
    * @param requestingUser               the [[UserADM]] of the requesting user.
    * @param apiRequestID                 the API request ID.
    * @return [[PermissionGetResponseADM]].
@@ -1318,40 +1317,16 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
    */
   private def permissionGroupChangeRequestADM(permissionIri: IRI,
                                               changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
-                                              featureFactoryConfig: FeatureFactoryConfig,
                                               requestingUser: UserADM,
                                               apiRequestID: UUID
                                              ): Future[PermissionGetResponseADM] = {
-    /**
-     * Change group of a permission. If permission is an administrative one, only updates its group.
-     * If permission is a default object access one which already had a group, updates it. If no group was previously defined,
-     * but a property, or a resource class or both of them, then deletes these members and adds the new group.
-     *
-     * @param isAdministrative     the flag to identify the type of admission.
-     * @return [[PermissionItemADM]]
-     * @throws UpdateNotPerformedException if something has gone wrong and the permission could not be updated.
-     */
-    def changePermissionGroup(isAdministrative: Boolean): Future[PermissionItemADM] = for {
-
-      // Generate SPARQL for changing the group of a permission.
-      sparqlChangePermissionGroup: String <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updatePermissionGroup(
-          namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
-          triplestore = settings.triplestoreType,
-          permissionIri = permissionIri,
-          newGroup = changePermissionGroupRequest.groupIri,
-          isAdministrative = isAdministrative
-        ).toString()
-      )
-
-      _ <- (storeManager ? SparqlUpdateRequest(sparqlChangePermissionGroup)).mapTo[SparqlUpdateResponse]
-
-      /* verify that the permission group is updated */
-      permission <- permissionGetADM(
+    /* verify that the permission group is updated */
+    def verifyPermissionGroupUpdate(): Future[PermissionItemADM] = for {
+      updatedPermission <- permissionGetADM(
         permissionIri = permissionIri,
         requestingUser = requestingUser
       )
-      _ = permission match {
+      _ = updatedPermission match {
         case ap: AdministrativePermissionADM =>
           if (ap.forGroup != changePermissionGroupRequest.groupIri)
             throw UpdateNotPerformedException(s"The group of permission $permissionIri was not updated. Please report this as a bug.")
@@ -1363,16 +1338,14 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
               throw UpdateNotPerformedException(s"The $permissionIri is not correctly updated. Please report this as a bug.")
           }
       }
-    } yield permission
+    } yield updatedPermission
 
     /**
      * The actual task run with an IRI lock.
      */
     def permissionGroupChangeTask(permissioniri: IRI,
                                   changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
-                                  featureFactoryConfig: FeatureFactoryConfig,
-                                  requestingUser: UserADM,
-                                  apiRequestID: UUID): Future[PermissionGetResponseADM] = for {
+                                  requestingUser: UserADM): Future[PermissionGetResponseADM] = for {
       // get permission
       permission <- permissionGetADM(permissioniri, requestingUser)
       response <- permission match {
@@ -1380,14 +1353,15 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         case ap: AdministrativePermissionADM =>
           // Yes. Update the group
           for {
-            updatedPermission <- changePermissionGroup(isAdministrative = true)
+            _ <- updatePermission(permissionIri = ap.iri, maybeGroup = Some(changePermissionGroupRequest.groupIri))
+            updatedPermission <- verifyPermissionGroupUpdate
           } yield AdministrativePermissionGetResponseADM(updatedPermission.asInstanceOf[AdministrativePermissionADM])
         case doap: DefaultObjectAccessPermissionADM =>
           //No. It is a default object access permission
           for {
             // if a doap permission has a group defined, it cannot have either resourceClass or property
-            updatedPermission <- changePermissionGroup(isAdministrative = false)
-
+            _ <- updatePermission(permissionIri = doap.iri, maybeGroup = Some(changePermissionGroupRequest.groupIri))
+            updatedPermission <- verifyPermissionGroupUpdate
           } yield DefaultObjectAccessPermissionGetResponseADM(updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM])
       }
     } yield response
@@ -1397,7 +1371,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       taskResult <- IriLocker.runWithIriLock(
         apiRequestID,
         permissionIri,
-        () => permissionGroupChangeTask(permissionIri, changePermissionGroupRequest, featureFactoryConfig, requestingUser, apiRequestID)
+        () => permissionGroupChangeTask(permissionIri, changePermissionGroupRequest, requestingUser)
       )
     } yield taskResult
   }
@@ -1405,32 +1379,21 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   /**
    * Update a permission's set of hasPermissions.
    *
-   * @param permissionIri        the IRI of the permission.
-   * @param changeHasPermissions the request to change hasPermissions.
-   * @param featureFactoryConfig the feature factory configuration.
-   * @param requestingUser       the [[UserADM]] of the requesting user.
-   * @param apiRequestID         the API request ID.
+   * @param permissionIri               the IRI of the permission.
+   * @param changeHasPermissionsRequest the request to change hasPermissions.
+   * @param requestingUser              the [[UserADM]] of the requesting user.
+   * @param apiRequestID                the API request ID.
    * @return [[PermissionGetResponseADM]].
    * @throw UpdateNotPerformed if something has gone wrong.
    */
   private def permissionHasPermissionsChangeRequestADM(permissionIri: IRI,
                                                        changeHasPermissionsRequest: ChangePermissionHasPermissionsApiRequestADM,
-                                                       featureFactoryConfig: FeatureFactoryConfig,
                                                        requestingUser: UserADM,
                                                        apiRequestID: UUID
                                                       ): Future[PermissionGetResponseADM] = {
-    def changeHasPermissions(hasPermissionsFormatted: String): Future[PermissionItemADM] = for {
-      // Generate SPARQL for changing the group of a permission.
-      sparqlChangePermissionGroup: String <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updateHasPermissions(
-          namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
-          triplestore = settings.triplestoreType,
-          permissionIri = permissionIri,
-          hasPermissions = hasPermissionsFormatted
-        ).toString()
-      )
 
-      _ <- (storeManager ? SparqlUpdateRequest(sparqlChangePermissionGroup)).mapTo[SparqlUpdateResponse]
+    /*Verify that hasPermissions is updated successfully*/
+    def verifyUpdateOfHasPermissions(): Future[PermissionItemADM] = for {
       updatedPermission <- permissionGetADM(permissionIri, requestingUser)
 
       /*Verify that update was successful*/
@@ -1451,22 +1414,24 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
      */
     def permissionHasPermissionsChangeTask(permissionIri: IRI,
                                            changeHasPermissionsRequest: ChangePermissionHasPermissionsApiRequestADM,
-                                           featureFactoryConfig: FeatureFactoryConfig,
-                                           requestingUser: UserADM,
-                                           apiRequestID: UUID): Future[PermissionGetResponseADM] = for {
+                                           requestingUser: UserADM): Future[PermissionGetResponseADM] = for {
       // get permission
       permission <- permissionGetADM(permissionIri, requestingUser)
       response <- permission match {
         // Is permission an administrative permission?
-        case _: AdministrativePermissionADM =>
-          // Yes. Update the group
+        case ap: AdministrativePermissionADM =>
+          // Yes.
           for {
-            updatedPermission <- changeHasPermissions(PermissionUtilADM.formatPermissionADMs(changeHasPermissionsRequest.hasPermissions, PermissionType.AP))
+            formattedPermissions <- Future(PermissionUtilADM.formatPermissionADMs(changeHasPermissionsRequest.hasPermissions, PermissionType.AP))
+            _ <- updatePermission(permissionIri = ap.iri, maybeHasPermissions = Some(formattedPermissions))
+            updatedPermission <- verifyUpdateOfHasPermissions
           } yield AdministrativePermissionGetResponseADM(updatedPermission.asInstanceOf[AdministrativePermissionADM])
-        case _: DefaultObjectAccessPermissionADM =>
-          //No. It is a default object access permission
+        case doap: DefaultObjectAccessPermissionADM =>
+          //No. It is a default object access permission.
           for {
-            updatedPermission <- changeHasPermissions(PermissionUtilADM.formatPermissionADMs(changeHasPermissionsRequest.hasPermissions, PermissionType.OAP))
+            formattedPermissions <- Future(PermissionUtilADM.formatPermissionADMs(changeHasPermissionsRequest.hasPermissions, PermissionType.OAP))
+            _ <- updatePermission(permissionIri = doap.iri, maybeHasPermissions = Some(formattedPermissions))
+            updatedPermission <- verifyUpdateOfHasPermissions
           } yield DefaultObjectAccessPermissionGetResponseADM(updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM])
         case _ => throw UpdateNotPerformedException(s"Permission $permissionIri was not updated. Please report this as a bug.")
       }
@@ -1477,7 +1442,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       taskResult <- IriLocker.runWithIriLock(
         apiRequestID,
         permissionIri,
-        () => permissionHasPermissionsChangeTask(permissionIri, changeHasPermissionsRequest, featureFactoryConfig, requestingUser, apiRequestID)
+        () => permissionHasPermissionsChangeTask(permissionIri, changeHasPermissionsRequest, requestingUser)
       )
     } yield taskResult
   }
@@ -1547,6 +1512,31 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       case _ => throw BadRequestException(s"Invalid permission type returned, please report this as a bug.")
     }
   } yield permission
+
+  /**
+   * Update an existing permission with a given parameter.
+   *
+   * @param permissionIri       the IRI of the permission.
+   * @param maybeGroup          the IRI of the new group.
+   * @param maybeHasPermissions the new set of permissions formatted according to permission type as string.
+   */
+  def updatePermission(permissionIri: IRI,
+                       maybeGroup: Option[IRI] = None,
+                       maybeHasPermissions: Option[String] = None): Future[Unit] = for {
+
+    // Generate SPARQL for changing the permission.
+    sparqlChangePermission: String <- Future(
+      org.knora.webapi.messages.twirl.queries.sparql.admin.txt.updatePermission(
+        namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
+        triplestore = settings.triplestoreType,
+        permissionIri = permissionIri,
+        newGroup = maybeGroup,
+        hasPermissions = maybeHasPermissions
+      ).toString()
+    )
+
+    _ <- (storeManager ? SparqlUpdateRequest(sparqlChangePermission)).mapTo[SparqlUpdateResponse]
+  } yield ()
 }
 
 

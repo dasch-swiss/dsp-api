@@ -192,13 +192,11 @@ case class PermissionsForProjectGetRequestADM(projectIri: IRI,
  * A successful response will be a [[PermissionItemADM]].
  *
  * @param permissionIri        the IRI of the permission to be updated.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user initiation the request.
  * @param apiRequestID         the API request ID.
  */
 case class PermissionChangeGroupRequestADM(permissionIri: IRI,
                                            changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
-                                           featureFactoryConfig: FeatureFactoryConfig,
                                            requestingUser: UserADM,
                                            apiRequestID: UUID
                                           ) extends PermissionsResponderRequestADM {
@@ -215,13 +213,11 @@ case class PermissionChangeGroupRequestADM(permissionIri: IRI,
  * A successful response will be a [[PermissionItemADM]].
  *
  * @param permissionIri        the IRI of the permission to be updated.
- * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user initiation the request.
  * @param apiRequestID         the API request ID.
  */
 case class PermissionChangeHasPermissionsRequestADM(permissionIri: IRI,
                                                     changePermissionHasPermissionsRequest: ChangePermissionHasPermissionsApiRequestADM,
-                                                    featureFactoryConfig: FeatureFactoryConfig,
                                                     requestingUser: UserADM,
                                                     apiRequestID: UUID
                                           ) extends PermissionsResponderRequestADM {
