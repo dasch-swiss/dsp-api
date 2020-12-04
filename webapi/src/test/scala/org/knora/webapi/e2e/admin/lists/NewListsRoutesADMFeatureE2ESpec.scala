@@ -39,8 +39,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object NewListsRouteADMFeatureE2ESpec {
-    val config: Config = ConfigFactory.parseString(
-        """
+  val config: Config = ConfigFactory.parseString("""
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
@@ -49,292 +48,307 @@ object NewListsRouteADMFeatureE2ESpec {
 /**
   * End-to-End (E2E) test specification for testing new lists endpoint.
   */
-class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListADMJsonProtocol {
+class NewListsRouteADMFeatureE2ESpec
+    extends E2ESpec(NewListsRouteADMFeatureE2ESpec.config)
+    with SessionJsonProtocol
+    with TriplestoreJsonProtocol
+    with ListADMJsonProtocol {
 
-    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
 
-    // Directory path for generated client test data
-    private val clientTestDataPath: Seq[String] = Seq("admin", "lists", "toggle_new-list-admin-routes_v1")
+  // Directory path for generated client test data
+  private val clientTestDataPath: Seq[String] = Seq("admin", "lists", "toggle_new-list-admin-routes_v1")
 
-    // Collects client test data
-    private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  // Collects client test data
+  private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
-    override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
-    )
+  override lazy val rdfDataObjects = List(
+    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+  )
 
-    val rootCreds: CredentialsADM = CredentialsADM(
-        SharedTestDataADM.rootUser,
-        "test"
-    )
+  val rootCreds: CredentialsADM = CredentialsADM(
+    SharedTestDataADM.rootUser,
+    "test"
+  )
 
-    val normalUserCreds: CredentialsADM = CredentialsADM(
-        SharedTestDataADM.normalUser,
-        "test"
-    )
+  val normalUserCreds: CredentialsADM = CredentialsADM(
+    SharedTestDataADM.normalUser,
+    "test"
+  )
 
-    val anythingUserCreds: CredentialsADM = CredentialsADM(
-        SharedTestDataADM.anythingUser1,
-        "test"
-    )
+  val anythingUserCreds: CredentialsADM = CredentialsADM(
+    SharedTestDataADM.anythingUser1,
+    "test"
+  )
 
-    val anythingAdminUserCreds: CredentialsADM = CredentialsADM(
-        SharedTestDataADM.anythingAdminUser,
-        "test"
-    )
+  val anythingAdminUserCreds: CredentialsADM = CredentialsADM(
+    SharedTestDataADM.anythingAdminUser,
+    "test"
+  )
 
-    private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
-    private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
+  private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
+  private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
 
-    def addChildListNodeRequest(parentNodeIri: IRI,
-                                name: String,
-                                label: String,
-                                comment: String): String = {
-        s"""{
+  def addChildListNodeRequest(parentNodeIri: IRI, name: String, label: String, comment: String): String = {
+    s"""{
            |    "parentNodeIri": "$parentNodeIri",
            |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
            |    "name": "$name",
            |    "labels": [{ "value": "$label", "language": "en"}],
            |    "comments": [{ "value": "$comment", "language": "en"}]
            |}""".stripMargin
+  }
+
+  "The Lists Route (/admin/lists)" when {
+
+    "used to query information about lists" should {
+
+      "return all lists" in {
+        val request = Get(baseApiUrl + s"/admin/lists")
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // println(s"response: ${response.toString}")
+
+        response.status should be(StatusCodes.OK)
+
+        val lists: Seq[ListNodeInfoADM] =
+          AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListNodeInfoADM]]
+
+        // log.debug("lists: {}", lists)
+
+        lists.size should be(8)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-lists-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "return all lists belonging to the images project" in {
+        val request = Get(baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF")
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          rootCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+
+        response.status should be(StatusCodes.OK)
+
+        val lists: Seq[ListNodeInfoADM] =
+          AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListNodeInfoADM]]
+
+        // log.debug("lists: {}", lists)
+
+        lists.size should be(4)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-image-project-lists-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "return all lists belonging to the anything project" in {
+        val request = Get(baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F0001")
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          rootCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+
+        response.status should be(StatusCodes.OK)
+
+        val lists: Seq[ListNodeInfoADM] =
+          AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListNodeInfoADM]]
+
+        // log.debug("lists: {}", lists)
+
+        lists.size should be(3)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-anything-project-lists-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "return basic list information" in {
+        val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList/info")
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          rootCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+
+        response.status should be(StatusCodes.OK)
+
+        val receivedListInfo: ListRootNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+
+        val expectedListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
+
+        receivedListInfo.sorted should be(expectedListInfo.sorted)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-list-info-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "return a complete list" in {
+        val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList")
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          rootCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // println(s"response: ${response.toString}")
+
+        response.status should be(StatusCodes.OK)
+
+        val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
+        receivedList.listinfo.sorted should be(treeListInfo.sorted)
+        receivedList.children.map(_.sorted) should be(treeListNodes.map(_.sorted))
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-list-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "return node info without children" in {
+        val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList01/info")
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          rootCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+
+        response.status should be(StatusCodes.OK)
+
+        val receivedListInfo: ListChildNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
+
+        val expectedListInfo: ListChildNodeInfoADM = SharedListsTestDataADM.treeListNode01Info
+
+        receivedListInfo.sorted should be(expectedListInfo.sorted)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-list-node-info-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "return a complete node with children" in {
+        val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList03")
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          rootCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+
+        val receivedNode: NodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[NodeADM]
+        receivedNode.nodeinfo.id should be("http://rdfh.ch/lists/0001/treeList03")
+        receivedNode.nodeinfo.name should be(Some("Tree list node 03"))
+        receivedNode.children.size should be(2)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-node-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+
+      }
     }
 
-    "The Lists Route (/admin/lists)" when {
+    "given a custom Iri" should {
 
-        "used to query information about lists" should {
-
-            "return all lists" in {
-                val request = Get(baseApiUrl + s"/admin/lists")
-                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
-
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // println(s"response: ${response.toString}")
-
-                response.status should be(StatusCodes.OK)
-
-                val lists: Seq[ListNodeInfoADM] = AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListNodeInfoADM]]
-
-                // log.debug("lists: {}", lists)
-
-                lists.size should be (8)
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "get-lists-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
-
-            "return all lists belonging to the images project" in {
-                val request = Get(baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF")
-                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(rootCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
-
-                response.status should be(StatusCodes.OK)
-
-                val lists: Seq[ListNodeInfoADM] = AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListNodeInfoADM]]
-
-                // log.debug("lists: {}", lists)
-
-                lists.size should be (4)
-
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "get-image-project-lists-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
-
-            "return all lists belonging to the anything project" in {
-                val request = Get(baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F0001")
-                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(rootCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
-
-                response.status should be(StatusCodes.OK)
-
-                val lists: Seq[ListNodeInfoADM] = AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListNodeInfoADM]]
-
-                // log.debug("lists: {}", lists)
-
-                lists.size should be (3)
-
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "get-anything-project-lists-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
-
-            "return basic list information" in {
-                val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList/info")
-                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(rootCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
-
-                response.status should be(StatusCodes.OK)
-
-                val receivedListInfo: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
-
-                val expectedListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
-
-                receivedListInfo.sorted should be (expectedListInfo.sorted)
-
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "get-list-info-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
-
-            "return a complete list" in {
-                val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList")
-                    .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on"))~> addCredentials(rootCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // println(s"response: ${response.toString}")
-
-                response.status should be(StatusCodes.OK)
-
-                val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
-                receivedList.listinfo.sorted should be (treeListInfo.sorted)
-                receivedList.children.map(_.sorted) should be (treeListNodes.map(_.sorted))
-
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "get-list-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
-
-            "return node info without children" in {
-                val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList01/info")
-                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(rootCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
-
-                response.status should be(StatusCodes.OK)
-
-                val receivedListInfo: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
-
-                val expectedListInfo: ListChildNodeInfoADM = SharedListsTestDataADM.treeListNode01Info
-
-                receivedListInfo.sorted should be (expectedListInfo.sorted)
-
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "get-list-node-info-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
-
-            "return a complete node with children" in {
-                val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList03")
-                    .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(rootCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be(StatusCodes.OK)
-
-                val receivedNode: NodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[NodeADM]
-                receivedNode.nodeinfo.id should be ("http://rdfh.ch/lists/0001/treeList03")
-                receivedNode.nodeinfo.name should be (Some("Tree list node 03"))
-                receivedNode.children.size should be (2)
-
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "get-node-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-
-            }
-        }
-
-        "given a custom Iri" should {
-
-            "create a list with the provided custom Iri" in {
-                val createListWithCustomIriRequest: String =
-                    s"""{
+      "create a list with the provided custom Iri" in {
+        val createListWithCustomIriRequest: String =
+          s"""{
                        |    "id": "${SharedTestDataADM.customListIRI}",
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
                        |    "comments": []
                        |}""".stripMargin
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "create-list-with-custom-IRI-request",
-                            fileExtension = "json"
-                        ),
-                        text = createListWithCustomIriRequest
-                    )
-                )
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, createListWithCustomIriRequest))
-                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be(StatusCodes.OK)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-list-with-custom-IRI-request",
+              fileExtension = "json"
+            ),
+            text = createListWithCustomIriRequest
+          )
+        )
+        val request = Post(baseApiUrl + s"/admin/lists",
+                           HttpEntity(ContentTypes.`application/json`, createListWithCustomIriRequest))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
 
-                val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
+        val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
 
-                val listInfo = receivedList.listinfo
-                listInfo.id should be (SharedTestDataADM.customListIRI)
+        val listInfo = receivedList.listinfo
+        listInfo.id should be(SharedTestDataADM.customListIRI)
 
-                val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
-                labels.size should be (1)
-                labels.head should be (StringLiteralV2(value = "New list with a custom IRI", language = Some("en")))
+        val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
+        labels.size should be(1)
+        labels.head should be(StringLiteralV2(value = "New list with a custom IRI", language = Some("en")))
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "create-list-with-custom-IRI-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-list-with-custom-IRI-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
 
-            "return a DuplicateValueException during list creation when the supplied list IRI is not unique" in {
+      "return a DuplicateValueException during list creation when the supplied list IRI is not unique" in {
 
-                // duplicate list IRI
-                val params =
-                    s"""
+        // duplicate list IRI
+        val params =
+          s"""
                        |{
                        |    "id": "${SharedTestDataADM.customListIRI}",
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
@@ -343,22 +357,24 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                        |}
                 """.stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))
-                            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be(StatusCodes.BadRequest)
+        val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.BadRequest)
 
-                val errorMessage : String = Await.result(Unmarshal(response.entity).to[String], 1.second)
-                val invalidIri: Boolean = errorMessage.contains(s"IRI: '${SharedTestDataADM.customListIRI}' already exists, try another one.")
-                invalidIri should be(true)
-            }
+        val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], 1.second)
+        val invalidIri: Boolean =
+          errorMessage.contains(s"IRI: '${SharedTestDataADM.customListIRI}' already exists, try another one.")
+        invalidIri should be(true)
+      }
 
-            "add a child with a custom IRI" in {
+      "add a child with a custom IRI" in {
 
-                val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
+        val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
 
-                val createChildNodeWithCustomIriRequest =
-                            s"""
+        val createChildNodeWithCustomIriRequest =
+          s"""
                                  |{   "id": "$customChildNodeIRI",
                                  |    "parentNodeIri": "${SharedTestDataADM.customListIRI}",
                                  |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
@@ -367,108 +383,112 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                                  |    "comments": []
                                  |}""".stripMargin
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "create-child-node-with-custom-IRI-request",
-                            fileExtension = "json"
-                        ),
-                        text = createChildNodeWithCustomIriRequest
-                    )
-                )
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-child-node-with-custom-IRI-request",
+              fileExtension = "json"
+            ),
+            text = createChildNodeWithCustomIriRequest
+          )
+        )
 
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, createChildNodeWithCustomIriRequest))
-                            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // println(s"response: ${response.toString}")
-                response.status should be(StatusCodes.OK)
+        val request = Post(baseApiUrl + s"/admin/lists",
+                           HttpEntity(ContentTypes.`application/json`, createChildNodeWithCustomIriRequest))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // println(s"response: ${response.toString}")
+        response.status should be(StatusCodes.OK)
 
-                val received: ListNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListNodeInfoADM]
+        val received: ListNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListNodeInfoADM]
 
-                // check correct node info
-                val childNodeInfo = received match {
-                    case info: ListChildNodeInfoADM => info
-                    case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
-                }
-                childNodeInfo.id should be (customChildNodeIRI)
-
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "create-child-node-with-custom-IRI-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
+        // check correct node info
+        val childNodeInfo = received match {
+          case info: ListChildNodeInfoADM => info
+          case something                  => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
         }
+        childNodeInfo.id should be(customChildNodeIRI)
 
-        "used to modify list information" should {
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-child-node-with-custom-IRI-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+    }
 
-            val newListIri = new MutableTestIri
-            val firstChildIri = new MutableTestIri
-            val secondChildIri = new MutableTestIri
-            val thirdChildIri = new MutableTestIri
+    "used to modify list information" should {
 
-            "create a list" in {
-                val createListRequest: String =
-                    s"""{
+      val newListIri = new MutableTestIri
+      val firstChildIri = new MutableTestIri
+      val secondChildIri = new MutableTestIri
+      val thirdChildIri = new MutableTestIri
+
+      "create a list" in {
+        val createListRequest: String =
+          s"""{
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [{ "value": "Neue Liste", "language": "de"}],
                        |    "comments": []
                        |}""".stripMargin
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "create-list-request",
-                            fileExtension = "json"
-                        ),
-                        text = createListRequest
-                    )
-                )
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, createListRequest))
-                        .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
-                response.status should be(StatusCodes.OK)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-list-request",
+              fileExtension = "json"
+            ),
+            text = createListRequest
+          )
+        )
+        val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, createListRequest))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        response.status should be(StatusCodes.OK)
 
-                val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
+        val receivedList: ListADM = AkkaHttpUtils.httpResponseToJson(response).fields("list").convertTo[ListADM]
 
-                val listInfo = receivedList.listinfo
-                listInfo.projectIri should be (SharedTestDataADM.ANYTHING_PROJECT_IRI)
+        val listInfo = receivedList.listinfo
+        listInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
 
-                val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
-                labels.size should be (1)
-                labels.head should be (StringLiteralV2(value = "Neue Liste", language = Some("de")))
+        val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
+        labels.size should be(1)
+        labels.head should be(StringLiteralV2(value = "Neue Liste", language = Some("de")))
 
-                val comments = receivedList.listinfo.comments.stringLiterals
-                comments.isEmpty should be (true)
+        val comments = receivedList.listinfo.comments.stringLiterals
+        comments.isEmpty should be(true)
 
-                val children = receivedList.children
-                children.size should be (0)
+        val children = receivedList.children
+        children.size should be(0)
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "create-list-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-                // store list IRI for next test
-                newListIri.set(listInfo.id)
-            }
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-list-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+        // store list IRI for next test
+        newListIri.set(listInfo.id)
+      }
 
-            "return a ForbiddenException if the user creating the list is not project or system admin" in {
-                val params =
-                    s"""
+      "return a ForbiddenException if the user creating the list is not project or system admin" in {
+        val params =
+          s"""
                        |{
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [{ "value": "Neue Liste", "language": "de"}],
@@ -476,18 +496,19 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                        |}
                 """.stripMargin
 
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))
-                            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingUserCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
-                response.status should be(StatusCodes.Forbidden)
-            }
+        val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        response.status should be(StatusCodes.Forbidden)
+      }
 
-            "return a BadRequestException during list creation when payload is not correct" in {
+      "return a BadRequestException during list creation when payload is not correct" in {
 
-                // no project IRI
-                val params01 =
-                    s"""
+        // no project IRI
+        val params01 =
+          s"""
                        |{
                        |    "projectIri": "",
                        |    "labels": [{ "value": "Neue Liste", "language": "de"}],
@@ -495,16 +516,15 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                        |}
                 """.stripMargin
 
-                val request01 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params01))
-                                    .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on"))
-                val response01: HttpResponse = singleAwaitingRequest(request01)
-                // println(s"response: ${response01.toString}")
-                response01.status should be(StatusCodes.BadRequest)
+        val request01 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params01))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on"))
+        val response01: HttpResponse = singleAwaitingRequest(request01)
+        // println(s"response: ${response01.toString}")
+        response01.status should be(StatusCodes.BadRequest)
 
-
-                // invalid project IRI
-                val params02 =
-                    s"""
+        // invalid project IRI
+        val params02 =
+          s"""
                        |{
                        |    "projectIri": "notvalidIRI",
                        |    "labels": [{ "value": "Neue Liste", "language": "de"}],
@@ -512,16 +532,15 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                        |}
                 """.stripMargin
 
-                val request02 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params02))
-                                    .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on"))
-                val response02: HttpResponse = singleAwaitingRequest(request02)
-                // println(s"response: ${response02.toString}")
-                response02.status should be(StatusCodes.BadRequest)
+        val request02 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params02))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on"))
+        val response02: HttpResponse = singleAwaitingRequest(request02)
+        // println(s"response: ${response02.toString}")
+        response02.status should be(StatusCodes.BadRequest)
 
-
-                // missing label
-                val params03 =
-                    s"""
+        // missing label
+        val params03 =
+          s"""
                        |{
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [],
@@ -529,112 +548,118 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                        |}
                 """.stripMargin
 
-                val request03 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params03))
-                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on"))
-                val response03: HttpResponse = singleAwaitingRequest(request03)
-                // println(s"response: ${response03.toString}")
-                response03.status should be(StatusCodes.BadRequest)
+        val request03 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params03))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on"))
+        val response03: HttpResponse = singleAwaitingRequest(request03)
+        // println(s"response: ${response03.toString}")
+        response03.status should be(StatusCodes.BadRequest)
 
-            }
+      }
 
-            "update basic list information" in {
+      "update basic list information" in {
 
-                val updateListInfo: String =
-                    s"""{
+        val updateListInfo: String =
+          s"""{
                        |    "listIri": "${newListIri.get}",
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
                        |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
                        |}""".stripMargin
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "update-list-info-request",
-                            fileExtension = "json"
-                        ),
-                        text = updateListInfo
-                    )
-                )
-                val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-list-info-request",
+              fileExtension = "json"
+            ),
+            text = updateListInfo
+          )
+        )
+        val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateListInfo))
-                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
-                response.status should be(StatusCodes.OK)
+        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
+                          HttpEntity(ContentTypes.`application/json`, updateListInfo))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        response.status should be(StatusCodes.OK)
 
-                val receivedListInfo: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+        val receivedListInfo: ListRootNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-                receivedListInfo.projectIri should be (SharedTestDataADM.ANYTHING_PROJECT_IRI)
+        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
 
-                val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
-                labels.size should be (2)
+        val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
+        labels.size should be(2)
 
-                val comments = receivedListInfo.comments.stringLiterals
-                comments.size should be (2)
+        val comments = receivedListInfo.comments.stringLiterals
+        comments.size should be(2)
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "update-list-info-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-list-info-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
 
-            "update basic list information with a new name" in {
-                val updateListName =
-                    s"""{
+      "update basic list information with a new name" in {
+        val updateListName =
+          s"""{
                        |    "listIri": "${newListIri.get}",
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "name": "a totally new name"
                        |}""".stripMargin
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "update-list-name-request",
-                            fileExtension = "json"
-                        ),
-                        text = updateListName
-                    )
-                )
-                val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-list-name-request",
+              fileExtension = "json"
+            ),
+            text = updateListName
+          )
+        )
+        val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateListName))
-                            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
-                response.status should be(StatusCodes.OK)
+        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
+                          HttpEntity(ContentTypes.`application/json`, updateListName))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        response.status should be(StatusCodes.OK)
 
-                val receivedListInfo: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+        val receivedListInfo: ListRootNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-                receivedListInfo.projectIri should be (SharedTestDataADM.ANYTHING_PROJECT_IRI)
+        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
 
-                receivedListInfo.name should be (Some("a totally new name"))
+        receivedListInfo.name should be(Some("a totally new name"))
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "update-list-name-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-list-name-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
 
-            "update basic list information with repeated comment and label in different languages" in {
+      "update basic list information with repeated comment and label in different languages" in {
 
-                val updateListInfoWithRepeatedCommentAndLabelValuesRequest: String =
-                    s"""{
+        val updateListInfoWithRepeatedCommentAndLabelValuesRequest: String =
+          s"""{
                        |    "listIri": "http://rdfh.ch/lists/0001/treeList",
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |  "labels": [
@@ -649,50 +674,54 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                        |  ]
                        |}""".stripMargin
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "update-list-info-comment-label-multiple-languages-request",
-                            fileExtension = "json"
-                        ),
-                        text = updateListInfoWithRepeatedCommentAndLabelValuesRequest
-                    )
-                )
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-list-info-comment-label-multiple-languages-request",
+              fileExtension = "json"
+            ),
+            text = updateListInfoWithRepeatedCommentAndLabelValuesRequest
+          )
+        )
 
-                val encodedListUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "utf-8")
+        val encodedListUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateListInfoWithRepeatedCommentAndLabelValuesRequest))
-                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
-                response.status should be(StatusCodes.OK)
+        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
+                          HttpEntity(ContentTypes.`application/json`,
+                                     updateListInfoWithRepeatedCommentAndLabelValuesRequest))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        response.status should be(StatusCodes.OK)
 
-                val receivedListInfo: ListRootNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+        val receivedListInfo: ListRootNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
-                receivedListInfo.projectIri should be (SharedTestDataADM.ANYTHING_PROJECT_IRI)
+        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
 
-                val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
-                labels.size should be (2)
+        val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
+        labels.size should be(2)
 
-                val comments = receivedListInfo.comments.stringLiterals
-                comments.size should be (4)
+        val comments = receivedListInfo.comments.stringLiterals
+        comments.size should be(4)
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "update-list-info-comment-label-multiple-languages-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-list-info-comment-label-multiple-languages-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
 
-            "return a ForbiddenException if the user updating the list is not project or system admin" in {
-                val params =
-                    s"""
+      "return a ForbiddenException if the user updating the list is not project or system admin" in {
+        val params =
+          s"""
                        |{
                        |    "listIri": "${newListIri.get}",
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
@@ -701,22 +730,24 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                        |}
                 """.stripMargin
 
-                val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
+        val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params))
-                        .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingUserCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // log.debug(s"response: ${response.toString}")
-                response.status should be(StatusCodes.Forbidden)
-            }
+        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
+                          HttpEntity(ContentTypes.`application/json`, params))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        response.status should be(StatusCodes.Forbidden)
+      }
 
-            "return a BadRequestException during list change when payload is not correct" in {
+      "return a BadRequestException during list change when payload is not correct" in {
 
-                val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
+        val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-                // empty list IRI
-                val params01 =
-                    s"""
+        // empty list IRI
+        val params01 =
+          s"""
                        |{
                        |    "listIri": "",
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
@@ -725,15 +756,17 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                        |}
                 """.stripMargin
 
-                val request01 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params01))
-                    .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response01: HttpResponse = singleAwaitingRequest(request01)
-                // log.debug(s"response: ${response.toString}")
-                response01.status should be(StatusCodes.BadRequest)
+        val request01 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
+                            HttpEntity(ContentTypes.`application/json`, params01))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response01: HttpResponse = singleAwaitingRequest(request01)
+        // log.debug(s"response: ${response.toString}")
+        response01.status should be(StatusCodes.BadRequest)
 
-                // empty project
-                val params02 =
-                s"""
+        // empty project
+        val params02 =
+          s"""
                    |{
                    |    "listIri": "${newListIri.get}",
                    |    "projectIri": "",
@@ -742,15 +775,17 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                    |}
                 """.stripMargin
 
-                val request02 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params02))
-                            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response02: HttpResponse = singleAwaitingRequest(request02)
-                // log.debug(s"response: ${response.toString}")
-                response02.status should be(StatusCodes.BadRequest)
+        val request02 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
+                            HttpEntity(ContentTypes.`application/json`, params02))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response02: HttpResponse = singleAwaitingRequest(request02)
+        // log.debug(s"response: ${response.toString}")
+        response02.status should be(StatusCodes.BadRequest)
 
-                // empty parameters
-                val params03 =
-                    s"""
+        // empty parameters
+        val params03 =
+          s"""
                        |{
                        |    "listIri": "${newListIri.get}",
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
@@ -759,271 +794,278 @@ class NewListsRouteADMFeatureE2ESpec extends E2ESpec(NewListsRouteADMFeatureE2ES
                        |}
                 """.stripMargin
 
-                val request03 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params03))
-                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response03: HttpResponse = singleAwaitingRequest(request03)
-                // log.debug(s"response: ${response.toString}")
-                response03.status should be(StatusCodes.BadRequest)
+        val request03 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
+                            HttpEntity(ContentTypes.`application/json`, params03))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response03: HttpResponse = singleAwaitingRequest(request03)
+        // log.debug(s"response: ${response.toString}")
+        response03.status should be(StatusCodes.BadRequest)
 
-            }
+      }
 
-            "add child to list - to the root node" in {
-                val name = "first"
-                val label = "New First Child List Node Value"
-                val comment = "New First Child List Node Comment"
+      "add child to list - to the root node" in {
+        val name = "first"
+        val label = "New First Child List Node Value"
+        val comment = "New First Child List Node Comment"
 
-                val addChildToRoot = addChildListNodeRequest(
-                    parentNodeIri = newListIri.get,
-                    name = name,
-                    label = label,
-                    comment = comment
-                )
+        val addChildToRoot = addChildListNodeRequest(
+          parentNodeIri = newListIri.get,
+          name = name,
+          label = label,
+          comment = comment
+        )
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "create-child-node-request",
-                            fileExtension = "json"
-                        ),
-                        text = addChildToRoot
-                    )
-                )
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-child-node-request",
+              fileExtension = "json"
+            ),
+            text = addChildToRoot
+          )
+        )
 
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, addChildToRoot))
-                            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // println(s"response: ${response.toString}")
-                response.status should be(StatusCodes.OK)
+        val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, addChildToRoot))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // println(s"response: ${response.toString}")
+        response.status should be(StatusCodes.OK)
 
-                val received: ListNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListNodeInfoADM]
+        val received: ListNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListNodeInfoADM]
 
-                // check correct node info
-                val childNodeInfo = received match {
-                    case info: ListChildNodeInfoADM => info
-                    case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
-                }
+        // check correct node info
+        val childNodeInfo = received match {
+          case info: ListChildNodeInfoADM => info
+          case something                  => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
+        }
 
-                // check labels
-                val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
-                labels.size should be (1)
-                labels.sorted should be (Seq(StringLiteralV2(value = label, language = Some("en"))))
+        // check labels
+        val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
+        labels.size should be(1)
+        labels.sorted should be(Seq(StringLiteralV2(value = label, language = Some("en"))))
 
-                // check comments
-                val comments = childNodeInfo.comments.stringLiterals
-                comments.size should be (1)
-                comments.sorted should be (Seq(StringLiteralV2(value = comment, language = Some("en"))))
+        // check comments
+        val comments = childNodeInfo.comments.stringLiterals
+        comments.size should be(1)
+        comments.sorted should be(Seq(StringLiteralV2(value = comment, language = Some("en"))))
 
-                // check position
-                val position = childNodeInfo.position
-                position should be (0)
+        // check position
+        val position = childNodeInfo.position
+        position should be(0)
 
-                // check has root node
-                val rootNode = childNodeInfo.hasRootNode
-                rootNode should be (newListIri.get)
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "create-child-node-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-                firstChildIri.set(childNodeInfo.id)
-            }
+        // check has root node
+        val rootNode = childNodeInfo.hasRootNode
+        rootNode should be(newListIri.get)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-child-node-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+        firstChildIri.set(childNodeInfo.id)
+      }
 
-            "add second child to list - to the root node" in {
+      "add second child to list - to the root node" in {
 
-                val name = "second"
-                val label = "New Second Child List Node Value"
-                val comment = "New Second Child List Node Comment"
+        val name = "second"
+        val label = "New Second Child List Node Value"
+        val comment = "New Second Child List Node Comment"
 
-                val addSecondChildToRoot = addChildListNodeRequest(
-                    parentNodeIri = newListIri.get,
-                    name = name,
-                    label = label,
-                    comment = comment
-                )
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "add-second-child-to-root-request",
-                            fileExtension = "json"
-                        ),
-                        text = addSecondChildToRoot
-                    )
-                )
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, addSecondChildToRoot))
-                                .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // println(s"response: ${response.toString}")
-                response.status should be(StatusCodes.OK)
+        val addSecondChildToRoot = addChildListNodeRequest(
+          parentNodeIri = newListIri.get,
+          name = name,
+          label = label,
+          comment = comment
+        )
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "add-second-child-to-root-request",
+              fileExtension = "json"
+            ),
+            text = addSecondChildToRoot
+          )
+        )
+        val request = Post(baseApiUrl + s"/admin/lists",
+                           HttpEntity(ContentTypes.`application/json`, addSecondChildToRoot))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // println(s"response: ${response.toString}")
+        response.status should be(StatusCodes.OK)
 
-                val received: ListNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListNodeInfoADM]
+        val received: ListNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListNodeInfoADM]
 
-                // check correct node info
-                val childNodeInfo = received match {
-                    case info: ListChildNodeInfoADM => info
-                    case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
-                }
+        // check correct node info
+        val childNodeInfo = received match {
+          case info: ListChildNodeInfoADM => info
+          case something                  => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
+        }
 
-                // check labels
-                val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
-                labels.size should be (1)
-                labels.sorted should be (Seq(StringLiteralV2(value = label, language = Some("en"))))
+        // check labels
+        val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
+        labels.size should be(1)
+        labels.sorted should be(Seq(StringLiteralV2(value = label, language = Some("en"))))
 
-                // check comments
-                val comments = childNodeInfo.comments.stringLiterals
-                comments.size should be (1)
-                comments.sorted should be (Seq(StringLiteralV2(value = comment, language = Some("en"))))
+        // check comments
+        val comments = childNodeInfo.comments.stringLiterals
+        comments.size should be(1)
+        comments.sorted should be(Seq(StringLiteralV2(value = comment, language = Some("en"))))
 
-                // check position
-                val position = childNodeInfo.position
-                position should be (1)
+        // check position
+        val position = childNodeInfo.position
+        position should be(1)
 
-                // check has root node
-                val rootNode = childNodeInfo.hasRootNode
-                rootNode should be (newListIri.get)
+        // check has root node
+        val rootNode = childNodeInfo.hasRootNode
+        rootNode should be(newListIri.get)
 
-                secondChildIri.set(childNodeInfo.id)
+        secondChildIri.set(childNodeInfo.id)
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "add-second-child-to-root-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "add-second-child-to-root-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
 
-            "add child to second child node" in {
+      "add child to second child node" in {
 
-                val name = "third"
-                val label = "New Third Child List Node Value"
-                val comment = "New Third Child List Node Comment"
+        val name = "third"
+        val label = "New Third Child List Node Value"
+        val comment = "New Third Child List Node Comment"
 
-                val addChildToSecondChild = addChildListNodeRequest(
-                    parentNodeIri = secondChildIri.get,
-                    name = name,
-                    label = label,
-                    comment = comment
-                )
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "add-second-child-to-root-request",
-                            fileExtension = "json"
-                        ),
-                        text = addChildToSecondChild
-                    )
-                )
-                val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, addChildToSecondChild))
-                            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
-                // println(s"response: ${response.toString}")
-                response.status should be(StatusCodes.OK)
+        val addChildToSecondChild = addChildListNodeRequest(
+          parentNodeIri = secondChildIri.get,
+          name = name,
+          label = label,
+          comment = comment
+        )
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "add-second-child-to-root-request",
+              fileExtension = "json"
+            ),
+            text = addChildToSecondChild
+          )
+        )
+        val request = Post(baseApiUrl + s"/admin/lists",
+                           HttpEntity(ContentTypes.`application/json`, addChildToSecondChild))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // println(s"response: ${response.toString}")
+        response.status should be(StatusCodes.OK)
 
-                val received: ListNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListNodeInfoADM]
+        val received: ListNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListNodeInfoADM]
 
-                // check correct node info
-                val childNodeInfo = received match {
-                    case info: ListChildNodeInfoADM => info
-                    case something => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
-                }
+        // check correct node info
+        val childNodeInfo = received match {
+          case info: ListChildNodeInfoADM => info
+          case something                  => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
+        }
 
-                // check labels
-                val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
-                labels.size should be (1)
-                labels.sorted should be (Seq(StringLiteralV2(value = label, language = Some("en"))))
+        // check labels
+        val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
+        labels.size should be(1)
+        labels.sorted should be(Seq(StringLiteralV2(value = label, language = Some("en"))))
 
-                // check comments
-                val comments = childNodeInfo.comments.stringLiterals
-                comments.size should be (1)
-                comments.sorted should be (Seq(StringLiteralV2(value = comment, language = Some("en"))))
+        // check comments
+        val comments = childNodeInfo.comments.stringLiterals
+        comments.size should be(1)
+        comments.sorted should be(Seq(StringLiteralV2(value = comment, language = Some("en"))))
 
-                // check position
-                val position = childNodeInfo.position
-                position should be (0)
+        // check position
+        val position = childNodeInfo.position
+        position should be(0)
 
-                // check has root node
-                val rootNode = childNodeInfo.hasRootNode
-                rootNode should be (newListIri.get)
+        // check has root node
+        val rootNode = childNodeInfo.hasRootNode
+        rootNode should be(newListIri.get)
 
-                thirdChildIri.set(childNodeInfo.id)
+        thirdChildIri.set(childNodeInfo.id)
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "add-second-child-to-root-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
-            "update node information of node that has custom IRI with a new name" in {
-                val newName = "modified third child"
-                val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
-                val updateNodeName =
-                    s"""{
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "add-second-child-to-root-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+      "update node information of node that has custom IRI with a new name" in {
+        val newName = "modified third child"
+        val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
+        val updateNodeName =
+          s"""{
                        |    "listIri": "${customChildNodeIRI}",
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "name": "${newName}"
                        |}""".stripMargin
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "update-node-info-name-request",
-                            fileExtension = "json"
-                        ),
-                        text = updateNodeName
-                    )
-                )
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-node-info-name-request",
+              fileExtension = "json"
+            ),
+            text = updateNodeName
+          )
+        )
 
-                val encodedListUrl = java.net.URLEncoder.encode(customChildNodeIRI, "utf-8")
+        val encodedListUrl = java.net.URLEncoder.encode(customChildNodeIRI, "utf-8")
 
-                val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, updateNodeName))
-                    .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
-                val response: HttpResponse = singleAwaitingRequest(request)
+        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
+                          HttpEntity(ContentTypes.`application/json`, updateNodeName))
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
 
-                response.status should be(StatusCodes.OK)
+        response.status should be(StatusCodes.OK)
 
-                val receivedNodeInfo: ListChildNodeInfoADM = AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
-                receivedNodeInfo.name.get should be (newName)
+        val receivedNodeInfo: ListChildNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
+        receivedNodeInfo.name.get should be(newName)
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "update-node-info-name-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-node-info-name-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
 
-            "add flat nodes" ignore {
+      "add flat nodes" ignore {}
 
-            }
+      "add hierarchical nodes" ignore {}
 
-            "add hierarchical nodes" ignore {
-
-            }
-
-            "change node order" ignore {
-
-            }
-        }
+      "change node order" ignore {}
     }
+  }
 }

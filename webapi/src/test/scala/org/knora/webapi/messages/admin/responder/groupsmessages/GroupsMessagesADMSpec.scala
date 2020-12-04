@@ -25,33 +25,32 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 object GroupsMessagesADMSpec {
-    val config = ConfigFactory.parseString(
-        """
+  val config = ConfigFactory.parseString("""
               akka.loglevel = "DEBUG"
               akka.stdout-loglevel = "DEBUG"
             """.stripMargin)
 }
 
 /**
- * This spec is used to test 'GroupAdminMessages'.
- */
+  * This spec is used to test 'GroupAdminMessages'.
+  */
 class GroupsMessagesADMSpec extends CoreSpec(GroupsMessagesADMSpec.config) {
 
-    "The CreateGroupsApiRequestADM case class" should {
+  "The CreateGroupsApiRequestADM case class" should {
 
-        "return 'BadRequest' if the supplied 'id' is not a valid IRI" in {
+    "return 'BadRequest' if the supplied 'id' is not a valid IRI" in {
 
-            val caught = intercept[BadRequestException](
-                CreateGroupApiRequestADM(
-                  id = Some("invalid-group-IRI"),
-                  name = "NewGroupWithInvalidCustomIri",
-                  description = Some("A new group with an invalid custom Iri"),
-                  project = SharedTestDataADM.IMAGES_PROJECT_IRI,
-                  status = true,
-                  selfjoin = false
-                )
-            )
-            assert(caught.getMessage === "Invalid group IRI")
-        }
+      val caught = intercept[BadRequestException](
+        CreateGroupApiRequestADM(
+          id = Some("invalid-group-IRI"),
+          name = "NewGroupWithInvalidCustomIri",
+          description = Some("A new group with an invalid custom Iri"),
+          project = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          status = true,
+          selfjoin = false
+        )
+      )
+      assert(caught.getMessage === "Invalid group IRI")
     }
+  }
 }

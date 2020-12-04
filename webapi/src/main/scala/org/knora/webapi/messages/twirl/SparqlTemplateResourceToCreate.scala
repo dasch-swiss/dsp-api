@@ -17,7 +17,6 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 package org.knora.webapi.messages.twirl
 
 import java.time.Instant
@@ -25,16 +24,15 @@ import java.time.Instant
 import org.knora.webapi._
 
 /**
- * Represents a resource to be created with its index, label, IRI, permissions, and SPARQL for creating its values
- *
- * @param resourceIri          the IRI of the resource to be created.
- * @param permissions          the permissions user has for creating the new resource.
- * @param sparqlForValues      the SPARQL for creating the values of the resource.
- * @param resourceClassIri     the type of the resource to be created.
- * @param resourceLabel        the label of the resource.
- * @param resourceCreationDate the creation date that should be attached to the resource.
- */
-
+  * Represents a resource to be created with its index, label, IRI, permissions, and SPARQL for creating its values
+  *
+  * @param resourceIri          the IRI of the resource to be created.
+  * @param permissions          the permissions user has for creating the new resource.
+  * @param sparqlForValues      the SPARQL for creating the values of the resource.
+  * @param resourceClassIri     the type of the resource to be created.
+  * @param resourceLabel        the label of the resource.
+  * @param resourceCreationDate the creation date that should be attached to the resource.
+  */
 case class SparqlTemplateResourceToCreate(resourceIri: IRI,
                                           permissions: String,
                                           sparqlForValues: String,

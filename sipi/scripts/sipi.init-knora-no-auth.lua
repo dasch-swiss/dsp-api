@@ -34,6 +34,7 @@ require "get_knora_session"
 --    filepath: server-path where the master file is located
 -------------------------------------------------------------------------------
 function pre_flight(prefix,identifier,cookie)
+    server.log("pre_flight called in sipi.init-knora-no-auth.lua", server.loglevel.LOG_DEBUG)
 
     --
     -- Allways allows access to images. No authorization from Knora is retrieved

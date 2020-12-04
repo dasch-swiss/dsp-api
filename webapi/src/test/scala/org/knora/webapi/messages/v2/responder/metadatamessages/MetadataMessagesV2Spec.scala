@@ -27,13 +27,13 @@ import org.knora.webapi.messages.util.rdf.{RdfFeatureFactory, RdfFormatUtil, Rdf
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
- * Tests [[MetadataPutRequestV2]].
- */
+  * Tests [[MetadataPutRequestV2]].
+  */
 class MetadataMessagesV2Spec extends CoreSpec() {
-    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
 
-    private val graphDataContent: String =
-        """
+  private val graphDataContent: String =
+    """
         @prefix dsp-repo: <http://ns.dasch.swiss/repository#> .
         @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 
@@ -41,23 +41,23 @@ class MetadataMessagesV2Spec extends CoreSpec() {
         dsp-repo:anything dsp-repo:hasShortcode "0001" .
         """
 
-    // Parse the request to an RdfModel.
-    private val requestModel: RdfModel = rdfFormatUtil.parseToRdfModel(
-        rdfStr = graphDataContent,
-        rdfFormat = Turtle
-    )
+  // Parse the request to an RdfModel.
+  private val requestModel: RdfModel = rdfFormatUtil.parseToRdfModel(
+    rdfStr = graphDataContent,
+    rdfFormat = Turtle
+  )
 
-    "MetadataPutRequestV2" should {
-        "return ForbiddenException if the requesting user is not the project admin or a system admin" in {
-            assertThrows[ForbiddenException](
-                MetadataPutRequestV2(
-                    rdfModel = requestModel,
-                    projectADM = SharedTestDataADM.anythingProject,
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    requestingUser = SharedTestDataADM.anythingUser2,
-                    apiRequestID = UUID.randomUUID()
-                )
-            )
-        }
+  "MetadataPutRequestV2" should {
+    "return ForbiddenException if the requesting user is not the project admin or a system admin" in {
+      assertThrows[ForbiddenException](
+        MetadataPutRequestV2(
+          rdfModel = requestModel,
+          projectADM = SharedTestDataADM.anythingProject,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingUser2,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
     }
+  }
 }

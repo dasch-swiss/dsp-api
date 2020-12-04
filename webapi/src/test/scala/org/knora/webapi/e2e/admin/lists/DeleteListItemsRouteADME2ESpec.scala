@@ -32,116 +32,120 @@ import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtoco
 import org.knora.webapi.messages.v1.routing.authenticationmessages.CredentialsADM
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util.AkkaHttpUtils
-import spray.json.{JsObject, JsValue}
 
 import scala.concurrent.duration._
 
 object DeleteListItemsRouteADME2ESpec {
-    val config: Config = ConfigFactory.parseString(
-        """
+  val config: Config = ConfigFactory.parseString("""
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
 
 /**
- * End-to-End (E2E) test specification for testing  endpoint.
- */
-class DeleteListItemsRouteADME2ESpec extends E2ESpec(DeleteListItemsRouteADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol with ListADMJsonProtocol {
+  * End-to-End (E2E) test specification for testing  endpoint.
+  */
+class DeleteListItemsRouteADME2ESpec
+    extends E2ESpec(DeleteListItemsRouteADME2ESpec.config)
+    with SessionJsonProtocol
+    with TriplestoreJsonProtocol
+    with ListADMJsonProtocol {
 
-    implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(5.seconds)
 
-    // Directory path for generated client test data
-    private val clientTestDataPath: Seq[String] = Seq("admin", "lists")
+  // Directory path for generated client test data
+  private val clientTestDataPath: Seq[String] = Seq("admin", "lists")
 
-    // Collects client test data
-    private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  // Collects client test data
+  private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
-    override lazy val rdfDataObjects = List(
-        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-        RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
-    )
+  override lazy val rdfDataObjects = List(
+    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+  )
 
-    val rootCreds: CredentialsADM = CredentialsADM(
-        SharedTestDataADM.rootUser,
-        "test"
-    )
+  val rootCreds: CredentialsADM = CredentialsADM(
+    SharedTestDataADM.rootUser,
+    "test"
+  )
 
-    val normalUserCreds: CredentialsADM = CredentialsADM(
-        SharedTestDataADM.normalUser,
-        "test"
-    )
+  val normalUserCreds: CredentialsADM = CredentialsADM(
+    SharedTestDataADM.normalUser,
+    "test"
+  )
 
-    val anythingUserCreds: CredentialsADM = CredentialsADM(
-        SharedTestDataADM.anythingUser1,
-        "test"
-    )
+  val anythingUserCreds: CredentialsADM = CredentialsADM(
+    SharedTestDataADM.anythingUser1,
+    "test"
+  )
 
-    val anythingAdminUserCreds: CredentialsADM = CredentialsADM(
-        SharedTestDataADM.anythingAdminUser,
-        "test"
-    )
+  val anythingAdminUserCreds: CredentialsADM = CredentialsADM(
+    SharedTestDataADM.anythingAdminUser,
+    "test"
+  )
 
-    private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
-    private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
+  private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
+  private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
 
+  "The List Items Route (/admin/lists)" when {
+    "deleting list items" should {
+      "return forbidden exception when requesting user is not system or project admin" in {
+        val encodedNodeUrl = java.net.URLEncoder.encode(SharedListsTestDataADM.otherTreeListInfo.id, "utf-8")
+        val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
+          BasicHttpCredentials(anythingUserCreds.user.email, anythingUserCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.Forbidden)
+      }
 
-    "The List Items Route (/admin/lists)" when {
-        "deleting list items" should {
-            "return forbidden exception when requesting user is not system or project admin" in {
-                val encodedNodeUrl = java.net.URLEncoder.encode(SharedListsTestDataADM.otherTreeListInfo.id, "utf-8")
-                val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(BasicHttpCredentials(anythingUserCreds.user.email, anythingUserCreds.password))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be(StatusCodes.Forbidden)
-            }
+      "delete a middle node and shift its siblings" in {
+        val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList02", "utf-8")
+        val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
+          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+        val node = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
+        val children = node.getChildren
+        children.size should be(2)
+        // last child must be shifted one place to left
+        val lastChild = children.last
+        lastChild.id should be("http://rdfh.ch/lists/0001/notUsedList03")
+        lastChild.position should be(1)
+        // first child must have its child
+        val firstChild = children.head
+        firstChild.children.size should be(5)
 
-            "delete a middle node and shift its siblings" in {
-                val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList02", "utf-8")
-                val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be(StatusCodes.OK)
-                val node = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
-                val children = node.getChildren
-                children.size should be(2)
-                // last child must be shifted one place to left
-                val lastChild = children.last
-                lastChild.id should be("http://rdfh.ch/lists/0001/notUsedList03")
-                lastChild.position should be(1)
-                // first child must have its child
-                val firstChild = children.head
-                firstChild.children.size should be(5)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "delete-list-node-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
 
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "delete-list-node-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
+      "delete a list entirely with all its children" in {
+        val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList", "utf-8")
+        val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
+          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+        val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
+        deletedStatus.convertTo[Boolean] should be(true)
 
-            "delete a list entirely with all its children" in {
-                val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList", "utf-8")
-                val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
-                val response: HttpResponse = singleAwaitingRequest(request)
-                response.status should be(StatusCodes.OK)
-                val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
-                deletedStatus.convertTo[Boolean] should be(true)
-
-                clientTestDataCollector.addFile(
-                    TestDataFileContent(
-                        filePath = TestDataFilePath(
-                            directoryPath = clientTestDataPath,
-                            filename = "delete-list-response",
-                            fileExtension = "json"
-                        ),
-                        text = responseToString(response)
-                    )
-                )
-            }
-        }
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "delete-list-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
     }
+  }
 }

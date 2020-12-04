@@ -32,17 +32,17 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import scala.concurrent.duration._
 
 /**
- * Tests [[MetadataResponderV2]].
- */
+  * Tests [[MetadataResponderV2]].
+  */
 class MetadataResponderV2Spec extends CoreSpec() with ImplicitSender {
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
 
-    // The default timeout for receiving reply messages from actors.
-    private val timeout = 10.seconds
+  // The default timeout for receiving reply messages from actors.
+  private val timeout = 10.seconds
 
-    private val metadataContent =
-        s"""
+  private val metadataContent =
+    s"""
            |@prefix dsp-repo: <http://ns.dasch.swiss/repository#> .
            |@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
            |@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
@@ -93,42 +93,42 @@ class MetadataResponderV2Spec extends CoreSpec() with ImplicitSender {
            |<beol> dsp-repo:hasAlternateName "beol" .
            |""".stripMargin
 
-    // Parse the request to an RdfModel.
-    private val requestModel: RdfModel = rdfFormatUtil.parseToRdfModel(
-        rdfStr = metadataContent,
-        rdfFormat = Turtle
-    )
+  // Parse the request to an RdfModel.
+  private val requestModel: RdfModel = rdfFormatUtil.parseToRdfModel(
+    rdfStr = metadataContent,
+    rdfFormat = Turtle
+  )
 
-    "The metadata responder v2" should {
+  "The metadata responder v2" should {
 
-        "save a metadata graph in the triplestore" in {
-            responderManager ! MetadataPutRequestV2(
-                rdfModel = requestModel,
-                projectADM = SharedTestDataADM.beolProject,
-                featureFactoryConfig = defaultFeatureFactoryConfig,
-                requestingUser = SharedTestDataADM.beolUser,
-                apiRequestID = UUID.randomUUID
-            )
+    "save a metadata graph in the triplestore" in {
+      responderManager ! MetadataPutRequestV2(
+        rdfModel = requestModel,
+        projectADM = SharedTestDataADM.beolProject,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.beolUser,
+        apiRequestID = UUID.randomUUID
+      )
 
-            val response = expectMsgType[SuccessResponseV2](timeout)
-            assert(response.message.contains(s"<${SharedTestDataADM.beolProject.id}>"))
-        }
-        
-        "get the metadata graph of a project" in {
-            responderManager ! MetadataGetRequestV2(
-                projectADM = SharedTestDataADM.beolProject,
-                featureFactoryConfig = defaultFeatureFactoryConfig,
-                requestingUser = SharedTestDataADM.beolUser
-            )
-
-            val response = expectMsgType[MetadataGetResponseV2](timeout)
-
-            val receivedModel: RdfModel = rdfFormatUtil.parseToRdfModel(
-                rdfStr = response.turtle,
-                rdfFormat = Turtle
-            )
-
-            assert(receivedModel.isIsomorphicWith(requestModel))
-        }
+      val response = expectMsgType[SuccessResponseV2](timeout)
+      assert(response.message.contains(s"<${SharedTestDataADM.beolProject.id}>"))
     }
+
+    "get the metadata graph of a project" in {
+      responderManager ! MetadataGetRequestV2(
+        projectADM = SharedTestDataADM.beolProject,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.beolUser
+      )
+
+      val response = expectMsgType[MetadataGetResponseV2](timeout)
+
+      val receivedModel: RdfModel = rdfFormatUtil.parseToRdfModel(
+        rdfStr = response.turtle,
+        rdfFormat = Turtle
+      )
+
+      assert(receivedModel.isIsomorphicWith(requestModel))
+    }
+  }
 }

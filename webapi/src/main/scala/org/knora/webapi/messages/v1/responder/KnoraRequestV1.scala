@@ -20,6 +20,6 @@
 package org.knora.webapi.messages.v1.responder
 
 /**
- * A tagging trait for messages that can be sent to Knora API v1 responders.
- */
+  * A tagging trait for messages that can be sent to Knora API v1 responders.
+  */
 trait KnoraRequestV1

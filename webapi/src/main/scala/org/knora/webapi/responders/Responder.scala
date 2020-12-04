@@ -37,124 +37,128 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
 /**
- * Responder helper methods.
- */
+  * Responder helper methods.
+  */
 object Responder {
 
-    /**
-     * An responder use this method to handle unexpected request messages in a consistent way.
-     *
-     * @param message the message that was received.
-     * @param log     a [[Logger]].
-     * @param who     the responder receiving the message.
-     */
-    def handleUnexpectedMessage(message: Any, log: Logger, who: String): Future[Nothing] = {
-        val unexpectedMessageException = UnexpectedMessageException(s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}")
-        FastFuture.failed(unexpectedMessageException)
-    }
+  /**
+    * An responder use this method to handle unexpected request messages in a consistent way.
+    *
+    * @param message the message that was received.
+    * @param log     a [[Logger]].
+    * @param who     the responder receiving the message.
+    */
+  def handleUnexpectedMessage(message: Any, log: Logger, who: String): Future[Nothing] = {
+    val unexpectedMessageException = UnexpectedMessageException(
+      s"$who received an unexpected message $message of type ${message.getClass.getCanonicalName}")
+    FastFuture.failed(unexpectedMessageException)
+  }
 }
 
-
 /**
- * An abstract class providing values that are commonly used in Knora responders.
- */
+  * An abstract class providing values that are commonly used in Knora responders.
+  */
 abstract class Responder(responderData: ResponderData) extends LazyLogging {
 
-    /**
-     * The actor system.
-     */
-    protected implicit val system: ActorSystem = responderData.system
+  /**
+    * The actor system.
+    */
+  protected implicit val system: ActorSystem = responderData.system
 
-    /**
-     * The execution context for futures created in Knora actors.
-     */
-    protected implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+  /**
+    * The execution context for futures created in Knora actors.
+    */
+  protected implicit val executionContext: ExecutionContext =
+    system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-    /**
-     * The application settings.
-     */
-    protected val settings: KnoraSettingsImpl = KnoraSettings(system)
+  /**
+    * The application settings.
+    */
+  protected val settings: KnoraSettingsImpl = KnoraSettings(system)
 
-    /**
-     * The main application actor.
-     */
-    protected val appActor: ActorRef = responderData.appActor
+  /**
+    * The main application actor.
+    */
+  protected val appActor: ActorRef = responderData.appActor
 
-    /**
-     * The main application actor forwards messages to the responder manager.
-     */
-    protected val responderManager: ActorRef = responderData.appActor
+  /**
+    * The main application actor forwards messages to the responder manager.
+    */
+  protected val responderManager: ActorRef = responderData.appActor
 
-    /**
-     * The main application actor forwards messages to the store manager.
-     */
-    protected val storeManager: ActorRef = responderData.appActor
+  /**
+    * The main application actor forwards messages to the store manager.
+    */
+  protected val storeManager: ActorRef = responderData.appActor
 
-    /**
-     * A string formatter.
-     */
-    protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  /**
+    * A string formatter.
+    */
+  protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    /**
-     * The application's default timeout for `ask` messages.
-     */
-    protected implicit val timeout: Timeout = settings.defaultTimeout
+  /**
+    * The application's default timeout for `ask` messages.
+    */
+  protected implicit val timeout: Timeout = settings.defaultTimeout
 
-    /**
-     * Provides logging
-     */
-    protected val log: Logger = logger
-    protected val loggingAdapter: LoggingAdapter = akka.event.Logging(system, this.getClass)
+  /**
+    * Provides logging
+    */
+  protected val log: Logger = logger
+  protected val loggingAdapter: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
-    /**
-     * Checks whether an entity is used in the triplestore.
-     *
-     * @param entityIri                 the IRI of the entity.
-     * @param errorFun                  a function that throws an exception. It will be called if the entity is used.
-     * @param ignoreKnoraConstraints    if `true`, ignores the use of the entity in Knora subject or object constraints.
-     * @param ignoreRdfSubjectAndObject if `true`, ignores the use of the entity in `rdf:subject` and `rdf:object`.
-     */
-    protected def isEntityUsed(entityIri: SmartIri,
-                               errorFun: => Nothing,
-                               ignoreKnoraConstraints: Boolean = false,
-                               ignoreRdfSubjectAndObject: Boolean = false): Future[Unit] = {
+  /**
+    * Checks whether an entity is used in the triplestore.
+    *
+    * @param entityIri                 the IRI of the entity.
+    * @param errorFun                  a function that throws an exception. It will be called if the entity is used.
+    * @param ignoreKnoraConstraints    if `true`, ignores the use of the entity in Knora subject or object constraints.
+    * @param ignoreRdfSubjectAndObject if `true`, ignores the use of the entity in `rdf:subject` and `rdf:object`.
+    */
+  protected def isEntityUsed(entityIri: SmartIri,
+                             errorFun: => Nothing,
+                             ignoreKnoraConstraints: Boolean = false,
+                             ignoreRdfSubjectAndObject: Boolean = false): Future[Unit] = {
 
+    for {
+      isEntityUsedSparql <- Future(
+        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .isEntityUsed(
+            triplestore = settings.triplestoreType,
+            entityIri = entityIri,
+            ignoreKnoraConstraints = ignoreKnoraConstraints,
+            ignoreRdfSubjectAndObject = ignoreRdfSubjectAndObject
+          )
+          .toString())
+
+      isEntityUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql))
+        .mapTo[SparqlSelectResult]
+
+      _ = if (isEntityUsedResponse.results.bindings.nonEmpty) {
+        errorFun
+      }
+    } yield ()
+  }
+
+  /**
+    * Checks whether an entity with the provided custom IRI exists in the triplestore, if yes, throws an exception.
+    * If no custom IRI was given, creates a random unused IRI.
+    *
+    * @param entityIri    the optional custom IRI of the entity.
+    * @param iriFormatter the stringFormatter method that must be used to create a random Iri.
+    * @return IRI of the entity.
+    */
+  protected def checkOrCreateEntityIri(entityIri: Option[SmartIri], iriFormatter: => IRI): Future[IRI] = {
+    entityIri match {
+      case Some(customResourceIri) =>
         for {
-            isEntityUsedSparql <- Future(org.knora.webapi.messages.twirl.queries.sparql.v2.txt.isEntityUsed(
-                triplestore = settings.triplestoreType,
-                entityIri = entityIri,
-                ignoreKnoraConstraints = ignoreKnoraConstraints,
-                ignoreRdfSubjectAndObject = ignoreRdfSubjectAndObject
-            ).toString())
+          result <- stringFormatter.checkIriExists(customResourceIri.toString, storeManager)
+          _ = if (result) {
+            throw DuplicateValueException(s"IRI: '${customResourceIri.toString}' already exists, try another one.")
+          }
+        } yield customResourceIri.toString
 
-            isEntityUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql)).mapTo[SparqlSelectResult]
-
-            _ = if (isEntityUsedResponse.results.bindings.nonEmpty) {
-                errorFun
-            }
-        } yield ()
+      case None => stringFormatter.makeUnusedIri(iriFormatter, storeManager, loggingAdapter)
     }
-
-    /**
-     * Checks whether an entity with the provided custom IRI exists in the triplestore, if yes, throws an exception.
-     * If no custom IRI was given, creates a random unused IRI.
-     *
-     * @param entityIri    the optional custom IRI of the entity.
-     * @param iriFormatter the stringFormatter method that must be used to create a random Iri.
-     * @return IRI of the entity.
-     */
-    protected def checkOrCreateEntityIri(entityIri: Option[SmartIri],
-                                         iriFormatter: => IRI): Future[IRI] = {
-        entityIri match {
-            case Some(customResourceIri) =>
-                for {
-                    result <- stringFormatter.checkIriExists(customResourceIri.toString, storeManager)
-                    _ = if (result) {
-                        throw DuplicateValueException(s"IRI: '${customResourceIri.toString}' already exists, try another one.")
-                    }
-                } yield customResourceIri.toString
-
-            case None => stringFormatter.makeUnusedIri(iriFormatter, storeManager, loggingAdapter)
-        }
-    }
+  }
 }

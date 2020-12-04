@@ -29,11 +29,11 @@ import org.knora.webapi.tags.E2ETest
 import scala.concurrent.duration._
 
 /**
-  * Example Simulation Scenario:
-  *
-  * This simulation scenario accesses the users endpoint with
-  * 1000 users concurrently.
-  */
+ * Example Simulation Scenario:
+ *
+ * This simulation scenario accesses the users endpoint with
+ * 1000 users concurrently.
+ */
 class ExampleE2ESimSpec extends E2ESimSpec {
 
     override lazy val rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]
@@ -62,4 +62,4 @@ class ExampleE2ESimSpec extends E2ESimSpec {
 }
 
 
-*/
+ */

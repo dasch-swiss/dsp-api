@@ -25,41 +25,39 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.ITKnoraFakeSpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 
-
 object KnoraSipiScriptsV1ITSpec {
-    val config: Config = ConfigFactory.parseString(
-        """
+  val config: Config = ConfigFactory.parseString("""
           |akka.loglevel = "DEBUG"
           |akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
 
 /**
- * End-to-End (E2E) test specification for testing Knora-Sipi scripts. Sipi must be running with the config file
- * `sipi.knora-config.lua`. This spec uses the KnoraFakeService to start a faked `webapi` server that always allows
- * access to files.
- */
+  * End-to-End (E2E) test specification for testing Knora-Sipi scripts. Sipi must be running with the config file
+  * `sipi.knora-config.lua`. This spec uses the KnoraFakeService to start a faked `webapi` server that always allows
+  * access to files.
+  */
 class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.config) with TriplestoreJsonProtocol {
 
-    implicit override val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
+  implicit override val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
-    "Calling Knora Sipi Scripts" should {
+  "Calling Knora Sipi Scripts" should {
 
-        "successfully call C++ functions from Lua scripts" in {
-            val request = Get(baseInternalSipiUrl + "/test_functions" )
-            // DSP-707: trying to wake up sipi first (without triggering an exception)
-            Http().singleRequest(request)
-            checkResponseOK(request)
-        }
-
-        "successfully call Lua functions for mediatype handling" in {
-            val request = Get(baseInternalSipiUrl + "/test_file_type" )
-            getResponseString(request)
-        }
-
-        "successfully call Lua function that gets the Knora session id from the cookie header sent to Sipi" in {
-            val request = Get(baseInternalSipiUrl + "/test_knora_session_cookie" )
-            getResponseString(request)
-        }
+    "successfully call C++ functions from Lua scripts" in {
+      val request = Get(baseInternalSipiUrl + "/test_functions")
+      // DSP-707: trying to wake up sipi first (without triggering an exception)
+      Http().singleRequest(request)
+      checkResponseOK(request)
     }
+
+    "successfully call Lua functions for mediatype handling" in {
+      val request = Get(baseInternalSipiUrl + "/test_file_type")
+      getResponseString(request)
+    }
+
+    "successfully call Lua function that gets the Knora session id from the cookie header sent to Sipi" in {
+      val request = Get(baseInternalSipiUrl + "/test_knora_session_cookie")
+      getResponseString(request)
+    }
+  }
 }

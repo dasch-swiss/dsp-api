@@ -33,11 +33,9 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 import scala.concurrent.duration._
 
-
 object ProjectsResponderV1Spec {
 
-    val config: Config = ConfigFactory.parseString(
-        """
+  val config: Config = ConfigFactory.parseString("""
          akka.loglevel = "DEBUG"
          akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
@@ -48,83 +46,83 @@ object ProjectsResponderV1Spec {
   */
 class ProjectsResponderV1Spec extends CoreSpec(ProjectsResponderV1Spec.config) with ImplicitSender {
 
-    private val timeout = 5.seconds
+  private val timeout = 5.seconds
 
-    private val rootUserProfileV1 = SharedTestDataV1.rootUser
+  private val rootUserProfileV1 = SharedTestDataV1.rootUser
 
-    "The ProjectsResponderV1 " when {
+  "The ProjectsResponderV1 " when {
 
-        "used to query for project information" should {
+    "used to query for project information" should {
 
-            "return information for every project" in {
+      "return information for every project" in {
 
-                responderManager ! ProjectsGetRequestV1(
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    userProfile = Some(rootUserProfileV1)
-                )
-                val received = expectMsgType[ProjectsResponseV1](timeout)
+        responderManager ! ProjectsGetRequestV1(
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          userProfile = Some(rootUserProfileV1)
+        )
+        val received = expectMsgType[ProjectsResponseV1](timeout)
 
-                assert(received.projects.contains(SharedTestDataV1.imagesProjectInfo))
-                assert(received.projects.contains(SharedTestDataV1.incunabulaProjectInfo))
-            }
+        assert(received.projects.contains(SharedTestDataV1.imagesProjectInfo))
+        assert(received.projects.contains(SharedTestDataV1.incunabulaProjectInfo))
+      }
 
-            "return information about a project identified by IRI" in {
+      "return information about a project identified by IRI" in {
 
-                /* Incunabula project */
-                responderManager ! ProjectInfoByIRIGetRequestV1(
-                    iri = SharedTestDataV1.incunabulaProjectInfo.id,
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    userProfileV1 = Some(SharedTestDataV1.rootUser)
-                )
-                expectMsg(ProjectInfoResponseV1(SharedTestDataV1.incunabulaProjectInfo))
+        /* Incunabula project */
+        responderManager ! ProjectInfoByIRIGetRequestV1(
+          iri = SharedTestDataV1.incunabulaProjectInfo.id,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          userProfileV1 = Some(SharedTestDataV1.rootUser)
+        )
+        expectMsg(ProjectInfoResponseV1(SharedTestDataV1.incunabulaProjectInfo))
 
-                /* Images project */
-                responderManager ! ProjectInfoByIRIGetRequestV1(
-                    iri = SharedTestDataV1.imagesProjectInfo.id,
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    userProfileV1 = Some(SharedTestDataV1.rootUser)
-                )
-                expectMsg(ProjectInfoResponseV1(SharedTestDataV1.imagesProjectInfo))
+        /* Images project */
+        responderManager ! ProjectInfoByIRIGetRequestV1(
+          iri = SharedTestDataV1.imagesProjectInfo.id,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          userProfileV1 = Some(SharedTestDataV1.rootUser)
+        )
+        expectMsg(ProjectInfoResponseV1(SharedTestDataV1.imagesProjectInfo))
 
-                /* 'SystemProject' */
-                responderManager ! ProjectInfoByIRIGetRequestV1(
-                    iri = SharedTestDataV1.systemProjectInfo.id,
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    userProfileV1 = Some(SharedTestDataV1.rootUser)
-                )
-                expectMsg(ProjectInfoResponseV1(SharedTestDataV1.systemProjectInfo))
+        /* 'SystemProject' */
+        responderManager ! ProjectInfoByIRIGetRequestV1(
+          iri = SharedTestDataV1.systemProjectInfo.id,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          userProfileV1 = Some(SharedTestDataV1.rootUser)
+        )
+        expectMsg(ProjectInfoResponseV1(SharedTestDataV1.systemProjectInfo))
 
-            }
+      }
 
-            "return information about a project identified by shortname" in {
-                responderManager ! ProjectInfoByShortnameGetRequestV1(
-                    SharedTestDataV1.incunabulaProjectInfo.shortname,
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    Some(rootUserProfileV1)
-                )
-                expectMsg(ProjectInfoResponseV1(SharedTestDataV1.incunabulaProjectInfo))
-            }
+      "return information about a project identified by shortname" in {
+        responderManager ! ProjectInfoByShortnameGetRequestV1(
+          SharedTestDataV1.incunabulaProjectInfo.shortname,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          Some(rootUserProfileV1)
+        )
+        expectMsg(ProjectInfoResponseV1(SharedTestDataV1.incunabulaProjectInfo))
+      }
 
-            "return 'NotFoundException' when the project IRI is unknown" in {
+      "return 'NotFoundException' when the project IRI is unknown" in {
 
-                responderManager ! ProjectInfoByIRIGetRequestV1(
-                    iri = "http://rdfh.ch/projects/notexisting",
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    userProfileV1 = Some(rootUserProfileV1)
-                )
-                expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found")))
+        responderManager ! ProjectInfoByIRIGetRequestV1(
+          iri = "http://rdfh.ch/projects/notexisting",
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          userProfileV1 = Some(rootUserProfileV1)
+        )
+        expectMsg(Failure(NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found")))
 
-            }
+      }
 
-            "return 'NotFoundException' when the project shortname unknown " in {
-                responderManager ! ProjectInfoByShortnameGetRequestV1(
-                    shortname = "projectwrong",
-                    featureFactoryConfig = defaultFeatureFactoryConfig,
-                    userProfileV1 = Some(rootUserProfileV1)
-                )
-                expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found")))
-            }
-        }
+      "return 'NotFoundException' when the project shortname unknown " in {
+        responderManager ! ProjectInfoByShortnameGetRequestV1(
+          shortname = "projectwrong",
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          userProfileV1 = Some(rootUserProfileV1)
+        )
+        expectMsg(Failure(NotFoundException(s"Project 'projectwrong' not found")))
+      }
     }
+  }
 
 }

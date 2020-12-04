@@ -11,12 +11,12 @@ import scala.util.Random
 
 
 /**
-  * Simulation Scenario for testing the users endpoint.
-  *
-  * In this simulation scenario, concurrently, 1000 users retrieve a list of all users,
-  * while additional 20 users register themselves. The mean response time should be less
-  * then 300 ms (according to a quick google search, 200 ms are standard).
-  */
+ * Simulation Scenario for testing the users endpoint.
+ *
+ * In this simulation scenario, concurrently, 1000 users retrieve a list of all users,
+ * while additional 20 users register themselves. The mean response time should be less
+ * then 300 ms (according to a quick google search, 200 ms are standard).
+ */
 class UsersADME2ESimSpec extends E2ESimSpec {
 
     // need to override this. before each test, the triplestore is automatically reloaded.
@@ -66,4 +66,4 @@ class UsersADME2ESimSpec extends E2ESimSpec {
 }
 
 
-*/
+ */
