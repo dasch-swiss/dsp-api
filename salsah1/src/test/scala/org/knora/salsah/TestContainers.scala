@@ -19,44 +19,62 @@
 
 package org.knora.salsah
 
+import java.net.NetworkInterface
+
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.IRI
+import org.knora.webapi.exceptions.TestConfigurationException
 import org.testcontainers.containers.{BindMode, GenericContainer}
+import org.testcontainers.utility.DockerImageName
+
+import scala.collection.JavaConverters._
 
 /**
  * Provides all containers necessary for running tests.
  */
 object TestContainers {
 
-    val FusekiContainer = new GenericContainer("daschswiss/knora-jena-fuseki:latest")
+    // get local IP address, which we need for SIPI
+    val localIpAddress: String = NetworkInterface.getNetworkInterfaces
+        .asScala.toSeq.filter(!_.isLoopback)
+        .flatMap(_.getInetAddresses.asScala.toSeq.filter(_.getAddress.length == 4).map(_.toString))
+        .headOption.getOrElse(throw TestConfigurationException(s"No suitable network interface found"))
+
+    val FusekiImageName: DockerImageName = DockerImageName.parse("bazel/docker/knora-jena-fuseki:image")
+    val FusekiContainer = new GenericContainer(FusekiImageName)
     FusekiContainer.withExposedPorts(3030)
     FusekiContainer.withEnv("ADMIN_PASSWORD", "test")
     FusekiContainer.withEnv("JVM_ARGS", "-Xmx3G")
     FusekiContainer.start()
 
-    val SipiContainer = new GenericContainer("daschswiss/knora-sipi:latest")
+    val SipiImageName: DockerImageName = DockerImageName.parse("bazel/docker/knora-sipi:image")
+    val SipiContainer = new GenericContainer(SipiImageName)
     SipiContainer.withExposedPorts(1024)
-    SipiContainer.withEnv("SIPI_EXTERNAL_PROTOCOL", "http")
-    SipiContainer.withEnv("SIPI_EXTERNAL_HOSTNAME", "sipi")
-    SipiContainer.withEnv("SIPI_EXTERNAL_PORT", "1024")
-    SipiContainer.withEnv("SIPI_WEBAPI_HOSTNAME", "api")
+    SipiContainer.withEnv("SIPI_WEBAPI_HOSTNAME", localIpAddress)
     SipiContainer.withEnv("SIPI_WEBAPI_PORT", "3333")
     SipiContainer.withCommand("--config=/sipi/config/sipi.knora-docker-config.lua")
-    SipiContainer.withClasspathResourceMapping("/sipi/config/sipi.knora-docker-config.lua",
+    SipiContainer.withClasspathResourceMapping(
         "/sipi/config/sipi.knora-docker-config.lua",
-        BindMode.READ_ONLY)
-    SipiContainer.withClasspathResourceMapping("/sipi/config/sipi.knora-docker-config.lua",
-        "/sipi/config/sipi.init-knora.lua",
+        "/sipi/config/sipi.knora-docker-config.lua",
         BindMode.READ_ONLY)
     SipiContainer.start()
 
-    val RedisContainer = new GenericContainer("redis:5")
+    // Container needs to be started to get the random IP
+    val sipiIp: IRI = SipiContainer.getHost
+    val sipiPort: Int = SipiContainer.getFirstMappedPort
+
+    val RedisImageName: DockerImageName = DockerImageName.parse("redis:5")
+    val RedisContainer = new GenericContainer(RedisImageName)
     RedisContainer.withExposedPorts(6379)
     RedisContainer.start()
 
     import scala.collection.JavaConverters._
     private val portMap = Map(
         "app.triplestore.fuseki.port" -> FusekiContainer.getFirstMappedPort,
-        "app.sipi.internal-port" -> SipiContainer.getFirstMappedPort,
+        "app.sipi.external-host" -> sipiIp,
+        "app.sipi.external-port" -> sipiPort,
+        "app.sipi.internal-host" -> sipiIp,
+        "app.sipi.internal-port" -> sipiPort,
         "app.cache-service.redis.port" -> RedisContainer.getFirstMappedPort
     ).asJava
 

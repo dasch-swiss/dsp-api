@@ -19,11 +19,14 @@
 
 package org.knora.webapi
 
-import java.net.InetAddress
+import java.net.NetworkInterface
 
 import com.typesafe.config.{Config, ConfigFactory}
+import org.knora.webapi.exceptions.TestConfigurationException
 import org.testcontainers.containers.{BindMode, GenericContainer}
 import org.testcontainers.utility.DockerImageName
+
+import scala.collection.JavaConverters._
 
 /**
   * Provides all containers necessary for running tests.
@@ -31,8 +34,10 @@ import org.testcontainers.utility.DockerImageName
 object TestContainers {
 
     // get local IP address, which we need for SIPI
-    val localhost: InetAddress = InetAddress.getLocalHost
-    val localIpAddress: String = localhost.getHostAddress
+    val localIpAddress: String = NetworkInterface.getNetworkInterfaces
+        .asScala.toSeq.filter(!_.isLoopback)
+        .flatMap(_.getInetAddresses.asScala.toSeq.filter(_.getAddress.length == 4).map(_.toString))
+        .headOption.getOrElse(throw TestConfigurationException(s"No suitable network interface found"))
 
     val FusekiImageName: DockerImageName = DockerImageName.parse("bazel/docker/knora-jena-fuseki:image")
     val FusekiContainer = new GenericContainer(FusekiImageName)
