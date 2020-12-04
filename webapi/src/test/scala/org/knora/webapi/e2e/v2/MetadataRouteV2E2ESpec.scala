@@ -1,7 +1,7 @@
 package org.knora.webapi.e2e.v2
 
-import java.io.File
 import java.net.URLEncoder
+import java.nio.file.Paths
 
 import akka.http.scaladsl.model.headers.{BasicHttpCredentials, RawHeader}
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse}
@@ -19,9 +19,9 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
   private val beolProjectIRI: IRI = SharedTestDataADM.BEOL_PROJECT_IRI
   private val password = SharedTestDataADM.testPass
 
-  private val metadataAsTurtle: String = FileUtil.readTextFile(new File("test_data/metadataE2EV2/metadata.ttl"))
+  private val metadataAsTurtle: String = FileUtil.readTextFile(Paths.get("test_data/metadataE2EV2/metadata.ttl"))
   private val metadataAsFlatJsonLD: String =
-    FileUtil.readTextFile(new File("test_data/metadataE2EV2/metadata-flat.jsonld"))
+    FileUtil.readTextFile(Paths.get("test_data/metadataE2EV2/metadata-flat.jsonld"))
 
   private val expectedRdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(
     rdfStr = metadataAsTurtle,

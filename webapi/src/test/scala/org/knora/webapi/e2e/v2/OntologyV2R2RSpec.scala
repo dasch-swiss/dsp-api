@@ -1,6 +1,7 @@
 package org.knora.webapi.e2e.v2
 
-import java.io.File
+import java.nio.file.{Path, Paths, Files}
+
 import java.net.URLEncoder
 import java.time.Instant
 
@@ -84,9 +85,9 @@ class OntologyV2R2RSpec extends R2RSpec {
                                  fileBasename: String,
                                  maybeClientTestDataBasename: Option[String] = None,
                                  disableWrite: Boolean = false) {
-    def makeFile(mediaType: MediaType.NonBinary): File = {
+    def makeFile(mediaType: MediaType.NonBinary): Path = {
       val fileSuffix = mediaType.fileExtensions.head
-      new File(s"test_data/ontologyR2RV2/$fileBasename.$fileSuffix")
+      Paths.get(s"test_data/ontologyR2RV2/$fileBasename.$fileSuffix")
     }
 
     /**
@@ -99,10 +100,10 @@ class OntologyV2R2RSpec extends R2RSpec {
       if (!disableWrite) {
         // Per default only read access is allowed in the bazel sandbox.
         // This workaround allows to save test output.
-        val testOutputDir = sys.env("TEST_UNDECLARED_OUTPUTS_DIR")
+        val testOutputDir = Paths.get(sys.env("TEST_UNDECLARED_OUTPUTS_DIR"))
         val file = makeFile(mediaType)
-        val newOutputFile = new File(testOutputDir, file.getPath)
-        newOutputFile.getParentFile.mkdirs()
+        val newOutputFile = testOutputDir.resolve(file)
+        Files.createDirectories(newOutputFile.getParent)
         FileUtil.writeTextFile(newOutputFile, responseStr)
       }
     }
@@ -342,9 +343,9 @@ class OntologyV2R2RSpec extends R2RSpec {
 
               mediaType match {
                 case RdfMediaTypes.`application/rdf+xml` =>
-                  val existingFile: File = httpGetTest.makeFile(mediaType)
+                  val existingFile: Path = httpGetTest.makeFile(mediaType)
 
-                  if (existingFile.exists()) {
+                  if (Files.exists(existingFile)) {
                     val parsedResponse: RdfModel = parseRdfXml(responseStr)
                     val parsedExistingFile: RdfModel = parseRdfXml(httpGetTest.readFile(mediaType))
 

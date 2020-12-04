@@ -63,7 +63,7 @@ abstract class AbstractShaclValidator[ShaclGraphT](baseDir: Path, private val rd
       // Is this a Turtle file?
       if (file.getFileName.toString.endsWith(".ttl")) {
         // Yes. Parse it.
-        val shaclModel: RdfModel = rdfFormatUtil.fileToRdfModel(file = file.toFile, rdfFormat = Turtle)
+        val shaclModel: RdfModel = rdfFormatUtil.fileToRdfModel(file = file, rdfFormat = Turtle)
 
         // Convert it to a ShaclGraphT.
         val shaclGraph: ShaclGraphT = rdfModelToShaclGraph(shaclModel)

@@ -19,7 +19,7 @@
 
 package org.knora.webapi.contributors
 
-import java.io.File
+import java.nio.file.{Files, Path}
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.util.FileUtil
@@ -30,9 +30,9 @@ import org.knora.webapi.util.FileUtil
 class GenerateContributorsFileSpec extends CoreSpec() {
   "The GenerateContributorsFile utility" should {
     "generate a contributors file" ignore { // GitHub returns an HTTP 403 (Forbidden) error when this is run on Travis without a GitHub API key.
-      val tmpContributorsFile = File.createTempFile("TestContributors", ".md")
-      tmpContributorsFile.deleteOnExit()
-      GenerateContributorsFile.main(Array("-o", s"${tmpContributorsFile.getAbsolutePath}"))
+      val tmpContributorsFile: Path = Files.createTempFile("TestContributors", ".md")
+      tmpContributorsFile.toFile.deleteOnExit()
+      GenerateContributorsFile.main(Array("-o", s"${tmpContributorsFile.toAbsolutePath}"))
       val fileContents = FileUtil.readTextFile(tmpContributorsFile)
       fileContents.contains("Benjamin Geer") should ===(true)
     }

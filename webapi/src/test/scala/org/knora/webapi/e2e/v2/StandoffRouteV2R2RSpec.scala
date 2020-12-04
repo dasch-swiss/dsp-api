@@ -19,7 +19,7 @@
 
 package org.knora.webapi.e2e.v2
 
-import java.io.File
+import java.nio.file.Paths
 
 import akka.actor.ActorSystem
 import akka.http.javadsl.model.StatusCodes
@@ -89,7 +89,7 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
 
     "create a mapping from a XML" in {
 
-      val xmlFileToSend = new File(RequestParams.pathToLetterMapping)
+      val xmlFileToSend = Paths.get(RequestParams.pathToLetterMapping)
 
       val mappingParams =
         s"""
@@ -113,7 +113,7 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
         ),
         Multipart.FormData.BodyPart(
           "xml",
-          HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), xmlFileToSend.toPath),
+          HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), xmlFileToSend),
           Map("filename" -> "brokenMapping.xml")
         )
       )
@@ -125,7 +125,7 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
                "creation of a mapping returned a non successful HTTP status code: " + responseAs[String])
 
         val expectedAnswerJSONLD =
-          FileUtil.readTextFile(new File("test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
+          FileUtil.readTextFile(Paths.get("test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
 
         compareJSONLDForMappingCreationResponse(expectedJSONLD = expectedAnswerJSONLD,
                                                 receivedJSONLD = responseAs[String])

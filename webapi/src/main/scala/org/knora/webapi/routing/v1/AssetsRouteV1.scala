@@ -21,7 +21,8 @@ package org.knora.webapi.routing.v1
 
 import java.awt.image.BufferedImage
 import java.awt.{Color, Font, Graphics}
-import java.io.{ByteArrayOutputStream, File}
+import java.io.ByteArrayOutputStream
+import java.nio.file.Paths
 
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaTypes}
 import akka.http.scaladsl.server.Directives._
@@ -53,7 +54,7 @@ class AssetsRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
             val dummyImage = if (text.contains("http://rdfh.ch/0a077e5a93bf".toCharArray)) {
               //calling this should get me here: http://localhost:3333/v1/assets/http%3A%2F%2Frdfh.ch%2F0a077e5a93bf
-              val tmpImage = ImageIO.read(new File("_assets/4KUN_7_000169.png"))
+              val tmpImage = ImageIO.read(Paths.get("_assets/4KUN_7_000169.png").toFile)
               tmpImage
             } else {
               /* make dummy images with the image name as content */

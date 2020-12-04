@@ -19,7 +19,7 @@
 
 package org.knora.webapi.responders.v1
 
-import java.io.File
+import java.nio.file.Paths
 
 import akka.actor.ActorSystem
 import org.knora.webapi.messages.v1.responder.resourcemessages._
@@ -42,7 +42,7 @@ object ResourcesResponderV1SpecContextData {
    */
   private val expectedBookResourceContextResponseStr = FileUtil
     .readTextFile(
-      new File("test_data/v1/expectedBookContextResponse.json")
+      Paths.get("test_data/v1/expectedBookContextResponse.json")
     )
     .replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
 
