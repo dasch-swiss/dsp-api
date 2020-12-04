@@ -29,7 +29,8 @@
  * @param permissionIri           the IRI of the permission we want to update.
  * @param maybeGroup              the IRI of the new group.
  * @param maybeHasPermissions     the new set of permission values as string.
- * @param maybeResourceClass   the resource's class IRI.
+ * @param maybeResourceClass      the new resource class IRI.
+ * @param maybeProperty           the new property IRI.
  *@
 
 @(namedGraphIri: IRI,
@@ -37,7 +38,8 @@
   permissionIri: IRI,
   maybeGroup: Option[IRI],
   maybeHasPermissions: Option[String],
-  maybeResourceClass: Option[IRI]
+  maybeResourceClass: Option[IRI],
+  maybeProperty: Option[IRI]
   )
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
@@ -63,6 +65,11 @@ DELETE {
         ?permissionIri knora-admin:forGroup ?currentGroup .
     }
 
+    @if(maybeProperty.isDefined){
+        ?permissionIri knora-admin:forProperty ?currentProperty .
+        ?permissionIri knora-admin:forGroup ?currentGroup .
+    }
+
 } INSERT {
     @if(maybeGroup.isDefined){
         ?permissionIri knora-admin:forGroup <@maybeGroup.get> .
@@ -74,6 +81,10 @@ DELETE {
 
     @if(maybeResourceClass.isDefined){
        ?permissionIri knora-admin:forResourceClass <@maybeResourceClass.get> .
+    }
+
+    @if(maybeProperty.isDefined){
+        ?permissionIri knora-admin:forProperty <@maybeProperty.get> .
     }
 }
 

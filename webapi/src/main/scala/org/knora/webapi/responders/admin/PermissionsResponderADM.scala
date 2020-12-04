@@ -78,6 +78,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     case PermissionChangeGroupRequestADM(permissionIri, changePermissionGroupRequest, requestingUser, apiRequestID) => permissionGroupChangeRequestADM(permissionIri, changePermissionGroupRequest, requestingUser, apiRequestID)
     case PermissionChangeHasPermissionsRequestADM(permissionIri, changePermissionHasPermissionsRequest, requestingUser, apiRequestID) => permissionHasPermissionsChangeRequestADM(permissionIri, changePermissionHasPermissionsRequest, requestingUser, apiRequestID)
     case PermissionChangeResourceClassRequestADM(permissionIri, changePermissionResourceClassRequest, requestingUser, apiRequestID) => permissionResourceClassChangeRequestADM(permissionIri, changePermissionResourceClassRequest, requestingUser, apiRequestID)
+    case PermissionChangePropertyRequestADM(permissionIri, changePermissionPropertyRequest, requestingUser, apiRequestID) => permissionPropertyChangeRequestADM(permissionIri, changePermissionPropertyRequest, requestingUser, apiRequestID)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -1470,13 +1471,14 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
       /*Verify that update was successful*/
       _ = updatedPermission match {
-        case ap: AdministrativePermissionADM =>
-          throw UpdateNotPerformedException(s"Incorrect permission type returned for $permissionIri. Please report this as a bug.")
         case doap: DefaultObjectAccessPermissionADM =>
-          if (doap.forResourceClass.get != changePermissionResourceClass.forResourceClass) {
-            throw UpdateNotPerformedException(s"The resource class of $permissionIri was not updated. Please report this as a bug.")
-          }
-        case _ => None
+          if (doap.forResourceClass.get != changePermissionResourceClass.forResourceClass)
+            throw UpdateNotPerformedException(s"The resource class of ${doap.iri} was not updated. Please report this as a bug.")
+
+          if (doap.forGroup.isDefined)
+            throw UpdateNotPerformedException(s"The $permissionIri is not correctly updated. Please report this as a bug.")
+
+        case _ => throw UpdateNotPerformedException(s"Incorrect permission type returned for $permissionIri. Please report this as a bug.")
       }
     } yield updatedPermission
 
@@ -1492,7 +1494,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         // Is permission an administrative permission?
         case ap: AdministrativePermissionADM =>
           // Yes.
-          throw BadRequestException(s"Permission $permissionIri is of type administrative permission which does not have a resource class.")
+          throw BadRequestException(s"Permission ${ap.iri} is of type administrative permission. " +
+            s"Only a default object access permission defined for a resource class can be updated.")
         case doap: DefaultObjectAccessPermissionADM =>
           //No. It is a default object access permission.
           for {
@@ -1509,6 +1512,73 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         apiRequestID,
         permissionIri,
         () => permissionResourceClassChangeTask(permissionIri, changePermissionResourceClass, requestingUser)
+      )
+    } yield taskResult
+  }
+
+  /**
+   * Update a doap permission's property.
+   *
+   * @param permissionIri                   the IRI of the permission.
+   * @param changePermissionPropertyRequest the request to change hasPermissions.
+   * @param requestingUser                  the [[UserADM]] of the requesting user.
+   * @param apiRequestID                    the API request ID.
+   * @return [[PermissionGetResponseADM]].
+   * @throw UpdateNotPerformed if something has gone wrong.
+   */
+  private def permissionPropertyChangeRequestADM(permissionIri: IRI,
+                                                 changePermissionPropertyRequest: ChangePermissionPropertyApiRequestADM,
+                                                 requestingUser: UserADM,
+                                                 apiRequestID: UUID
+                                                ): Future[PermissionGetResponseADM] = {
+
+    /*Verify that property of doap is updated successfully*/
+    def verifyUpdateOfProperty(): Future[PermissionItemADM] = for {
+      updatedPermission <- permissionGetADM(permissionIri, requestingUser)
+
+      /*Verify that update was successful*/
+      _ = updatedPermission match {
+        case doap: DefaultObjectAccessPermissionADM =>
+          if (doap.forProperty.get != changePermissionPropertyRequest.forProperty)
+            throw UpdateNotPerformedException(s"The property of ${doap.iri} was not updated. Please report this as a bug.")
+
+          if (doap.forGroup.isDefined)
+            throw UpdateNotPerformedException(s"The $permissionIri is not correctly updated. Please report this as a bug.")
+
+        case _ => throw UpdateNotPerformedException(s"Incorrect permission type returned for $permissionIri. Please report this as a bug.")
+      }
+    } yield updatedPermission
+
+    /**
+     * The actual task run with an IRI lock.
+     */
+    def permissionPropertyChangeTask(permissionIri: IRI,
+                                     changePermissionPropertyRequest: ChangePermissionPropertyApiRequestADM,
+                                     requestingUser: UserADM): Future[PermissionGetResponseADM] = for {
+      // get permission
+      permission <- permissionGetADM(permissionIri, requestingUser)
+      response <- permission match {
+        // Is permission an administrative permission?
+        case ap: AdministrativePermissionADM =>
+          // Yes.
+          throw BadRequestException(s"Permission ${ap.iri} is of type administrative permission. " +
+            s"Only a default object access permission defined for a property can be updated.")
+        case doap: DefaultObjectAccessPermissionADM =>
+          //No. It is a default object access permission.
+          for {
+            _ <- updatePermission(permissionIri = doap.iri, maybeProperty = Some(changePermissionPropertyRequest.forProperty))
+            updatedPermission <- verifyUpdateOfProperty
+          } yield DefaultObjectAccessPermissionGetResponseADM(updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM])
+        case _ => throw UpdateNotPerformedException(s"Permission $permissionIri was not updated. Please report this as a bug.")
+      }
+    } yield response
+
+    for {
+      // run list info update with an local IRI lock
+      taskResult <- IriLocker.runWithIriLock(
+        apiRequestID,
+        permissionIri,
+        () => permissionPropertyChangeTask(permissionIri, changePermissionPropertyRequest, requestingUser)
       )
     } yield taskResult
   }
@@ -1588,6 +1658,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
    * @param permissionIri       the IRI of the permission.
    * @param maybeGroup          the IRI of the new group.
    * @param maybeHasPermissions the new set of permissions formatted according to permission type as string.
+   * @param maybeResourceClass  the new resource class IRI of a doap permission.
+   * @param maybeProperty       the new property IRI of a doap permission.
    */
   def updatePermission(permissionIri: IRI,
                        maybeGroup: Option[IRI] = None,
@@ -1604,7 +1676,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         permissionIri = permissionIri,
         maybeGroup = maybeGroup,
         maybeHasPermissions = maybeHasPermissions,
-        maybeResourceClass = maybeResourceClass
+        maybeResourceClass = maybeResourceClass,
+        maybeProperty = maybeProperty
       ).toString()
     )
 

@@ -778,8 +778,63 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
-        expectMsg(Failure(BadRequestException(s"Permission $permissionIri is of type administrative permission which does not have a resource class.")))
+        expectMsg(Failure(BadRequestException(s"Permission $permissionIri is of type administrative permission. " +
+          s"Only a default object access permission defined for a resource class can be updated.")))
       }
+
+      "not update property of an administrative permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/0803/003-a2"
+        val propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
+
+        responderManager ! PermissionChangePropertyRequestADM(
+          permissionIri = permissionIri,
+          changePermissionPropertyRequest = ChangePermissionPropertyApiRequestADM(
+            forProperty = propertyIri
+          ),
+          requestingUser = rootUser,
+          apiRequestID = UUID.randomUUID()
+        )
+        expectMsg(Failure(BadRequestException(s"Permission $permissionIri is of type administrative permission. " +
+          s"Only a default object access permission defined for a property can be updated.")))
+      }
+
+      "update property of a default object access permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
+        val propertyIri = OntologyConstants.KnoraBase.TextFileValue
+
+        responderManager ! PermissionChangePropertyRequestADM(
+          permissionIri = permissionIri,
+          changePermissionPropertyRequest = ChangePermissionPropertyApiRequestADM(
+            forProperty = propertyIri
+          ),
+          requestingUser = rootUser,
+          apiRequestID = UUID.randomUUID()
+        )
+        val received: DefaultObjectAccessPermissionGetResponseADM = expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
+        val doap = received.defaultObjectAccessPermission
+        assert(doap.iri == permissionIri)
+        assert(doap.forProperty.get == propertyIri)
+      }
+
+      "update property of a default object access permission, delete group" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        val propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
+
+        responderManager ! PermissionChangePropertyRequestADM(
+          permissionIri = permissionIri,
+          changePermissionPropertyRequest = ChangePermissionPropertyApiRequestADM(
+            forProperty = propertyIri
+          ),
+          requestingUser = rootUser,
+          apiRequestID = UUID.randomUUID()
+        )
+        val received: DefaultObjectAccessPermissionGetResponseADM = expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
+        val doap = received.defaultObjectAccessPermission
+        assert(doap.iri == permissionIri)
+        assert(doap.forProperty.get == propertyIri)
+        assert(doap.forGroup.isEmpty)
+      }
+
     }
   }
 }
