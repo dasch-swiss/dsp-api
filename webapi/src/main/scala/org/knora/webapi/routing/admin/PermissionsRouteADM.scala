@@ -26,8 +26,8 @@ import org.knora.webapi.routing.admin.permissions._
 import org.knora.webapi.routing.{KnoraRoute, KnoraRouteData}
 
 /**
- * Provides an akka-http-routing function for API routes that deal with permissions.
- */
+  * Provides an akka-http-routing function for API routes that deal with permissions.
+  */
 class PermissionsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
   private val createPermissionRoute: CreatePermissionRouteADM = new CreatePermissionRouteADM(routeData)
   private val getPermissionRoute: GetPermissionsRouteADM = new GetPermissionsRouteADM(routeData)
