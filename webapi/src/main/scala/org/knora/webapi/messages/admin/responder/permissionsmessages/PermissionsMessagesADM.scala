@@ -145,12 +145,27 @@ case class ChangePermissionHasPermissionsApiRequestADM(hasPermissions: Set[Permi
  */
 case class ChangePermissionResourceClassApiRequestADM(forResourceClass: IRI) extends PermissionsADMJsonProtocol {
   if (forResourceClass.isEmpty) {
-    throw BadRequestException(s"forResourceClass cannot be empty.")
+    throw BadRequestException(s"Resource class IRI cannot be empty.")
   }
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
   stringFormatter.validateAndEscapeIri(forResourceClass, throw BadRequestException(s"Invalid resource class IRI $forResourceClass is given."))
 
   def toJsValue: JsValue = changePermissionResourceClassApiRequestADMFormat.write(this)
+}
+
+/**
+ * Represents an API request payload that asks the Knora API server to update property of a doap permission.
+ *
+ * @param forProperty the new property IRI of the doap permission.
+ */
+case class ChangePermissionPropertyApiRequestADM(forProperty: IRI) extends PermissionsADMJsonProtocol {
+  if (forProperty.isEmpty) {
+    throw BadRequestException(s"Property IRI cannot be empty.")
+  }
+  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+  stringFormatter.validateAndEscapeIri(forProperty, throw BadRequestException(s"Invalid property IRI $forProperty is given."))
+
+  def toJsValue: JsValue = changePermissionPropertyApiRequestADMFormat.write(this)
 }
 
 /**
@@ -261,6 +276,27 @@ case class PermissionChangeResourceClassRequestADM(permissionIri: IRI,
                                                    requestingUser: UserADM,
                                                    apiRequestID: UUID
                                                   ) extends PermissionsResponderRequestADM {
+
+  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+  if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
+    throw BadRequestException(s"Invalid IRI is given: $permissionIri.")
+  }
+}
+
+/**
+ * A message that requests update of a doap permission's resource class.
+ * A successful response will be a [[PermissionItemADM]].
+ *
+ * @param permissionIri                   the IRI of the permission to be updated.
+ * @param changePermissionPropertyRequest the request to update permission's property.
+ * @param requestingUser                  the user initiation the request.
+ * @param apiRequestID                    the API request ID.
+ */
+case class PermissionChangePropertyRequestADM(permissionIri: IRI,
+                                              changePermissionPropertyRequest: ChangePermissionPropertyApiRequestADM,
+                                              requestingUser: UserADM,
+                                              apiRequestID: UUID
+                                             ) extends PermissionsResponderRequestADM {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
   if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
@@ -1174,4 +1210,5 @@ trait PermissionsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtoc
   implicit val changePermissionGroupApiRequestADMFormat: RootJsonFormat[ChangePermissionGroupApiRequestADM] = jsonFormat(ChangePermissionGroupApiRequestADM, "forGroup")
   implicit val changePermissionHasPermissionsApiRequestADMFormat: RootJsonFormat[ChangePermissionHasPermissionsApiRequestADM] = jsonFormat(ChangePermissionHasPermissionsApiRequestADM, "hasPermissions")
   implicit val changePermissionResourceClassApiRequestADMFormat: RootJsonFormat[ChangePermissionResourceClassApiRequestADM] = jsonFormat(ChangePermissionResourceClassApiRequestADM, "forResourceClass")
+  implicit val changePermissionPropertyApiRequestADMFormat: RootJsonFormat[ChangePermissionPropertyApiRequestADM] = jsonFormat(ChangePermissionPropertyApiRequestADM, "forProperty")
 }
