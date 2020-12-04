@@ -46,7 +46,8 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData) extends KnoraRoute(rou
    * Returns the route.
    */
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-      updatePermissionGroup(featureFactoryConfig)
+      updatePermissionGroup(featureFactoryConfig) ~
+        updatePermissionHasPermissions(featureFactoryConfig)
 
   /**
    * Update a permission's group
@@ -66,6 +67,41 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData) extends KnoraRoute(rou
           } yield PermissionChangeGroupRequestADM(
             permissionIri = permissionIri,
             changePermissionGroupRequest = apiRequest,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
+
+          RouteUtilADM.runJsonRoute(
+            requestMessageF = requestMessage,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log
+          )
+      }
+    }
+  }
+
+  /**
+   * Update a permission's set of hasPermissions.
+   */
+  private def updatePermissionHasPermissions(featureFactoryConfig: FeatureFactoryConfig): Route = path(PermissionsBasePath / Segment / "hasPermissions") { iri =>
+    put {
+      /* create a new administrative permission */
+      entity(as[ChangePermissionHasPermissionsApiRequestADM]) { apiRequest =>
+        requestContext =>
+          val permissionIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid permission IRI: $iri"))
+
+          val requestMessage = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield PermissionChangeHasPermissionsRequestADM(
+            permissionIri = permissionIri,
+            changePermissionHasPermissionsRequest = apiRequest,
             featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
