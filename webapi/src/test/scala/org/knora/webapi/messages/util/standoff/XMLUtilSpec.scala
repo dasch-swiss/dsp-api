@@ -21,10 +21,10 @@ package org.knora.webapi.util.standoff
 
 import java.io.File
 
-import org.knora.webapi.util.FileUtil
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.StandoffConversionException
 import org.knora.webapi.messages.util.standoff.{XMLToStandoffUtil, XMLUtil}
+import org.knora.webapi.util.FileUtil
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
@@ -33,17 +33,17 @@ import org.xmlunit.diff.Diff
   */
 class XMLUtilSpec extends CoreSpec {
 
-    "The XML to standoff utility" should {
+  "The XML to standoff utility" should {
 
-        "transform an XML document to HTML" in {
+    "transform an XML document to HTML" in {
 
-            val xml =
-                """<?xml version="1.0"?>
+      val xml =
+        """<?xml version="1.0"?>
                   |<text><i>test</i></text>
                 """.stripMargin
 
-            val xslt =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val xslt =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |
                   |<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
                   |
@@ -55,29 +55,30 @@ class XMLUtilSpec extends CoreSpec {
                   |</xsl:transform>
                 """.stripMargin
 
-            val expected =
-                """<div><em>test</em></div>
+      val expected =
+        """<div><em>test</em></div>
                 """.stripMargin
 
-            val transformed: String = XMLUtil.applyXSLTransformation(xml, xslt)
+      val transformed: String = XMLUtil.applyXSLTransformation(xml, xslt)
 
-            // Compare the generated XML with the expected XML.
-            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(expected)).withTest(Input.fromString(transformed)).build()
+      // Compare the generated XML with the expected XML.
+      val xmlDiff: Diff =
+        DiffBuilder.compare(Input.fromString(expected)).withTest(Input.fromString(transformed)).build()
 
-            xmlDiff.hasDifferences should be(false)
+      xmlDiff.hasDifferences should be(false)
 
-        }
+    }
 
-        "attempt transform an XML document with an invalid XSL transformation" in {
+    "attempt transform an XML document with an invalid XSL transformation" in {
 
-            val xml =
-                """<?xml version="1.0"?>
+      val xml =
+        """<?xml version="1.0"?>
                   |<text><i>test</i></text>
                 """.stripMargin
 
-            // closing root tag is invalid
-            val xsltInvalid =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      // closing root tag is invalid
+      val xsltInvalid =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |
                   |<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
                   |
@@ -89,22 +90,27 @@ class XMLUtilSpec extends CoreSpec {
                   |</xsl:transform
                 """.stripMargin
 
-            assertThrows[StandoffConversionException] {
-                val transformed: String = XMLUtil.applyXSLTransformation(xml, xsltInvalid)
-            }
+      assertThrows[StandoffConversionException] {
+        val transformed: String = XMLUtil.applyXSLTransformation(xml, xsltInvalid)
+      }
 
-        }
-
-        "demonstrate how to handle resources that may or may not be embedded" in {
-            val xmlWithNestedResource = FileUtil.readTextFile(new File("test_data/test_route/texts/beol/xml-with-nested-resources.xml"))
-            val xmlWithNonNestedResource = FileUtil.readTextFile(new File("test_data/test_route/texts/beol/xml-with-non-nested-resources.xml"))
-            val xslt = FileUtil.readTextFile(new File("test_data/test_route/texts/beol/header.xsl"))
-
-            val transformedXmlWithNestedResource: String = XMLUtil.applyXSLTransformation(xmlWithNestedResource, xslt)
-            val transformedXmlWithNonNestedResource: String = XMLUtil.applyXSLTransformation(xmlWithNonNestedResource, xslt)
-
-            val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(transformedXmlWithNestedResource)).withTest(Input.fromString(transformedXmlWithNonNestedResource)).build()
-            xmlDiff.hasDifferences should be(false)
-        }
     }
+
+    "demonstrate how to handle resources that may or may not be embedded" in {
+      val xmlWithNestedResource =
+        FileUtil.readTextFile(new File("test_data/test_route/texts/beol/xml-with-nested-resources.xml"))
+      val xmlWithNonNestedResource =
+        FileUtil.readTextFile(new File("test_data/test_route/texts/beol/xml-with-non-nested-resources.xml"))
+      val xslt = FileUtil.readTextFile(new File("test_data/test_route/texts/beol/header.xsl"))
+
+      val transformedXmlWithNestedResource: String = XMLUtil.applyXSLTransformation(xmlWithNestedResource, xslt)
+      val transformedXmlWithNonNestedResource: String = XMLUtil.applyXSLTransformation(xmlWithNonNestedResource, xslt)
+
+      val xmlDiff: Diff = DiffBuilder
+        .compare(Input.fromString(transformedXmlWithNestedResource))
+        .withTest(Input.fromString(transformedXmlWithNonNestedResource))
+        .build()
+      xmlDiff.hasDifferences should be(false)
+    }
+  }
 }

@@ -24,38 +24,41 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
 class UpgradePluginPR1367Spec extends UpgradePluginSpec {
-    private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
+  private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
 
-    "Upgrade plugin PR1367" should {
-        "fix the datatypes of decimal literals" in {
-            // Parse the input file.
-            val model: RdfModel = trigFileToModel("test_data/upgrade/pr1367.trig")
+  "Upgrade plugin PR1367" should {
+    "fix the datatypes of decimal literals" in {
+      // Parse the input file.
+      val model: RdfModel = trigFileToModel("test_data/upgrade/pr1367.trig")
 
-            // Use the plugin to transform the input.
-            val plugin = new UpgradePluginPR1367(defaultFeatureFactoryConfig)
-            plugin.transform(model)
+      // Use the plugin to transform the input.
+      val plugin = new UpgradePluginPR1367(defaultFeatureFactoryConfig)
+      plugin.transform(model)
 
-            // Check that the decimal datatype was fixed.
+      // Check that the decimal datatype was fixed.
 
-            val subj = nodeFactory.makeIriNode("http://rdfh.ch/0001/thing-with-history/values/1")
-            val pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasDecimal)
+      val subj = nodeFactory.makeIriNode("http://rdfh.ch/0001/thing-with-history/values/1")
+      val pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasDecimal)
 
-            model.find(
-                subj = Some(subj),
-                pred = Some(pred),
-                obj = None
-            ).toSet.headOption match {
-                case Some(statement: Statement) =>
-                    statement.obj match {
-                        case datatypeLiteral: DatatypeLiteral =>
-                            assert(datatypeLiteral.datatype == OntologyConstants.Xsd.Decimal)
+      model
+        .find(
+          subj = Some(subj),
+          pred = Some(pred),
+          obj = None
+        )
+        .toSet
+        .headOption match {
+        case Some(statement: Statement) =>
+          statement.obj match {
+            case datatypeLiteral: DatatypeLiteral =>
+              assert(datatypeLiteral.datatype == OntologyConstants.Xsd.Decimal)
 
-                        case other =>
-                            throw AssertionException(s"Unexpected object for $pred: $other")
-                    }
+            case other =>
+              throw AssertionException(s"Unexpected object for $pred: $other")
+          }
 
-                case None => throw AssertionException(s"No statement found with subject $subj and predicate $pred")
-            }
-        }
+        case None => throw AssertionException(s"No statement found with subject $subj and predicate $pred")
+      }
     }
+  }
 }

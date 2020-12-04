@@ -29,8 +29,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi.sharedtestdata._
 
 /**
- * This spec is used to test subclasses of the [[PermissionsResponderRequestADM]] class.
- */
+  * This spec is used to test subclasses of the [[PermissionsResponderRequestADM]] class.
+  */
 class PermissionsMessagesADMSpec extends CoreSpec() {
 
   "Administrative Permission Get Requests" should {
@@ -77,7 +77,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       )
       assert(caught.getMessage === "Administrative permission can only be queried by system and project admin.")
     }
-
 
     "return 'BadRequest' if the supplied project IRI for AdministrativePermissionForProjectGroupGetADM is not valid" in {
       val caught = intercept[BadRequestException](
@@ -279,7 +278,8 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           requestingUser = SharedTestDataADM.imagesUser01
         )
       )
-      assert(caught.getMessage === s"Either a group, a resource class, a property, or a combination of resource class and property must be given.")
+      assert(
+        caught.getMessage === s"Either a group, a resource class, a property, or a combination of resource class and property must be given.")
     }
 
     "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionsForProjectGetRequestADM is not valid" in {
@@ -588,7 +588,8 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Either a group, a resource class, a property, or a combination of resource class and property must be given.")
+      assert(
+        caught.getMessage === "Either a group, a resource class, a property, or a combination of resource class and property must be given.")
     }
   }
 
@@ -624,18 +625,20 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       val projectIri = INCUNABULA_PROJECT_IRI
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
-      val result = SharedTestDataADM.rootUser.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)
+      val result = SharedTestDataADM.rootUser.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri),
+                                                                           projectIri,
+                                                                           None)
 
       result should be(true)
     }
-
 
     "return true if the user is allowed to create a resource (project admin user)" in {
 
       val projectIri = INCUNABULA_PROJECT_IRI
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
-      val result = SharedTestDataADM.incunabulaProjectAdminUser.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)
+      val result = SharedTestDataADM.incunabulaProjectAdminUser.permissions
+        .hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)
 
       result should be(true)
     }
@@ -645,17 +648,19 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       val projectIri = INCUNABULA_PROJECT_IRI
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
-      val result = SharedTestDataADM.incunabulaMemberUser.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)
+      val result = SharedTestDataADM.incunabulaMemberUser.permissions
+        .hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)
 
       result should be(true)
     }
-
 
     "return false if the user is not allowed to create a resource" in {
       val projectIri = INCUNABULA_PROJECT_IRI
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
-      val result = SharedTestDataADM.normalUser.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri), projectIri, None)
+      val result = SharedTestDataADM.normalUser.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri),
+                                                                             projectIri,
+                                                                             None)
 
       result should be(false)
     }
@@ -666,10 +671,12 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       val allowedResourceClassIri02 = s"$IMAGES_ONTOLOGY_IRI#bildformat"
       val notAllowedResourceClassIri = s"$IMAGES_ONTOLOGY_IRI#person"
 
-      val result1 = SharedTestDataADM.imagesReviewerUser.permissions.hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri01), projectIri, None)
+      val result1 = SharedTestDataADM.imagesReviewerUser.permissions
+        .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri01), projectIri, None)
       result1 should be(true)
 
-      val result2 = SharedTestDataADM.imagesReviewerUser.permissions.hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri02), projectIri, None)
+      val result2 = SharedTestDataADM.imagesReviewerUser.permissions
+        .hasPermissionFor(ResourceCreateOperation(allowedResourceClassIri02), projectIri, None)
       result2 should be(true)
     }
 
@@ -677,7 +684,8 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       val projectIri = IMAGES_PROJECT_IRI
       val notAllowedResourceClassIri = s"$IMAGES_ONTOLOGY_IRI#person"
 
-      val result = SharedTestDataADM.imagesReviewerUser.permissions.hasPermissionFor(ResourceCreateOperation(notAllowedResourceClassIri), projectIri, None)
+      val result = SharedTestDataADM.imagesReviewerUser.permissions
+        .hasPermissionFor(ResourceCreateOperation(notAllowedResourceClassIri), projectIri, None)
       result should be(false)
     }
   }

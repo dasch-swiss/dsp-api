@@ -23,32 +23,32 @@ import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import org.knora.webapi.exceptions._
 
 /**
- * The possible values for the HTTP status code that is returned as part of each Knora API v2 response.
- */
+  * The possible values for the HTTP status code that is returned as part of each Knora API v2 response.
+  */
 object ApiStatusCodesV2 {
 
-    /**
-     * Converts an exception to a similar HTTP status code.
-     *
-     * @param ex an exception.
-     * @return an HTTP status code.
-     */
-    def fromException(ex: Throwable): StatusCode = {
-        ex match {
-            // Subclasses of RequestRejectedException (which must be last in this group)
-            case NotFoundException(_) => StatusCodes.NotFound
-            case ForbiddenException(_) => StatusCodes.Forbidden
-            case BadCredentialsException(_) => StatusCodes.Unauthorized
-            case DuplicateValueException(_) => StatusCodes.BadRequest
-            case OntologyConstraintException(_) => StatusCodes.BadRequest
-            case EditConflictException(_) => StatusCodes.Conflict
-            case RequestRejectedException(_) => StatusCodes.BadRequest
+  /**
+    * Converts an exception to a similar HTTP status code.
+    *
+    * @param ex an exception.
+    * @return an HTTP status code.
+    */
+  def fromException(ex: Throwable): StatusCode = {
+    ex match {
+      // Subclasses of RequestRejectedException (which must be last in this group)
+      case NotFoundException(_)           => StatusCodes.NotFound
+      case ForbiddenException(_)          => StatusCodes.Forbidden
+      case BadCredentialsException(_)     => StatusCodes.Unauthorized
+      case DuplicateValueException(_)     => StatusCodes.BadRequest
+      case OntologyConstraintException(_) => StatusCodes.BadRequest
+      case EditConflictException(_)       => StatusCodes.Conflict
+      case RequestRejectedException(_)    => StatusCodes.BadRequest
 
-            // Subclasses of InternalServerException (which must be last in this group)
-            case UpdateNotPerformedException(_) => StatusCodes.Conflict
-            case InternalServerException(_) => StatusCodes.InternalServerError
-            case _ => StatusCodes.InternalServerError
-        }
+      // Subclasses of InternalServerException (which must be last in this group)
+      case UpdateNotPerformedException(_) => StatusCodes.Conflict
+      case InternalServerException(_)     => StatusCodes.InternalServerError
+      case _                              => StatusCodes.InternalServerError
     }
+  }
 
 }

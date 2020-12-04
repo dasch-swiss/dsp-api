@@ -23,6 +23,6 @@ import org.knora.webapi.feature.{FeatureToggle, ToggleStateOff}
 import org.knora.webapi.util.rdf.KnoraResponseV2Spec
 
 /**
- * Tests [[org.knora.webapi.messages.v2.responder.KnoraResponseV2]] with the RDF4J API.
- */
+  * Tests [[org.knora.webapi.messages.v2.responder.KnoraResponseV2]] with the RDF4J API.
+  */
 class RDF4JKnoraResponseV2Spec extends KnoraResponseV2Spec(FeatureToggle("jena-rdf-library", ToggleStateOff))

@@ -31,45 +31,49 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 import scala.concurrent.Future
 
 object DeleteListItemsRouteADM {
-    val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
+  val ListsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "lists")
 }
 
 /**
- * A [[Feature]] that provides routes to delete list items.
- *
- * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
- */
-class DeleteListItemsRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData)
-    with Feature with Authenticator with ListADMJsonProtocol {
+  * A [[Feature]] that provides routes to delete list items.
+  *
+  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
+  */
+class DeleteListItemsRouteADM(routeData: KnoraRouteData)
+    extends KnoraRoute(routeData)
+    with Feature
+    with Authenticator
+    with ListADMJsonProtocol {
 
-    import DeleteListItemsRouteADM._
+  import DeleteListItemsRouteADM._
 
-    def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-            deleteListItem(featureFactoryConfig)
+  def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+    deleteListItem(featureFactoryConfig)
 
-    /* delete list (i.e. root node) or a child node which should also delete its children */
-    private def deleteListItem(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
-        delete {
-            /* delete a list item root node or child if unused */
-            requestContext =>
-                val nodeIri = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list item Iri: $iri"))
+  /* delete list (i.e. root node) or a child node which should also delete its children */
+  private def deleteListItem(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
+    delete {
+      /* delete a list item root node or child if unused */
+      requestContext =>
+        val nodeIri =
+          stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list item Iri: $iri"))
 
-                val requestMessage: Future[ListItemDeleteRequestADM] = for {
-                    requestingUser <- getUserADM(requestContext, featureFactoryConfig)
-                } yield ListItemDeleteRequestADM(
-                    nodeIri = nodeIri,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser,
-                    apiRequestID = UUID.randomUUID())
+        val requestMessage: Future[ListItemDeleteRequestADM] = for {
+          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+        } yield
+          ListItemDeleteRequestADM(nodeIri = nodeIri,
+                                   featureFactoryConfig = featureFactoryConfig,
+                                   requestingUser = requestingUser,
+                                   apiRequestID = UUID.randomUUID())
 
-                RouteUtilADM.runJsonRoute(
-                    requestMessageF = requestMessage,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log
-                )
-        }
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
     }
+  }
 }

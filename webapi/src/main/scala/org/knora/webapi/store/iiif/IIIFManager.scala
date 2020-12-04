@@ -28,24 +28,27 @@ import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.settings.{KnoraDispatchers, _}
 
 /**
- * Makes requests to IIIF servers.
- */
+  * Makes requests to IIIF servers.
+  */
 class IIIFManager extends Actor with ActorLogging {
-    this: ActorMaker =>
+  this: ActorMaker =>
 
-    /**
-     * Constructs the [[SipiConnector]] actor (pool).
-     */
-    protected final def makeDefaultSipiConnector: ActorRef = makeActor(FromConfig.props(Props[SipiConnector]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher), SipiConnectorActorName)
+  /**
+    * Constructs the [[SipiConnector]] actor (pool).
+    */
+  protected final def makeDefaultSipiConnector: ActorRef =
+    makeActor(FromConfig.props(Props[SipiConnector]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+              SipiConnectorActorName)
 
-    /**
-     * Subclasses can override this member to substitute a custom actor instead of the default SipiConnector.
-     */
-    protected lazy val sipiConnector: ActorRef = makeDefaultSipiConnector
+  /**
+    * Subclasses can override this member to substitute a custom actor instead of the default SipiConnector.
+    */
+  protected lazy val sipiConnector: ActorRef = makeDefaultSipiConnector
 
-    def receive = LoggingReceive {
-        case sipiMessages: IIIFRequest => sipiConnector forward sipiMessages
-        case other => sender ! Status.Failure(UnexpectedMessageException(s"SipiManager received an unexpected message: $other"))
-    }
+  def receive = LoggingReceive {
+    case sipiMessages: IIIFRequest => sipiConnector forward sipiMessages
+    case other =>
+      sender ! Status.Failure(UnexpectedMessageException(s"SipiManager received an unexpected message: $other"))
+  }
 
 }

@@ -37,194 +37,198 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 import scala.concurrent.Future
 
 object ValuesRouteV2 {
-    val ValuesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "values")
+  val ValuesBasePath: PathMatcher[Unit] = PathMatcher("v2" / "values")
 }
 
 /**
- * Provides a routing function for API v2 routes that deal with values.
- */
+  * Provides a routing function for API v2 routes that deal with values.
+  */
 class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    import ValuesRouteV2._
+  import ValuesRouteV2._
 
-    /**
-     * Returns the route.
-     */
-    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-        getValue(featureFactoryConfig) ~
-            createValue(featureFactoryConfig) ~
-            updateValue(featureFactoryConfig) ~
-            deleteValue(featureFactoryConfig)
+  /**
+    * Returns the route.
+    */
+  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+    getValue(featureFactoryConfig) ~
+      createValue(featureFactoryConfig) ~
+      updateValue(featureFactoryConfig) ~
+      deleteValue(featureFactoryConfig)
 
-    private def getValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath / Segment / Segment) { (resourceIriStr: IRI, valueUuidStr: String) =>
-        get {
-            requestContext => {
-                val resourceIri: SmartIri = resourceIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
+  private def getValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath / Segment / Segment) {
+    (resourceIriStr: IRI, valueUuidStr: String) =>
+      get { requestContext =>
+        {
+          val resourceIri: SmartIri =
+            resourceIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
 
-                if (!resourceIri.isKnoraResourceIri) {
-                    throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
-                }
+          if (!resourceIri.isKnoraResourceIri) {
+            throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
+          }
 
-                val valueUuid: UUID = stringFormatter.decodeUuidWithErr(valueUuidStr, throw BadRequestException(s"Invalid value UUID: $valueUuidStr"))
+          val valueUuid: UUID =
+            stringFormatter.decodeUuidWithErr(valueUuidStr,
+                                              throw BadRequestException(s"Invalid value UUID: $valueUuidStr"))
 
-                val params: Map[String, String] = requestContext.request.uri.query().toMap
+          val params: Map[String, String] = requestContext.request.uri.query().toMap
 
-                // Was a version date provided?
-                val versionDate: Option[Instant] = params.get("version").map {
-                    versionStr =>
-                        def errorFun: Nothing = throw BadRequestException(s"Invalid version date: $versionStr")
+          // Was a version date provided?
+          val versionDate: Option[Instant] = params.get("version").map { versionStr =>
+            def errorFun: Nothing = throw BadRequestException(s"Invalid version date: $versionStr")
 
-                        // Yes. Try to parse it as an xsd:dateTimeStamp.
-                        try {
-                            stringFormatter.xsdDateTimeStampToInstant(versionStr, errorFun)
-                        } catch {
-                            // If that doesn't work, try to parse it as a Knora ARK timestamp.
-                            case _: Exception => stringFormatter.arkTimestampToInstant(versionStr, errorFun)
-                        }
-                }
-
-                val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
-                val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
-
-                val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
-                    requestingUser <- getUserADM(
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig
-                    )
-                } yield ResourcesGetRequestV2(
-                    resourceIris = Seq(resourceIri.toString),
-                    valueUuid = Some(valueUuid),
-                    versionDate = versionDate,
-                    targetSchema = targetSchema,
-                    featureFactoryConfig = featureFactoryConfig,
-                    requestingUser = requestingUser
-                )
-
-                RouteUtilV2.runRdfRouteWithFuture(
-                    requestMessageF = requestMessageFuture,
-                    requestContext = requestContext,
-                    featureFactoryConfig = featureFactoryConfig,
-                    settings = settings,
-                    responderManager = responderManager,
-                    log = log,
-                    targetSchema = targetSchema,
-                    schemaOptions = schemaOptions
-                )
+            // Yes. Try to parse it as an xsd:dateTimeStamp.
+            try {
+              stringFormatter.xsdDateTimeStampToInstant(versionStr, errorFun)
+            } catch {
+              // If that doesn't work, try to parse it as a Knora ARK timestamp.
+              case _: Exception => stringFormatter.arkTimestampToInstant(versionStr, errorFun)
             }
+          }
+
+          val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+          val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+
+          val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield
+            ResourcesGetRequestV2(
+              resourceIris = Seq(resourceIri.toString),
+              valueUuid = Some(valueUuid),
+              versionDate = versionDate,
+              targetSchema = targetSchema,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser
+            )
+
+          RouteUtilV2.runRdfRouteWithFuture(
+            requestMessageF = requestMessageFuture,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log,
+            targetSchema = targetSchema,
+            schemaOptions = schemaOptions
+          )
         }
-    }
+      }
+  }
 
-    private def createValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath) {
-        post {
-            entity(as[String]) { jsonRequest =>
-                requestContext => {
-                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+  private def createValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath) {
+    post {
+      entity(as[String]) { jsonRequest => requestContext =>
+        {
+          val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-                    val requestMessageFuture: Future[CreateValueRequestV2] = for {
-                        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                        )
-                        requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
-                            requestDoc,
-                            apiRequestID = UUID.randomUUID,
-                            requestingUser = requestingUser,
-                            responderManager = responderManager,
-                            storeManager = storeManager,
-                            featureFactoryConfig = featureFactoryConfig,
-                            settings = settings,
-                            log = log
-                        )
-                    } yield requestMessage
+          val requestMessageFuture: Future[CreateValueRequestV2] = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+            requestMessage: CreateValueRequestV2 <- CreateValueRequestV2.fromJsonLD(
+              requestDoc,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = requestingUser,
+              responderManager = responderManager,
+              storeManager = storeManager,
+              featureFactoryConfig = featureFactoryConfig,
+              settings = settings,
+              log = log
+            )
+          } yield requestMessage
 
-                    RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageF = requestMessageFuture,
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log,
-                        targetSchema = ApiV2Complex,
-                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-                    )
-                }
-            }
+          RouteUtilV2.runRdfRouteWithFuture(
+            requestMessageF = requestMessageFuture,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log,
+            targetSchema = ApiV2Complex,
+            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+          )
         }
+      }
     }
+  }
 
-    private def updateValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath) {
-        put {
-            entity(as[String]) { jsonRequest =>
-                requestContext => {
-                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+  private def updateValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath) {
+    put {
+      entity(as[String]) { jsonRequest => requestContext =>
+        {
+          val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-                    val requestMessageFuture: Future[UpdateValueRequestV2] = for {
-                        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                        )
-                        requestMessage: UpdateValueRequestV2 <- UpdateValueRequestV2.fromJsonLD(
-                            requestDoc,
-                            apiRequestID = UUID.randomUUID,
-                            requestingUser = requestingUser,
-                            responderManager = responderManager,
-                            storeManager = storeManager,
-                            featureFactoryConfig = featureFactoryConfig,
-                            settings = settings,
-                            log = log
-                        )
-                    } yield requestMessage
+          val requestMessageFuture: Future[UpdateValueRequestV2] = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+            requestMessage: UpdateValueRequestV2 <- UpdateValueRequestV2.fromJsonLD(
+              requestDoc,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = requestingUser,
+              responderManager = responderManager,
+              storeManager = storeManager,
+              featureFactoryConfig = featureFactoryConfig,
+              settings = settings,
+              log = log
+            )
+          } yield requestMessage
 
-                    RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageF = requestMessageFuture,
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log,
-                        targetSchema = ApiV2Complex,
-                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-                    )
-                }
-            }
+          RouteUtilV2.runRdfRouteWithFuture(
+            requestMessageF = requestMessageFuture,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log,
+            targetSchema = ApiV2Complex,
+            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+          )
         }
+      }
     }
+  }
 
-    private def deleteValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath / "delete") {
-        post {
-            entity(as[String]) { jsonRequest =>
-                requestContext => {
-                    val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+  private def deleteValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath / "delete") {
+    post {
+      entity(as[String]) { jsonRequest => requestContext =>
+        {
+          val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
-                    val requestMessageFuture: Future[DeleteValueRequestV2] = for {
-                        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                        )
-                        requestMessage: DeleteValueRequestV2 <- DeleteValueRequestV2.fromJsonLD(
-                            requestDoc,
-                            apiRequestID = UUID.randomUUID,
-                            requestingUser = requestingUser,
-                            responderManager = responderManager,
-                            storeManager = storeManager,
-                            featureFactoryConfig = featureFactoryConfig,
-                            settings = settings,
-                            log = log
-                        )
-                    } yield requestMessage
+          val requestMessageFuture: Future[DeleteValueRequestV2] = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+            requestMessage: DeleteValueRequestV2 <- DeleteValueRequestV2.fromJsonLD(
+              requestDoc,
+              apiRequestID = UUID.randomUUID,
+              requestingUser = requestingUser,
+              responderManager = responderManager,
+              storeManager = storeManager,
+              featureFactoryConfig = featureFactoryConfig,
+              settings = settings,
+              log = log
+            )
+          } yield requestMessage
 
-                    RouteUtilV2.runRdfRouteWithFuture(
-                        requestMessageF = requestMessageFuture,
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log,
-                        targetSchema = ApiV2Complex,
-                        schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
-                    )
-                }
-            }
+          RouteUtilV2.runRdfRouteWithFuture(
+            requestMessageF = requestMessageFuture,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log,
+            targetSchema = ApiV2Complex,
+            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+          )
         }
+      }
     }
+  }
 }

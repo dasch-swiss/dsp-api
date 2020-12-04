@@ -19,7 +19,6 @@
 
 package org.knora.webapi.other.v2
 
-import akka.event.LoggingAdapter
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpResponse, StatusCodes}
 import com.typesafe.config.{Config, ConfigFactory}
@@ -27,8 +26,7 @@ import org.knora.webapi.E2ESpec
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
 
 object LumieresLausanneV2E2ESpec {
-    val config: Config = ConfigFactory.parseString(
-        """
+  val config: Config = ConfigFactory.parseString("""
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
@@ -39,22 +37,26 @@ object LumieresLausanneV2E2ESpec {
   */
 class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config) with TriplestoreJsonProtocol {
 
-    override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_admin.ttl", name = "http://www.knora.org/data/admin"),
-        RdfDataObject(path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_permissions.ttl", name = "http://www.knora.org/data/permissions"),
-        RdfDataObject(path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-onto.ttl", name = "http://www.knora.org/ontology/0113/lumieres-lausanne"),
-        RdfDataObject(path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-data-lists.ttl", name = "http://www.knora.org/data/0113/lumieres-lausanne")
-    )
+  override lazy val rdfDataObjects: List[RdfDataObject] = List(
+    RdfDataObject(path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_admin.ttl",
+                  name = "http://www.knora.org/data/admin"),
+    RdfDataObject(path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne_permissions.ttl",
+                  name = "http://www.knora.org/data/permissions"),
+    RdfDataObject(path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-onto.ttl",
+                  name = "http://www.knora.org/ontology/0113/lumieres-lausanne"),
+    RdfDataObject(path = "test_data/other.v2.LumieresLausanneV2E2ESpec/lumieres-lausanne-data-lists.ttl",
+                  name = "http://www.knora.org/data/0113/lumieres-lausanne")
+  )
 
-    "For project Lumieres Lausanne" should {
+  "For project Lumieres Lausanne" should {
 
-        val gfUserEmail = "gilles.faucherand@unil.ch"
-        val testPass = "test"
+    val gfUserEmail = "gilles.faucherand@unil.ch"
+    val testPass = "test"
 
-        "allow user 'gfaucherand' to create a resource using V2 API" in {
+    "allow user 'gfaucherand' to create a resource using V2 API" in {
 
-            val params =
-                s"""
+      val params =
+        s"""
                    |{
                    |    "@type": "onto:User",
                    |    "rdfs:label": "Test",
@@ -78,9 +80,10 @@ class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config
                    |}
                 """.stripMargin
 
-            val request = Post(baseApiUrl + s"/v2/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(gfUserEmail, testPass))
-            val response: HttpResponse = singleAwaitingRequest(request)
-            assert(response.status === StatusCodes.OK)
-        }
+      val request = Post(baseApiUrl + s"/v2/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(gfUserEmail, testPass))
+      val response: HttpResponse = singleAwaitingRequest(request)
+      assert(response.status === StatusCodes.OK)
     }
+  }
 }

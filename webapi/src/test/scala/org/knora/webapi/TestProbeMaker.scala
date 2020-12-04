@@ -28,20 +28,20 @@ import org.knora.webapi.core.ActorMaker
   * makeActor method that creates an actor as a [[TestProbe]], which can than be used in testing.
   */
 trait TestProbeMaker extends ActorMaker {
-    this: Actor with ActorLogging =>
+  this: Actor with ActorLogging =>
 
-    lazy val probes = scala.collection.mutable.Map[String, TestProbe]()
+  lazy val probes = scala.collection.mutable.Map[String, TestProbe]()
 
-    def makeActor(props: Props, name: String) = {
-        val probe = new TestProbe(context.system)
-        probes(name) = probe
-        log.debug(s"created test-probe named: $name")
-        context.actorOf(Props(new Actor {
-            def receive = {
-                case msg => {
-                    probe.ref forward msg
-                }
-            }
-        }), name)
-    }
+  def makeActor(props: Props, name: String) = {
+    val probe = new TestProbe(context.system)
+    probes(name) = probe
+    log.debug(s"created test-probe named: $name")
+    context.actorOf(Props(new Actor {
+      def receive = {
+        case msg => {
+          probe.ref forward msg
+        }
+      }
+    }), name)
+  }
 }

@@ -27,45 +27,50 @@ import org.knora.webapi.messages.admin.responder.sipimessages.SipiFileInfoGetReq
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 /**
- * Provides a routing function for the API that Sipi connects to.
- */
+  * Provides a routing function for the API that Sipi connects to.
+  */
 class SipiRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
-    /**
-     * A routing function for the API that Sipi connects to.
-     */
-    /**
-     * Returns the route.
-     */
-    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
+  /**
+    * A routing function for the API that Sipi connects to.
+    */
+  /**
+    * Returns the route.
+    */
+  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
 
-        path("admin" / "files" / Segments(2)) { projectIDAndFile: Seq[String] =>
-            get {
-                requestContext =>
-                    val requestMessage = for {
-                        requestingUser <- getUserADM(
-                            requestContext = requestContext,
-                            featureFactoryConfig = featureFactoryConfig
-                        )
-                        projectID = stringFormatter.validateProjectShortcode(projectIDAndFile.head, throw BadRequestException(s"Invalid project ID: '${projectIDAndFile.head}'"))
-                        filename = stringFormatter.toSparqlEncodedString(projectIDAndFile(1), throw BadRequestException(s"Invalid filename: '${projectIDAndFile(1)}'"))
-                    } yield SipiFileInfoGetRequestADM(
-                        projectID = projectID,
-                        filename = filename,
-                        featureFactoryConfig = featureFactoryConfig,
-                        requestingUser = requestingUser
-                    )
+    path("admin" / "files" / Segments(2)) { projectIDAndFile: Seq[String] =>
+      get { requestContext =>
+        val requestMessage = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+          projectID = stringFormatter.validateProjectShortcode(
+            projectIDAndFile.head,
+            throw BadRequestException(s"Invalid project ID: '${projectIDAndFile.head}'"))
+          filename = stringFormatter.toSparqlEncodedString(
+            projectIDAndFile(1),
+            throw BadRequestException(s"Invalid filename: '${projectIDAndFile(1)}'"))
+          _ = println(s"/admin/files route called for filename $filename")
+        } yield
+          SipiFileInfoGetRequestADM(
+            projectID = projectID,
+            filename = filename,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
 
-                    RouteUtilADM.runJsonRoute(
-                        requestMessageF = requestMessage,
-                        requestContext = requestContext,
-                        featureFactoryConfig = featureFactoryConfig,
-                        settings = settings,
-                        responderManager = responderManager,
-                        log = log
-                    )
-            }
-        }
-
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
     }
+
+  }
 }

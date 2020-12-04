@@ -34,12 +34,12 @@ import org.knora.webapi.{ApiV2Complex, CoreSpec}
   */
 class InputOntologyV2Spec extends CoreSpec {
 
-    import InputOntologyV2Spec._
+  import InputOntologyV2Spec._
 
-    "InputOntologyV2" should {
-        "parse a property definition" in {
-            val params =
-                """
+  "InputOntologyV2" should {
+    "parse a property definition" in {
+      val params =
+        """
                   |{
                   |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                   |  "@type" : "owl:Ontology",
@@ -87,13 +87,13 @@ class InputOntologyV2Spec extends CoreSpec {
                   |}
                 """.stripMargin
 
-            val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
-            paramsAsInput should ===(PropertyDef)
-        }
+      val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+      paramsAsInput should ===(PropertyDef)
+    }
 
-        "parse a class definition" in {
-            val params =
-                s"""
+    "parse a class definition" in {
+      val params =
+        s"""
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
                    |  "@type" : "owl:Ontology",
@@ -133,13 +133,13 @@ class InputOntologyV2Spec extends CoreSpec {
                    |}
             """.stripMargin
 
-            val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
-            paramsAsInput should ===(ClassDef)
-        }
+      val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+      paramsAsInput should ===(ClassDef)
+    }
 
-        "reject an entity definition in the wrong ontology" in {
-            val params =
-                s"""
+    "reject an entity definition in the wrong ontology" in {
+      val params =
+        s"""
                    |{
                    |  "@id" : "http://0.0.0.0:3333/ontology/0001/incunabula/v2",
                    |  "@type" : "owl:Ontology",
@@ -179,85 +179,89 @@ class InputOntologyV2Spec extends CoreSpec {
                    |}
             """.stripMargin
 
-            assertThrows[BadRequestException] {
-                InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params))
-            }
-        }
+      assertThrows[BadRequestException] {
+        InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params))
+      }
     }
+  }
 }
 
 object InputOntologyV2Spec {
-    private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val PropertyDef = InputOntologyV2(
-        ontologyMetadata = OntologyMetadataV2(
-            ontologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
-            label = None,
-            lastModificationDate = Some(Instant.parse("2017-12-19T15:23:42.166Z"))
+  val PropertyDef = InputOntologyV2(
+    ontologyMetadata = OntologyMetadataV2(
+      ontologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
+      label = None,
+      lastModificationDate = Some(Instant.parse("2017-12-19T15:23:42.166Z"))
+    ),
+    properties = Map(
+      "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri -> PropertyInfoContentV2(
+        propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri,
+        predicates = Map(
+          "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+            predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+            objects = Seq(SmartIriLiteralV2("http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
+          ),
+          "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
+            predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
+            objects = Seq(SmartIriLiteralV2("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)),
+          ),
+          "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
+            predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
+            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri)),
+          ),
+          "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+            predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+            objects = Seq(
+              StringLiteralV2("has name", Some("en")),
+              StringLiteralV2("hat Namen", Some("de"))
+            )
+          ),
+          "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+            predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+            objects = Seq(
+              StringLiteralV2("The name of a 'Thing'", Some("en")),
+              StringLiteralV2("Der Name eines Dinges", Some("de"))
+            )
+          )
         ),
-        properties = Map("http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri -> PropertyInfoContentV2(
-            propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri,
-            predicates = Map(
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-                    predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                    objects = Seq(SmartIriLiteralV2("http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri)),
-                ),
-                "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
-                    predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-                    objects = Seq(SmartIriLiteralV2("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)),
-                ),
-                "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
-                    predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
-                    objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri)),
-                ),
-                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
-                    predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-                    objects = Seq(
-                        StringLiteralV2("has name", Some("en")),
-                        StringLiteralV2("hat Namen", Some("de"))
-                    )
-                ),
-                "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
-                    predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-                    objects = Seq(
-                        StringLiteralV2("The name of a 'Thing'", Some("en")),
-                        StringLiteralV2("Der Name eines Dinges", Some("de"))
-                    )
-                )
-            ),
-            subPropertyOf = Set(
-                "http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri,
-                "http://schema.org/name".toSmartIri
-            ),
-            ontologySchema = ApiV2Complex
-        ))
-    )
+        subPropertyOf = Set(
+          "http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri,
+          "http://schema.org/name".toSmartIri
+        ),
+        ontologySchema = ApiV2Complex
+      ))
+  )
 
-    val ClassDef = InputOntologyV2(
-        classes = Map("http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri -> ClassInfoContentV2(
-            predicates = Map(
-                "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-                    predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-                    objects = Seq(SmartIriLiteralV2("http://www.w3.org/2002/07/owl#Class".toSmartIri))
-                ),
-                "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
-                    predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-                    objects = Seq(StringLiteralV2("wild thing", Some("en")))
-                ),
-                "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
-                    predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-                    objects = Seq(StringLiteralV2("A thing that is wild", Some("en")))
-                )
-            ),
-            classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri,
-            ontologySchema = ApiV2Complex,
-            directCardinalities = Map("http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri -> KnoraCardinalityInfo(Cardinality.MayHaveOne)),
-            subClassOf = Set("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
-        )),
-        ontologyMetadata = OntologyMetadataV2(
-            ontologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
-            lastModificationDate = Some(Instant.parse("2017-12-19T15:23:42.166Z"))
+  val ClassDef = InputOntologyV2(
+    classes = Map(
+      "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri -> ClassInfoContentV2(
+        predicates = Map(
+          "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+            predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+            objects = Seq(SmartIriLiteralV2("http://www.w3.org/2002/07/owl#Class".toSmartIri))
+          ),
+          "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+            predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+            objects = Seq(StringLiteralV2("wild thing", Some("en")))
+          ),
+          "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+            predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+            objects = Seq(StringLiteralV2("A thing that is wild", Some("en")))
+          )
         ),
-        properties = Map()
-    )
+        classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri,
+        ontologySchema = ApiV2Complex,
+        directCardinalities = Map(
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri -> KnoraCardinalityInfo(
+            Cardinality.MayHaveOne)),
+        subClassOf = Set("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri)
+      )),
+    ontologyMetadata = OntologyMetadataV2(
+      ontologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri,
+      lastModificationDate = Some(Instant.parse("2017-12-19T15:23:42.166Z"))
+    ),
+    properties = Map()
+  )
 }
