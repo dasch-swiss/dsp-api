@@ -624,7 +624,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
         responderManager ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
           changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
-            groupIri = newGroupIri
+            forGroup = newGroupIri
           ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
@@ -641,7 +641,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
         responderManager ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
           changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
-            groupIri = newGroupIri
+            forGroup = newGroupIri
           ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
@@ -658,7 +658,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
         responderManager ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
           changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
-            groupIri = newGroupIri
+            forGroup = newGroupIri
           ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
@@ -676,7 +676,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
         responderManager ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
           changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
-            groupIri = newGroupIri
+            forGroup = newGroupIri
           ),
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
@@ -728,6 +728,7 @@ class PermissionsResponderADMSpec extends CoreSpec(PermissionsResponderADMSpec.c
         doap.hasPermissions.size should be(2)
         assert(doap.hasPermissions.equals(hasPermissions))
       }
+
     }
   }
 }
