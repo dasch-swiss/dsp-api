@@ -21,9 +21,9 @@ package org.knora.webapi.app
 
 import akka.actor.SupervisorStrategy._
 import akka.actor.{Actor, ActorRef, ActorSystem, OneForOneStrategy, Props, Stash, Timers}
+import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.{ExceptionHandler, RejectionHandler, Route}
-import akka.http.scaladsl.{Http, server}
+import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import akka.util.Timeout
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
@@ -33,7 +33,7 @@ import kamon.Kamon
 import org.knora.webapi.core.LiveActorMaker
 import org.knora.webapi.exceptions.{InconsistentRepositoryDataException, SipiException, UnexpectedMessageException, UnsupportedValueException}
 import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
-import org.knora.webapi.http.handler.KnoraExceptionHandler
+import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
 import org.knora.webapi.messages.app.appmessages._
@@ -399,14 +399,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
         s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}")
   }
 
-  // Our rejection handler. Here we are using the default one from the CORS lib
-  val rejectionHandler: RejectionHandler = CorsDirectives.corsRejectionHandler.withFallback(RejectionHandler.default)
 
-  // Our exception handler
-  val exceptionHandler: ExceptionHandler = KnoraExceptionHandler(KnoraSettings(system))
-
-  // Combining the two handlers for convenience
-  val handleErrors: server.Directive[Unit] = handleRejections(rejectionHandler) & handleExceptions(exceptionHandler)
 
   /**
     * All routes composed together and CORS activated based on the
@@ -414,12 +407,14 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
     *
     * ALL requests go through each of the routes in ORDER.
     * The FIRST matching route is used for handling a request.
+   *
+   *
     */
   private val apiRoutes: Route = logDuration {
     ServerVersion.addServerHeader {
-      handleErrors {
+      DSPApiDirectives.handleErrors(system) {
         CorsDirectives.cors(CorsSettings(system)) {
-          handleErrors {
+          DSPApiDirectives.handleErrors(system) {
             new HealthRoute(routeData).knoraApiPath ~
               new VersionRoute(routeData).knoraApiPath ~
               new RejectingRoute(routeData).knoraApiPath ~

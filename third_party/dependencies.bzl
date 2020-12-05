@@ -156,6 +156,7 @@ ALL_WEBAPI_MAIN_DEPENDENCIES = [
     "//webapi/src/main/scala/org/knora/webapi/core",
     "//webapi/src/main/scala/org/knora/webapi/exceptions",
     "//webapi/src/main/scala/org/knora/webapi/feature",
+    "//webapi/src/main/scala/org/knora/webapi/http/directives",
     "//webapi/src/main/scala/org/knora/webapi/http/handler",
     "//webapi/src/main/scala/org/knora/webapi/http/version",
     "//webapi/src/main/scala/org/knora/webapi/http/version/versioninfo",
