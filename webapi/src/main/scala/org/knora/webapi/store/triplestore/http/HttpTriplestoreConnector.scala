@@ -21,7 +21,7 @@ package org.knora.webapi.store.triplestore.http
 
 import java.io.BufferedInputStream
 import java.net.URI
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.util
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
@@ -1108,7 +1108,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
           case Some(GraphIriAndFormat(graphIri, quadFormat)) =>
             // Yes. Stream the HTTP entity to a temporary Turtle file.
             val turtleFile = Paths.get(outputFile.toString + ".ttl")
-            Files.copy(responseEntity.getContent, turtleFile)
+            Files.copy(responseEntity.getContent, turtleFile, StandardCopyOption.REPLACE_EXISTING)
 
             // Convert the Turtle to the output format.
 

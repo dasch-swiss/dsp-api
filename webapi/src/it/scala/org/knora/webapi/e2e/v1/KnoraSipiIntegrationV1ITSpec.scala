@@ -20,7 +20,7 @@
 package org.knora.webapi.e2e.v1
 
 import java.net.URLEncoder
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Paths, StandardCopyOption}
 
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
@@ -303,7 +303,7 @@ class KnoraSipiIntegrationV1ITSpec
       // To be able to run packaged tests inside Docker, we need to copy
       // the file first to a place which is shared with sipi
       val dest = FileUtil.createTempFile(settings, Some("jpg"))
-      Files.copy(fileToUpload, dest)
+      Files.copy(fileToUpload, dest, StandardCopyOption.REPLACE_EXISTING)
 
       // Upload the image to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
