@@ -31,23 +31,14 @@ import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.scalalogging.LazyLogging
 import kamon.Kamon
 import org.knora.webapi.core.LiveActorMaker
-import org.knora.webapi.exceptions.{
-  InconsistentRepositoryDataException,
-  SipiException,
-  UnexpectedMessageException,
-  UnsupportedValueException
-}
+import org.knora.webapi.exceptions.{InconsistentRepositoryDataException, SipiException, UnexpectedMessageException, UnsupportedValueException}
 import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
-import org.knora.webapi.http.handler
+import org.knora.webapi.http.handler.KnoraExceptionHandler
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.StoreRequest
-import org.knora.webapi.messages.store.cacheservicemessages.{
-  CacheServiceGetStatus,
-  CacheServiceStatusNOK,
-  CacheServiceStatusOK
-}
+import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetStatus, CacheServiceStatusNOK, CacheServiceStatusOK}
 import org.knora.webapi.messages.store.sipimessages.{IIIFServiceGetStatus, IIIFServiceStatusNOK, IIIFServiceStatusOK}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -412,7 +403,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
   val rejectionHandler: RejectionHandler = CorsDirectives.corsRejectionHandler.withFallback(RejectionHandler.default)
 
   // Our exception handler
-  val exceptionHandler: ExceptionHandler = handler.KnoraExceptionHandler(KnoraSettings(system))
+  val exceptionHandler: ExceptionHandler = KnoraExceptionHandler(KnoraSettings(system))
 
   // Combining the two handlers for convenience
   val handleErrors: server.Directive[Unit] = handleRejections(rejectionHandler) & handleExceptions(exceptionHandler)
