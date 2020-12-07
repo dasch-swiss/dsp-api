@@ -28,6 +28,7 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import akka.http.scaladsl.util.FastFuture
 import org.knora.webapi.R2RSpec
 import org.knora.webapi.feature._
+import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.routing.{KnoraRoute, KnoraRouteData, KnoraRouteFactory}
 
 import scala.concurrent.ExecutionContextExecutor
@@ -245,8 +246,8 @@ class FeatureToggleR2RSpec extends R2RSpec {
   }
 
   // The façade route instances that we are going to test.
-  private val fooRoute = new FooRoute(routeData).knoraApiPath
-  private val bazRoute = new BazRoute(routeData).knoraApiPath
+  private val fooRoute = DSPApiDirectives.handleErrors(system) { new FooRoute(routeData).knoraApiPath }
+  private val bazRoute = DSPApiDirectives.handleErrors(system) { new BazRoute(routeData).knoraApiPath }
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 

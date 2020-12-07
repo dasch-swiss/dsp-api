@@ -33,6 +33,7 @@ import spray.json._
 import scala.concurrent.duration._
 
 object PermissionsADME2ESpec {
+
   val config: Config = ConfigFactory.parseString("""
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
@@ -60,13 +61,16 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
         val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri/$groupIri") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+
         val response = singleAwaitingRequest(request, 1.seconds)
         logger.debug("==>> " + response.toString)
         assert(response.status === StatusCodes.OK)
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
+
         val iri = result
           .getOrElse("iri", throw DeserializationException("The expected field 'iri' is missing."))
           .convertTo[String]
+
         assert(iri == "http://rdfh.ch/permissions/00FF/a1")
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -83,8 +87,10 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       "return a project's administrative permissions" in {
 
         val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
+
         val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+
         val response = singleAwaitingRequest(request, 1.seconds)
         logger.debug("==>> " + response.toString)
         assert(response.status === StatusCodes.OK)
@@ -106,8 +112,10 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       "return a project's default object access permissions" in {
 
         val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
+
         val request = Get(baseApiUrl + s"/admin/permissions/doap/$projectIri") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+
         val response = singleAwaitingRequest(request, 1.seconds)
         logger.debug("==>> " + response.toString)
         assert(response.status === StatusCodes.OK)
@@ -129,8 +137,10 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       "return a project's all permissions" in {
 
         val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
+
         val request = Get(baseApiUrl + s"/admin/permissions/$projectIri") ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+
         val response = singleAwaitingRequest(request, 1.seconds)
         logger.debug("==>> " + response.toString)
         assert(response.status === StatusCodes.OK)
@@ -148,17 +158,16 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           )
         )
       }
-
     }
 
     "creating permissions" should {
       "create an administrative access permission" in {
         val createAdministrativePermissionRequest: String =
           s"""{
-                       |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-                       |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
-                       |}""".stripMargin
+               |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
+               |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+               |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
+               |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -170,14 +179,17 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             text = createAdministrativePermissionRequest
           )
         )
+
         val request = Post(
           baseApiUrl + s"/admin/permissions/ap",
           HttpEntity(ContentTypes.`application/json`, createAdministrativePermissionRequest)) ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
+
         val groupIri = result
           .getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing."))
           .convertTo[String]
@@ -190,6 +202,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           .getOrElse("hasPermissions",
                      throw DeserializationException("The expected field 'hasPermissions' is missing."))
           .toString()
+
         assert(permissions.contains("ProjectAdminGroupAllPermission"))
 
         clientTestDataCollector.addFile(
@@ -205,11 +218,11 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
         val createAdministrativePermissionWithCustomIriRequest: String =
           s"""{
-                       |    "id": "http://rdfh.ch/permissions/0001/AP-with-customIri",
-                       |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-                       |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
-                       |}""".stripMargin
+               |    "id": "http://rdfh.ch/permissions/0001/AP-with-customIri",
+               |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
+               |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+               |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
+               |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -224,19 +237,19 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
         val createAdministrativePermissionWithCustomIriResponse: String =
           s"""{
-                       |    "administrative_permission": {
-                       |        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
-                       |        "forProject": "http://rdfh.ch/projects/0001",
-                       |        "hasPermissions": [
-                       |            {
-                       |                "additionalInformation": null,
-                       |                "name": "ProjectAdminGroupAllPermission",
-                       |                "permissionCode": null
-                       |            }
-                       |        ],
-                       |        "iri": "http://rdfh.ch/permissions/0001/AP-with-customIri"
-                       |    }
-                       |}""".stripMargin
+               |    "administrative_permission": {
+               |        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
+               |        "forProject": "http://rdfh.ch/projects/0001",
+               |        "hasPermissions": [
+               |            {
+               |                "additionalInformation": null,
+               |                "name": "ProjectAdminGroupAllPermission",
+               |                "permissionCode": null
+               |            }
+               |        ],
+               |        "iri": "http://rdfh.ch/permissions/0001/AP-with-customIri"
+               |    }
+               |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -253,12 +266,12 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       "create a default object access permission" in {
         val createDefaultObjectAccessPermissionRequest: String =
           s"""{
-                       |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-                       |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "forProperty":null,
-                       |    "forResourceClass":null,
-                       |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
-                       |}""".stripMargin
+               |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
+               |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+               |    "forProperty":null,
+               |    "forResourceClass":null,
+               |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
+               |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -270,6 +283,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             text = createDefaultObjectAccessPermissionRequest
           )
         )
+
         val request = Post(
           baseApiUrl + s"/admin/permissions/doap",
           HttpEntity(ContentTypes.`application/json`, createDefaultObjectAccessPermissionRequest)) ~> addCredentials(
@@ -291,6 +305,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           .getOrElse("hasPermissions",
                      throw DeserializationException("The expected field 'hasPermissions' is missing."))
           .toString()
+
         assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
 
         clientTestDataCollector.addFile(
@@ -308,13 +323,14 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       "create a default object access permission with a custom IRI" in {
         val createDefaultObjectAccessPermissionWithCustomIriRequest: String =
           s"""{
-                       |    "id": "http://rdfh.ch/permissions/00FF/DOAP-with-customIri",
-                       |    "forGroup":null,
-                       |    "forProject":"${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "forProperty":null,
-                       |    "forResourceClass":"${SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS}",
-                       |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
-                       |}""".stripMargin
+
+                 |    "id": "http://rdfh.ch/permissions/00FF/DOAP-with-customIri",
+                 |    "forGroup":null,
+                 |    "forProject":"${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+                 |    "forProperty":null,
+                 |    "forResourceClass":"${SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS}",
+                 |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
+                 |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -326,6 +342,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             text = createDefaultObjectAccessPermissionWithCustomIriRequest
           )
         )
+
         val request = Post(baseApiUrl + s"/admin/permissions/doap",
                            HttpEntity(ContentTypes.`application/json`,
                                       createDefaultObjectAccessPermissionWithCustomIriRequest)) ~> addCredentials(
@@ -352,6 +369,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           .getOrElse("hasPermissions",
                      throw DeserializationException("The expected field 'hasPermissions' is missing."))
           .toString()
+
         assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
 
         clientTestDataCollector.addFile(
@@ -359,6 +377,265 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "create-defaultObjectAccess-permission-withCustomIRI-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+    }
+
+    "updating permissions" should {
+      "change the group of an administrative permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
+        val updatePermissionGroup =
+          s"""{
+             |    "forGroup": "$newGroupIri"
+             |}""".stripMargin
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-administrative-permission-forGroup-request",
+              fileExtension = "json"
+            ),
+            text = updatePermissionGroup
+          )
+        )
+        val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/group",
+                          HttpEntity(ContentTypes.`application/json`, updatePermissionGroup)) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.OK)
+        val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
+        val groupIri = result
+          .getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing."))
+          .convertTo[String]
+        assert(groupIri == newGroupIri)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-administrative-permission-forGroup-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "change the group of a default object access permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
+        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
+        val updatePermissionGroup =
+          s"""{
+             |    "forGroup": "$newGroupIri"
+             |}""".stripMargin
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-defaultObjectAccess-permission-forGroup-request",
+              fileExtension = "json"
+            ),
+            text = updatePermissionGroup
+          )
+        )
+        val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/group",
+                          HttpEntity(ContentTypes.`application/json`, updatePermissionGroup)) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.OK)
+        val result =
+          AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
+        val groupIri = result
+          .getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing."))
+          .convertTo[String]
+        assert(groupIri == newGroupIri)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-defaultObjectAccess-permission-forGroup-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "change the set of hasPermissions of an administrative permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val updateHasPermissions =
+          s"""{
+             |   "hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
+             |}""".stripMargin
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-administrative-permission-hasPermissions-request",
+              fileExtension = "json"
+            ),
+            text = updateHasPermissions
+          )
+        )
+        val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/hasPermissions",
+                          HttpEntity(ContentTypes.`application/json`, updateHasPermissions)) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.OK)
+        val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
+        val permissions = result
+          .getOrElse("hasPermissions",
+                     throw DeserializationException("The expected field 'hasPermissions' is missing."))
+          .asInstanceOf[JsArray]
+          .elements
+        permissions.size should be(1)
+        assert(permissions.head.asJsObject.fields("name").toString.contains("ProjectAdminGroupAllPermission"))
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-administrative-permission-hasPermissions-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "change the set of hasPermissions of a default object access permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val updateHasPermissions =
+          s"""{
+             |   "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
+             |}""".stripMargin
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-defaultObjectAccess-permission-hasPermissions-request",
+              fileExtension = "json"
+            ),
+            text = updateHasPermissions
+          )
+        )
+        val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/hasPermissions",
+                          HttpEntity(ContentTypes.`application/json`, updateHasPermissions)) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.OK)
+        val result =
+          AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
+        val permissions = result
+          .getOrElse("hasPermissions",
+                     throw DeserializationException("The expected field 'hasPermissions' is missing."))
+          .asInstanceOf[JsArray]
+          .elements
+        permissions.size should be(1)
+        assert(
+          permissions.head.asJsObject
+            .fields("additionalInformation")
+            .toString
+            .contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-defaultObjectAccess-permission-hasPermissions-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "change the resource class of a default object access permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
+        val updateResourceClass =
+          s"""{
+             |   "forResourceClass":"$resourceClassIri"
+             |}""".stripMargin
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-defaultObjectAccess-permission-forResourceClass-request",
+              fileExtension = "json"
+            ),
+            text = updateResourceClass
+          )
+        )
+        val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/resourceClass",
+                          HttpEntity(ContentTypes.`application/json`, updateResourceClass)) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.OK)
+        val result =
+          AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
+        val forResourceClassIRI = result
+          .getOrElse("forResourceClass",
+                     throw DeserializationException("The expected field 'forResourceClass' is missing."))
+          .convertTo[String]
+        assert(forResourceClassIRI == resourceClassIri)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-defaultObjectAccess-permission-forResourceClass-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "change the property of a default object access permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val propertyClassIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
+        val updateResourceClass =
+          s"""{
+             |   "forProperty":"$propertyClassIri"
+             |}""".stripMargin
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-defaultObjectAccess-permission-forProperty-request",
+              fileExtension = "json"
+            ),
+            text = updateResourceClass
+          )
+        )
+        val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/property",
+                          HttpEntity(ContentTypes.`application/json`, updateResourceClass)) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        assert(response.status === StatusCodes.OK)
+        val result =
+          AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
+        val forProperty = result
+          .getOrElse("forProperty", throw DeserializationException("The expected field 'forProperty' is missing."))
+          .convertTo[String]
+        assert(forProperty == propertyClassIri)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-defaultObjectAccess-permission-forProperty-response",
               fileExtension = "json"
             ),
             text = responseToString(response)
