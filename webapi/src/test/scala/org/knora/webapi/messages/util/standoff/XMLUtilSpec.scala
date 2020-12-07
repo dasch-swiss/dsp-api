@@ -19,17 +19,17 @@
 
 package org.knora.webapi.util.standoff
 
-import java.io.File
+import java.nio.file.Paths
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.StandoffConversionException
-import org.knora.webapi.messages.util.standoff.{XMLToStandoffUtil, XMLUtil}
+import org.knora.webapi.messages.util.standoff.XMLUtil
 import org.knora.webapi.util.FileUtil
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
 /**
-  * Tests [[XMLToStandoffUtil]].
+  * Tests [[org.knora.webapi.messages.util.standoff.XMLToStandoffUtil]].
   */
 class XMLUtilSpec extends CoreSpec {
 
@@ -91,17 +91,17 @@ class XMLUtilSpec extends CoreSpec {
                 """.stripMargin
 
       assertThrows[StandoffConversionException] {
-        val transformed: String = XMLUtil.applyXSLTransformation(xml, xsltInvalid)
+        val _: String = XMLUtil.applyXSLTransformation(xml, xsltInvalid)
       }
 
     }
 
     "demonstrate how to handle resources that may or may not be embedded" in {
       val xmlWithNestedResource =
-        FileUtil.readTextFile(new File("test_data/test_route/texts/beol/xml-with-nested-resources.xml"))
+        FileUtil.readTextFile(Paths.get("test_data/test_route/texts/beol/xml-with-nested-resources.xml"))
       val xmlWithNonNestedResource =
-        FileUtil.readTextFile(new File("test_data/test_route/texts/beol/xml-with-non-nested-resources.xml"))
-      val xslt = FileUtil.readTextFile(new File("test_data/test_route/texts/beol/header.xsl"))
+        FileUtil.readTextFile(Paths.get("test_data/test_route/texts/beol/xml-with-non-nested-resources.xml"))
+      val xslt = FileUtil.readTextFile(Paths.get("test_data/test_route/texts/beol/header.xsl"))
 
       val transformedXmlWithNestedResource: String = XMLUtil.applyXSLTransformation(xmlWithNestedResource, xslt)
       val transformedXmlWithNonNestedResource: String = XMLUtil.applyXSLTransformation(xmlWithNonNestedResource, xslt)

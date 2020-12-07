@@ -19,7 +19,7 @@
 
 package org.knora.webapi
 
-import java.io.File
+import java.nio.file.{Files, Path, Paths}
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingAdapter
@@ -155,19 +155,21 @@ class R2RSpec
 
   /**
     * Reads or writes a test data file.
+    * The written test data files can be found under:
+    * ./bazel-out/darwin-fastbuild/testlogs/<package-name>/<target-name>/test.outputs/outputs.zip
     *
     * @param responseAsString the API response received from Knora.
     * @param file             the file in which the expected API response is stored.
     * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
     * @return the expected response.
     */
-  protected def readOrWriteTextFile(responseAsString: String, file: File, writeFile: Boolean = false): String = {
+  protected def readOrWriteTextFile(responseAsString: String, file: Path, writeFile: Boolean = false): String = {
     if (writeFile) {
       // Per default only read access is allowed in the bazel sandbox.
       // This workaround allows to save test output.
-      val testOutputDir = sys.env("TEST_UNDECLARED_OUTPUTS_DIR")
-      val newOutputFile = new File(testOutputDir, file.getPath)
-      newOutputFile.getParentFile.mkdirs()
+      val testOutputDir: Path = Paths.get(sys.env("TEST_UNDECLARED_OUTPUTS_DIR"))
+      val newOutputFile = testOutputDir.resolve(file)
+      Files.createDirectories(newOutputFile.getParent)
       FileUtil.writeTextFile(newOutputFile,
                              responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
       responseAsString

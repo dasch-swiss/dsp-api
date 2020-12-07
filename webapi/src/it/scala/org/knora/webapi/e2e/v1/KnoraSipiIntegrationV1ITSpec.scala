@@ -19,8 +19,8 @@
 
 package org.knora.webapi.e2e.v1
 
-import java.io.{File, FileInputStream, FileOutputStream}
 import java.net.URLEncoder
+import java.nio.file.{Files, Paths, StandardCopyOption}
 
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
@@ -298,24 +298,17 @@ class KnoraSipiIntegrationV1ITSpec
     }
 
     "create an 'p0803-incunabula:book' and an 'p0803-incunabula:page' with file parameters via XML import" in {
-      val fileToUpload = new File(pathToChlaus)
+      val fileToUpload = Paths.get(pathToChlaus)
 
       // To be able to run packaged tests inside Docker, we need to copy
       // the file first to a place which is shared with sipi
       val dest = FileUtil.createTempFile(settings, Some("jpg"))
-      new FileOutputStream(dest).getChannel
-        .transferFrom(
-          new FileInputStream(fileToUpload).getChannel,
-          0,
-          Long.MaxValue
-        )
-
-      val absoluteFilePath = dest.getAbsolutePath
+      Files.copy(fileToUpload, dest, StandardCopyOption.REPLACE_EXISTING)
 
       // Upload the image to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
-        filesToUpload = Seq(FileToUpload(path = absoluteFilePath, mimeType = MediaTypes.`image/tiff`))
+        filesToUpload = Seq(FileToUpload(path = dest.toAbsolutePath.toString, mimeType = MediaTypes.`image/tiff`))
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -370,7 +363,7 @@ class KnoraSipiIntegrationV1ITSpec
       val locdata = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val origname = locdata.fields("origname").asInstanceOf[JsString].value
       val imageUrl = locdata.fields("path").asInstanceOf[JsString].value
-      assert(origname == dest.getName)
+      assert(origname == dest.getFileName.toString)
 
       // Request the file from Sipi.
       val sipiGetRequest = Get(imageUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
@@ -414,7 +407,7 @@ class KnoraSipiIntegrationV1ITSpec
 
       // add a mapping referring to the XSLT as the default XSL transformation
 
-      val mapping = FileUtil.readTextFile(new File(pathToMappingWithXSLT))
+      val mapping = FileUtil.readTextFile(Paths.get(pathToMappingWithXSLT))
 
       val updatedMapping = addXSLTIriToMapping(mapping, resId)
 
@@ -449,7 +442,7 @@ class KnoraSipiIntegrationV1ITSpec
     }
 
     "create a sample BEOL letter" in {
-      val mapping = FileUtil.readTextFile(new File(pathToBEOLLetterMapping))
+      val mapping = FileUtil.readTextFile(Paths.get(pathToBEOLLetterMapping))
 
       val paramsForMapping =
         s"""
@@ -481,7 +474,7 @@ class KnoraSipiIntegrationV1ITSpec
 
       // create a letter via bulk import
 
-      val bulkXML = FileUtil.readTextFile(new File(pathToBEOLBulkXML))
+      val bulkXML = FileUtil.readTextFile(Paths.get(pathToBEOLBulkXML))
 
       val bulkRequest = Post(
         baseApiUrl + "/v1/resources/xmlimport/" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF",
@@ -532,7 +525,7 @@ class KnoraSipiIntegrationV1ITSpec
 
       // add a mapping referring to the XSLT as the default XSL transformation
 
-      val mapping = FileUtil.readTextFile(new File(pathToBEOLStandoffTEIMapping))
+      val mapping = FileUtil.readTextFile(Paths.get(pathToBEOLStandoffTEIMapping))
 
       val updatedMapping = addXSLTIriToMapping(mapping, resId)
 

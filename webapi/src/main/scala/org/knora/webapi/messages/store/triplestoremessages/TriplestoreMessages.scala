@@ -19,7 +19,7 @@
 
 package org.knora.webapi.messages.store.triplestoremessages
 
-import java.io.File
+import java.nio.file.Path
 import java.time.Instant
 
 import akka.event.LoggingAdapter
@@ -87,7 +87,7 @@ case class SparqlConstructRequest(sparql: String, featureFactoryConfig: FeatureF
   */
 case class SparqlConstructFileRequest(sparql: String,
                                       graphIri: IRI,
-                                      outputFile: File,
+                                      outputFile: Path,
                                       outputFormat: QuadFormat,
                                       featureFactoryConfig: FeatureFactoryConfig)
     extends TriplestoreRequest
@@ -235,7 +235,7 @@ case class SparqlExtendedConstructResponse(
   * @param featureFactoryConfig the feature factory configuration.
   */
 case class NamedGraphFileRequest(graphIri: IRI,
-                                 outputFile: File,
+                                 outputFile: Path,
                                  outputFormat: QuadFormat,
                                  featureFactoryConfig: FeatureFactoryConfig)
     extends TriplestoreRequest
@@ -366,7 +366,7 @@ case class UpdateRepositoryRequest() extends TriplestoreRequest
   * @param outputFile           the output file.
   * @param featureFactoryConfig the feature factory configuration.
   */
-case class DownloadRepositoryRequest(outputFile: File, featureFactoryConfig: FeatureFactoryConfig)
+case class DownloadRepositoryRequest(outputFile: Path, featureFactoryConfig: FeatureFactoryConfig)
     extends TriplestoreRequest
 
 /**
@@ -380,7 +380,7 @@ case class FileWrittenResponse()
   *
   * @param inputFile a TriG file containing the content to be uploaded to the repository.
   */
-case class UploadRepositoryRequest(inputFile: File) extends TriplestoreRequest
+case class UploadRepositoryRequest(inputFile: Path) extends TriplestoreRequest
 
 /**
   * Indicates that repository content was successfully uploaded.

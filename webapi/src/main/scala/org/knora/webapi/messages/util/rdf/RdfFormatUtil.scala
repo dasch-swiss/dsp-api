@@ -19,7 +19,8 @@
 
 package org.knora.webapi.messages.util.rdf
 
-import java.io._
+import java.io.{BufferedInputStream, BufferedOutputStream, InputStream, OutputStream}
+import java.nio.file.{Files, Path}
 
 import akka.http.scaladsl.model.MediaType
 import org.knora.webapi.exceptions.{BadRequestException, InvalidRdfException}
@@ -279,9 +280,9 @@ trait RdfFormatUtil {
     * @param rdfFormat the file format.
     * @return a [[RdfModel]] representing the contents of the file.
     */
-  def fileToRdfModel(file: File, rdfFormat: NonJsonLD): RdfModel = {
+  def fileToRdfModel(file: Path, rdfFormat: NonJsonLD): RdfModel = {
     inputStreamToRdfModel(
-      inputStream = new BufferedInputStream(new FileInputStream(file)),
+      inputStream = new BufferedInputStream(Files.newInputStream(file)),
       rdfFormat = rdfFormat
     )
   }
@@ -293,10 +294,10 @@ trait RdfFormatUtil {
     * @param file      the file to be written.
     * @param rdfFormat the file format.
     */
-  def rdfModelToFile(rdfModel: RdfModel, file: File, rdfFormat: NonJsonLD): Unit = {
+  def rdfModelToFile(rdfModel: RdfModel, file: Path, rdfFormat: NonJsonLD): Unit = {
     rdfModelToOutputStream(
       rdfModel = rdfModel,
-      outputStream = new BufferedOutputStream(new FileOutputStream(file)),
+      outputStream = new BufferedOutputStream(Files.newOutputStream(file)),
       rdfFormat = rdfFormat
     )
   }
@@ -381,11 +382,11 @@ trait RdfFormatUtil {
     * @param outputFile   the output file.
     * @param outputFormat the output file format.
     */
-  def turtleToQuadsFile(rdfSource: RdfSource, graphIri: IRI, outputFile: File, outputFormat: QuadFormat): Unit = {
+  def turtleToQuadsFile(rdfSource: RdfSource, graphIri: IRI, outputFile: Path, outputFormat: QuadFormat): Unit = {
     var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
 
     val processingTry: Try[Unit] = Try {
-      val bufferedFileOutputStream = new BufferedOutputStream(new FileOutputStream(outputFile))
+      val bufferedFileOutputStream = new BufferedOutputStream(Files.newOutputStream(outputFile))
       maybeBufferedFileOutputStream = Some(bufferedFileOutputStream)
 
       val formattingStreamProcessor: RdfStreamProcessor = makeFormattingStreamProcessor(

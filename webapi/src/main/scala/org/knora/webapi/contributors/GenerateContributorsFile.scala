@@ -19,8 +19,8 @@
 
 package org.knora.webapi.contributors
 
-import java.io.File
 import java.net.{URL, URLConnection}
+import java.nio.file.{Path, Paths}
 
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.twirl.Contributor
@@ -44,7 +44,7 @@ object GenerateContributorsFile extends App {
 
   private val conf = new GenerateContributorsFileConf(args)
   private val token = conf.token.toOption
-  private val outputFile = new File(conf.output())
+  private val outputFile: Path = Paths.get(conf.output())
 
   // Get the list of contributors.
 
@@ -86,7 +86,7 @@ object GenerateContributorsFile extends App {
     org.knora.webapi.messages.twirl.queries.util.txt.generateContributorsMarkdown(contributorsSorted).toString
 
   // Write Contributors.md.
-  FileUtil.writeTextFile(outputFile, contributorsText)
+  FileUtil.writeTextFile(file = outputFile, content = contributorsText)
 
   /**
     * Makes an HTTP GET connection to the GitHub API.

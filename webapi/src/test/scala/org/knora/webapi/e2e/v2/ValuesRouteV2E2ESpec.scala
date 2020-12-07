@@ -19,8 +19,8 @@
 
 package org.knora.webapi.e2e.v2
 
-import java.io.File
 import java.net.URLEncoder
+import java.nio.file.Paths
 import java.time.Instant
 import java.util.UUID
 
@@ -668,7 +668,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     val responseStr = responseToString(response)
     assert(response.status == StatusCodes.OK, responseStr)
     val expectedResponseStr =
-      readOrWriteTextFile(responseStr, new File(s"test_data/valuesE2EV2/$fileBasename.jsonld"), writeTestDataFiles)
+      readOrWriteTextFile(responseStr, Paths.get(s"test_data/valuesE2EV2/$fileBasename.jsonld"), writeTestDataFiles)
     compareJSONLDForResourcesResponse(expectedJSONLD = expectedResponseStr, receivedJSONLD = responseStr)
 
     clientTestDataCollector.addFile(
@@ -1980,7 +1980,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "create a text value with standoff containing escaped text" in {
       val resourceIri = AThing.iri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-      val jsonLDEntity = FileUtil.readTextFile(new File("test_data/valuesE2EV2/CreateValueWithEscape.jsonld"))
+      val jsonLDEntity = FileUtil.readTextFile(Paths.get("test_data/valuesE2EV2/CreateValueWithEscape.jsonld"))
       val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
@@ -2012,7 +2012,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "create a TextValue from XML representing HTML with an attribute containing escaped quotes" in {
       // Create the mapping.
 
-      val xmlFileToSend = new File("test_data/test_route/texts/mappingForHTML.xml")
+      val xmlFileToSend = Paths.get("test_data/test_route/texts/mappingForHTML.xml")
 
       val mappingParams =
         s"""{
@@ -2034,7 +2034,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         ),
         Multipart.FormData.BodyPart(
           "xml",
-          HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), xmlFileToSend.toPath),
+          HttpEntity.fromPath(MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`), xmlFileToSend),
           Map("filename" -> "HTMLMapping.xml")
         )
       )
@@ -3809,7 +3809,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "update a text value with standoff containing escaped text" in {
       val resourceIri = AThing.iri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-      val jsonLDEntity = FileUtil.readTextFile(new File("test_data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
+      val jsonLDEntity = FileUtil.readTextFile(Paths.get("test_data/valuesE2EV2/UpdateValueWithEscape.jsonld"))
       val jsonLDEntityWithResourceValueIri = jsonLDEntity.replace("VALUE_IRI", textValueWithEscapeIri.get)
       val request = Put(
         baseApiUrl + "/v2/values",

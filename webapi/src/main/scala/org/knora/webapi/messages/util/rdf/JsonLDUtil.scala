@@ -1718,7 +1718,7 @@ object JsonLDUtil {
           inlineResource(iriToJsonLDObject(iriNode.iri))
         }
 
-      case blankNode: BlankNode =>
+      case _: BlankNode =>
         // It's a blank node. It should be possible to inline it. If not, return an empty blank node.
         inlineResource(JsonLDObject(Map.empty))
     }

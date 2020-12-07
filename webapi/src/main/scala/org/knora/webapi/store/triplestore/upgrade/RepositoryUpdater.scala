@@ -1,7 +1,6 @@
 package org.knora.webapi.store.triplestore.upgrade
 
-import java.io._
-import java.nio.file.Files
+import java.nio.file.{Files, Path, Paths}
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.util.FastFuture
@@ -160,24 +159,24 @@ class RepositoryUpdater(system: ActorSystem,
   private def updateRepositoryWithSelectedPlugins(
       pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]): Future[RepositoryUpdatedResponse] = {
     // Was a download directory specified in the application settings?
-    val downloadDir: File = settings.upgradeDownloadDir match {
+    val downloadDir: Path = settings.upgradeDownloadDir match {
       case Some(configuredDir) =>
         // Yes. Use that directory.
         log.info(s"Repository update using configured download directory $configuredDir")
-        val dirFile = new File(configuredDir)
-        dirFile.mkdirs()
+        val dirFile = Paths.get(configuredDir)
+        Files.createDirectories(dirFile)
         dirFile
 
       case None =>
         // No. Create a temporary directory.
-        val dirFile = Files.createTempDirectory("knora").toFile
+        val dirFile = Files.createTempDirectory("knora")
         log.info(s"Repository update using download directory $dirFile")
         dirFile
     }
 
     // The file to save the repository in.
-    val downloadedRepositoryFile = new File(downloadDir, "downloaded-repository.nq")
-    val transformedRepositoryFile = new File(downloadDir, "transformed-repository.nq")
+    val downloadedRepositoryFile = downloadDir.resolve("downloaded-repository.nq")
+    val transformedRepositoryFile = downloadDir.resolve("transformed-repository.nq")
     log.info("Downloading repository file...")
 
     for {
@@ -217,8 +216,8 @@ class RepositoryUpdater(system: ActorSystem,
     * @param transformedRepositoryFile the transformed file.
     * @param pluginsForNeededUpdates   the plugins needed to update the repository.
     */
-  private def doTransformations(downloadedRepositoryFile: File,
-                                transformedRepositoryFile: File,
+  private def doTransformations(downloadedRepositoryFile: Path,
+                                transformedRepositoryFile: Path,
                                 pluginsForNeededUpdates: Seq[PluginForKnoraBaseVersion]): Unit = {
     // Parse the input file.
     log.info("Reading repository file...")
