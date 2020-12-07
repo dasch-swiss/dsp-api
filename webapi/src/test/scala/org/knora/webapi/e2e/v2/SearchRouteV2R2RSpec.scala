@@ -30,6 +30,7 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDKeywords, JsonLDUtil}
@@ -59,10 +60,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
           |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-  private val searchPath = new SearchRouteV2(routeData).knoraApiPath
-  private val resourcePath = new ResourcesRouteV2(routeData).knoraApiPath
-  private val standoffPath = new StandoffRouteV2(routeData).knoraApiPath
-  private val valuesPath = new ValuesRouteV1(routeData).knoraApiPath
+  private val searchPath = DSPApiDirectives.handleErrors(system) { new SearchRouteV2(routeData).knoraApiPath }
+  private val resourcePath = DSPApiDirectives.handleErrors(system) { new ResourcesRouteV2(routeData).knoraApiPath }
+  private val standoffPath = DSPApiDirectives.handleErrors(system) { new StandoffRouteV2(routeData).knoraApiPath }
+  private val valuesPath = DSPApiDirectives.handleErrors(system) { new ValuesRouteV1(routeData).knoraApiPath }
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
