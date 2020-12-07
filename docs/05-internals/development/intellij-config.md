@@ -54,7 +54,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 Use [Scalafmt](https://scalameta.org/scalafmt/) in [IntelliJ IDEA](https://www.jetbrains.com/idea) to format Scala code.
 
-In IntelliJ editor setting (`Preferences -> Code Style -> Scala`), choose `Scalafmt` as formatter and check the box for 
+In IntelliJ editor setting (`Preferences -> Editor -> Code Style -> Scala`), choose `Scalafmt` as formatter and check the box for 
 `Reformat on file save` as shown below:
 
  ![screenshot 'setting tab size'](figures/setup_formatting.png)
