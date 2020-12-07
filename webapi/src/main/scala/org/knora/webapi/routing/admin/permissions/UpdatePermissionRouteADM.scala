@@ -30,8 +30,6 @@ import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
-import scala.concurrent.Future
-
 object UpdatePermissionRouteADM {
   val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
 }

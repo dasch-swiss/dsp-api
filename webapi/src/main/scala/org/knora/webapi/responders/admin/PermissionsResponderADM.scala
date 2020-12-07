@@ -495,7 +495,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     for {
       administrativePermission <- permissionGetADM(administrativePermissionIri, requestingUser)
       result = administrativePermission match {
-        case (ap: AdministrativePermissionADM) =>
+        case ap: AdministrativePermissionADM =>
           AdministrativePermissionGetResponseADM(ap)
         case _ => throw BadRequestException(s"$administrativePermissionIri is not an administrative permission.")
       }
@@ -864,7 +864,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     for {
       defaultObjectAccessPermission <- permissionGetADM(permissionIri, requestingUser)
       result = defaultObjectAccessPermission match {
-        case (doap: DefaultObjectAccessPermissionADM) =>
+        case doap: DefaultObjectAccessPermissionADM =>
           DefaultObjectAccessPermissionGetResponseADM(doap)
         case _ => throw BadRequestException(s"$permissionIri is not a default object access permission.")
       }
@@ -998,7 +998,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       .mapTo[Option[DefaultObjectAccessPermissionADM]]
       .flatMap {
         case Some(doap) => Future(DefaultObjectAccessPermissionGetResponseADM(doap))
-        case None => {
+        case None       =>
           /* if the query was for a property, then we need to additionally check if it is a system property */
           if (propertyIri.isDefined) {
             val systemProject = OntologyConstants.KnoraAdmin.SystemProject
@@ -1013,7 +1013,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             throw NotFoundException(
               s"No Default Object Access Permission found for project: $projectIri, group: $groupIri, resourceClassIri: $resourceClassIri, propertyIri: $propertyIri combination")
           }
-        }
       }
   }
 
@@ -1540,14 +1539,14 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     * @param requestingUser               the [[UserADM]] of the requesting user.
     * @param apiRequestID                 the API request ID.
     * @return [[PermissionGetResponseADM]].
-    * @throw UpdateNotPerformed if something has gone wrong.
+    * @throws UpdateNotPerformedException if something has gone wrong.
     */
   private def permissionGroupChangeRequestADM(permissionIri: IRI,
                                               changePermissionGroupRequest: ChangePermissionGroupApiRequestADM,
                                               requestingUser: UserADM,
                                               apiRequestID: UUID): Future[PermissionGetResponseADM] = {
     /* verify that the permission group is updated */
-    def verifyPermissionGroupUpdate(): Future[PermissionItemADM] =
+    def verifyPermissionGroupUpdate: Future[PermissionItemADM] =
       for {
         updatedPermission <- permissionGetADM(
           permissionIri = permissionIri,
@@ -1617,7 +1616,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     * @param requestingUser              the [[UserADM]] of the requesting user.
     * @param apiRequestID                the API request ID.
     * @return [[PermissionGetResponseADM]].
-    * @throw UpdateNotPerformed if something has gone wrong.
+    * @throws UpdateNotPerformedException if something has gone wrong.
     */
   private def permissionHasPermissionsChangeRequestADM(
       permissionIri: IRI,
@@ -1626,7 +1625,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       apiRequestID: UUID): Future[PermissionGetResponseADM] = {
 
     /*Verify that hasPermissions is updated successfully*/
-    def verifyUpdateOfHasPermissions(): Future[PermissionItemADM] =
+    def verifyUpdateOfHasPermissions: Future[PermissionItemADM] =
       for {
         updatedPermission <- permissionGetADM(permissionIri, requestingUser)
 
@@ -1698,7 +1697,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     * @param requestingUser                the [[UserADM]] of the requesting user.
     * @param apiRequestID                  the API request ID.
     * @return [[PermissionGetResponseADM]].
-    * @throw UpdateNotPerformed if something has gone wrong.
+    * @throws UpdateNotPerformedException if something has gone wrong.
     */
   private def permissionResourceClassChangeRequestADM(
       permissionIri: IRI,
@@ -1707,7 +1706,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       apiRequestID: UUID): Future[PermissionGetResponseADM] = {
 
     /*Verify that resource class of doap is updated successfully*/
-    def verifyUpdateOfResourceClass(): Future[PermissionItemADM] =
+    def verifyUpdateOfResourceClass: Future[PermissionItemADM] =
       for {
         updatedPermission <- permissionGetADM(permissionIri, requestingUser)
 
@@ -1777,7 +1776,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     * @param requestingUser                  the [[UserADM]] of the requesting user.
     * @param apiRequestID                    the API request ID.
     * @return [[PermissionGetResponseADM]].
-    * @throw UpdateNotPerformed if something has gone wrong.
+    * @throws UpdateNotPerformedException if something has gone wrong.
     */
   private def permissionPropertyChangeRequestADM(permissionIri: IRI,
                                                  changePermissionPropertyRequest: ChangePermissionPropertyApiRequestADM,
@@ -1785,7 +1784,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                                  apiRequestID: UUID): Future[PermissionGetResponseADM] = {
 
     /*Verify that property of doap is updated successfully*/
-    def verifyUpdateOfProperty(): Future[PermissionItemADM] =
+    def verifyUpdateOfProperty: Future[PermissionItemADM] =
       for {
         updatedPermission <- permissionGetADM(permissionIri, requestingUser)
 
@@ -1856,7 +1855,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     * @param permissionIri  the IRI of the permission.
     * @param requestingUser the [[UserADM]] of the requesting user.
     * @return [[PermissionItemADM]].
-    * @throw UpdateNotPerformed if something has gone wrong.
     */
   private def permissionGetADM(permissionIri: IRI, requestingUser: UserADM): Future[PermissionItemADM] =
     for {
