@@ -7,6 +7,7 @@ scala_library(
     srcs = glob(["*.scala"]),
     unused_dependency_checker_mode = "warn",
     deps = [
+        "//webapi/src/main/scala/org/knora/webapi/http/directives",
         "//webapi/src/main/scala/org/knora/webapi/http/handler",
         "//webapi/src/main/scala/org/knora/webapi/http/status",
         "//webapi/src/main/scala/org/knora/webapi/http/version",
