@@ -146,7 +146,7 @@ group as below:
 When updating an administrative permission, its previous `forGroup` value will be replaced with the new one.
 When updating a default object access permission, if it originally had a `forGroup` value defined, it will be replaced 
 with the new group. Otherwise, if the default object access permission was defined for a resource class or a property or 
-the combination of both, the permission will be updated and defined for the newly specified group and its previous 
+the combination of both, the permission will be defined for the newly specified group and its previous 
 `forResourceClass` and `forProperty` values will be deleted.
 
 ### Updating a Permission's Scope:
@@ -169,7 +169,7 @@ updating a default object acceess permission. The IRI of the new resource class 
 }
 ```
 Note that if the default object access permission was originally defined for a group, with this operation, the permission 
-will be changed to be defined for the resource class instead of the group. That means the value of the `forGroup` will 
+will be defined for the given resource class instead of the group. That means the value of the `forGroup` will 
 be deleted.
 
 ### Updating a Default Object Access Permission's Property:
@@ -182,5 +182,5 @@ updating a default object acceess permission. The IRI of the new property must b
 }
 ```
 Note that if the default object access permission was originally defined for a group, with this operation, the permission 
-will be changed to be defined for the given property instead of the group. That means the value of the `forGroup` will 
+will be defined for the given property instead of the group. That means the value of the `forGroup` will 
 be deleted.
