@@ -214,7 +214,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
     "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionGetADM is not valid" in {
       val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionGetADM(
+        DefaultObjectAccessPermissionGetRequestADM(
           projectIri = "invalid-project-IRI",
           groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
           requestingUser = SharedTestDataADM.imagesUser01
@@ -225,7 +225,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
     "return 'BadRequest' if the supplied resourceClass IRI for DefaultObjectAccessPermissionGetADM is not valid" in {
       val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionGetADM(
+        DefaultObjectAccessPermissionGetRequestADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
           resourceClassIri = Some(SharedTestDataADM.customResourceIRI),
           requestingUser = SharedTestDataADM.imagesUser01
@@ -237,7 +237,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
     "return 'BadRequest' if the supplied property IRI for DefaultObjectAccessPermissionGetADM is not valid" in {
       val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionGetADM(
+        DefaultObjectAccessPermissionGetRequestADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
           propertyIri = Some(SharedTestDataADM.customValueIRI),
           requestingUser = SharedTestDataADM.imagesUser01
@@ -249,7 +249,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
     "return 'BadRequest' if both group and resource class are supplied for DefaultObjectAccessPermissionGetADM is not valid" in {
       val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionGetADM(
+        DefaultObjectAccessPermissionGetRequestADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
           groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
           resourceClassIri = Some(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS),
@@ -261,7 +261,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
     "return 'BadRequest' if both group and property are supplied for DefaultObjectAccessPermissionGetADM is not valid" in {
       val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionGetADM(
+        DefaultObjectAccessPermissionGetRequestADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
           groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
           propertyIri = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY_LocalHost),
@@ -273,7 +273,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
     "return 'BadRequest' if no group, resourceClassIri or propertyIri are supplied for DefaultObjectAccessPermissionGetADM is not valid" in {
       val caught = intercept[BadRequestException](
-        DefaultObjectAccessPermissionGetADM(
+        DefaultObjectAccessPermissionGetRequestADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
           requestingUser = SharedTestDataADM.imagesUser01
         )
@@ -705,5 +705,131 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
       result should be(false)
     }
+  }
+
+  "given the permission IRI" should {
+    "not get permission if invalid IRI given" in {
+      val permissionIri = "invalid-iri"
+      val caught = intercept[BadRequestException](
+        PermissionByIriGetRequestADM(
+          permissionIri = permissionIri,
+          requestingUser = SharedTestDataADM.imagesUser02
+        )
+      )
+      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+    }
+
+    "not update permission group if invalid permission IRI given" in {
+      val permissionIri = "invalid-permission-iri"
+      val newGroupIri = SharedTestDataADM.imagesReviewerGroup.id
+      val caught = intercept[BadRequestException](
+        PermissionChangeGroupRequestADM(
+          permissionIri = permissionIri,
+          changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(newGroupIri),
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === s"Invalid IRI is given: $permissionIri.")
+    }
+
+    "not update permission group if invalid group IRI given" in {
+      val permissionIri = SharedPermissionsTestData.perm001_d1.iri
+      val newGroupIri = "invalid-group-iri"
+      val caught = intercept[BadRequestException](
+        PermissionChangeGroupRequestADM(
+          permissionIri = permissionIri,
+          changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(newGroupIri),
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === s"Invalid IRI $newGroupIri is given.")
+    }
+
+    "not update hasPermissions set of a permission if invalid permission IRI given" in {
+      val permissionIri = "invalid-permission-iri"
+      val hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
+      val caught = intercept[BadRequestException](
+        PermissionChangeHasPermissionsRequestADM(
+          permissionIri = permissionIri,
+          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(hasPermissions),
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === s"Invalid IRI is given: $permissionIri.")
+    }
+
+    "not update hasPermissions set of a permission if invalid empty set given" in {
+      val permissionIri = SharedPermissionsTestData.perm001_d1.iri
+      val hasPermissions = Set.empty[PermissionADM]
+      val caught = intercept[BadRequestException](
+        PermissionChangeHasPermissionsRequestADM(
+          permissionIri = permissionIri,
+          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(hasPermissions),
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === s"hasPermissions cannot be empty.")
+    }
+
+    "not update resource class of a doap if invalid permission IRI given" in {
+      val permissionIri = "invalid-permission-iri"
+      val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
+      val caught = intercept[BadRequestException](
+        PermissionChangeResourceClassRequestADM(
+          permissionIri = permissionIri,
+          changePermissionResourceClassRequest = ChangePermissionResourceClassApiRequestADM(resourceClassIri),
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === s"Invalid IRI is given: $permissionIri.")
+    }
+
+    "not update resource class of a doap if invalid resource class IRI is given" in {
+      val permissionIri = SharedPermissionsTestData.perm001_d1.iri
+      val resourceClassIri = "invalid-iri"
+      val caught = intercept[BadRequestException](
+        PermissionChangeResourceClassRequestADM(
+          permissionIri = permissionIri,
+          changePermissionResourceClassRequest = ChangePermissionResourceClassApiRequestADM(resourceClassIri),
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === s"Invalid resource class IRI $resourceClassIri is given.")
+    }
+
+    "not update property of a doap if invalid permission IRI given" in {
+      val permissionIri = "invalid-permission-iri"
+      val propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
+      val caught = intercept[BadRequestException](
+        PermissionChangePropertyRequestADM(
+          permissionIri = permissionIri,
+          changePermissionPropertyRequest = ChangePermissionPropertyApiRequestADM(propertyIri),
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === s"Invalid IRI is given: $permissionIri.")
+    }
+
+    "not update property of a doap if invalid property IRI is given" in {
+      val permissionIri = SharedPermissionsTestData.perm001_d1.iri
+      val propertyIri = "invalid-iri"
+      val caught = intercept[BadRequestException](
+        PermissionChangePropertyRequestADM(
+          permissionIri = permissionIri,
+          changePermissionPropertyRequest = ChangePermissionPropertyApiRequestADM(propertyIri),
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === s"Invalid property IRI $propertyIri is given.")
+    }
+
   }
 }
