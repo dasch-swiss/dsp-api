@@ -354,9 +354,6 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     val permissionsPerProject: Iterable[Future[(IRI, Set[PermissionADM])]] = for {
       (projectIri, groups) <- groupsPerProject
 
-      /* Explicitly add 'KnownUser' group */
-      extendedUserGroups = OntologyConstants.KnoraAdmin.KnownUser ++ groups
-
       result = calculatePermission(projectIri, groups)
 
     } yield result
