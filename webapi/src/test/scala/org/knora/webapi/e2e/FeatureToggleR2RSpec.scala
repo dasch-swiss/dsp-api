@@ -246,8 +246,8 @@ class FeatureToggleR2RSpec extends R2RSpec {
   }
 
   // The façade route instances that we are going to test.
-  private val fooRoute = DSPApiDirectives.handleErrors(system) {new FooRoute(routeData).knoraApiPath}
-  private val bazRoute = DSPApiDirectives.handleErrors(system) {new BazRoute(routeData).knoraApiPath}
+  private val fooRoute = DSPApiDirectives.handleErrors(system) { new FooRoute(routeData).knoraApiPath }
+  private val bazRoute = DSPApiDirectives.handleErrors(system) { new BazRoute(routeData).knoraApiPath }
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
