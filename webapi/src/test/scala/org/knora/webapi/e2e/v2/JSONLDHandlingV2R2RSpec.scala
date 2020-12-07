@@ -19,8 +19,8 @@
 
 package org.knora.webapi.e2e.v2
 
-import java.io.File
 import java.net.URLEncoder
+import java.nio.file.Paths
 
 import akka.actor.ActorSystem
 import akka.http.javadsl.model.StatusCodes
@@ -63,7 +63,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
       // JSON-LD with prefixes and context object
       val jsonldWithPrefixes =
-        readOrWriteTextFile("", new File("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false)
+        readOrWriteTextFile("", Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false)
 
       // expand JSON-LD with JSON-LD processor
       val jsonldParsedExpanded = JsonLDUtil.parseJsonLD(jsonldWithPrefixes)
@@ -71,7 +71,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
       // expected result after expansion
       val expectedJsonldExpandedParsed = JsonLDUtil.parseJsonLD(
         readOrWriteTextFile("",
-                            new File("test_data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"),
+                            Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"),
                             writeFile = false))
 
       compareParsedJSONLDForResourcesResponse(expectedResponse = expectedJsonldExpandedParsed,
@@ -90,7 +90,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
         val expectedJson: JsObject =
           JsonParser(
             readOrWriteTextFile("",
-                                new File("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
+                                Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
                                 writeFile = false)).asJsObject
 
         assert(receivedJson.fields("@context") == expectedJson.fields("@context"), "@context incorrect")

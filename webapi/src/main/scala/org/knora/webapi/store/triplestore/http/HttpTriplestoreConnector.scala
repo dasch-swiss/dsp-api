@@ -19,9 +19,9 @@
 
 package org.knora.webapi.store.triplestore.http
 
-import java.io._
+import java.io.BufferedInputStream
 import java.net.URI
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.util
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
@@ -202,14 +202,14 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       try2Message(sender(), sparqlHttpExtendedConstruct(sparqlExtendedConstructRequest), log)
     case SparqlConstructFileRequest(sparql: String,
                                     graphIri: IRI,
-                                    outputFile: File,
+                                    outputFile: Path,
                                     outputFormat: QuadFormat,
                                     featureFactoryConfig: FeatureFactoryConfig) =>
       try2Message(sender(),
                   sparqlHttpConstructFile(sparql, graphIri, outputFile, outputFormat, featureFactoryConfig),
                   log)
     case NamedGraphFileRequest(graphIri: IRI,
-                               outputFile: File,
+                               outputFile: Path,
                                outputFormat: QuadFormat,
                                featureFactoryConfig: FeatureFactoryConfig) =>
       try2Message(sender(), sparqlHttpGraphFile(graphIri, outputFile, outputFormat, featureFactoryConfig), log)
@@ -225,9 +225,9 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     case CheckTriplestoreRequest()                               => try2Message(sender(), checkTriplestore(), log)
     case SearchIndexUpdateRequest(subjectIri: Option[String]) =>
       try2Message(sender(), updateLuceneIndex(subjectIri), log)
-    case DownloadRepositoryRequest(outputFile: File, featureFactoryConfig: FeatureFactoryConfig) =>
+    case DownloadRepositoryRequest(outputFile: Path, featureFactoryConfig: FeatureFactoryConfig) =>
       try2Message(sender(), downloadRepository(outputFile, featureFactoryConfig), log)
-    case UploadRepositoryRequest(inputFile: File) => try2Message(sender(), uploadRepository(inputFile), log)
+    case UploadRepositoryRequest(inputFile: Path) => try2Message(sender(), uploadRepository(inputFile), log)
     case InsertGraphDataContentRequest(graphContent: String, graphName: String) =>
       try2Message(sender(), insertDataGraphRequest(graphContent, graphName), log)
     case other =>
@@ -345,7 +345,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     */
   private def sparqlHttpConstructFile(sparql: String,
                                       graphIri: IRI,
-                                      outputFile: File,
+                                      outputFile: Path,
                                       outputFormat: QuadFormat,
                                       featureFactoryConfig: FeatureFactoryConfig): Try[FileWrittenResponse] = {
     val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
@@ -533,11 +533,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         val httpPost: HttpPost = new HttpPost(uriBuilder.build())
 
         // Add the input file to the body of the request.
-        val inputFile = new File(elem.path)
-        if (!inputFile.exists) {
-          throw BadRequestException(s"File ${inputFile.getAbsolutePath} does not exist")
+        val inputFile = Paths.get(elem.path)
+
+        if (!Files.exists(inputFile)) {
+          throw BadRequestException(s"File ${inputFile.toAbsolutePath} does not exist")
         }
-        val fileEntity = new FileEntity(inputFile, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
+
+        val fileEntity = new FileEntity(inputFile.toFile, ContentType.create(mimeTypeTextTurtle, "UTF-8"))
         httpPost.setEntity(fileEntity)
         val makeResponse: CloseableHttpResponse => InsertGraphDataContentResponse = returnInsertGraphDataResponse(
           graphName)
@@ -783,7 +785,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     * @return a string containing the contents of the graph in N-Quads format.
     */
   private def sparqlHttpGraphFile(graphIri: IRI,
-                                  outputFile: File,
+                                  outputFile: Path,
                                   outputFormat: QuadFormat,
                                   featureFactoryConfig: FeatureFactoryConfig): Try[FileWrittenResponse] = {
     val httpContext: HttpClientContext = makeHttpContext
@@ -877,7 +879,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     * @param featureFactoryConfig the feature factory configuration.
     * @return a string containing the contents of the graph in N-Quads format.
     */
-  private def downloadRepository(outputFile: File,
+  private def downloadRepository(outputFile: Path,
                                  featureFactoryConfig: FeatureFactoryConfig): Try[FileWrittenResponse] = {
     val httpContext: HttpClientContext = makeHttpContext
 
@@ -926,10 +928,10 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     *
     * @param inputFile an N-Quads file containing the content to be uploaded to the repository.
     */
-  private def uploadRepository(inputFile: File): Try[RepositoryUploadedResponse] = {
+  private def uploadRepository(inputFile: Path): Try[RepositoryUploadedResponse] = {
     val httpContext: HttpClientContext = makeHttpContext
     val httpPost: HttpPost = new HttpPost(repositoryUploadPath)
-    val fileEntity = new FileEntity(inputFile, ContentType.create(mimeTypeApplicationNQuads, "UTF-8"))
+    val fileEntity = new FileEntity(inputFile.toFile, ContentType.create(mimeTypeApplicationNQuads, "UTF-8"))
     httpPost.setEntity(fileEntity)
 
     doHttpRequest(
@@ -1095,7 +1097,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     * @param response               the response to be read.
     * @return a [[FileWrittenResponse]].
     */
-  def writeResponseFile(outputFile: File,
+  def writeResponseFile(outputFile: Path,
                         featureFactoryConfig: FeatureFactoryConfig,
                         maybeGraphIriAndFormat: Option[GraphIriAndFormat] = None)(
       response: CloseableHttpResponse): FileWrittenResponse = {
@@ -1105,8 +1107,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         maybeGraphIriAndFormat match {
           case Some(GraphIriAndFormat(graphIri, quadFormat)) =>
             // Yes. Stream the HTTP entity to a temporary Turtle file.
-            val turtleFile = new File(outputFile.getCanonicalPath + ".ttl")
-            Files.copy(responseEntity.getContent, Paths.get(turtleFile.getCanonicalPath))
+            val turtleFile = Paths.get(outputFile.toString + ".ttl")
+            Files.copy(responseEntity.getContent, turtleFile, StandardCopyOption.REPLACE_EXISTING)
 
             // Convert the Turtle to the output format.
 
@@ -1114,14 +1116,14 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
             val processFileTry: Try[Unit] = Try {
               rdfFormatUtil.turtleToQuadsFile(
-                rdfSource = RdfInputStreamSource(new BufferedInputStream(new FileInputStream(turtleFile))),
+                rdfSource = RdfInputStreamSource(new BufferedInputStream(Files.newInputStream(turtleFile))),
                 graphIri = graphIri,
                 outputFile = outputFile,
                 outputFormat = quadFormat
               )
             }
 
-            turtleFile.delete()
+            Files.delete(turtleFile)
 
             processFileTry match {
               case Success(_)  => ()
@@ -1130,7 +1132,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
           case None =>
             // No. Stream the HTTP entity directly to the output file.
-            Files.copy(responseEntity.getContent, Paths.get(outputFile.getCanonicalPath))
+            Files.copy(responseEntity.getContent, outputFile)
         }
 
         FileWrittenResponse()

@@ -19,8 +19,8 @@
 
 package org.knora.webapi.e2e.v2
 
-import java.io.File
 import java.net.URLEncoder
+import java.nio.file.Paths
 
 import akka.actor.ActorSystem
 import akka.http.javadsl.model.StatusCodes
@@ -72,7 +72,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
       Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/00FF/73d0ec0302", "UTF-8")}") ~> listsPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val expectedAnswerJSONLD: JsValue =
-          JsonParser(FileUtil.readTextFile(new File("test_data/listsR2RV2/imagesList.jsonld")))
+          JsonParser(FileUtil.readTextFile(Paths.get("test_data/listsR2RV2/imagesList.jsonld")))
         val responseJson: JsValue = JsonParser(responseAs[String])
         assert(responseJson == expectedAnswerJSONLD)
       }
@@ -83,7 +83,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val expectedAnswerJSONLD: JsValue =
-          JsonParser(FileUtil.readTextFile(new File("test_data/listsR2RV2/treelist.jsonld")))
+          JsonParser(FileUtil.readTextFile(Paths.get("test_data/listsR2RV2/treelist.jsonld")))
         val responseJson: JsValue = JsonParser(responseStr)
         assert(responseJson == expectedAnswerJSONLD)
 
@@ -105,7 +105,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val expectedAnswerJSONLD: JsValue =
-          JsonParser(FileUtil.readTextFile(new File("test_data/listsR2RV2/othertreelist.jsonld")))
+          JsonParser(FileUtil.readTextFile(Paths.get("test_data/listsR2RV2/othertreelist.jsonld")))
         val responseJson: JsValue = JsonParser(responseStr)
         assert(responseJson == expectedAnswerJSONLD)
 
@@ -127,7 +127,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
         .addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> listsPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val expectedAnswerTurtle: RdfModel =
-          parseTurtle(FileUtil.readTextFile(new File("test_data/listsR2RV2/imagesList.ttl")))
+          parseTurtle(FileUtil.readTextFile(Paths.get("test_data/listsR2RV2/imagesList.ttl")))
         val responseTurtle: RdfModel = parseTurtle(responseAs[String])
         assert(responseTurtle == expectedAnswerTurtle)
       }
@@ -138,7 +138,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
         .addHeader(Accept(RdfMediaTypes.`application/rdf+xml`)) ~> listsPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val expectedAnswerRdfXml: RdfModel =
-          parseRdfXml(FileUtil.readTextFile(new File("test_data/listsR2RV2/imagesList.rdf")))
+          parseRdfXml(FileUtil.readTextFile(Paths.get("test_data/listsR2RV2/imagesList.rdf")))
         val responseRdfXml: RdfModel = parseRdfXml(responseAs[String])
         assert(responseRdfXml == expectedAnswerRdfXml)
       }
@@ -148,7 +148,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
       Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}") ~> listsPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val expectedAnswerJSONLD: JsValue =
-          JsonParser(FileUtil.readTextFile(new File("test_data/listsR2RV2/imagesListNode.jsonld")))
+          JsonParser(FileUtil.readTextFile(Paths.get("test_data/listsR2RV2/imagesListNode.jsonld")))
         val responseJson: JsValue = JsonParser(responseAs[String])
         assert(responseJson == expectedAnswerJSONLD)
       }
@@ -159,7 +159,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val expectedAnswerJSONLD: JsValue =
-          JsonParser(FileUtil.readTextFile(new File("test_data/listsR2RV2/treelistnode.jsonld")))
+          JsonParser(FileUtil.readTextFile(Paths.get("test_data/listsR2RV2/treelistnode.jsonld")))
         val responseJson: JsValue = JsonParser(responseStr)
         assert(responseJson == expectedAnswerJSONLD)
 
@@ -181,7 +181,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
         .addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> listsPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val expectedAnswerTurtle: RdfModel =
-          parseTurtle(FileUtil.readTextFile(new File("test_data/listsR2RV2/imagesListNode.ttl")))
+          parseTurtle(FileUtil.readTextFile(Paths.get("test_data/listsR2RV2/imagesListNode.ttl")))
         val responseTurtle: RdfModel = parseTurtle(responseAs[String])
         assert(responseTurtle == expectedAnswerTurtle)
       }
@@ -192,7 +192,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
         .addHeader(Accept(RdfMediaTypes.`application/rdf+xml`)) ~> listsPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val expectedAnswerRdfXml: RdfModel =
-          parseRdfXml(FileUtil.readTextFile(new File("test_data/listsR2RV2/imagesListNode.rdf")))
+          parseRdfXml(FileUtil.readTextFile(Paths.get("test_data/listsR2RV2/imagesListNode.rdf")))
         val responseRdfXml: RdfModel = parseRdfXml(responseAs[String])
         assert(responseRdfXml == expectedAnswerRdfXml)
       }
