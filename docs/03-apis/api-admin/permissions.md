@@ -88,7 +88,7 @@ always reference a project, but can only reference **either** a group
 or a combination of resource class **and** property. For example, to create a new 
 default object access permission for a group of a project the request body would be
  
-```
+```json
 {
     "forGroup":"http://rdfh.ch/groups/0001/thing-searcher",
     "forProject":"http://rdfh.ch/projects/0001",
@@ -134,3 +134,53 @@ The response contains the newly created permission and its IRI, as:
 }
 ```
 
+### Updating a Permission's Group:
+- `PUT: /admin/permissions/<permissionIri>/group` to change the group for which an administrative or a default object 
+access permission, identified by it IRI `<permissionIri>`, is defined. The request body must contain the IRI of the new 
+group as below:
+ ```json
+{
+    "forGroup": "http://www.knora.org/ontology/knora-admin#ProjectMember"
+}
+```
+When updating an administrative permission, its previous `forGroup` value will be replaced with the new one.
+When updating a default object access permission, if it originally had a `forGroup` value defined, it will be replaced 
+with the new group. Otherwise, if the default object access permission was defined for a resource class or a property or 
+the combination of both, the permission will be updated and defined for the newly specified group and its previous 
+`forResourceClass` and `forProperty` values will be deleted.
+
+### Updating a Permission's Scope:
+- `PUT: /admin/permissions/<permissionIri>/hasPermissions` to change the scope of permissions assigned to an administrative
+ or a default object access permission identified by it IRI, `<permissionIri>`. The request body must contain the new set 
+ of permission types as below:
+ ```json
+{
+   "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
+}
+```
+
+### Updating a Default Object Access Permission's Resource Class:
+- `PUT: /admin/permissions/<doap_permissionIri>/resourceClass` to change the resource class for which a default object 
+access permission, identified by it IRI `<doap_permissionIri>`, is defined. This operation is only valid for 
+updating a default object acceess permission. The IRI of the new resource class must be given in the request body as:
+ ```json
+{
+    "forResourceClass": "http://www.knora.org/ontology/0803/incunabula#book"
+}
+```
+Note that if the default object access permission was originally defined for a group, with this operation, the permission 
+will be changed to be defined for the resource class instead of the group. That means the value of the `forGroup` will 
+be deleted.
+
+### Updating a Default Object Access Permission's Property:
+- `PUT: /admin/permissions/<doap_permissionIri>/property` to change the property for which a default object 
+access permission, identified by it IRI `<doap_permissionIri>`, is defined. This operation is only valid for 
+updating a default object acceess permission. The IRI of the new property must be given in the request body as:
+ ```json
+{
+   "forProperty":"http://www.knora.org/ontology/00FF/images#titel"
+}
+```
+Note that if the default object access permission was originally defined for a group, with this operation, the permission 
+will be changed to be defined for the given property instead of the group. That means the value of the `forGroup` will 
+be deleted.
