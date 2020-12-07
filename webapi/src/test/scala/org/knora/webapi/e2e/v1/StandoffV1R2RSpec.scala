@@ -28,6 +28,7 @@ import akka.http.scaladsl.model.{HttpEntity, _}
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.exceptions.InvalidApiJsonException
+import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.routing.v1.{StandoffRouteV1, ValuesRouteV1}
@@ -53,8 +54,8 @@ class StandoffV1R2RSpec extends R2RSpec {
          # akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-  private val standoffPath = new StandoffRouteV1(routeData).knoraApiPath
-  private val valuesPath = new ValuesRouteV1(routeData).knoraApiPath
+  private val standoffPath = DSPApiDirectives.handleErrors(system) { new StandoffRouteV1(routeData).knoraApiPath }
+  private val valuesPath = DSPApiDirectives.handleErrors(system) { new ValuesRouteV1(routeData).knoraApiPath }
 
   private val anythingUser = SharedTestDataV1.anythingUser1
   private val anythingUserEmail = anythingUser.userData.email.get
