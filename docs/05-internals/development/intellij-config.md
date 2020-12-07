@@ -49,14 +49,16 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
    on Bazel logo `Sync Project with Build Files`. This needs to be repeated every time there is a change in a `BUILD.bazel` file.
    
    ![screenshot 'Bazel sync'](figures/bazel-sync.png)
-   
-  - Make sure that the tab size is set correctly to **4 spaces** (so you
-    can use automatic code reformatting): `Preferences -> Code Style ->
-    Scala`:
 
- ![screenshot 'setting tab size'](figures/setting-tab-space.png)
+## Setup IntelliJ Code Formatter
 
+Use [Scalafmt](https://scalameta.org/scalafmt/) in [IntelliJ IDEA](https://www.jetbrains.com/idea) to format Scala code.
 
+In IntelliJ editor setting (`Preferences -> Editor -> Code Style -> Scala`), choose `Scalafmt` as formatter and check the box for 
+`Reformat on file save` as shown below:
+
+ ![screenshot 'setting tab size'](figures/setup_formatting.png)
+ 
 ## Use IntelliJ IDEA's Run/Debugger Configuration with Knora
 
 First, you need to create an application configuration to run or debug a code. Here the configuration is explained using a test as an 
