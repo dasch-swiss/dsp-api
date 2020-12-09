@@ -37,14 +37,15 @@ class UpgradePluginPR1372Spec extends UpgradePluginSpec {
       // Check that permissions were removed.
 
       val query: String =
-        """
-                  |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                  |
-                  |SELECT ?value WHERE {
-                  |    ?value knora-base:valueCreationDate ?creationDate ;
-                  |    knora-base:hasPermissions ?permissions .
-                  |} ORDER BY ?value
-                  |""".stripMargin
+        """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |SELECT ?value
+          |FROM <http://www.knora.org/data/0001/anything>
+          |WHERE {
+          |    ?value knora-base:valueCreationDate ?creationDate ;
+          |    knora-base:hasPermissions ?permissions .
+          |} ORDER BY ?value
+          |""".stripMargin
 
       val queryResult1: SparqlSelectResult = repository.doSelect(selectQuery = query)
 
