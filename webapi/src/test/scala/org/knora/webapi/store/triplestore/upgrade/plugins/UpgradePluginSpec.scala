@@ -29,7 +29,7 @@ import org.knora.webapi.messages.util.rdf._
   * Provides helper methods for specs that test upgrade plugins.
   */
 abstract class UpgradePluginSpec extends CoreSpec() {
-  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
+  protected val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
 
   /**
     * Parses a TriG file and returns it as an [[RdfModel]].

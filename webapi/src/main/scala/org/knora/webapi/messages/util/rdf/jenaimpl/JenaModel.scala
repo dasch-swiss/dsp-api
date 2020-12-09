@@ -458,7 +458,18 @@ class JenaRepository(private val dataset: jena.query.Dataset) extends RdfReposit
       val varNames: Iterator[String] = querySolution.varNames.asScala
 
       val rowMap: Map[String, String] = varNames.map { varName =>
-        varName -> querySolution.get(varName).asNode.toString
+        val varValue: jena.graph.Node = querySolution.get(varName).asNode
+
+        // Is the value a literal?
+        val varValueStr: String = if (varValue.isLiteral) {
+          // Yes. Get its lexical form, i.e. don't include its datatype in its string representation.
+          varValue.getLiteralLexicalForm
+        } else {
+          // No, it's an IRI or blank node ID, so its string representation is OK.
+          varValue.toString
+        }
+
+        varName -> varValueStr
       }.toMap
 
       rowBuffer.append(VariableResultsRow(new ErrorHandlingMap[String, String](rowMap, { key: String =>

@@ -40,7 +40,9 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
         """
                   |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                   |
-                  |SELECT ?s ?maxStartIndex WHERE {
+                  |SELECT ?s ?maxStartIndex
+                  |FROM <http://www.knora.org/data/0001/anything>
+                  |WHERE {
                   |    ?s knora-base:valueHasMaxStandoffStartIndex ?maxStartIndex .
                   |}
                   |""".stripMargin
@@ -64,7 +66,9 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
         """
                   |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                   |
-                  |SELECT ?tag WHERE {
+                  |SELECT ?tag
+                  |FROM <http://www.knora.org/data/0001/anything>
+                  |WHERE {
                   |    <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ> knora-base:valueHasStandoff ?tag .
                   |} ORDER BY ?tag
                   |""".stripMargin
@@ -92,7 +96,9 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
         """
                   |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
                   |
-                  |SELECT ?tag ?startIndex ?startParent WHERE {
+                  |SELECT ?tag ?startIndex ?startParent
+                  |FROM <http://www.knora.org/data/0001/anything>
+                  |WHERE {
                   |    ?tag knora-base:standoffTagHasStartIndex ?startIndex .
                   |
                   |    OPTIONAL {
