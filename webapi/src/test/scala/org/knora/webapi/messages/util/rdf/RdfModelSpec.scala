@@ -315,14 +315,13 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
       val rdfRepository: RdfRepository = anythingModel.asRepository
 
       val selectQuery =
-        """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                  |PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
-                  |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                  |
-                  |SELECT ?resource ?value ?decimalValue WHERE {
-                  |    ?resource anything:hasDecimal ?value .
-                  |    ?value knora-base:valueHasDecimal ?decimalValue .
-                  |} ORDER BY ?resource""".stripMargin
+        """PREFIX anything: <http://www.knora.org/ontology/0001/anything#>
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |SELECT ?resource ?value ?decimalValue WHERE {
+          |    ?resource anything:hasDecimal ?value .
+          |    ?value knora-base:valueHasDecimal ?decimalValue .
+          |} ORDER BY ?resource""".stripMargin
 
       val queryResult: SparqlSelectResult = rdfRepository.doSelect(selectQuery)
 
