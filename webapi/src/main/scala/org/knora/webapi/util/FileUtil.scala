@@ -19,9 +19,9 @@
 
 package org.knora.webapi.util
 
-import java.io.{ByteArrayOutputStream, File}
+import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
 import com.typesafe.scalalogging.Logger
@@ -42,7 +42,7 @@ object FileUtil {
     * @param file    the destination file.
     * @param content the string to write.
     */
-  def writeTextFile(file: File, content: String): Unit = {
+  def writeTextFile(file: Path, content: String): Unit = {
     writeBinaryFile(file, content.getBytes(StandardCharsets.UTF_8))
   }
 
@@ -52,10 +52,10 @@ object FileUtil {
     * @param file the source file.
     * @return the contents of the file.
     */
-  def readTextFile(file: File): String = {
+  def readTextFile(file: Path): String = {
     // TODO: provide apt error handling
 
-    val source = Source.fromFile(file)(Codec.UTF8)
+    val source = Source.fromFile(file.toFile)(Codec.UTF8)
 
     try {
       source.mkString
@@ -84,7 +84,7 @@ object FileUtil {
 
       source.mkString
     } catch {
-      case ex: Exception =>
+      case _: Exception =>
         throw NotFoundException(s"The requested file could not be read: $filename")
     } finally {
       if (sourceOption.nonEmpty) {
@@ -100,8 +100,8 @@ object FileUtil {
     * @param file    the destination file.
     * @param content the binary data to write.
     */
-  def writeBinaryFile(file: File, content: Array[Byte]): Unit = {
-    Files.write(Paths.get(file.getCanonicalPath), content)
+  def writeBinaryFile(file: Path, content: Array[Byte]): Unit = {
+    Files.write(file, content)
   }
 
   /**
@@ -137,13 +137,10 @@ object FileUtil {
     * @param binaryData the binary file data to be saved.
     * @return the location where the file has been written to.
     */
-  def saveFileToTmpLocation(settings: KnoraSettingsImpl, binaryData: Array[Byte]): File = {
-
-    val fileName = createTempFile(settings)
-    // write given file to disk
-    Files.write(fileName.toPath, binaryData)
-
-    fileName
+  def saveFileToTmpLocation(settings: KnoraSettingsImpl, binaryData: Array[Byte]): Path = {
+    val file = createTempFile(settings)
+    Files.write(file, binaryData)
+    file
   }
 
   /**
@@ -153,42 +150,39 @@ object FileUtil {
     * @param fileExtension the extension to be used for the temporary file name, if any,
     * @return the location where the file has been written to.
     */
-  def createTempFile(settings: KnoraSettingsImpl, fileExtension: Option[String] = None): File = {
+  def createTempFile(settings: KnoraSettingsImpl, fileExtension: Option[String] = None): Path = {
+    val tempDataDir = Paths.get(settings.tmpDataDir)
 
     // check if the location for writing temporary files exists
-    if (!Files.exists(Paths.get(settings.tmpDataDir))) {
+    if (!Files.exists(tempDataDir)) {
       throw FileWriteException(s"Data directory ${settings.tmpDataDir} does not exist on server")
     }
 
-    val extension = if (fileExtension.nonEmpty) {
-      fileExtension.get
-    } else {
-      "bin"
+    val extension = fileExtension.getOrElse("bin")
+
+    val file: Path = Files.createTempFile(tempDataDir, "tmp_", "." + extension)
+
+    if (!Files.isWritable(file)) {
+      throw FileWriteException(s"File $file cannot be written.")
     }
 
-    val file: File = File.createTempFile("tmp_", "." + extension, new File(settings.tmpDataDir))
-
-    if (!file.canWrite)
-      throw FileWriteException(s"File $file cannot be written.")
     file
   }
 
   /**
     * Deletes a temporary file.
     *
-    * @param fileName the file to be deleted.
+    * @param file the file to be deleted.
     * @param log      a logging adapter.
     * @return `true` if the file was deleted by this method.
     */
-  def deleteFileFromTmpLocation(fileName: File, log: Logger): Boolean = {
+  def deleteFileFromTmpLocation(file: Path, log: Logger): Boolean = {
 
-    val path = fileName.toPath
-
-    if (!fileName.canWrite) {
-      val ex = FileWriteException(s"File $path cannot be deleted.")
+    if (!Files.isWritable(file)) {
+      val ex = FileWriteException(s"File $file cannot be deleted.")
       log.error(ex.getMessage, ex)
     }
 
-    Files.deleteIfExists(path)
+    Files.deleteIfExists(file)
   }
 }

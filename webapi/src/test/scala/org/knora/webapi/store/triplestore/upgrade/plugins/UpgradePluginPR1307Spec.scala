@@ -37,13 +37,14 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
       // Check that knora-base:valueHasMaxStandoffStartIndex was added.
 
       val query1: String =
-        """
-                  |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                  |
-                  |SELECT ?s ?maxStartIndex WHERE {
-                  |    ?s knora-base:valueHasMaxStandoffStartIndex ?maxStartIndex .
-                  |}
-                  |""".stripMargin
+        """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |SELECT ?s ?maxStartIndex
+          |FROM <http://www.knora.org/data/0001/anything>
+          |WHERE {
+          |    ?s knora-base:valueHasMaxStandoffStartIndex ?maxStartIndex .
+          |}
+          |""".stripMargin
 
       val queryResult1: SparqlSelectResult = repository.doSelect(selectQuery = query1)
 
@@ -61,13 +62,14 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
       // Check that the standoff tags' IRIs were changed correctly.
 
       val query2: String =
-        """
-                  |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                  |
-                  |SELECT ?tag WHERE {
-                  |    <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ> knora-base:valueHasStandoff ?tag .
-                  |} ORDER BY ?tag
-                  |""".stripMargin
+        """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |SELECT ?tag
+          |FROM <http://www.knora.org/data/0001/anything>
+          |WHERE {
+          |    <http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g/values/xyUIf8QHS5aFrlt7Q4F1FQ> knora-base:valueHasStandoff ?tag .
+          |} ORDER BY ?tag
+          |""".stripMargin
 
       val queryResult2: SparqlSelectResult = repository.doSelect(selectQuery = query2)
 
@@ -89,17 +91,18 @@ class UpgradePluginPR1307Spec extends UpgradePluginSpec {
       // Check that the objects of knora-base:standoffTagHasStartParent were changed correctly.
 
       val query3: String =
-        """
-                  |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                  |
-                  |SELECT ?tag ?startIndex ?startParent WHERE {
-                  |    ?tag knora-base:standoffTagHasStartIndex ?startIndex .
-                  |
-                  |    OPTIONAL {
-                  |        ?tag knora-base:standoffTagHasStartParent ?startParent .
-                  |    }
-                  |} ORDER BY ?tag
-                  |""".stripMargin
+        """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |SELECT ?tag ?startIndex ?startParent
+          |FROM <http://www.knora.org/data/0001/anything>
+          |WHERE {
+          |    ?tag knora-base:standoffTagHasStartIndex ?startIndex .
+          |
+          |    OPTIONAL {
+          |        ?tag knora-base:standoffTagHasStartParent ?startParent .
+          |    }
+          |} ORDER BY ?tag
+          |""".stripMargin
 
       val queryResult3: SparqlSelectResult = repository.doSelect(selectQuery = query3)
 

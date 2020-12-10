@@ -19,8 +19,8 @@
 
 package org.knora.webapi.responders.admin
 
-import java.io._
-import java.nio.file.Files
+import java.io.{BufferedInputStream, BufferedOutputStream}
+import java.nio.file.{Files, Path}
 import java.util.UUID
 
 import akka.http.scaladsl.util.FastFuture
@@ -493,12 +493,12 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       * @param graphIri the IRI of the named graph.
       * @param tempDir  the directory in which the file is to be saved.
       */
-    case class NamedGraphTrigFile(graphIri: IRI, tempDir: File) {
-      lazy val dataFile: File = {
+    case class NamedGraphTrigFile(graphIri: IRI, tempDir: Path) {
+      lazy val dataFile: Path = {
         val filename = graphIri.replaceAll(":", "_").replaceAll("/", "_").replaceAll("""\.""", "_") +
           ".trig"
 
-        new File(tempDir, filename)
+        tempDir.resolve(filename)
       }
     }
 
@@ -535,12 +535,12 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       * @param namedGraphTrigFiles the TriG files to combine.
       * @param resultFile          the output file.
       */
-    def combineGraphs(namedGraphTrigFiles: Seq[NamedGraphTrigFile], resultFile: File): Unit = {
+    def combineGraphs(namedGraphTrigFiles: Seq[NamedGraphTrigFile], resultFile: Path): Unit = {
       val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
       var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
 
       val trigFileTry: Try[Unit] = Try {
-        maybeBufferedFileOutputStream = Some(new BufferedOutputStream(new FileOutputStream(resultFile)))
+        maybeBufferedFileOutputStream = Some(new BufferedOutputStream(Files.newOutputStream(resultFile)))
 
         val formattingStreamProcessor: RdfStreamProcessor = rdfFormatUtil.makeFormattingStreamProcessor(
           outputStream = maybeBufferedFileOutputStream.get,
@@ -554,13 +554,13 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
           val namedGraphTry: Try[Unit] = Try {
             rdfFormatUtil.parseWithStreamProcessor(
               rdfSource =
-                RdfInputStreamSource(new BufferedInputStream(new FileInputStream(namedGraphTrigFile.dataFile))),
+                RdfInputStreamSource(new BufferedInputStream(Files.newInputStream(namedGraphTrigFile.dataFile))),
               rdfFormat = TriG,
               rdfStreamProcessor = combiningRdfProcessor
             )
           }
 
-          namedGraphTrigFile.dataFile.delete
+          Files.delete(namedGraphTrigFile.dataFile)
 
           namedGraphTry match {
             case Success(_)  => ()
@@ -597,8 +597,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       }
 
       // Make a temporary directory for the downloaded data.
-      tempDir = Files.createTempDirectory(project.shortname).toFile
-      _ = log.info("Downloading project data to temporary directory " + tempDir.getAbsolutePath)
+      tempDir = Files.createTempDirectory(project.shortname)
+      _ = log.info("Downloading project data to temporary directory " + tempDir.toAbsolutePath)
 
       // Download the project's named graphs.
 
@@ -665,7 +665,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       // Stream the combined results into the output file.
 
       namedGraphTrigFiles: Seq[NamedGraphTrigFile] = projectSpecificNamedGraphTrigFiles :+ adminDataNamedGraphTrigFile :+ permissionDataNamedGraphTrigFile
-      resultFile: File = new File(tempDir, project.shortname + ".trig")
+      resultFile: Path = tempDir.resolve(project.shortname + ".trig")
       _ = combineGraphs(namedGraphTrigFiles = namedGraphTrigFiles, resultFile = resultFile)
     } yield ProjectDataGetResponseADM(resultFile)
   }

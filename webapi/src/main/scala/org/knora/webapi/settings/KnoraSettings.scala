@@ -19,7 +19,6 @@
 
 package org.knora.webapi.settings
 
-import java.io.File
 import java.nio.file.{Files, Path, Paths}
 import java.time.Instant
 
@@ -82,8 +81,7 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
   // try to create the directories
   if (!Files.exists(Paths.get(tmpDataDir))) {
     try {
-      val _tmpDataDir = new File(tmpDataDir)
-      _tmpDataDir.mkdir()
+      Files.createDirectories(Paths.get(tmpDataDir))
     } catch {
       case e: Throwable =>
         throw FileWriteException(s"Tmp data directory $tmpDataDir could not be created: ${e.getMessage}")
@@ -93,8 +91,7 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
   // try to create the directories
   if (!Files.exists(Paths.get(dataDir))) {
     try {
-      val _dataDir = new File(dataDir)
-      _dataDir.mkdir()
+      Files.createDirectories(Paths.get(dataDir))
     } catch {
       case e: Throwable =>
         throw FileWriteException(s"Tmp data directory $tmpDataDir could not be created: ${e.getMessage}")
@@ -229,7 +226,7 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
   private val fakeTriplestore: String = config.getString("app.triplestore.fake-triplestore")
   val prepareFakeTriplestore: Boolean = fakeTriplestore == "prepare"
   val useFakeTriplestore: Boolean = fakeTriplestore == "use"
-  val fakeTriplestoreDataDir: File = new File(config.getString("app.triplestore.fake-triplestore-data-dir"))
+  val fakeTriplestoreDataDir: Path = Paths.get(config.getString("app.triplestore.fake-triplestore-data-dir"))
 
   val skipAuthentication: Boolean = config.getBoolean("app.skip-authentication")
 

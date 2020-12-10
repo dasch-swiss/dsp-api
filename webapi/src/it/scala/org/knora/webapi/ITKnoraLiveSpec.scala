@@ -19,7 +19,7 @@
 
 package org.knora.webapi
 
-import java.io.File
+import java.nio.file.{Files, Path, Paths}
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingAdapter
@@ -228,13 +228,13 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     // Make a multipart/form-data request containing the files.
 
     val formDataParts: Seq[Multipart.FormData.BodyPart] = filesToUpload.map { fileToUpload =>
-      val fileToSend = new File(fileToUpload.path)
-      assert(fileToSend.exists(), s"File ${fileToUpload.path} does not exist")
+      val fileToSend: Path = Paths.get(fileToUpload.path)
+      assert(Files.exists(fileToSend), s"File ${fileToUpload.path} does not exist")
 
       Multipart.FormData.BodyPart(
         "file",
-        HttpEntity.fromPath(fileToUpload.mimeType, fileToSend.toPath),
-        Map("filename" -> fileToSend.getName)
+        HttpEntity.fromPath(fileToUpload.mimeType, fileToSend),
+        Map("filename" -> fileToSend.getFileName.toString)
       )
     }
 

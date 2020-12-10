@@ -105,7 +105,7 @@ Then we need to start knora-api after loading the data:
 $ make stack-up
 ```
 
-Then try opening [http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a](http://localhost:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a) in a web browser. You should see a response in JSON describing a book.
+Then try opening [http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a](http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a) in a web browser. You should see a response in JSON-LD describing a book.
 
 To shut down the Knora-Stack:
 
@@ -150,7 +150,11 @@ implementing the desired functionality.
 
 Use `camelCase` for names of classes, variables, and functions. Make names descriptive, and don't worry if they're long.
 
-Format your code consistently. We [IntelliJ IDEA](https://www.jetbrains.com/idea) to format code, with 4 spaces indentation. Use whitespace to make your code easier to read. Add lots of implementation comments describing what your code is doing, how it works, and why it works that way.
+Use [Scalafmt](https://scalameta.org/scalafmt/) in [IntelliJ IDEA](https://www.jetbrains.com/idea) to format Scala code.
+
+Use whitespace to make your code easier to read.
+Add lots of implementation comments describing what your code is doing,
+how it works, and why it works that way.
 
 ### Tests
 

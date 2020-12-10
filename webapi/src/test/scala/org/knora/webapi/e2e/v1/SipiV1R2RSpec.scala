@@ -19,7 +19,6 @@
 
 package org.knora.webapi.e2e.v1
 
-import java.io.File
 import java.net.URLEncoder
 import java.nio.file.{Files, Paths}
 
@@ -103,17 +102,17 @@ class SipiV1R2RSpec extends R2RSpec {
 
     def createTmpFileDir(): Unit = {
       // check if tmp datadir exists and create it if not
-      if (!Files.exists(Paths.get(settings.tmpDataDir))) {
+      val tmpFileDir = Paths.get(settings.tmpDataDir)
+
+      if (!Files.exists(tmpFileDir)) {
         try {
-          val tmpDir = new File(settings.tmpDataDir)
-          tmpDir.mkdir()
+          Files.createDirectories(tmpFileDir)
         } catch {
           case e: Throwable =>
             throw FileWriteException(s"Tmp data directory ${settings.tmpDataDir} could not be created: ${e.getMessage}")
         }
       }
     }
-
   }
 
   "The Resources Endpoint" should {

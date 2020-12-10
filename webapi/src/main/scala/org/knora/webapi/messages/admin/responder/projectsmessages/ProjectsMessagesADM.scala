@@ -19,7 +19,7 @@
 
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
-import java.io.File
+import java.nio.file.Path
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -360,7 +360,7 @@ case class ProjectOperationResponseADM(project: ProjectADM) extends KnoraRespons
   *
   * @param projectDataFile a file containing the project's data in TriG format.
   */
-case class ProjectDataGetResponseADM(projectDataFile: File)
+case class ProjectDataGetResponseADM(projectDataFile: Path)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages

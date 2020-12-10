@@ -19,7 +19,7 @@
 
 package org.knora.webapi.store.triplestore.embedded
 
-import java.io._
+import java.nio.file.{Files, Paths}
 
 import akka.actor.{Actor, ActorLogging, Status}
 import org.apache.commons.io.FileUtils
@@ -62,8 +62,8 @@ class JenaTDBActor extends Actor with ActorLogging {
 
   private val persist = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.persisted")
   private val loadExistingData = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.loadExistingData")
-  private val storagePath = new File(settings.tripleStoreConfig.getString("embedded-jena-tdb.storage-path"))
-  private val tdbStoragePath = new File(storagePath + "/db")
+  private val storagePath = Paths.get(settings.tripleStoreConfig.getString("embedded-jena-tdb.storage-path"))
+  private val tdbStoragePath = Paths.get(storagePath + "/db")
 
   private val tsType = settings.triplestoreType
 
@@ -88,14 +88,15 @@ class JenaTDBActor extends Actor with ActorLogging {
   override def preStart(): Unit = {
     if (persist) {
       if (reloadDataOnStart || !loadExistingData) {
-        log.debug(s"Disk backed store. Delete and Create: ${tdbStoragePath.getAbsolutePath}")
+        log.debug(s"Disk backed store. Delete and Create: ${tdbStoragePath.toAbsolutePath}")
 
         // only allowed, because the dataset gets created later on.
-        FileUtils.deleteQuietly(tdbStoragePath)
+        FileUtils.deleteQuietly(tdbStoragePath.toFile)
       } else {
-        log.debug(s"Disk backed store. Using: ${tdbStoragePath.getAbsolutePath}")
+        log.debug(s"Disk backed store. Using: ${tdbStoragePath.toAbsolutePath}")
       }
-      tdbStoragePath.mkdirs()
+
+      Files.createDirectories(tdbStoragePath)
     } else {
       log.debug(s"In-memory store: will reload data")
     }
@@ -448,7 +449,7 @@ class JenaTDBActor extends Actor with ActorLogging {
       // Set UnionDefaultGraph globally
       TDB.getContext.set(TDB.symUnionDefaultGraph, true)
 
-      val ds = TDBFactory.createDataset(tdbStoragePath.getAbsolutePath)
+      val ds = TDBFactory.createDataset(tdbStoragePath.toAbsolutePath.toString)
 
       // Lucene, on disk
       //val indexDirectory: Directory = new SimpleFSDirectory(new File(luceneIndexPath.getAbsolutePath))

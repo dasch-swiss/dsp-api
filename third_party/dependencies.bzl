@@ -104,7 +104,7 @@ def dependencies():
             "org.glassfish:jakarta.json:1.1.6",
 
             # swagger (api documentation)
-            "com.github.swagger-akka-http:swagger-akka-http_2.12:0.14.0",
+            "com.github.swagger-akka-http:swagger-akka-http_2.12:1.2.0",
 
             # Java EE modules which are deprecated in Java SE 9, 10 and will be removed in Java SE 11
             "javax.xml.bind:jaxb-api:2.2.12",
@@ -156,6 +156,7 @@ ALL_WEBAPI_MAIN_DEPENDENCIES = [
     "//webapi/src/main/scala/org/knora/webapi/core",
     "//webapi/src/main/scala/org/knora/webapi/exceptions",
     "//webapi/src/main/scala/org/knora/webapi/feature",
+    "//webapi/src/main/scala/org/knora/webapi/http/directives",
     "//webapi/src/main/scala/org/knora/webapi/http/handler",
     "//webapi/src/main/scala/org/knora/webapi/http/version",
     "//webapi/src/main/scala/org/knora/webapi/http/version/versioninfo",

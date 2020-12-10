@@ -19,6 +19,7 @@
 
 package org.knora.webapi.routing.admin
 
+import java.nio.file.Files
 import java.util.UUID
 
 import akka.Done
@@ -731,9 +732,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
 
         // Stream the output file back to the client, then delete the file.
 
-        source: Source[ByteString, Unit] = FileIO.fromPath(responseMessage.projectDataFile.toPath).watchTermination() {
+        source: Source[ByteString, Unit] = FileIO.fromPath(responseMessage.projectDataFile).watchTermination() {
           case (_: Future[IOResult], result: Future[Done]) =>
-            result.onComplete((_: Try[Done]) => responseMessage.projectDataFile.delete)
+            result.onComplete((_: Try[Done]) => Files.delete(responseMessage.projectDataFile))
         }
 
         httpEntity = HttpEntity(ContentTypes.`application/octet-stream`, source)

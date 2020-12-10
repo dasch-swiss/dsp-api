@@ -37,10 +37,12 @@ class UpgradePluginPR1615Spec extends UpgradePluginSpec {
       // Check that <http://rdfh.ch/0000/forbiddenResource> was removed.
 
       val query1: String =
-        """SELECT ?p ?o WHERE {
-                  |    <http://rdfh.ch/0000/forbiddenResource> ?p ?o .
-                  |}
-                  |""".stripMargin
+        """SELECT ?p ?o
+          |FROM <http://www.knora.org/data/0000/SystemProject>
+          |WHERE {
+          |    <http://rdfh.ch/0000/forbiddenResource> ?p ?o .
+          |}
+          |""".stripMargin
 
       val queryResult1: SparqlSelectResult = repository.doSelect(selectQuery = query1)
       assert(queryResult1.results.bindings.isEmpty)
@@ -48,10 +50,12 @@ class UpgradePluginPR1615Spec extends UpgradePluginSpec {
       // Check that other data is still there.
 
       val query2: String =
-        """SELECT ?p ?o WHERE {
-                  |    <http://rdfh.ch/lists/FFFF/ynm01> ?p ?o .
-                  |}
-                  |""".stripMargin
+        """SELECT ?p ?o
+          |FROM <http://www.knora.org/data/0000/SystemProject>
+          |WHERE {
+          |    <http://rdfh.ch/lists/FFFF/ynm01> ?p ?o .
+          |}
+          |""".stripMargin
 
       val queryResult2: SparqlSelectResult = repository.doSelect(selectQuery = query2)
       assert(queryResult2.results.bindings.nonEmpty)
