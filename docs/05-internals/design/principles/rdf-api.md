@@ -86,6 +86,10 @@ In tests, it can be useful to run SPARQL queries to check the content of
 an `RdfModel`. To do this, use the `RdfModel.asRepository` method, which
 returns an `RdfRepository` that can run `SELECT` queries.
 
+The configuration of the default graph depends on which underlying
+RDF library is used. If you are querying data in named graphs, use `FROM`
+or quad patterns rather than the default graph.
+
 
 ## SHACL validation
 
