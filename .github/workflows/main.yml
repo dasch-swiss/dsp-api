@@ -211,8 +211,8 @@ jobs:
           df -h
           docker system df
 
-  sipi-tests:
-    name: Sipi Integration Tests
+  sipi-dsp-707-reproducer:
+    name: Sipi DSP-707 Reproducer
     needs: compile
     runs-on: ubuntu-latest
     steps:
@@ -250,10 +250,10 @@ jobs:
         run: |
           make env-file
           make print-env-file
-      - name: run API integration tests
+      - name: Run KnoraSipiScriptsV1ITSpec 100 times
         run: |
           make docker-build
-          bazel test //webapi/src/it/scala/org/knora/... --runs_per_test=100
+          bazel test //webapi/src/it/scala/org/knora/webapi:KnoraSipiScriptsV1ITSpec --runs_per_test=100
 
   upgrade-integration-tests:
     name: Upgrade Integration Tests
