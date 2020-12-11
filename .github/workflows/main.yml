@@ -213,7 +213,6 @@ jobs:
 
   sipi-dsp-707-reproducer:
     name: Sipi DSP-707 Reproducer
-    needs: compile
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
