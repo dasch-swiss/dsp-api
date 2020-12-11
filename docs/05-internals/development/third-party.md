@@ -19,6 +19,23 @@ Example of a "flattened" Bazel version looks as follows:
 
 To query Bazel for all defined Maven dependencies: `bazel query @maven//:all | sort`
 
+### Manually Fetching Dependencies
+
+The Maven dependencies can be manually fetched with:
+```bash
+$ bazel fetch @maven//...
+```
+
+If there are any problems downloading the Maven dependencies, set the
+`RJE_VERBOSE` environment variable to true to print `coursier`'s verbose output:
+```bash
+$ RJE_VERBOSE=true bazel fetch @maven//...
+```
+
+Note: If you are on macOS Big Sur and have the Cisco VPN client installed,
+make sure that the packet filters are not active, or they may be a problem
+downloading the dependencies.
+
 ## Docker Image Versions
 
 The required Docker image versions of `Sipi` and `Fuseki` are defined in the
