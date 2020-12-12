@@ -43,14 +43,14 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
 
   "Calling Knora Sipi Scripts" should {
 
-    "successfully call C++ functions from Lua scripts" in {
+    "successfully call C++ functions from Lua scripts" ignore {
       val request = Get(baseInternalSipiUrl + "/test_functions")
       // DSP-707: trying to wake up sipi first (without triggering an exception)
       Http().singleRequest(request)
       checkResponseOK(request)
     }
 
-    "successfully call Lua functions for mediatype handling" ignore {
+    "successfully call Lua functions for mediatype handling" in {
       val request = Get(baseInternalSipiUrl + "/test_file_type")
       getResponseString(request)
     }
