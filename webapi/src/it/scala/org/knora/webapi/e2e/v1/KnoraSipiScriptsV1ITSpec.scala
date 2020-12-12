@@ -21,9 +21,12 @@ package org.knora.webapi.e2e.v1
 
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.ITKnoraFakeSpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
+
+import scala.concurrent.Future
 
 object KnoraSipiScriptsV1ITSpec {
   val config: Config = ConfigFactory.parseString("""
@@ -43,21 +46,23 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
 
   "Calling Knora Sipi Scripts" should {
 
-    "successfully call C++ functions from Lua scripts" ignore {
+    "successfully call C++ functions from Lua scripts" in {
       val request = Get(baseInternalSipiUrl + "/test_functions")
       // DSP-707: trying to wake up sipi first (without triggering an exception)
-      Http().singleRequest(request)
-      checkResponseOK(request)
+      val response: HttpResponse = singleAwaitingRequest(request)
+      response.status should be (StatusCodes.OK)
     }
 
     "successfully call Lua functions for mediatype handling" ignore {
       val request = Get(baseInternalSipiUrl + "/test_file_type")
-      getResponseString(request)
+      val response: HttpResponse = singleAwaitingRequest(request)
+      response.status should be (StatusCodes.OK)
     }
 
-    "successfully call Lua function that gets the Knora session id from the cookie header sent to Sipi" in {
+    "successfully call Lua function that gets the Knora session id from the cookie header sent to Sipi" ignore {
       val request = Get(baseInternalSipiUrl + "/test_knora_session_cookie")
-      getResponseString(request)
+      val response: HttpResponse = singleAwaitingRequest(request)
+      response.status should be (StatusCodes.OK)
     }
   }
 }
