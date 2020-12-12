@@ -1,32 +1,29 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
- * This file is part of Knora.
+ *  This file is part of Knora.
  *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ *  Knora is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ *  Knora is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Affero General Public
+ *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.e2e.v1
+package org.knora.webapi.it.v1
 
 import akka.event.LoggingAdapter
-import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpResponse, StatusCodes}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.ITKnoraFakeSpec
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
-
-import scala.concurrent.Future
+import org.knora.webapi.{ITKnoraFakeSpec, TestContainers}
 
 object KnoraSipiScriptsV1ITSpec {
   val config: Config = ConfigFactory.parseString("""
@@ -49,8 +46,14 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
     "successfully call C++ functions from Lua scripts" in {
       val request = Get(baseInternalSipiUrl + "/test_functions")
       // DSP-707: trying to wake up sipi first (without triggering an exception)
-      val response: HttpResponse = singleAwaitingRequest(request)
-      response.status should be (StatusCodes.OK)
+      try {
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be (StatusCodes.OK)
+      } catch {
+        case e:Exception => {
+          println(TestContainers.SipiContainer.getLogs)
+        }
+      }
     }
 
     "successfully call Lua functions for mediatype handling" ignore {

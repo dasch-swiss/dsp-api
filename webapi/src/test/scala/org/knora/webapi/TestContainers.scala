@@ -60,6 +60,10 @@ object TestContainers {
                                              BindMode.READ_ONLY)
   SipiContainer.start()
 
+  // Container needs to be started to get the random IP
+  val sipiIp: String = SipiContainer.getHost
+  val sipiPort: Int = SipiContainer.getFirstMappedPort
+
   val RedisImageName: DockerImageName = DockerImageName.parse("redis:5")
   val RedisContainer = new GenericContainer(RedisImageName)
   RedisContainer.withExposedPorts(6379)
@@ -68,7 +72,10 @@ object TestContainers {
   import scala.collection.JavaConverters._
   private val portMap = Map(
     "app.triplestore.fuseki.port" -> FusekiContainer.getFirstMappedPort,
-    "app.sipi.internal-port" -> SipiContainer.getFirstMappedPort,
+    "app.sipi.external-host" -> sipiIp,
+    "app.sipi.external-port" -> sipiPort,
+    "app.sipi.internal-host" -> sipiIp,
+    "app.sipi.internal-port" -> sipiPort,
     "app.cache-service.redis.port" -> RedisContainer.getFirstMappedPort
   ).asJava
 

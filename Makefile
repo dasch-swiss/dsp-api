@@ -247,7 +247,7 @@ client-test-data: docker-build ## runs the dsp-api e2e tests and generates clien
 
 .PHONY: test-it
 test-it: docker-build ## runs the dsp-api integration tests.
-	bazel test //webapi/src/it/...
+	bazel test //webapi/src/test/scala/org/knora/webapi/it/...
 
 .PHONY: test-salsah1
 test-salsah1: docker-build ## runs salsah1 headless browser tests
