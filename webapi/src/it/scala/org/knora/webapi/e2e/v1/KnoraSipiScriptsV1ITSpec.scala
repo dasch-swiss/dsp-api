@@ -50,12 +50,12 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
       checkResponseOK(request)
     }
 
-    "successfully call Lua functions for mediatype handling" in {
+    "successfully call Lua functions for mediatype handling" ignore {
       val request = Get(baseInternalSipiUrl + "/test_file_type")
       getResponseString(request)
     }
 
-    "successfully call Lua function that gets the Knora session id from the cookie header sent to Sipi" ignore {
+    "successfully call Lua function that gets the Knora session id from the cookie header sent to Sipi" in {
       val request = Get(baseInternalSipiUrl + "/test_knora_session_cookie")
       getResponseString(request)
     }
