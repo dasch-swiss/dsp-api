@@ -362,7 +362,7 @@ class KnoraSipiIntegrationV1ITSpec
       val pageJson: JsObject = getResponseJson(knoraRequestNewPageResource)
       val locdata = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val origname = locdata.fields("origname").asInstanceOf[JsString].value
-      val imageUrl = locdata.fields("path").asInstanceOf[JsString].value
+      val imageUrl = locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
       assert(origname == dest.getFileName.toString)
 
       // Request the file from Sipi.
