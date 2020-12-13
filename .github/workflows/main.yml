@@ -211,49 +211,6 @@ jobs:
           df -h
           docker system df
 
-  sipi-dsp-707-reproducer:
-    name: Sipi DSP-707 Reproducer
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
-      - uses: joschi/setup-jdk@v2
-        with:
-          java-version: '11' # The OpenJDK version to make available on the path
-          architecture: 'x64' # defaults to 'x64'
-      - name: install requirements
-        run: sudo apt-get install ca-certificates-java expect
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Set up Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12'
-      - name: Install dependencies
-        run: |
-          npm install --global @bazel/bazelisk
-      - name: cache maven artifacts
-        uses: actions/cache@v1
-        with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
-      - name: print env file
-        run: |
-          make env-file
-          make print-env-file
-      - name: Run KnoraSipiScriptsV1ITSpec 100 times
-        run: |
-          make docker-build
-          bazel test //webapi/src/test/scala/org/knora/webapi/it/v1:KnoraSipiScriptsV1ITSpec --runs_per_test=100
-
   upgrade-integration-tests:
     name: Upgrade Integration Tests
     needs: compile
