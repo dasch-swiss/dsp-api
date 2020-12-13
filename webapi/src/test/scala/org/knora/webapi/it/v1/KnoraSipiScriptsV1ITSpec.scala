@@ -50,8 +50,9 @@ class KnoraSipiScriptsV1ITSpec extends ITKnoraFakeSpec(KnoraSipiScriptsV1ITSpec.
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be (StatusCodes.OK)
       } catch {
-        case e:Exception => {
+        case e: Exception => {
           println(TestContainers.SipiContainer.getLogs)
+          throw e
         }
       }
     }
