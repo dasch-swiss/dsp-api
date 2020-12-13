@@ -50,7 +50,7 @@ object TestContainers {
   val SipiContainer = new GenericContainer(SipiImageName)
   SipiContainer.withExposedPorts(1024)
   SipiContainer.withEnv("SIPI_EXTERNAL_PROTOCOL", "http")
-  SipiContainer.withEnv("SIPI_EXTERNAL_HOSTNAME", "sipi")
+  SipiContainer.withEnv("SIPI_EXTERNAL_HOSTNAME", "0.0.0.0")
   SipiContainer.withEnv("SIPI_EXTERNAL_PORT", "1024")
   SipiContainer.withEnv("SIPI_WEBAPI_HOSTNAME", localIpAddress)
   SipiContainer.withEnv("SIPI_WEBAPI_PORT", "3333")
@@ -72,8 +72,6 @@ object TestContainers {
   import scala.collection.JavaConverters._
   private val portMap = Map(
     "app.triplestore.fuseki.port" -> FusekiContainer.getFirstMappedPort,
-    "app.sipi.external-host" -> sipiIp,
-    "app.sipi.external-port" -> sipiPort,
     "app.sipi.internal-host" -> sipiIp,
     "app.sipi.internal-port" -> sipiPort,
     "app.cache-service.redis.port" -> RedisContainer.getFirstMappedPort
