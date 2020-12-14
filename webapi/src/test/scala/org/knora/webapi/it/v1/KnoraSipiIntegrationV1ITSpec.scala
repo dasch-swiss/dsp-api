@@ -1,23 +1,23 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
- * This file is part of Knora.
+ *  This file is part of Knora.
  *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ *  Knora is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ *  Knora is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Affero General Public
+ *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.e2e.v1
+package org.knora.webapi.it.v1
 
 import java.net.URLEncoder
 import java.nio.file.{Files, Paths, StandardCopyOption}
@@ -362,7 +362,8 @@ class KnoraSipiIntegrationV1ITSpec
       val pageJson: JsObject = getResponseJson(knoraRequestNewPageResource)
       val locdata = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val origname = locdata.fields("origname").asInstanceOf[JsString].value
-      val imageUrl = locdata.fields("path").asInstanceOf[JsString].value
+      val imageUrl =
+        locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
       assert(origname == dest.getFileName.toString)
 
       // Request the file from Sipi.

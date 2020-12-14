@@ -1,23 +1,23 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
- * This file is part of Knora.
+ *  This file is part of Knora.
  *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ *  Knora is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ *  Knora is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Affero General Public
+ *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.e2e.v2
+package org.knora.webapi.it.v2
 
 import java.net.URLEncoder
 import java.nio.file.{Files, Paths}
@@ -441,7 +441,7 @@ class KnoraSipiIntegrationV2ITSpec
       assert(savedImage.height == trp88Height)
 
       // Request the permanently stored image from Sipi.
-      val sipiGetImageRequest = Get(savedImage.iiifUrl)
+      val sipiGetImageRequest = Get(savedImage.iiifUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
       checkResponseOK(sipiGetImageRequest)
     }
 
@@ -454,7 +454,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       val internalFilename = sipiUploadResponse.uploadedFiles.head.internalFilename
       val temporaryUrl =
-        sipiUploadResponse.uploadedFiles.head.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl)
+        sipiUploadResponse.uploadedFiles.head.temporaryUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
       val temporaryDirectDownloadUrl = temporaryUrl + "/file"
 
       // JSON describing the new image to Knora.

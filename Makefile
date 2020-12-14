@@ -186,15 +186,9 @@ stack-status:
 stack-down: ## stops the knora-stack.
 	docker-compose -f docker-compose.yml down
 
-.PHONY: stack-down-delete-volumes
-stack-down-delete-volumes: ## stops the knora-stack and delete any created volumes (deletes the database!).
-	docker-compose -f docker-compose.yml down --volumes
-
 .PHONY: stack-db-remove
-stack-db-remove: ## stops Fuseki and webapi, and deletes any created volumes (deletes the database!).
-	docker-compose -f docker-compose.yml stop api
-	docker-compose -f docker-compose.yml rm -f -v -s db
-	@docker volume rm -f knora-api_db-home
+stack-db-remove: ## stops the knora-stack and deletes any created volumes (deletes the database!).
+	docker-compose -f docker-compose.yml down --volumes
 
 .PHONY: stack-config
 stack-config: env-file
@@ -253,7 +247,7 @@ client-test-data: docker-build ## runs the dsp-api e2e tests and generates clien
 
 .PHONY: test-it
 test-it: docker-build ## runs the dsp-api integration tests.
-	bazel test //webapi/src/it/...
+	bazel test //webapi/src/test/scala/org/knora/webapi/it/...
 
 .PHONY: test-salsah1
 test-salsah1: docker-build ## runs salsah1 headless browser tests
@@ -270,7 +264,7 @@ test-repository-upgrade: init-db-test-minimal ## runs DB upgrade integration tes
 	$(CURRENT_DIR)/webapi/scripts/fuseki-upload-repository.sh -r knora-test -u admin -p test -h localhost:3030 $(CURRENT_DIR)/.tmp/knora-test-data/v7.0.0/v7.0.0-knora-test.trig
 	# call target which restarts the API and emits error if API does not start
 	# after a certain time. at startup, data should be upgraded.
-	@$(MAKE) -f $(THIS_FILE) stack-up || $(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
+	@$(MAKE) -f $(THIS_FILE) stack-up
 
 .PHONY: test
 test: docker-build ## runs all test targets.

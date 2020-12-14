@@ -251,9 +251,9 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     // Request the temporary file from Sipi.
     for (responseEntry <- sipiUploadResponse.uploadedFiles) {
       val sipiGetTmpFileRequest: HttpRequest = if (responseEntry.fileType == "image") {
-        Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl) + "/full/max/0/default.jpg")
+        Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl) + "/full/max/0/default.jpg")
       } else {
-        Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl) + "/file")
+        Get(responseEntry.temporaryUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl) + "/file")
       }
 
       checkResponseOK(sipiGetTmpFileRequest)

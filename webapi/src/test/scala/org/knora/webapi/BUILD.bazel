@@ -8,6 +8,9 @@ filegroup(
         "CoreSpec.scala",
         "E2ESimSpec.scala",
         "E2ESpec.scala",
+        "ITKnoraFakeSpec.scala",
+        "ITKnoraLiveSpec.scala",
+        "KnoraFakeCore.scala",
         "ManagersWithMockedSipi.scala",
         "R2RSpec.scala",
         "TestContainers.scala",
@@ -17,6 +20,5 @@ filegroup(
         "//webapi/src/test/scala/org/knora/webapi/sharedtestdata:srcs",
         "//webapi/src/test/scala/org/knora/webapi/store:srcs",
         "//webapi/src/test/scala/org/knora/webapi/util:srcs",
-
     ],
 )
