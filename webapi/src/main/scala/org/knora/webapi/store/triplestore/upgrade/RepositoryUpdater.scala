@@ -88,7 +88,11 @@ class RepositoryUpdater(system: ActorSystem,
         FastFuture.successful(RepositoryUpdatedResponse(s"Repository is up to date at $requiredRepositoryVersion"))
       } else {
         // No. Construct the list of updates that it needs.
-        log.info(s"Repository not up-to-date. Found: $foundRepositoryVersion, Required: $requiredRepositoryVersion")
+
+        log.info(
+          s"Repository not up-to-date. Found: ${foundRepositoryVersion.getOrElse("None")}, Required: $requiredRepositoryVersion"
+        )
+
         val selectedPlugins: Seq[PluginForKnoraBaseVersion] = selectPluginsForNeededUpdates(foundRepositoryVersion)
         log.info(s"Updating repository with transformations: ${selectedPlugins.map(_.versionString).mkString(", ")}")
 
