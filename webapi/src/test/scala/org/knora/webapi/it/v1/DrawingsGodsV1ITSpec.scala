@@ -137,8 +137,8 @@ class DrawingsGodsV1ITSpec
             case Some(locdata: JsObject) =>
               locdata.fields.get("path") match {
                 case Some(JsString(foundUrl)) => foundUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
-                case None                 => throw InvalidApiJsonException("no 'path' given")
-                case other                => throw InvalidApiJsonException("'path' could not pe parsed correctly")
+                case None                     => throw InvalidApiJsonException("no 'path' given")
+                case other                    => throw InvalidApiJsonException("'path' could not pe parsed correctly")
               }
             case None => throw InvalidApiJsonException("no 'locdata' given")
 
