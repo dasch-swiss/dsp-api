@@ -136,7 +136,7 @@ class DrawingsGodsV1ITSpec
           resinfo.fields.get("locdata") match {
             case Some(locdata: JsObject) =>
               locdata.fields.get("path") match {
-                case Some(JsString(path)) => path
+                case Some(JsString(foundUrl)) => foundUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
                 case None                 => throw InvalidApiJsonException("no 'path' given")
                 case other                => throw InvalidApiJsonException("'path' could not pe parsed correctly")
               }
@@ -149,7 +149,7 @@ class DrawingsGodsV1ITSpec
 
         case _ => throw InvalidApiJsonException("'resinfo' could not pe parsed correctly")
       }
-      println("=====>>>> iiiURL: {}", iiifUrl)
+      println("=====>>>> iiifURL: {}", iiifUrl)
 
       // Request the image from Sipi.
       val sipiGetRequest = Get(iiifUrl) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))

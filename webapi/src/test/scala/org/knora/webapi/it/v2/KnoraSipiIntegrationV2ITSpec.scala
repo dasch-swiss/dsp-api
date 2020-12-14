@@ -441,7 +441,7 @@ class KnoraSipiIntegrationV2ITSpec
       assert(savedImage.height == trp88Height)
 
       // Request the permanently stored image from Sipi.
-      val sipiGetImageRequest = Get(savedImage.iiifUrl)
+      val sipiGetImageRequest = Get(savedImage.iiifUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
       checkResponseOK(sipiGetImageRequest)
     }
 
@@ -454,7 +454,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       val internalFilename = sipiUploadResponse.uploadedFiles.head.internalFilename
       val temporaryUrl =
-        sipiUploadResponse.uploadedFiles.head.temporaryUrl.replace("http://0.0.0.0:1024", baseExternalSipiUrl)
+        sipiUploadResponse.uploadedFiles.head.temporaryUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
       val temporaryDirectDownloadUrl = temporaryUrl + "/file"
 
       // JSON describing the new image to Knora.
