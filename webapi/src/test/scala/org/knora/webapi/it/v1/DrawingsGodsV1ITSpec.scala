@@ -1,23 +1,23 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2018 the contributors (see Contributors.md).
  *
- * This file is part of Knora.
+ *  This file is part of Knora.
  *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ *  Knora is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as published
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
  *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
+ *  Knora is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Affero General Public License for more details.
  *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Affero General Public
+ *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.other.v1
+package org.knora.webapi.it.v1
 
 import java.net.URLEncoder
 
@@ -136,9 +136,9 @@ class DrawingsGodsV1ITSpec
           resinfo.fields.get("locdata") match {
             case Some(locdata: JsObject) =>
               locdata.fields.get("path") match {
-                case Some(JsString(path)) => path
-                case None                 => throw InvalidApiJsonException("no 'path' given")
-                case other                => throw InvalidApiJsonException("'path' could not pe parsed correctly")
+                case Some(JsString(foundUrl)) => foundUrl.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
+                case None                     => throw InvalidApiJsonException("no 'path' given")
+                case other                    => throw InvalidApiJsonException("'path' could not pe parsed correctly")
               }
             case None => throw InvalidApiJsonException("no 'locdata' given")
 
@@ -149,7 +149,7 @@ class DrawingsGodsV1ITSpec
 
         case _ => throw InvalidApiJsonException("'resinfo' could not pe parsed correctly")
       }
-      println("=====>>>> iiiURL: {}", iiifUrl)
+      println("=====>>>> iiifURL: {}", iiifUrl)
 
       // Request the image from Sipi.
       val sipiGetRequest = Get(iiifUrl) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
