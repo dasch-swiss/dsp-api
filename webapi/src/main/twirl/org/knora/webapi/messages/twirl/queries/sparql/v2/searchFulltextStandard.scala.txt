@@ -36,6 +36,7 @@
  * @param limitToProject limit search to the given project.
  * @param limitToResourceClass limit search to given resource class.
  * @param limitToStandoffClass limit the search to given standoff class.
+ * @param returnImageFiles if true, return any still image file attached to each matching resource.
  * @param separator the separator to be used in aggregation functions.
  * @param limit maximal amount of rows to be returned
  * @param offset offset for paging (starts with 0)
@@ -46,6 +47,7 @@
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI],
   limitToStandoffClass: Option[IRI],
+  returnImageFiles: Boolean,
   separator: Option[Char],
   limit: Int,
   offset: Int,
@@ -55,7 +57,10 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
 @if(!countQuery) {
-SELECT DISTINCT ?resource (GROUP_CONCAT(IF(BOUND(?valueObject), STR(?valueObject), ""); separator="@separator.getOrElse(throw SparqlGenerationException("Separator expected for non count query, but none given"))") AS ?valueObjectConcat)
+SELECT DISTINCT ?resource
+                (GROUP_CONCAT(IF(BOUND(?valueObject), STR(?valueObject), "");
+                    separator="@separator.getOrElse(throw SparqlGenerationException("Separator expected for non count query, but none given"))")
+                    AS ?valueObjectConcat)
 } else {
     SELECT (count(distinct ?resource) as ?count)
 }
@@ -133,6 +138,12 @@ WHERE {
         }
 
         case None => {}
+    }
+
+    @if(returnImageFiles) {
+        OPTIONAL {
+            ?resource knora-base:hasStillImageFileValue ?valueObject .
+        }
     }
 
     FILTER NOT EXISTS {

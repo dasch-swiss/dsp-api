@@ -80,34 +80,42 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                             limitToStandoffClass,
                             featureFactoryConfig,
                             requestingUser)
+
     case FulltextSearchRequestV2(searchValue,
                                  offset,
                                  limitToProject,
                                  limitToResourceClass,
                                  limitToStandoffClass,
+                                 returnImageFiles,
                                  targetSchema,
                                  schemaOptions,
                                  featureFactoryConfig,
                                  requestingUser) =>
-      fulltextSearchV2(searchValue,
-                       offset,
-                       limitToProject,
-                       limitToResourceClass,
-                       limitToStandoffClass,
-                       targetSchema,
-                       schemaOptions,
-                       featureFactoryConfig,
-                       requestingUser)
+      fulltextSearchV2(
+        searchValue,
+        offset,
+        limitToProject,
+        limitToResourceClass,
+        limitToStandoffClass,
+        returnImageFiles,
+        targetSchema,
+        schemaOptions,
+        featureFactoryConfig,
+        requestingUser
+      )
+
     case GravsearchCountRequestV2(query, featureFactoryConfig, requestingUser) =>
       gravsearchCountV2(inputQuery = query,
                         featureFactoryConfig = featureFactoryConfig,
                         requestingUser = requestingUser)
+
     case GravsearchRequestV2(query, targetSchema, schemaOptions, featureFactoryConfig, requestingUser) =>
       gravsearchV2(inputQuery = query,
                    targetSchema = targetSchema,
                    schemaOptions = schemaOptions,
                    featureFactoryConfig = featureFactoryConfig,
                    requestingUser = requestingUser)
+
     case SearchResourceByLabelCountRequestV2(searchValue,
                                              limitToProject,
                                              limitToResourceClass,
@@ -118,6 +126,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                                     limitToResourceClass,
                                     featureFactoryConfig,
                                     requestingUser)
+
     case SearchResourceByLabelRequestV2(searchValue,
                                         offset,
                                         limitToProject,
@@ -132,8 +141,10 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                                targetSchema,
                                featureFactoryConfig,
                                requestingUser)
+
     case resourcesInProjectGetRequestV2: SearchResourcesByProjectAndClassRequestV2 =>
       searchResourcesByProjectAndClassV2(resourcesInProjectGetRequestV2)
+
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -167,7 +178,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             searchTerms = searchTerms,
             limitToProject = limitToProject,
             limitToResourceClass = limitToResourceClass.map(_.toString),
-            limitToStandoffClass.map(_.toString),
+            limitToStandoffClass = limitToStandoffClass.map(_.toString),
+            returnImageFiles = false, // not relevant for a count query
             separator = None, // no separator needed for count query
             limit = 1,
             offset = 0,
@@ -197,6 +209,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     * @param offset               the offset to be used for paging.
     * @param limitToProject       limit search to given project.
     * @param limitToResourceClass limit search to given resource class.
+    * @param returnImageFiles if true, return any still image file attached to each matching resource.
     * @param targetSchema         the target API schema.
     * @param schemaOptions        the schema options submitted with the request.
     * @param featureFactoryConfig the feature factory configuration.
@@ -208,6 +221,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                                limitToProject: Option[IRI],
                                limitToResourceClass: Option[SmartIri],
                                limitToStandoffClass: Option[SmartIri],
+                               returnImageFiles: Boolean,
                                targetSchema: ApiV2Schema,
                                schemaOptions: Set[SchemaOption],
                                featureFactoryConfig: FeatureFactoryConfig,
@@ -227,6 +241,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             limitToProject = limitToProject,
             limitToResourceClass = limitToResourceClass.map(_.toString),
             limitToStandoffClass = limitToStandoffClass.map(_.toString),
+            returnImageFiles = returnImageFiles,
             separator = Some(groupConcatSeparator),
             limit = settings.v2ResultsPerPage,
             offset = offset * settings.v2ResultsPerPage, // determine the actual offset
@@ -364,7 +379,6 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     * @return a [[ResourceCountV2]] representing the number of resources that have been found.
     */
   private def gravsearchCountV2(inputQuery: ConstructQuery,
-                                apiSchema: ApiV2Schema = ApiV2Simple,
                                 featureFactoryConfig: FeatureFactoryConfig,
                                 requestingUser: UserADM): Future[ResourceCountV2] = {
 

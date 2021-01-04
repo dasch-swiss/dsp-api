@@ -509,6 +509,9 @@ in `app/v2` in `application.conf`.
 If the parameter `limitToStandoffClass` is provided, Knora will look for search terms
 that are marked up with the indicated standoff class.
 
+If the parameter `returnImageFiles=true` is provided, Knora will return any
+image file value attached to each matching resource.
+
 To request the number of results rather than the results themselves, you can
 do a count query:
 

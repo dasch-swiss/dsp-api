@@ -25,6 +25,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
+import org.knora.webapi.messages.v2.responder.valuemessages.{ReadValueV2, StillImageFileValueContentV2}
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.{ApiV2Complex, CoreSpec, SchemaOptions}
@@ -58,6 +59,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         limitToProject = None,
         limitToResourceClass = None,
         limitToStandoffClass = None,
+        returnImageFiles = false,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -81,6 +83,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         limitToProject = None,
         limitToResourceClass = None,
         limitToStandoffClass = None,
+        returnImageFiles = false,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -91,6 +94,36 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         case response: ReadResourcesSequenceV2 =>
           compareReadResourcesSequenceV2Response(expected = searchResponderV2SpecFullData.fulltextSearchForDinge,
                                                  received = response)
+      }
+
+    }
+
+    "return images attached to full-text search results test1" in {
+
+      responderManager ! FulltextSearchRequestV2(
+        searchValue = "p7v",
+        offset = 0,
+        limitToProject = None,
+        limitToResourceClass = None,
+        limitToStandoffClass = None,
+        returnImageFiles = true,
+        targetSchema = ApiV2Complex,
+        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.anythingUser1
+      )
+
+      expectMsgPF(timeout) {
+        case response: ReadResourcesSequenceV2 =>
+          val hasImageFileValues: Boolean =
+            response.resources.flatMap(_.values.values.flatten).exists { readValueV2: ReadValueV2 =>
+              readValueV2.valueContent match {
+                case _: StillImageFileValueContentV2 => true
+                case _                               => false
+              }
+            }
+
+          assert(hasImageFileValues)
       }
 
     }

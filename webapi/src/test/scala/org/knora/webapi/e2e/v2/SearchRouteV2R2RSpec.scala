@@ -216,6 +216,22 @@ class SearchRouteV2R2RSpec extends R2RSpec {
       }
     }
 
+    "return images attached to full-text search results" in {
+
+      Get("/v2/search/p7v?returnImageFiles=true") ~> searchPath ~> check {
+
+        assert(status == StatusCodes.OK, response.toString)
+
+        val expectedAnswerJSONLD =
+          readOrWriteTextFile(responseAs[String],
+                              Paths.get("test_data/searchR2RV2/FulltextSearchWithImage.jsonld"),
+                              writeTestDataFiles)
+
+        compareJSONLDForResourcesResponse(expectedJSONLD = expectedAnswerJSONLD, receivedJSONLD = responseAs[String])
+
+      }
+    }
+
     "not accept a fulltext query containing http://api.knora.org" in {
       val invalidSearchString: String =
         URLEncoder.encode("PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>", "UTF-8")
