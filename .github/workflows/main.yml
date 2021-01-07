@@ -380,12 +380,31 @@ jobs:
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make docker-publish
-      - name: Deploy docs
-        uses: mhausenblas/mkdocs-deploy-gh-pages@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          CUSTOM_DOMAIN: docs.knora.org
       - name: Disk Free After
         run: |
           df -h
           docker system df
+
+  # deploy documentation only on release
+  deploy-docs:
+    name: Deploy docs (on release only)
+    needs: [
+      docs-build-test
+    ]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
+    steps:
+    - name: Checkout main
+      uses: actions/checkout@v1
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r docs/requirements.txt
+        npm install --global typedoc
+        npm install --global @bazel/bazelisk
+        sudo apt-get install graphviz
+    - name: Deploy docs
+      uses: mhausenblas/mkdocs-deploy-gh-pages@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        CUSTOM_DOMAIN: docs.knora.org
