@@ -1,10 +1,10 @@
-[![Build Status](https://github.com/dasch-swiss/knora-api/workflows/CI/badge.svg?branch=main)](https://github.com/dasch-swiss/knora-api/actions)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/7e7c734a37ef403a964345e29106b267)](https://app.codacy.com/app/dhlab-basel/Knora?utm_source=github.com&utm_medium=referral&utm_content=dhlab-basel/Knora&utm_campaign=Badge_Grade_Dashboard)
-# Knora
+# Knora &mdash; Knowledge Organization, Representation, and Annotation
 
-[Knora](https://www.knora.org/) (Knowledge Organization, Representation, and
-Annotation) is a server application for storing, sharing, and working with
-primary sources and data in the humanities.
+[![Github](https://img.shields.io/github/v/tag/dasch-swiss/dsp-api?include_prereleases&label=Github%20tag)](https://github.com/dasch-swiss/dsp-api)
+[![Docker](https://img.shields.io/docker/v/daschswiss/knora-api?label=Docker%20image)](https://hub.docker.com/r/daschswiss/knora-api)
+[![CI](https://github.com/dasch-swiss/dsp-app/workflows/CI/badge.svg)](https://github.com/dasch-swiss/dsp-api/actions?query=workflow%3ACI)
+
+[Knora](https://www.knora.org/) is a server application for storing, sharing, and working with primary sources and data in the humanities.
 
 It is developed by the [Data and Service Center for the Humanities](https://dasch.swiss)
 at the [University of Basel](https://www.unibas.ch), and is supported by the
@@ -17,11 +17,11 @@ released under the [GNU Affero General Public License](http://www.gnu.org/licens
 ## Features
 
 * Stores humanities data as industry-standard [RDF](http://www.w3.org/TR/2014/NOTE-rdf11-primer-20140624/) graphs, plus files for binary data such as digitized primary sources.
-    * Designed to work with any standards-compliant RDF triplestore. Tested with [Jena Fuseki](https://jena.apache.org/).
+  * Designed to work with any standards-compliant RDF triplestore. Tested with [Jena Fuseki](https://jena.apache.org/).
 * Based on [OWL](http://www.w3.org/TR/2012/REC-owl2-primer-20121211/) ontologies that express abstract, cross-disciplinary commonalities in the structure and semantics of research data.
 * Offers a generic HTTP-based API, implemented in [Scala](https://www.scala-lang.org/), for querying, annotating, and linking together heterogeneous data in a unified way.
-    * Handles authentication and authorization.
-    * Provides automatic versioning of data.
+  * Handles authentication and authorization.
+  * Provides automatic versioning of data.
 * Uses [Sipi](https://www.sipi.io), a high-performance media server implemented in C++.
 * Designed to be be used with [DSP-APP](https://docs.dasch.swiss/user-guide/), a general-purpose, browser-based virtual research environment,
   as well as with custom user interfaces.
@@ -59,14 +59,14 @@ Each developer machine should have the following prerequisites installed:
 
 To install, follow these steps:
 
-```bash
-$ brew tap AdoptOpenJDK/openjdk
-$ brew cask install AdoptOpenJDK/openjdk/adoptopenjdk11
+```shell
+brew tap AdoptOpenJDK/openjdk
+brew cask install AdoptOpenJDK/openjdk/adoptopenjdk11
 ```
 
 To pin the version of Java, please add this environment variable to you startup script (bashrc, etc.):
 
-```
+```shell
 export JAVA_HOME=`/usr/libexec/java_home -v 11`
 ```
 
@@ -74,8 +74,8 @@ export JAVA_HOME=`/usr/libexec/java_home -v 11`
 
 To install, follow these steps:
 
-```
-$ npm install -g @bazel/bazelisk
+```shell
+npm install -g @bazel/bazelisk
 ```
 
 This will install [bazelisk](https://github.com/bazelbuild/bazelisk) which is
@@ -95,30 +95,30 @@ With [Bazel](https://docs.bazel.build/versions/3.3.0/install-os-x.html) and
 [Docker](https://www.docker.com) installed, run the following to create a test
 repository and load some test data into the triplestore:
 
-```
-$ make init-db-test
+```shell
+make init-db-test
 ```
 
 Then we need to start knora-api after loading the data:
 
-```
-$ make stack-up
+```shell
+make stack-up
 ```
 
 Then try opening [http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a](http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a) in a web browser. You should see a response in JSON-LD describing a book.
 
 To shut down the Knora-Stack:
 
-```
-$ make stack-down
+```shell
+make stack-down
 ```
 
 ### Run the automated tests
 
 Run :
 
-```
-$ make test
+```shell
+make test
 ```
 
 ### Running with Custom Folders
@@ -126,9 +126,9 @@ $ make test
 The `$ make stack-up` target can be additionally configured thorough the
 following environment variables:
 
-- `KNORA_DB_HOME`: sets the path to the folder where the triplestore will store
+* `KNORA_DB_HOME`: sets the path to the folder where the triplestore will store
 the database files
-- `KNORA_DB_IMPORT`: sets the path to the import directory accessible from
+* `KNORA_DB_IMPORT`: sets the path to the import directory accessible from
 inside the docker image
 
 If the import and/or data directory are not set, then Docker volumes will be
@@ -210,11 +210,11 @@ A pull request usually resolves one issue or user story defined on [Youtrack](ht
 
 ## Acknowledgments
 
-![](https://www.yourkit.com/images/yklogo.png)
+![YourKit](https://www.yourkit.com/images/yklogo.png)
 
 The Knora project is using YourKit for profiling.
 
 YourKit supports open source projects with its full-featured Java Profiler.
-YourKit, LLC is the creator of <a href="https://www.yourkit.com/java/profiler/">YourKit Java Profiler</a>
-and <a href="https://www.yourkit.com/.net/profiler/">YourKit .NET Profiler</a>,
+YourKit, LLC is the creator of [YourKit Java Profiler](https://www.yourkit.com/java/profiler/)
+and [YourKit .NET Profiler](https://www.yourkit.com/.net/profiler/),
 innovative and intelligent tools for profiling Java and .NET applications.
