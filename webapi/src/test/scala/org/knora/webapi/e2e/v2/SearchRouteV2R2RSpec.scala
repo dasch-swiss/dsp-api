@@ -216,9 +216,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
       }
     }
 
-    "return images attached to full-text search results" in {
+    "return files attached to full-text search results" in {
 
-      Get("/v2/search/p7v?returnImageFiles=true") ~> searchPath ~> check {
+      Get("/v2/search/p7v?returnFiles=true") ~> searchPath ~> check {
 
         assert(status == StatusCodes.OK, response.toString)
 

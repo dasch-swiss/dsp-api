@@ -86,7 +86,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                                  limitToProject,
                                  limitToResourceClass,
                                  limitToStandoffClass,
-                                 returnImageFiles,
+                                 returnFiles,
                                  targetSchema,
                                  schemaOptions,
                                  featureFactoryConfig,
@@ -97,7 +97,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         limitToProject,
         limitToResourceClass,
         limitToStandoffClass,
-        returnImageFiles,
+        returnFiles,
         targetSchema,
         schemaOptions,
         featureFactoryConfig,
@@ -179,7 +179,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             limitToProject = limitToProject,
             limitToResourceClass = limitToResourceClass.map(_.toString),
             limitToStandoffClass = limitToStandoffClass.map(_.toString),
-            returnImageFiles = false, // not relevant for a count query
+            returnFiles = false, // not relevant for a count query
             separator = None, // no separator needed for count query
             limit = 1,
             offset = 0,
@@ -209,7 +209,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
     * @param offset               the offset to be used for paging.
     * @param limitToProject       limit search to given project.
     * @param limitToResourceClass limit search to given resource class.
-    * @param returnImageFiles if true, return any still image file attached to each matching resource.
+    * @param returnFiles          if true, return any file value attached to each matching resource.
     * @param targetSchema         the target API schema.
     * @param schemaOptions        the schema options submitted with the request.
     * @param featureFactoryConfig the feature factory configuration.
@@ -221,7 +221,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                                limitToProject: Option[IRI],
                                limitToResourceClass: Option[SmartIri],
                                limitToStandoffClass: Option[SmartIri],
-                               returnImageFiles: Boolean,
+                               returnFiles: Boolean,
                                targetSchema: ApiV2Schema,
                                schemaOptions: Set[SchemaOption],
                                featureFactoryConfig: FeatureFactoryConfig,
@@ -241,7 +241,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
             limitToProject = limitToProject,
             limitToResourceClass = limitToResourceClass.map(_.toString),
             limitToStandoffClass = limitToStandoffClass.map(_.toString),
-            returnImageFiles = returnImageFiles,
+            returnFiles = returnFiles,
             separator = Some(groupConcatSeparator),
             limit = settings.v2ResultsPerPage,
             offset = offset * settings.v2ResultsPerPage, // determine the actual offset

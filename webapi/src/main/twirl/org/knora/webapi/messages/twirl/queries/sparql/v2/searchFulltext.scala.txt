@@ -32,7 +32,7 @@
  * @param limitToProject limit search to the given project.
  * @param limitToResourceClass limit search to given resource class.
  * @param limitToStandoffClass limit the search to given standoff class.
- * @param returnImageFiles if true, return any still image file attached to each matching resource.
+ * @param returnFiles if true, return any file value attached to each matching resource.
  * @param separator the separator to be used in aggregation functions.
  * @param limit maximal amount of rows to be returned
  * @param offset offset for paging (starts with 0)
@@ -43,7 +43,7 @@
   limitToProject: Option[IRI],
   limitToResourceClass: Option[IRI],
   limitToStandoffClass: Option[IRI],
-  returnImageFiles: Boolean,
+  returnFiles: Boolean,
   separator: Option[Char],
   limit: Int,
   offset: Int,
@@ -55,7 +55,7 @@
                                                     limitToProject = limitToProject,
                                                     limitToResourceClass = limitToResourceClass,
                                                     limitToStandoffClass = limitToStandoffClass,
-                                                    returnImageFiles = returnImageFiles,
+                                                    returnFiles = returnFiles,
                                                     separator = separator,
                                                     limit = limit,
                                                     offset = offset,
@@ -68,7 +68,7 @@
                                                      limitToProject = limitToProject,
                                                      limitToResourceClass = limitToResourceClass,
                                                      limitToStandoffClass = limitToStandoffClass,
-                                                     returnImageFiles = returnImageFiles,
+                                                     returnFiles = returnFiles,
                                                      separator = separator,
                                                      limit = limit,
                                                      offset = offset,

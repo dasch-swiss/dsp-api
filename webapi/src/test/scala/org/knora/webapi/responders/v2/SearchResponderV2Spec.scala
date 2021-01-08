@@ -3,7 +3,7 @@
  *
  * This file is part of Knora.
  *
- * Knora is free software: you can redistribute it and/or modify
+ * Knora is free software: you can redistribute it and/or modifySearchResponderV2
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
@@ -59,7 +59,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         limitToProject = None,
         limitToResourceClass = None,
         limitToStandoffClass = None,
-        returnImageFiles = false,
+        returnFiles = false,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -83,7 +83,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         limitToProject = None,
         limitToResourceClass = None,
         limitToStandoffClass = None,
-        returnImageFiles = false,
+        returnFiles = false,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -98,7 +98,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     }
 
-    "return images attached to full-text search results test1" in {
+    "return files attached to full-text search results" in {
 
       responderManager ! FulltextSearchRequestV2(
         searchValue = "p7v",
@@ -106,7 +106,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         limitToProject = None,
         limitToResourceClass = None,
         limitToStandoffClass = None,
-        returnImageFiles = true,
+        returnFiles = true,
         targetSchema = ApiV2Complex,
         schemaOptions = SchemaOptions.ForStandoffWithTextValues,
         featureFactoryConfig = defaultFeatureFactoryConfig,

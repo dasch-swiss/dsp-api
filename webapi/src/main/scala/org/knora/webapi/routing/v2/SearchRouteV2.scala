@@ -41,7 +41,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   private val LIMIT_TO_RESOURCE_CLASS = "limitToResourceClass"
   private val OFFSET = "offset"
   private val LIMIT_TO_STANDOFF_CLASS = "limitToStandoffClass"
-  private val RETURN_IMAGE_FILES = "returnImageFiles"
+  private val RETURN_FILES = "returnFiles"
 
   /**
     * Returns the route.
@@ -237,9 +237,9 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           val limitToStandoffClass: Option[SmartIri] = getStandoffClass(params)
 
-          val returnImageFiles: Boolean = stringFormatter.optionStringToBoolean(
-            params.get(RETURN_IMAGE_FILES),
-            throw BadRequestException(s"Invalid boolean value for '$RETURN_IMAGE_FILES'")
+          val returnFiles: Boolean = stringFormatter.optionStringToBoolean(
+            params.get(RETURN_FILES),
+            throw BadRequestException(s"Invalid boolean value for '$RETURN_FILES'")
           )
 
           val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
@@ -257,7 +257,7 @@ class SearchRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
               limitToProject = limitToProject,
               limitToResourceClass = limitToResourceClass,
               limitToStandoffClass = limitToStandoffClass,
-              returnImageFiles = returnImageFiles,
+              returnFiles = returnFiles,
               featureFactoryConfig = featureFactoryConfig,
               requestingUser = requestingUser,
               targetSchema = targetSchema,
