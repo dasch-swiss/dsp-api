@@ -297,23 +297,18 @@ jobs:
           df -h
           docker system df
 
-  # Update release notes for "Next release"
-  update_release_draft:
-    name: Update next release draft
-    needs: [
-      api-unit-tests,
-      api-e2e-tests,
-      api-integration-tests,
-      upgrade-integration-tests,
-      docs-build-test
-    ]
+  release-please:
+    name: Prepare next release
     runs-on: ubuntu-latest
-    # Drafts your next Release notes as Pull Requests are merged into "main"
+    # Automate releases with Conventional Commit Messages as Pull Requests are merged into "main" branch
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: release-drafter/release-drafter@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      - uses: GoogleCloudPlatform/release-please-action@v2
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+          release-type: simple
+          changelog-types: '[{"type": "feat","section": "Enhancements","hidden": false }, {"type": "fix","section": "Bug Fixes","hidden": false }, {"type": "chore","section": "Maintenance","hidden": false }, {"type": "docs","section": "Documentation","hidden": false }]'
+
 
   # publish only on release
   publish:
@@ -380,12 +375,31 @@ jobs:
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make docker-publish
-      - name: Deploy docs
-        uses: mhausenblas/mkdocs-deploy-gh-pages@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          CUSTOM_DOMAIN: docs.knora.org
       - name: Disk Free After
         run: |
           df -h
           docker system df
+
+  # deploy documentation only on release
+  deploy-docs:
+    name: Deploy docs (on release only)
+    needs: [
+      docs-build-test
+    ]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
+    steps:
+    - name: Checkout main
+      uses: actions/checkout@v1
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r docs/requirements.txt
+        npm install --global typedoc
+        npm install --global @bazel/bazelisk
+        sudo apt-get install graphviz
+    - name: Deploy docs
+      uses: mhausenblas/mkdocs-deploy-gh-pages@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        CUSTOM_DOMAIN: docs.knora.org
