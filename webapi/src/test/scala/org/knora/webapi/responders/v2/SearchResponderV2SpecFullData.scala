@@ -1566,7 +1566,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ))
   )
 
-  // Dear Ben: I am aware of the fact that this code is not formatted properly and I know that this deeply disturbs you. But please leave it like this since otherwise I cannot possibly read and understand this query.
   val constructQueryForBooksWithTitleZeitgloecklein: ConstructQuery = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(
@@ -1708,7 +1707,6 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
     )
   )
 
-  // Dear Ben: please see my comment above
   val constructQueryForBooksWithoutTitleZeitgloecklein: ConstructQuery = ConstructQuery(
     constructClause = ConstructClause(
       statements = Vector(

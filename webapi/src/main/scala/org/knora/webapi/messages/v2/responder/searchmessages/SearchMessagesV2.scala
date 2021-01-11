@@ -60,6 +60,7 @@ case class FullTextSearchCountRequestV2(searchValue: String,
   * @param offset               the offset to be used for paging.
   * @param limitToProject       limit search to given project.
   * @param limitToResourceClass limit search to given resource class.
+  * @param returnFiles          if true, return any file value value attached to each matching resource.
   * @param targetSchema         the target API schema.
   * @param schemaOptions        the schema options submitted with the request.
   * @param featureFactoryConfig the feature factory configuration.
@@ -70,6 +71,7 @@ case class FulltextSearchRequestV2(searchValue: String,
                                    limitToProject: Option[IRI],
                                    limitToResourceClass: Option[SmartIri],
                                    limitToStandoffClass: Option[SmartIri],
+                                   returnFiles: Boolean,
                                    targetSchema: ApiV2Schema,
                                    schemaOptions: Set[SchemaOption],
                                    featureFactoryConfig: FeatureFactoryConfig,
