@@ -1135,9 +1135,11 @@ case class JsonLDDocument(body: JsonLDObject,
   /**
     * Converts this JSON-LD document to its compacted representation.
     *
-    * @param flatten `true` if a flat JSON-LD document should be returned.
+    * @param flatten       `true` if a flat JSON-LD document should be returned.
+    * @param compactArrays if `true`, replace arrays with just one element. Otherwise,
+    *                      all arrays will remain arrays even if they have just one element.
     */
-  private def makeCompactedJavaxJsonObject(flatten: Boolean): JsonObject = {
+  private def makeCompactedJavaxJsonObject(flatten: Boolean, compactArrays: Boolean): JsonObject = {
     // Flatten the document if requested.
     val documentFlattenedIfRequested: JsonLDDocument = if (flatten) {
       flattened
@@ -1147,7 +1149,7 @@ case class JsonLDDocument(body: JsonLDObject,
 
     val bodyAsTitaniumJsonDocument: JsonDocument = JsonDocument.of(documentFlattenedIfRequested.body.toJavaxJsonValue)
     val contextAsTitaniumJsonDocument: JsonDocument = JsonDocument.of(context.toJavaxJsonValue)
-    JsonLd.compact(bodyAsTitaniumJsonDocument, contextAsTitaniumJsonDocument).get
+    JsonLd.compact(bodyAsTitaniumJsonDocument, contextAsTitaniumJsonDocument).compactArrays(compactArrays).get
   }
 
   /**
@@ -1155,10 +1157,15 @@ case class JsonLDDocument(body: JsonLDObject,
     *
     * @param jsonWriterFactory a [[JsonWriterFactory]] configured with the desired options.
     * @param flatten           `true` if a flat JSON-LD document should be returned.
+    * @param compactArrays     if `true`, replace arrays with just one element. Otherwise,
+    *                          all arrays will remain arrays even if they have just one element.
     * @return the formatted document.
     */
-  private def formatWithJsonWriterFactory(jsonWriterFactory: JsonWriterFactory, flatten: Boolean): String = {
-    val compactedJavaxJsonObject: JsonObject = makeCompactedJavaxJsonObject(flatten)
+  private def formatWithJsonWriterFactory(jsonWriterFactory: JsonWriterFactory,
+                                          flatten: Boolean,
+                                          compactArrays: Boolean): String = {
+    val compactedJavaxJsonObject: JsonObject =
+      makeCompactedJavaxJsonObject(flatten = flatten, compactArrays = compactArrays)
     val stringWriter = new StringWriter()
     val jsonWriter = jsonWriterFactory.createWriter(stringWriter)
     jsonWriter.write(compactedJavaxJsonObject)
@@ -1169,26 +1176,30 @@ case class JsonLDDocument(body: JsonLDObject,
   /**
     * Converts this JSON-LD document to a pretty-printed JSON-LD string.
     *
-    * @param flatten `true` if a flat JSON-LD document should be returned.
+    * @param flatten       `true` if a flat JSON-LD document should be returned.
+    * @param compactArrays if `true`, replace arrays with just one element. Otherwise,
+    *                      all arrays will remain arrays even if they have just one element.
     * @return the formatted document.
     */
-  def toPrettyString(flatten: Boolean = false): String = {
+  def toPrettyString(flatten: Boolean = false, compactArrays: Boolean = true): String = {
     val config = new util.HashMap[String, Boolean]()
     config.put(JsonGenerator.PRETTY_PRINTING, true)
     val jsonWriterFactory: JsonWriterFactory = Json.createWriterFactory(config)
-    formatWithJsonWriterFactory(jsonWriterFactory = jsonWriterFactory, flatten = flatten)
+    formatWithJsonWriterFactory(jsonWriterFactory = jsonWriterFactory, flatten = flatten, compactArrays = compactArrays)
   }
 
   /**
     * Converts this [[JsonLDDocument]] to a compact JSON-LD string.
     *
-    * @param flatten `true` if a flat JSON-LD document should be returned.
+    * @param flatten       `true` if a flat JSON-LD document should be returned.
+    * @param compactArrays if `true`, replace arrays with just one element. Otherwise,
+    *                      all arrays will remain arrays even if they have just one element.
     * @return the formatted document.
     */
-  def toCompactString(flatten: Boolean = false): String = {
+  def toCompactString(flatten: Boolean = false, compactArrays: Boolean = true): String = {
     val config = new util.HashMap[String, Boolean]()
     val jsonWriterFactory: JsonWriterFactory = Json.createWriterFactory(config)
-    formatWithJsonWriterFactory(jsonWriterFactory = jsonWriterFactory, flatten = flatten)
+    formatWithJsonWriterFactory(jsonWriterFactory = jsonWriterFactory, flatten = flatten, compactArrays = compactArrays)
   }
 
   /**

@@ -92,7 +92,7 @@ object RouteUtilV2 {
   val MARKUP_STANDOFF: String = "standoff"
 
   /**
-    * The name of the HTTP header that can be used to request hierarchical or flat JSON-LD.
+    * The name of the HTTP header that can be used to request JSON-LD rendering options.
     */
   val JSON_LD_RENDERING_HEADER: String = "x-knora-json-ld-rendering"
 
@@ -107,6 +107,16 @@ object RouteUtilV2 {
     * possible, rather than referenced by IRI.
     */
   val JSON_LD_RENDERING_HIERARCHICAL: String = "hierarchical"
+
+  /**
+    * Indicates that an array with just one element should be replaced with that element.
+    */
+  val COMPACT_JSON_LD_ARRAYS_ON: String = "compactArraysOn"
+
+  /**
+    * Indicates that all arrays should remain arrays even if they have just one element.
+    */
+  val COMPACT_JSON_LD_ARRAYS_OFF: String = "compactArraysOff"
 
   /**
     * Gets the ontology schema that is specified in an HTTP request. The schema can be specified
@@ -148,7 +158,7 @@ object RouteUtilV2 {
     * @return the specified standoff rendering, or [[MarkupAsXml]] if no rendering was specified
     *         in the request.
     */
-  private def getStandoffRendering(requestContext: RequestContext): Option[MarkupRendering] = {
+  private def getStandoffRendering(requestContext: RequestContext): Set[MarkupRendering] = {
     def nameToStandoffRendering(standoffRenderingName: String): MarkupRendering = {
       standoffRenderingName match {
         case MARKUP_XML      => MarkupAsXml
@@ -160,27 +170,42 @@ object RouteUtilV2 {
     val params: Map[String, String] = requestContext.request.uri.query().toMap
 
     params.get(MARKUP_PARAM) match {
-      case Some(schemaParam) => Some(nameToStandoffRendering(schemaParam))
+      case Some(schemaParam) => Set(nameToStandoffRendering(schemaParam))
 
       case None =>
-        requestContext.request.headers.find(_.lowercaseName == MARKUP_HEADER).map { header =>
-          nameToStandoffRendering(header.value)
-        }
+        requestContext.request.headers
+          .find(_.lowercaseName == MARKUP_HEADER)
+          .map { header =>
+            nameToStandoffRendering(header.value)
+          }
+          .toSet
     }
   }
 
-  private def getJsonLDRendering(requestContext: RequestContext): Option[JsonLDRendering] = {
+  private def getJsonLDRenderings(requestContext: RequestContext): Set[JsonLDRendering] = {
     def nameToJsonLDRendering(jsonLDRenderingName: String): JsonLDRendering = {
       jsonLDRenderingName match {
         case JSON_LD_RENDERING_FLAT         => FlatJsonLD
         case JSON_LD_RENDERING_HIERARCHICAL => HierarchicalJsonLD
+        case COMPACT_JSON_LD_ARRAYS_ON      => CompactJsonLDArraysOn
+        case COMPACT_JSON_LD_ARRAYS_OFF     => CompactJsonLDArraysOff
         case _                              => throw BadRequestException(s"Unrecognised JSON-LD rendering: $jsonLDRenderingName")
       }
     }
 
-    requestContext.request.headers.find(_.lowercaseName == JSON_LD_RENDERING_HEADER).map { header =>
-      nameToJsonLDRendering(header.value)
-    }
+    requestContext.request.headers
+      .find(_.lowercaseName == JSON_LD_RENDERING_HEADER)
+      .map { header: HttpHeader =>
+        header.value
+          .split(',')
+          .map(_.trim)
+          .map { headerValue: String =>
+            nameToJsonLDRendering(headerValue)
+          }
+          .toSet
+      }
+      .toSet
+      .flatten
   }
 
   /**
@@ -192,7 +217,7 @@ object RouteUtilV2 {
   def getSchemaOptions(requestContext: RequestContext): Set[SchemaOption] = {
     Set(
       getStandoffRendering(requestContext),
-      getJsonLDRendering(requestContext)
+      getJsonLDRenderings(requestContext)
     ).flatten
   }
 

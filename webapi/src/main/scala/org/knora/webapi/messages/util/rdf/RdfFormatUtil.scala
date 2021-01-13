@@ -250,9 +250,9 @@ trait RdfFormatUtil {
 
         // Format the document as a string.
         if (prettyPrint) {
-          jsonLDDocument.toPrettyString()
+          jsonLDDocument.toPrettyString(compactArrays = SchemaOptions.compactJsonLDArrays(schemaOptions))
         } else {
-          jsonLDDocument.toCompactString()
+          jsonLDDocument.toCompactString(compactArrays = SchemaOptions.compactJsonLDArrays(schemaOptions))
         }
 
       case nonJsonLD: NonJsonLD =>

@@ -75,7 +75,8 @@ trait KnoraJsonLDResponseV2 extends KnoraResponseV2 {
     rdfFormat match {
       case JsonLD =>
         // JSON-LD. Have the JsonLDDocument format itself.
-        jsonLDDocument.toPrettyString(SchemaOptions.returnFlatJsonLD(schemaOptions))
+        jsonLDDocument.toPrettyString(flatten = SchemaOptions.returnFlatJsonLD(schemaOptions),
+                                      compactArrays = SchemaOptions.compactJsonLDArrays(schemaOptions))
 
       case nonJsonLD: NonJsonLD =>
         // Some other format. Convert the JSON-LD document to an RDF model.

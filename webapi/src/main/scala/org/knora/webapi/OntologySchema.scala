@@ -90,6 +90,16 @@ case object FlatJsonLD extends JsonLDRendering
 case object HierarchicalJsonLD extends JsonLDRendering
 
 /**
+  * Indicates that an array with just one element should be replaced with that element.
+  */
+case object CompactJsonLDArraysOn extends JsonLDRendering
+
+/**
+  * Indicates that all arrays should remain arrays even if they have just one element.
+  */
+case object CompactJsonLDArraysOff extends JsonLDRendering
+
+/**
   * Utility functions for working with schema options.
   */
 object SchemaOptions {
@@ -146,5 +156,15 @@ object SchemaOptions {
     */
   def returnFlatJsonLD(schemaOptions: Set[SchemaOption]): Boolean = {
     schemaOptions.contains(FlatJsonLD)
+  }
+
+  /**
+    * Determines whether a JSON-LD array containing just one element should be replaced by that element.
+    *
+    * @param schemaOptions the schema options submitted with the request.
+    * @return `true` if JSON-LD arrays should be compacted.
+    */
+  def compactJsonLDArrays(schemaOptions: Set[SchemaOption]): Boolean = {
+    !schemaOptions.contains(CompactJsonLDArraysOff)
   }
 }
