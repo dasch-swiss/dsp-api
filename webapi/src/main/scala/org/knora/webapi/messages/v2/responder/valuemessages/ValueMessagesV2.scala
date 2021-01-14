@@ -3148,12 +3148,15 @@ case class StillImageFileValueContentV2(ontologySchema: OntologySchema,
   override def toOntologySchema(targetSchema: OntologySchema): StillImageFileValueContentV2 =
     copy(ontologySchema = targetSchema)
 
+  def makeFileUrl(projectADM: ProjectADM, settings: KnoraSettingsImpl): String = {
+    s"${settings.externalSipiIIIFGetUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg"
+  }
+
   override def toJsonLDValue(targetSchema: ApiV2Schema,
                              projectADM: ProjectADM,
                              settings: KnoraSettingsImpl,
                              schemaOptions: Set[SchemaOption]): JsonLDValue = {
-    val fileUrl: String =
-      s"${settings.externalSipiIIIFGetUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/full/$dimX,$dimY/0/default.jpg"
+    val fileUrl: String = makeFileUrl(projectADM, settings)
 
     targetSchema match {
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)

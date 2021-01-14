@@ -2253,19 +2253,47 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   def getIIIFManifestV2(request: ResourceIIIFManifestGetRequestV2): Future[ResourceIIIFManifestGetResponseV2] = {
-    Future.successful(
+    for {
+      // Make a Gravsearch query from a template.
+      gravsearchQuery: String <- Future(
+        org.knora.webapi.messages.twirl.queries.gravsearch.txt
+          .getIncomingImageLinks(
+            resourceIri = request.resourceIri
+          )
+          .toString())
+
+      // Run the query.
+
+      parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
+      searchResponse <- (responderManager ? GravsearchRequestV2(
+        constructQuery = parsedGravsearchQuery,
+        targetSchema = ApiV2Complex,
+        schemaOptions = SchemaOptions.ForStandoffSeparateFromTextValues,
+        featureFactoryConfig = request.featureFactoryConfig,
+        requestingUser = request.requestingUser
+      )).mapTo[ReadResourcesSequenceV2]
+
+      resource: ReadResourceV2 = searchResponse.toResource(request.resourceIri)
+
+      incomingLinks: Seq[ReadValueV2] = resource.values
+        .getOrElse(OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri, Seq.empty)
+
+      representations: Seq[ReadResourceV2] = incomingLinks.collect {
+        case readLinkValueV2: ReadLinkValueV2 => readLinkValueV2.valueContent.nestedResource
+      }.flatten
+    } yield
       ResourceIIIFManifestGetResponseV2(
         JsonLDDocument(
           body = JsonLDObject(
             Map(
               JsonLDKeywords.CONTEXT -> JsonLDString("http://iiif.io/api/presentation/3/context.json"),
-              JsonLDKeywords.ID -> JsonLDString("https://iiif.io/api/cookbook/recipe/0009-book-1/manifest.json"),
+              JsonLDKeywords.ID -> JsonLDString(s"${request.resourceIri}/manifest"),
               JsonLDKeywords.TYPE -> JsonLDString("Manifest"),
               "label" -> JsonLDObject(
                 Map(
                   "en" -> JsonLDArray(
                     Seq(
-                      JsonLDString("Simple Manifest - Book")
+                      JsonLDString(resource.label)
                     )
                   )
                 )
@@ -2276,52 +2304,63 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 )
               ),
               "items" -> JsonLDArray(
-                Seq(
+                representations.map { representation: ReadResourceV2 =>
+                  val imageValue: ReadValueV2 = representation.values
+                    .getOrElse(
+                      OntologyConstants.KnoraBase.HasStillImageFileValue.toSmartIri,
+                      throw InconsistentRepositoryDataException(
+                        s"Representation ${representation.resourceIri} has no still image file value")
+                    )
+                    .head
+
+                  val imageValueContent: StillImageFileValueContentV2 = imageValue.valueContent match {
+                    case stillImageFileValueContentV2: StillImageFileValueContentV2 => stillImageFileValueContentV2
+                    case _                                                          => throw AssertionException("Expected a StillImageFileValueContentV2")
+                  }
+
+                  val fileUrl: String =
+                    imageValueContent.makeFileUrl(projectADM = representation.projectADM, settings = settings)
+
                   JsonLDObject(
                     Map(
-                      JsonLDKeywords.ID -> JsonLDString("https://iiif.io/api/cookbook/recipe/0009-book-1/canvas/p1"),
+                      JsonLDKeywords.ID -> JsonLDString(s"${representation.resourceIri}/canvas"),
                       JsonLDKeywords.TYPE -> JsonLDString("Canvas"),
                       "label" -> JsonLDObject(
                         Map(
                           "en" -> JsonLDArray(
                             Seq(
-                              JsonLDString("Blank page")
+                              JsonLDString(representation.label)
                             )
                           )
                         )
                       ),
-                      "height" -> JsonLDInt(4613),
-                      "width" -> JsonLDInt(3204),
+                      "height" -> JsonLDInt(imageValueContent.dimY),
+                      "width" -> JsonLDInt(imageValueContent.dimX),
                       "items" -> JsonLDArray(
                         Seq(
                           JsonLDObject(
                             Map(
-                              JsonLDKeywords.ID -> JsonLDString(
-                                "https://iiif.io/api/cookbook/recipe/0009-book-1/page/p1/1"),
+                              JsonLDKeywords.ID -> JsonLDString(s"${imageValue.valueIri}/image"),
                               JsonLDKeywords.TYPE -> JsonLDString("AnnotationPage"),
                               "items" -> JsonLDArray(
                                 Seq(
                                   JsonLDObject(
                                     Map(
-                                      JsonLDKeywords.ID -> JsonLDString(
-                                        "https://iiif.io/api/cookbook/recipe/0009-book-1/annotation/p0001-image"),
+                                      JsonLDKeywords.ID -> JsonLDString(imageValue.valueIri),
                                       JsonLDKeywords.TYPE -> JsonLDString("Annotation"),
                                       "motivation" -> JsonLDString("painting"),
                                       "body" -> JsonLDObject(
                                         Map(
-                                          JsonLDKeywords.ID -> JsonLDString(
-                                            "https://iiif.io/api/image/3.0/example/reference/59d09e6773341f28ea166e9f3c1e674f-gallica_ark_12148_bpt6k1526005v_f18/full/max/0/default.jpg"
-                                          ),
+                                          JsonLDKeywords.ID -> JsonLDString(fileUrl),
                                           JsonLDKeywords.TYPE -> JsonLDString("Image"),
                                           "format" -> JsonLDString("image/jpeg"),
-                                          "height" -> JsonLDInt(4613),
-                                          "width" -> JsonLDInt(3204),
+                                          "height" -> JsonLDInt(imageValueContent.dimY),
+                                          "width" -> JsonLDInt(imageValueContent.dimX),
                                           "service" -> JsonLDArray(
                                             Seq(
                                               JsonLDObject(
                                                 Map(
-                                                  JsonLDKeywords.ID -> JsonLDString(
-                                                    "https://iiif.io/api/image/3.0/example/reference/59d09e6773341f28ea166e9f3c1e674f-gallica_ark_12148_bpt6k1526005v_f18"),
+                                                  JsonLDKeywords.ID -> JsonLDString(settings.externalSipiIIIFGetUrl),
                                                   JsonLDKeywords.TYPE -> JsonLDString("ImageService3"),
                                                   "profile" -> JsonLDString("level1")
                                                 )
@@ -2340,13 +2379,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                       )
                     )
                   )
-                )
+                }
               )
             )
           ),
           keepStructure = true
         )
       )
-    )
   }
 }
