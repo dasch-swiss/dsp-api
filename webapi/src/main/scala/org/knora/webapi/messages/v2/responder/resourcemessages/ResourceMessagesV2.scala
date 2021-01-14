@@ -98,6 +98,31 @@ case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI],
     extends ResourcesResponderRequestV2
 
 /**
+  * Requests a IIIF manifest for the images that are `knora-base:isPartOf` the specified
+  * resource.
+  *
+  * @param resourceIri          the resource IRI.
+  * @param featureFactoryConfig the feature factory configuration.
+  * @param requestingUser       the user making the request.
+  */
+case class ResourceIIIFManifestGetRequestV2(resourceIri: IRI,
+                                            featureFactoryConfig: FeatureFactoryConfig,
+                                            requestingUser: UserADM)
+    extends ResourcesResponderRequestV2
+
+/**
+  * Represents a IIIF manifest for the images that are `knora-base:isPartOf` the specified
+  * resource.
+  *
+  * @param manifest the IIIF manifest.
+  */
+case class ResourceIIIFManifestGetResponseV2(manifest: JsonLDDocument) extends KnoraJsonLDResponseV2 {
+  override protected def toJsonLDDocument(targetSchema: ApiV2Schema,
+                                          settings: KnoraSettingsImpl,
+                                          schemaOptions: Set[SchemaOption]): JsonLDDocument = manifest
+}
+
+/**
   * Requests the version history of the values of a resource.
   *
   * @param resourceIri          the IRI of the resource.

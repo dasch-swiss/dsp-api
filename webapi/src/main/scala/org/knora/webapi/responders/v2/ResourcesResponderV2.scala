@@ -47,7 +47,16 @@ import org.knora.webapi.messages.util.PermissionUtilADM.{
   PermissionComparisonResult
 }
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
+import org.knora.webapi.messages.util.rdf.{
+  JsonLDArray,
+  JsonLDDocument,
+  JsonLDInt,
+  JsonLDKeywords,
+  JsonLDObject,
+  JsonLDString,
+  SparqlSelectResult,
+  VariableResultsRow
+}
 import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -107,8 +116,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                      schemaOptions,
                      featureFactoryConfig,
                      requestingUser)
+
     case ResourcesPreviewGetRequestV2(resIris, targetSchema, featureFactoryConfig, requestingUser) =>
       getResourcePreviewV2(resIris, targetSchema, featureFactoryConfig, requestingUser)
+
     case ResourceTEIGetRequestV2(resIri,
                                  textProperty,
                                  mappingIri,
@@ -123,14 +134,22 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                          headerXSLTIri,
                          featureFactoryConfig,
                          requestingUser)
+
     case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
+
     case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 =>
       updateResourceMetadataV2(updateResourceMetadataRequestV2)
+
     case deleteOrEraseResourceRequestV2: DeleteOrEraseResourceRequestV2 =>
       deleteOrEraseResourceV2(deleteOrEraseResourceRequestV2)
-    case graphDataGetRequest: GraphDataGetRequestV2                 => getGraphDataResponseV2(graphDataGetRequest)
+
+    case graphDataGetRequest: GraphDataGetRequestV2 => getGraphDataResponseV2(graphDataGetRequest)
+
     case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 => getResourceHistoryV2(resourceHistoryRequest)
-    case other                                                      => handleUnexpectedMessage(other, log, this.getClass.getName)
+
+    case resourceIIIFManifestRequest: ResourceIIIFManifestGetRequestV2 => getIIIFManifestV2(resourceIIIFManifestRequest)
+
+    case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
   /**
@@ -2231,5 +2250,103 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       ResourceVersionHistoryResponseV2(
         historyEntriesWithResourceCreation
       )
+  }
+
+  def getIIIFManifestV2(request: ResourceIIIFManifestGetRequestV2): Future[ResourceIIIFManifestGetResponseV2] = {
+    Future.successful(
+      ResourceIIIFManifestGetResponseV2(
+        JsonLDDocument(
+          body = JsonLDObject(
+            Map(
+              JsonLDKeywords.CONTEXT -> JsonLDString("http://iiif.io/api/presentation/3/context.json"),
+              JsonLDKeywords.ID -> JsonLDString("https://iiif.io/api/cookbook/recipe/0009-book-1/manifest.json"),
+              JsonLDKeywords.TYPE -> JsonLDString("Manifest"),
+              "label" -> JsonLDObject(
+                Map(
+                  "en" -> JsonLDArray(
+                    Seq(
+                      JsonLDString("Simple Manifest - Book")
+                    )
+                  )
+                )
+              ),
+              "behavior" -> JsonLDArray(
+                Seq(
+                  JsonLDString("paged")
+                )
+              ),
+              "items" -> JsonLDArray(
+                Seq(
+                  JsonLDObject(
+                    Map(
+                      JsonLDKeywords.ID -> JsonLDString("https://iiif.io/api/cookbook/recipe/0009-book-1/canvas/p1"),
+                      JsonLDKeywords.TYPE -> JsonLDString("Canvas"),
+                      "label" -> JsonLDObject(
+                        Map(
+                          "en" -> JsonLDArray(
+                            Seq(
+                              JsonLDString("Blank page")
+                            )
+                          )
+                        )
+                      ),
+                      "height" -> JsonLDInt(4613),
+                      "width" -> JsonLDInt(3204),
+                      "items" -> JsonLDArray(
+                        Seq(
+                          JsonLDObject(
+                            Map(
+                              JsonLDKeywords.ID -> JsonLDString(
+                                "https://iiif.io/api/cookbook/recipe/0009-book-1/page/p1/1"),
+                              JsonLDKeywords.TYPE -> JsonLDString("AnnotationPage"),
+                              "items" -> JsonLDArray(
+                                Seq(
+                                  JsonLDObject(
+                                    Map(
+                                      JsonLDKeywords.ID -> JsonLDString(
+                                        "https://iiif.io/api/cookbook/recipe/0009-book-1/annotation/p0001-image"),
+                                      JsonLDKeywords.TYPE -> JsonLDString("Annotation"),
+                                      "motivation" -> JsonLDString("painting"),
+                                      "body" -> JsonLDObject(
+                                        Map(
+                                          JsonLDKeywords.ID -> JsonLDString(
+                                            "https://iiif.io/api/image/3.0/example/reference/59d09e6773341f28ea166e9f3c1e674f-gallica_ark_12148_bpt6k1526005v_f18/full/max/0/default.jpg"
+                                          ),
+                                          JsonLDKeywords.TYPE -> JsonLDString("Image"),
+                                          "format" -> JsonLDString("image/jpeg"),
+                                          "height" -> JsonLDInt(4613),
+                                          "width" -> JsonLDInt(3204),
+                                          "service" -> JsonLDArray(
+                                            Seq(
+                                              JsonLDObject(
+                                                Map(
+                                                  JsonLDKeywords.ID -> JsonLDString(
+                                                    "https://iiif.io/api/image/3.0/example/reference/59d09e6773341f28ea166e9f3c1e674f-gallica_ark_12148_bpt6k1526005v_f18"),
+                                                  JsonLDKeywords.TYPE -> JsonLDString("ImageService3"),
+                                                  "profile" -> JsonLDString("level1")
+                                                )
+                                              )
+                                            )
+                                          )
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                )
+              )
+            )
+          ),
+          keepStructure = true
+        )
+      )
+    )
   }
 }
