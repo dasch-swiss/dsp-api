@@ -57,14 +57,15 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "return 'BadRequest' if the supplied permission IRI for AdministrativePermissionForIriGetRequestADM is not valid" in {
+      val permissionIri = "invalid-permission-IRI"
       val caught = intercept[BadRequestException](
         AdministrativePermissionForIriGetRequestADM(
-          administrativePermissionIri = "invalid-permission-IRI",
+          administrativePermissionIri = permissionIri,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Invalid permission IRI")
+      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
     }
 
     "return 'ForbiddenException' if the user requesting AdministrativePermissionForIriGetRequestADM is not SystemAdmin" in {
@@ -119,10 +120,11 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "return 'BadRequest' if the supplied permission IRI for AdministrativePermissionCreateRequestADM is not valid" in {
+      val permissionIri = "invalid-permission-IRI"
       val caught = intercept[BadRequestException](
         AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
-            id = Some("invalid-permission-IRI"),
+            id = Some(permissionIri),
             forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
@@ -132,7 +134,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Invalid permission IRI")
+      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
     }
 
     "return 'BadRequest' if the no permissions supplied for AdministrativePermissionCreateRequestADM" in {
@@ -305,14 +307,15 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "return 'BadRequest' if the supplied permission IRI for DefaultObjectAccessPermissionForIriGetRequestADM is not valid" in {
+      val permissionIri = "invalid-permission-IRI"
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionForIriGetRequestADM(
-          defaultObjectAccessPermissionIri = "invalid-permission-IRI",
+          defaultObjectAccessPermissionIri = permissionIri,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Invalid permission IRI")
+      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
     }
 
     "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionForIriGetRequestADM is not SystemAdmin" in {
@@ -462,10 +465,11 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "return 'BadRequest' if the supplied custom permission IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
+      val permissionIri = "invalid-permission-IRI"
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            id = Some("invalid-permission-IRI"),
+            id = Some(permissionIri),
             forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
@@ -475,7 +479,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Invalid permission IRI")
+      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
     }
 
     "return 'BadRequest' if the no permissions supplied for DefaultObjectAccessPermissionCreateRequestADM" in {
@@ -730,7 +734,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid IRI is given: $permissionIri.")
+      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
     }
 
     "not update permission group if invalid group IRI given" in {
@@ -758,7 +762,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid IRI is given: $permissionIri.")
+      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
     }
 
     "not update hasPermissions set of a permission if invalid empty set given" in {
@@ -786,7 +790,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid IRI is given: $permissionIri.")
+      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
     }
 
     "not update resource class of a doap if invalid resource class IRI is given" in {
@@ -814,7 +818,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === s"Invalid IRI is given: $permissionIri.")
+      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
     }
 
     "not update property of a doap if invalid property IRI is given" in {
@@ -831,5 +835,16 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       assert(caught.getMessage === s"Invalid property IRI $propertyIri is given.")
     }
 
+    "return 'BadRequest' if the supplied permission IRI for PermissionDeleteRequest is not valid" in {
+      val permissionIri = "invalid-permission-Iri"
+      val caught = intercept[BadRequestException](
+        PermissionDeleteRequestADM(
+          permissionIri = permissionIri,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+    }
   }
 }
