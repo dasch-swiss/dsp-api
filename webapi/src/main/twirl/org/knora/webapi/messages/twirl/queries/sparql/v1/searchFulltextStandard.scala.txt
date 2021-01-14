@@ -147,7 +147,6 @@ WHERE {
     OPTIONAL {
        ?resource knora-base:hasStillImageFileValue ?fileValue .
        ?fileValue a knora-base:StillImageFileValue .
-       ?fileValue knora-base:isPreview true .
        ?fileValue knora-base:internalFilename ?previewPath .
 
         OPTIONAL {
