@@ -835,7 +835,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       assert(caught.getMessage === s"Invalid property IRI $propertyIri is given.")
     }
 
-    "return 'BadRequest' if the supplied permission IRI for PermissionDeleteRequest is not valid" in {
+    "return 'BadRequest' if the supplied permission IRI for PermissionDeleteRequestADM is not valid" in {
       val permissionIri = "invalid-permission-Iri"
       val caught = intercept[BadRequestException](
         PermissionDeleteRequestADM(
@@ -845,6 +845,17 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
         )
       )
       assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
+    }
+
+    "return 'ForbiddenException' if the user requesting PermissionDeleteRequestADM is not SystemAdmin" in {
+      val caught = intercept[ForbiddenException](
+        PermissionDeleteRequestADM(
+          permissionIri = "http://rdfh.ch/permissions/permissionIRI",
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === "Permission can only be deleted by a system or a project admin.")
     }
   }
 }
