@@ -275,27 +275,27 @@ test: docker-build ## runs all test targets.
 #################################
 
 .PHONY: init-db-test
-init-db-test: stack-db-remove stack-db-only ## initializes the knora-test repository
+init-db-test: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test
 
 .PHONY: init-db-test-minimal
-init-db-test-minimal: stack-db-remove stack-db-only ## initializes the knora-test repository with minimal data
+init-db-test-minimal: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-minimal
 
 .PHONY: init-db-test-empty
-init-db-test-empty: stack-db-remove stack-db-only ## initializes the knora-test repository with minimal data
+init-db-test-empty: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-empty
 
 .PHONY: init-db-test-unit
-init-db-test-unit: stack-db-remove stack-db-only ## initializes the knora-test-unit repository
+init-db-test-unit: stack-down-delete-volumes stack-db-only ## initializes the knora-test-unit repository
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit
 
 .PHONY: init-db-test-unit-minimal
-init-db-test-unit-minimal: stack-db-remove stack-db-only ## initializes the knora-test-unit repository with minimal data
+init-db-test-unit-minimal: stack-down-delete-volumes stack-db-only ## initializes the knora-test-unit repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit-minimal
 
