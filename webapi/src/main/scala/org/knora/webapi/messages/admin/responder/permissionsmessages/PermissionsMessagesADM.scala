@@ -706,7 +706,7 @@ case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: User
 
 /**
   * A message that requests deletion of a permission identified through its IRI.
-  * A successful response will be a delete successful message.
+  * A successful response will be [[PermissionDeleteResponseADM]] with deleted=true.
   *
   * @param permissionIri               the iri of the permission object.
   * @param requestingUser              the user initiating the request.
@@ -821,6 +821,19 @@ case class DefaultObjectAccessPermissionCreateResponseADM(
   * @param permissionLiteral a permission literal string.
   */
 case class DefaultObjectAccessPermissionsStringResponseADM(permissionLiteral: String)
+
+/**
+  * Responds to deletion of a permission by returning a success message.
+  *
+  * @param permissionIri the IRI of the permission that is deleted.
+  * @param deleted       status of delete operation.
+  */
+case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean)
+    extends KnoraResponseADM
+    with PermissionsADMJsonProtocol {
+
+  def toJsValue = permissionDeleteResponseADMFormat.write(this)
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -1232,27 +1245,35 @@ trait PermissionsADMJsonProtocol
 
   implicit val permissionADMFormat: JsonFormat[PermissionADM] =
     jsonFormat(PermissionADM.apply, "name", "additionalInformation", "permissionCode")
+
   implicit val permissionInfoADMFormat: JsonFormat[PermissionInfoADM] = lazyFormat(
     jsonFormat(PermissionInfoADM, "iri", "permissionType"))
+
   implicit val administrativePermissionADMFormat: JsonFormat[AdministrativePermissionADM] = lazyFormat(
     jsonFormat(AdministrativePermissionADM, "iri", "forProject", "forGroup", "hasPermissions"))
+
   implicit val objectAccessPermissionADMFormat: JsonFormat[ObjectAccessPermissionADM] =
     jsonFormat(ObjectAccessPermissionADM, "forResource", "forValue", "hasPermissions")
+
   implicit val defaultObjectAccessPermissionADMFormat: JsonFormat[DefaultObjectAccessPermissionADM] = lazyFormat(
     jsonFormat6(DefaultObjectAccessPermissionADM))
+
   implicit val permissionsDataADMFormat: JsonFormat[PermissionsDataADM] = jsonFormat2(PermissionsDataADM)
 
   implicit val permissionsForProjectGetResponseADMFormat: RootJsonFormat[PermissionsForProjectGetResponseADM] =
     jsonFormat(PermissionsForProjectGetResponseADM, "permissions")
+
   implicit val administrativePermissionsForProjectGetResponseADMFormat
     : RootJsonFormat[AdministrativePermissionsForProjectGetResponseADM] =
     jsonFormat(AdministrativePermissionsForProjectGetResponseADM, "administrative_permissions")
+
   implicit val defaultObjectAccessPermissionsForProjectGetResponseADMFormat
     : RootJsonFormat[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     jsonFormat(DefaultObjectAccessPermissionsForProjectGetResponseADM, "default_object_access_permissions")
 
   implicit val administrativePermissionGetResponseADMFormat: RootJsonFormat[AdministrativePermissionGetResponseADM] =
     jsonFormat(AdministrativePermissionGetResponseADM, "administrative_permission")
+
   implicit val defaultObjectAccessPermissionGetResponseADMFormat
     : RootJsonFormat[DefaultObjectAccessPermissionGetResponseADM] =
     jsonFormat(DefaultObjectAccessPermissionGetResponseADM, "default_object_access_permission")
@@ -1261,6 +1282,7 @@ trait PermissionsADMJsonProtocol
     : RootJsonFormat[CreateAdministrativePermissionAPIRequestADM] = rootFormat(
     lazyFormat(
       jsonFormat(CreateAdministrativePermissionAPIRequestADM, "id", "forProject", "forGroup", "hasPermissions")))
+
   implicit val createDefaultObjectAccessPermissionAPIRequestADMFormat
     : RootJsonFormat[CreateDefaultObjectAccessPermissionAPIRequestADM] = rootFormat(
     lazyFormat(
@@ -1271,21 +1293,30 @@ trait PermissionsADMJsonProtocol
                  "forResourceClass",
                  "forProperty",
                  "hasPermissions")))
+
   implicit val administrativePermissionCreateResponseADMFormat
     : RootJsonFormat[AdministrativePermissionCreateResponseADM] = rootFormat(
     lazyFormat(jsonFormat(AdministrativePermissionCreateResponseADM, "administrative_permission")))
+
   implicit val defaultObjectAccessPermissionCreateResponseADMFormat
     : RootJsonFormat[DefaultObjectAccessPermissionCreateResponseADM] =
     jsonFormat(DefaultObjectAccessPermissionCreateResponseADM, "default_object_access_permission")
 
   implicit val changePermissionGroupApiRequestADMFormat: RootJsonFormat[ChangePermissionGroupApiRequestADM] =
     jsonFormat(ChangePermissionGroupApiRequestADM, "forGroup")
+
   implicit val changePermissionHasPermissionsApiRequestADMFormat
     : RootJsonFormat[ChangePermissionHasPermissionsApiRequestADM] =
     jsonFormat(ChangePermissionHasPermissionsApiRequestADM, "hasPermissions")
+
   implicit val changePermissionResourceClassApiRequestADMFormat
     : RootJsonFormat[ChangePermissionResourceClassApiRequestADM] =
     jsonFormat(ChangePermissionResourceClassApiRequestADM, "forResourceClass")
+
   implicit val changePermissionPropertyApiRequestADMFormat: RootJsonFormat[ChangePermissionPropertyApiRequestADM] =
     jsonFormat(ChangePermissionPropertyApiRequestADM, "forProperty")
+
+  implicit val permissionDeleteResponseADMFormat: RootJsonFormat[PermissionDeleteResponseADM] =
+    jsonFormat(PermissionDeleteResponseADM, "permissionIri", "deleted")
+
 }
