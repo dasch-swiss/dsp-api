@@ -155,6 +155,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                             requestingUser,
                                             apiRequestID) =>
       permissionPropertyChangeRequestADM(permissionIri, changePermissionPropertyRequest, requestingUser, apiRequestID)
+    case PermissionDeleteRequestADM(permissionIri, requestingUser, apiRequestID) =>
+      permissionDeleteRequestADM(permissionIri, requestingUser, apiRequestID)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -1837,11 +1839,48 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       } yield response
 
     for {
-      // run list info update with an local IRI lock
+      // run permission update with an local IRI lock
       taskResult <- IriLocker.runWithIriLock(
         apiRequestID,
         permissionIri,
         () => permissionPropertyChangeTask(permissionIri, changePermissionPropertyRequest, requestingUser)
+      )
+    } yield taskResult
+  }
+
+  /**
+    * Delete a permission.
+    *
+    * @param permissionIri                   the IRI of the permission.
+    * @param requestingUser                  the [[UserADM]] of the requesting user.
+    * @param apiRequestID                    the API request ID.
+    * @return [[PermissionDeleteResponseADM]].
+    * @throws UpdateNotPerformedException if permission was in use and could not be deleted or something else went wrong.
+    * @throws NotFoundException if no permission is found for the given IRI.
+    */
+  private def permissionDeleteRequestADM(permissionIri: IRI,
+                                         requestingUser: UserADM,
+                                         apiRequestID: UUID): Future[PermissionDeleteResponseADM] = {
+
+    def permissionDeleteTask(): Future[PermissionDeleteResponseADM] =
+      for {
+        // check that there is a permission with a given IRI
+        _ <- permissionGetADM(permissionIri, requestingUser)
+        // Is permission in use?
+        _ <- isPermissionUsed(permissionIri = permissionIri,
+                              errorFun = throw UpdateNotPerformedException(
+                                s"Permission $permissionIri cannot be deleted, because it is in use."))
+
+        _ <- deletePermission(permissionIri)
+
+      } yield PermissionDeleteResponseADM(permissionIri, true)
+
+    for {
+      // run list info update with an local IRI lock
+      taskResult <- IriLocker.runWithIriLock(
+        apiRequestID,
+        permissionIri,
+        () => permissionDeleteTask()
       )
     } yield taskResult
   }
@@ -1960,5 +1999,65 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       )
 
       _ <- (storeManager ? SparqlUpdateRequest(sparqlChangePermission)).mapTo[SparqlUpdateResponse]
+    } yield ()
+
+  /**
+    * Delete an existing permission with a given IRI.
+    *
+    * @param permissionIri       the IRI of the permission.
+    */
+  def deletePermission(permissionIri: IRI): Future[Unit] =
+    for {
+      // Generate SPARQL for erasing a permission.
+      sparqlDeletePermission: String <- Future(
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          .deletePermission(
+            triplestore = settings.triplestoreType,
+            namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
+            permissionIri = permissionIri
+          )
+          .toString()
+      )
+
+      // Do the update.
+      _ <- (storeManager ? SparqlUpdateRequest(sparqlDeletePermission)).mapTo[SparqlUpdateResponse]
+
+      // Verify that the permission was deleted correctly.
+      askString <- Future(
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(permissionIri).toString
+      )
+      askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      permissionStillExists: Boolean = askResponse.result
+
+      _ = if (permissionStillExists) {
+        throw UpdateNotPerformedException(
+          s"Permission <$permissionIri> was not erased. Please report this as a possible bug.")
+      }
+    } yield ()
+
+  /**
+    * Helper method to check if a permission is in use.
+    *
+    * @param permissionIri  the IRI of the permission.
+    * @param errorFun a function that throws an exception. It will be called if the permission is used.
+    * @return a [[Boolean]].
+    */
+  protected def isPermissionUsed(permissionIri: IRI, errorFun: => Nothing): Future[Unit] =
+    for {
+      isPermissionUsedSparql <- Future(
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          .isEntityUsed(
+            triplestore = settings.triplestoreType,
+            entityIri = permissionIri
+          )
+          .toString()
+      )
+
+      isPermissionUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isPermissionUsedSparql))
+        .mapTo[SparqlSelectResult]
+
+      _ = if (isPermissionUsedResponse.results.bindings.nonEmpty) {
+        errorFun
+      }
     } yield ()
 }

@@ -25,7 +25,7 @@ import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, ForbiddenException}
+import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, ForbiddenException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.KnoraSystemInstances
@@ -900,7 +900,28 @@ class PermissionsResponderADMSpec
         assert(doap.forProperty.get == propertyIri)
         assert(doap.forGroup.isEmpty)
       }
+    }
 
+    "request to delete a permission" should {
+      "throw BadRequestException if given IRI is not a permission IRI" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/d1kjhfkj"
+        responderManager ! PermissionDeleteRequestADM(
+          permissionIri = permissionIri,
+          requestingUser = rootUser,
+          apiRequestID = UUID.randomUUID()
+        )
+        expectMsg(Failure(NotFoundException(s"Permission with given IRI: $permissionIri not found.")))
+      }
+      "erase a permission with given IRI" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        responderManager ! PermissionDeleteRequestADM(
+          permissionIri = permissionIri,
+          requestingUser = rootUser,
+          apiRequestID = UUID.randomUUID()
+        )
+        val received: PermissionDeleteResponseADM = expectMsgType[PermissionDeleteResponseADM]
+        assert(received.deleted == true)
+      }
     }
   }
 }
