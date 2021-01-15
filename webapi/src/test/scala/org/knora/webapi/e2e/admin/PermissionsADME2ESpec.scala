@@ -643,5 +643,19 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         )
       }
     }
+
+    "delete request" should {
+      "erase an administrative permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+        val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
+        deletedStatus.convertTo[Boolean] should be(true)
+
+      }
+    }
   }
 }

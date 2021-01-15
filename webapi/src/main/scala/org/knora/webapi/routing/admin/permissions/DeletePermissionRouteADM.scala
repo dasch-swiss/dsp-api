@@ -26,7 +26,6 @@ import akka.http.scaladsl.server.{PathMatcher, Route}
 
 import io.swagger.annotations._
 import javax.ws.rs.Path
-import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
@@ -51,7 +50,7 @@ class DeletePermissionRouteADM(routeData: KnoraRouteData)
     deletePermission(featureFactoryConfig)
 
   /**
-    * Update a permission's group
+    * Delete a permission
     */
   private def deletePermission(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(PermissionsBasePath / Segment) { iri =>
