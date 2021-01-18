@@ -169,7 +169,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     */
   private def loadOntologies(featureFactoryConfig: FeatureFactoryConfig,
                              requestingUser: UserADM): Future[SuccessResponseV2] = {
-    for {
+    val loadOntologiesFuture: Future[SuccessResponseV2] = for {
       _ <- Future {
         if (!(requestingUser.id == KnoraSystemInstances.Users.SystemUser.id || requestingUser.permissions.isSystemAdmin)) {
           throw ForbiddenException(s"Only a system administrator can reload ontologies")
@@ -217,8 +217,19 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       ontologyGraphs: Iterable[OntologyGraph] <- Future.sequence(ontologyGraphResponseFutures)
 
       _ = makeOntologyCache(allOntologyMetadata, ontologyGraphs)
-
     } yield SuccessResponseV2("Ontologies loaded.")
+
+    loadOntologiesFuture.recover {
+      case exception: Throwable =>
+        exception match {
+          case inconsistentRepositoryDataException: InconsistentRepositoryDataException =>
+            log.error(inconsistentRepositoryDataException.message)
+            SuccessResponseV2(
+              s"An error occurred when loading ontologies: ${inconsistentRepositoryDataException.message}")
+
+          case other => throw other
+        }
+    }
   }
 
   /**
