@@ -97,7 +97,13 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                                        superClassOfRelations: Map[SmartIri, Set[SmartIri]],
                                        subPropertyOfRelations: Map[SmartIri, Set[SmartIri]],
                                        guiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]],
-                                       standoffProperties: Set[SmartIri])
+                                       standoffProperties: Set[SmartIri]) {
+    lazy val allPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = ontologies.values
+      .flatMap(_.properties.map {
+        case (propertyIri, readPropertyInfo) => propertyIri -> readPropertyInfo.entityInfoContent
+      })
+      .toMap
+  }
 
   /**
     * Receives a message of type [[OntologiesResponderRequestV2]], and returns an appropriate response message.
@@ -895,24 +901,16 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                 }
             }
 
-            // A cardinality on a property with a boolean object must be 1 or 0-1.
-
-            val invalidCardinalitiesOnBooleanProps: Set[SmartIri] = directCardinalities.filter {
-              case (propertyIri, knoraCardinalityInfo) =>
-                val propertyObjectClassConstraint: SmartIri = allPropertyDefs(propertyIri).requireIriObject(
-                  OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri,
-                  throw InconsistentRepositoryDataException(
-                    s"Property $propertyIri has no knora-base:objectClassConstraint")
-                )
-                propertyObjectClassConstraint == OntologyConstants.KnoraBase.BooleanValue.toSmartIri &&
-                !(knoraCardinalityInfo.cardinality == Cardinality.MustHaveOne || knoraCardinalityInfo.cardinality == Cardinality.MayHaveOne)
-            }.keySet
-
-            if (invalidCardinalitiesOnBooleanProps.nonEmpty) {
-              throw InconsistentRepositoryDataException(
-                s"Class $classIri has one or more invalid cardinalities on boolean properties: ${invalidCardinalitiesOnBooleanProps
-                  .mkString(", ")}")
-            }
+            // Check for invalid cardinalities on boolean properties.
+            checkForInvalidBooleanCardinalities(
+              classIri = classIri,
+              directCardinalities = directCardinalities,
+              allPropertyDefs = allPropertyDefs,
+              schemaForErrors = InternalSchema,
+              errorFun = { msg: String =>
+                throw InconsistentRepositoryDataException(msg)
+              }
+            )
 
             // All its base classes with Knora IRIs must also be resource classes.
             for (baseClass <- classDef.subClassOf) {
@@ -1020,6 +1018,42 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         )
 
         classIri -> readClassInfo
+    }
+  }
+
+  /**
+    * Checks for invalid cardinalities on boolean properties.
+    *
+    * @param classIri the class IRI.
+    * @param directCardinalities the cardinalities directly defined on the class.
+    * @param allPropertyDefs all property definitions.
+    */
+  def checkForInvalidBooleanCardinalities(classIri: SmartIri,
+                                          directCardinalities: Map[SmartIri, KnoraCardinalityInfo],
+                                          allPropertyDefs: Map[SmartIri, PropertyInfoContentV2],
+                                          schemaForErrors: OntologySchema,
+                                          errorFun: String => Nothing): Unit = {
+    // A cardinality on a property with a boolean object must be 1 or 0-1.
+
+    val invalidCardinalitiesOnBooleanProps: Set[SmartIri] = directCardinalities.filter {
+      case (propertyIri, knoraCardinalityInfo) =>
+        val objectClassConstraintIri = OntologyConstants.KnoraBase.ObjectClassConstraint.toSmartIri
+
+        val propertyObjectClassConstraint: SmartIri = allPropertyDefs(propertyIri).requireIriObject(
+          objectClassConstraintIri,
+          errorFun(s"Property ${propertyIri
+            .toOntologySchema(schemaForErrors)} has no ${objectClassConstraintIri.toOntologySchema(schemaForErrors)}")
+        )
+
+        propertyObjectClassConstraint == OntologyConstants.KnoraBase.BooleanValue.toSmartIri &&
+        !(knoraCardinalityInfo.cardinality == Cardinality.MustHaveOne || knoraCardinalityInfo.cardinality == Cardinality.MayHaveOne)
+    }.keySet
+
+    if (invalidCardinalitiesOnBooleanProps.nonEmpty) {
+      errorFun(
+        s"Class ${classIri.toOntologySchema(schemaForErrors).toSparql} has one or more invalid cardinalities on boolean properties: ${invalidCardinalitiesOnBooleanProps
+          .map(_.toOntologySchema(schemaForErrors).toSparql)
+          .mkString(", ")}")
     }
   }
 
@@ -2503,6 +2537,17 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
       case None => ()
     }
+
+    // Check for invalid cardinalities on boolean properties.
+    checkForInvalidBooleanCardinalities(
+      classIri = internalClassDef.classIri,
+      directCardinalities = internalClassDef.directCardinalities,
+      allPropertyDefs = cacheData.allPropertyDefs,
+      schemaForErrors = ApiV2Complex,
+      errorFun = { msg: String =>
+        throw BadRequestException(msg)
+      }
+    )
 
     (classDefWithAddedLinkValueProps, cardinalitiesForClassWithInheritance)
   }

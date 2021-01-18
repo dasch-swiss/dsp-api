@@ -3386,6 +3386,39 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
+    "not add an 0-n cardinality for a boolean property" in {
+      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+      val classInfoContent = ClassInfoContentV2(
+        classIri = classIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          )
+        ),
+        directCardinalities = Map(
+          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(cardinality =
+                                                                                        Cardinality.MayHaveMany,
+                                                                                      guiOrder = Some(0))
+        ),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! AddCardinalitiesToClassRequestV2(
+        classInfoContent = classInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: akka.actor.Status.Failure =>
+          msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      }
+    }
+
     "add a cardinality for the property anything:hasNothingness to the class anything:Nothing" in {
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
