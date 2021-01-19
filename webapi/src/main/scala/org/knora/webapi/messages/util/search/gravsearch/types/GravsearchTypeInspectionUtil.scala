@@ -186,6 +186,10 @@ object GravsearchTypeInspectionUtil {
 
     override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
       Seq(luceneQueryPattern)
+
+    override def enteringUnionBlock(): Unit = {}
+
+    override def leavingUnionBlock(): Unit = {}
   }
 
   /**

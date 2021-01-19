@@ -8577,6 +8577,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                    |} WHERE {
                    |    ?thing a knora-api:Resource .
                    |    ?thing a anything:Thing .
+                   |    ?thing anything:hasInteger ?int .
                    |
                    |    {
                    |        ?thing anything:hasRichtext ?richtext .
