@@ -341,7 +341,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
           case None =>
             // No.
             throw GravsearchException(
-              s"Variable ${criterion.queryVariable} is used in ORDER by, but is not bound at the top level of the WHERE clause")
+              s"Variable ${criterion.queryVariable.toSparql} is used in ORDER by, but is not bound at the top level of the WHERE clause")
 
         }
     }

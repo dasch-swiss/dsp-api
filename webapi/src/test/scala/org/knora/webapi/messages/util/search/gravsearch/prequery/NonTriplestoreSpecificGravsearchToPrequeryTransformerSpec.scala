@@ -1558,6 +1558,214 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
     useDistinct = true
   )
 
+  val InputQueryWithUnionScopes: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX onto: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |    ?thing onto:hasText ?text .        
+      |} WHERE {
+      |    ?thing a onto:Thing .
+      |    ?thing onto:hasText ?text .
+      |    
+      |    {
+      |        ?thing onto:hasInteger ?int .
+      |        FILTER(?int = 1)
+      |    } UNION {
+      |        ?thing onto:hasText ?text .
+      |        FILTER regex(?text, "Abel", "i") .
+      |    }
+      |}
+      |ORDER BY ASC(?text)
+      |OFFSET 0""".stripMargin
+
+  val TransformedQueryWithUnionScopes: SelectQuery = SelectQuery(
+    fromClause = None,
+    variables = Vector(
+      QueryVariable(variableName = "thing"),
+      GroupConcat(
+        inputVariable = QueryVariable(variableName = "text"),
+        separator = StringFormatter.INFORMATION_SEPARATOR_ONE,
+        outputVariableName = "text__Concat"
+      )
+    ),
+    offset = 0,
+    groupBy = Vector(
+      QueryVariable(variableName = "thing"),
+      QueryVariable(variableName = "text__valueHasString")
+    ),
+    orderBy = Vector(
+      OrderCriterion(
+        queryVariable = QueryVariable(variableName = "text__valueHasString"),
+        isAscending = true
+      ),
+      OrderCriterion(
+        queryVariable = QueryVariable(variableName = "thing"),
+        isAscending = true
+      )
+    ),
+    whereClause = WhereClause(
+      patterns = Vector(
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "false",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          ),
+          namedGraph = Some(
+            IriRef(
+              iri = "http://www.knora.org/explicit".toSmartIri,
+              propertyPathOperator = None
+            ))
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = QueryVariable(variableName = "text"),
+          namedGraph = None
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "text"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "false",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          ),
+          namedGraph = Some(
+            IriRef(
+              iri = "http://www.knora.org/explicit".toSmartIri,
+              propertyPathOperator = None
+            ))
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "text"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#valueHasString".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = QueryVariable(variableName = "text__valueHasString"),
+          namedGraph = Some(
+            IriRef(
+              iri = "http://www.knora.org/explicit".toSmartIri,
+              propertyPathOperator = None
+            ))
+        ),
+        UnionPattern(
+          blocks = Vector(
+            Vector(
+              StatementPattern(
+                subj = QueryVariable(variableName = "thing"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = QueryVariable(variableName = "int"),
+                namedGraph = None
+              ),
+              StatementPattern(
+                subj = QueryVariable(variableName = "int"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = XsdLiteral(
+                  value = "false",
+                  datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                ),
+                namedGraph = Some(
+                  IriRef(
+                    iri = "http://www.knora.org/explicit".toSmartIri,
+                    propertyPathOperator = None
+                  ))
+              ),
+              StatementPattern(
+                subj = QueryVariable(variableName = "int"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/knora-base#valueHasInteger".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = QueryVariable(variableName = "int__valueHasInteger"),
+                namedGraph = Some(
+                  IriRef(
+                    iri = "http://www.knora.org/explicit".toSmartIri,
+                    propertyPathOperator = None
+                  ))
+              ),
+              FilterPattern(expression = CompareExpression(
+                leftArg = QueryVariable(variableName = "int__valueHasInteger"),
+                operator = CompareExpressionOperator.EQUALS,
+                rightArg = XsdLiteral(
+                  value = "1",
+                  datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
+                )
+              ))
+            ),
+            Vector(
+              StatementPattern(
+                subj = QueryVariable(variableName = "thing"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = QueryVariable(variableName = "text"),
+                namedGraph = None
+              ),
+              StatementPattern(
+                subj = QueryVariable(variableName = "text"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = XsdLiteral(
+                  value = "false",
+                  datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+                ),
+                namedGraph = Some(
+                  IriRef(
+                    iri = "http://www.knora.org/explicit".toSmartIri,
+                    propertyPathOperator = None
+                  ))
+              ),
+              StatementPattern(
+                subj = QueryVariable(variableName = "text"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/knora-base#valueHasString".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = QueryVariable(variableName = "text__valueHasString"),
+                namedGraph = Some(
+                  IriRef(
+                    iri = "http://www.knora.org/explicit".toSmartIri,
+                    propertyPathOperator = None
+                  ))
+              ),
+              FilterPattern(
+                expression = RegexFunction(
+                  textExpr = QueryVariable(variableName = "text__valueHasString"),
+                  pattern = "Abel",
+                  modifier = Some("i")
+                ))
+            )
+          ))
+      ),
+      positiveEntities = Set(),
+      querySchema = None
+    ),
+    limit = Some(25),
+    useDistinct = true
+  )
+
   "The NonTriplestoreSpecificGravsearchToPrequeryGenerator object" should {
 
     "transform an input query with an optional property criterion without removing the rdf:type statement" in {
@@ -1711,6 +1919,13 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(InputQueryWithRdfsLabelAndRegexInComplexSchema, responderData, settings)
 
       assert(transformedQuery === TransformedQueryWithRdfsLabelAndRegex)
+    }
+
+    "transform an input query with UNION scopes in the simple schema" in {
+      val transformedQuery =
+        QueryHandler.transformQuery(InputQueryWithUnionScopes, responderData, settings)
+
+      assert(transformedQuery === TransformedQueryWithUnionScopes)
     }
   }
 }
