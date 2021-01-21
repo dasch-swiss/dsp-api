@@ -321,7 +321,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       thrown.getMessage should equal(PROJECT_IRI_INVALID_ERROR)
     }
 
-    "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when labels and comments are empty" in {
+    "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when labels are empty" in {
 
       val payload =
         s"""
@@ -335,7 +335,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
 
-      thrown.getMessage should equal(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
+      thrown.getMessage should equal(UPDATE_REQUEST_EMPTY_LABEL_ERROR)
     }
 
     "throw 'ForbiddenException' if user requesting `createChildNodeRequest` is not system or project admin" in {
