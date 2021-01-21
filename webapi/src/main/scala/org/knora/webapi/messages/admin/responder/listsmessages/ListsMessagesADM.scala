@@ -162,13 +162,9 @@ case class ChangeNodeInfoApiRequestADM(listIri: IRI,
   if (hasRootNode.isDefined && !stringFormatter.isKnoraListIriStr(hasRootNode.get)) {
     throw BadRequestException(s"Invalid root node IRI is given.")
   }
-  // If payload contains label or comments they should not be empty
+  // If payload contains labels, they should not be empty
   if (labels.exists(_.isEmpty)) {
-    throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
-  }
-
-  if (comments.exists(_.isEmpty)) {
-    throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
+    throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_ERROR)
   }
 
   def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
