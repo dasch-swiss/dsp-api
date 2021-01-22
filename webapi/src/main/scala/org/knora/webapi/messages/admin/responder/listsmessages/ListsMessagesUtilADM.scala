@@ -30,5 +30,5 @@ object ListsMessagesUtilADM {
   val LIST_CREATE_PERMISSION_ERROR = "A list can only be created by the project or system administrator."
   val LIST_NODE_CREATE_PERMISSION_ERROR = "A list node can only be created by the project or system administrator."
   val LIST_CHANGE_PERMISSION_ERROR = "A list can only be changed by the project or system administrator."
-  val UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR = "List labels and comments cannot be empty."
+  val UPDATE_REQUEST_EMPTY_LABEL_ERROR = "List labels cannot be empty."
 }
