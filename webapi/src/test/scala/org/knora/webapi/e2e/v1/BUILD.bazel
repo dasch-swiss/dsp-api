@@ -113,6 +113,7 @@ scala_test(
         "//webapi:test_library",
         "@maven//:org_scala_lang_modules_scala_xml_2_12",
         "@maven//:org_xmlunit_xmlunit_core",
+        "@maven//:com_jsuereth_scala_arm_2_12",
     ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )
 
