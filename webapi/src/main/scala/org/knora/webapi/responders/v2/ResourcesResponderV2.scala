@@ -2287,8 +2287,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           body = JsonLDObject(
             Map(
               JsonLDKeywords.CONTEXT -> JsonLDString("http://iiif.io/api/presentation/3/context.json"),
-              JsonLDKeywords.ID -> JsonLDString(s"${request.resourceIri}/manifest"),
-              JsonLDKeywords.TYPE -> JsonLDString("Manifest"),
+              "id" -> JsonLDString(s"${request.resourceIri}/manifest"),
+              "type" -> JsonLDString("Manifest"),
               "label" -> JsonLDObject(
                 Map(
                   "en" -> JsonLDArray(
@@ -2323,8 +2323,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                   JsonLDObject(
                     Map(
-                      JsonLDKeywords.ID -> JsonLDString(s"${representation.resourceIri}/canvas"),
-                      JsonLDKeywords.TYPE -> JsonLDString("Canvas"),
+                      "id" -> JsonLDString(s"${representation.resourceIri}/canvas"),
+                      "type" -> JsonLDString("Canvas"),
                       "label" -> JsonLDObject(
                         Map(
                           "en" -> JsonLDArray(
@@ -2340,19 +2340,19 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         Seq(
                           JsonLDObject(
                             Map(
-                              JsonLDKeywords.ID -> JsonLDString(s"${imageValue.valueIri}/image"),
-                              JsonLDKeywords.TYPE -> JsonLDString("AnnotationPage"),
+                              "id" -> JsonLDString(s"${imageValue.valueIri}/image"),
+                              "type" -> JsonLDString("AnnotationPage"),
                               "items" -> JsonLDArray(
                                 Seq(
                                   JsonLDObject(
                                     Map(
-                                      JsonLDKeywords.ID -> JsonLDString(imageValue.valueIri),
-                                      JsonLDKeywords.TYPE -> JsonLDString("Annotation"),
+                                      "id" -> JsonLDString(imageValue.valueIri),
+                                      "type" -> JsonLDString("Annotation"),
                                       "motivation" -> JsonLDString("painting"),
                                       "body" -> JsonLDObject(
                                         Map(
-                                          JsonLDKeywords.ID -> JsonLDString(fileUrl),
-                                          JsonLDKeywords.TYPE -> JsonLDString("Image"),
+                                          "id" -> JsonLDString(fileUrl),
+                                          "type" -> JsonLDString("Image"),
                                           "format" -> JsonLDString("image/jpeg"),
                                           "height" -> JsonLDInt(imageValueContent.dimY),
                                           "width" -> JsonLDInt(imageValueContent.dimX),
@@ -2360,8 +2360,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                             Seq(
                                               JsonLDObject(
                                                 Map(
-                                                  JsonLDKeywords.ID -> JsonLDString(settings.externalSipiIIIFGetUrl),
-                                                  JsonLDKeywords.TYPE -> JsonLDString("ImageService3"),
+                                                  "id" -> JsonLDString(settings.externalSipiIIIFGetUrl),
+                                                  "type" -> JsonLDString("ImageService3"),
                                                   "profile" -> JsonLDString("level1")
                                                 )
                                               )
