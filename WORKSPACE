@@ -237,22 +237,22 @@ container_pull(
 )
 
 # get sipi
-load("//third_party:versions.bzl", "SIPI_REPOSITORY", "SIPI_TAG", "SIPI_IMAGE_DIGEST")
+load("//third_party:versions.bzl", "SIPI_REPOSITORY", "SIPI_VERSION", "SIPI_IMAGE_DIGEST")
 container_pull(
     name = "sipi",
     registry = "docker.io",
     repository = SIPI_REPOSITORY,
-    tag = SIPI_TAG,
+    tag = SIPI_VERSION,
     digest = SIPI_IMAGE_DIGEST,
 )
 
 # get fuseki
-load("//third_party:versions.bzl", "FUSEKI_REPOSITORY", "FUSEKI_TAG", "FUSEKI_IMAGE_DIGEST")
+load("//third_party:versions.bzl", "FUSEKI_REPOSITORY", "FUSEKI_VERSION", "FUSEKI_IMAGE_DIGEST")
 container_pull(
     name = "jenafuseki",
     registry = "docker.io",
     repository = FUSEKI_REPOSITORY,
-    tag = FUSEKI_TAG,
+    tag = FUSEKI_VERSION,
     digest = FUSEKI_IMAGE_DIGEST,
 )
 
