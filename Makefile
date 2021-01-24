@@ -218,6 +218,10 @@ stack-db-only: docker-build-knora-jena-fuseki-image env-file ## starts only fuse
 ## Test Targets
 #################################
 
+.PHONY: test-docker
+test-docker: docker-build ## runs Docker image tests
+	bazel test //docker/...
+
 .PHONY: test-webapi
 test-webapi: docker-build ## runs all dsp-api tests.
 	bazel test //webapi/...
