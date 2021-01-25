@@ -205,7 +205,9 @@ jobs:
           docker system prune --all --force --volumes
           df -h
       - name: run API integration tests
-        run: make test-it
+        run: |
+          make test-docker
+          make test-it
       - name: Disk Free After
         run: |
           df -h

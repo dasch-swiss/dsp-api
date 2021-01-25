@@ -55,3 +55,4 @@ dump.rdb
 /site/
 dependencies.txt
 /client-test-data.zip
+/db_staging_dump.trig
