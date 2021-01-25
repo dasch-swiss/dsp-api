@@ -76,7 +76,7 @@ class PermissionsResponderADMSpec
 
   "The PermissionsResponderADM" when {
 
-    "queried about the permission profile" should {
+    "ask about the permission profile" should {
 
       "return the permissions profile (root user)" in {
         responderManager ! PermissionDataGetADM(
@@ -173,7 +173,8 @@ class PermissionsResponderADMSpec
         )
         expectMsg(SharedTestDataV1.anythingUser1.permissionData)
       }
-
+    }
+    "ask for userAdministrativePermissionsGetADM" should {
       "return user's administrative permissions (helper method used in queries before)" in {
         val f
           : Future[Map[IRI, Set[PermissionADM]]] = responderUnderTest invokePrivate userAdministrativePermissionsGetADM(
@@ -183,7 +184,7 @@ class PermissionsResponderADMSpec
       }
     }
 
-    "queried about administrative permissions " should {
+    "ask about administrative permissions " should {
 
       "return all AdministrativePermissions for project " in {
         responderManager ! AdministrativePermissionsForProjectGetRequestADM(
@@ -214,9 +215,19 @@ class PermissionsResponderADMSpec
         )
         expectMsg(AdministrativePermissionGetResponseADM(perm002_a1.p))
       }
-
+      "throw ForbiddenException for AdministrativePermissionForIriGetRequestADM if requesting user is not system or project admin " in {
+        val permissionIri = perm002_a1.iri
+        responderManager ! AdministrativePermissionForIriGetRequestADM(
+          administrativePermissionIri = permissionIri,
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+        expectMsg(
+          Failure(ForbiddenException(
+            s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
+      }
     }
-
+//
     "asked to create an administrative permission" should {
       "fail and return a 'DuplicateValueException' when permission for project and group combination already exists" in {
         responderManager ! AdministrativePermissionCreateRequestADM(
@@ -253,14 +264,23 @@ class PermissionsResponderADMSpec
       }
     }
 
-    "queried about object access permissions " should {
-
+    "ask to query about object access permissions " should {
       "return object access permissions for a resource" in {
         responderManager ! ObjectAccessPermissionsForResourceGetADM(
           resourceIri = perm003_o1.iri,
           requestingUser = rootUser
         )
         expectMsg(Some(perm003_o1.p))
+      }
+
+      "return 'ForbiddenException' if the user requesting ObjectAccessPermissionsForResourceGetADM is not ProjectAdmin" in {
+
+        responderManager ! ObjectAccessPermissionsForResourceGetADM(
+          resourceIri = perm003_o1.iri,
+          requestingUser = SharedTestDataADM.incunabulaMemberUser
+        )
+        expectMsg(
+          Failure(ForbiddenException("Object access permissions can only be queried by system and project admin.")))
       }
 
       "return object access permissions for a value" in {
@@ -271,9 +291,18 @@ class PermissionsResponderADMSpec
         expectMsg(Some(perm003_o2.p))
       }
 
+      "return 'ForbiddenException' if the user requesting ObjectAccessPermissionsForValueGetADM is not ProjectAdmin" in {
+
+        responderManager ! ObjectAccessPermissionsForValueGetADM(
+          valueIri = perm003_o2.iri,
+          requestingUser = SharedTestDataADM.incunabulaMemberUser
+        )
+        expectMsg(
+          Failure(ForbiddenException("Object access permissions can only be queried by system and project admin.")))
+      }
     }
 
-    "queried about default object access permissions " should {
+    "ask to query about default object access permissions " should {
 
       "return all DefaultObjectAccessPermissions for project" in {
         responderManager ! DefaultObjectAccessPermissionsForProjectGetRequestADM(
@@ -298,6 +327,19 @@ class PermissionsResponderADMSpec
           DefaultObjectAccessPermissionGetResponseADM(
             defaultObjectAccessPermission = perm002_d1.p
           ))
+      }
+
+      "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionForIriGetRequestADM is not System or project Admin" in {
+        val permissionIri = perm002_d1.iri
+        responderManager ! DefaultObjectAccessPermissionForIriGetRequestADM(
+          defaultObjectAccessPermissionIri = permissionIri,
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+
+        expectMsg(
+          Failure(ForbiddenException(
+            s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
       }
 
       "return DefaultObjectAccessPermission for project and group" in {
@@ -362,7 +404,7 @@ class PermissionsResponderADMSpec
       }
     }
 
-    "asked to create a default object access permission" should {
+    "ask to create a default object access permission" should {
 
       "create a DefaultObjectAccessPermission for project and group" in {
         responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
@@ -465,7 +507,7 @@ class PermissionsResponderADMSpec
       }
     }
 
-    "asked to get all permissions" should {
+    "ask to get all permissions" should {
 
       "return all permissions for 'image' project " in {
         responderManager ! PermissionsForProjectGetRequestADM(
@@ -496,14 +538,7 @@ class PermissionsResponderADMSpec
       }
     }
 
-    "asked to delete a permission object " should {
-
-      "delete an administrative permission " ignore {}
-
-      "delete a default object access permission " ignore {}
-    }
-
-    "asked for default object access permissions 'string'" should {
+    "ask for default object access permissions 'string'" should {
 
       "return the default object access permissions 'string' for the 'knora-base:LinkObj' resource class (system resource class)" in {
         responderManager ! DefaultObjectAccessPermissionsStringForResourceClassGetADM(
@@ -646,14 +681,16 @@ class PermissionsResponderADMSpec
       }
     }
 
-    "request to get the permission by IRI" should {
+    "ask to get the permission by IRI" should {
       "not return the permission if requesting user does not have permission to see it" in {
+        val permissionIri = perm002_a1.iri
         responderManager ! PermissionByIriGetRequestADM(
           permissionIri = perm002_a1.iri,
           requestingUser = SharedTestDataADM.imagesUser02
         )
         expectMsg(
-          Failure(ForbiddenException(s"Permission ${perm002_a1.iri} can only be queried by system or project admin.")))
+          Failure(ForbiddenException(
+            s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
       }
 
       "return an administrative permission" in {
@@ -673,7 +710,7 @@ class PermissionsResponderADMSpec
       }
     }
 
-    "request to update a permission" should {
+    "ask to update group of a permission" should {
       "update group of an administrative permission" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
         val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
@@ -689,6 +726,22 @@ class PermissionsResponderADMSpec
         val ap = received.administrativePermission
         assert(ap.iri == permissionIri)
         assert(ap.forGroup == newGroupIri)
+      }
+
+      "throw ForbiddenException for PermissionChangeGroupRequestADM if requesting user is not system or project Admin" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
+        responderManager ! PermissionChangeGroupRequestADM(
+          permissionIri = permissionIri,
+          changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
+            forGroup = newGroupIri
+          ),
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+        expectMsg(
+          Failure(ForbiddenException(
+            s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
       }
 
       "update group of a default object access permission" in {
@@ -746,7 +799,25 @@ class PermissionsResponderADMSpec
         assert(doap.forGroup.get == newGroupIri)
         assert(doap.forProperty.isEmpty)
       }
+    }
 
+    "ask to update hasPermissions of a permission" should {
+      "throw ForbiddenException for PermissionChangeHasPermissionsRequestADM if requesting user is not system or project Admin" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
+
+        responderManager ! PermissionChangeHasPermissionsRequestADM(
+          permissionIri = permissionIri,
+          changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
+            hasPermissions = hasPermissions
+          ),
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+        expectMsg(
+          Failure(ForbiddenException(
+            s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
+      }
       "update hasPermissions of an administrative permission" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
         val hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
@@ -788,7 +859,24 @@ class PermissionsResponderADMSpec
         doap.hasPermissions.size should be(2)
         assert(doap.hasPermissions.equals(hasPermissions))
       }
+    }
+    "ask to update resource class of a permission" should {
+      "throw ForbiddenException for PermissionChangeResourceClassRequestADM if requesting user is not system or project Admin" in {
+        val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
+        val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
+        responderManager ! PermissionChangeResourceClassRequestADM(
+          permissionIri = permissionIri,
+          changePermissionResourceClassRequest = ChangePermissionResourceClassApiRequestADM(
+            forResourceClass = resourceClassIri
+          ),
+          requestingUser = SharedTestDataADM.incunabulaMemberUser,
+          apiRequestID = UUID.randomUUID()
+        )
+        expectMsg(
+          Failure(ForbiddenException(
+            s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
+      }
       "update resource class of a default object access permission" in {
         val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
@@ -844,7 +932,8 @@ class PermissionsResponderADMSpec
           Failure(BadRequestException(s"Permission $permissionIri is of type administrative permission. " +
             s"Only a default object access permission defined for a resource class can be updated.")))
       }
-
+    }
+    "ask to update property of a permission" should {
       "not update property of an administrative permission" in {
         val permissionIri = "http://rdfh.ch/permissions/0803/003-a2"
         val propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
@@ -861,7 +950,22 @@ class PermissionsResponderADMSpec
           Failure(BadRequestException(s"Permission $permissionIri is of type administrative permission. " +
             s"Only a default object access permission defined for a property can be updated.")))
       }
+      "throw ForbiddenException for PermissionChangePropertyRequestADM if requesting user is not system or project Admin" in {
+        val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
+        val propertyIri = OntologyConstants.KnoraBase.TextFileValue
 
+        responderManager ! PermissionChangePropertyRequestADM(
+          permissionIri = permissionIri,
+          changePermissionPropertyRequest = ChangePermissionPropertyApiRequestADM(
+            forProperty = propertyIri
+          ),
+          requestingUser = SharedTestDataADM.normalUser,
+          apiRequestID = UUID.randomUUID()
+        )
+        expectMsg(
+          Failure(ForbiddenException(
+            s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
+      }
       "update property of a default object access permission" in {
         val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
         val propertyIri = OntologyConstants.KnoraBase.TextFileValue
@@ -902,7 +1006,7 @@ class PermissionsResponderADMSpec
       }
     }
 
-    "request to delete a permission" should {
+    "ask to delete a permission" should {
       "throw BadRequestException if given IRI is not a permission IRI" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/d1kjhfkj"
         responderManager ! PermissionDeleteRequestADM(
@@ -912,6 +1016,19 @@ class PermissionsResponderADMSpec
         )
         expectMsg(Failure(NotFoundException(s"Permission with given IRI: $permissionIri not found.")))
       }
+
+      "throw ForbiddenException if user requesting PermissionDeleteResponseADM is not a system or project admin" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        responderManager ! PermissionDeleteRequestADM(
+          permissionIri = permissionIri,
+          requestingUser = SharedTestDataADM.imagesUser02,
+          apiRequestID = UUID.randomUUID()
+        )
+        expectMsg(
+          Failure(ForbiddenException(
+            s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
+      }
+
       "erase a permission with given IRI" in {
         val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
         responderManager ! PermissionDeleteRequestADM(

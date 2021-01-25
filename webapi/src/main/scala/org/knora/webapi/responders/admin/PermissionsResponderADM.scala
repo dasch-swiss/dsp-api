@@ -703,6 +703,13 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
     log.debug(s"objectAccessPermissionsForResourceGetV1 - resourceIRI: $resourceIri")
     for {
+      projectIri <- getProjectOfEntity(resourceIri)
+      // Check user's permission for the operation
+      _ = if (!requestingUser.isSystemAdmin
+              && !requestingUser.permissions.isProjectAdmin(projectIri)
+              && !requestingUser.isSystemUser) {
+        throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
+      }
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getObjectAccessPermission(
@@ -749,6 +756,13 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
     log.debug(s"objectAccessPermissionsForValueGetV1 - valueIRI: $valueIri")
     for {
+      projectIri <- getProjectOfEntity(valueIri)
+      // Check user's permission for the operation
+      _ = if (!requestingUser.isSystemAdmin
+              && !requestingUser.permissions.isProjectAdmin(projectIri)
+              && !requestingUser.isSystemUser) {
+        throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
+      }
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getObjectAccessPermission(
@@ -1889,6 +1903,22 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
   /*Helper Methods*/
   /** *************/
   /**
+    * Checks that requesting user has right for the permission operation
+    *
+    * @param requestingUser the [[UserADM]] of the requesting user.
+    * @param projectIri      the IRI of the project the permission is attached to.
+    * @param permissionIri the IRI of the permission.
+    * @throw ForbiddenException if the user is not a project or system admin
+    */
+  def verifyUsersRightForOperation(requestingUser: UserADM, projectIri: IRI, permissionIri: IRI): Unit = {
+    if (!requestingUser.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(projectIri)) {
+
+      throw ForbiddenException(
+        s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")
+    }
+  }
+
+  /**
     * Get a permission.
     *
     * @param permissionIri  the IRI of the permission.
@@ -1927,10 +1957,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         .head
 
       // Before returning the permission check that the requesting user has permission to see it
-      _ = if (!requestingUser.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(projectIri)) {
-        // not a system or project admin
-        throw ForbiddenException(s"Permission $permissionIri can only be queried by system or project admin.")
-      }
+      _ = verifyUsersRightForOperation(requestingUser = requestingUser,
+                                       projectIri = projectIri,
+                                       permissionIri = permissionIri)
 
       permissionType: Option[String] = groupedPermissionsQueryResponse
         .getOrElse(OntologyConstants.Rdf.Type, throw InconsistentRepositoryDataException(s"RDF type is not returned."))
@@ -2060,4 +2089,26 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         errorFun
       }
     } yield ()
+
+  def getProjectOfEntity(entityIri: IRI): Future[IRI] =
+    for {
+      sparqlQueryString <- Future(
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          .getProjectOfEntity(
+            triplestore = settings.triplestoreType,
+            entityIri = entityIri
+          )
+          .toString())
+      response <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      rows: Seq[VariableResultsRow] = response.results.bindings
+      projectIri = if (rows.size == 0) {
+        throw BadRequestException(
+          s"<$entityIri> is not attached to a project, please verify that IRI is of a knora entity.")
+      } else {
+        val projectOption = rows.head.rowMap.get("projectIri")
+        projectOption.getOrElse(throw BadRequestException(s"No Project found for the given <$entityIri>"))
+      }
+
+    } yield projectIri
+
 }

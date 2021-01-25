@@ -358,14 +358,6 @@ case class AdministrativePermissionForIriGetRequestADM(administrativePermissionI
                                                        requestingUser: UserADM,
                                                        apiRequestID: UUID)
     extends PermissionsResponderRequestADM {
-  // Check user's permission for the operation
-  //TODO: should get the project the permission is assigned to and check if the requesting user is the project admin
-  if (!requestingUser.isSystemAdmin
-      && !requestingUser.permissions.isProjectAdminInAnyProject()
-      && !requestingUser.isSystemUser) {
-    // not a system admin
-    throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
-  }
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
   stringFormatter.validatePermissionIri(
@@ -405,7 +397,15 @@ case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupI
   * @param requestingUser
   */
 case class AdministrativePermissionForProjectGroupGetRequestADM(projectIri: IRI, groupIri: IRI, requestingUser: UserADM)
-    extends PermissionsResponderRequestADM
+    extends PermissionsResponderRequestADM {
+  // Check user's permission for the operation
+  if (!requestingUser.isSystemAdmin
+      && !requestingUser.permissions.isProjectAdmin(projectIri)
+      && !requestingUser.isSystemUser) {
+    // not a system admin
+    throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
+  }
+}
 
 /**
   * Create a single [[AdministrativePermissionADM]].
@@ -426,7 +426,7 @@ case class AdministrativePermissionCreateRequestADM(createRequest: CreateAdminis
       && !requestingUser.permissions.isProjectAdmin(createRequest.forProject)
       && !requestingUser.isSystemUser) {
     // not a system admin
-    throw ForbiddenException("A new administrative permission can only be added by a system admin.")
+    throw ForbiddenException("A new administrative permission can only be added by system or project admin.")
   }
 }
 
@@ -439,14 +439,6 @@ case class AdministrativePermissionCreateRequestADM(createRequest: CreateAdminis
   */
 case class ObjectAccessPermissionsForResourceGetADM(resourceIri: IRI, requestingUser: UserADM)
     extends PermissionsResponderRequestADM {
-  // Check user's permission for the operation
-  //TODO: should get the project the resource belongs to and check if the requestingUser is the project admin
-  if (!requestingUser.isSystemAdmin
-      && !requestingUser.permissions.isProjectAdminInAnyProject()
-      && !requestingUser.isSystemUser) {
-    // not a system admin
-    throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
-  }
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
@@ -463,16 +455,6 @@ case class ObjectAccessPermissionsForResourceGetADM(resourceIri: IRI, requesting
   */
 case class ObjectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: UserADM)
     extends PermissionsResponderRequestADM {
-
-  // Check user's permission for the operation
-  //TODO: should get the project the value belongs to and check if the requestingUser is the project admin
-
-  if (!requestingUser.isSystemAdmin
-      && !requestingUser.permissions.isProjectAdminInAnyProject()
-      && !requestingUser.isSystemUser) {
-    // not a system admin
-    throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
-  }
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
@@ -578,13 +560,6 @@ case class DefaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessP
                                                             requestingUser: UserADM,
                                                             apiRequestID: UUID)
     extends PermissionsResponderRequestADM {
-  // Check user's permission for the operation
-  if (!requestingUser.isSystemAdmin
-      && !requestingUser.permissions.isProjectAdminInAnyProject()
-      && !requestingUser.isSystemUser) {
-    // not a system admin
-    throw ForbiddenException("Default object access permissions can only be queried by system and project admin.")
-  }
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
   stringFormatter.validatePermissionIri(
@@ -714,13 +689,6 @@ case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: User
   */
 case class PermissionDeleteRequestADM(permissionIri: IRI, requestingUser: UserADM, apiRequestID: UUID)
     extends PermissionsResponderRequestADM {
-  // Check user's permission for the operation
-  if (!requestingUser.isSystemAdmin
-      && !requestingUser.permissions.isProjectAdminInAnyProject()
-      && !requestingUser.isSystemUser) {
-    // not a system admin
-    throw ForbiddenException("Permission can only be deleted by a system or a project admin.")
-  }
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
   stringFormatter.validatePermissionIri(permissionIri,

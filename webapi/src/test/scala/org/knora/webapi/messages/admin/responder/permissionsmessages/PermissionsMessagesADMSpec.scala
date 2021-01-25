@@ -45,12 +45,23 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       assert(caught.getMessage === "Invalid project IRI")
     }
 
-    "return 'ForbiddenException' if the user requesting AdministrativePermissionsForProjectGetRequestADM is not SystemAdmin" in {
+    "return 'ForbiddenException' if the user requesting AdministrativePermissionsForProjectGetRequestADM is not system or project Admin" in {
       val caught = intercept[ForbiddenException](
         AdministrativePermissionsForProjectGetRequestADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
           requestingUser = SharedTestDataADM.imagesUser02,
           apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === "Administrative permission can only be queried by system and project admin.")
+    }
+
+    "return 'ForbiddenException' if the user requesting AdministrativePermissionForProjectGroupGetRequestADM is not system or project Admin" in {
+      val caught = intercept[ForbiddenException](
+        AdministrativePermissionForProjectGroupGetRequestADM(
+          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          groupIri = OntologyConstants.KnoraAdmin.ProjectMember,
+          requestingUser = SharedTestDataADM.imagesUser02
         )
       )
       assert(caught.getMessage === "Administrative permission can only be queried by system and project admin.")
@@ -68,17 +79,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
     }
 
-    "return 'ForbiddenException' if the user requesting AdministrativePermissionForIriGetRequestADM is not SystemAdmin" in {
-      val caught = intercept[ForbiddenException](
-        AdministrativePermissionForIriGetRequestADM(
-          administrativePermissionIri = "http://rdfh.ch/permissions/permissionIRI",
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(caught.getMessage === "Administrative permission can only be queried by system and project admin.")
-    }
-
     "return 'BadRequest' if the supplied project IRI for AdministrativePermissionForProjectGroupGetADM is not valid" in {
       val caught = intercept[BadRequestException](
         AdministrativePermissionForProjectGroupGetADM(
@@ -90,7 +90,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       assert(caught.getMessage === "Invalid project IRI")
     }
 
-    "return 'ForbiddenException' if the user requesting AdministrativePermissionForProjectGroupGetADM is not SystemAdmin" in {
+    "return 'ForbiddenException' if the user requesting AdministrativePermissionForProjectGroupGetADM is not system or project Admin" in {
       val caught = intercept[ForbiddenException](
         AdministrativePermissionForProjectGroupGetADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
@@ -153,7 +153,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       assert(caught.getMessage === "Permissions needs to be supplied.")
     }
 
-    "return 'ForbiddenException' if the user requesting AdministrativePermissionCreateRequestADM is not SystemAdmin" in {
+    "return 'ForbiddenException' if the user requesting AdministrativePermissionCreateRequestADM is not system or project admin" in {
       val caught = intercept[ForbiddenException](
         AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
@@ -166,7 +166,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "A new administrative permission can only be added by a system admin.")
+      assert(caught.getMessage === "A new administrative permission can only be added by system or project admin.")
     }
 
   }
@@ -182,15 +182,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       // a value IRI is given instead of a resource IRI, exception should be thrown.
       assert(caught.getMessage === s"Invalid resource IRI: ${SharedTestDataADM.customValueIRI}")
     }
-    "return 'ForbiddenException' if the user requesting ObjectAccessPermissionsForResourceGetADM is not SystemAdmin" in {
-      val caught = intercept[ForbiddenException](
-        ObjectAccessPermissionsForResourceGetADM(
-          resourceIri = SharedTestDataADM.customResourceIRI,
-          requestingUser = SharedTestDataADM.anythingUser1
-        )
-      )
-      assert(caught.getMessage === "Object access permissions can only be queried by system and project admin.")
-    }
+
     "return 'BadRequest' if the supplied resource IRI for ObjectAccessPermissionsForValueGetADM is not a valid KnoraValueIri" in {
       val caught = intercept[BadRequestException](
         ObjectAccessPermissionsForValueGetADM(
@@ -200,15 +192,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       )
       // a resource IRI is given instead of a value IRI, exception should be thrown.
       assert(caught.getMessage === s"Invalid value IRI: ${SharedTestDataADM.customResourceIRI}")
-    }
-    "return 'ForbiddenException' if the user requesting ObjectAccessPermissionsForValueGetADM is not SystemAdmin" in {
-      val caught = intercept[ForbiddenException](
-        ObjectAccessPermissionsForValueGetADM(
-          valueIri = SharedTestDataADM.customValueIRI,
-          requestingUser = SharedTestDataADM.anythingUser1
-        )
-      )
-      assert(caught.getMessage === "Object access permissions can only be queried by system and project admin.")
     }
   }
 
@@ -284,6 +267,18 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
         caught.getMessage === s"Either a group, a resource class, a property, or a combination of resource class and property must be given.")
     }
 
+    "return 'ForbiddenException' if requesting user of DefaultObjectAccessPermissionGetRequestADM is not system or project admin" in {
+      val caught = intercept[ForbiddenException](
+        DefaultObjectAccessPermissionGetRequestADM(
+          projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+          groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
+          requestingUser = SharedTestDataADM.imagesUser02
+        )
+      )
+      assert(
+        caught.getMessage === s"Default object access permissions can only be queried by system and project admin.")
+    }
+
     "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionsForProjectGetRequestADM is not valid" in {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionsForProjectGetRequestADM(
@@ -295,7 +290,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       assert(caught.getMessage === "Invalid project IRI")
     }
 
-    "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsForProjectGetRequestADM is not SystemAdmin" in {
+    "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsForProjectGetRequestADM is not System or project Admin" in {
       val caught = intercept[ForbiddenException](
         DefaultObjectAccessPermissionsForProjectGetRequestADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
@@ -318,17 +313,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
     }
 
-    "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionForIriGetRequestADM is not SystemAdmin" in {
-      val caught = intercept[ForbiddenException](
-        DefaultObjectAccessPermissionForIriGetRequestADM(
-          defaultObjectAccessPermissionIri = "http://rdfh.ch/permissions/permissionIRI",
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(caught.getMessage === "Default object access permissions can only be queried by system and project admin.")
-    }
-
     "return 'BadRequest' if the supplied resourceClass IRI for DefaultObjectAccessPermissionsStringForResourceClassGetADM is not valid" in {
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionsStringForResourceClassGetADM(
@@ -342,7 +326,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       assert(caught.getMessage === s"Invalid resource class IRI: ${SharedTestDataADM.customResourceIRI}")
     }
 
-    "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsStringForResourceClassGetADM is not SystemAdmin" in {
+    "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsStringForResourceClassGetADM is not system or project admin" in {
       val caught = intercept[ForbiddenException](
         DefaultObjectAccessPermissionsStringForResourceClassGetADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
@@ -419,7 +403,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       assert(caught.getMessage === s"Invalid property IRI: ${SharedTestDataADM.customValueIRI}")
     }
 
-    "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsStringForPropertyGetADM is not SystemAdmin" in {
+    "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsStringForPropertyGetADM is not system or project admin" in {
       val caught = intercept[ForbiddenException](
         DefaultObjectAccessPermissionsStringForPropertyGetADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
@@ -498,7 +482,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       assert(caught.getMessage === "Permissions needs to be supplied.")
     }
 
-    "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionCreateRequestADM is not SystemAdmin" in {
+    "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionCreateRequestADM is not system or project Admin" in {
       val caught = intercept[ForbiddenException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
@@ -610,7 +594,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       assert(caught.getMessage === "Invalid project IRI")
     }
 
-    "return 'ForbiddenException' if the user requesting PermissionsForProjectGetRequestADM is not SystemAdmin" in {
+    "return 'ForbiddenException' if the user requesting PermissionsForProjectGetRequestADM is not system or project Admin" in {
       val caught = intercept[ForbiddenException](
         PermissionsForProjectGetRequestADM(
           projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
@@ -845,17 +829,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
         )
       )
       assert(caught.getMessage === s"Invalid permission IRI $permissionIri is given.")
-    }
-
-    "return 'ForbiddenException' if the user requesting PermissionDeleteRequestADM is not SystemAdmin" in {
-      val caught = intercept[ForbiddenException](
-        PermissionDeleteRequestADM(
-          permissionIri = "http://rdfh.ch/permissions/permissionIRI",
-          requestingUser = SharedTestDataADM.imagesUser02,
-          apiRequestID = UUID.randomUUID()
-        )
-      )
-      assert(caught.getMessage === "Permission can only be deleted by a system or a project admin.")
     }
   }
 }
