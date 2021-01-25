@@ -136,11 +136,11 @@ object StandoffTagUtilV2 {
             standoffPropertyEntities(standoffTagPropIri).entityInfoContent.predicates
 
           // check if a cardinality exists for the current attribute
-          if (classSpecificProps.get(standoffTagPropIri).isEmpty) {
+          if (!classSpecificProps.contains(standoffTagPropIri)) {
             throw BadRequestException(s"no cardinality defined for attr '${attr.key}'")
           }
 
-          if (propPredicates.get(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri).isDefined) {
+          if (propPredicates.contains(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri)) {
             // property is a data type property
 
             val propDatatypeConstraint = propPredicates(OntologyConstants.KnoraBase.ObjectDatatypeConstraint.toSmartIri)

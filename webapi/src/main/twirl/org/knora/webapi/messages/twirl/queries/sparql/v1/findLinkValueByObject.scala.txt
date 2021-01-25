@@ -1,5 +1,5 @@
 @*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -47,23 +47,22 @@ SELECT ?linkValue ?directLinkExists ?targetResourceClass ?objPred ?objObj
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND(IRI("@subjectIri") AS ?subject)
-    BIND(IRI("@predicateIri") AS ?predicate)
-    BIND(IRI("@{predicateIri}Value") AS ?predicateForLinkValue)
-    BIND(IRI("@objectIri") AS ?object)
+    <@subjectIri> <@{predicateIri}Value> ?linkValue .
 
-    ?subject ?predicateForLinkValue ?linkValue .
     ?linkValue rdf:type knora-base:LinkValue ;
-        @if(!includeDeleted) {
-            knora-base:isDeleted false ;
+        rdf:subject <@subjectIri> ;
+        rdf:predicate <@predicateIri> ;
+        rdf:object <@objectIri> .
+
+    @if(!includeDeleted) {
+        FILTER NOT EXISTS {
+            ?linkValue knora-base:isDeleted true ;
         }
-        rdf:subject ?subject ;
-        rdf:predicate ?predicate ;
-        rdf:object ?object .
+    }
 
     OPTIONAL {
-        ?subject ?predicate ?object .
-        ?object rdf:type ?targetResourceClass .
+        <@subjectIri> <@predicateIri> <@objectIri> .
+        <@objectIri> rdf:type ?targetResourceClass .
         BIND(true AS ?directLinkExists)
     }
 
@@ -76,8 +75,7 @@ WHERE {
     {
         @* Return the project of the resource that contains the value. *@
 
-        ?subject ?predicateForLinkValue ?linkValue . @* TODO: Why do we need this here? (Issue 235) *@
-        ?subject knora-base:attachedToProject ?resourceProject .
+        <@subjectIri> knora-base:attachedToProject ?resourceProject .
 
         BIND(knora-base:attachedToProject AS ?objPred)
         BIND(?resourceProject AS ?objObj)

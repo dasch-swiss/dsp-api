@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -22,6 +22,7 @@ package org.knora.webapi.store.triplestore.http
 import java.io.BufferedInputStream
 import java.net.URI
 import java.nio.file.{Files, Path, Paths, StandardCopyOption}
+import java.nio.charset.StandardCharsets
 import java.util
 
 import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
@@ -604,7 +605,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
         val responseTry: Try[String] = Try {
           maybeResponse = Some(queryHttpClient.execute(targetHost, httpGet, context))
-          EntityUtils.toString(maybeResponse.get.getEntity)
+          EntityUtils.toString(maybeResponse.get.getEntity, StandardCharsets.UTF_8)
         }
 
         maybeResponse.foreach(_.close())
@@ -712,7 +713,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
         val responseTry: Try[String] = Try {
           maybeResponse = Some(queryHttpClient.execute(targetHost, httpGet, context))
-          EntityUtils.toString(maybeResponse.get.getEntity)
+          EntityUtils.toString(maybeResponse.get.getEntity, StandardCharsets.UTF_8)
         }
 
         maybeResponse.foreach(_.close())
@@ -1008,7 +1009,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       val statusCategory: Int = statusCode / 100
 
       if (statusCategory != 2) {
-        Option(response.getEntity).map(responseEntity => EntityUtils.toString(responseEntity)) match {
+        Option(response.getEntity)
+          .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)) match {
           case Some(responseEntityStr) =>
             log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
             throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
@@ -1043,7 +1045,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       case None => ""
 
       case Some(responseEntity) =>
-        EntityUtils.toString(responseEntity)
+        EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)
     }
   }
 
@@ -1055,7 +1057,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
       case Some(responseEntity: HttpEntity) =>
         NamedGraphDataResponse(
-          turtle = EntityUtils.toString(responseEntity)
+          turtle = EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)
         )
     }
   }

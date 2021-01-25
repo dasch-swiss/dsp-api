@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -77,7 +77,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   override lazy val rdfDataObjects: Seq[RdfDataObject] = List(exampleSharedOntology, anythingData)
 
-  private def customLoadTestData(rdfDataObjs: List[RdfDataObject], expectOK: Boolean = false): Unit = {
+  private def loadInvalidTestData(rdfDataObjs: List[RdfDataObject]): Unit = {
     storeManager ! ResetRepositoryContent(rdfDataObjs)
     expectMsg(5 minutes, ResetRepositoryContentACK())
 
@@ -86,9 +86,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       requestingUser = KnoraSystemInstances.Users.SystemUser
     )
 
-    if (expectOK) {
-      expectMsgType[SuccessResponseV2](10.seconds)
-    }
+    val response: SuccessResponseV2 = expectMsgType[SuccessResponseV2](10.seconds)
+    assert(response.message.contains("An error occurred when loading ontologies"))
   }
 
   "The ontology responder v2" should {
@@ -3386,6 +3385,39 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
+    "not add an 0-n cardinality for a boolean property" in {
+      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+      val classInfoContent = ClassInfoContentV2(
+        classIri = classIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          )
+        ),
+        directCardinalities = Map(
+          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(cardinality =
+                                                                                        Cardinality.MayHaveMany,
+                                                                                      guiOrder = Some(0))
+        ),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! AddCardinalitiesToClassRequestV2(
+        classInfoContent = classInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: akka.actor.Status.Failure =>
+          msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      }
+    }
+
     "add a cardinality for the property anything:hasNothingness to the class anything:Nothing" in {
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
@@ -4518,9 +4550,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a class that's missing a cardinality for a link value property" in {
@@ -4530,9 +4560,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a class that's missing a cardinality for a link property" in {
@@ -4542,9 +4570,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a class with a cardinality whose subject class constraint is incompatible with the class" in {
@@ -4554,9 +4580,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a resource class without an rdfs:label" in {
@@ -4566,9 +4590,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a resource property without an rdfs:label" in {
@@ -4578,9 +4600,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a resource class that is also a standoff class" in {
@@ -4590,9 +4610,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a resource class with a cardinality on an undefined property" in {
@@ -4602,9 +4620,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a resource class with a directly defined cardinality on a non-resource property" in {
@@ -4614,9 +4630,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a resource class with a cardinality on knora-base:resourceProperty" in {
@@ -4626,9 +4640,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a resource class with a cardinality on knora-base:hasValue" in {
@@ -4638,9 +4650,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a resource class with a base class that has a Knora IRI but isn't a resource class" in {
@@ -4650,9 +4660,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a standoff class with a cardinality on a resource property" in {
@@ -4662,9 +4670,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a standoff class with a base class that's not a standoff class" in {
@@ -4674,9 +4680,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a property with a subject class constraint of foaf:Person" in {
@@ -4686,9 +4690,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a Knora value property with a subject class constraint of knora-base:TextValue" in {
@@ -4698,9 +4700,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a property with a subject class constraint of salsah-gui:Guielement" in {
@@ -4710,9 +4710,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a property with an object class constraint of foaf:Person" in {
@@ -4722,9 +4720,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a property whose object class constraint is incompatible with its base property" in {
@@ -4734,9 +4730,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a class with cardinalities for a link property and a matching link value property, except that the link property isn't really a link property" in {
@@ -4746,9 +4740,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a class with cardinalities for a link property and a matching link value property, except that the link value property isn't really a link value property" in {
@@ -4758,9 +4750,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a resource property with no object class constraint" ignore { // Consistency checks don't allow this in GraphDB.
@@ -4770,9 +4760,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a resource property with no rdfs:label" in {
@@ -4782,9 +4770,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a property that's a subproperty of both knora-base:hasValue and knora-base:hasLinkTo" in {
@@ -4794,9 +4780,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a property that's a subproperty of knora-base:hasFileValue" in {
@@ -4806,9 +4790,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a resource property with a base property that has a Knora IRI but isn't a resource property" in {
@@ -4818,9 +4800,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a property that contains salsah-gui:guiOrder" ignore { // Consistency checks don't allow this in GraphDB.
@@ -4830,9 +4810,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a cardinality that contains salsah-gui:guiElement" in {
@@ -4842,9 +4820,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load an ontology containing a cardinality that contains salsah-gui:guiAttribute" in {
@@ -4854,9 +4830,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load a project-specific ontology containing an owl:TransitiveProperty" in {
@@ -4866,9 +4840,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load a project-specific ontology with a class that has cardinalities both on property P and on a subproperty of P" in {
@@ -4878,9 +4850,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load a project-specific ontology containing mismatched cardinalities for a link property and a link value property" in {
@@ -4890,9 +4860,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load a project-specific ontology containing an invalid cardinality on a boolean property" in {
@@ -4902,9 +4870,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load a project-specific ontology containing a class with a cardinality on a property from a non-shared ontology in another project" in {
@@ -4914,9 +4880,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load a project-specific ontology containing a class with a base class defined in a non-shared ontology in another project" in {
@@ -4926,9 +4890,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load a project-specific ontology containing a property with a base property defined in a non-shared ontology in another project" in {
@@ -4938,9 +4900,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load a project-specific ontology containing a property whose subject class constraint is defined in a non-shared ontology in another project" in {
@@ -4950,9 +4910,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load a project-specific ontology containing a property whose object class constraint is defined in a non-shared ontology in another project" in {
@@ -4962,9 +4920,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
 
     "not load a project-specific ontology containing a class with two cardinalities that override the same base class cardinality of 1 or 0-1" in {
@@ -4974,9 +4930,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           name = "http://www.knora.org/ontology/invalid"
         ))
 
-      customLoadTestData(invalidOnto)
-      expectMsgType[akka.actor.Status.Failure](timeout).cause
-        .isInstanceOf[InconsistentRepositoryDataException] should ===(true)
+      loadInvalidTestData(invalidOnto)
     }
   }
 }

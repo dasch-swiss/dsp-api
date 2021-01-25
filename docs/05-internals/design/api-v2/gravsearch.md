@@ -1,5 +1,5 @@
 <!---
-Copyright © 2015-2019 the contributors (see Contributors.md).
+Copyright © 2015-2021 the contributors (see Contributors.md).
 
 This file is part of Knora.
 
@@ -18,6 +18,9 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Gravsearch Design
+
+For a detailed overview of Gravsearch, see
+[Gravsearch: Transforming SPARQL to query humanities data](https://doi.org/10.3233/SW-200386).
 
 ## Gravsearch Package
 

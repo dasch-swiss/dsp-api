@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -1944,6 +1944,55 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       // Check that it has the property knora-api:hasStandoffLinkToValue.
       val resourceJsonLDDoc = JsonLDUtil.parseJsonLD(resourceComplexGetResponseAsString)
       assert(resourceJsonLDDoc.body.value.contains(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue))
+    }
+
+    "create a resource containing a text value with multiple standoff links" in {
+      val jsonLDEntity =
+        """{
+          |  "@type": "anything:Thing",
+          |  "anything:hasText": {
+          |  "@type": "knora-api:TextValue",
+          |  "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>\n   This text links to another <a class=\"salsah-link\" href=\"http://rdfh.ch/0001/another-thing\">thing</a> and a <a class=\"salsah-link\" href=\"http://rdfh.ch/0001/a-blue-thing\">blue thing</a>.\n</text>",
+          |   "knora-api:textValueHasMapping": {
+          |                  "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+          |            	}
+          |            },
+          |   "knora-api:attachedToProject": {
+          |                  "@id": "http://rdfh.ch/projects/0001"
+          |                  },
+          |   "rdfs:label": "thing_with_mutiple_standoffLinks",
+          |   "@context": {
+          |                "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+          |                "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |                "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+          |                "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+          |                }
+          | }""".stripMargin
+
+      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password))
+      val response: HttpResponse = singleAwaitingRequest(request)
+      assert(response.status == StatusCodes.OK, response.toString)
+      val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
+      val resourceIri: IRI =
+        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      assert(resourceIri.toSmartIri.isKnoraDataIri)
+
+      // Request the newly created resource in the complex schema, and check that it matches the ontology.
+      val resourceComplexGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password))
+      val resourceComplexGetResponse: HttpResponse = singleAwaitingRequest(resourceComplexGetRequest)
+      val resourceComplexGetResponseAsString = responseToString(resourceComplexGetResponse)
+
+      // Check that it has multiple property knora-api:hasStandoffLinkToValue.
+      val resourceJsonLDDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceComplexGetResponseAsString)
+      val numberOfStandofHasLinkValue = resourceJsonLDDoc.body.value
+        .get(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue)
+        .get
+        .asInstanceOf[JsonLDArray]
+        .value
+        .size
+      assert(numberOfStandofHasLinkValue == 2)
     }
   }
 }

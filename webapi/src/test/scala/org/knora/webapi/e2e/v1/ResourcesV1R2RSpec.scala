@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -19,14 +19,26 @@
 
 package org.knora.webapi.e2e.v1
 
+import java.io.ByteArrayInputStream
+import java.net.URLEncoder
+import java.util.zip.{ZipEntry, ZipInputStream}
+
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.testkit.RouteTestTimeout
+import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.InvalidApiJsonException
+import org.knora.webapi.exceptions.{
+  AssertionException,
+  InvalidApiJsonException,
+  NotFoundException,
+  TriplestoreResponseException
+}
+import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 import org.knora.webapi.messages.v1.responder.resourcemessages.PropsGetForRegionV1
 import org.knora.webapi.messages.v1.responder.resourcemessages.ResourceV1JsonProtocol._
 import org.knora.webapi.routing.v1.{ResourcesRouteV1, ValuesRouteV1}
@@ -38,13 +50,16 @@ import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.scalatest.Assertion
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
+import resource._
 import spray.json._
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.util.Random
+import scala.xml.{Node, NodeSeq, XML}
 
 /**
-  * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
-  * here: http://spray.io/documentation/1.2.2/spray-testkit/
+  * End-to-end test specification for the resources endpoint.
   */
 class ResourcesV1R2RSpec extends R2RSpec {
 
@@ -54,9 +69,9 @@ class ResourcesV1R2RSpec extends R2RSpec {
           |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-  private val resourcesPathV1 = new ResourcesRouteV1(routeData).knoraApiPath
-  private val resourcesPathV2 = new ResourcesRouteV2(routeData).knoraApiPath
-  private val valuesPathV1 = new ValuesRouteV1(routeData).knoraApiPath
+  private val resourcesPathV1 = DSPApiDirectives.handleErrors(system) { new ResourcesRouteV1(routeData).knoraApiPath }
+  private val resourcesPathV2 = DSPApiDirectives.handleErrors(system) { new ResourcesRouteV2(routeData).knoraApiPath }
+  private val valuesPathV1 = DSPApiDirectives.handleErrors(system) { new ValuesRouteV1(routeData).knoraApiPath }
 
   private val superUser = SharedTestDataADM.superUser
   private val superUserEmail = superUser.email
@@ -158,7 +173,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
       case Some(JsString(resourceId)) => resourceId
       case None                       => throw InvalidApiJsonException(s"The response does not contain a field called 'res_id'")
       case other =>
-        throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but ${other}")
+        throw InvalidApiJsonException(s"The response does not contain a res_id of type JsString, but $other")
     }
   }
 
@@ -326,8 +341,8 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
             assert(region2.length == 1, "No region found with Iri 'http://rdfh.ch/0803/b6b64a62b006'")
 
-          case None => assert(false, "No regions given, but 2 were expected")
-          case _    => assert(false, "No valid regions given")
+          case None => throw AssertionException("No regions given, but 2 were expected")
+          case _    => throw AssertionException("No valid regions given")
         }
       }
     }
@@ -454,11 +469,11 @@ class ResourcesV1R2RSpec extends R2RSpec {
       checkSearchWithDifferentNumberOfProperties(search + filter + "&numprops=2")
 
     }
-    /*
-        "create a first resource of type anything:Thing" in {
 
-            val params =
-                s"""
+    "create a first resource of type anything:Thing" in {
+
+      val params =
+        s"""
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A thing",
@@ -478,48 +493,50 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                 """.stripMargin
 
-            // TODO: these properties have been commented out in the thing test ontology because of compatibility with the GUI
-            // "http://www.knora.org/ontology/0001/anything#hasGeoname": [{"geoname_value": "2661602"}]
-            // "http://www.knora.org/ontology/0001/anything#hasGeometry": [{"geom_value":"{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"}],
+      // TODO: these properties have been commented out in the thing test ontology because of compatibility with the GUI
+      // "http://www.knora.org/ontology/0001/anything#hasGeoname": [{"geoname_value": "2661602"}]
+      // "http://www.knora.org/ontology/0001/anything#hasGeometry": [{"geom_value":"{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.5516074450084602,\"y\":0.4444444444444444},{\"x\":0.2791878172588832,\"y\":0.5}],\"type\":\"rectangle\",\"original_index\":0}"}],
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
+      Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
 
-                val resId = getResIriFromJsonResponse(response)
+        val resId = getResIriFromJsonResponse(response)
 
-                firstThingIri.set(resId)
+        firstThingIri.set(resId)
+      }
+    }
+
+    "get the created resource and check its standoff in the response" in {
+
+      Get("/v1/resources/" + URLEncoder.encode(firstThingIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+
+        assert(status == StatusCodes.OK, response.toString)
+
+        val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
+
+        val xml: String = text match {
+          case vals: JsArray =>
+            vals.elements.head.asJsObject.fields("xml") match {
+              case JsString(xml: String) => xml
+              case _                     => throw new InvalidApiJsonException("member 'xml' not given")
             }
+          case _ =>
+            throw new InvalidApiJsonException("values is not an array")
         }
 
-        "get the created resource and check its standoff in the response" in {
+        // Compare the original XML with the regenerated XML.
+        val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xml1)).withTest(Input.fromString(xml)).build()
 
-            Get("/v1/resources/" + URLEncoder.encode(firstThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+        xmlDiff.hasDifferences should be(false)
+      }
+    }
 
-                assert(status == StatusCodes.OK, response.toString)
+    "create a new text value for the first thing resource" in {
 
-                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
-
-                val xml: String = text match {
-                    case vals: JsArray =>
-                        vals.elements.head.asJsObject.fields("xml") match {
-                            case JsString(xml: String) => xml
-                            case _ => throw new InvalidApiJsonException("member 'xml' not given")
-                        }
-                    case _ =>
-                        throw new InvalidApiJsonException("values is not an array")
-                }
-
-                // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xml1)).withTest(Input.fromString(xml)).build()
-
-                xmlDiff.hasDifferences should be(false)
-            }
-        }
-
-        "create a new text value for the first thing resource" in {
-
-            val newValueParams =
-                s"""
+      val newValueParams =
+        s"""
                    |{
                    |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "res_id": "${firstThingIri.get}",
@@ -531,38 +548,40 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPathV1 ~> check {
+      Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPathV1 ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
 
-                val xml = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
-                    case Some(value: JsObject) => value.fields.get("xml") match {
-                        case Some(JsString(xml: String)) => xml
-                        case _ => throw new InvalidApiJsonException("member 'xml' not given")
-                    }
-                    case _ => throw new InvalidApiJsonException("member 'value' not given")
-                }
-
-                // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xml2)).withTest(Input.fromString(xml)).build()
-
-                xmlDiff.hasDifferences should be(false)
-
-                val resId = getNewValueIriFromJsonResponse(response)
-
-                firstTextValueIRI.set(resId)
+        val xml = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
+          case Some(value: JsObject) =>
+            value.fields.get("xml") match {
+              case Some(JsString(xml: String)) => xml
+              case _                           => throw new InvalidApiJsonException("member 'xml' not given")
             }
+          case _ => throw new InvalidApiJsonException("member 'value' not given")
         }
 
-        "change the created text value above for the first thing resource so it has a standoff link to incunabulaBookBiechlin" in {
+        // Compare the original XML with the regenerated XML.
+        val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xml2)).withTest(Input.fromString(xml)).build()
 
-            val xml =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+        xmlDiff.hasDifferences should be(false)
+
+        val resId = getNewValueIriFromJsonResponse(response)
+
+        firstTextValueIRI.set(resId)
+      }
+    }
+
+    "change the created text value above for the first thing resource so it has a standoff link to incunabulaBookBiechlin" in {
+
+      val xml =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<text>a <u>new</u> value with a standoff <a class="salsah-link" href="$incunabulaBookBiechlin">link</a></text>
                  """.stripMargin
 
-            val newValueParams =
-                s"""
+      val newValueParams =
+        s"""
                    |{
                    |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "richtext_value": {
@@ -572,64 +591,62 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Put("/v1/values/" + URLEncoder.encode(firstTextValueIRI.get, "UTF-8"), HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPathV1 ~> check {
+      Put("/v1/values/" + URLEncoder.encode(firstTextValueIRI.get, "UTF-8"),
+          HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPathV1 ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
 
-                val resId = getNewValueIriFromJsonResponse(response)
+        val resId = getNewValueIriFromJsonResponse(response)
 
-                firstTextValueIRI.set(resId)
-            }
-        }
+        firstTextValueIRI.set(resId)
+      }
+    }
 
-        "make sure that the first thing resource contains a direct standoff link to incunabulaBookBiechlin now" in {
+    "make sure that the first thing resource contains a direct standoff link to incunabulaBookBiechlin now" in {
 
-            val sparqlQuery = getDirectLinksSPARQL(firstThingIri.get)
+      val sparqlQuery = getDirectLinksSPARQL(firstThingIri.get)
 
-            Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+      Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
 
-                case response: SparqlSelectResponse =>
+        case response: SparqlSelectResult =>
+          val ref: Boolean = response.results.bindings.exists { row: VariableResultsRow =>
+            row.rowMap("referredResourceIRI") == incunabulaBookBiechlin
+          }
 
-                    val ref: Boolean = response.results.bindings.exists {
-                        row: VariableResultsRow =>
-                            row.rowMap("referredResourceIRI") == incunabulaBookBiechlin
-                    }
+          assert(ref, s"No direct link to '$incunabulaBookBiechlin' found")
 
-                    assert(ref, s"No direct link to '$incunabulaBookBiechlin' found")
+        case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
+      }
+    }
 
-                case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
-            }
-        }
+    "check that the first thing resource's standoff link reification has the correct reference count" in {
 
-        "check that the first thing resource's standoff link reification has the correct reference count" in {
+      val sparqlQuery = getRefCountsSPARQL(firstThingIri.get)
 
-            val sparqlQuery = getRefCountsSPARQL(firstThingIri.get)
+      Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
 
-            Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+        case response: SparqlSelectResult =>
+          val refCnt: Boolean = response.results.bindings.exists { row: VariableResultsRow =>
+            row.rowMap("object") == incunabulaBookBiechlin &&
+            row.rowMap("refCnt").toInt == 1
+          }
 
-                case response: SparqlSelectResponse =>
+          assert(refCnt, s"Ref count for '$incunabulaBookBiechlin' should be 1")
 
-                    val refCnt: Boolean = response.results.bindings.exists {
-                        row: VariableResultsRow =>
-                            row.rowMap("object") == incunabulaBookBiechlin &&
-                                row.rowMap("refCnt").toInt == 1
-                    }
+        case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
+      }
+    }
 
-                    assert(refCnt, s"Ref count for '$incunabulaBookBiechlin' should be 1")
+    "create a second resource of type anything:Thing linking to the first thing via standoff" in {
 
-                case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
-            }
-        }
-
-        "create a second resource of type anything:Thing linking to the first thing via standoff" in {
-
-            val xml =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+      val xml =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<text>This text <a class="salsah-link" href="${firstThingIri.get}">links</a> to a thing</text>
                  """.stripMargin
 
-            val params =
-                s"""
+      val params =
+        s"""
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
@@ -647,102 +664,107 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+      Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
 
-                val resId = getResIriFromJsonResponse(response)
+        val resId = getResIriFromJsonResponse(response)
 
-                secondThingIri.set(resId)
+        secondThingIri.set(resId)
+      }
+    }
+
+    "get the second resource of type anything:Thing, containing the correct standoff link" in {
+
+      Get("/v1/resources/" + URLEncoder.encode(secondThingIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+
+        val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
+
+        val xmlString: String = text match {
+          case vals: JsArray =>
+            vals.elements.head.asJsObject.fields("xml") match {
+              case JsString(xml: String) => xml
+              case _                     => throw new InvalidApiJsonException("member 'xml' not given")
             }
+          case _ =>
+            throw new InvalidApiJsonException("values is not an array")
         }
 
-        "get the second resource of type anything:Thing, containing the correct standoff link" in {
+        // make sure that the xml contains a link to "firstThingIri"
+        val xml = XML.loadString(xmlString)
 
-            Get("/v1/resources/" + URLEncoder.encode(secondThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
+        val link: NodeSeq = xml \ "a"
 
-                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
+        assert(link.nonEmpty)
 
-                val xmlString: String = text match {
-                    case vals: JsArray =>
-                        vals.elements.head.asJsObject.fields("xml") match {
-                            case JsString(xml: String) => xml
-                            case _ => throw new InvalidApiJsonException("member 'xml' not given")
-                        }
-                    case _ =>
-                        throw new InvalidApiJsonException("values is not an array")
-                }
+        val target: Seq[Node] = link.head.attributes("href")
 
-                // make sure that the xml contains a link to "firstThingIri"
-                val xml = XML.loadString(xmlString)
+        assert(target.nonEmpty && target.head.text == firstThingIri.get)
+      }
+    }
 
-                val link: NodeSeq = xml \ "a"
+    "get the first thing resource that is referred to by the second thing resource" in {
 
-                assert(link.nonEmpty)
+      Get("/v1/resources/" + URLEncoder.encode(firstThingIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-                val target: Seq[Node] = link.head.attributes("href")
+        assert(status == StatusCodes.OK, response.toString)
 
-                assert(target.nonEmpty && target.head.text == firstThingIri.get)
-            }
+        // check if this resource is referred to by the second thing resource
+        val incoming = AkkaHttpUtils.httpResponseToJson(response).fields.get("incoming") match {
+          case Some(incomingRefs: JsArray) => incomingRefs
+          case None                        => throw InvalidApiJsonException(s"The response does not contain a field called 'incoming'")
+          case other =>
+            throw InvalidApiJsonException(s"The response does not contain a res_id of type JsObject, but $other")
         }
 
-        "get the first thing resource that is referred to by the second thing resource" in {
-
-            Get("/v1/resources/" + URLEncoder.encode(firstThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
-
-                assert(status == StatusCodes.OK, response.toString)
-
-                // check if this resource is referred to by the second thing resource
-                val incoming = AkkaHttpUtils.httpResponseToJson(response).fields.get("incoming") match {
-                    case Some(incomingRefs: JsArray) => incomingRefs
-                    case None => throw InvalidApiJsonException(s"The response does not contain a field called 'incoming'")
-                    case other => throw InvalidApiJsonException(s"The response does not contain a res_id of type JsObject, but $other")
-                }
-
-                val firstElement = incoming.elements.headOption match {
-                    case Some(incomingRef: JsObject) => incomingRef
-                    case None => throw NotFoundException("Field 'incoming' is empty, but one incoming reference is expected")
-                    case other => throw InvalidApiJsonException("First element in 'incoming' is not a JsObject")
-                }
-
-                firstElement.fields.get("ext_res_id") match {
-                    case Some(extResObj: JsObject) =>
-                        // get the Iri of the referring resource
-                        val idJsString = extResObj.fields.getOrElse("id", throw InvalidApiJsonException("No member 'id' given"))
-
-                        // get the Iri of the property pointing to this resource
-                        val propIriJsString = extResObj.fields.getOrElse("pid", throw InvalidApiJsonException("No member 'pid' given"))
-
-                        idJsString match {
-                            case JsString(id) =>
-                                assert(id == secondThingIri.get, "This resource should be referred to by the second thing resource")
-                            case other => throw InvalidApiJsonException("Id is not a JsString")
-                        }
-
-                        propIriJsString match {
-                            case JsString(pid) =>
-                                assert(pid == OntologyConstants.KnoraBase.HasStandoffLinkTo, s"This resource should be referred to by ${OntologyConstants.KnoraBase.HasStandoffLinkTo}")
-                            case other => throw InvalidApiJsonException("pid is not a JsString")
-                        }
-
-
-                    case None => throw InvalidApiJsonException("Element in 'incoming' does not have a member 'ext_res_id'")
-                    case other => throw InvalidApiJsonException("Element in 'incoming' is not a JsObject")
-                }
-            }
+        val firstElement = incoming.elements.headOption match {
+          case Some(incomingRef: JsObject) => incomingRef
+          case None                        => throw NotFoundException("Field 'incoming' is empty, but one incoming reference is expected")
+          case _                           => throw InvalidApiJsonException("First element in 'incoming' is not a JsObject")
         }
 
-        "not create a resource of type thing with an invalid standoff tag name" in {
+        firstElement.fields.get("ext_res_id") match {
+          case Some(extResObj: JsObject) =>
+            // get the Iri of the referring resource
+            val idJsString = extResObj.fields.getOrElse("id", throw InvalidApiJsonException("No member 'id' given"))
 
-            // use a tag name that is not defined in the standard mapping ("trong" instead of "strong")
-            val xml =
-                """<?xml version="1.0" encoding="UTF-8"?>
+            // get the Iri of the property pointing to this resource
+            val propIriJsString =
+              extResObj.fields.getOrElse("pid", throw InvalidApiJsonException("No member 'pid' given"))
+
+            idJsString match {
+              case JsString(id) =>
+                assert(id == secondThingIri.get, "This resource should be referred to by the second thing resource")
+              case _ => throw InvalidApiJsonException("Id is not a JsString")
+            }
+
+            propIriJsString match {
+              case JsString(pid) =>
+                assert(pid == OntologyConstants.KnoraBase.HasStandoffLinkTo,
+                       s"This resource should be referred to by ${OntologyConstants.KnoraBase.HasStandoffLinkTo}")
+              case _ => throw InvalidApiJsonException("pid is not a JsString")
+            }
+
+          case None => throw InvalidApiJsonException("Element in 'incoming' does not have a member 'ext_res_id'")
+          case _    => throw InvalidApiJsonException("Element in 'incoming' is not a JsObject")
+        }
+      }
+    }
+
+    "not create a resource of type thing with an invalid standoff tag name" in {
+
+      // use a tag name that is not defined in the standard mapping ("trong" instead of "strong")
+      val xml =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<text>This <trong>text</trong></text>
                 """.stripMargin
 
-            val params =
-                s"""
+      val params =
+        s"""
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
@@ -760,22 +782,23 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+      Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-                // the route should reject the request because `trong` is not a tag name supported by the standard mapping
-                assert(status == StatusCodes.BadRequest, response.toString)
-            }
-        }
+        // the route should reject the request because `trong` is not a tag name supported by the standard mapping
+        assert(status == StatusCodes.BadRequest, response.toString)
+      }
+    }
 
-        "not create a resource of type thing submitting a wrong standoff link" in {
+    "not create a resource of type thing submitting a wrong standoff link" in {
 
-            val xml =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+      val xml =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<text><u><strong>This</strong></u> <u>text</u> <a class="salsah-link" href="$incunabulaBookQuadra">links</a> to <a class="salsah-link" href="http://rdfh.ch/0803/9935159f">two</a> things</text>
                  """.stripMargin
 
-            val params =
-                s"""
+      val params =
+        s"""
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
@@ -794,30 +817,30 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |
                  """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+      Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-                //println(response)
+        //println(response)
 
-                // the route should reject the request because an IRI is wrong (formally valid though)
-                assert(status == StatusCodes.NotFound, response.toString)
-            }
-        }
+        // the route should reject the request because an IRI is wrong (formally valid though)
+        assert(status == StatusCodes.NotFound, response.toString)
+      }
+    }
 
+    "create a third resource of type thing with two standoff links to the same resource and a standoff link to another one" in {
 
-        "create a third resource of type thing with two standoff links to the same resource and a standoff link to another one" in {
-
-            val firstXML =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+      val firstXML =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<text><u><strong>This</strong></u> <u>text</u> <a class="salsah-link" href="$incunabulaBookQuadra">links</a> to a thing</text>
                  """.stripMargin
 
-            val secondXML =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+      val secondXML =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<text><u><strong>This</strong></u> <u>text</u> <a class="salsah-link" href="$incunabulaBookBiechlin">links</a> to the same thing <a class="salsah-link" href="$incunabulaBookBiechlin">twice</a> and to another <a class="salsah-link" href="$incunabulaBookQuadra">thing</a></text>
                  """.stripMargin
 
-            val params =
-                s"""
+      val params =
+        s"""
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
@@ -835,87 +858,82 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+      Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
 
-                val resId = getResIriFromJsonResponse(response)
+        val resId = getResIriFromJsonResponse(response)
 
-                thirdThingIri.set(resId)
-            }
-        }
+        thirdThingIri.set(resId)
+      }
+    }
 
-        "check that the third thing resource has two direct standoff links" in {
+    "check that the third thing resource has two direct standoff links" in {
 
-            val sparqlQuery = getDirectLinksSPARQL(thirdThingIri.get)
+      val sparqlQuery = getDirectLinksSPARQL(thirdThingIri.get)
 
-            Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+      Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
 
-                case response: SparqlSelectResponse =>
+        case response: SparqlSelectResult =>
+          val ref1: Boolean = response.results.bindings.exists { row: VariableResultsRow =>
+            row.rowMap("referredResourceIRI") == incunabulaBookQuadra
+          }
 
-                    val ref1: Boolean = response.results.bindings.exists {
-                        row: VariableResultsRow =>
-                            row.rowMap("referredResourceIRI") == incunabulaBookQuadra
-                    }
+          val ref2: Boolean = response.results.bindings.exists { row: VariableResultsRow =>
+            row.rowMap("referredResourceIRI") == incunabulaBookBiechlin
+          }
 
-                    val ref2: Boolean = response.results.bindings.exists {
-                        row: VariableResultsRow =>
-                            row.rowMap("referredResourceIRI") == incunabulaBookBiechlin
-                    }
+          assert(ref1, s"No direct link to '$incunabulaBookQuadra' found")
 
-                    assert(ref1, s"No direct link to '$incunabulaBookQuadra' found")
+          assert(ref2, s"No direct link to '$incunabulaBookBiechlin' found")
 
-                    assert(ref2, s"No direct link to '$incunabulaBookBiechlin' found")
+        case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
+      }
+    }
 
-                case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
-            }
-        }
+    "check that the third thing resource's standoff link reifications have the correct reference counts" in {
 
-        "check that the third thing resource's standoff link reifications have the correct reference counts" in {
+      val sparqlQuery = getRefCountsSPARQL(thirdThingIri.get)
 
-            val sparqlQuery = getRefCountsSPARQL(thirdThingIri.get)
+      Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
 
-            Await.result(storeManager ? SparqlSelectRequest(sparqlQuery), 30.seconds) match {
+        case response: SparqlSelectResult =>
+          val refCnt1: Boolean = response.results.bindings.exists { row: VariableResultsRow =>
+            row.rowMap("object") == incunabulaBookQuadra &&
+            row.rowMap("refCnt").toInt == 2
+          }
 
-                case response: SparqlSelectResponse =>
+          val refCnt2: Boolean = response.results.bindings.exists { row: VariableResultsRow =>
+            row.rowMap("object") == incunabulaBookBiechlin &&
+            row.rowMap("refCnt").toInt == 1
+          }
 
-                    val refCnt1: Boolean = response.results.bindings.exists {
-                        row: VariableResultsRow =>
-                            row.rowMap("object") == incunabulaBookQuadra &&
-                                row.rowMap("refCnt").toInt == 2
-                    }
+          assert(refCnt1, s"Ref count for '$incunabulaBookQuadra' should be 2")
 
-                    val refCnt2: Boolean = response.results.bindings.exists {
-                        row: VariableResultsRow =>
-                            row.rowMap("object") == incunabulaBookBiechlin &&
-                                row.rowMap("refCnt").toInt == 1
-                    }
+          assert(refCnt2, s"Ref count for '$incunabulaBookBiechlin' should be 1")
 
-                    assert(refCnt1, s"Ref count for '$incunabulaBookQuadra' should be 2")
+        case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
+      }
+    }
 
-                    assert(refCnt2, s"Ref count for '$incunabulaBookBiechlin' should be 1")
+    "mark a resource as deleted" in {
 
-                case _ => throw TriplestoreResponseException("Expected a SparqlSelectResponse")
-            }
-        }
+      Delete("/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F9d626dc76c03?deleteComment=deleted%20for%20testing") ~> addCredentials(
+        BasicHttpCredentials(incunabulaUserEmail2, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+      }
+    }
 
-        "mark a resource as deleted" in {
+    "create a fourth resource of type anything:Thing with a hyperlink in standoff" in {
 
-            Delete("/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F9d626dc76c03?deleteComment=deleted%20for%20testing") ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail2, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
-            }
-        }
-
-
-        "create a fourth resource of type anything:Thing with a hyperlink in standoff" in {
-
-            val xml =
-                """<?xml version="1.0" encoding="UTF-8"?>
+      val xml =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<text>This text links to <a href="http://www.google.ch">Google</a>.</text>
                 """.stripMargin
 
-            val params =
-                s"""
+      val params =
+        s"""
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
@@ -933,53 +951,54 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+      Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
 
-                val resId = getResIriFromJsonResponse(response)
+        val resId = getResIriFromJsonResponse(response)
 
-                fourthThingIri.set(resId)
+        fourthThingIri.set(resId)
+      }
+    }
+
+    "get the fourth resource of type anything:Thing, containing the hyperlink in standoff" in {
+
+      Get("/v1/resources/" + URLEncoder.encode(fourthThingIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+
+        val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
+
+        val xmlString: String = text match {
+          case vals: JsArray =>
+            vals.elements.head.asJsObject.fields("xml") match {
+              case JsString(xml: String) => xml
+              case _                     => throw new InvalidApiJsonException("member 'xml' not given")
             }
+          case _ =>
+            throw new InvalidApiJsonException("values is not an array")
         }
 
-        "get the fourth resource of type anything:Thing, containing the hyperlink in standoff" in {
+        // make sure that the xml contains a link to http://www.google.ch
+        val xml = XML.loadString(xmlString)
 
-            Get("/v1/resources/" + URLEncoder.encode(fourthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
+        val link: NodeSeq = xml \ "a"
 
-                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
+        assert(link.nonEmpty)
 
-                val xmlString: String = text match {
-                    case vals: JsArray =>
-                        vals.elements.head.asJsObject.fields("xml") match {
-                            case JsString(xml: String) => xml
-                            case _ => throw new InvalidApiJsonException("member 'xml' not given")
-                        }
-                    case _ =>
-                        throw new InvalidApiJsonException("values is not an array")
-                }
+        val target: Seq[Node] = link.head.attributes("href")
 
-                // make sure that the xml contains a link to http://www.google.ch
-                val xml = XML.loadString(xmlString)
+        assert(target.nonEmpty && target.head.text == "http://www.google.ch")
+      }
+    }
 
-                val link: NodeSeq = xml \ "a"
+    "create a fifth resource of type anything:Thing with various standoff markup including internal links and hyperlinks" in {
 
-                assert(link.nonEmpty)
+      // xml3 contains a link to google.ch and to incunabulaBookBiechlin
 
-                val target: Seq[Node] = link.head.attributes("href")
-
-                assert(target.nonEmpty && target.head.text == "http://www.google.ch")
-            }
-        }
-
-
-        "create a fifth resource of type anything:Thing with various standoff markup including internal links and hyperlinks" in {
-
-            // xml3 contains a link to google.ch and to incunabulaBookBiechlin
-
-            val params =
-                s"""
+      val params =
+        s"""
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
@@ -997,66 +1016,68 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+      Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
 
-                val resId = getResIriFromJsonResponse(response)
+        val resId = getResIriFromJsonResponse(response)
 
-                fifthThingIri.set(resId)
+        fifthThingIri.set(resId)
+      }
+    }
+
+    "get the fifth resource of type anything:Thing, containing various standoff markup" in {
+
+      Get("/v1/resources/" + URLEncoder.encode(fifthThingIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+
+        val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
+
+        val xmlString: String = text match {
+          case vals: JsArray =>
+            vals.elements.head.asJsObject.fields("xml") match {
+              case JsString(xml: String) => xml
+              case _                     => throw new InvalidApiJsonException("member 'xml' not given")
             }
+          case _ =>
+            throw new InvalidApiJsonException("values is not an array")
         }
 
-        "get the fifth resource of type anything:Thing, containing various standoff markup" in {
+        // make sure that the correct standoff links and references
+        // xml3 contains a link to google.ch and to incunabulaBookBiechlin
 
-            Get("/v1/resources/" + URLEncoder.encode(fifthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
+        val xml = XML.loadString(xmlString)
 
-                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
+        val links: NodeSeq = xml \ "a"
 
-                val xmlString: String = text match {
-                    case vals: JsArray =>
-                        vals.elements.head.asJsObject.fields("xml") match {
-                            case JsString(xml: String) => xml
-                            case _ => throw new InvalidApiJsonException("member 'xml' not given")
-                        }
-                    case _ =>
-                        throw new InvalidApiJsonException("values is not an array")
-                }
+        // there should be two links
+        assert(links.length == 2)
 
-                // make sure that the correct standoff links and references
-                // xml3 contains a link to google.ch and to incunabulaBookBiechlin
+        assert(links.head.attributes.asAttrMap.keySet.size == 1) // The URL has no class attribute
+        val linkToGoogle: Seq[Node] = links.head.attributes("href")
 
-                val xml = XML.loadString(xmlString)
+        assert(linkToGoogle.nonEmpty && linkToGoogle.head.text == "http://www.google.ch")
 
-                val links: NodeSeq = xml \ "a"
+        assert(links(1).attributes.asAttrMap("class") == "salsah-link") // The link to a resource IRI has class="salsah-link"
+        val linkKnoraResource: Seq[Node] = links(1).attributes("href")
 
-                // there should be two links
-                assert(links.length == 2)
+        assert(linkKnoraResource.nonEmpty && linkKnoraResource.head.text == incunabulaBookBiechlin)
 
-                assert(links.head.attributes.asAttrMap.keySet.size == 1) // The URL has no class attribute
-                val linkToGoogle: Seq[Node] = links.head.attributes("href")
+        // Compare the original XML with the regenerated XML.
+        val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xmlString)).withTest(Input.fromString(xml3)).build()
 
-                assert(linkToGoogle.nonEmpty && linkToGoogle.head.text == "http://www.google.ch")
+        xmlDiff.hasDifferences should be(false)
+      }
+    }
 
-                assert(links(1).attributes.asAttrMap("class") == "salsah-link") // The link to a resource IRI has class="salsah-link"
-                val linkKnoraResource: Seq[Node] = links(1).attributes("href")
+    "create a sixth resource of type anything:Thing with internal links to two different resources" in {
 
-                assert(linkKnoraResource.nonEmpty && linkKnoraResource.head.text == incunabulaBookBiechlin)
+      // xml4 contains a link to google.ch, to incunabulaBookBiechlin and to incunabulaBookQuadra
 
-                // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xmlString)).withTest(Input.fromString(xml3)).build()
-
-                xmlDiff.hasDifferences should be(false)
-            }
-        }
-
-        "create a sixth resource of type anything:Thing with internal links to two different resources" in {
-
-            // xml4 contains a link to google.ch, to incunabulaBookBiechlin and to incunabulaBookQuadra
-
-            val params =
-                s"""
+      val params =
+        s"""
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
@@ -1074,90 +1095,94 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+      Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
 
-                val resId = getResIriFromJsonResponse(response)
+        val resId = getResIriFromJsonResponse(response)
 
-                sixthThingIri.set(resId)
+        sixthThingIri.set(resId)
+      }
+    }
+
+    "get the sixth resource of type anything:Thing with internal links to two different resources" in {
+
+      Get("/v1/resources/" + URLEncoder.encode(sixthThingIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+
+        val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
+
+        val xmlString: String = text match {
+          case vals: JsArray =>
+            vals.elements.head.asJsObject.fields("xml") match {
+              case JsString(xml: String) => xml
+              case _                     => throw new InvalidApiJsonException("member 'xml' not given")
             }
+          case _ =>
+            throw new InvalidApiJsonException("values is not an array")
         }
 
-        "get the sixth resource of type anything:Thing with internal links to two different resources" in {
+        // make sure that the correct standoff links and references
+        // xml4 contains a link to google.ch, to incunabulaBookBiechlin and to incunabulaBookQuadra
+        val xml = XML.loadString(xmlString)
 
-            Get("/v1/resources/" + URLEncoder.encode(sixthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
+        val links: NodeSeq = xml \ "a"
 
+        // there should be three links
+        assert(links.length == 3)
 
-                val text: JsValue = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText")
+        val linkToGoogle: Seq[Node] = links.head.attributes("href")
 
-                val xmlString: String = text match {
-                    case vals: JsArray =>
-                        vals.elements.head.asJsObject.fields("xml") match {
-                            case JsString(xml: String) => xml
-                            case _ => throw new InvalidApiJsonException("member 'xml' not given")
-                        }
-                    case _ =>
-                        throw new InvalidApiJsonException("values is not an array")
-                }
+        assert(linkToGoogle.nonEmpty && linkToGoogle.head.text == "http://www.google.ch")
 
-                // make sure that the correct standoff links and references
-                // xml4 contains a link to google.ch, to incunabulaBookBiechlin and to incunabulaBookQuadra
-                val xml = XML.loadString(xmlString)
+        val linkKnoraResource: Seq[Node] = links(1).attributes("href")
 
-                val links: NodeSeq = xml \ "a"
+        assert(linkKnoraResource.nonEmpty && linkKnoraResource.head.text == incunabulaBookBiechlin)
 
-                // there should be three links
-                assert(links.length == 3)
+        val linkKnoraResource2: Seq[Node] = links(2).attributes("href")
 
-                val linkToGoogle: Seq[Node] = links.head.attributes("href")
+        assert(linkKnoraResource2.nonEmpty && linkKnoraResource2.head.text == incunabulaBookQuadra)
 
-                assert(linkToGoogle.nonEmpty && linkToGoogle.head.text == "http://www.google.ch")
+        // Compare the original XML with the regenerated XML.
+        val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xmlString)).withTest(Input.fromString(xml4)).build()
 
-                val linkKnoraResource: Seq[Node] = links(1).attributes("href")
+        xmlDiff.hasDifferences should be(false)
+      }
+    }
 
-                assert(linkKnoraResource.nonEmpty && linkKnoraResource.head.text == incunabulaBookBiechlin)
+    "change a resource's label" in {
 
-                val linkKnoraResource2: Seq[Node] = links(2).attributes("href")
+      val newLabel = "my new label"
 
-                assert(linkKnoraResource2.nonEmpty && linkKnoraResource2.head.text == incunabulaBookQuadra)
-
-                // Compare the original XML with the regenerated XML.
-                val xmlDiff: Diff = DiffBuilder.compare(Input.fromString(xmlString)).withTest(Input.fromString(xml4)).build()
-
-                xmlDiff.hasDifferences should be(false)
-            }
-        }
-
-        "change a resource's label" in {
-
-            val newLabel = "my new label"
-
-            val params =
-                s"""
+      val params =
+        s"""
                    |{
                    |    "label": "$newLabel"
                    |}
                  """.stripMargin
 
-            Put("/v1/resources/label/" + URLEncoder.encode("http://rdfh.ch/0803/c5058f3a", "UTF-8"), HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
+      Put("/v1/resources/label/" + URLEncoder.encode("http://rdfh.ch/0803/c5058f3a", "UTF-8"),
+          HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
 
-                val label = AkkaHttpUtils.httpResponseToJson(response).fields.get("label") match {
-                    case Some(JsString(str)) => str
-                    case None => throw InvalidApiJsonException(s"The response does not contain a field called 'label'")
-                    case other => throw InvalidApiJsonException(s"The response does not contain a label of type JsString, but $other")
-                }
-
-                assert(label == newLabel, "label has not been updated correctly")
-            }
+        val label = AkkaHttpUtils.httpResponseToJson(response).fields.get("label") match {
+          case Some(JsString(str)) => str
+          case None                => throw InvalidApiJsonException(s"The response does not contain a field called 'label'")
+          case other =>
+            throw InvalidApiJsonException(s"The response does not contain a label of type JsString, but $other")
         }
 
-        "create a resource of type anything:Thing with a link (containing a comment) to another resource" in {
+        assert(label == newLabel, "label has not been updated correctly")
+      }
+    }
 
-            val params =
-                s"""
+    "create a resource of type anything:Thing with a link (containing a comment) to another resource" in {
+
+      val params =
+        s"""
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A thing with a link value that has a comment",
@@ -1169,45 +1194,49 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    }
                 """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
+      Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
 
-                val resId = getResIriFromJsonResponse(response)
+        val resId = getResIriFromJsonResponse(response)
 
-                seventhThingIri.set(resId)
-            }
-        }
+        seventhThingIri.set(resId)
+      }
+    }
 
-        "get the created resource and check the comment on the link value" in {
+    "get the created resource and check the comment on the link value" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(seventhThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+      Get("/v1/resources/" + URLEncoder.encode(seventhThingIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
 
-                val targetResourceIri: String = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasOtherThing") match {
-                    case vals: JsArray =>
-                        vals.elements.head.asInstanceOf[JsString].value
-                    case _ =>
-                        throw new InvalidApiJsonException("values is not an array")
-                }
+        val targetResourceIri: String =
+          getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasOtherThing") match {
+            case vals: JsArray =>
+              vals.elements.head.asInstanceOf[JsString].value
+            case _ =>
+              throw new InvalidApiJsonException("values is not an array")
+          }
 
-                assert(targetResourceIri == sixthThingIri.get)
+        assert(targetResourceIri == sixthThingIri.get)
 
-                val linkValueComment: String = getCommentsForProp(response, "http://www.knora.org/ontology/0001/anything#hasOtherThing") match {
-                    case vals: JsArray =>
-                        vals.elements.head.asInstanceOf[JsString].value
-                    case _ =>
-                        throw new InvalidApiJsonException("comments is not an array")
-                }
+        val linkValueComment: String =
+          getCommentsForProp(response, "http://www.knora.org/ontology/0001/anything#hasOtherThing") match {
+            case vals: JsArray =>
+              vals.elements.head.asInstanceOf[JsString].value
+            case _ =>
+              throw new InvalidApiJsonException("comments is not an array")
+          }
 
-                assert(linkValueComment == notTheMostBoringComment)
-            }
-        }
+        assert(linkValueComment == notTheMostBoringComment)
+      }
+    }
 
-        "add a simple TextValue to the seventh resource" in {
+    "add a simple TextValue to the seventh resource" in {
 
-            val newValueParams =
-                s"""
+      val newValueParams =
+        s"""
                    |{
                    |    "project_id": "http://rdfh.ch/projects/0001",
                    |    "res_id": "${seventhThingIri.get}",
@@ -1218,26 +1247,28 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-            Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPathV1 ~> check {
+      Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPathV1 ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
 
-                val utf8str = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
-                    case Some(value: JsObject) => value.fields.get("utf8str") match {
-                        case Some(JsString(xml: String)) => xml
-                        case _ => throw new InvalidApiJsonException("member 'utf8str' not given")
-                    }
-                    case _ => throw new InvalidApiJsonException("member 'value' not given")
-                }
-
-                assert(utf8str == "another simple text")
+        val utf8str = AkkaHttpUtils.httpResponseToJson(response).fields.get("value") match {
+          case Some(value: JsObject) =>
+            value.fields.get("utf8str") match {
+              case Some(JsString(xml: String)) => xml
+              case _                           => throw new InvalidApiJsonException("member 'utf8str' not given")
             }
+          case _ => throw new InvalidApiJsonException("member 'value' not given")
         }
 
-        "create eighth resource of type anything:Thing with the date of the murder of Caesar" in {
+        assert(utf8str == "another simple text")
+      }
+    }
 
-            val params =
-                s"""
+    "create eighth resource of type anything:Thing with the date of the murder of Caesar" in {
+
+      val params =
+        s"""
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A thing with a BCE date of the murder of Caesar",
@@ -1248,74 +1279,77 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    }
                 """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
+      Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
 
-                val resId = getResIriFromJsonResponse(response)
+        val resId = getResIriFromJsonResponse(response)
 
-                eighthThingIri.set(resId)
-            }
-        }
+        eighthThingIri.set(resId)
+      }
+    }
 
-        "get the eighth resource and check its date" in {
+    "get the eighth resource and check its date" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(eighthThingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+      Get("/v1/resources/" + URLEncoder.encode(eighthThingIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
 
-                val dateObj: JsObject = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasDate") match {
-                    case vals: JsArray =>
-                        vals.elements.head.asInstanceOf[JsObject]
-                    case _ =>
-                        throw new InvalidApiJsonException("values is not an array")
-                }
+        val dateObj: JsObject =
+          getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasDate") match {
+            case vals: JsArray =>
+              vals.elements.head.asInstanceOf[JsObject]
+            case _ =>
+              throw new InvalidApiJsonException("values is not an array")
+          }
 
-                // expected result:
-                // {"dateval1":"0044-03-15","calendar":"JULIAN","era1":"BCE","dateval2":"0044-03-15","era2":"BCE"}
+        // expected result:
+        // {"dateval1":"0044-03-15","calendar":"JULIAN","era1":"BCE","dateval2":"0044-03-15","era2":"BCE"}
 
-                dateObj.fields.get("dateval1") match {
-                    case Some(JsString(dateval1)) => assert(dateval1 == "0044-03-15")
+        dateObj.fields.get("dateval1") match {
+          case Some(JsString(dateval1)) => assert(dateval1 == "0044-03-15")
 
-                    case None => throw InvalidApiJsonException("No member 'dateval1' given for date value")
+          case None => throw InvalidApiJsonException("No member 'dateval1' given for date value")
 
-                    case _ => throw InvalidApiJsonException("'dateval1' is not a JsString")
-
-                }
-
-                dateObj.fields.get("era1") match {
-                    case Some(JsString(era1)) => assert(era1 == "BCE")
-
-                    case None => throw InvalidApiJsonException("No member 'era1' given for date value")
-
-                    case _ => throw InvalidApiJsonException("'era1' is not a JsString")
-
-                }
-
-                dateObj.fields.get("dateval2") match {
-                    case Some(JsString(dateval1)) => assert(dateval1 == "0044-03-15")
-
-                    case None => throw InvalidApiJsonException("No member 'dateval1' given for date value")
-
-                    case _ => throw InvalidApiJsonException("'dateval1' is not a JsString")
-
-                }
-
-                dateObj.fields.get("era2") match {
-                    case Some(JsString(era2)) => assert(era2 == "BCE")
-
-                    case None => throw InvalidApiJsonException("No member 'era2' given for date value")
-
-                    case _ => throw InvalidApiJsonException("'era2' is not a JsString")
-
-                }
-
-            }
+          case _ => throw InvalidApiJsonException("'dateval1' is not a JsString")
 
         }
 
-        "create resources from an XML import" in {
-            val xmlImport =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+        dateObj.fields.get("era1") match {
+          case Some(JsString(era1)) => assert(era1 == "BCE")
+
+          case None => throw InvalidApiJsonException("No member 'era1' given for date value")
+
+          case _ => throw InvalidApiJsonException("'era1' is not a JsString")
+
+        }
+
+        dateObj.fields.get("dateval2") match {
+          case Some(JsString(dateval1)) => assert(dateval1 == "0044-03-15")
+
+          case None => throw InvalidApiJsonException("No member 'dateval1' given for date value")
+
+          case _ => throw InvalidApiJsonException("'dateval1' is not a JsString")
+
+        }
+
+        dateObj.fields.get("era2") match {
+          case Some(JsString(era2)) => assert(era2 == "BCE")
+
+          case None => throw InvalidApiJsonException("No member 'era2' given for date value")
+
+          case _ => throw InvalidApiJsonException("'era2' is not a JsString")
+
+        }
+
+      }
+
+    }
+
+    "create resources from an XML import" in {
+      val xmlImport =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    |    xsi:schemaLocation="http://api.knora.org/ontology/0801/biblio/xml-import/v1# p0801-biblio.xsd"
@@ -1360,23 +1394,25 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0801-biblio:JournalArticle>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
-                val responseStr: String = responseAs[String]
-                assert(status == StatusCodes.OK, responseStr)
-                responseStr should include("createdResources")
+      Post(s"/v1/resources/xmlimport/$projectIri",
+           HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
+        BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
+        val responseStr: String = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        responseStr should include("createdResources")
 
-                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
-                val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
-                abelAuthorIri.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
-                mathIntelligencerIri.set(createdResources(2).asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
-            }
-        }
+        val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+        val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
+        abelAuthorIri.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
+        mathIntelligencerIri.set(createdResources(2).asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
+      }
+    }
 
-        "reject XML import data that fails schema validation" in {
-            val xmlImport =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+    "reject XML import data that fails schema validation" in {
+      val xmlImport =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    |    xsi:schemaLocation="http://api.knora.org/ontology/0801/biblio/xml-import/v1# p0801-biblio.xsd"
@@ -1420,19 +1456,21 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0801-biblio:JournalArticle>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.BadRequest, response.toString)
-                val responseStr = responseAs[String]
-                responseStr should include("org.xml.sax.SAXParseException")
-                responseStr should include("cvc-pattern-valid")
-            }
-        }
+      Post(s"/v1/resources/xmlimport/$projectIri",
+           HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
+        BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.BadRequest, response.toString)
+        val responseStr = responseAs[String]
+        responseStr should include("org.xml.sax.SAXParseException")
+        responseStr should include("cvc-pattern-valid")
+      }
+    }
 
-        "refer to existing resources in an XML import" in {
-            val xmlImport =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+    "refer to existing resources in an XML import" in {
+      val xmlImport =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0801/biblio/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    |    xsi:schemaLocation="http://api.knora.org/ontology/0801/biblio/xml-import/v1# p0801-biblio.xsd"
@@ -1458,18 +1496,20 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0801-biblio:JournalArticle>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
-                val responseStr = responseAs[String]
-                assert(status == StatusCodes.OK, responseStr)
-                responseStr should include("createdResources")
-            }
-        }
+      Post(s"/v1/resources/xmlimport/$projectIri",
+           HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
+        BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        responseStr should include("createdResources")
+      }
+    }
 
-        "create an anything:Thing with all data types from an XML import" in {
-            val xmlImport =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+    "create an anything:Thing with all data types from an XML import" in {
+      val xmlImport =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
@@ -1492,18 +1532,20 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0001-anything:Thing>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
-                val responseStr = responseAs[String]
-                assert(status == StatusCodes.OK, responseStr)
-                responseStr should include("createdResources")
-            }
-        }
+      Post(s"/v1/resources/xmlimport/$projectIri",
+           HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
+        BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        responseStr should include("createdResources")
+      }
+    }
 
-        "not create an anything:Thing in the incunabula project in a bulk import" in {
-            val xmlImport =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+    "not create an anything:Thing in the incunabula project in a bulk import" in {
+      val xmlImport =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
@@ -1515,18 +1557,20 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0001-anything:Thing>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.BadRequest, response.toString)
-                val responseStr = responseAs[String]
-                responseStr should include("not shared")
-            }
-        }
+      Post(s"/v1/resources/xmlimport/$projectIri",
+           HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
+        BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.BadRequest, response.toString)
+        val responseStr = responseAs[String]
+        responseStr should include("not shared")
+      }
+    }
 
-        "not create a resource in a shared ontologies project in a bulk import" in {
-            val xmlImport =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+    "not create a resource in a shared ontologies project in a bulk import" in {
+      val xmlImport =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/shared/example-box/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    |    xsi:schemaLocation="http://api.knora.org/ontology/shared/example-box/xml-import/v1# p0000-example-box.xsd"
@@ -1538,18 +1582,21 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0000-example-box:Box>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject", "UTF-8")
+      val projectIri =
+        URLEncoder.encode("http://www.knora.org/ontology/knora-admin#DefaultSharedOntologiesProject", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(superUserEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.BadRequest, response.toString)
-                val responseStr = responseAs[String]
-                responseStr should include("Resources cannot be created in project")
-            }
-        }
+      Post(s"/v1/resources/xmlimport/$projectIri",
+           HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
+        BasicHttpCredentials(superUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.BadRequest, response.toString)
+        val responseStr = responseAs[String]
+        responseStr should include("Resources cannot be created in project")
+      }
+    }
 
-        "create a resource in the incunabula project using a class from the default shared ontologies project" in {
-            val xmlImport =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+    "create a resource in the incunabula project using a class from the default shared ontologies project" in {
+      val xmlImport =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/shared/example-box/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    |    xsi:schemaLocation="http://api.knora.org/ontology/shared/example-box/xml-import/v1# p0000-example-box.xsd"
@@ -1561,18 +1608,20 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0000-example-box:Box>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPathV1 ~> check {
-                val responseStr = responseAs[String]
-                assert(status == StatusCodes.OK, responseStr)
-                responseStr should include("createdResources")
-            }
-        }
+      Post(s"/v1/resources/xmlimport/$projectIri",
+           HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
+        BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPathV1 ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        responseStr should include("createdResources")
+      }
+    }
 
-        "use a knora-base property directly in a bulk import" in {
-            val xmlImport =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+    "use a knora-base property directly in a bulk import" in {
+      val xmlImport =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
@@ -1584,96 +1633,101 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0001-anything:ThingWithSeqnum>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
-                val responseStr = responseAs[String]
-                assert(status == StatusCodes.OK, responseStr)
-                responseStr should include("createdResources")
-            }
+      Post(s"/v1/resources/xmlimport/$projectIri",
+           HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
+        BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        responseStr should include("createdResources")
+      }
+    }
+
+    "serve a Zip file containing XML schemas for validating an XML import" in {
+      val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0801/biblio", "UTF-8")
+
+      Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(
+        BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
+        val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
+        val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
+        val zippedFilenames = collection.mutable.Set.empty[String]
+
+        for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
+          var zipEntry: ZipEntry = null
+
+          while ({
+            zipEntry = zipInputStream.getNextEntry
+            zipEntry != null
+          }) {
+            zippedFilenames.add(zipEntry.getName)
+          }
         }
 
-        "serve a Zip file containing XML schemas for validating an XML import" in {
-            val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0801/biblio", "UTF-8")
+        assert(zippedFilenames == Set("p0801-beol.xsd", "p0801-biblio.xsd", "knoraXmlImport.xsd"))
+      }
+    }
 
-            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
-                val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
-                val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
-                val zippedFilenames = collection.mutable.Set.empty[String]
+    "consider inherited cardinalities when generating XML schemas for referenced ontologies in an XML import" in {
+      val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0001/something", "UTF-8")
 
-                for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
-                    var zipEntry: ZipEntry = null
+      Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(
+        BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
+        val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
+        val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
+        val zippedFilenames = collection.mutable.Set.empty[String]
 
-                    while ( {
-                        zipEntry = zipInputStream.getNextEntry
-                        zipEntry != null
-                    }) {
-                        zippedFilenames.add(zipEntry.getName)
-                    }
-                }
+        for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
+          var zipEntry: ZipEntry = null
 
-                assert(zippedFilenames == Set("p0801-beol.xsd", "p0801-biblio.xsd", "knoraXmlImport.xsd"))
-            }
+          while ({
+            zipEntry = zipInputStream.getNextEntry
+            zipEntry != null
+          }) {
+            zippedFilenames.add(zipEntry.getName)
+          }
         }
 
-        "consider inherited cardinalities when generating XML schemas for referenced ontologies in an XML import" in {
-            val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0001/something", "UTF-8")
+        assert(zippedFilenames == Set("p0001-something.xsd", "knoraXmlImport.xsd", "p0001-anything.xsd"))
+      }
+    }
 
-            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
-                val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
-                val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
-                val zippedFilenames = collection.mutable.Set.empty[String]
+    "follow rdfs:subClassOf when generating XML schemas for referenced ontologies in an XML import" in {
+      val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0001/empty-thing", "UTF-8")
 
-                for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
-                    var zipEntry: ZipEntry = null
+      Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(
+        BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
+        val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
+        val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
+        val zippedFilenames = collection.mutable.Set.empty[String]
 
-                    while ( {
-                        zipEntry = zipInputStream.getNextEntry
-                        zipEntry != null
-                    }) {
-                        zippedFilenames.add(zipEntry.getName)
-                    }
-                }
+        for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
+          var zipEntry: ZipEntry = null
 
-                assert(zippedFilenames == Set("p0001-something.xsd", "knoraXmlImport.xsd", "p0001-anything.xsd"))
-            }
+          while ({
+            zipEntry = zipInputStream.getNextEntry
+            zipEntry != null
+          }) {
+            zippedFilenames.add(zipEntry.getName)
+          }
         }
 
-        "follow rdfs:subClassOf when generating XML schemas for referenced ontologies in an XML import" in {
-            val ontologyIri = URLEncoder.encode("http://www.knora.org/ontology/0001/empty-thing", "UTF-8")
+        assert(zippedFilenames == Set("p0001-empty-thing.xsd", "knoraXmlImport.xsd", "p0001-anything.xsd"))
+      }
+    }
 
-            Get(s"/v1/resources/xmlimportschemas/$ontologyIri") ~> addCredentials(BasicHttpCredentials(beolUserEmail, password)) ~> resourcesPathV1 ~> check {
-                val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
-                val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
-                val zippedFilenames = collection.mutable.Set.empty[String]
-
-                for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
-                    var zipEntry: ZipEntry = null
-
-                    while ( {
-                        zipEntry = zipInputStream.getNextEntry
-                        zipEntry != null
-                    }) {
-                        zippedFilenames.add(zipEntry.getName)
-                    }
-                }
-
-                assert(zippedFilenames == Set("p0001-empty-thing.xsd", "knoraXmlImport.xsd", "p0001-anything.xsd"))
-            }
+    "create 10,000 anything:Thing resources with random contents" in {
+      def maybeAppendValue(random: Random, xmlStringBuilder: StringBuilder, value: String): Unit = {
+        if (random.nextBoolean) {
+          xmlStringBuilder.append(value)
         }
+      }
 
-        "create 10,000 anything:Thing resources with random contents" in {
-            def maybeAppendValue(random: Random, xmlStringBuilder: StringBuilder, value: String): Unit = {
-                if (random.nextBoolean) {
-                    xmlStringBuilder.append(value)
-                }
-            }
+      val xmlStringBuilder = new StringBuilder
+      val random = new Random
 
-            val xmlStringBuilder = new StringBuilder
-            val random = new Random
-
-            xmlStringBuilder.append(
-                """<?xml version="1.0" encoding="UTF-8"?>
+      xmlStringBuilder.append(
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                   |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# anything.xsd"
@@ -1682,107 +1736,119 @@ class ResourcesV1R2RSpec extends R2RSpec {
                   |
                 """.stripMargin)
 
-            for (i <- 1 to 10000) {
-                xmlStringBuilder.append(
-                    s"""
+      for (i <- 1 to 10000) {
+        xmlStringBuilder.append(s"""
                        |<p0001-anything:Thing id="test_thing_$i">
                        |<knoraXmlImport:label>This is thing $i</knoraXmlImport:label>
                     """.stripMargin)
 
-                maybeAppendValue(random = random,
-                    xmlStringBuilder = xmlStringBuilder,
-                    value =
-                        """
+        maybeAppendValue(
+          random = random,
+          xmlStringBuilder = xmlStringBuilder,
+          value = """
                           |<p0001-anything:hasBoolean knoraType="boolean_value">true</p0001-anything:hasBoolean>
-                        """.stripMargin)
+                        """.stripMargin
+        )
 
-                maybeAppendValue(random = random,
-                    xmlStringBuilder = xmlStringBuilder,
-                    value =
-                        """
+        maybeAppendValue(
+          random = random,
+          xmlStringBuilder = xmlStringBuilder,
+          value = """
                           |<p0001-anything:hasColor knoraType="color_value">#4169E1</p0001-anything:hasColor>
-                        """.stripMargin)
+                        """.stripMargin
+        )
 
-                maybeAppendValue(random = random,
-                    xmlStringBuilder = xmlStringBuilder,
-                    value =
-                        """
+        maybeAppendValue(
+          random = random,
+          xmlStringBuilder = xmlStringBuilder,
+          value = """
                           |<p0001-anything:hasDate knoraType="date_value">JULIAN:1291-08-01:1291-08-01</p0001-anything:hasDate>
-                        """.stripMargin)
+                        """.stripMargin
+        )
 
-                maybeAppendValue(random = random,
-                    xmlStringBuilder = xmlStringBuilder,
-                    value =
-                        s"""
+        maybeAppendValue(
+          random = random,
+          xmlStringBuilder = xmlStringBuilder,
+          value = s"""
                            |<p0001-anything:hasDecimal knoraType="decimal_value">$i.$i</p0001-anything:hasDecimal>
-                        """.stripMargin)
+                        """.stripMargin
+        )
 
-                maybeAppendValue(random = random,
-                    xmlStringBuilder = xmlStringBuilder,
-                    value =
-                        s"""
+        maybeAppendValue(
+          random = random,
+          xmlStringBuilder = xmlStringBuilder,
+          value = s"""
                            |<p0001-anything:hasInteger knoraType="int_value">$i</p0001-anything:hasInteger>
-                        """.stripMargin)
+                        """.stripMargin
+        )
 
-                maybeAppendValue(random = random,
-                    xmlStringBuilder = xmlStringBuilder,
-                    value =
-                        """
+        maybeAppendValue(
+          random = random,
+          xmlStringBuilder = xmlStringBuilder,
+          value =
+            """
                           |<p0001-anything:hasInterval knoraType="interval_value">1000000000000000.0000000000000001,1000000000000000.0000000000000002</p0001-anything:hasInterval>
-                        """.stripMargin)
+                        """.stripMargin
+        )
 
-                maybeAppendValue(random = random,
-                    xmlStringBuilder = xmlStringBuilder,
-                    value =
-                        """
+        maybeAppendValue(
+          random = random,
+          xmlStringBuilder = xmlStringBuilder,
+          value =
+            """
                           |<p0001-anything:hasListItem knoraType="hlist_value">http://rdfh.ch/lists/0001/treeList10</p0001-anything:hasListItem>
-                        """.stripMargin)
+                        """.stripMargin
+        )
 
-                maybeAppendValue(random = random,
-                    xmlStringBuilder = xmlStringBuilder,
-                    value =
-                        s"""
+        maybeAppendValue(
+          random = random,
+          xmlStringBuilder = xmlStringBuilder,
+          value = s"""
                            |<p0001-anything:hasText knoraType="richtext_value">This is a test in thing $i.</p0001-anything:hasText>
-                        """.stripMargin)
+                        """.stripMargin
+        )
 
-                maybeAppendValue(random = random,
-                    xmlStringBuilder = xmlStringBuilder,
-                    value =
-                        s"""
+        maybeAppendValue(
+          random = random,
+          xmlStringBuilder = xmlStringBuilder,
+          value = s"""
                            |<p0001-anything:hasTimeStamp knoraType="time_value">2019-08-28T15:13:10.968318Z</p0001-anything:hasTimeStamp>
-                        """.stripMargin)
+                        """.stripMargin
+        )
 
-                maybeAppendValue(random = random,
-                    xmlStringBuilder = xmlStringBuilder,
-                    value =
-                        """
+        maybeAppendValue(
+          random = random,
+          xmlStringBuilder = xmlStringBuilder,
+          value = """
                           |<p0001-anything:hasUri knoraType="uri_value">http://dhlab.unibas.ch</p0001-anything:hasUri>
-                        """.stripMargin)
+                        """.stripMargin
+        )
 
-                xmlStringBuilder.append(
-                    """
+        xmlStringBuilder.append("""
                       |</p0001-anything:Thing>
                     """.stripMargin)
-            }
+      }
 
-            xmlStringBuilder.append(
-                """
+      xmlStringBuilder.append("""
                   |</knoraXmlImport:resources>
                 """.stripMargin)
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlStringBuilder.toString)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
-                val responseStr = responseAs[String]
-                assert(status == StatusCodes.OK, responseStr)
-                responseStr should include("createdResources")
-            }
-        }
+      Post(
+        s"/v1/resources/xmlimport/$projectIri",
+        HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlStringBuilder.toString)) ~> addCredentials(
+        BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        responseStr should include("createdResources")
+      }
+    }
 
-        "create a resource of type anything:Thing with textValue which has language" in {
+    "create a resource of type anything:Thing with textValue which has language" in {
 
-            val params =
-                s"""
+      val params =
+        s"""
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "Ein Ding auf deutsch",
@@ -1793,86 +1859,90 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    }
                 """.stripMargin
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
+      Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
 
-                val resId = getResIriFromJsonResponse(response)
+        val resId = getResIriFromJsonResponse(response)
 
-                deutschesDingIri.set(resId)
-            }
-        }
+        deutschesDingIri.set(resId)
+      }
+    }
 
-        "get the deutschesDing Resource and check its textValue" in {
+    "get the deutschesDing Resource and check its textValue" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(deutschesDingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+      Get("/v1/resources/" + URLEncoder.encode(deutschesDingIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
 
-                val textObj: JsObject = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText") match {
-                    case vals: JsArray =>
-                        vals.elements.head.asInstanceOf[JsObject]
-                    case _ =>
-                        throw new InvalidApiJsonException("values is not an array")
-                }
+        val textObj: JsObject =
+          getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText") match {
+            case vals: JsArray =>
+              vals.elements.head.asInstanceOf[JsObject]
+            case _ =>
+              throw new InvalidApiJsonException("values is not an array")
+          }
 
-                textObj.fields.get("utf8str") match {
-                    case Some(JsString(textVal)) => assert(textVal == "Ein deutscher Text")
+        textObj.fields.get("utf8str") match {
+          case Some(JsString(textVal)) => assert(textVal == "Ein deutscher Text")
 
-                    case _ => throw InvalidApiJsonException("'utf8str' is not a JsString")
-
-                }
-
-                textObj.fields.get("language") match {
-                    case Some(JsString(lang)) => assert(lang == "de")
-
-                    case _ => throw InvalidApiJsonException("'lang' is not a JsString")
-
-                }
-
-
-            }
+          case _ => throw InvalidApiJsonException("'utf8str' is not a JsString")
 
         }
 
-        "get the resource created by bulk import and check language of its textValue" in {
+        textObj.fields.get("language") match {
+          case Some(JsString(lang)) => assert(lang == "de")
 
-            Get("/v1/resources/" + URLEncoder.encode(abelAuthorIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
-
-                assert(status == StatusCodes.OK, response.toString)
-
-                val textObj: JsObject = getValuesForProp(response, "http://www.knora.org/ontology/0801/beol#personHasTitle") match {
-                    case vals: JsArray =>
-                        vals.elements.head.asInstanceOf[JsObject]
-                    case _ =>
-                        throw new InvalidApiJsonException("values is not an array")
-                }
-
-                textObj.fields.get("utf8str") match {
-                    case Some(JsString(textVal)) => assert(textVal == "Sir")
-
-                    case _ => throw InvalidApiJsonException("'utf8str' is not a JsString")
-
-                }
-
-                textObj.fields.get("language") match {
-                    case Some(JsString(lang)) => assert(lang == "en")
-
-                    case _ => throw InvalidApiJsonException("'lang' is not a JsString")
-
-                }
-            }
+          case _ => throw InvalidApiJsonException("'lang' is not a JsString")
 
         }
 
-        "create a resource of type anything:Thing with textValueWithStandoff which has language" in {
+      }
 
-            val xml =
-                """<?xml version="1.0" encoding="UTF-8"?>
+    }
+
+    "get the resource created by bulk import and check language of its textValue" in {
+
+      Get("/v1/resources/" + URLEncoder.encode(abelAuthorIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+
+        assert(status == StatusCodes.OK, response.toString)
+
+        val textObj: JsObject =
+          getValuesForProp(response, "http://www.knora.org/ontology/0801/beol#personHasTitle") match {
+            case vals: JsArray =>
+              vals.elements.head.asInstanceOf[JsObject]
+            case _ =>
+              throw new InvalidApiJsonException("values is not an array")
+          }
+
+        textObj.fields.get("utf8str") match {
+          case Some(JsString(textVal)) => assert(textVal == "Sir")
+
+          case _ => throw InvalidApiJsonException("'utf8str' is not a JsString")
+
+        }
+
+        textObj.fields.get("language") match {
+          case Some(JsString(lang)) => assert(lang == "en")
+
+          case _ => throw InvalidApiJsonException("'lang' is not a JsString")
+
+        }
+      }
+
+    }
+
+    "create a resource of type anything:Thing with textValueWithStandoff which has language" in {
+
+      val xml =
+        """<?xml version="1.0" encoding="UTF-8"?>
                   |<text>This text links to <a href="http://www.google.ch">Google</a>.</text>
                 """.stripMargin
 
-            val params =
-                s"""
+      val params =
+        s"""
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
@@ -1883,44 +1953,44 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
+      Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
 
-            Post("/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
+        val resId = getResIriFromJsonResponse(response)
+        standoffLangDingIri.set(resId)
+      }
+    }
 
-                val resId = getResIriFromJsonResponse(response)
-                standoffLangDingIri.set(resId)
-            }
-        }
+    "get the Resource with standoff and language and check its textValue" in {
 
-        "get the Resource with standoff and language and check its textValue" in {
+      Get("/v1/resources/" + URLEncoder.encode(standoffLangDingIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-            Get("/v1/resources/" + URLEncoder.encode(standoffLangDingIri.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
 
-                assert(status == StatusCodes.OK, response.toString)
+        val textObj: JsObject =
+          getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText") match {
+            case vals: JsArray =>
+              vals.elements.head.asInstanceOf[JsObject]
+            case _ =>
+              throw new InvalidApiJsonException("values is not an array")
+          }
 
-                val textObj: JsObject = getValuesForProp(response, "http://www.knora.org/ontology/0001/anything#hasText") match {
-                    case vals: JsArray =>
-                        vals.elements.head.asInstanceOf[JsObject]
-                    case _ =>
-                        throw new InvalidApiJsonException("values is not an array")
-                }
-
-
-                textObj.fields.get("language") match {
-                    case Some(JsString(lang)) => assert(lang == "en")
-                    case None => throw InvalidApiJsonException("'lang' is not specified but expected")
-                    case _ => throw InvalidApiJsonException("'lang' is not a JsString")
-
-                }
-
-
-            }
+        textObj.fields.get("language") match {
+          case Some(JsString(lang)) => assert(lang == "en")
+          case None                 => throw InvalidApiJsonException("'lang' is not specified but expected")
+          case _                    => throw InvalidApiJsonException("'lang' is not a JsString")
 
         }
 
-        "create a string value with chars encoded as entities but without markup in a bulk import" in {
-            val xmlImport =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+      }
+
+    }
+
+    "create a string value with chars encoded as entities but without markup in a bulk import" in {
+      val xmlImport =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
@@ -1932,53 +2002,63 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0001-anything:Thing>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
-                val responseStr = responseAs[String]
+      Post(s"/v1/resources/xmlimport/$projectIri",
+           HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
+        BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
+        val responseStr = responseAs[String]
 
-                assert(status == StatusCodes.OK, responseStr)
-                responseStr should include("createdResources")
+        assert(status == StatusCodes.OK, responseStr)
+        responseStr should include("createdResources")
 
-                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
-                val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
-                thingWithString.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
+        val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+        val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
+        thingWithString.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
 
-            }
-        }
+      }
+    }
 
-        "get the resource created by bulk import and check for entities in string value" in {
+    "get the resource created by bulk import and check for entities in string value" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(thingWithString.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+      Get("/v1/resources/" + URLEncoder.encode(thingWithString.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
 
-                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
-                val stringVal = responseJson.fields("props")
-                    .asInstanceOf[JsObject].fields("http://www.knora.org/ontology/0001/anything#hasText")
-                    .asInstanceOf[JsObject].fields("values")
-                    .asInstanceOf[JsArray].elements.head
-                    .asInstanceOf[JsObject].fields("utf8str").asInstanceOf[JsString].value
+        val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+        val stringVal = responseJson
+          .fields("props")
+          .asInstanceOf[JsObject]
+          .fields("http://www.knora.org/ontology/0001/anything#hasText")
+          .asInstanceOf[JsObject]
+          .fields("values")
+          .asInstanceOf[JsArray]
+          .elements
+          .head
+          .asInstanceOf[JsObject]
+          .fields("utf8str")
+          .asInstanceOf[JsString]
+          .value
 
-                assert(!(stringVal contains "&amp;"))
-                assert(stringVal contains "&")
+        assert(!(stringVal contains "&amp;"))
+        assert(stringVal contains "&")
 
-                assert(!(stringVal contains "&lt;"))
-                assert(stringVal contains "<")
+        assert(!(stringVal contains "&lt;"))
+        assert(stringVal contains "<")
 
-                assert(!(stringVal contains "&gt;"))
-                assert(stringVal contains ">")
+        assert(!(stringVal contains "&gt;"))
+        assert(stringVal contains ">")
 
-                assert(!(stringVal contains "&apos;"))
-                assert(stringVal contains "'")
+        assert(!(stringVal contains "&apos;"))
+        assert(stringVal contains "'")
 
+      }
+    }
 
-            }
-        }
-
-        "create a string value with a newline in a bulk import" in {
-            val xmlImport =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+    "create a string value with a newline in a bulk import" in {
+      val xmlImport =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
@@ -1991,44 +2071,55 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0001-anything:Thing>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
-                val responseStr = responseAs[String]
+      Post(s"/v1/resources/xmlimport/$projectIri",
+           HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
+        BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
+        val responseStr = responseAs[String]
 
-                assert(status == StatusCodes.OK, responseStr)
-                responseStr should include("createdResources")
+        assert(status == StatusCodes.OK, responseStr)
+        responseStr should include("createdResources")
 
-                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
-                val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
-                thingWithString.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
+        val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+        val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
+        thingWithString.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
 
-            }
-        }
+      }
+    }
 
-        "get the resource created by bulk import and check for the newline in the string value" in {
+    "get the resource created by bulk import and check for the newline in the string value" in {
 
-            Get("/v1/resources/" + URLEncoder.encode(thingWithString.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
+      Get("/v1/resources/" + URLEncoder.encode(thingWithString.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV1 ~> check {
 
-                assert(status == StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
 
-                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+        val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
 
-                val stringVal = responseJson.fields("props")
-                    .asInstanceOf[JsObject].fields("http://www.knora.org/ontology/0001/anything#hasText")
-                    .asInstanceOf[JsObject].fields("values")
-                    .asInstanceOf[JsArray].elements.head
-                    .asInstanceOf[JsObject].fields("utf8str").asInstanceOf[JsString].value
+        val stringVal = responseJson
+          .fields("props")
+          .asInstanceOf[JsObject]
+          .fields("http://www.knora.org/ontology/0001/anything#hasText")
+          .asInstanceOf[JsObject]
+          .fields("values")
+          .asInstanceOf[JsArray]
+          .elements
+          .head
+          .asInstanceOf[JsObject]
+          .fields("utf8str")
+          .asInstanceOf[JsString]
+          .value
 
-                assert(!(stringVal contains "\\n"))
-                assert(stringVal contains "\n")
+        assert(!(stringVal contains "\\n"))
+        assert(stringVal contains "\n")
 
-            }
-        }
+      }
+    }
 
-        "create a resource whose label ends in a double quote" in {
-            val xmlImport =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+    "create a resource whose label ends in a double quote" in {
+      val xmlImport =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
@@ -2039,26 +2130,28 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0001-anything:Thing>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
-                val responseStr = responseAs[String]
+      Post(s"/v1/resources/xmlimport/$projectIri",
+           HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
+        BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
+        val responseStr = responseAs[String]
 
-                assert(status == StatusCodes.OK, responseStr)
-                responseStr should include("createdResources")
+        assert(status == StatusCodes.OK, responseStr)
+        responseStr should include("createdResources")
 
-                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
-                val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
-                thingWithString.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
+        val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+        val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
+        thingWithString.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
 
-            }
-        }
+      }
+    }
 
-        "create a resource with a custom creation date in a bulk import" in {
-            val creationDateStr = "2019-01-09T15:45:54.502951Z"
+    "create a resource with a custom creation date in a bulk import" in {
+      val creationDateStr = "2019-01-09T15:45:54.502951Z"
 
-            val xmlImport =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+      val xmlImport =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0001/anything/xml-import/v1#"
                    |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    |    xsi:schemaLocation="http://api.knora.org/ontology/0001/anything/xml-import/v1# p0001-anything.xsd"
@@ -2070,27 +2163,30 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0001-anything:Thing>
                    |</knoraXmlImport:resources>""".stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
-                val responseStr = responseAs[String]
-                responseStr should include("createdResources")
-                val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
-                val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
-                thingWithCreationDate.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
-            }
+      Post(s"/v1/resources/xmlimport/$projectIri",
+           HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
+        BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+        val responseStr = responseAs[String]
+        responseStr should include("createdResources")
+        val responseJson: JsObject = AkkaHttpUtils.httpResponseToJson(response)
+        val createdResources: Seq[JsValue] = responseJson.fields("createdResources").asInstanceOf[JsArray].elements
+        thingWithCreationDate.set(createdResources.head.asJsObject.fields("resourceIri").asInstanceOf[JsString].value)
+      }
 
-            Get("/v2/resourcespreview/" + URLEncoder.encode(thingWithCreationDate.get, "UTF-8")) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV2 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
-                val responseStr = responseAs[String]
-                responseStr should include(creationDateStr)
-            }
-        }
+      Get("/v2/resourcespreview/" + URLEncoder.encode(thingWithCreationDate.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)) ~> resourcesPathV2 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+        val responseStr = responseAs[String]
+        responseStr should include(creationDateStr)
+      }
+    }
 
-        "create a resource belonging to a class in a shared ontology that refers to a property in another shared ontology" in {
-            val xmlImport =
-                s"""<?xml version="1.0" encoding="UTF-8"?>
+    "create a resource belonging to a class in a shared ontology that refers to a property in another shared ontology" in {
+      val xmlImport =
+        s"""<?xml version="1.0" encoding="UTF-8"?>
                    |  <knoraXmlImport:resources xmlns="http://api.knora.org/ontology/shared/example-ibox/xml-import/v1#"
                    |  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    |  xsi:schemaLocation="http://api.knora.org/ontology/004D/kuno-raeber/xml-import/v1#"
@@ -2104,15 +2200,17 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |</knoraXmlImport:resources>
                  """.stripMargin
 
-            val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
 
-            Post(s"/v1/resources/xmlimport/$projectIri", HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
-                assert(status == StatusCodes.OK, response.toString)
-                val responseStr = responseAs[String]
-                responseStr should include("createdResources")
-            }
+      Post(s"/v1/resources/xmlimport/$projectIri",
+           HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
+        BasicHttpCredentials(anythingAdminEmail, password)) ~> resourcesPathV1 ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+        val responseStr = responseAs[String]
+        responseStr should include("createdResources")
+      }
 
-        }*/
+    }
   }
 
 }

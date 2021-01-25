@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -217,6 +217,27 @@ class UpdateListItemsRouteADME2ESpec
             text = responseToString(response)
           )
         )
+      }
+      "delete node comments" in {
+        val deleteCommentsLabels =
+          s"""{
+             |    "comments": []
+             |}""".stripMargin
+        val encodedListUrl = java.net.URLEncoder.encode(treeListInfo.id, "utf-8")
+
+        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
+                          HttpEntity(ContentTypes.`application/json`, deleteCommentsLabels)) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        response.status should be(StatusCodes.OK)
+        val receivedListInfo: ListRootNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+
+        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
+
+        val comments: Seq[StringLiteralV2] = receivedListInfo.comments.stringLiterals
+        comments.size should be(0)
       }
     }
 

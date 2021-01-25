@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  * This file is part of Knora.
  *
@@ -789,13 +789,13 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       // standoff links to that IRI.
       val initialReferenceCounts: Map[IRI, Int] = allStandoffLinkTargetsGrouped.mapValues(_.size)
 
-      for {
-        newValueIri: IRI <- makeUnusedValueIri(createMultipleValuesRequest.resourceIri)
-
-        // For each standoff link target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property
-        // and one LinkValue with its initial reference count.
-        standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] = initialReferenceCounts.toSeq.map {
-          case (targetIri, initialReferenceCount) =>
+      // For each standoff link target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property
+      // and one LinkValue with its initial reference count.
+      val standoffLinkUpdatesFutures: Seq[Future[SparqlTemplateLinkUpdate]] = initialReferenceCounts.toSeq.map {
+        case (targetIri, initialReferenceCount) =>
+          for {
+            newValueIri <- makeUnusedValueIri(createMultipleValuesRequest.resourceIri)
+          } yield
             SparqlTemplateLinkUpdate(
               linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
               directLinkExists = false,
@@ -810,8 +810,9 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
               newLinkValueCreator = OntologyConstants.KnoraAdmin.SystemUser,
               newLinkValuePermissions = standoffLinkValuePermissions
             )
-        }
-
+      }
+      for {
+        standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- Future.sequence(standoffLinkUpdatesFutures)
         // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
         sparqlInsert = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .generateInsertStatementsForStandoffLinks(

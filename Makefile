@@ -186,8 +186,8 @@ stack-status:
 stack-down: ## stops the knora-stack.
 	docker-compose -f docker-compose.yml down
 
-.PHONY: stack-db-remove
-stack-db-remove: ## stops the knora-stack and deletes any created volumes (deletes the database!).
+.PHONY: stack-down-delete-volumes
+stack-down-delete-volumes: ## stops the knora-stack and deletes any created volumes (deletes the database!).
 	docker-compose -f docker-compose.yml down --volumes
 
 .PHONY: stack-config
@@ -217,6 +217,10 @@ stack-db-only: docker-build-knora-jena-fuseki-image env-file ## starts only fuse
 #################################
 ## Test Targets
 #################################
+
+.PHONY: test-docker
+test-docker: docker-build ## runs Docker image tests
+	bazel test //docker/...
 
 .PHONY: test-webapi
 test-webapi: docker-build ## runs all dsp-api tests.
@@ -275,29 +279,39 @@ test: docker-build ## runs all test targets.
 #################################
 
 .PHONY: init-db-test
-init-db-test: stack-db-remove stack-db-only ## initializes the knora-test repository
+init-db-test: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test
 
 .PHONY: init-db-test-minimal
-init-db-test-minimal: stack-db-remove stack-db-only ## initializes the knora-test repository with minimal data
+init-db-test-minimal: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-minimal
 
 .PHONY: init-db-test-empty
-init-db-test-empty: stack-db-remove stack-db-only ## initializes the knora-test repository with minimal data
+init-db-test-empty: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-empty
 
 .PHONY: init-db-test-unit
-init-db-test-unit: stack-db-remove stack-db-only ## initializes the knora-test-unit repository
+init-db-test-unit: stack-down-delete-volumes stack-db-only ## initializes the knora-test-unit repository
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit
 
 .PHONY: init-db-test-unit-minimal
-init-db-test-unit-minimal: stack-db-remove stack-db-only ## initializes the knora-test-unit repository with minimal data
+init-db-test-unit-minimal: stack-down-delete-volumes stack-db-only ## initializes the knora-test-unit repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit-minimal
+
+db_staging_dump.trig:
+	@echo $@
+	@curl -X GET -H "Accept: application/trig" -u "admin:${DB_STAGING_PASSWORD}" "https://db.staging.dasch.swiss/dsp-repo" > "db_staging_dump.trig"
+
+.PHONY: init-db-test-from-staging
+init-db-test-from-staging: db_staging_dump.trig init-db-test-empty ## init local database with data from staging
+	@echo $@
+	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_staging_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
 #################################
 ## Other
