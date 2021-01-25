@@ -67,15 +67,47 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     */
   private case class GeneratedQueryVariable(variable: QueryVariable, useInOrderBy: Boolean)
 
-  // variables that are created when processing filter statements or for a value object var used as a sort criterion
-  // they represent the value of a literal pointed to by a value object
-  private val valueVariablesAutomaticallyGenerated = mutable.Map.empty[QueryVariable, Set[GeneratedQueryVariable]]
+  // Variables that are created when processing filter statements or for a value object var used as a sort criterion.
+  // They represent the value of a literal pointed to by a value object. There is a stack of collections of these
+  // variables, with an element for the top level of the WHERE clause, and an element for each level of UNION blocks,
+  // because we can't assume that variables at the top level will be bound in a UNION block.
+  private var valueVariablesAutomaticallyGenerated: List[Map[QueryVariable, Set[GeneratedQueryVariable]]] =
+    List(Map.empty[QueryVariable, Set[GeneratedQueryVariable]])
+
+  // Variables mentioned in the UNION block that is currently being processed, so we can ensure that a variable
+  // is bound before it is used in a FILTER. This is a stack of sets, with one element per level of union blocks.
+  private var variablesInUnionBlocks: List[Set[QueryVariable]] = List.empty
 
   // variables the represent resource metadata
   private val resourceMetadataVariables = mutable.Set.empty[QueryVariable]
 
   // The query can set this to false to disable inference.
   var useInference = true
+
+  /**
+    * When we enter a UNION block, pushes an empty collection of generated variables on to the stack
+    * valueVariablesAutomaticallyGenerated.
+    */
+  override def enteringUnionBlock(): Unit = {
+    valueVariablesAutomaticallyGenerated = Map
+      .empty[QueryVariable, Set[GeneratedQueryVariable]] :: valueVariablesAutomaticallyGenerated
+
+    variablesInUnionBlocks = Set.empty[QueryVariable] :: variablesInUnionBlocks
+  }
+
+  /**
+    * When we leave a UNION block, pops that block's collection of generated variables off the
+    * stack valueVariablesAutomaticallyGenerated.
+    */
+  override def leavingUnionBlock(): Unit = {
+    valueVariablesAutomaticallyGenerated = valueVariablesAutomaticallyGenerated.tail
+
+    variablesInUnionBlocks = variablesInUnionBlocks.tail
+  }
+
+  private def inUnionBlock: Boolean = {
+    variablesInUnionBlocks.nonEmpty
+  }
 
   /**
     * Saves a generated variable representing a value literal, if it hasn't been saved already.
@@ -88,17 +120,24 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
   private def addGeneratedVariableForValueLiteral(valueVar: QueryVariable,
                                                   generatedVar: QueryVariable,
                                                   useInOrderBy: Boolean = true): Boolean = {
-    val currentGeneratedVars =
-      valueVariablesAutomaticallyGenerated.getOrElse(valueVar, Set.empty[GeneratedQueryVariable])
+    val currentGeneratedVarsForBlock: Map[QueryVariable, Set[GeneratedQueryVariable]] =
+      valueVariablesAutomaticallyGenerated.head
 
-    if (!currentGeneratedVars.exists(currentGeneratedVar => currentGeneratedVar.variable == generatedVar)) {
-      valueVariablesAutomaticallyGenerated.put(
-        valueVar,
-        currentGeneratedVars + GeneratedQueryVariable(generatedVar, useInOrderBy))
-      true
-    } else {
-      false
-    }
+    val currentGeneratedVarsForValueVar: Set[GeneratedQueryVariable] =
+      currentGeneratedVarsForBlock.getOrElse(valueVar, Set.empty[GeneratedQueryVariable])
+
+    val newGeneratedVarsForBlock =
+      if (!currentGeneratedVarsForValueVar.exists(currentGeneratedVar => currentGeneratedVar.variable == generatedVar)) {
+        currentGeneratedVarsForBlock + (valueVar -> (currentGeneratedVarsForValueVar + GeneratedQueryVariable(
+          generatedVar,
+          useInOrderBy)))
+      } else {
+        currentGeneratedVarsForBlock
+      }
+
+    valueVariablesAutomaticallyGenerated = newGeneratedVarsForBlock :: valueVariablesAutomaticallyGenerated.tail
+
+    newGeneratedVarsForBlock != currentGeneratedVarsForBlock
   }
 
   /**
@@ -108,7 +147,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     * @return a generated variable that represents a value literal and can be used in ORDER BY, or `None` if no such variable has been saved.
     */
   protected def getGeneratedVariableForValueLiteralInOrderBy(valueVar: QueryVariable): Option[QueryVariable] = {
-    valueVariablesAutomaticallyGenerated.get(valueVar) match {
+    valueVariablesAutomaticallyGenerated.head.get(valueVar) match {
       case Some(generatedVars: Set[GeneratedQueryVariable]) =>
         val generatedVarsForOrderBy: Set[QueryVariable] = generatedVars.filter(_.useInOrderBy).map(_.variable)
 
@@ -492,6 +531,38 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     }
   }
 
+  /**
+    * If we're in a UNION block, records any variables that are used in the specified statement,
+    * so we can make sure that they're defined before they're used in a FILTER pattern.
+    *
+    * @param statementPattern the statement pattern being processed.
+    */
+  private def recordVariablesInUnionBlock(statementPattern: StatementPattern): Unit = {
+    def entityAsVariable(entity: Entity): Option[QueryVariable] = {
+      entity match {
+        case queryVariable: QueryVariable => Some(queryVariable)
+        case _                            => None
+      }
+    }
+
+    // Are we in a UNION block?
+    variablesInUnionBlocks match {
+      case variablesInCurrentBlock :: tail =>
+        // Yes. Collect any variables in the statement.
+        val newVariablesInCurrentBlock: Set[QueryVariable] = variablesInCurrentBlock ++ entityAsVariable(
+          statementPattern.subj) ++
+          entityAsVariable(statementPattern.pred) ++
+          entityAsVariable(statementPattern.obj)
+
+        // Record them.
+        variablesInUnionBlocks = newVariablesInCurrentBlock :: tail
+
+      case Nil =>
+        // No. Nothing to do here.
+        ()
+    }
+  }
+
   protected def processStatementPatternFromWhereClause(statementPattern: StatementPattern,
                                                        inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
 
@@ -528,6 +599,10 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
           typeInspectionResult = typeInspectionResult,
           conversionFuncForPropertyType = convertStatementForPropertyType(inputOrderBy)
         )
+
+        // If we're in a UNION block, record any variables that are used in the statement,
+        // so we can make sure that they're defined before they're used in a FILTER pattern.
+        recordVariablesInUnionBlock(statementPattern)
 
         additionalStatementsForSubj ++ additionalStatementsForWholeStatement ++ additionalStatementsForObj
     }
@@ -1875,11 +1950,22 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     *
     * @param filterExpression     the `FILTER` expression to be transformed.
     * @param typeInspectionResult the results of type inspection.
+    * @param isTopLevel `true` if this is the top-level expression in the filter.
     * @return a [[TransformedFilterPattern]].
     */
   protected def transformFilterPattern(filterExpression: Expression,
                                        typeInspectionResult: GravsearchTypeInspectionResult,
                                        isTopLevel: Boolean): TransformedFilterPattern = {
+    // Are we looking at a top-level filter expression in a UNION block?
+    if (isTopLevel && inUnionBlock) {
+      // Yes. Make sure that all the variables used in the FILTER have already been bound in the same block.
+      val unboundVariables: Set[QueryVariable] = filterExpression.getVariables -- variablesInUnionBlocks.head
+
+      if (unboundVariables.nonEmpty) {
+        throw GravsearchException(
+          s"One or more variables used in a filter have not been bound in the same UNION block: ${unboundVariables.map(_.toSparql).mkString(", ")}")
+      }
+    }
 
     filterExpression match {
 
