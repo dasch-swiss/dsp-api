@@ -19,6 +19,9 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 
 # Gravsearch Design
 
+For a detailed overview of Gravsearch, see
+[Gravsearch: Transforming SPARQL to query humanities data](https://doi.org/10.3233/SW-200386).
+
 ## Gravsearch Package
 
 The classes that process Gravsearch queries and results can be found in `org.knora.webapi.messages.util.search.gravsearch`.
