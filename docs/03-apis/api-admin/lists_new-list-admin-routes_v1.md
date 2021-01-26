@@ -18,7 +18,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Lists Endpoint
-## To use some of the routes in this endpoint the [feature toggle](../feature-toggles.md), `new-list-admin-routes:1` must
+## To use the routes in this endpoint the [feature toggle](../feature-toggles.md), `new-list-admin-routes:1` must
  be activated.
 
 ## Endpoint Overview
@@ -170,6 +170,23 @@ The response will contain the basic information of the node, `nodeinfo`, as belo
     }
 }
 ```
+
+The new node can be created and inserted in a specific position which must be in the payload as below. If necessary, 
+according to the given position, the sibling nodes will be shifted. Note that `position` cannot have a value higher than 
+number of existing children.
+
+```json
+{   "parentNodeIri": "http://rdfh.ch/lists/0001/a-list",
+    "projectIri": "http://rdfh.ch/projects/0001",
+    "name": "Inserted new child",
+    "position": 0,
+    "labels": [{ "value": "New List Node", "language": "en"}],
+    "comments": []
+}
+```
+
+In case the new node should be appended to the list of current children, either `position: -1` must be given in the 
+payload or the `position` parameter must be left out of the payload. 
 
 ### Update basic information (entire list or a node)
 The basic information of a list or a node such as its labels, comments, name, or all of them can be updated. The parameters that 

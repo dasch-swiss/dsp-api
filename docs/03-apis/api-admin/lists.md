@@ -224,8 +224,9 @@ There is no need to specify the project IRI because it is automatically extracte
 
   - Required permission: SystemAdmin / ProjectAdmin
   - Appends a new child node under the supplied nodeIri. If the supplied nodeIri
-    is the listIri, then a new child node is appended to the top level. Children
-    are currently only appended.
+    is the listIri, then a new child node is appended to the top level. If a position is given
+     for the new child node, the node will be created and inserted in the specified position, otherwise 
+     the node is appended to the end of parent's children.
   - POST: `/admin/lists/<parentNodeIri>`
   - BODY:
   
@@ -269,6 +270,22 @@ The response will contain the basic information of the node, `nodeinfo`, as belo
     }
 }
 ```
+The new node can be created and inserted in a specific position which must be in the payload as below. If necessary, 
+according to the given position, the sibling nodes will be shifted. Note that `position` cannot have a value higher than 
+number of existing children.
+
+```json
+{   "parentNodeIri": "http://rdfh.ch/lists/0001/a-list",
+    "projectIri": "http://rdfh.ch/projects/0001",
+    "name": "Inserted new child",
+    "position": 0,
+    "labels": [{ "value": "New List Node", "language": "en"}],
+    "comments": []
+}
+```
+
+In case the new node should be appended to the list of current children, either `position: -1` must be given in the 
+payload or the `position` parameter must be left out of the payload. 
 
 ### Update node's information
 The basic information of a node such as its labels, comments, name, or all of them can be updated. The parameters that 
