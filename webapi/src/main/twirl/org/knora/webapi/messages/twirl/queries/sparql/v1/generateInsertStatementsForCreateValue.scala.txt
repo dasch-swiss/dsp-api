@@ -221,6 +221,44 @@
                 }
             }
 
+            case documentFileValue: DocumentFileValueV1 => {
+                <@newValueIri> knora-base:internalFilename """@documentFileValue.internalFilename""" ;
+                               knora-base:internalMimeType """@documentFileValue.internalMimeType""" ;
+                               knora-base:pageCount @documentFileValue.pageCount .
+
+                @documentFileValue.dimX match {
+                    case Some(definedDimX) => {
+                        <@newValueIri> knora-base:dimX @definedDimX .
+                    }
+
+                    case None => {}
+                }
+
+                @documentFileValue.dimY match {
+                    case Some(definedDimY) => {
+                        <@newValueIri> knora-base:dimY @definedDimY .
+                    }
+
+                    case None => {}
+                }
+
+                @documentFileValue.originalFilename match {
+                    case Some(definedOriginalFilename) => {
+                        <@newValueIri> knora-base:originalFilename """@definedOriginalFilename""" .
+                    }
+
+                    case None => {}
+                }
+
+                @documentFileValue.originalMimeType match {
+                    case Some(definedOriginalMimeType) => {
+                        <@newValueIri> knora-base:originalMimeType """@definedOriginalMimeType""" .
+                    }
+
+                    case None => {}
+                }
+            }
+
             case listValue: HierarchicalListValueV1 => {
 
                 <@newValueIri> knora-base:valueHasListNode <@listValue.hierarchicalListIri> .

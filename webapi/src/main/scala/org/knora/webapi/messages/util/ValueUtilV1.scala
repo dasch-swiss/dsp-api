@@ -88,6 +88,8 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         makeStillImageValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.TextFileValue =>
         makeTextFileValue(valueProps, projectShortcode, responderManager, userProfile)
+      case OntologyConstants.KnoraBase.DocumentFileValue =>
+        makeDocumentFileValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, responderManager, userProfile)
     }
   }
@@ -801,6 +803,31 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
         originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
         projectShortcode = projectShortcode
+      ))
+  }
+
+  /**
+    * Converts a [[ValueProps]] into a [[DocumentFileValueV1]].
+    *
+    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+    * @return a [[DocumentFileValueV1]].
+    */
+  private def makeDocumentFileValue(
+      valueProps: ValueProps,
+      projectShortcode: String,
+      responderManager: ActorRef,
+      userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    val predicates = valueProps.literalData
+
+    Future(
+      DocumentFileValueV1(
+        internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
+        internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
+        originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
+        projectShortcode = projectShortcode,
+        pageCount = predicates(OntologyConstants.KnoraBase.PageCount).literals.head.toInt,
+        dimX = predicates.get(OntologyConstants.KnoraBase.DimX).flatMap(_.literals.headOption.map(_.toInt)),
+        dimY = predicates.get(OntologyConstants.KnoraBase.DimY).flatMap(_.literals.headOption.map(_.toInt))
       ))
   }
 
