@@ -311,12 +311,13 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         firstChildIri.set(childNodeInfo.id)
       }
 
-      "add second child to list - to the root node" in {
+      "add second child to list in first position - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = CreateNodeApiRequestADM(
             parentNodeIri = Some(newListIri.get),
             projectIri = IMAGES_PROJECT_IRI,
             name = Some("second"),
+            position = Some(0),
             labels = Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
             comments = Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
           ),
@@ -347,7 +348,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         // check position
         val position = childNodeInfo.position
-        position should be(1)
+        position should be(0)
 
         // check has root node
         val rootNode = childNodeInfo.hasRootNode
@@ -399,6 +400,25 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         rootNode should be(newListIri.get)
 
         thirdChildIri.set(childNodeInfo.id)
+      }
+
+      "not create a node if given new position is out of range" in {
+        val givenPosition = 20
+        responderManager ! ListChildNodeCreateRequestADM(
+          createChildNodeRequest = CreateNodeApiRequestADM(
+            parentNodeIri = Some(newListIri.get),
+            projectIri = IMAGES_PROJECT_IRI,
+            name = Some("fourth"),
+            position = Some(givenPosition),
+            labels = Seq(StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))),
+            comments = Seq(StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en")))
+          ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID
+        )
+        expectMsg(
+          Failure(BadRequestException(s"Invalid position given ${givenPosition}, maximum allowed position is = 2.")))
       }
     }
 
