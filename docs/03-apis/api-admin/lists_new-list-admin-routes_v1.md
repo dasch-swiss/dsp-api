@@ -171,7 +171,7 @@ The response will contain the basic information of the node, `nodeinfo`, as belo
 }
 ```
 
-The new node can be created and inserted in a specific position which must be in the payload as below. If necessary, 
+The new node can be created and inserted in a specific position which must be given in the payload as shown below. If necessary, 
 according to the given position, the sibling nodes will be shifted. Note that `position` cannot have a value higher than 
 number of existing children.
 
