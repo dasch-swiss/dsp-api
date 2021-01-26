@@ -120,6 +120,10 @@ case class CreateNodeApiRequestADM(id: Option[IRI] = None,
     throw BadRequestException(LABEL_MISSING_ERROR)
   }
 
+  if (position.exists(_.<(-1))) {
+    throw BadRequestException(INVALID_POSITION)
+  }
+
   def toJsValue: JsValue = createListNodeApiRequestADMFormat.write(this)
 }
 
@@ -171,6 +175,10 @@ case class ChangeNodeInfoApiRequestADM(listIri: IRI,
     throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_ERROR)
   }
 
+  if (position.exists(_.<(-1))) {
+    throw BadRequestException(INVALID_POSITION)
+  }
+
   def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
 
@@ -220,6 +228,9 @@ case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extend
     throw BadRequestException(s"Invalid IRI is given: $parentIri.")
   }
 
+  if (position < (-1)) {
+    throw BadRequestException(INVALID_POSITION)
+  }
   def toJsValue: JsValue = changeNodePositionApiRequestADMFormat.write(this)
 }
 

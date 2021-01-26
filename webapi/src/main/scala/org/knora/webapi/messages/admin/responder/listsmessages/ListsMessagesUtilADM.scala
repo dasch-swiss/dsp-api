@@ -31,4 +31,5 @@ object ListsMessagesUtilADM {
   val LIST_NODE_CREATE_PERMISSION_ERROR = "A list node can only be created by the project or system administrator."
   val LIST_CHANGE_PERMISSION_ERROR = "A list can only be changed by the project or system administrator."
   val UPDATE_REQUEST_EMPTY_LABEL_ERROR = "List labels cannot be empty."
+  val INVALID_POSITION = "Invalid position value is given, position should be either a positive value or -1."
 }
