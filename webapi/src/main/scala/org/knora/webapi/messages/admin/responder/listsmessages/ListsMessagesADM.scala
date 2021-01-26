@@ -228,7 +228,7 @@ case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extend
     throw BadRequestException(s"Invalid IRI is given: $parentIri.")
   }
 
-  if (position < (-1)) {
+  if (position < -1) {
     throw BadRequestException(INVALID_POSITION)
   }
   def toJsValue: JsValue = changeNodePositionApiRequestADMFormat.write(this)
