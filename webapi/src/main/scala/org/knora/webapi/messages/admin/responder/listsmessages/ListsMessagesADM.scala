@@ -120,7 +120,7 @@ case class CreateNodeApiRequestADM(id: Option[IRI] = None,
     throw BadRequestException(LABEL_MISSING_ERROR)
   }
 
-  if (position.exists(_.<(-1))) {
+  if (position.exists(_ < -1)) {
     throw BadRequestException(INVALID_POSITION)
   }
 
@@ -175,7 +175,7 @@ case class ChangeNodeInfoApiRequestADM(listIri: IRI,
     throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_ERROR)
   }
 
-  if (position.exists(_.<(-1))) {
+  if (position.exists(_ < -1)) {
     throw BadRequestException(INVALID_POSITION)
   }
 
@@ -545,7 +545,7 @@ case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM
   def sorted: ListADM = {
     ListADM(
       listinfo = listinfo,
-      children = children.sortBy(_.position) map (_.sorted)
+      children = children.sortBy(_.position).map(_.sorted)
     )
   }
 }
@@ -561,7 +561,7 @@ case class NodeADM(nodeinfo: ListChildNodeInfoADM, children: Seq[ListChildNodeAD
   def sorted: NodeADM = {
     NodeADM(
       nodeinfo = nodeinfo,
-      children = children.sortBy(_.position) map (_.sorted)
+      children = children.sortBy(_.position).map(_.sorted)
     )
   }
 }
@@ -786,7 +786,7 @@ case class ListRootNodeADM(id: IRI,
       name = name,
       labels = labels.sortByStringValue,
       comments = comments.sortByStringValue,
-      children = children.sortBy(_.position) map (_.sorted)
+      children = children.sortBy(_.position).map(_.sorted)
     )
   }
 
@@ -846,7 +846,7 @@ case class ListChildNodeADM(id: IRI,
       comments = comments.sortByStringValue,
       position = position,
       hasRootNode = hasRootNode,
-      children = children.sortBy(_.position) map (_.sorted)
+      children = children.sortBy(_.position).map(_.sorted)
     )
   }
 

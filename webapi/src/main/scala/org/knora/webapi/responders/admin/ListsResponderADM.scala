@@ -808,11 +808,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                          featureFactoryConfig: FeatureFactoryConfig): Future[IRI] = {
 
     def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
-      if (createNodeRequest.position.exists(_.>(children.size))) {
+      if (createNodeRequest.position.exists(_ > children.size)) {
         val givenPosition = createNodeRequest.position.get
         throw BadRequestException(
           s"Invalid position given $givenPosition, maximum allowed position is = ${children.size}.")
       }
+
       val position = if (createNodeRequest.position.isEmpty || createNodeRequest.position.exists(_.equals(-1))) {
         children.size
       } else {
@@ -830,7 +831,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
     def getRootNodeAndPositionOfNewChild(parentNodeIri: IRI,
                                          dataNamedGraph: IRI,
-                                         featureFactoryConfig: FeatureFactoryConfig) = {
+                                         featureFactoryConfig: FeatureFactoryConfig): Future[(Some[Int], Some[IRI])] = {
       for {
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
         maybeParentListNode <- listNodeGetADM(
@@ -898,8 +899,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
 
       // if parent node is known, find the root node of the list and the position of the new child node
-      (position, rootNodeIri) <- if (createNodeRequest.parentNodeIri.nonEmpty) {
-        getRootNodeAndPositionOfNewChild(createNodeRequest.parentNodeIri.get, dataNamedGraph, featureFactoryConfig)
+      (position: Option[Int], rootNodeIri: Option[IRI]) <- if (createNodeRequest.parentNodeIri.nonEmpty) {
+        getRootNodeAndPositionOfNewChild(parentNodeIri = createNodeRequest.parentNodeIri.get,
+                                         dataNamedGraph = dataNamedGraph,
+                                         featureFactoryConfig = featureFactoryConfig)
       } else {
         Future(None, None)
       }
