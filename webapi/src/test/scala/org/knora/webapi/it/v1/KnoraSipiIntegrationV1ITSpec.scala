@@ -713,7 +713,7 @@ class KnoraSipiIntegrationV1ITSpec
     }
 
     "create a resource with a PDF file attached" in {
-      // Upload the body XSLT file to Sipi.
+      // Upload the PDF file to Sipi.
       val pdfUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
         filesToUpload = Seq(FileToUpload(path = pathToMinimalPdf, mimeType = MediaTypes.`application/pdf`))
@@ -721,8 +721,8 @@ class KnoraSipiIntegrationV1ITSpec
 
       val uploadedPdfFile: SipiUploadResponseEntry = pdfUploadResponse.uploadedFiles.head
 
-      // Create a resource for the XSL transformation.
-      val bodyXsltParams = JsObject(
+      // Create a resource for the PDF file.
+      val pdfResourceParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#ThingDocument"),
           "label" -> JsString("PDF file"),
@@ -733,9 +733,9 @@ class KnoraSipiIntegrationV1ITSpec
       )
 
       // Send the JSON in a POST request to the Knora API server.
-      val bodyXSLTRequest: HttpRequest = Post(
-        baseApiUrl + "/v1/resources",
-        HttpEntity(ContentTypes.`application/json`, bodyXsltParams.compactPrint)) ~> addCredentials(
+      val bodyXSLTRequest: HttpRequest = Post(baseApiUrl + "/v1/resources",
+                                              HttpEntity(ContentTypes.`application/json`,
+                                                         pdfResourceParams.compactPrint)) ~> addCredentials(
         BasicHttpCredentials(userEmail, password))
       val bodyXSLTJson: JsObject = getResponseJson(bodyXSLTRequest)
 
