@@ -643,5 +643,48 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         )
       }
     }
+
+    "delete request" should {
+      "erase a defaultObjectAccess permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/DOAP-with-customIri"
+        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+        val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
+        deletedStatus.convertTo[Boolean] should be(true)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "delete-defaultObjectAccess-permission-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+      "erase an administrative permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+        val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
+        deletedStatus.convertTo[Boolean] should be(true)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "delete-administrative-permission-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+    }
   }
 }
