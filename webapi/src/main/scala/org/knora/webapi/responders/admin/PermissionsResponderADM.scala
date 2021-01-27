@@ -638,16 +638,21 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request."))
 
         // get group
-        maybeGroup <- (responderManager ? GroupGetADM(
-          groupIri = createRequest.forGroup,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )).mapTo[Option[GroupADM]]
+        groupIri: IRI <- if (OntologyConstants.KnoraAdmin.BuiltInGroups.contains(createRequest.forGroup)) {
+          Future.successful(createRequest.forGroup)
+        } else {
+          for {
+            maybeGroup <- (responderManager ? GroupGetADM(
+              groupIri = createRequest.forGroup,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = KnoraSystemInstances.Users.SystemUser
+            )).mapTo[Option[GroupADM]]
 
-        // if it does not exist then throw an error
-        group: GroupADM = maybeGroup.getOrElse(
-          throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
-
+            // if it does not exist then throw an error
+            group: GroupADM = maybeGroup.getOrElse(
+              throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
+          } yield group.id
+        }
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
         newPermissionIri: IRI <- checkOrCreateEntityIri(customPermissionIri,
                                                         stringFormatter.makeRandomPermissionIri(project.shortcode))
@@ -660,7 +665,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             permissionClassIri = OntologyConstants.KnoraAdmin.AdministrativePermission,
             permissionIri = newPermissionIri,
             projectIri = project.id,
-            groupIri = group.id,
+            groupIri = groupIri,
             permissions = PermissionUtilADM.formatPermissionADMs(createRequest.hasPermissions, PermissionType.AP)
           )
           .toString
