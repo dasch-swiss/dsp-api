@@ -808,10 +808,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                          featureFactoryConfig: FeatureFactoryConfig): Future[IRI] = {
 
     def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
-      val position = if (children.isEmpty) {
-        0
-      } else {
+      if (createNodeRequest.position.exists(_ > children.size)) {
+        val givenPosition = createNodeRequest.position.get
+        throw BadRequestException(
+          s"Invalid position given $givenPosition, maximum allowed position is = ${children.size}.")
+      }
+
+      val position = if (createNodeRequest.position.isEmpty || createNodeRequest.position.exists(_.equals(-1))) {
         children.size
+      } else {
+        createNodeRequest.position.get
       }
       position
     }
@@ -823,7 +829,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       }
     }
 
-    def getRootNodeAndPositionOfNewChild(parentNodeIri: IRI, featureFactoryConfig: FeatureFactoryConfig) = {
+    def getRootNodeAndPositionOfNewChild(parentNodeIri: IRI,
+                                         dataNamedGraph: IRI,
+                                         featureFactoryConfig: FeatureFactoryConfig): Future[(Some[Int], Some[IRI])] = {
       for {
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
         maybeParentListNode <- listNodeGetADM(
@@ -839,8 +847,27 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           case Some(_) | None               => throw BadRequestException(s"List node '$parentNodeIri' not found.")
         }
 
-        // append child to the end
+        // get position of the new child
         position = getPositionOfNewChild(children)
+
+        // Is the node supposed to be inserted in a specific position in array of children?
+        _ <- if (position != children.size) {
+          // Yes. Shift the siblings after the given position to right in order to free the position.
+          for {
+            // shift siblings that are after given position to right
+            updatedSiblings <- shiftNodes(
+              startPos = position,
+              endPos = children.size - 1,
+              nodes = children,
+              shiftToLeft = false,
+              dataNamedGraph = dataNamedGraph,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield updatedSiblings
+        } else {
+          // No. new node will be appended to the end, no shifting is necessary.
+          Future.successful(children)
+        }
 
         /* get the root node, depending on the type of the parent */
         rootNodeIri = getRootNodeIri(parentListNode)
@@ -868,15 +895,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           s"The node name ${createNodeRequest.name.get} is already used by a list inside the project ${createNodeRequest.projectIri}.")
       }
 
+      // calculate the data named graph
+      dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
+
       // if parent node is known, find the root node of the list and the position of the new child node
-      (position, rootNodeIri) <- if (createNodeRequest.parentNodeIri.nonEmpty) {
-        getRootNodeAndPositionOfNewChild(createNodeRequest.parentNodeIri.get, featureFactoryConfig)
+      (position: Option[Int], rootNodeIri: Option[IRI]) <- if (createNodeRequest.parentNodeIri.nonEmpty) {
+        getRootNodeAndPositionOfNewChild(parentNodeIri = createNodeRequest.parentNodeIri.get,
+                                         dataNamedGraph = dataNamedGraph,
+                                         featureFactoryConfig = featureFactoryConfig)
       } else {
         Future(None, None)
       }
-
-      // calculate the data named graph
-      dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
 
       // check the custom IRI; if not given, create an unused IRI
       customListIri: Option[SmartIri] = createNodeRequest.id.map(iri => iri.toSmartIri)

@@ -338,6 +338,21 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       thrown.getMessage should equal(UPDATE_REQUEST_EMPTY_LABEL_ERROR)
     }
 
+    "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when position is invalid" in {
+
+      val payload =
+        s"""
+           |{
+           |    "listIri": "$exampleListIri",
+           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "position": -2
+           |}
+                """.stripMargin
+
+      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
+
+      thrown.getMessage should equal(INVALID_POSITION)
+    }
     "throw 'ForbiddenException' if user requesting `createChildNodeRequest` is not system or project admin" in {
       val caught = intercept[ForbiddenException](
         ListChildNodeCreateRequestADM(
@@ -353,6 +368,24 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
         )
       )
       assert(caught.getMessage === LIST_NODE_CREATE_PERMISSION_ERROR)
+    }
+
+    "throw 'BadRequestException' if invalid position given in payload of `createChildNodeRequest`" in {
+      val caught = intercept[BadRequestException](
+        ListChildNodeCreateRequestADM(
+          createChildNodeRequest = CreateNodeApiRequestADM(
+            parentNodeIri = Some(exampleListIri),
+            projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            labels = Seq(StringLiteralV2(value = "New child node", language = Some("en"))),
+            position = Some(-3),
+            comments = Seq.empty[StringLiteralV2]
+          ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === INVALID_POSITION)
     }
 
     "return a 'ForbiddenException' if the user changing the node info is not project or system admin" in {
@@ -518,6 +551,22 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
 
       thrown.getMessage should equal(s"Invalid IRI is given: $invalid_parentIri.")
+
+    }
+
+    "throw 'BadRequestException' for `ChangeNodePositionApiRequestADM` when position is invalid" in {
+
+      val payload =
+        s"""
+           |{
+           |    "parentNodeIri": "http://rdfh.ch/lists/0001/notUsedList01",
+           |    "position": -2
+           |}
+                """.stripMargin
+
+      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
+
+      thrown.getMessage should equal(INVALID_POSITION)
 
     }
   }
