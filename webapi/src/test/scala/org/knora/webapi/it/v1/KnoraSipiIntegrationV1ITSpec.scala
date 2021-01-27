@@ -722,7 +722,7 @@ class KnoraSipiIntegrationV1ITSpec
       val uploadedPdfFile: SipiUploadResponseEntry = pdfUploadResponse.uploadedFiles.head
 
       // Create a resource for the PDF file.
-      val pdfResourceParams = JsObject(
+      val createDocumentResourceParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#ThingDocument"),
           "label" -> JsString("PDF file"),
@@ -733,14 +733,15 @@ class KnoraSipiIntegrationV1ITSpec
       )
 
       // Send the JSON in a POST request to the Knora API server.
-      val bodyXSLTRequest: HttpRequest = Post(baseApiUrl + "/v1/resources",
-                                              HttpEntity(ContentTypes.`application/json`,
-                                                         pdfResourceParams.compactPrint)) ~> addCredentials(
+      val createDocumentResourceRequest: HttpRequest = Post(
+        baseApiUrl + "/v1/resources",
+        HttpEntity(ContentTypes.`application/json`, createDocumentResourceParams.compactPrint)) ~> addCredentials(
         BasicHttpCredentials(userEmail, password))
-      val bodyXSLTJson: JsObject = getResponseJson(bodyXSLTRequest)
+
+      val createDocumentResourceResponseJson: JsObject = getResponseJson(createDocumentResourceRequest)
 
       // get the IRI of the document file resource
-      val resourceIri: String = bodyXSLTJson.fields.get("res_id") match {
+      val resourceIri: String = createDocumentResourceResponseJson.fields.get("res_id") match {
         case Some(JsString(res_id: String)) => res_id
         case _                              => throw InvalidApiJsonException("member 'res_id' was expected")
       }
