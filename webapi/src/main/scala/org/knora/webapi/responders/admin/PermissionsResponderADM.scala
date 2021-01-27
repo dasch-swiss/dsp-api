@@ -155,6 +155,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                             requestingUser,
                                             apiRequestID) =>
       permissionPropertyChangeRequestADM(permissionIri, changePermissionPropertyRequest, requestingUser, apiRequestID)
+    case PermissionDeleteRequestADM(permissionIri, requestingUser, apiRequestID) =>
+      permissionDeleteRequestADM(permissionIri, requestingUser, apiRequestID)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -701,6 +703,13 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
     log.debug(s"objectAccessPermissionsForResourceGetV1 - resourceIRI: $resourceIri")
     for {
+      projectIri <- getProjectOfEntity(resourceIri)
+      // Check user's permission for the operation
+      _ = if (!requestingUser.isSystemAdmin
+              && !requestingUser.permissions.isProjectAdmin(projectIri)
+              && !requestingUser.isSystemUser) {
+        throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
+      }
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getObjectAccessPermission(
@@ -747,6 +756,13 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       requestingUser: UserADM): Future[Option[ObjectAccessPermissionADM]] = {
     log.debug(s"objectAccessPermissionsForValueGetV1 - valueIRI: $valueIri")
     for {
+      projectIri <- getProjectOfEntity(valueIri)
+      // Check user's permission for the operation
+      _ = if (!requestingUser.isSystemAdmin
+              && !requestingUser.permissions.isProjectAdmin(projectIri)
+              && !requestingUser.isSystemUser) {
+        throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
+      }
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getObjectAccessPermission(
@@ -1837,7 +1853,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       } yield response
 
     for {
-      // run list info update with an local IRI lock
+      // run permission update with an local IRI lock
       taskResult <- IriLocker.runWithIriLock(
         apiRequestID,
         permissionIri,
@@ -1846,9 +1862,62 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
     } yield taskResult
   }
 
+  /**
+    * Delete a permission.
+    *
+    * @param permissionIri                   the IRI of the permission.
+    * @param requestingUser                  the [[UserADM]] of the requesting user.
+    * @param apiRequestID                    the API request ID.
+    * @return [[PermissionDeleteResponseADM]].
+    * @throws UpdateNotPerformedException if permission was in use and could not be deleted or something else went wrong.
+    * @throws NotFoundException if no permission is found for the given IRI.
+    */
+  private def permissionDeleteRequestADM(permissionIri: IRI,
+                                         requestingUser: UserADM,
+                                         apiRequestID: UUID): Future[PermissionDeleteResponseADM] = {
+
+    def permissionDeleteTask(): Future[PermissionDeleteResponseADM] =
+      for {
+        // check that there is a permission with a given IRI
+        _ <- permissionGetADM(permissionIri, requestingUser)
+        // Is permission in use?
+        _ <- isPermissionUsed(permissionIri = permissionIri,
+                              errorFun = throw UpdateNotPerformedException(
+                                s"Permission $permissionIri cannot be deleted, because it is in use."))
+
+        _ <- deletePermission(permissionIri)
+
+      } yield PermissionDeleteResponseADM(permissionIri, true)
+
+    for {
+      // run list info update with an local IRI lock
+      taskResult <- IriLocker.runWithIriLock(
+        apiRequestID,
+        permissionIri,
+        () => permissionDeleteTask()
+      )
+    } yield taskResult
+  }
+
   /** **************/
   /*Helper Methods*/
   /** *************/
+  /**
+    * Checks that requesting user has right for the permission operation
+    *
+    * @param requestingUser the [[UserADM]] of the requesting user.
+    * @param projectIri      the IRI of the project the permission is attached to.
+    * @param permissionIri the IRI of the permission.
+    * @throw ForbiddenException if the user is not a project or system admin
+    */
+  def verifyUsersRightForOperation(requestingUser: UserADM, projectIri: IRI, permissionIri: IRI): Unit = {
+    if (!requestingUser.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(projectIri)) {
+
+      throw ForbiddenException(
+        s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")
+    }
+  }
+
   /**
     * Get a permission.
     *
@@ -1888,10 +1957,9 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         .head
 
       // Before returning the permission check that the requesting user has permission to see it
-      _ = if (!requestingUser.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(projectIri)) {
-        // not a system or project admin
-        throw ForbiddenException(s"Permission $permissionIri can only be queried by system or project admin.")
-      }
+      _ = verifyUsersRightForOperation(requestingUser = requestingUser,
+                                       projectIri = projectIri,
+                                       permissionIri = permissionIri)
 
       permissionType: Option[String] = groupedPermissionsQueryResponse
         .getOrElse(OntologyConstants.Rdf.Type, throw InconsistentRepositoryDataException(s"RDF type is not returned."))
@@ -1961,4 +2029,86 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
 
       _ <- (storeManager ? SparqlUpdateRequest(sparqlChangePermission)).mapTo[SparqlUpdateResponse]
     } yield ()
+
+  /**
+    * Delete an existing permission with a given IRI.
+    *
+    * @param permissionIri       the IRI of the permission.
+    */
+  def deletePermission(permissionIri: IRI): Future[Unit] =
+    for {
+      // Generate SPARQL for erasing a permission.
+      sparqlDeletePermission: String <- Future(
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          .deletePermission(
+            triplestore = settings.triplestoreType,
+            namedGraphIri = OntologyConstants.NamedGraphs.PermissionNamedGraph,
+            permissionIri = permissionIri
+          )
+          .toString()
+      )
+
+      // Do the update.
+      _ <- (storeManager ? SparqlUpdateRequest(sparqlDeletePermission)).mapTo[SparqlUpdateResponse]
+
+      // Verify that the permission was deleted correctly.
+      askString <- Future(
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkIriExists(permissionIri).toString
+      )
+      askResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
+      permissionStillExists: Boolean = askResponse.result
+
+      _ = if (permissionStillExists) {
+        throw UpdateNotPerformedException(
+          s"Permission <$permissionIri> was not erased. Please report this as a possible bug.")
+      }
+    } yield ()
+
+  /**
+    * Helper method to check if a permission is in use.
+    *
+    * @param permissionIri  the IRI of the permission.
+    * @param errorFun a function that throws an exception. It will be called if the permission is used.
+    * @return a [[Boolean]].
+    */
+  protected def isPermissionUsed(permissionIri: IRI, errorFun: => Nothing): Future[Unit] =
+    for {
+      isPermissionUsedSparql <- Future(
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          .isEntityUsed(
+            triplestore = settings.triplestoreType,
+            entityIri = permissionIri
+          )
+          .toString()
+      )
+
+      isPermissionUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isPermissionUsedSparql))
+        .mapTo[SparqlSelectResult]
+
+      _ = if (isPermissionUsedResponse.results.bindings.nonEmpty) {
+        errorFun
+      }
+    } yield ()
+
+  def getProjectOfEntity(entityIri: IRI): Future[IRI] =
+    for {
+      sparqlQueryString <- Future(
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          .getProjectOfEntity(
+            triplestore = settings.triplestoreType,
+            entityIri = entityIri
+          )
+          .toString())
+      response <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+      rows: Seq[VariableResultsRow] = response.results.bindings
+      projectIri = if (rows.size == 0) {
+        throw BadRequestException(
+          s"<$entityIri> is not attached to a project, please verify that IRI is of a knora entity.")
+      } else {
+        val projectOption = rows.head.rowMap.get("projectIri")
+        projectOption.getOrElse(throw BadRequestException(s"No Project found for the given <$entityIri>"))
+      }
+
+    } yield projectIri
+
 }
