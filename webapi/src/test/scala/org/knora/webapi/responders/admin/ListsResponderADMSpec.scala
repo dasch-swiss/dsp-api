@@ -468,21 +468,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         expectMsg(Failure(BadRequestException(s"Invalid position given, maximum allowed position is = 3.")))
       }
 
-      "not reposition a node to another parent node if new position less than -1" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
-        responderManager ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = -2,
-            parentIri = "http://rdfh.ch/lists/0001/notUsedList"
-          ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
-        )
-        expectMsg(Failure(BadRequestException(s"Invalid position given, minimum allowed is -1.")))
-      }
-
       "reposition node List014 from position 3 to 1 (shift to right)" in {
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
         val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
