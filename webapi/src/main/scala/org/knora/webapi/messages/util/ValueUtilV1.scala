@@ -345,6 +345,8 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
 
       case _: TextFileValueV1 => basicObjectResponse
 
+      case _: DocumentFileValueV1 => basicObjectResponse
+
       case _: HierarchicalListValueV1 => basicObjectResponse
 
       case _: ColorValueV1 => basicObjectResponse

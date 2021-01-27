@@ -79,6 +79,11 @@ class KnoraSipiIntegrationV1ITSpec
   private val letterIri = new MutableTestIri
   private val gravsearchTemplateIri = new MutableTestIri
 
+  private val minimalPdfOriginalFilename = "minimal.pdf"
+  private val pathToMinimalPdf = s"test_data/test_route/files/$minimalPdfOriginalFilename"
+  private val minimalPdfWidth = 1250
+  private val minimalPdfHeight = 600
+
   /**
     * Adds the IRI of a XSL transformation to the given mapping.
     *
@@ -705,6 +710,53 @@ class KnoraSipiIntegrationV1ITSpec
       assert(responseBodyStr.contains("Unable to get file"))
       assert(responseBodyStr.contains("as requested by org.knora.webapi.responders.v2.StandoffResponderV2"))
       assert(responseBodyStr.contains("Sipi responded with HTTP status code 404"))
+    }
+
+    "create a resource with a PDF file attached" in {
+      // Upload the body XSLT file to Sipi.
+      val pdfUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToMinimalPdf, mimeType = MediaTypes.`application/pdf`))
+      )
+
+      val uploadedPdfFile: SipiUploadResponseEntry = pdfUploadResponse.uploadedFiles.head
+
+      // Create a resource for the XSL transformation.
+      val bodyXsltParams = JsObject(
+        Map(
+          "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#ThingDocument"),
+          "label" -> JsString("PDF file"),
+          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
+          "properties" -> JsObject(),
+          "file" -> JsString(uploadedPdfFile.internalFilename)
+        )
+      )
+
+      // Send the JSON in a POST request to the Knora API server.
+      val bodyXSLTRequest: HttpRequest = Post(
+        baseApiUrl + "/v1/resources",
+        HttpEntity(ContentTypes.`application/json`, bodyXsltParams.compactPrint)) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+      val bodyXSLTJson: JsObject = getResponseJson(bodyXSLTRequest)
+
+      // get the IRI of the document file resource
+      val resourceIri: String = bodyXSLTJson.fields.get("res_id") match {
+        case Some(JsString(res_id: String)) => res_id
+        case _                              => throw InvalidApiJsonException("member 'res_id' was expected")
+      }
+
+      // Request the document resource from the Knora API server.
+      val documentResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      val documentResourceResponse = getResponseStringOrThrow(documentResourceRequest)
+      println(documentResourceResponse)
+
+      val documentResourceRequestV2 = Get(baseApiUrl + "/v2/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      val documentResourceResponseV2 = getResponseStringOrThrow(documentResourceRequestV2)
+      println(documentResourceResponseV2)
     }
   }
 }
