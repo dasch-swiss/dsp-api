@@ -51,7 +51,18 @@
 
                       knora-admin:forProperty knora-base:hasStillImageFileValue ;
 
-                      knora-base:hasPermissions "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"^^xsd:string .
+                      knora-base:hasPermissions "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser|V knora-admin:UnknownUser"^^xsd:string .
+
+### Default Object Access Permissions on knora-base:hasDocumentFileValue property
+<http://rdfh.ch/permissions/0000/001-d4>
+
+                      rdf:type knora-admin:DefaultObjectAccessPermission ;
+
+                      knora-admin:forProject knora-admin:SystemProject ;
+
+                      knora-admin:forProperty knora-base:hasDocumentFileValue ;
+
+                      knora-base:hasPermissions "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser|V knora-admin:UnknownUser"^^xsd:string .
 
 
 

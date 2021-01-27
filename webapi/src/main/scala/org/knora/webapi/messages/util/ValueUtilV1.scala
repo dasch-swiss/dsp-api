@@ -86,6 +86,8 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       case OntologyConstants.KnoraBase.TimeValue     => makeTimeValue(valueProps, responderManager, userProfile)
       case OntologyConstants.KnoraBase.StillImageFileValue =>
         makeStillImageValue(valueProps, projectShortcode, responderManager, userProfile)
+      case OntologyConstants.KnoraBase.DocumentFileValue =>
+        makeDocumentValue(valueProps, projectShortcode, responderManager, userProfile) // ToDo:: make DocumentValue
       case OntologyConstants.KnoraBase.TextFileValue =>
         makeTextFileValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, responderManager, userProfile)
@@ -104,6 +106,10 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     */
   def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String = {
     s"${settings.externalSipiIIIFGetUrl}/${imageFileValueV1.projectShortcode}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
+  }
+
+  def makeSipiDocumentGetUrlFromFilename(documentFileValueV1: DocumentFileValueV1): String = {
+    s"${settings.externalSipiIIIFGetUrl}/${documentFileValueV1.projectShortcode}/${documentFileValueV1.internalFilename}/file"
   }
 
   /**
@@ -167,6 +173,12 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
           nx = Some(stillImageFileValueV1.dimX),
           ny = Some(stillImageFileValueV1.dimY),
           path = makeSipiImageGetUrlFromFilename(stillImageFileValueV1)
+        )
+      case documentFileValueV1: DocumentFileValueV1 =>
+        LocationV1(
+          format_name = mimeType2V1Format(documentFileValueV1.internalMimeType),
+          origname = documentFileValueV1.originalFilename,
+          path = makeSipiDocumentGetUrlFromFilename(documentFileValueV1)
         )
       case textFileValue: TextFileValueV1 =>
         LocationV1(
@@ -769,6 +781,24 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       projectShortcode: String,
       responderManager: ActorRef,
       userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    val predicates = valueProps.literalData
+
+    Future(
+      StillImageFileValueV1(
+        internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
+        internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
+        originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
+        projectShortcode = projectShortcode,
+        dimX = predicates(OntologyConstants.KnoraBase.DimX).literals.head.toInt,
+        dimY = predicates(OntologyConstants.KnoraBase.DimY).literals.head.toInt
+      ))
+  }
+
+  private def makeDocumentValue(
+                                   valueProps: ValueProps,
+                                   projectShortcode: String,
+                                   responderManager: ActorRef,
+                                   userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
     val predicates = valueProps.literalData
 
     Future(
