@@ -77,8 +77,9 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
 
 /**
   * Represents an API request payload that asks the Knora API server to create a new node.
-  * If the IRI of the parent node is given, the new node is attached to the parent node as a sublist node. If other
-  * child nodes exist, the newly created list node will be appended to the end of the list of children.
+  * If the IRI of the parent node is given, the new node is attached to the parent node as a sublist node.
+  * If a specific position is given, insert the child node there. Otherwise, the newly created list node will be appended
+  * to the end of the list of children.
   * If no parent node IRI is given in the payload, a new list is created with this node as its root node.
   * At least one label needs to be supplied.
   *
@@ -86,13 +87,16 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
   * @param parentNodeIri the optional IRI of the parent node.
   * @param projectIri    the IRI of the project.
   * @param name          the optional name of the list node.
+  * @param position      the optional position of the node.
   * @param labels        labels of the list node.
   * @param comments      comments of the list node.
+  *
   */
 case class CreateNodeApiRequestADM(id: Option[IRI] = None,
                                    parentNodeIri: Option[IRI] = None,
                                    projectIri: IRI,
                                    name: Option[String] = None,
+                                   position: Option[Int] = None,
                                    labels: Seq[StringLiteralV2],
                                    comments: Seq[StringLiteralV2])
     extends ListADMJsonProtocol {
@@ -114,6 +118,10 @@ case class CreateNodeApiRequestADM(id: Option[IRI] = None,
 
   if (labels.isEmpty) {
     throw BadRequestException(LABEL_MISSING_ERROR)
+  }
+
+  if (position.exists(_ < -1)) {
+    throw BadRequestException(INVALID_POSITION)
   }
 
   def toJsValue: JsValue = createListNodeApiRequestADMFormat.write(this)
@@ -167,6 +175,10 @@ case class ChangeNodeInfoApiRequestADM(listIri: IRI,
     throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_ERROR)
   }
 
+  if (position.exists(_ < -1)) {
+    throw BadRequestException(INVALID_POSITION)
+  }
+
   def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
 
@@ -216,6 +228,9 @@ case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extend
     throw BadRequestException(s"Invalid IRI is given: $parentIri.")
   }
 
+  if (position < -1) {
+    throw BadRequestException(INVALID_POSITION)
+  }
   def toJsValue: JsValue = changeNodePositionApiRequestADMFormat.write(this)
 }
 
@@ -530,7 +545,7 @@ case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM
   def sorted: ListADM = {
     ListADM(
       listinfo = listinfo,
-      children = children.sortBy(_.position) map (_.sorted)
+      children = children.sortBy(_.position).map(_.sorted)
     )
   }
 }
@@ -546,7 +561,7 @@ case class NodeADM(nodeinfo: ListChildNodeInfoADM, children: Seq[ListChildNodeAD
   def sorted: NodeADM = {
     NodeADM(
       nodeinfo = nodeinfo,
-      children = children.sortBy(_.position) map (_.sorted)
+      children = children.sortBy(_.position).map(_.sorted)
     )
   }
 }
@@ -771,7 +786,7 @@ case class ListRootNodeADM(id: IRI,
       name = name,
       labels = labels.sortByStringValue,
       comments = comments.sortByStringValue,
-      children = children.sortBy(_.position) map (_.sorted)
+      children = children.sortBy(_.position).map(_.sorted)
     )
   }
 
@@ -831,7 +846,7 @@ case class ListChildNodeADM(id: IRI,
       comments = comments.sortByStringValue,
       position = position,
       hasRootNode = hasRootNode,
-      children = children.sortBy(_.position) map (_.sorted)
+      children = children.sortBy(_.position).map(_.sorted)
     )
   }
 
@@ -1279,7 +1294,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
   implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] =
     jsonFormat(CreateListApiRequestADM, "id", "projectIri", "name", "labels", "comments")
   implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateNodeApiRequestADM] =
-    jsonFormat(CreateNodeApiRequestADM, "id", "parentNodeIri", "projectIri", "name", "labels", "comments")
+    jsonFormat(CreateNodeApiRequestADM, "id", "parentNodeIri", "projectIri", "name", "position", "labels", "comments")
   implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeNodeInfoApiRequestADM] = jsonFormat(
     ChangeNodeInfoApiRequestADM,
     "listIri",

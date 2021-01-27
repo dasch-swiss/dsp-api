@@ -927,6 +927,82 @@ class OldListsRouteADMFeatureE2ESpec
         )
       }
 
+      "insert new child in a specific position" in {
+
+        val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
+
+        val name = "child with position"
+        val label = "Inserted List Node Label"
+        val comment = "Inserted List Node Comment"
+
+        val insertChild =
+          s"""{
+           |    "parentNodeIri": "${newListIri.get}",
+           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+           |    "name": "$name",
+           |    "position": 1,
+           |    "labels": [{ "value": "$label", "language": "en"}],
+           |    "comments": [{ "value": "$comment", "language": "en"}]
+           |}""".stripMargin
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "insert-childNode-in-position-request",
+              fileExtension = "json"
+            ),
+            text = insertChild
+          )
+        )
+        val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl,
+                           HttpEntity(ContentTypes.`application/json`, insertChild)) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // println(s"response: ${response.toString}")
+        response.status should be(StatusCodes.OK)
+
+        val received: ListNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListNodeInfoADM]
+
+        // check correct node info
+        val childNodeInfo = received match {
+          case info: ListChildNodeInfoADM => info
+          case something                  => fail(s"expecting ListChildNodeInfoADM but got ${something.getClass.toString} instead.")
+        }
+
+        // check labels
+        val labels: Seq[StringLiteralV2] = childNodeInfo.labels.stringLiterals
+        labels.size should be(1)
+        labels.sorted should be(Seq(StringLiteralV2(value = label, language = Some("en"))))
+
+        // check comments
+        val comments = childNodeInfo.comments.stringLiterals
+        comments.size should be(1)
+        comments.sorted should be(Seq(StringLiteralV2(value = comment, language = Some("en"))))
+
+        // check position
+        val position = childNodeInfo.position
+        position should be(1)
+
+        // check has root node
+        val rootNode = childNodeInfo.hasRootNode
+        rootNode should be(newListIri.get)
+
+        secondChildIri.set(childNodeInfo.id)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "insert-childNode-in-position-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
       "add child to second child node" in {
 
         val encodedListUrl = java.net.URLEncoder.encode(secondChildIri.get, "utf-8")

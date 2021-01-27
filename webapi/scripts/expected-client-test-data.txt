@@ -33,6 +33,8 @@ test-data/admin/lists/get-list-node-info-response.json
 test-data/admin/lists/get-list-response.json
 test-data/admin/lists/get-lists-response.json
 test-data/admin/lists/get-node-response.json
+test-data/admin/lists/insert-childNode-in-position-request.json
+test-data/admin/lists/insert-childNode-in-position-response.json
 test-data/admin/lists/toggle_new-list-admin-routes_v1/
 test-data/admin/lists/toggle_new-list-admin-routes_v1/add-second-child-to-root-request.json
 test-data/admin/lists/toggle_new-list-admin-routes_v1/add-second-child-to-root-response.json
