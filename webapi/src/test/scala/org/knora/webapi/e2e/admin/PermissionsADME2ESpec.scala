@@ -263,6 +263,45 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         )
       }
 
+      "create a new administrative permission for a new project" in {
+        val projectIri = "http://rdfh.ch/projects/3333"
+        val projectPayload =
+          s"""
+             |{
+             |	"projectIri": "$projectIri",
+             |    "shortname": "newprojectWithIri",
+             |    "shortcode": "3333",
+             |    "longname": "new project with a custom IRI",
+             |    "description": [{"value": "a project created with a custom IRI", "language": "en"}],
+             |    "keywords": ["projectIRI"],
+             |    "logo": "/fu/bar/baz.jpg",
+             |    "status": true,
+             |    "selfjoin": false
+             |
+             |}
+             |""".stripMargin
+
+        val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, projectPayload)) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+
+        val permissionPayload =
+          s"""{
+              |    "forGroup":"http://www.knora.org/ontology/knora-admin#ProjectMember",
+              |    "forProject":"$projectIri",
+              |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
+              |}""".stripMargin
+
+        val permissionRequest = Post(baseApiUrl + s"/admin/permissions/ap",
+                                     HttpEntity(ContentTypes.`application/json`, permissionPayload)) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+
+        val permissionResponse: HttpResponse = singleAwaitingRequest(permissionRequest)
+        assert(permissionResponse.status === StatusCodes.OK)
+
+      }
+
       "create a default object access permission" in {
         val createDefaultObjectAccessPermissionRequest: String =
           s"""{
