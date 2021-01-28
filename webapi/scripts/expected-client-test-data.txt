@@ -98,6 +98,8 @@ test-data/admin/permissions/create-defaultObjectAccess-permission-request.json
 test-data/admin/permissions/create-defaultObjectAccess-permission-response.json
 test-data/admin/permissions/create-defaultObjectAccess-permission-withCustomIRI-request.json
 test-data/admin/permissions/create-defaultObjectAccess-permission-withCustomIRI-response.json
+test-data/admin/permissions/delete-administrative-permission-response.json
+test-data/admin/permissions/delete-defaultObjectAccess-permission-response.json
 test-data/admin/permissions/get-administrative-permission-for-project-group-response.json
 test-data/admin/permissions/get-administrative-permissions-for-project-response.json
 test-data/admin/permissions/get-defaultObjectAccess-permissions-for-project-response.json
