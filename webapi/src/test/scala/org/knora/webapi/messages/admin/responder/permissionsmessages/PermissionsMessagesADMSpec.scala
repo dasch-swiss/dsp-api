@@ -119,6 +119,23 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       assert(caught.getMessage === "Invalid project IRI")
     }
 
+    "return 'BadRequest' if the supplied group IRI for AdministrativePermissionCreateRequestADM is not valid" in {
+      val groupIri = "invalid-group-iri"
+      val caught = intercept[BadRequestException](
+        AdministrativePermissionCreateRequestADM(
+          createRequest = CreateAdministrativePermissionAPIRequestADM(
+            forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+            forGroup = groupIri,
+            hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
+          ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === s"Invalid group IRI $groupIri")
+    }
+
     "return 'BadRequest' if the supplied permission IRI for AdministrativePermissionCreateRequestADM is not valid" in {
       val permissionIri = "invalid-permission-IRI"
       val caught = intercept[BadRequestException](
@@ -428,7 +445,6 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       )
       assert(caught.getMessage === s"Anonymous Users are not allowed.")
     }
-
   }
 
   "Default Object Access Permission Create Requests" should {
@@ -446,6 +462,23 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
         )
       )
       assert(caught.getMessage === "Invalid project IRI")
+    }
+
+    "return 'BadRequest' if the supplied group IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
+      val groupIri = "invalid-group-iri"
+      val caught = intercept[BadRequestException](
+        DefaultObjectAccessPermissionCreateRequestADM(
+          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+            forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
+            forGroup = Some(groupIri),
+            hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
+          ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(caught.getMessage === s"Invalid group IRI $groupIri")
     }
 
     "return 'BadRequest' if the supplied custom permission IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
