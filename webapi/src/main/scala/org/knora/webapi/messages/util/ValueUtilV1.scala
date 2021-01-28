@@ -802,13 +802,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     val predicates = valueProps.literalData
 
     Future(
-      StillImageFileValueV1(
+      DocumentFileValueV1(
         internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
         internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
         originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
-        projectShortcode = projectShortcode,
-        dimX = predicates(OntologyConstants.KnoraBase.DimX).literals.head.toInt,
-        dimY = predicates(OntologyConstants.KnoraBase.DimY).literals.head.toInt
+        projectShortcode = projectShortcode
       ))
   }
 
