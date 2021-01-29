@@ -33,6 +33,8 @@ test-data/admin/lists/get-list-node-info-response.json
 test-data/admin/lists/get-list-response.json
 test-data/admin/lists/get-lists-response.json
 test-data/admin/lists/get-node-response.json
+test-data/admin/lists/insert-childNode-in-position-request.json
+test-data/admin/lists/insert-childNode-in-position-response.json
 test-data/admin/lists/toggle_new-list-admin-routes_v1/
 test-data/admin/lists/toggle_new-list-admin-routes_v1/add-second-child-to-root-request.json
 test-data/admin/lists/toggle_new-list-admin-routes_v1/add-second-child-to-root-response.json
@@ -96,6 +98,8 @@ test-data/admin/permissions/create-defaultObjectAccess-permission-request.json
 test-data/admin/permissions/create-defaultObjectAccess-permission-response.json
 test-data/admin/permissions/create-defaultObjectAccess-permission-withCustomIRI-request.json
 test-data/admin/permissions/create-defaultObjectAccess-permission-withCustomIRI-response.json
+test-data/admin/permissions/delete-administrative-permission-response.json
+test-data/admin/permissions/delete-defaultObjectAccess-permission-response.json
 test-data/admin/permissions/get-administrative-permission-for-project-group-response.json
 test-data/admin/permissions/get-administrative-permissions-for-project-response.json
 test-data/admin/permissions/get-defaultObjectAccess-permissions-for-project-response.json

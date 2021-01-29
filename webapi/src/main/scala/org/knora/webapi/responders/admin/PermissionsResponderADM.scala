@@ -638,16 +638,21 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request."))
 
         // get group
-        maybeGroup <- (responderManager ? GroupGetADM(
-          groupIri = createRequest.forGroup,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )).mapTo[Option[GroupADM]]
+        groupIri: IRI <- if (OntologyConstants.KnoraAdmin.BuiltInGroups.contains(createRequest.forGroup)) {
+          Future.successful(createRequest.forGroup)
+        } else {
+          for {
+            maybeGroup <- (responderManager ? GroupGetADM(
+              groupIri = createRequest.forGroup,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = KnoraSystemInstances.Users.SystemUser
+            )).mapTo[Option[GroupADM]]
 
-        // if it does not exist then throw an error
-        group: GroupADM = maybeGroup.getOrElse(
-          throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
-
+            // if it does not exist then throw an error
+            group: GroupADM = maybeGroup.getOrElse(
+              throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
+          } yield group.id
+        }
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
         newPermissionIri: IRI <- checkOrCreateEntityIri(customPermissionIri,
                                                         stringFormatter.makeRandomPermissionIri(project.shortcode))
@@ -660,7 +665,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             permissionClassIri = OntologyConstants.KnoraAdmin.AdministrativePermission,
             permissionIri = newPermissionIri,
             projectIri = project.id,
-            groupIri = group.id,
+            groupIri = groupIri,
             permissions = PermissionUtilADM.formatPermissionADMs(createRequest.hasPermissions, PermissionType.AP)
           )
           .toString
@@ -1458,6 +1463,27 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
         newPermissionIri: IRI <- checkOrCreateEntityIri(customPermissionIri,
                                                         stringFormatter.makeRandomPermissionIri(project.shortcode))
+        // verify group, if any given.
+        // Is a group given that is not a built-in one?
+        maybeGroupIri: Option[IRI] <- if (createRequest.forGroup.exists(
+                                            !OntologyConstants.KnoraAdmin.BuiltInGroups.contains(_))) {
+          // Yes. Check if it is a known group.
+          for {
+            maybeGroup <- (responderManager ? GroupGetADM(
+              groupIri = createRequest.forGroup.get,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = KnoraSystemInstances.Users.SystemUser
+            )).mapTo[Option[GroupADM]]
+
+            group: GroupADM = maybeGroup.getOrElse(
+              throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
+          } yield Some(group.id)
+        } else {
+          // No, return given group as it is. That means:
+          // If given group is a built-in one, no verification is necessary, return it as it is.
+          // In case no group IRI is given, returns None.
+          Future.successful(createRequest.forGroup)
+        }
 
         // Create the default object access permission.
         createNewDefaultObjectAccessPermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -1467,7 +1493,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
             permissionIri = newPermissionIri,
             permissionClassIri = OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission,
             projectIri = project.id,
-            maybeGroupIri = createRequest.forGroup,
+            maybeGroupIri = maybeGroupIri,
             maybeResourceClassIri = createRequest.forResourceClass,
             maybePropertyIri = createRequest.forProperty,
             permissions = PermissionUtilADM.formatPermissionADMs(createRequest.hasPermissions, PermissionType.OAP)
