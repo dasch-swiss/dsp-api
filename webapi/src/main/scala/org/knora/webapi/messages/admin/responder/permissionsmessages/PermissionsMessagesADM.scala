@@ -59,6 +59,9 @@ case class CreateAdministrativePermissionAPIRequestADM(id: Option[IRI] = None,
     id,
     throw BadRequestException(s"Invalid permission IRI ${id.get} is given."))
   if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
+  if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(forGroup)) {
+    stringFormatter.validateGroupIri(forGroup, throw BadRequestException(s"Invalid group IRI ${forGroup}"))
+  }
 }
 
 /**
@@ -85,18 +88,24 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(id: Option[IRI] = No
   stringFormatter.validateOptionalPermissionIri(
     id,
     throw BadRequestException(s"Invalid permission IRI ${id.get} is given."))
+
   forGroup match {
     case Some(iri: IRI) =>
       if (forResourceClass.isDefined)
         throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together.")
       else if (forProperty.isDefined)
         throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
-      else Some(iri)
+      else {
+        if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(iri)) {
+          stringFormatter.validateOptionalGroupIri(forGroup,
+                                                   throw BadRequestException(s"Invalid group IRI ${forGroup.get}"))
+        }
+      }
     case None =>
       if (forResourceClass.isEmpty && forProperty.isEmpty) {
         throw BadRequestException(
           "Either a group, a resource class, a property, or a combination of resource class and property must be given.")
-      } else None
+      }
   }
 
   forResourceClass match {

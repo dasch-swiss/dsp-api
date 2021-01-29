@@ -109,6 +109,16 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
   }
 
   /**
+    * Creates a URL for accessing a document file via Sipi.
+    *
+    * @param documentFileValueV1 the document file value.
+    * @return a Sipi  URL.
+    */
+  def makeSipiDocumentGetUrlFromFilename(documentFileValueV1: DocumentFileValueV1): String = {
+    s"${settings.externalSipiIIIFGetUrl}/${documentFileValueV1.projectShortcode}/${documentFileValueV1.internalFilename}/file"
+  }
+
+  /**
     * Creates a URL for accessing a text file via Sipi.
     *
     * @param textFileValue the text file value representing the text file.
@@ -170,6 +180,14 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
           ny = Some(stillImageFileValueV1.dimY),
           path = makeSipiImageGetUrlFromFilename(stillImageFileValueV1)
         )
+
+      case documentFileValueV1: DocumentFileValueV1 =>
+        LocationV1(
+          format_name = mimeType2V1Format(documentFileValueV1.internalMimeType),
+          origname = documentFileValueV1.originalFilename,
+          path = makeSipiDocumentGetUrlFromFilename(documentFileValueV1)
+        )
+
       case textFileValue: TextFileValueV1 =>
         LocationV1(
           format_name = mimeType2V1Format(textFileValue.internalMimeType),

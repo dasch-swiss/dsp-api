@@ -35,13 +35,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.messages.v2.responder.valuemessages.{
-  DocumentFileValueContentV2,
-  FileValueContentV2,
-  FileValueV2,
-  StillImageFileValueContentV2,
-  TextFileValueContentV2
-}
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import spray.json._
 
@@ -1601,7 +1595,7 @@ case class DocumentFileValueV1(internalMimeType: String,
   override def toString: String = internalFilename
 
   /**
-    * Checks if a new still image file value would duplicate an existing document file value.
+    * Checks if a new document file value would duplicate an existing document file value.
     *
     * @param other another [[ValueV1]].
     * @return `true` if `other` is a duplicate of `this`.

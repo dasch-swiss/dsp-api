@@ -912,6 +912,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       */
     case class StillImageFileValue(id: IRI, permissionCode: Option[Int], image: StillImageFileValueV1)
 
+    case class DocumentFileValue(id: IRI, permissionCode: Option[Int], document: DocumentFileValueV1)
+
     /**
       * Creates a [[StillImageFileValue]] from a [[VariableResultsRow]] representing a row of context query results.
       * If the row doesn't contain a file value IRI, returns [[None]].
@@ -2711,6 +2713,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           .groupBy(row => row.rowMap("obj"))
           .toVector
 
+        _ = log.info(s"========>\nresInfoResponseRows:\n${resInfoResponseRows}\n<==========")
+        _ = log.info(s"----->fileValueGroupedRows: ${fileValueGroupedRows}")
+
         // Convert the file value rows to ValueProps objects, and filter out the ones that the user doesn't have permission to see.
         valuePropsForFileValues: Seq[(IRI, ValueProps)] = fileValueGroupedRows
           .map {
@@ -2730,6 +2735,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                                           OntologyConstants.KnoraBase.RestrictedViewPermission)
           }
 
+        _ = log.info(s"********>\nvaluePropsForFileValues:\n${valuePropsForFileValues}\n<**********")
         // Convert the ValueProps objects into FileValueV1 objects
         fileValuesWithFuture: Seq[Future[FileValueV1]] = valuePropsForFileValues.map {
           case (fileValueIri, fileValueProps) =>
@@ -2752,6 +2758,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         }
 
         fileValues: Seq[FileValueV1] <- Future.sequence(fileValuesWithFuture)
+        _ = log.info(s"----->fileValues: ${fileValues}")
 
         // Generate a IIIF preview URL from the full-size image.
 
@@ -2759,13 +2766,20 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           case fileValue: StillImageFileValueV1 => fileValue
         }
 
+        documentFileValues: Seq[DocumentFileValueV1] = fileValues.collect {
+          case fileValue: DocumentFileValueV1 => fileValue
+        }
+        _ = log.info(s"+++++++++>fullSizeImageFileValues: ${fullSizeImageFileValues.lastOption}")
+        _ = log.info(s"+++++++++>documentFileValues: ${documentFileValues.lastOption}")
+
         preview: Option[LocationV1] = fullSizeImageFileValues.headOption.map {
           fullSizeImageFileValue: StillImageFileValueV1 =>
             valueUtilV1.fileValueV12LocationV1(fullSizeImageFileValueToPreview(fullSizeImageFileValue))
         }
 
         // Convert the full-resolution file values into LocationV1 objects as required by Knora API v1.
-        locations: Seq[LocationV1] = preview.toVector ++ fullSizeImageFileValues.flatMap { fileValueV1 =>
+        //locations: Seq[LocationV1] = preview.toVector ++ fullSizeImageFileValues.flatMap { fileValueV1 =>
+        locations: Seq[LocationV1] = preview.toVector ++ fileValues.flatMap { fileValueV1 =>
           createMultipleImageResolutions(fileValueV1).map(oneResolution =>
             valueUtilV1.fileValueV12LocationV1(oneResolution))
         }
@@ -3262,6 +3276,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           // For other MIME types, just leave the image as is.
           Vector(stillImageFileValueV1)
         }
+
+      case documentFileValueV1: DocumentFileValueV1 => Vector(documentFileValueV1)
 
       case otherFileValueV1 => Vector(otherFileValueV1)
     }
