@@ -346,6 +346,7 @@ jobs:
       api-unit-tests,
       api-e2e-tests,
       api-integration-tests,
+      client-test-data,
       upgrade-integration-tests,
       docs-build-test
     ]
