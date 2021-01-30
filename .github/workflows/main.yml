@@ -52,6 +52,32 @@ jobs:
           df -h
           docker system df
 
+# ------------------------------------------
+# ------------------------------------------
+# Test client-test-data 
+  client-test-data-tests:
+    name: Test client-test-data 
+    needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+        with:
+          fetch-depth: 50
+      - uses: joschi/setup-jdk@v2
+        with:
+          java-version: '11' # The OpenJDK version to make available on the path
+          architecture: 'x64' # defaults to 'x64'
+      - name: Install requirements
+        run: sudo apt-get install ca-certificates-java expect redis-tools unzip
+      - name: Generate api-client-test-data
+        run: make client-test-data
+      - name: Disk Free After
+        run: |
+          df -h
+          docker system df
+# ------------------------------------------
+# ------------------------------------------
+
   api-unit-tests:
     name: API Unit Tests
     needs: compile
@@ -320,6 +346,7 @@ jobs:
       api-unit-tests,
       api-e2e-tests,
       api-integration-tests,
+      client-test-data-tests,
       upgrade-integration-tests,
       docs-build-test
     ]
