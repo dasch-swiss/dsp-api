@@ -1,5 +1,12 @@
 # Changelog
 
+### [13.1.2](https://www.github.com/dasch-swiss/dsp-api/compare/v13.1.1...v13.1.2) (2021-02-01)
+
+
+### Maintenance
+
+* **salsah1:** delete from repository ([#1805](https://www.github.com/dasch-swiss/dsp-api/issues/1805))(DSP-1294) ([3251a74](https://www.github.com/dasch-swiss/dsp-api/commit/3251a742664a74e3a214861f24f9bdd416813291))
+
 ### [13.1.1](https://www.github.com/dasch-swiss/dsp-api/compare/v13.1.0...v13.1.1) (2021-01-30)
 
 ### Maintenance
