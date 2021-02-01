@@ -3347,8 +3347,7 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
       DocumentFileValueContentV2(
         ontologySchema = ApiV2Complex,
         fileValue = fileValueWithSipiMetadata.fileValue,
-        pageCount = fileValueWithSipiMetadata.sipiFileMetadata.pageCount
-          .getOrElse(throw SipiException("Sipi did not return a page count")),
+        pageCount = fileValueWithSipiMetadata.sipiFileMetadata.pageCount.getOrElse(1),// if no page count, it's a document without -> assume 1
         dimX = fileValueWithSipiMetadata.sipiFileMetadata.width,
         dimY = fileValueWithSipiMetadata.sipiFileMetadata.height,
         comment = getComment(jsonLDObject)

@@ -151,7 +151,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       "text/xml" -> "XML",
       "text/csv" -> "CSV",
       "application/zip" -> "ZIP",
-      "application/x-compressed-zip" -> "ZIP"
+      "application/x-compressed-zip" -> "ZIP",
+      "audio/x-wav" -> "AUDIO",
+      "audio/mp4" -> "AUDIO",
+      "audio/mpeg" -> "AUDIO"
+
     ), { key: String =>
       s"Unknown MIME type: $key"
     }
