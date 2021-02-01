@@ -750,14 +750,18 @@ class KnoraSipiIntegrationV1ITSpec
       val documentResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
         BasicHttpCredentials(userEmail, password))
 
-      val documentResourceResponse = getResponseStringOrThrow(documentResourceRequest)
-      println(documentResourceResponse)
+      val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
+      val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val nx = locdata.fields("nx").asInstanceOf[JsNumber].value.toInt
+      val ny = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
+      val pdfUrl =
+        locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
+      assert(nx == minimalPdfWidth)
+      assert(ny == minimalPdfHeight)
 
-      val documentResourceRequestV2 = Get(baseApiUrl + "/v2/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
-
-      val documentResourceResponseV2 = getResponseStringOrThrow(documentResourceRequestV2)
-      println(documentResourceResponseV2)
+      // Request the file from Sipi.
+      val sipiGetRequest = Get(pdfUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
+      checkResponseOK(sipiGetRequest)
     }
   }
 }

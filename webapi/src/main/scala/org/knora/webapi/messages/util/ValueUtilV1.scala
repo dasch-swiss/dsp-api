@@ -185,6 +185,8 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         LocationV1(
           format_name = mimeType2V1Format(documentFileValueV1.internalMimeType),
           origname = documentFileValueV1.originalFilename,
+          nx = documentFileValueV1.dimX,
+          ny = documentFileValueV1.dimY,
           path = makeSipiDocumentGetUrlFromFilename(documentFileValueV1)
         )
 
