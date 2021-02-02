@@ -2713,9 +2713,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           .groupBy(row => row.rowMap("obj"))
           .toVector
 
-        // _ = log.info(s"========>\nresInfoResponseRows:\n${resInfoResponseRows}\n<==========")
-        // _ = log.info(s"----->fileValueGroupedRows: ${fileValueGroupedRows}")
-
         // Convert the file value rows to ValueProps objects, and filter out the ones that the user doesn't have permission to see.
         valuePropsForFileValues: Seq[(IRI, ValueProps)] = fileValueGroupedRows
           .map {
@@ -2735,7 +2732,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                                                           OntologyConstants.KnoraBase.RestrictedViewPermission)
           }
 
-        // _ = log.info(s"********>\nvaluePropsForFileValues:\n${valuePropsForFileValues}\n<**********")
         // Convert the ValueProps objects into FileValueV1 objects
         fileValuesWithFuture: Seq[Future[FileValueV1]] = valuePropsForFileValues.map {
           case (fileValueIri, fileValueProps) =>
@@ -2758,7 +2754,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         }
 
         fileValues: Seq[FileValueV1] <- Future.sequence(fileValuesWithFuture)
-        // _ = log.info(s"----->fileValues: ${fileValues}")
 
         // Generate a IIIF preview URL from the full-size image.
 
@@ -2769,8 +2764,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         documentFileValues: Seq[DocumentFileValueV1] = fileValues.collect {
           case fileValue: DocumentFileValueV1 => fileValue
         }
-        // _ = log.info(s"+++++++++>fullSizeImageFileValues: ${fullSizeImageFileValues.lastOption}")
-        // _ = log.info(s"+++++++++>documentFileValues: ${documentFileValues.lastOption}")
 
         preview: Option[LocationV1] = fullSizeImageFileValues.headOption.map {
           fullSizeImageFileValue: StillImageFileValueV1 =>
