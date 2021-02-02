@@ -49,8 +49,7 @@ object KnoraSipiIntegrationV1ITSpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file
-  * `sipi.knora-docker-config.lua`.
+  * End-to-End (E2E) test specification for testing Knora-Sipi integration.
   */
 class KnoraSipiIntegrationV1ITSpec
     extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config)
@@ -79,10 +78,17 @@ class KnoraSipiIntegrationV1ITSpec
   private val letterIri = new MutableTestIri
   private val gravsearchTemplateIri = new MutableTestIri
 
+  private val pdfResourceIri = new MutableTestIri
+
   private val minimalPdfOriginalFilename = "minimal.pdf"
   private val pathToMinimalPdf = s"test_data/test_route/files/$minimalPdfOriginalFilename"
   private val minimalPdfWidth = 1250
   private val minimalPdfHeight = 600
+
+  private val testPdfOriginalFilename = "test.pdf"
+  private val pathToTestPdf = s"test_data/test_route/files/$testPdfOriginalFilename"
+  private val testPdfWidth = 2480
+  private val testPdfHeight = 3508
 
   /**
     * Adds the IRI of a XSL transformation to the given mapping.
@@ -746,6 +752,8 @@ class KnoraSipiIntegrationV1ITSpec
         case _                              => throw InvalidApiJsonException("member 'res_id' was expected")
       }
 
+      pdfResourceIri.set(resourceIri)
+
       // Request the document resource from the Knora API server.
       val documentResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
         BasicHttpCredentials(userEmail, password))
@@ -762,6 +770,43 @@ class KnoraSipiIntegrationV1ITSpec
       // Request the file from Sipi.
       val sipiGetRequest = Get(pdfUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
       checkResponseOK(sipiGetRequest)
+    }
+
+    "change the PDF file attached to a resource" in {
+      // Upload the file to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToTestPdf, mimeType = MediaTypes.`application/pdf`))
+      )
+
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.originalFilename should ===(testPdfOriginalFilename)
+
+      // JSON describing the new file to Knora.
+      val knoraParams = JsObject(
+        Map(
+          "file" -> JsString(s"${uploadedFile.internalFilename}")
+        )
+      )
+
+      // Send the JSON in a PUT request to the Knora API server.
+      val knoraPutRequest = Put(
+        baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(pdfResourceIri.get, "UTF-8"),
+        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      checkResponseOK(knoraPutRequest)
+
+      // Request the document resource from the Knora API server.
+      val documentResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(pdfResourceIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
+      val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val nx = locdata.fields("nx").asInstanceOf[JsNumber].value.toInt
+      val ny = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
+      assert(nx == testPdfWidth)
+      assert(ny == testPdfHeight)
     }
   }
 }
