@@ -3263,8 +3263,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           Vector(stillImageFileValueV1)
         }
 
-      case documentFileValueV1: DocumentFileValueV1 => Vector(documentFileValueV1)
-
       case otherFileValueV1 => Vector(otherFileValueV1)
     }
   }
