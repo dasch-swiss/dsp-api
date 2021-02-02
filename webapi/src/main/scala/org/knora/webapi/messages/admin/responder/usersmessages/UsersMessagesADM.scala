@@ -722,6 +722,7 @@ case class UserADM(id: IRI,
         Some(id)
       },
       email = Some(email),
+      username = Some(username),
       password = password,
       token = token,
       firstname = Some(givenName),

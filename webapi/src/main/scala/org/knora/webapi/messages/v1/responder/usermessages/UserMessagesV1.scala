@@ -342,6 +342,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
   * @param lang      The ISO 639-1 code of the user's preferred language.
   */
 case class UserDataV1(user_id: Option[IRI] = None,
+                      username: Option[String] = None,
                       email: Option[String] = None,
                       password: Option[String] = None,
                       token: Option[String] = None,

@@ -665,8 +665,8 @@ object Authenticator {
         // in v2 we support the basic scheme
         val maybeBasicAuthValue = credsArr.find(_.contains("Basic"))
 
-        // try to decode email/password
-        val (maybeEmail, maybePassword) = maybeBasicAuthValue match {
+        // try to decode username/email and password
+        val (maybeUsernameOrEmail, maybePassword) = maybeBasicAuthValue match {
           case Some(value) =>
             val trimmedValue = value.substring(5).trim() // remove 'Basic '
             val decodedValue = ByteString.fromArray(Base64.getDecoder.decode(trimmedValue)).decodeString("UTF8")
@@ -676,11 +676,19 @@ object Authenticator {
             (None, None)
         }
 
-        val maybePassCreds: Option[KnoraPasswordCredentialsV2] = if (maybeEmail.nonEmpty && maybePassword.nonEmpty) {
-          Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = maybeEmail), maybePassword.get))
-        } else {
-          None
-        }
+        val maybePassCreds: Option[KnoraPasswordCredentialsV2] =
+          if (maybeUsernameOrEmail.nonEmpty && maybePassword.nonEmpty) {
+            if (maybeUsernameOrEmail.contains("@")) {
+              // contains '@' so it must be an email
+              Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = maybeUsernameOrEmail), maybePassword.get))
+            } else {
+              // does not contain '@' so it must be a username
+              Some(
+                KnoraPasswordCredentialsV2(UserIdentifierADM(maybeUsername = maybeUsernameOrEmail), maybePassword.get))
+            }
+          } else {
+            None
+          }
 
         // and the bearer scheme
         val maybeToken = credsArr.find(_.contains("Bearer")) match {
