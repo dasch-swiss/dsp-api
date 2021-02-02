@@ -22,7 +22,6 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 * [Knora APIs](03-apis/index.md)
 * [Publishing and Deployment](04-publishing-deployment/index.md)
 * [Knora Internals](05-internals/design/principles/index.md)
-* [Salsah](06-salsah/index.md)
 * [Sipi](07-sipi/index.md)
 * [Lucene](08-lucene/index.md)
 * [Frequently Asked Questions](faq/index.md)
