@@ -1493,7 +1493,6 @@ $(function() {
 					resource_label(data);
 					window_html.win('contentElement').css('overflow', 'auto'); // we have to set overlfow=auto to have a scrollbar, if the content does not fit....
 
-					console.log(data);
 					metadataAreaDomCreate(window_html.win('content'), data, {winid: window_html.win('getId')});
 
 					window_html.find('.resicon').dragndrop('makeDraggable', 'RESID', {resid: data.resdata.res_id});
