@@ -718,6 +718,46 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 3)
         isNodeUpdated should be(true)
       }
+
+      "reposition node in a position equal to length of new parents children" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList03"
+        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        responderManager ! NodePositionChangeRequestADM(
+          nodeIri = nodeIri,
+          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
+            position = 5,
+            parentIri = parentIri
+          ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser,
+          apiRequestID = UUID.randomUUID
+        )
+        val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
+        val parentNode = received.node
+        parentNode.getNodeId should be(parentIri)
+        val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 5)
+        isNodeUpdated should be(true)
+      }
+
+      "reposition List014 in position 0 of its sibling which does not have a child" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+        val parentIri = "http://rdfh.ch/lists/0001/notUsedList015"
+        responderManager ! NodePositionChangeRequestADM(
+          nodeIri = nodeIri,
+          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
+            position = 0,
+            parentIri = parentIri
+          ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser,
+          apiRequestID = UUID.randomUUID
+        )
+        val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
+        val parentNode = received.node
+        parentNode.getNodeId should be(parentIri)
+        val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 0)
+        isNodeUpdated should be(true)
+      }
     }
 
     "used to delete list items" should {
@@ -812,6 +852,5 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         received.deleted should be(true)
       }
     }
-
   }
 }
