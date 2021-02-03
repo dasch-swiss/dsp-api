@@ -816,9 +816,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         remainingChildren.last.position should be(3)
 
         // node List015 should still have its child
-        val firstChild = remainingChildren.filter(node => node.id == "http://rdfh.ch/lists/0001/notUsedList015").head
-        firstChild.position should be(2)
-        firstChild.children.size should be(1)
+        val list015 = remainingChildren.filter(node => node.id == "http://rdfh.ch/lists/0001/notUsedList015").head
+        list015.position should be(2)
+        list015.children.size should be(1)
       }
 
       "delete a child node that is not in use" in {
