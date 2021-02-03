@@ -265,6 +265,44 @@ DELETE {
                 }
             }
 
+            case documentFileValue: DocumentFileValueV1 => {
+                ?newValue knora-base:internalFilename """@documentFileValue.internalFilename""" .
+                ?newValue knora-base:internalMimeType """@documentFileValue.internalMimeType""" .
+                ?newValue knora-base:pageCount @documentFileValue.pageCount .
+
+                @documentFileValue.dimX match {
+                    case Some(definedDimX) => {
+                        ?newValue knora-base:dimX @definedDimX .
+                    }
+
+                    case None => {}
+                }
+
+                @documentFileValue.dimY match {
+                    case Some(definedDimY) => {
+                        ?newValue knora-base:dimY @definedDimY .
+                    }
+
+                    case None => {}
+                }
+
+                @documentFileValue.originalFilename match {
+                    case Some(definedOriginalFilename) => {
+                        ?newValue knora-base:originalFilename """@definedOriginalFilename""" .
+                    }
+
+                    case None => {}
+                }
+
+                @documentFileValue.originalMimeType match {
+                    case Some(definedOriginalMimeType) => {
+                        ?newValue knora-base:originalMimeType """@definedOriginalMimeType""" .
+                    }
+
+                    case None => {}
+                }
+            }
+
             case listValue: HierarchicalListValueV1 => {
 
                 ?newValue knora-base:valueHasListNode <@listValue.hierarchicalListIri> .

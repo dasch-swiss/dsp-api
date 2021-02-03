@@ -83,7 +83,7 @@ object SharedPermissionsTestData {
           PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.Creator),
           PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
-          PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
+          PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
         )
       )
     )

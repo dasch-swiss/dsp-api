@@ -33,7 +33,12 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
-import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{
+  DocumentFileValueV1,
+  FileValueV1,
+  StillImageFileValueV1,
+  TextFileValueV1
+}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
 import org.knora.webapi.settings.KnoraSettingsImpl
@@ -258,6 +263,13 @@ object RouteUtilV1 {
   )
 
   /**
+    * MIME types used in Sipi to store document files.
+    */
+  private val documentMimeTypes: Set[String] = Set(
+    "application/pdf"
+  )
+
+  /**
     * Converts file metadata from Sipi into a [[FileValueV1]].
     *
     * @param filename             the filename.
@@ -286,6 +298,18 @@ object RouteUtilV1 {
         originalFilename = fileMetadataResponse.originalFilename,
         originalMimeType = fileMetadataResponse.originalMimeType,
         projectShortcode = projectShortcode
+      )
+    } else if (documentMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
+      DocumentFileValueV1(
+        internalFilename = filename,
+        internalMimeType = fileMetadataResponse.internalMimeType,
+        originalFilename = fileMetadataResponse.originalFilename,
+        originalMimeType = fileMetadataResponse.originalMimeType,
+        projectShortcode = projectShortcode,
+        pageCount = fileMetadataResponse.pageCount.getOrElse(
+          throw SipiException(s"Sipi did not return the page count of the document")),
+        dimX = fileMetadataResponse.width,
+        dimY = fileMetadataResponse.height
       )
     } else {
       throw BadRequestException(s"MIME type ${fileMetadataResponse.internalMimeType} not supported in Knora API v1")
