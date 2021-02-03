@@ -801,7 +801,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "delete a middle child node that is not in use" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
+        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = nodeIri,
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -811,19 +811,18 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val received: ChildNodeDeleteResponseADM = expectMsgType[ChildNodeDeleteResponseADM](timeout)
         val parentNode = received.node
         val remainingChildren = parentNode.getChildren
-        remainingChildren.size should be(2)
-        //last child should be shifted to left
-        remainingChildren.last.position should be(1)
+        remainingChildren.size should be(4)
+        //Tailing children should be shifted to left
+        remainingChildren.last.position should be(3)
 
-        // first node should still have its child
-        val firstChild = remainingChildren.head
-        firstChild.id should be("http://rdfh.ch/lists/0001/notUsedList01")
-        firstChild.position should be(0)
-        firstChild.children.size should be(5)
+        // node List015 should still have its child
+        val firstChild = remainingChildren.filter(node => node.id == "http://rdfh.ch/lists/0001/notUsedList015").head
+        firstChild.position should be(2)
+        firstChild.children.size should be(1)
       }
 
       "delete a child node that is not in use" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = nodeIri,
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -835,7 +834,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val remainingChildren = parentNode.getChildren
         remainingChildren.size should be(1)
         val firstChild = remainingChildren.head
-        firstChild.id should be("http://rdfh.ch/lists/0001/notUsedList03")
+        firstChild.id should be("http://rdfh.ch/lists/0001/notUsedList01")
         firstChild.position should be(0)
       }
 
