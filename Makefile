@@ -111,6 +111,7 @@ stack-up: docker-build env-file ## starts the knora-stack: fuseki, sipi, redis, 
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 	docker-compose -f docker-compose.yml up -d
 	$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
+	$(MAKE) metadata
 
 .PHONY: stack-up-fast
 stack-up-fast: docker-build-knora-api-image env-file ## starts the knora-stack by skipping rebuilding most of the images (only api image is rebuilt).
@@ -293,31 +294,32 @@ init-db-test-from-staging: db_staging_dump.trig init-db-test-empty ## init local
 	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_staging_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
 .PHONY: metadata
-metadata: ## starts the stack and adds metadata
+metadata: ## add three example metadata sets
 	@echo $@
-	$(MAKE) stack-up
 	$(MAKE) metadata-standard
+	$(MAKE) metadata-minimal
+	$(MAKE) metadata-maximal
 
 .PHONY: metadata-standard
 metadata-standard: ## add pseudo-realistic metadata set to anything project
 	@echo $@
 	@mkdir -p .tmp
 	@curl https://raw.githubusercontent.com/dasch-swiss/dsp-ontologies/main/example/example-metadata.ttl -o .tmp/metadata.ttl -s
-	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001" -s
+	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001" -s -o /dev/null
 
 .PHONY: metadata-minimal
-metadata-minimal: ## add minimal metadata set to anything project
+metadata-minimal: ## add minimal metadata set to images project
 	@echo $@
 	@mkdir -p .tmp
 	@curl https://raw.githubusercontent.com/dasch-swiss/dsp-ontologies/main/example/example-metadata-minimal.ttl -o .tmp/metadata.ttl -s
-	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001" -s
+	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF" -s -o /dev/null
 
 .PHONY: metadata-maximal
-metadata-maximal: ## add maximal metadata set to anything project
+metadata-maximal: ## add maximal metadata set to dokubib project
 	@echo $@
 	@mkdir -p .tmp
 	@curl https://raw.githubusercontent.com/dasch-swiss/dsp-ontologies/main/example/example-metadata-maximal.ttl -o .tmp/metadata.ttl -s
-	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001" -s
+	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0804" -s -o /dev/null
 
 #################################
 ## Other
