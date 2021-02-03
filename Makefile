@@ -293,10 +293,8 @@ init-db-test-from-staging: db_staging_dump.trig init-db-test-empty ## init local
 	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_staging_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
 .PHONY: metadata
-metadata: ## initializes the knora-test repository, starts the stack and adds metadata
+metadata: ## starts the stack and adds metadata
 	@echo $@
-	$(MAKE) stack-down-delete-volumes
-	$(MAKE) init-db-test
 	$(MAKE) stack-up
 	$(MAKE) metadata-standard
 
