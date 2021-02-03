@@ -292,6 +292,35 @@ init-db-test-from-staging: db_staging_dump.trig init-db-test-empty ## init local
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
 	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_staging_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
+.PHONY: metadata
+metadata: ## initializes the knora-test repository, starts the stack and adds metadata
+	@echo $@
+	$(MAKE) stack-down-delete-volumes
+	$(MAKE) init-db-test
+	$(MAKE) stack-up
+	$(MAKE) metadata-standard
+
+.PHONY: metadata-standard
+metadata-standard: ## add pseudo-realistic metadata set to anything project
+	@echo $@
+	@mkdir -p .tmp
+	@curl https://raw.githubusercontent.com/dasch-swiss/dsp-ontologies/main/example/example-metadata.ttl -o .tmp/metadata.ttl -s
+	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001" -s
+
+.PHONY: metadata-minimal
+metadata-minimal: ## add minimal metadata set to anything project
+	@echo $@
+	@mkdir -p .tmp
+	@curl https://raw.githubusercontent.com/dasch-swiss/dsp-ontologies/main/example/example-metadata-minimal.ttl -o .tmp/metadata.ttl -s
+	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001" -s
+
+.PHONY: metadata-maximal
+metadata-maximal: ## add maximal metadata set to anything project
+	@echo $@
+	@mkdir -p .tmp
+	@curl https://raw.githubusercontent.com/dasch-swiss/dsp-ontologies/main/example/example-metadata-maximal.ttl -o .tmp/metadata.ttl -s
+	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001" -s
+
 #################################
 ## Other
 #################################
