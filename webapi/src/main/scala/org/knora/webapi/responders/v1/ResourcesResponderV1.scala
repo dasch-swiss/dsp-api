@@ -2764,8 +2764,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             valueUtilV1.fileValueV12LocationV1(fullSizeImageFileValueToPreview(fullSizeImageFileValue))
         }
 
-        // Convert the full-resolution file values into LocationV1 objects as required by Knora API v1.
-        locations: Seq[LocationV1] = preview.toVector ++ fullSizeImageFileValues.flatMap { fileValueV1 =>
+        // Convert the file values into LocationV1 objects as required by Knora API v1.
+        locations: Seq[LocationV1] = preview.toVector ++ fileValues.flatMap { fileValueV1 =>
           createMultipleImageResolutions(fileValueV1).map(oneResolution =>
             valueUtilV1.fileValueV12LocationV1(oneResolution))
         }
