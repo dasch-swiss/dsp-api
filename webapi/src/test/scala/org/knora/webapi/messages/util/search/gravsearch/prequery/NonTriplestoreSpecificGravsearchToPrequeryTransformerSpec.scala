@@ -21,11 +21,16 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+import scalax.collection.edge.WDiEdge
+import scalax.collection.edge.Implicits._
+
 private object QueryHandler {
 
   private val timeout = 10.seconds
 
   val anythingUser: UserADM = SharedTestDataADM.anythingAdminUser
+
+  protected def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Seq[QueryPattern] = ???
 
   def transformQuery(query: String, responderData: ResponderData, settings: KnoraSettingsImpl): SelectQuery = {
 
