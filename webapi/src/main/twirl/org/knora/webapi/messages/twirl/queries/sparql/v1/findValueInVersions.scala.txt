@@ -43,16 +43,22 @@ SELECT ?objPred ?objObj ?predStandoff ?objStandoff
     FROM <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND(IRI("@resourceIri") as ?resource)
-    BIND(IRI("@propertyIri") as ?property)
-    BIND(IRI("@searchValueIri") as ?searchValue)
-
     {
-        ?resource ?property ?currentValue ;
-            knora-base:isDeleted false .
-        ?currentValue knora-base:previousValue* ?searchValue ;
-            knora-base:isDeleted false .
+        BIND(IRI("@resourceIri") as ?resource)
+        BIND(IRI("@propertyIri") as ?property)
+        BIND(IRI("@searchValueIri") as ?searchValue)
+
+        ?resource ?property ?currentValue .
+        ?currentValue knora-base:previousValue* ?searchValue .
         ?searchValue ?objPred ?objObj .
+
+        FILTER NOT EXISTS {
+            ?resource knora-base:isDeleted true .
+        }
+
+        FILTER NOT EXISTS {
+            ?currentValue knora-base:isDeleted true .
+        }
 
         FILTER(?objPred != knora-base:attachedToProject)
 
@@ -63,11 +69,22 @@ WHERE {
     }
     UNION
     {
+        BIND(IRI("@resourceIri") as ?resource)
+        BIND(IRI("@propertyIri") as ?property)
+        BIND(IRI("@searchValueIri") as ?searchValue)
+
         ?resource ?property ?currentValue ;
-            knora-base:isDeleted false ;
             knora-base:attachedToProject ?resourceProject .
-        ?currentValue knora-base:previousValue* ?searchValue ;
-            knora-base:isDeleted false .
+
+        ?currentValue knora-base:previousValue* ?searchValue .
+
+        FILTER NOT EXISTS {
+            ?resource knora-base:isDeleted true .
+        }
+
+        FILTER NOT EXISTS {
+            ?currentValue knora-base:isDeleted true .
+        }
 
         @* Return the project of the resource that contains the value. *@
 
