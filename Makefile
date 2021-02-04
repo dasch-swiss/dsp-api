@@ -111,6 +111,10 @@ stack-up: docker-build env-file ## starts the knora-stack: fuseki, sipi, redis, 
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 	docker-compose -f docker-compose.yml up -d
 	$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
+
+.PHONY: stack-up-with-metadata
+stack-up-with-metadata: ## starts stack and adds metadata
+	$(MAKE) stack-up
 	$(MAKE) metadata
 
 .PHONY: stack-up-fast
