@@ -113,9 +113,7 @@ stack-up: docker-build env-file ## starts the knora-stack: fuseki, sipi, redis, 
 	$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
 
 .PHONY: stack-up-with-metadata
-stack-up-with-metadata: ## starts stack and adds metadata
-	$(MAKE) stack-up
-	$(MAKE) metadata
+stack-up-with-metadata: stack-up metadata ## starts stack and adds metadata
 
 .PHONY: stack-up-fast
 stack-up-fast: docker-build-knora-api-image env-file ## starts the knora-stack by skipping rebuilding most of the images (only api image is rebuilt).
@@ -298,11 +296,7 @@ init-db-test-from-staging: db_staging_dump.trig init-db-test-empty ## init local
 	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_staging_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
 .PHONY: metadata
-metadata: ## add three example metadata sets
-	@echo $@
-	$(MAKE) metadata-standard
-	$(MAKE) metadata-minimal
-	$(MAKE) metadata-maximal
+metadata: metadata-standard metadata-minimal metadata-maximal ## add three example metadata sets
 
 .PHONY: metadata-standard
 metadata-standard: ## add pseudo-realistic metadata set to anything project
