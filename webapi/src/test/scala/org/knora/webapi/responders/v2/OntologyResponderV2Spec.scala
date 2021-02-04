@@ -1950,6 +1950,41 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
+    "change the labels of a property, submitting the same labels again" in {
+      val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
+
+      val newObjects = Seq(
+        StringLiteralV2("has name", Some("en")),
+        StringLiteralV2("a nom", Some("fr")),
+        StringLiteralV2("hat Namen", Some("de"))
+      )
+
+      responderManager ! ChangePropertyLabelsOrCommentsRequestV2(
+        propertyIri = propertyIri,
+        predicateToUpdate = OntologyConstants.Rdfs.Label.toSmartIri,
+        newObjects = newObjects,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val externalOntology = msg.toOntologySchema(ApiV2Complex)
+          assert(externalOntology.properties.size == 1)
+          val readPropertyInfo = externalOntology.properties(propertyIri)
+          readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(
+            newObjects)
+
+          val metadata = externalOntology.ontologyMetadata
+          val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+            throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
     "not allow a user to change the comments of a property if they are not a sysadmin or an admin in the ontology's project" in {
 
       val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
@@ -1979,6 +2014,46 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "change the comments of a property" in {
+      val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
+
+      val newObjects = Seq(
+        StringLiteralV2("The name of a Thing", Some("en")),
+        StringLiteralV2("Le nom d\\'une chose", Some("fr")), // This is SPARQL-escaped as it would be if taken from a JSON-LD request.
+        StringLiteralV2("Der Name eines Dinges", Some("de"))
+      )
+
+      // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
+      val newObjectsUnescaped = newObjects.map {
+        case StringLiteralV2(text, lang) => StringLiteralV2(stringFormatter.fromSparqlEncodedString(text), lang)
+      }
+
+      responderManager ! ChangePropertyLabelsOrCommentsRequestV2(
+        propertyIri = propertyIri,
+        predicateToUpdate = OntologyConstants.Rdfs.Comment.toSmartIri,
+        newObjects = newObjects,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val externalOntology = msg.toOntologySchema(ApiV2Complex)
+          assert(externalOntology.properties.size == 1)
+          val readPropertyInfo = externalOntology.properties(propertyIri)
+          readPropertyInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(
+            newObjectsUnescaped)
+
+          val metadata = externalOntology.ontologyMetadata
+          val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+            throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
+    "change the comments of a property, submitting the same comments again" in {
       val propertyIri = AnythingOntologyIri.makeEntityIri("hasName")
 
       val newObjects = Seq(
@@ -2449,6 +2524,40 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
+    "change the labels of a class, submitting the same labels again" in {
+      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+      val newObjects = Seq(
+        StringLiteralV2("nothing", Some("en")),
+        StringLiteralV2("rien", Some("fr"))
+      )
+
+      responderManager ! ChangeClassLabelsOrCommentsRequestV2(
+        classIri = classIri,
+        predicateToUpdate = OntologyConstants.Rdfs.Label.toSmartIri,
+        newObjects = newObjects,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val externalOntology = msg.toOntologySchema(ApiV2Complex)
+          assert(externalOntology.classes.size == 1)
+          val readClassInfo = externalOntology.classes(classIri)
+          readClassInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Label.toSmartIri).objects should ===(
+            newObjects)
+
+          val metadata = externalOntology.ontologyMetadata
+          val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+            throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
     "not allow a user to change the comments of a class if they are not a sysadmin or an admin in the ontology's project" in {
 
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
@@ -2475,6 +2584,45 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "change the comments of a class" in {
+      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+      val newObjects = Seq(
+        StringLiteralV2("Represents nothing", Some("en")),
+        StringLiteralV2("ne représente rien", Some("fr"))
+      )
+
+      // Make an unescaped copy of the new comments, because this is how we will receive them in the API response.
+      val newObjectsUnescaped = newObjects.map {
+        case StringLiteralV2(text, lang) => StringLiteralV2(stringFormatter.fromSparqlEncodedString(text), lang)
+      }
+
+      responderManager ! ChangeClassLabelsOrCommentsRequestV2(
+        classIri = classIri,
+        predicateToUpdate = OntologyConstants.Rdfs.Comment.toSmartIri,
+        newObjects = newObjects,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val externalOntology = msg.toOntologySchema(ApiV2Complex)
+          assert(externalOntology.classes.size == 1)
+          val readClassInfo = externalOntology.classes(classIri)
+          readClassInfo.entityInfoContent.predicates(OntologyConstants.Rdfs.Comment.toSmartIri).objects should ===(
+            newObjectsUnescaped)
+
+          val metadata = externalOntology.ontologyMetadata
+          val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+            throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
+    "change the comments of a class, submitting the same comments again" in {
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
       val newObjects = Seq(

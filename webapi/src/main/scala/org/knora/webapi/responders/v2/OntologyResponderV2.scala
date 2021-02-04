@@ -3744,19 +3744,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           featureFactoryConfig = changePropertyLabelsOrCommentsRequest.featureFactoryConfig
         )
 
-        // Check that the new labels/comments are different from the current ones.
-
-        currentLabelsOrComments: Seq[OntologyLiteralV2] = currentReadPropertyInfo.entityInfoContent.predicates
-          .get(changePropertyLabelsOrCommentsRequest.predicateToUpdate) match {
-          case Some(pred) => pred.objects
-          case None       => Seq.empty[OntologyLiteralV2]
-        }
-
-        _ = if (currentLabelsOrComments == changePropertyLabelsOrCommentsRequest.newObjects) {
-          throw BadRequestException(
-            s"The submitted objects of ${changePropertyLabelsOrCommentsRequest.propertyIri} are the same as the current ones in property ${changePropertyLabelsOrCommentsRequest.propertyIri}")
-        }
-
         // If this is a link property, also change the labels/comments of the corresponding link value property.
 
         maybeCurrentLinkValueReadPropertyInfo: Option[ReadPropertyInfoV2] = if (currentReadPropertyInfo.isLinkProp) {
@@ -3936,19 +3923,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           expectedLastModificationDate = changeClassLabelsOrCommentsRequest.lastModificationDate,
           featureFactoryConfig = changeClassLabelsOrCommentsRequest.featureFactoryConfig
         )
-
-        // Check that the new labels/comments are different from the current ones.
-
-        currentLabelsOrComments: Seq[OntologyLiteralV2] = currentReadClassInfo.entityInfoContent.predicates
-          .get(changeClassLabelsOrCommentsRequest.predicateToUpdate) match {
-          case Some(pred) => pred.objects
-          case None       => Seq.empty[OntologyLiteralV2]
-        }
-
-        _ = if (currentLabelsOrComments == changeClassLabelsOrCommentsRequest.newObjects) {
-          throw BadRequestException(
-            s"The submitted objects of ${changeClassLabelsOrCommentsRequest.predicateToUpdate} are the same as the current ones in class ${changeClassLabelsOrCommentsRequest.classIri}")
-        }
 
         // Do the update.
 
