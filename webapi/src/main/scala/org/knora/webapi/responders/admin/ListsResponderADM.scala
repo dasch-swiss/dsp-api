@@ -1528,7 +1528,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       } yield newPosition
 
     /**
-      * Changes position of the node, remove from current parent and add to the sepcified parent.
+      * Changes position of the node, remove from current parent and add to the specified parent.
       * It shifts the new siblings and old siblings.
       *
       * @param node           the node whose position should be updated.
@@ -1590,7 +1590,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         )
 
         // Is node supposed to be added to the end of new parent's children list?
-        _ <- if (givenPosition == -1) {
+        _ <- if (givenPosition == -1 || givenPosition == newSiblings.size) {
           // Yes. New siblings should not be shifted
           Future(newSiblings)
         } else {
