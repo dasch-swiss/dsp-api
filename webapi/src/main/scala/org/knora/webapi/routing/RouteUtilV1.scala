@@ -266,7 +266,17 @@ object RouteUtilV1 {
     * MIME types used in Sipi to store document files.
     */
   private val documentMimeTypes: Set[String] = Set(
-    "application/pdf"
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/zip",
+    "application/x-tar",
+    "application/x-iso9660-image",
+    "application/gzip"
   )
 
   /**

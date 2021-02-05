@@ -3269,7 +3269,7 @@ case class DocumentFileValueContentV2(ontologySchema: OntologySchema,
                              projectADM: ProjectADM,
                              settings: KnoraSettingsImpl,
                              schemaOptions: Set[SchemaOption]): JsonLDValue = {
-    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}"
+    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
 
     targetSchema match {
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
@@ -3381,7 +3381,7 @@ case class TextFileValueContentV2(ontologySchema: OntologySchema,
                              projectADM: ProjectADM,
                              settings: KnoraSettingsImpl,
                              schemaOptions: Set[SchemaOption]): JsonLDValue = {
-    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}"
+    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
 
     targetSchema match {
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
