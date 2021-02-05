@@ -114,6 +114,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
               case None           => settings.fallbackLanguage
             },
             user_id = Some(userIri),
+            username = propsMap.get(OntologyConstants.KnoraAdmin.Username),
             email = propsMap.get(OntologyConstants.KnoraAdmin.Email),
             firstname = propsMap.get(OntologyConstants.KnoraAdmin.GivenName),
             lastname = propsMap.get(OntologyConstants.KnoraAdmin.FamilyName),

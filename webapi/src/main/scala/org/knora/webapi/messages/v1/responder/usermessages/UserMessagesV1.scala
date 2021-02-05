@@ -253,6 +253,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
         val oldUserData = userData
         val newUserData = UserDataV1(
           user_id = oldUserData.user_id,
+          username = oldUserData.username,
           token = None, // remove token
           firstname = oldUserData.firstname,
           lastname = oldUserData.lastname,
@@ -274,6 +275,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
         val newUserData = UserDataV1(
           lang = oldUserData.lang,
           user_id = oldUserData.user_id,
+          username = oldUserData.username,
           token = None, // remove token
           firstname = oldUserData.firstname,
           lastname = oldUserData.lastname,
@@ -413,7 +415,7 @@ object UserV1JsonProtocol
     with ProjectV1JsonProtocol
     with PermissionsADMJsonProtocol {
 
-  implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat8(UserDataV1))
+  implicit val userDataV1Format: JsonFormat[UserDataV1] = lazyFormat(jsonFormat9(UserDataV1))
   implicit val userProfileV1Format: JsonFormat[UserProfileV1] = jsonFormat6(UserProfileV1)
   implicit val usersGetResponseV1Format: RootJsonFormat[UsersGetResponseV1] = jsonFormat1(UsersGetResponseV1)
   implicit val userProfileResponseV1Format: RootJsonFormat[UserProfileResponseV1] = jsonFormat1(UserProfileResponseV1)

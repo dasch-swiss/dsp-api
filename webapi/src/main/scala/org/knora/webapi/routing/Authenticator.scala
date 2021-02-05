@@ -645,52 +645,106 @@ object Authenticator {
     */
   private def extractCredentialsFromHeaderV2(requestContext: RequestContext): Option[KnoraCredentialsV2] = {
 
+    val maybeSessionCredentials = extractSessionCredentials(requestContext)
+
+    val maybePasswordCredentials = extractPasswordCredentials(requestContext)
+
+    val maybeTokenCredentials = extractTokenCredentials(requestContext)
+
+    // prefer password over token over session
+    if (maybePasswordCredentials.nonEmpty) {
+      maybePasswordCredentials
+    } else if (maybeTokenCredentials.nonEmpty) {
+      maybeTokenCredentials
+    } else {
+      maybeSessionCredentials
+    }
+  }
+
+  /**
+    * Tries to extract the session credentials from the cookie header
+    */
+  private def extractSessionCredentials(requestContext: RequestContext): Option[KnoraSessionCredentialsV2] = {
     // Session token from cookie header
     val cookies: Seq[HttpCookiePair] = requestContext.request.cookies
-    val maybeSessionCreds: Option[KnoraSessionCredentialsV2] = cookies.find(_.name == "KnoraAuthentication") match {
-      case Some(authCookie) =>
-        val value: String = authCookie.value
-        Some(KnoraSessionCredentialsV2(value))
-      case None =>
-        None
+
+    // extracts session credentials from cookie header
+    def extract(cookies: Seq[HttpCookiePair]): Option[KnoraSessionCredentialsV2] = {
+      cookies.find(_.name == "KnoraAuthentication") match {
+        case Some(authCookie) =>
+          val value: String = authCookie.value
+          Some(KnoraSessionCredentialsV2(value))
+        case None =>
+          None
+      }
     }
 
-    // Authorization header
+    // call the extract method
+    extract(cookies)
+  }
+
+  /**
+    * Tries to extract the password credentials from the authorization header
+    */
+  private def extractPasswordCredentials(requestContext: RequestContext): Option[KnoraPasswordCredentialsV2] = {
+
     val headers: Seq[HttpHeader] = requestContext.request.headers
-    val (maybePassCreds, maybeTokenCreds) = headers.find(_.name == "Authorization") match {
+
+    headers.find(_.name == "Authorization") match {
       case Some(authHeader: HttpHeader) =>
         // the authorization header can hold different schemes
         val credsArr: Array[String] = authHeader.value().split(",")
 
-        // in v2 we support the basic scheme
+        // find the basic scheme
         val maybeBasicAuthValue = credsArr.find(_.contains("Basic"))
 
         // try to decode username/email and password
-        val (maybeUsernameOrEmail, maybePassword) = maybeBasicAuthValue match {
+        maybeBasicAuthValue match {
           case Some(value) =>
             val trimmedValue = value.substring(5).trim() // remove 'Basic '
             val decodedValue = ByteString.fromArray(Base64.getDecoder.decode(trimmedValue)).decodeString("UTF8")
             val decodedValueArr = decodedValue.split(":", 2)
-            (Some(decodedValueArr(0)), Some(decodedValueArr(1)))
-          case None =>
-            (None, None)
-        }
 
-        val maybePassCreds: Option[KnoraPasswordCredentialsV2] =
-          if (maybeUsernameOrEmail.nonEmpty && maybePassword.nonEmpty) {
-            if (maybeUsernameOrEmail.contains("@")) {
-              // contains '@' so it must be an email
-              Some(KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = maybeUsernameOrEmail), maybePassword.get))
-            } else {
-              // does not contain '@' so it must be a username
+            if (decodedValueArr(0).contains("@")) {
               Some(
-                KnoraPasswordCredentialsV2(UserIdentifierADM(maybeUsername = maybeUsernameOrEmail), maybePassword.get))
+                KnoraPasswordCredentialsV2(
+                  UserIdentifierADM(
+                    maybeEmail = Option(decodedValueArr(0))
+                  ),
+                  password = decodedValueArr(1)
+                )
+              )
+            } else {
+              Some(
+                KnoraPasswordCredentialsV2(
+                  UserIdentifierADM(
+                    maybeUsername = Option(decodedValueArr(0))
+                  ),
+                  password = decodedValueArr(1)
+                )
+              )
             }
-          } else {
+          case None =>
             None
-          }
+        }
+      case None =>
+        None
+    }
+  }
 
-        // and the bearer scheme
+  /**
+    * Tries to extract the password credentials from the authorization header
+    */
+  private def extractTokenCredentials(requestContext: RequestContext): Option[KnoraTokenCredentialsV2] = {
+
+    val headers: Seq[HttpHeader] = requestContext.request.headers
+
+    headers.find(_.name == "Authorization") match {
+      case Some(authHeader: HttpHeader) =>
+        // the authorization header can hold different schemes
+        val credsArr: Array[String] = authHeader.value().split(",")
+
+        // find the bearer scheme
         val maybeToken = credsArr.find(_.contains("Bearer")) match {
           case Some(value) =>
             Some(value.substring(6).trim()) // remove 'Bearer '
@@ -704,19 +758,10 @@ object Authenticator {
           None
         }
 
-        (maybePassCreds, maybeTokenCreds)
+        maybeTokenCreds
 
       case None =>
-        (None, None)
-    }
-
-    // prefer password over token over session
-    if (maybePassCreds.nonEmpty) {
-      maybePassCreds
-    } else if (maybeTokenCreds.nonEmpty) {
-      maybeTokenCreds
-    } else {
-      maybeSessionCreds
+        None
     }
   }
 
