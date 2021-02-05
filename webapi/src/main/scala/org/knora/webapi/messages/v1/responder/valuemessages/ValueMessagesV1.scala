@@ -1584,7 +1584,7 @@ case class DocumentFileValueV1(internalMimeType: String,
                                originalFilename: Option[String] = None,
                                originalMimeType: Option[String] = None,
                                projectShortcode: String,
-                               pageCount: Int,
+                               pageCount: Option[Int],
                                dimX: Option[Int],
                                dimY: Option[Int])
     extends FileValueV1 {

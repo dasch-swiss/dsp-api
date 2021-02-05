@@ -268,7 +268,6 @@ DELETE {
             case documentFileValue: DocumentFileValueV1 => {
                 ?newValue knora-base:internalFilename """@documentFileValue.internalFilename""" .
                 ?newValue knora-base:internalMimeType """@documentFileValue.internalMimeType""" .
-                ?newValue knora-base:pageCount @documentFileValue.pageCount .
 
                 @documentFileValue.dimX match {
                     case Some(definedDimX) => {
@@ -281,6 +280,14 @@ DELETE {
                 @documentFileValue.dimY match {
                     case Some(definedDimY) => {
                         ?newValue knora-base:dimY @definedDimY .
+                    }
+
+                    case None => {}
+                }
+
+                @documentFileValue.pageCount match {
+                    case Some(definedPageCount) => {
+                        ?newValue knora-base:pageCount @definedPageCount .
                     }
 
                     case None => {}
