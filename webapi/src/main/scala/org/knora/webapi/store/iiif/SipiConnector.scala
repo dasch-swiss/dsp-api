@@ -69,12 +69,6 @@ class SipiConnector extends Actor with ActorLogging {
 
   private val httpClient: CloseableHttpClient = HttpClients.custom.setDefaultRequestConfig(sipiRequestConfig).build
 
-  // Sipi's /knora.json route only returns the correct original filename for images.
-  private val internalMimeTypesForWhichSipiReturnsTheCorrectOriginalFilename: Set[String] = Set(
-    "image/jpx",
-    "image/jp2"
-  )
-
   override def receive: Receive = {
     case getFileMetadataRequest: GetFileMetadataRequest =>
       try2Message(sender(), getFileMetadata(getFileMetadataRequest), log)
@@ -134,10 +128,7 @@ class SipiConnector extends Actor with ActorLogging {
       sipiResponse: SipiKnoraJsonResponse = sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse]
     } yield
       GetFileMetadataResponse(
-        originalFilename =
-          if (internalMimeTypesForWhichSipiReturnsTheCorrectOriginalFilename.contains(sipiResponse.internalMimeType))
-            sipiResponse.originalFilename
-          else None,
+        originalFilename = sipiResponse.originalFilename,
         originalMimeType = sipiResponse.originalMimeType,
         internalMimeType = sipiResponse.internalMimeType,
         width = sipiResponse.width,

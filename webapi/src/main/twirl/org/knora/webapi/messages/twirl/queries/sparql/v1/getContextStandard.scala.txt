@@ -56,8 +56,7 @@ SELECT ?sourceObject
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 
-    ?resource rdf:type ?resourceClass ;
-         knora-base:isDeleted false .
+    ?resource rdf:type ?resourceClass .
 
     ?resourceClass rdfs:subClassOf* knora-base:Resource .
 
@@ -65,8 +64,7 @@ WHERE {
 
     ?linkingProp rdfs:subPropertyOf* knora-base:isPartOf .
 
-    ?sourceObject ?linkingProp ?resource ;
-      knora-base:isDeleted false .
+    ?sourceObject ?linkingProp ?resource .
 
     OPTIONAL {
         ?seqProp rdfs:subPropertyOf* knora-base:seqnum .
@@ -87,16 +85,30 @@ WHERE {
         rdf:subject ?sourceObject ;
         rdf:predicate ?linkingProp ;
         rdf:object ?resource ;
-        knora-base:isDeleted false ;
         knora-base:attachedToUser ?linkValueCreator ;
         knora-base:hasPermissions ?linkValuePermissions .
+
+      FILTER NOT EXISTS {
+          ?resource knora-base:isDeleted true .
+      }
+
+      FILTER NOT EXISTS {
+          ?sourceObject knora-base:isDeleted true .
+      }
+
+      FILTER NOT EXISTS {
+          ?linkValue knora-base:isDeleted true .
+      }
 
     OPTIONAL {
         ?fileValueProp rdfs:subPropertyOf* knora-base:hasFileValue .
         ?sourceObject ?fileValueProp ?fileValue .
 
-        ?fileValue a knora-base:StillImageFileValue ;
-             knora-base:isDeleted false .
+        ?fileValue a knora-base:StillImageFileValue .
+
+        FILTER NOT EXISTS {
+            ?fileValue knora-base:isDeleted true .
+        }
 
         ?fileValue knora-base:internalMimeType ?internalMimeType ;
                  knora-base:originalFilename ?originalFilename ;

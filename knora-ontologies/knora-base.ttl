@@ -33,7 +33,7 @@
 
     :attachedToProject knora-admin:SystemProject ;
 
-    :ontologyVersion "knora-base v9" .
+    :ontologyVersion "knora-base v10" .
 
 
 
@@ -1792,7 +1792,7 @@
                    rdfs:subClassOf :FileValue ,
                    [ rdf:type owl:Restriction ;
                      owl:onProperty :pageCount ;
-                     owl:cardinality "1"^^xsd:nonNegativeInteger
+                     owl:maxCardinality "1"^^xsd:nonNegativeInteger
                    ] ,
                    [ rdf:type owl:Restriction ;
                      owl:onProperty :dimX ;

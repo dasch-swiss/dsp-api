@@ -157,7 +157,10 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       "text/xml" -> "XML",
       "text/csv" -> "CSV",
       "application/zip" -> "ZIP",
-      "application/x-compressed-zip" -> "ZIP"
+      "application/x-compressed-zip" -> "ZIP",
+      "audio/x-wav" -> "AUDIO",
+      "audio/mp4" -> "AUDIO",
+      "audio/mpeg" -> "AUDIO"
     ), { key: String =>
       s"Unknown MIME type: $key"
     }
@@ -847,7 +850,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
         originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
         projectShortcode = projectShortcode,
-        pageCount = predicates(OntologyConstants.KnoraBase.PageCount).literals.head.toInt,
+        pageCount = predicates.get(OntologyConstants.KnoraBase.PageCount).flatMap(_.literals.headOption.map(_.toInt)),
         dimX = predicates.get(OntologyConstants.KnoraBase.DimX).flatMap(_.literals.headOption.map(_.toInt)),
         dimY = predicates.get(OntologyConstants.KnoraBase.DimY).flatMap(_.literals.headOption.map(_.toInt))
       ))

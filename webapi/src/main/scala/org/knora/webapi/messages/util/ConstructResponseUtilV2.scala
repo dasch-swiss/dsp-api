@@ -1074,7 +1074,7 @@ object ConstructResponseUtilV2 {
           DocumentFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
-            pageCount = valueObject.requireIntObject(OntologyConstants.KnoraBase.PageCount.toSmartIri),
+            pageCount = valueObject.maybeIntObject(OntologyConstants.KnoraBase.PageCount.toSmartIri),
             dimX = valueObject.maybeIntObject(OntologyConstants.KnoraBase.DimX.toSmartIri),
             dimY = valueObject.maybeIntObject(OntologyConstants.KnoraBase.DimY.toSmartIri),
             comment = valueCommentOption
