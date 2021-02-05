@@ -65,18 +65,6 @@ services:
       - KNORA_WEBAPI_CACHE_SERVICE_REDIS_PORT=6379
       - KNORA_WEBAPI_ALLOW_RELOAD_OVER_HTTP=true
 
-  salsah1:
-    image: bazel/docker/knora-salsah1:image
-    ports:
-      - "3335:3335"
-    networks:
-      - knora-net
-    environment:
-      - KNORA_SALSAH1_HOSTNAME=0.0.0.0
-      - KNORA_SALSAH1_PORT=3335
-      - KNORA_SALSAH1_WEBAPI=http://0.0.0.0:3333
-      - KNORA_SALSAH1_SIPI=http://0.0.0.0:1024
-
 networks:
   knora-net:
     name: knora-net

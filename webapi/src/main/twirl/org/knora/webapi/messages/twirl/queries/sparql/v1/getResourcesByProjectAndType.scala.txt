@@ -43,6 +43,9 @@ WHERE {
     BIND(IRI("@resType") as ?resType)
 
     ?s rdf:type ?resType ;
-        knora-base:isDeleted false ;
         knora-base:attachedToProject ?projectIri .
+
+    FILTER NOT EXISTS {
+        ?s knora-base:isDeleted true .
+    }
 }

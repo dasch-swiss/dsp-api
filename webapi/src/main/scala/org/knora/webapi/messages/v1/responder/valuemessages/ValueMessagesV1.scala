@@ -35,7 +35,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages.LocationV1
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import org.knora.webapi.messages.v2.responder.standoffmessages._
-import org.knora.webapi.messages.v2.responder.valuemessages.{DocumentFileValueContentV2, FileValueContentV2, FileValueV2, StillImageFileValueContentV2, TextFileValueContentV2}
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import spray.json._
 
@@ -1569,13 +1569,25 @@ case class StillImageFileValueV1(internalMimeType: String,
   }
 }
 
+/**
+  * A representation of a document in a binary format.
+  *
+  * @param internalMimeType the MIME-type of the internal representation.
+  * @param internalFilename the internal filename of the object.
+  * @param originalFilename the original filename of the object at the time of the import.
+  * @param pageCount        the number of pages in the document.
+  * @param dimX             the X dimension of the object.
+  * @param dimY             the Y dimension of the object.
+  */
 case class DocumentFileValueV1(internalMimeType: String,
-                                 internalFilename: String,
-                                 originalFilename: Option[String] = None,
-                                 originalMimeType: Option[String] = None,
-                                 projectShortcode: String)
-  extends FileValueV1 {
-
+                               internalFilename: String,
+                               originalFilename: Option[String] = None,
+                               originalMimeType: Option[String] = None,
+                               projectShortcode: String,
+                               pageCount: Option[Int],
+                               dimX: Option[Int],
+                               dimY: Option[Int])
+    extends FileValueV1 {
   def valueTypeIri: IRI = OntologyConstants.KnoraBase.DocumentFileValue
 
   def toJsValue: JsValue = ApiValueV1JsonProtocol.documentFileValueV1Format.write(this)
@@ -1583,11 +1595,11 @@ case class DocumentFileValueV1(internalMimeType: String,
   override def toString: String = internalFilename
 
   /**
-   * Checks if a new still image file value would duplicate an existing still image file value.
-   *
-   * @param other another [[ValueV1]].
-   * @return `true` if `other` is a duplicate of `this`.
-   */
+    * Checks if a new document file value would duplicate an existing document file value.
+    *
+    * @param other another [[ValueV1]].
+    * @return `true` if `other` is a duplicate of `this`.
+    */
   override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
     other match {
       case documentFileValueV1: DocumentFileValueV1 => documentFileValueV1 == this
@@ -1597,11 +1609,11 @@ case class DocumentFileValueV1(internalMimeType: String,
   }
 
   /**
-   * Checks if a new version of a still image file value would be redundant given the current version of the value.
-   *
-   * @param currentVersion the current version of the value.
-   * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
-   */
+    * Checks if a new version of a document file value would be redundant given the current version of the value.
+    *
+    * @param currentVersion the current version of the value.
+    * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+    */
   override def isRedundant(currentVersion: ApiValueV1): Boolean = {
     currentVersion match {
       case documentFileValueV1: DocumentFileValueV1 => documentFileValueV1 == this
@@ -1619,9 +1631,9 @@ case class DocumentFileValueV1(internalMimeType: String,
         originalFilename = originalFilename,
         originalMimeType = Some(internalMimeType)
       ),
-      pageCount = 1,
-      dimX = None,
-      dimY = None
+      pageCount = pageCount,
+      dimX = dimX,
+      dimY = dimY
     )
   }
 }
@@ -1808,7 +1820,7 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   implicit val valueGetResponseV1Format: RootJsonFormat[ValueGetResponseV1] = jsonFormat7(ValueGetResponseV1)
   implicit val dateValueV1Format: JsonFormat[DateValueV1] = jsonFormat5(DateValueV1)
   implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat7(StillImageFileValueV1)
-  implicit val documentFileValueV1Format: JsonFormat[DocumentFileValueV1] = jsonFormat5(DocumentFileValueV1)
+  implicit val documentFileValueV1Format: JsonFormat[DocumentFileValueV1] = jsonFormat8(DocumentFileValueV1)
   implicit val textFileValueV1Format: JsonFormat[TextFileValueV1] = jsonFormat5(TextFileValueV1)
   implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat5(MovingImageFileValueV1)
   implicit val valueVersionV1Format: JsonFormat[ValueVersionV1] = jsonFormat3(ValueVersionV1)

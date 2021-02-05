@@ -46,16 +46,21 @@ WHERE {
     BIND(IRI("@propertyIri") AS ?prop)
     BIND(IRI("@currentValueIri") AS ?currentValue)
 
-    ?resource knora-base:isDeleted false .
+    ?currentValue knora-base:hasPermissions ?valuePermissions .
 
-    ?currentValue knora-base:isDeleted false ;
-        knora-base:hasPermissions ?valuePermissions .
+    FILTER NOT EXISTS {
+        ?currentValue knora-base:isDeleted true .
+    }
 
     ?resource ?prop ?currentValue .
     ?prop rdfs:subPropertyOf* knora-base:hasValue .
     ?resource knora-base:attachedToProject ?project .
 
     ?currentValue knora-base:previousValue* ?value .
+
+    FILTER NOT EXISTS {
+        ?resource knora-base:isDeleted true .
+    }
 
     OPTIONAL {
         ?value knora-base:valueCreationDate ?valueCreationDate .

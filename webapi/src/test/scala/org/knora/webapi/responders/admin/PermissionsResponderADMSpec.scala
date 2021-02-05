@@ -562,7 +562,7 @@ class PermissionsResponderADMSpec
         )
         expectMsg(
           DefaultObjectAccessPermissionsStringResponseADM(
-            "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"))
+            "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"))
       }
 
       "return the default object access permissions 'string' for the 'incunabula:book' resource class (project resource class)" in {
