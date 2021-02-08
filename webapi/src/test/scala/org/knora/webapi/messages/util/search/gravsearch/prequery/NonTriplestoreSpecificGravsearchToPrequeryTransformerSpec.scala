@@ -48,7 +48,8 @@ private object QueryHandler {
       println(createdGraph.findCycle)
     } else {
       // No. sort the graph
-      createdGraph.topologicalSort
+      val sortedGraph = createdGraph.topologicalSort
+      println(sortedGraph)
     }
     statementPatterns
   }
