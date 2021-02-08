@@ -20,10 +20,8 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scalax.collection.edge.LUnDiEdge
-import scalax.collection.Graph
-import scalax.collection.edge.Implicits._
-import scalax.collection.GraphEdge
+import scalax.collection.{Graph}
+import scalax.collection.GraphEdge.DiHyperEdge
 
 private object QueryHandler {
 
@@ -37,11 +35,12 @@ private object QueryHandler {
       val node1 = statementPattern.subj.toSparql
       val node2 = statementPattern.obj.toSparql
       val edge = statementPattern.pred.toSparql
-      LUnDiEdge(node1, node2)(edgeLabel(edge))
+      DiHyperEdge(node1, node2)
     }
-    val createdGraph = graphComponents.foldLeft(Graph.empty[String, LUnDiEdge]) { (graph, edge) =>
+    val createdGraph = graphComponents.foldLeft(Graph.empty[String, DiHyperEdge]) { (graph, edge) =>
       graph + edge // add nodes and edges to graph
     }
+
     // TODO: Is there a cycle in the graph?
     if (createdGraph.isCyclic) {
       // yes.
@@ -49,8 +48,11 @@ private object QueryHandler {
       println(cycle)
     } else {
       // No. sort the graph
-      val sortedGraph = createdGraph.topologicalSort
-      println(sortedGraph)
+      createdGraph.topologicalSort match {
+        case Right(topOrder) => println(topOrder)
+        case Left(cycleNode) =>
+          throw new Error(s"Graph contains a cycle at node: ${cycleNode}.")
+      }
     }
     statementPatterns
   }
