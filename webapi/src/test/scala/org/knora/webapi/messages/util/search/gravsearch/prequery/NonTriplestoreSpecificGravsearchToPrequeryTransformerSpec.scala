@@ -20,17 +20,59 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
-
-import scalax.collection.edge.WDiEdge
+import scalax.collection.edge.LUnDiEdge
+import scalax.collection.Graph
 import scalax.collection.edge.Implicits._
+import scalax.collection.GraphEdge
 
 private object QueryHandler {
 
   private val timeout = 10.seconds
 
   val anythingUser: UserADM = SharedTestDataADM.anythingAdminUser
+  case class edgeLabel(label: String)
+  def createAndSortGraph(statementPatterns: Seq[StatementPattern]): Seq[StatementPattern] = {
+    val graphComponents = statementPatterns.map { statementPattern =>
+      // transform every statementPattern to LUniDiEdge(Subj,Obj)(edgeLabel(pred))
+      val node1 = statementPattern.subj.toSparql
+      val node2 = statementPattern.obj.toSparql
+      val edge = statementPattern.pred.toSparql
+      LUnDiEdge(node1, node2)(edgeLabel(edge))
+    }
+    val graph = Graph(graphComponents)
+    statementPatterns
+  }
+  def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
 
-  protected def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Seq[QueryPattern] = ???
+    val statementPatterns: Seq[StatementPattern] = patterns.collect { case pattern: StatementPattern => pattern }
+    val sortedStatementPatterns = createAndSortGraph(statementPatterns)
+    val otherPatterns: Set[QueryPattern] = patterns.filterNot(p => p.isInstanceOf[StatementPattern]).toSet
+    val sortedOtherPatterns: Set[QueryPattern] = otherPatterns.map {
+      // sort statements inside each UnionPattern block
+      case unionPattern: UnionPattern => {
+        val sortedUnionBlocks = unionPattern.blocks.map(block => reorderPatternsByDependency(block))
+        UnionPattern(blocks = sortedUnionBlocks)
+      }
+      // sort statements inside OptionalPattern
+      case optionalPattern: OptionalPattern => {
+        val sortedOptionalPatterns = reorderPatternsByDependency(optionalPattern.patterns)
+        OptionalPattern(patterns = sortedOptionalPatterns)
+      }
+      // sort statements inside MinusPattern
+      case minusPattern: MinusPattern => {
+        val sortedMinusPatterns = reorderPatternsByDependency(minusPattern.patterns)
+        MinusPattern(patterns = sortedMinusPatterns)
+      }
+      // sort statements inside FilterNotExistsPattern
+      case filterNotExistsPattern: FilterNotExistsPattern => {
+        val sortedFilterNotExistsPatterns = reorderPatternsByDependency(filterNotExistsPattern.patterns)
+        FilterNotExistsPattern(patterns = sortedFilterNotExistsPatterns)
+      }
+      // return any other query pattern as it is
+      case pattern: QueryPattern => pattern
+    }
+    sortedStatementPatterns ++ sortedOtherPatterns.toSeq
+  }
 
   def transformQuery(query: String, responderData: ResponderData, settings: KnoraSettingsImpl): SelectQuery = {
 
@@ -1931,6 +1973,12 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(InputQueryWithUnionScopes, responderData, settings)
 
       assert(transformedQuery === TransformedQueryWithUnionScopes)
+    }
+
+    "reorder query patterns in where clause" in {
+      val sortedPatterns = QueryHandler.reorderPatternsByDependency(
+        transformedQueryWithDecimalOptionalSortCriterionAndFilter.whereClause.patterns)
+      assert(sortedPatterns.head.isInstanceOf[StatementPattern])
     }
   }
 }
