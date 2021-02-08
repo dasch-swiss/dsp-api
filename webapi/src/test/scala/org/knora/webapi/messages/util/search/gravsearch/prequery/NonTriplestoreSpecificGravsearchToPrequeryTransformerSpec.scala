@@ -45,7 +45,8 @@ private object QueryHandler {
     // TODO: Is there a cycle in the graph?
     if (createdGraph.isCyclic) {
       // yes.
-      println(createdGraph.findCycle)
+      val cycle = createdGraph.findCycle
+      println(cycle)
     } else {
       // No. sort the graph
       val sortedGraph = createdGraph.topologicalSort
@@ -2012,8 +2013,8 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
     }
 
     "reorder query patterns in where clause" in {
-      val transformedQuery = QueryHandler.transformQuery(queryToReorder, responderData, settings)
-      val sortedPatterns = QueryHandler.reorderPatternsByDependency(transformedQuery.whereClause.patterns)
+      val constructQuery = GravsearchParser.parseQuery(queryToReorder)
+      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
       assert(sortedPatterns.head.isInstanceOf[StatementPattern])
     }
   }
