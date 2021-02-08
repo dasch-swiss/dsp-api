@@ -39,7 +39,17 @@ private object QueryHandler {
       val edge = statementPattern.pred.toSparql
       LUnDiEdge(node1, node2)(edgeLabel(edge))
     }
-    val graph = Graph(graphComponents)
+    val createdGraph = graphComponents.foldLeft(Graph.empty[String, LUnDiEdge]) { (graph, edge) =>
+      graph + edge // add nodes and edges to graph
+    }
+    // TODO: Is there a cycle in the graph?
+    if (createdGraph.isCyclic) {
+      // yes.
+      println(createdGraph.findCycle)
+    } else {
+      // No. sort the graph
+      createdGraph.topologicalSort
+    }
     statementPatterns
   }
   def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
@@ -1813,6 +1823,31 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
     useDistinct = true
   )
 
+  val queryToReorder: String = """
+   |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+   |
+   |CONSTRUCT {
+   |  ?letter knora-api:isMainResource true .
+   |  ?letter ?linkingProp1  ?person1 .
+   |  ?letter ?linkingProp2  ?person2 .
+   |  ?letter beol:creationDate ?date .
+   |} WHERE {
+   |  ?letter beol:creationDate ?date .
+   |
+   |  ?letter ?linkingProp1 ?person1 .
+   |  FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+   |
+   |  ?letter ?linkingProp2 ?person2 .
+   |  FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
+   |
+   |  ?person1 beol:hasIAFIdentifier ?gnd1 .
+   |  ?gnd1 knora-api:valueAsString "(DE-588)118531379" .
+   |
+   |  ?person2 beol:hasIAFIdentifier ?gnd2 .
+   |  ?gnd2 knora-api:valueAsString "(DE-588)118696149" .
+   |} ORDER BY ?date""".stripMargin
+
   "The NonTriplestoreSpecificGravsearchToPrequeryGenerator object" should {
 
     "transform an input query with an optional property criterion without removing the rdf:type statement" in {
@@ -1976,8 +2011,8 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
     }
 
     "reorder query patterns in where clause" in {
-      val sortedPatterns = QueryHandler.reorderPatternsByDependency(
-        transformedQueryWithDecimalOptionalSortCriterionAndFilter.whereClause.patterns)
+      val transformedQuery = QueryHandler.transformQuery(queryToReorder, responderData, settings)
+      val sortedPatterns = QueryHandler.reorderPatternsByDependency(transformedQuery.whereClause.patterns)
       assert(sortedPatterns.head.isInstanceOf[StatementPattern])
     }
   }
