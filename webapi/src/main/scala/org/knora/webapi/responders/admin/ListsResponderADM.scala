@@ -1794,14 +1794,20 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         // shift the siblings that were positioned after the deleted node, one place to left.
-        updatedChildren <- shiftNodes(
-          startPos = positionOfDeletedNode + 1,
-          endPos = remainingChildren.last.position,
-          nodes = remainingChildren,
-          shiftToLeft = true,
-          dataNamedGraph = dataNamedGraph,
-          featureFactoryConfig = featureFactoryConfig
-        )
+        updatedChildren <- if (remainingChildren.size > 1) {
+          for {
+            shiftedChildren <- shiftNodes(
+              startPos = positionOfDeletedNode + 1,
+              endPos = remainingChildren.last.position,
+              nodes = remainingChildren,
+              shiftToLeft = true,
+              dataNamedGraph = dataNamedGraph,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield shiftedChildren
+        } else {
+          Future.successful(remainingChildren)
+        }
 
         // return updated parent node with shifted children.
         updatedParentNode = parentNode match {
