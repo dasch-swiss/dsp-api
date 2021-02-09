@@ -1905,3 +1905,4 @@
   knora-base:hasRootNode <http://rdfh.ch/lists/0001/notUsedList>;
   knora-base:listNodePosition 0;
   rdfs:label "child of node 3"@en .
+  
