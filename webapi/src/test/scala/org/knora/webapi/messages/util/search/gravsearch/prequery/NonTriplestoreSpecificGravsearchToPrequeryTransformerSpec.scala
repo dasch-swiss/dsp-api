@@ -23,7 +23,7 @@ import scala.concurrent.duration._
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiHyperEdge
 
-import scala.collection.immutable.TreeSet
+import scala.collection.immutable.ListSet
 
 private object QueryHandler {
 
@@ -62,7 +62,7 @@ private object QueryHandler {
       // take the main resource out.
       val topologicalOrderWithoutRoot: Iterable[createdGraph.NodeT] = topologicalOrder.tail
       val sortedStatements: Set[QueryPattern] =
-        topologicalOrderWithoutRoot.foldRight(Set.empty[QueryPattern]) { (node, sortedStatements) =>
+        topologicalOrderWithoutRoot.foldRight(ListSet.empty[QueryPattern]) { (node, sortedStatements) =>
           val statementsOfNode: Set[QueryPattern] = statementPatterns
             .filter(p => p.obj.toSparql.equals(node.value))
             .toSet[QueryPattern]
