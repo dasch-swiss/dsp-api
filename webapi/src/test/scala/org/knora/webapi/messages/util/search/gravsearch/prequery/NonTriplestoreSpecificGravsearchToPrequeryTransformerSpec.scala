@@ -20,8 +20,10 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scalax.collection.{Graph}
+import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiHyperEdge
+
+import scala.collection.immutable.TreeSet
 
 private object QueryHandler {
 
@@ -29,7 +31,7 @@ private object QueryHandler {
 
   val anythingUser: UserADM = SharedTestDataADM.anythingAdminUser
   case class edgeLabel(label: String)
-  def createAndSortGraph(statementPatterns: Seq[StatementPattern]): Seq[StatementPattern] = {
+  def createAndSortGraph(statementPatterns: Seq[StatementPattern]): Set[QueryPattern] = {
     def createGraph: Graph[String, DiHyperEdge] = {
       val graphComponents = statementPatterns.map { statementPattern =>
         // transform every statementPattern to LUniDiEdge(Subj,Obj)(edgeLabel(pred))
@@ -44,7 +46,7 @@ private object QueryHandler {
       graph
     }
     def sortStatementPatterns(createdGraph: Graph[String, DiHyperEdge],
-                              statementPatterns: Seq[StatementPattern]): Seq[StatementPattern] = {
+                              statementPatterns: Seq[StatementPattern]): Set[QueryPattern] = {
       // Try topological sorting of graph
       val topologicalOrder: createdGraph.TopologicalOrder[createdGraph.NodeT] = createdGraph.topologicalSort match {
         // Is there a cycle in the graph?
@@ -53,18 +55,28 @@ private object QueryHandler {
           throw new Error(s"Graph contains a cycle at node: ${cycleNode}, entire cycle is ${createdGraph.findCycle}.")
         case Right(topOrder) => {
           // No. return the topological order
+          println(topOrder)
           topOrder
         }
       }
-      val leafToRootOrder: Seq[createdGraph.NodeT] = topologicalOrder.iterator.toSeq.reverse
-      statementPatterns
+      // take the main resource out.
+      val topologicalOrderWithoutRoot: Iterable[createdGraph.NodeT] = topologicalOrder.tail
+      val sortedStatements: Set[QueryPattern] =
+        topologicalOrderWithoutRoot.foldRight(Set.empty[QueryPattern]) { (node, sortedStatements) =>
+          val statementsOfNode: Set[QueryPattern] = statementPatterns
+            .filter(p => p.obj.toSparql.equals(node.value))
+            .toSet[QueryPattern]
+          println(sortedStatements ++ statementsOfNode)
+          sortedStatements ++ statementsOfNode
+        }
+      sortedStatements
     }
 
     val createdGraph = createGraph
     sortStatementPatterns(createdGraph, statementPatterns)
 
   }
-  def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+  def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Set[QueryPattern] = {
 
     val statementPatterns: Seq[StatementPattern] = patterns.collect { case pattern: StatementPattern => pattern }
     val sortedStatementPatterns = createAndSortGraph(statementPatterns)
@@ -72,28 +84,30 @@ private object QueryHandler {
     val sortedOtherPatterns: Set[QueryPattern] = otherPatterns.map {
       // sort statements inside each UnionPattern block
       case unionPattern: UnionPattern => {
-        val sortedUnionBlocks = unionPattern.blocks.map(block => reorderPatternsByDependency(block))
+        val sortedUnionBlocks: Seq[Seq[QueryPattern]] =
+          unionPattern.blocks.map(block => reorderPatternsByDependency(block).toSeq)
         UnionPattern(blocks = sortedUnionBlocks)
       }
       // sort statements inside OptionalPattern
       case optionalPattern: OptionalPattern => {
-        val sortedOptionalPatterns = reorderPatternsByDependency(optionalPattern.patterns)
-        OptionalPattern(patterns = sortedOptionalPatterns)
+        val sortedOptionalPatterns: Set[QueryPattern] = reorderPatternsByDependency(optionalPattern.patterns)
+        OptionalPattern(patterns = sortedOptionalPatterns.toSeq)
       }
       // sort statements inside MinusPattern
       case minusPattern: MinusPattern => {
-        val sortedMinusPatterns = reorderPatternsByDependency(minusPattern.patterns)
-        MinusPattern(patterns = sortedMinusPatterns)
+        val sortedMinusPatterns: Set[QueryPattern] = reorderPatternsByDependency(minusPattern.patterns)
+        MinusPattern(patterns = sortedMinusPatterns.toSeq)
       }
       // sort statements inside FilterNotExistsPattern
       case filterNotExistsPattern: FilterNotExistsPattern => {
-        val sortedFilterNotExistsPatterns = reorderPatternsByDependency(filterNotExistsPattern.patterns)
-        FilterNotExistsPattern(patterns = sortedFilterNotExistsPatterns)
+        val sortedFilterNotExistsPatterns: Set[QueryPattern] =
+          reorderPatternsByDependency(filterNotExistsPattern.patterns)
+        FilterNotExistsPattern(patterns = sortedFilterNotExistsPatterns.toSeq)
       }
       // return any other query pattern as it is
       case pattern: QueryPattern => pattern
     }
-    sortedStatementPatterns ++ sortedOtherPatterns.toSeq
+    sortedStatementPatterns ++ sortedOtherPatterns
   }
 
   def transformQuery(query: String, responderData: ResponderData, settings: KnoraSettingsImpl): SelectQuery = {
@@ -2025,7 +2039,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
     "reorder query patterns in where clause" in {
       val constructQuery = GravsearchParser.parseQuery(queryToReorder)
       val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
-      assert(sortedPatterns.head.isInstanceOf[StatementPattern])
+      assert(sortedPatterns.head.isInstanceOf[QueryPattern])
     }
   }
 }
