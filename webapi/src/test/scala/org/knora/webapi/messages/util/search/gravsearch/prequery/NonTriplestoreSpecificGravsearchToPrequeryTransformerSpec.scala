@@ -30,31 +30,39 @@ private object QueryHandler {
   val anythingUser: UserADM = SharedTestDataADM.anythingAdminUser
   case class edgeLabel(label: String)
   def createAndSortGraph(statementPatterns: Seq[StatementPattern]): Seq[StatementPattern] = {
-    val graphComponents = statementPatterns.map { statementPattern =>
-      // transform every statementPattern to LUniDiEdge(Subj,Obj)(edgeLabel(pred))
-      val node1 = statementPattern.subj.toSparql
-      val node2 = statementPattern.obj.toSparql
-      val edge = statementPattern.pred.toSparql
-      DiHyperEdge(node1, node2)
+    def createGraph: Graph[String, DiHyperEdge] = {
+      val graphComponents = statementPatterns.map { statementPattern =>
+        // transform every statementPattern to LUniDiEdge(Subj,Obj)(edgeLabel(pred))
+        val node1 = statementPattern.subj.toSparql
+        val node2 = statementPattern.obj.toSparql
+//        val edge = statementPattern.pred.toSparql
+        DiHyperEdge(node1, node2)
+      }
+      val graph = graphComponents.foldLeft(Graph.empty[String, DiHyperEdge]) { (graph, edge) =>
+        graph + edge // add nodes and edges to graph
+      }
+      graph
     }
-    val createdGraph = graphComponents.foldLeft(Graph.empty[String, DiHyperEdge]) { (graph, edge) =>
-      graph + edge // add nodes and edges to graph
+    def sortStatementPatterns(createdGraph: Graph[String, DiHyperEdge],
+                              statementPatterns: Seq[StatementPattern]): Seq[StatementPattern] = {
+      // Try topological sorting of graph
+      val topologicalOrder: createdGraph.TopologicalOrder[createdGraph.NodeT] = createdGraph.topologicalSort match {
+        // Is there a cycle in the graph?
+        case Left(cycleNode) =>
+          // TODO: yes. break the cycle
+          throw new Error(s"Graph contains a cycle at node: ${cycleNode}, entire cycle is ${createdGraph.findCycle}.")
+        case Right(topOrder) => {
+          // No. return the topological order
+          topOrder
+        }
+      }
+      val leafToRootOrder: Seq[createdGraph.NodeT] = topologicalOrder.iterator.toSeq.reverse
+      statementPatterns
     }
 
-    // TODO: Is there a cycle in the graph?
-    if (createdGraph.isCyclic) {
-      // yes.
-      val cycle = createdGraph.findCycle
-      println(cycle)
-    } else {
-      // No. sort the graph
-      createdGraph.topologicalSort match {
-        case Right(topOrder) => println(topOrder)
-        case Left(cycleNode) =>
-          throw new Error(s"Graph contains a cycle at node: ${cycleNode}.")
-      }
-    }
-    statementPatterns
+    val createdGraph = createGraph
+    sortStatementPatterns(createdGraph, statementPatterns)
+
   }
   def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
 
