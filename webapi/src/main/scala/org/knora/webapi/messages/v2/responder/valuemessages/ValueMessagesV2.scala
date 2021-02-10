@@ -1337,6 +1337,17 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
             log = log
           )
 
+        case OntologyConstants.KnoraApiV2Complex.AudioFileValue =>
+          AudioFileValueContentV2.fromJsonLDObject(
+            jsonLDObject = jsonLDObject,
+            requestingUser = requestingUser,
+            responderManager = responderManager,
+            storeManager = storeManager,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            log = log
+          )
+
         case other => throw NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other")
       }
 
@@ -3448,6 +3459,106 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
       TextFileValueContentV2(
         ontologySchema = ApiV2Complex,
         fileValue = fileValueWithSipiMetadata.fileValue,
+        comment = getComment(jsonLDObject)
+      )
+  }
+}
+
+/**
+  * Represents audio file metadata.
+  *
+  * @param fileValue the basic metadata about the file value.
+  * @param duration the duration of the audio file in seconds.
+  * @param comment a comment on this [[AudioFileValueContentV2]], if any.
+  */
+case class AudioFileValueContentV2(ontologySchema: OntologySchema,
+                                   fileValue: FileValueV2,
+                                   duration: BigDecimal,
+                                   comment: Option[String] = None)
+    extends FileValueContentV2 {
+  override def valueType: SmartIri = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    OntologyConstants.KnoraBase.AudioFileValue.toSmartIri.toOntologySchema(ontologySchema)
+  }
+
+  override def valueHasString: String = fileValue.internalFilename
+
+  override def toOntologySchema(targetSchema: OntologySchema): AudioFileValueContentV2 =
+    copy(ontologySchema = targetSchema)
+
+  override def toJsonLDValue(targetSchema: ApiV2Schema,
+                             projectADM: ProjectADM,
+                             settings: KnoraSettingsImpl,
+                             schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
+
+    targetSchema match {
+      case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
+
+      case ApiV2Complex =>
+        JsonLDObject(toJsonLDObjectMapInComplexSchema(fileUrl))
+    }
+  }
+
+  override def unescape: ValueContentV2 = {
+    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+  }
+
+  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean = {
+    that match {
+      case thatAudioFile: AudioFileValueContentV2 =>
+        fileValue == thatAudioFile.fileValue
+
+      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
+    }
+  }
+
+  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+    currentVersion match {
+      case thatAudioFile: AudioFileValueContentV2 =>
+        fileValue == thatAudioFile.fileValue &&
+          comment == thatAudioFile.comment
+
+      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+    }
+  }
+}
+
+/**
+  * Constructs [[AudioFileValueContentV2]] objects based on JSON-LD input.
+  */
+object AudioFileValueContentV2 extends ValueContentReaderV2[AudioFileValueContentV2] {
+  override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                requestingUser: UserADM,
+                                responderManager: ActorRef,
+                                storeManager: ActorRef,
+                                featureFactoryConfig: FeatureFactoryConfig,
+                                settings: KnoraSettingsImpl,
+                                log: LoggingAdapter)(
+      implicit timeout: Timeout,
+      executionContext: ExecutionContext): Future[AudioFileValueContentV2] = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    for {
+      fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
+        jsonLDObject = jsonLDObject,
+        requestingUser = requestingUser,
+        responderManager = responderManager,
+        storeManager = storeManager,
+        settings = settings,
+        log = log
+      )
+
+      _ = if (!settings.audioMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
+        throw BadRequestException(
+          s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for audio files")
+      }
+    } yield
+      AudioFileValueContentV2(
+        ontologySchema = ApiV2Complex,
+        fileValue = fileValueWithSipiMetadata.fileValue,
+        duration = fileValueWithSipiMetadata.sipiFileMetadata.duration
+          .getOrElse(throw SipiException(s"Sipi did not return the audio file duration")),
         comment = getComment(jsonLDObject)
       )
   }

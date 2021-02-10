@@ -69,6 +69,8 @@ class KnoraSipiIntegrationV2ITSpec
   private val csvValueIri = new MutableTestIri
   private val zipResourceIri = new MutableTestIri
   private val zipValueIri = new MutableTestIri
+  private val wavResourceIri = new MutableTestIri
+  private val wavValueIri = new MutableTestIri
 
   private val marblesOriginalFilename = "marbles.tif"
   private val pathToMarbles = s"test_data/test_route/images/$marblesOriginalFilename"
@@ -110,6 +112,10 @@ class KnoraSipiIntegrationV2ITSpec
   private val testZipOriginalFilename = "test.zip"
   private val pathToTestZip = s"test_data/test_route/files/$testZipOriginalFilename"
 
+  private val minimalWavOriginalFilename = "minimal.wav"
+  private val pathToMinimalWav = s"test_data/test_route/files/$minimalWavOriginalFilename"
+  private val minimalWavDuration = BigDecimal("0.0")
+
   /**
     * Represents the information that Knora returns about an image file value that was created.
     *
@@ -138,10 +144,19 @@ class KnoraSipiIntegrationV2ITSpec
   /**
     * Represents the information that Knora returns about a text file value that was created.
     *
-    * @param internalFilename the files's internal filename.
+    * @param internalFilename the file's internal filename.
     * @param url              the file's URL.
     */
   case class SavedTextFile(internalFilename: String, url: String)
+
+  /**
+    * Represents the information that Knora returns about an audio file value that was created.
+    *
+    * @param internalFilename the file's internal filename.
+    * @param url              the file's URL.
+    * @param duration         the duration of the audio in seconds.
+    */
+  case class SavedAudioFile(internalFilename: String, url: String, duration: BigDecimal)
 
   /**
     * Given a JSON-LD document representing a resource, returns a JSON-LD array containing the values of the specified
@@ -262,6 +277,34 @@ class KnoraSipiIntegrationV2ITSpec
     SavedTextFile(
       internalFilename = internalFilename,
       url = url
+    )
+  }
+
+  /**
+    * Given a JSON-LD object representing a Knora text file value, returns a [[SavedTextFile]] containing the same information.
+    *
+    * @param savedValue a JSON-LD object representing a Knora document file value.
+    * @return a [[SavedTextFile]] containing the same information.
+    */
+  private def savedValueToSavedAudioFile(savedValue: JsonLDObject): SavedAudioFile = {
+    val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+
+    val url: String = savedValue.requireDatatypeValueInObject(
+      key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
+      expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
+      validationFun = stringFormatter.toSparqlEncodedString
+    )
+
+    val duration = savedValue.requireDatatypeValueInObject(
+      key = OntologyConstants.KnoraApiV2Complex.AudioFileValueHasDuration,
+      expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
+      validationFun = stringFormatter.validateBigDecimal
+    )
+
+    SavedAudioFile(
+      internalFilename = internalFilename,
+      url = url,
+      duration = duration
     )
   }
 
@@ -1035,5 +1078,78 @@ class KnoraSipiIntegrationV2ITSpec
       val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
       checkResponseOK(sipiGetFileRequest)
     }
+
+    "create a resource with a WAV file" in {
+      // Upload the file to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToMinimalWav, mimeType = MediaTypes.`audio/wav`))
+      )
+
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.originalFilename should ===(minimalWavOriginalFilename)
+
+      // Ask Knora to create the resource.
+
+      val jsonLdEntity =
+        s"""{
+           |  "@type" : "anything:ThingWithRepresentation",
+           |  "knora-api:hasRepresentationValue" : {
+           |    "@type" : "knora-api:AudioFileValue",
+           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
+           |  },
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "rdfs:label" : "test thing with audio file",
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+
+      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password))
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      wavResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
+
+      // Get the resource from Knora.
+      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
+      val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
+      assert(
+        resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingWithRepresentation")
+
+      // Get the new file value from the resource.
+
+      val savedValues: JsonLDArray = getValuesFromResource(
+        resource = resource,
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasAudioFileValue.toSmartIri
+      )
+
+      val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
+        savedValues.value.head
+      } else {
+        throw AssertionException(s"Expected one file value, got ${savedValues.value.size}")
+      }
+
+      val savedValueObj: JsonLDObject = savedValue match {
+        case jsonLDObject: JsonLDObject => jsonLDObject
+        case other                      => throw AssertionException(s"Invalid value object: $other")
+      }
+
+      wavValueIri.set(savedValueObj.requireIDAsKnoraDataIri.toString)
+
+      val savedAudioFile: SavedAudioFile = savedValueToSavedAudioFile(savedValueObj)
+      assert(savedAudioFile.internalFilename == uploadedFile.internalFilename)
+      assert(savedAudioFile.duration == minimalWavDuration)
+
+      // Request the permanently stored file from Sipi.
+      val sipiGetFileRequest = Get(savedAudioFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
+      checkResponseOK(sipiGetFileRequest)
+    }
+
   }
 }
