@@ -24,6 +24,7 @@ import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiHyperEdge
 
 import scala.collection.immutable.ListSet
+import scala.util.Failure
 
 private object QueryHandler {
 
@@ -1875,6 +1876,22 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
    |  ?gnd2 knora-api:valueAsString "(DE-588)118696149" .
    |} ORDER BY ?date""".stripMargin
 
+  val queryToReorderWithCycle: String = """
+   |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+   |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+   |
+   |CONSTRUCT {
+   |  ?letter knora-api:isMainResource true .
+   |  ?letter ?linkingProp1  ?person1 .
+   |} WHERE {
+   |  ?letter beol:hasAuthor ?person1 .
+   |  ?letter beol:letterHasTranslation ?letter2.
+   |  ?letter2 beol:hasAuthor ?person1 .
+   |  ?person1 beol:hasIAFIdentifier ?gnd1 .
+   |  ?gnd1 knora-api:valueAsString "(DE-588)118531379" .
+   |
+   |} ORDER BY ?date""".stripMargin
+
   val queryToReorderWithMinus =
     """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
@@ -1917,7 +1934,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
        |        FILTER knora-api:matchText(?text, "test")
        |
        |		?thing anything:hasInteger ?int .
-       |		?int knora-api:intValueAsInt 1 .
+       |		?int knora-api:intValueAsInt 3 .
        |    }
        |}
        |ORDER BY (?int)""".stripMargin
@@ -2109,15 +2126,15 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         case pattern: StatementPattern => pattern
       }
       assert(firstBlockStatements.head.subj.toSparql == "?int")
+      assert(firstBlockStatements.head.obj.asInstanceOf[XsdLiteral].value == "1")
       assert(firstBlockStatements.last.subj.toSparql == "?thing")
-      assert(firstBlockStatements.last.obj.toSparql == "?richtext")
       val secondBlock = unionPattern.head.blocks.last
       val secondBlockStatements = secondBlock.collect {
         case pattern: StatementPattern => pattern
       }
       assert(secondBlockStatements.head.subj.toSparql == "?int")
+      assert(secondBlockStatements.head.obj.asInstanceOf[XsdLiteral].value == "3")
       assert(secondBlockStatements.last.subj.toSparql == "?thing")
-      assert(secondBlockStatements.last.obj.toSparql == "?text")
     }
 
     "reorder query patterns in where clause with optional" in {
@@ -2149,5 +2166,6 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       assert(minusPatternStatements.last.subj.toSparql == "?thing")
       assert(minusPatternStatements.last.obj.toSparql == "?intVal")
     }
+
   }
 }
