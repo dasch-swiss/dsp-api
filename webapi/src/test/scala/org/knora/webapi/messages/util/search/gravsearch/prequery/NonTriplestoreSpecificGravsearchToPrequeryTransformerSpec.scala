@@ -33,44 +33,69 @@ private object QueryHandler {
   val anythingUser: UserADM = SharedTestDataADM.anythingAdminUser
   case class edgeLabel(label: String)
   def createAndSortGraph(statementPatterns: Seq[StatementPattern]): Set[QueryPattern] = {
-    def createGraph: Graph[String, DiHyperEdge] = {
-      val graphComponents = statementPatterns.map { statementPattern =>
-        // transform every statementPattern to LUniDiEdge(Subj,Obj)(edgeLabel(pred))
-        val node1 = statementPattern.subj.toSparql
-        val node2 = statementPattern.obj.toSparql
-//        val edge = statementPattern.pred.toSparql
-        DiHyperEdge(node1, node2)
-      }
-      val graph = graphComponents.foldLeft(Graph.empty[String, DiHyperEdge]) { (graph, edge) =>
+    def makeGraphWithoutCycles(graphComponents: Seq[(String, String)]): Graph[String, DiHyperEdge] = {
+      val graph = graphComponents.foldLeft(Graph.empty[String, DiHyperEdge]) { (graph, edgeDef) =>
+        val edge = DiHyperEdge(edgeDef._1, edgeDef._2)
         graph + edge // add nodes and edges to graph
       }
-      graph
+      val acyclicGraph = if (graph.isCyclic) {
+        // get the cycle
+        val cycle: graph.Cycle = graph.findCycle.get
+        // the cyclic node is the one that cycle starts and ends with
+        val cyclicNode: graph.NodeT = cycle.endNode
+        val cyclicEdge: graph.EdgeT = cyclicNode.edges.last
+        val originNodeOfCyclicEdge: String = cyclicEdge._1.value
+        val TargetNodeOfCyclicEdge: String = cyclicEdge._2.value
+        val graphComponenetsWithOutCycle =
+          graphComponents.filterNot(edgeDef => edgeDef.equals((originNodeOfCyclicEdge, TargetNodeOfCyclicEdge)))
+
+        makeGraphWithoutCycles(graphComponenetsWithOutCycle)
+      } else {
+        graph
+      }
+      acyclicGraph
+    }
+    def createGraph: Graph[String, DiHyperEdge] = {
+      val graphComponents: Seq[(String, String)] = statementPatterns.map { statementPattern =>
+        // transform every statementPattern to pair of nodes that will consist an edge.
+        val node1 = statementPattern.subj.toSparql
+        val node2 = statementPattern.obj.toSparql
+        (node1, node2)
+      }
+      makeGraphWithoutCycles(graphComponents)
     }
     def sortStatementPatterns(createdGraph: Graph[String, DiHyperEdge],
                               statementPatterns: Seq[StatementPattern]): Set[QueryPattern] = {
       // Try topological sorting of graph
-      val topologicalOrder: createdGraph.TopologicalOrder[createdGraph.NodeT] = createdGraph.topologicalSort match {
-        // Is there a cycle in the graph?
-        case Left(cycleNode) =>
-          // TODO: yes. break the cycle
-          throw new Error(s"Graph contains a cycle at node: ${cycleNode}, entire cycle is ${createdGraph.findCycle}.")
-        case Right(topOrder) => {
-          // No. return the topological order
-          println(topOrder)
-          topOrder
+      val topologicalOrderSeq: Seq[createdGraph.TopologicalOrder[createdGraph.NodeT]] =
+        createdGraph.topologicalSort match {
+          // Is there still a cycle in the graph?
+          case Left(cycleNode) =>
+            // Don't try sorting, return statements as they are given.
+            Seq.empty[createdGraph.TopologicalOrder[createdGraph.NodeT]]
+          case Right(topOrder) =>
+            // No. return the topological order
+            Seq(topOrder)
         }
+
+      // Is there a topological order found?
+      val sortedPatterns = if (topologicalOrderSeq.nonEmpty) {
+        // Topological sort algorithm return only one perturbation; i.e. one topologicalOrder.
+        val topologicalOrder: Iterable[createdGraph.NodeT] = topologicalOrderSeq.head
+        // Start from the end of the ordered list (the nodes with lowest degree);
+        // for each node, find statements which have the node as object and bring them to top.
+        val sortedStatements: Set[QueryPattern] =
+          topologicalOrder.foldRight(ListSet.empty[QueryPattern]) { (node, sortedStatements) =>
+            val statementsOfNode: Set[QueryPattern] = statementPatterns
+              .filter(p => p.obj.toSparql.equals(node.value))
+              .toSet[QueryPattern]
+            sortedStatements ++ statementsOfNode
+          }
+        sortedStatements
+      } else {
+        statementPatterns.toSet[QueryPattern]
       }
-      // take the main resource out.
-      val topologicalOrderWithoutRoot: Iterable[createdGraph.NodeT] = topologicalOrder.tail
-      val sortedStatements: Set[QueryPattern] =
-        topologicalOrderWithoutRoot.foldRight(ListSet.empty[QueryPattern]) { (node, sortedStatements) =>
-          val statementsOfNode: Set[QueryPattern] = statementPatterns
-            .filter(p => p.obj.toSparql.equals(node.value))
-            .toSet[QueryPattern]
-          println(sortedStatements ++ statementsOfNode)
-          sortedStatements ++ statementsOfNode
-        }
-      sortedStatements
+      sortedPatterns
     }
 
     val createdGraph = createGraph
@@ -1877,20 +1902,16 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
    |} ORDER BY ?date""".stripMargin
 
   val queryToReorderWithCycle: String = """
-   |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+   |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
    |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
    |
    |CONSTRUCT {
-   |  ?letter knora-api:isMainResource true .
-   |  ?letter ?linkingProp1  ?person1 .
+   |    ?thing knora-api:isMainResource true .
    |} WHERE {
-   |  ?letter beol:hasAuthor ?person1 .
-   |  ?letter beol:letterHasTranslation ?letter2.
-   |  ?letter2 beol:hasAuthor ?person1 .
-   |  ?person1 beol:hasIAFIdentifier ?gnd1 .
-   |  ?gnd1 knora-api:valueAsString "(DE-588)118531379" .
-   |
-   |} ORDER BY ?date""".stripMargin
+   |  ?thing anything:hasOtherThing ?thing1 .
+   |  ?thing1 anything:hasOtherThing ?thing2 .
+   |  ?thing2 anything:hasOtherThing ?thing . 
+   |} """.stripMargin
 
   val queryToReorderWithMinus =
     """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -2166,6 +2187,12 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       assert(minusPatternStatements.last.subj.toSparql == "?thing")
       assert(minusPatternStatements.last.obj.toSparql == "?intVal")
     }
-
+    "reorder a query with a cycle" in {
+      val constructQuery = GravsearchParser.parseQuery(queryToReorderWithCycle)
+      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
+      // checks that all statement patterns which created a cycle are returned
+      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
+      assert(statements.size === 3)
+    }
   }
 }
