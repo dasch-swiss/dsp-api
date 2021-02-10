@@ -107,7 +107,8 @@ private object QueryHandler {
       // return any other query pattern as it is
       case pattern: QueryPattern => pattern
     }
-    sortedStatementPatterns ++ sortedOtherPatterns
+    val sorted = sortedStatementPatterns ++ sortedOtherPatterns
+    sorted
   }
 
   def transformQuery(query: String, responderData: ResponderData, settings: KnoraSettingsImpl): SelectQuery = {
@@ -1874,6 +1875,53 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
    |  ?gnd2 knora-api:valueAsString "(DE-588)118696149" .
    |} ORDER BY ?date""".stripMargin
 
+  val queryToReorderWithMinus =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |
+      |CONSTRUCT {
+      |  ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |  ?thing a knora-api:Resource .
+      |  ?thing a anything:Thing .
+      |  MINUS {
+      |    ?thing anything:hasInteger ?intVal .
+      |    anything:hasInteger knora-api:objectType xsd:integer .
+      |    ?intVal a xsd:integer .
+      |    FILTER(?intVal = 123454321 || ?intVal = 999999999)
+      |  }
+      |}""".stripMargin
+
+  val queryToReorderWithUnion: String =
+    s"""PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+       |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+       |CONSTRUCT {
+       |    ?thing knora-api:isMainResource true .
+       |    ?thing anything:hasInteger ?int .
+       |    ?thing anything:hasRichtext ?richtext .
+       |    ?thing anything:hasText ?text .
+       |} WHERE {
+       |    ?thing a knora-api:Resource .
+       |    ?thing a anything:Thing .
+       |    
+       |    {
+       |        ?thing anything:hasRichtext ?richtext .
+       |        FILTER knora-api:matchText(?richtext, "test")
+       |
+       |		    ?thing anything:hasInteger ?int .
+       |		    ?int knora-api:intValueAsInt 1 .
+       |    }
+       |    UNION
+       |    {
+       |        ?thing anything:hasText ?text .
+       |        FILTER knora-api:matchText(?text, "test")
+       |
+       |		?thing anything:hasInteger ?int .
+       |		?int knora-api:intValueAsInt 1 .
+       |    }
+       |}
+       |ORDER BY (?int)""".stripMargin
+
   "The NonTriplestoreSpecificGravsearchToPrequeryGenerator object" should {
 
     "transform an input query with an optional property criterion without removing the rdf:type statement" in {
@@ -2039,7 +2087,67 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
     "reorder query patterns in where clause" in {
       val constructQuery = GravsearchParser.parseQuery(queryToReorder)
       val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
-      assert(sortedPatterns.head.isInstanceOf[QueryPattern])
+      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
+      // check that statements are brought to top
+      val topElements = sortedPatterns.slice(0, statements.size)
+      assert(topElements.equals(statements))
+      // check the order of statements
+      val mainResourceStatements = statements.slice(statements.size - 3, statements.size)
+      assert(!mainResourceStatements.exists(p => p.asInstanceOf[StatementPattern].subj.toSparql !== "?letter"))
+    }
+    "reorder query patterns in where clause with union" in {
+      val constructQuery = GravsearchParser.parseQuery(queryToReorderWithUnion)
+      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
+      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
+      // check that statements are brought to top
+      val topElements = sortedPatterns.slice(0, statements.size)
+      assert(topElements.equals(statements))
+      //check order of statements in each block
+      val unionPattern: Set[UnionPattern] = sortedPatterns.collect { case pattern: UnionPattern => pattern }
+      val firstBlock = unionPattern.head.blocks.head
+      val firstBlockStatements = firstBlock.collect {
+        case pattern: StatementPattern => pattern
+      }
+      assert(firstBlockStatements.head.subj.toSparql == "?int")
+      assert(firstBlockStatements.last.subj.toSparql == "?thing")
+      assert(firstBlockStatements.last.obj.toSparql == "?richtext")
+      val secondBlock = unionPattern.head.blocks.last
+      val secondBlockStatements = secondBlock.collect {
+        case pattern: StatementPattern => pattern
+      }
+      assert(secondBlockStatements.head.subj.toSparql == "?int")
+      assert(secondBlockStatements.last.subj.toSparql == "?thing")
+      assert(secondBlockStatements.last.obj.toSparql == "?text")
+    }
+
+    "reorder query patterns in where clause with optional" in {
+      val constructQuery = GravsearchParser.parseQuery(queryWithOptional)
+      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
+      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
+      // check that statements are brought to top
+      val topElements = sortedPatterns.slice(0, statements.size)
+      assert(topElements.equals(statements))
+      // check statements inside optional pattern
+      val optionalPattern: Set[OptionalPattern] = sortedPatterns.collect { case pattern: OptionalPattern => pattern }
+      val optionalPatternStatements = optionalPattern.head.patterns.collect {
+        case pattern: StatementPattern => pattern
+      }
+      assert(optionalPatternStatements.last.subj.toSparql == "?document")
+      assert(optionalPatternStatements.last.obj.toSparql == "?recipient")
+    }
+
+    "reorder query patterns with minus scope" in {
+      val constructQuery = GravsearchParser.parseQuery(queryToReorderWithMinus)
+      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
+      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
+      // check that statements are brought to top
+      val topElements = sortedPatterns.slice(0, statements.size)
+      assert(topElements.equals(statements))
+      // check statements inside minus pattern
+      val minusPattern: Set[MinusPattern] = sortedPatterns.collect { case pattern: MinusPattern        => pattern }
+      val minusPatternStatements = minusPattern.head.patterns.collect { case pattern: StatementPattern => pattern }
+      assert(minusPatternStatements.last.subj.toSparql == "?thing")
+      assert(minusPatternStatements.last.obj.toSparql == "?intVal")
     }
   }
 }
