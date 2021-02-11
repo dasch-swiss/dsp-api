@@ -32,7 +32,7 @@ private object QueryHandler {
 
   val anythingUser: UserADM = SharedTestDataADM.anythingAdminUser
   case class edgeLabel(label: String)
-  def createAndSortGraph(statementPatterns: Seq[StatementPattern]): Set[QueryPattern] = {
+  def createAndSortGraph(statementPatterns: Seq[StatementPattern]): Seq[QueryPattern] = {
     def makeGraphWithoutCycles(graphComponents: Seq[(String, String)]): Graph[String, DiHyperEdge] = {
       val graph = graphComponents.foldLeft(Graph.empty[String, DiHyperEdge]) { (graph, edgeDef) =>
         val edge = DiHyperEdge(edgeDef._1, edgeDef._2)
@@ -65,7 +65,7 @@ private object QueryHandler {
       makeGraphWithoutCycles(graphComponents)
     }
     def sortStatementPatterns(createdGraph: Graph[String, DiHyperEdge],
-                              statementPatterns: Seq[StatementPattern]): Set[QueryPattern] = {
+                              statementPatterns: Seq[StatementPattern]): Seq[QueryPattern] = {
       // Try topological sorting of graph
       val topologicalOrderSeq: Seq[createdGraph.TopologicalOrder[createdGraph.NodeT]] =
         createdGraph.topologicalSort match {
@@ -84,16 +84,16 @@ private object QueryHandler {
         val topologicalOrder: Iterable[createdGraph.NodeT] = topologicalOrderSeq.head
         // Start from the end of the ordered list (the nodes with lowest degree);
         // for each node, find statements which have the node as object and bring them to top.
-        val sortedStatements: Set[QueryPattern] =
-          topologicalOrder.foldRight(ListSet.empty[QueryPattern]) { (node, sortedStatements) =>
+        val sortedStatements: Seq[QueryPattern] =
+          topologicalOrder.foldRight(Vector.empty[QueryPattern]) { (node, sortedStatements) =>
             val statementsOfNode: Set[QueryPattern] = statementPatterns
               .filter(p => p.obj.toSparql.equals(node.value))
               .toSet[QueryPattern]
-            sortedStatements ++ statementsOfNode
+            sortedStatements ++ statementsOfNode.toVector
           }
         sortedStatements
       } else {
-        statementPatterns.toSet[QueryPattern]
+        statementPatterns
       }
       sortedPatterns
     }
@@ -102,12 +102,12 @@ private object QueryHandler {
     sortStatementPatterns(createdGraph, statementPatterns)
 
   }
-  def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Set[QueryPattern] = {
+  def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
 
     val statementPatterns: Seq[StatementPattern] = patterns.collect { case pattern: StatementPattern => pattern }
-    val sortedStatementPatterns = createAndSortGraph(statementPatterns)
-    val otherPatterns: Set[QueryPattern] = patterns.filterNot(p => p.isInstanceOf[StatementPattern]).toSet
-    val sortedOtherPatterns: Set[QueryPattern] = otherPatterns.map {
+    val sortedStatementPatterns: Seq[QueryPattern] = createAndSortGraph(statementPatterns)
+    val otherPatterns: Seq[QueryPattern] = patterns.filterNot(p => p.isInstanceOf[StatementPattern])
+    val sortedOtherPatterns: Seq[QueryPattern] = otherPatterns.map {
       // sort statements inside each UnionPattern block
       case unionPattern: UnionPattern => {
         val sortedUnionBlocks: Seq[Seq[QueryPattern]] =
@@ -116,19 +116,19 @@ private object QueryHandler {
       }
       // sort statements inside OptionalPattern
       case optionalPattern: OptionalPattern => {
-        val sortedOptionalPatterns: Set[QueryPattern] = reorderPatternsByDependency(optionalPattern.patterns)
+        val sortedOptionalPatterns: Seq[QueryPattern] = reorderPatternsByDependency(optionalPattern.patterns)
         OptionalPattern(patterns = sortedOptionalPatterns.toSeq)
       }
       // sort statements inside MinusPattern
       case minusPattern: MinusPattern => {
-        val sortedMinusPatterns: Set[QueryPattern] = reorderPatternsByDependency(minusPattern.patterns)
+        val sortedMinusPatterns: Seq[QueryPattern] = reorderPatternsByDependency(minusPattern.patterns)
         MinusPattern(patterns = sortedMinusPatterns.toSeq)
       }
       // sort statements inside FilterNotExistsPattern
       case filterNotExistsPattern: FilterNotExistsPattern => {
-        val sortedFilterNotExistsPatterns: Set[QueryPattern] =
+        val sortedFilterNotExistsPatterns: Seq[QueryPattern] =
           reorderPatternsByDependency(filterNotExistsPattern.patterns)
-        FilterNotExistsPattern(patterns = sortedFilterNotExistsPatterns.toSeq)
+        FilterNotExistsPattern(patterns = sortedFilterNotExistsPatterns)
       }
       // return any other query pattern as it is
       case pattern: QueryPattern => pattern
@@ -2141,7 +2141,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val topElements = sortedPatterns.slice(0, statements.size)
       assert(topElements.equals(statements))
       //check order of statements in each block
-      val unionPattern: Set[UnionPattern] = sortedPatterns.collect { case pattern: UnionPattern => pattern }
+      val unionPattern: Seq[UnionPattern] = sortedPatterns.collect { case pattern: UnionPattern => pattern }
       val firstBlock = unionPattern.head.blocks.head
       val firstBlockStatements = firstBlock.collect {
         case pattern: StatementPattern => pattern
@@ -2166,7 +2166,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val topElements = sortedPatterns.slice(0, statements.size)
       assert(topElements.equals(statements))
       // check statements inside optional pattern
-      val optionalPattern: Set[OptionalPattern] = sortedPatterns.collect { case pattern: OptionalPattern => pattern }
+      val optionalPattern: Seq[OptionalPattern] = sortedPatterns.collect { case pattern: OptionalPattern => pattern }
       val optionalPatternStatements = optionalPattern.head.patterns.collect {
         case pattern: StatementPattern => pattern
       }
@@ -2182,7 +2182,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       val topElements = sortedPatterns.slice(0, statements.size)
       assert(topElements.equals(statements))
       // check statements inside minus pattern
-      val minusPattern: Set[MinusPattern] = sortedPatterns.collect { case pattern: MinusPattern        => pattern }
+      val minusPattern: Seq[MinusPattern] = sortedPatterns.collect { case pattern: MinusPattern        => pattern }
       val minusPatternStatements = minusPattern.head.patterns.collect { case pattern: StatementPattern => pattern }
       assert(minusPatternStatements.last.subj.toSparql == "?thing")
       assert(minusPatternStatements.last.obj.toSparql == "?intVal")
