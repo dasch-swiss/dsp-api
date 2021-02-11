@@ -1638,6 +1638,53 @@ case class DocumentFileValueV1(internalMimeType: String,
   }
 }
 
+case class AudioFileValueV1(internalMimeType: String,
+                            internalFilename: String,
+                            originalFilename: Option[String],
+                            originalMimeType: Option[String] = None,
+                            projectShortcode: String,
+                            duration: BigDecimal)
+    extends FileValueV1 {
+
+  def valueTypeIri: IRI = OntologyConstants.KnoraBase.AudioFileValue
+
+  def toJsValue: JsValue = ApiValueV1JsonProtocol.audioFileValueV1Format.write(this)
+
+  override def toString: String = internalFilename
+
+  /**
+    * Checks if a new moving image file value would duplicate an existing moving image file value.
+    *
+    * @param other another [[ValueV1]].
+    * @return `true` if `other` is a duplicate of `this`.
+    */
+  override def isDuplicateOfOtherValue(other: ApiValueV1): Boolean = {
+    other match {
+      case audioFileValueV1: AudioFileValueV1 => audioFileValueV1 == this
+      case otherValue =>
+        throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${otherValue.valueTypeIri}")
+    }
+  }
+
+  /**
+    * Checks if a new version of a moving image file value would be redundant given the current version of the value.
+    *
+    * @param currentVersion the current version of the value.
+    * @return `true` if this [[UpdateValueV1]] is redundant given `currentVersion`.
+    */
+  override def isRedundant(currentVersion: ApiValueV1): Boolean = {
+    currentVersion match {
+      case audioFileValueV1: AudioFileValueV1 => audioFileValueV1 == this
+      case other =>
+        throw InconsistentRepositoryDataException(s"Cannot compare a $valueTypeIri to a ${other.valueTypeIri}")
+    }
+  }
+
+  override def toFileValueContentV2: FileValueContentV2 = {
+    throw NotImplementedException("Moving image file values are not supported in Knora API v1")
+  }
+}
+
 case class MovingImageFileValueV1(internalMimeType: String,
                                   internalFilename: String,
                                   originalFilename: Option[String],
@@ -1822,6 +1869,7 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   implicit val stillImageFileValueV1Format: JsonFormat[StillImageFileValueV1] = jsonFormat7(StillImageFileValueV1)
   implicit val documentFileValueV1Format: JsonFormat[DocumentFileValueV1] = jsonFormat8(DocumentFileValueV1)
   implicit val textFileValueV1Format: JsonFormat[TextFileValueV1] = jsonFormat5(TextFileValueV1)
+  implicit val audioFileValueV1Format: JsonFormat[AudioFileValueV1] = jsonFormat6(AudioFileValueV1)
   implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat5(MovingImageFileValueV1)
   implicit val valueVersionV1Format: JsonFormat[ValueVersionV1] = jsonFormat3(ValueVersionV1)
   implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)

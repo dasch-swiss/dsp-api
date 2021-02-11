@@ -34,6 +34,7 @@ import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.v1.responder.valuemessages.{
+  AudioFileValueV1,
   DocumentFileValueV1,
   FileValueV1,
   StillImageFileValueV1,
@@ -280,6 +281,21 @@ object RouteUtilV1 {
   )
 
   /**
+    * MIME types used in Sipi to store audio files.
+    */
+  private val audioMimeTypes: Set[String] = Set(
+    "application/xml",
+    "text/xml",
+    "text/csv",
+    "text/plain",
+    "audio/mpeg",
+    "audio/mp4",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/vnd.wave"
+  )
+
+  /**
     * Converts file metadata from Sipi into a [[FileValueV1]].
     *
     * @param filename             the filename.
@@ -319,6 +335,16 @@ object RouteUtilV1 {
         pageCount = fileMetadataResponse.pageCount,
         dimX = fileMetadataResponse.width,
         dimY = fileMetadataResponse.height
+      )
+    } else if (audioMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
+      AudioFileValueV1(
+        internalFilename = filename,
+        internalMimeType = fileMetadataResponse.internalMimeType,
+        originalFilename = fileMetadataResponse.originalFilename,
+        originalMimeType = fileMetadataResponse.originalMimeType,
+        projectShortcode = projectShortcode,
+        duration = fileMetadataResponse.duration.getOrElse(
+          throw SipiException("Sipi did not return the duration of the audio file"))
       )
     } else {
       throw BadRequestException(s"MIME type ${fileMetadataResponse.internalMimeType} not supported in Knora API v1")

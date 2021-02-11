@@ -88,6 +88,8 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         makeStillImageValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.TextFileValue =>
         makeTextFileValue(valueProps, projectShortcode, responderManager, userProfile)
+      case OntologyConstants.KnoraBase.AudioFileValue =>
+        makeAudioFileValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.DocumentFileValue =>
         makeDocumentFileValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, responderManager, userProfile)
@@ -853,6 +855,29 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         pageCount = predicates.get(OntologyConstants.KnoraBase.PageCount).flatMap(_.literals.headOption.map(_.toInt)),
         dimX = predicates.get(OntologyConstants.KnoraBase.DimX).flatMap(_.literals.headOption.map(_.toInt)),
         dimY = predicates.get(OntologyConstants.KnoraBase.DimY).flatMap(_.literals.headOption.map(_.toInt))
+      ))
+  }
+
+  /**
+    * Converts a [[ValueProps]] into a [[AudioFileValueV1]].
+    *
+    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+    * @return a [[DocumentFileValueV1]].
+    */
+  private def makeAudioFileValue(
+      valueProps: ValueProps,
+      projectShortcode: String,
+      responderManager: ActorRef,
+      userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    val predicates = valueProps.literalData
+
+    Future(
+      AudioFileValueV1(
+        internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
+        internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
+        originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
+        projectShortcode = projectShortcode,
+        duration = BigDecimal(predicates(OntologyConstants.KnoraBase.Duration).literals.head)
       ))
   }
 

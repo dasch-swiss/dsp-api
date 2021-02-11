@@ -265,6 +265,28 @@ DELETE {
                 }
             }
 
+            case audioFileValue: AudioFileValueV1 => {
+                ?newValue knora-base:internalFilename """@audioFileValue.internalFilename""" ;
+                          knora-base:internalMimeType """@audioFileValue.internalMimeType""" ;
+                          knora-base:duration "@audioFileValue.duration" .
+
+                @audioFileValue.originalFilename match {
+                    case Some(definedOriginalFilename) => {
+                        ?newValue knora-base:originalFilename """@definedOriginalFilename""" .
+                    }
+
+                    case None => {}
+                }
+
+                @audioFileValue.originalMimeType match {
+                    case Some(definedOriginalMimeType) => {
+                        ?newValue knora-base:originalMimeType """@definedOriginalMimeType""" .
+                    }
+
+                    case None => {}
+                }
+            }
+
             case documentFileValue: DocumentFileValueV1 => {
                 ?newValue knora-base:internalFilename """@documentFileValue.internalFilename""" .
                 ?newValue knora-base:internalMimeType """@documentFileValue.internalMimeType""" .

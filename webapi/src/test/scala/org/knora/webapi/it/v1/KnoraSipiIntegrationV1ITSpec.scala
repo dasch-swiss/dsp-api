@@ -80,6 +80,7 @@ class KnoraSipiIntegrationV1ITSpec
 
   private val pdfResourceIri = new MutableTestIri
   private val zipResourceIri = new MutableTestIri
+  private val wavResourceIri = new MutableTestIri
 
   private val minimalPdfOriginalFilename = "minimal.pdf"
   private val pathToMinimalPdf = s"test_data/test_route/files/$minimalPdfOriginalFilename"
@@ -96,6 +97,10 @@ class KnoraSipiIntegrationV1ITSpec
 
   private val testZipOriginalFilename = "test.zip"
   private val pathToTestZip = s"test_data/test_route/files/$testZipOriginalFilename"
+
+  private val minimalWavOriginalFilename = "minimal.wav"
+  private val pathToMinimalWav = s"test_data/test_route/files/$minimalWavOriginalFilename"
+  private val minimalWavDuration = BigDecimal("0.0")
 
   /**
     * Adds the IRI of a XSL transformation to the given mapping.
@@ -899,6 +904,57 @@ class KnoraSipiIntegrationV1ITSpec
 
       val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
       val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val zipUrl =
+        locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
+
+      // Request the file from Sipi.
+      val sipiGetRequest = Get(zipUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
+      checkResponseOK(sipiGetRequest)
+    }
+
+    "create a resource with a WAV file attached" in {
+      // Upload the WAV file to Sipi.
+      val zipUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToMinimalWav, mimeType = MediaTypes.`audio/wav`))
+      )
+
+      val uploadedWavFile: SipiUploadResponseEntry = zipUploadResponse.uploadedFiles.head
+      uploadedWavFile.originalFilename should ===(minimalWavOriginalFilename)
+
+      // Create a resource for the WAV file.
+      val createAudioResourceParams = JsObject(
+        Map(
+          "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#ThingWithRepresentation"),
+          "label" -> JsString("Wav file"),
+          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
+          "properties" -> JsObject(),
+          "file" -> JsString(uploadedWavFile.internalFilename)
+        )
+      )
+
+      // Send the JSON in a POST request to the Knora API server.
+      val createAudioResourceRequest: HttpRequest = Post(
+        baseApiUrl + "/v1/resources",
+        HttpEntity(ContentTypes.`application/json`, createAudioResourceParams.compactPrint)) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      val createAudioResourceResponseJson: JsObject = getResponseJson(createAudioResourceRequest)
+
+      // get the IRI of the audio file resource
+      val resourceIri: String = createAudioResourceResponseJson.fields.get("res_id") match {
+        case Some(JsString(res_id: String)) => res_id
+        case _                              => throw InvalidApiJsonException("member 'res_id' was expected")
+      }
+
+      wavResourceIri.set(resourceIri)
+
+      // Request the audio file resource from the Knora API server.
+      val audioResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      val audioResourceResponse: JsObject = getResponseJson(audioResourceRequest)
+      val locdata = audioResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val zipUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
 
