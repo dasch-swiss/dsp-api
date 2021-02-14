@@ -180,11 +180,9 @@
                     }
 
                     case documentFileValue: DocumentFileValueContentV2 => {
-                        <@newValueIri> knora-base:pageCount @documentFileValue.pageCount .
-
                         @documentFileValue.dimX match {
                             case Some(definedDimX) => {
-                                <@newValueIri> knora-base:dimX @documentFileValue.dimX .
+                                <@newValueIri> knora-base:dimX @definedDimX .
                             }
 
                             case None => {}
@@ -192,7 +190,15 @@
 
                         @documentFileValue.dimY match {
                             case Some(definedDimY) => {
-                                <@newValueIri> knora-base:dimY @documentFileValue.dimY .
+                                <@newValueIri> knora-base:dimY @definedDimY .
+                            }
+
+                            case None => {}
+                        }
+
+                        @documentFileValue.pageCount match {
+                            case Some(definedPageCount) => {
+                                <@newValueIri> knora-base:pageCount @definedPageCount .
                             }
 
                             case None => {}

@@ -3250,7 +3250,7 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
   */
 case class DocumentFileValueContentV2(ontologySchema: OntologySchema,
                                       fileValue: FileValueV2,
-                                      pageCount: Int,
+                                      pageCount: Option[Int],
                                       dimX: Option[Int],
                                       dimY: Option[Int],
                                       comment: Option[String] = None)
@@ -3269,7 +3269,7 @@ case class DocumentFileValueContentV2(ontologySchema: OntologySchema,
                              projectADM: ProjectADM,
                              settings: KnoraSettingsImpl,
                              schemaOptions: Set[SchemaOption]): JsonLDValue = {
-    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}"
+    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
 
     targetSchema match {
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
@@ -3283,10 +3283,12 @@ case class DocumentFileValueContentV2(ontologySchema: OntologySchema,
           OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimY -> JsonLDInt(definedDimY)
         }
 
+        val maybePageCountStatement: Option[(IRI, JsonLDInt)] = pageCount.map { definedPageCount =>
+          OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasPageCount -> JsonLDInt(definedPageCount)
+        }
+
         JsonLDObject(
-          toJsonLDObjectMapInComplexSchema(fileUrl) ++ Map(
-            OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasPageCount -> JsonLDInt(pageCount)
-          ) ++ maybeDimXStatement ++ maybeDimYStatement
+          toJsonLDObjectMapInComplexSchema(fileUrl) ++ maybeDimXStatement ++ maybeDimYStatement ++ maybePageCountStatement
         )
     }
   }
@@ -3347,8 +3349,7 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
       DocumentFileValueContentV2(
         ontologySchema = ApiV2Complex,
         fileValue = fileValueWithSipiMetadata.fileValue,
-        pageCount = fileValueWithSipiMetadata.sipiFileMetadata.pageCount
-          .getOrElse(throw SipiException("Sipi did not return a page count")),
+        pageCount = fileValueWithSipiMetadata.sipiFileMetadata.pageCount,
         dimX = fileValueWithSipiMetadata.sipiFileMetadata.width,
         dimY = fileValueWithSipiMetadata.sipiFileMetadata.height,
         comment = getComment(jsonLDObject)
@@ -3380,7 +3381,7 @@ case class TextFileValueContentV2(ontologySchema: OntologySchema,
                              projectADM: ProjectADM,
                              settings: KnoraSettingsImpl,
                              schemaOptions: Set[SchemaOption]): JsonLDValue = {
-    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}"
+    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
 
     targetSchema match {
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)

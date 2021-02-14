@@ -38,9 +38,12 @@ SELECT ?prop ?isLinkProp ?isLinkValueProp ?obj ?objPred ?objObj ?predStandoff ?o
 WHERE {
     BIND(IRI("@resourceIri") as ?resource)
 
-    ?resource rdf:type ?resourceClass ;
-        knora-base:isDeleted false .
+    ?resource rdf:type ?resourceClass .
     ?resourceClass rdfs:subClassOf* knora-base:Resource .
+
+    FILTER NOT EXISTS {
+        ?resource knora-base:isDeleted true .
+    }
 
     {
         @* Get properties that point to Value objects. *@
@@ -63,20 +66,28 @@ WHERE {
             @* Get the project of the containing resource. *@
 
             ?resource ?prop ?obj .
-            ?obj knora-base:isDeleted false .
+
+            FILTER NOT EXISTS {
+                ?obj knora-base:isDeleted true .
+            }
+
             ?resource knora-base:attachedToProject ?resourceProject .
             BIND(knora-base:attachedToProject AS ?objPred)
-        	BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
+            BIND(COALESCE(?valueProject, ?resourceProject) AS ?objObj)
         }
         UNION
         {
             @* Get the value's standoff markup nodes if it has any. *@
 
             ?resource ?prop ?obj .
-            ?obj knora-base:isDeleted false .
+
+            FILTER NOT EXISTS {
+                ?obj knora-base:isDeleted true .
+            }
+
             ?obj a knora-base:TextValue .
             BIND(knora-base:valueHasStandoff AS ?objPred)
-	        ?obj ?objPred ?objObj .
+	          ?obj ?objPred ?objObj .
             ?objObj ?predStandoff ?objStandoff .
         }
         UNION
@@ -84,8 +95,12 @@ WHERE {
             @* Get any other statements about the value. *@
 
             ?resource ?prop ?obj .
-            ?obj knora-base:isDeleted false .
-	        ?obj ?objPred ?objObj .
+
+            FILTER NOT EXISTS {
+                ?obj knora-base:isDeleted true .
+            }
+
+	          ?obj ?objPred ?objObj .
 
             FILTER(!(?objPred = knora-base:attachedToProject || ?objPred = knora-base:valueHasStandoff))
         }
@@ -98,7 +113,11 @@ WHERE {
         BIND(true AS ?isLinkProp)
 
         ?resource ?prop ?obj .
-        ?obj knora-base:isDeleted false .
+
+        FILTER NOT EXISTS {
+            ?obj knora-base:isDeleted true .
+        }
+
         ?obj ?objPred ?objObj .
     }
 }

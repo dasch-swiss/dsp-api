@@ -69,6 +69,15 @@ $ make stack-up-fast
 
 which starts the knora-stack by skipping rebuilding most of the images (only api image is rebuilt).
 
+To work on Metadata, use
+
+```
+$ make stack-up-with-metadata
+```
+
+which will put three example metadata sets to the projects `anything`, `images` and `dokubib`.
+This data can then be consumed from `localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001`, `localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF` and `localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0804`.
+
 ## Managing Containers in Docker Dashboard
 
 The Docker Desktop is installed on your computer during the installation of docker, it enables easy management of docker 

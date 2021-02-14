@@ -88,6 +88,8 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         makeStillImageValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.TextFileValue =>
         makeTextFileValue(valueProps, projectShortcode, responderManager, userProfile)
+      case OntologyConstants.KnoraBase.DocumentFileValue =>
+        makeDocumentFileValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, responderManager, userProfile)
     }
   }
@@ -104,6 +106,16 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     */
   def makeSipiImageGetUrlFromFilename(imageFileValueV1: StillImageFileValueV1): String = {
     s"${settings.externalSipiIIIFGetUrl}/${imageFileValueV1.projectShortcode}/${imageFileValueV1.internalFilename}/full/${imageFileValueV1.dimX},${imageFileValueV1.dimY}/0/default.jpg"
+  }
+
+  /**
+    * Creates a URL for accessing a document file via Sipi.
+    *
+    * @param documentFileValueV1 the document file value.
+    * @return a Sipi  URL.
+    */
+  def makeSipiDocumentGetUrlFromFilename(documentFileValueV1: DocumentFileValueV1): String = {
+    s"${settings.externalSipiIIIFGetUrl}/${documentFileValueV1.projectShortcode}/${documentFileValueV1.internalFilename}/file"
   }
 
   /**
@@ -145,7 +157,10 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       "text/xml" -> "XML",
       "text/csv" -> "CSV",
       "application/zip" -> "ZIP",
-      "application/x-compressed-zip" -> "ZIP"
+      "application/x-compressed-zip" -> "ZIP",
+      "audio/x-wav" -> "AUDIO",
+      "audio/mp4" -> "AUDIO",
+      "audio/mpeg" -> "AUDIO"
     ), { key: String =>
       s"Unknown MIME type: $key"
     }
@@ -168,6 +183,16 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
           ny = Some(stillImageFileValueV1.dimY),
           path = makeSipiImageGetUrlFromFilename(stillImageFileValueV1)
         )
+
+      case documentFileValueV1: DocumentFileValueV1 =>
+        LocationV1(
+          format_name = mimeType2V1Format(documentFileValueV1.internalMimeType),
+          origname = documentFileValueV1.originalFilename,
+          nx = documentFileValueV1.dimX,
+          ny = documentFileValueV1.dimY,
+          path = makeSipiDocumentGetUrlFromFilename(documentFileValueV1)
+        )
+
       case textFileValue: TextFileValueV1 =>
         LocationV1(
           format_name = mimeType2V1Format(textFileValue.internalMimeType),
@@ -342,6 +367,8 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       case _: StillImageFileValueV1 => basicObjectResponse // TODO: implement this.
 
       case _: TextFileValueV1 => basicObjectResponse
+
+      case _: DocumentFileValueV1 => basicObjectResponse
 
       case _: HierarchicalListValueV1 => basicObjectResponse
 
@@ -801,6 +828,31 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
         originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
         projectShortcode = projectShortcode
+      ))
+  }
+
+  /**
+    * Converts a [[ValueProps]] into a [[DocumentFileValueV1]].
+    *
+    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+    * @return a [[DocumentFileValueV1]].
+    */
+  private def makeDocumentFileValue(
+      valueProps: ValueProps,
+      projectShortcode: String,
+      responderManager: ActorRef,
+      userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    val predicates = valueProps.literalData
+
+    Future(
+      DocumentFileValueV1(
+        internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
+        internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
+        originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
+        projectShortcode = projectShortcode,
+        pageCount = predicates.get(OntologyConstants.KnoraBase.PageCount).flatMap(_.literals.headOption.map(_.toInt)),
+        dimX = predicates.get(OntologyConstants.KnoraBase.DimX).flatMap(_.literals.headOption.map(_.toInt)),
+        dimY = predicates.get(OntologyConstants.KnoraBase.DimY).flatMap(_.literals.headOption.map(_.toInt))
       ))
   }
 

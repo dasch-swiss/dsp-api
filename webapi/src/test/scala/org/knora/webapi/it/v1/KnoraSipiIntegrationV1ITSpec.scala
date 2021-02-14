@@ -49,8 +49,7 @@ object KnoraSipiIntegrationV1ITSpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file
-  * `sipi.knora-docker-config.lua`.
+  * End-to-End (E2E) test specification for testing Knora-Sipi integration.
   */
 class KnoraSipiIntegrationV1ITSpec
     extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config)
@@ -78,6 +77,25 @@ class KnoraSipiIntegrationV1ITSpec
   private val pathToBEOLBulkXML = "test_data/test_route/texts/beol/testLetter/bulk.xml"
   private val letterIri = new MutableTestIri
   private val gravsearchTemplateIri = new MutableTestIri
+
+  private val pdfResourceIri = new MutableTestIri
+  private val zipResourceIri = new MutableTestIri
+
+  private val minimalPdfOriginalFilename = "minimal.pdf"
+  private val pathToMinimalPdf = s"test_data/test_route/files/$minimalPdfOriginalFilename"
+  private val minimalPdfWidth = 1250
+  private val minimalPdfHeight = 600
+
+  private val testPdfOriginalFilename = "test.pdf"
+  private val pathToTestPdf = s"test_data/test_route/files/$testPdfOriginalFilename"
+  private val testPdfWidth = 2480
+  private val testPdfHeight = 3508
+
+  private val minimalZipOriginalFilename = "minimal.zip"
+  private val pathToMinimalZip = s"test_data/test_route/files/$minimalZipOriginalFilename"
+
+  private val testZipOriginalFilename = "test.zip"
+  private val pathToTestZip = s"test_data/test_route/files/$testZipOriginalFilename"
 
   /**
     * Adds the IRI of a XSL transformation to the given mapping.
@@ -705,6 +723,188 @@ class KnoraSipiIntegrationV1ITSpec
       assert(responseBodyStr.contains("Unable to get file"))
       assert(responseBodyStr.contains("as requested by org.knora.webapi.responders.v2.StandoffResponderV2"))
       assert(responseBodyStr.contains("Sipi responded with HTTP status code 404"))
+    }
+
+    "create a resource with a PDF file attached" in {
+      // Upload the PDF file to Sipi.
+      val pdfUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToMinimalPdf, mimeType = MediaTypes.`application/pdf`))
+      )
+
+      val uploadedPdfFile: SipiUploadResponseEntry = pdfUploadResponse.uploadedFiles.head
+      uploadedPdfFile.originalFilename should ===(minimalPdfOriginalFilename)
+
+      // Create a resource for the PDF file.
+      val createDocumentResourceParams = JsObject(
+        Map(
+          "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#ThingDocument"),
+          "label" -> JsString("PDF file"),
+          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
+          "properties" -> JsObject(),
+          "file" -> JsString(uploadedPdfFile.internalFilename)
+        )
+      )
+
+      // Send the JSON in a POST request to the Knora API server.
+      val createDocumentResourceRequest: HttpRequest = Post(
+        baseApiUrl + "/v1/resources",
+        HttpEntity(ContentTypes.`application/json`, createDocumentResourceParams.compactPrint)) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      val createDocumentResourceResponseJson: JsObject = getResponseJson(createDocumentResourceRequest)
+
+      // get the IRI of the document file resource
+      val resourceIri: String = createDocumentResourceResponseJson.fields.get("res_id") match {
+        case Some(JsString(res_id: String)) => res_id
+        case _                              => throw InvalidApiJsonException("member 'res_id' was expected")
+      }
+
+      pdfResourceIri.set(resourceIri)
+
+      // Request the document resource from the Knora API server.
+      val documentResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
+      val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val nx = locdata.fields("nx").asInstanceOf[JsNumber].value.toInt
+      val ny = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
+      val pdfUrl =
+        locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
+      assert(nx == minimalPdfWidth)
+      assert(ny == minimalPdfHeight)
+
+      // Request the file from Sipi.
+      val sipiGetRequest = Get(pdfUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
+      checkResponseOK(sipiGetRequest)
+    }
+
+    "change the PDF file attached to a resource" in {
+      // Upload the file to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToTestPdf, mimeType = MediaTypes.`application/pdf`))
+      )
+
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.originalFilename should ===(testPdfOriginalFilename)
+
+      // JSON describing the new file to Knora.
+      val knoraParams = JsObject(
+        Map(
+          "file" -> JsString(s"${uploadedFile.internalFilename}")
+        )
+      )
+
+      // Send the JSON in a PUT request to the Knora API server.
+      val knoraPutRequest = Put(
+        baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(pdfResourceIri.get, "UTF-8"),
+        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      checkResponseOK(knoraPutRequest)
+
+      // Request the document resource from the Knora API server.
+      val documentResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(pdfResourceIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
+      val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val nx = locdata.fields("nx").asInstanceOf[JsNumber].value.toInt
+      val ny = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
+      assert(nx == testPdfWidth)
+      assert(ny == testPdfHeight)
+    }
+
+    "create a resource with a Zip file attached" in {
+      // Upload the Zip file to Sipi.
+      val zipUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToMinimalZip, mimeType = MediaTypes.`application/zip`))
+      )
+
+      val uploadedZipFile: SipiUploadResponseEntry = zipUploadResponse.uploadedFiles.head
+      uploadedZipFile.originalFilename should ===(minimalZipOriginalFilename)
+
+      // Create a resource for the Zip file.
+      val createDocumentResourceParams = JsObject(
+        Map(
+          "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#ThingDocument"),
+          "label" -> JsString("Zip file"),
+          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
+          "properties" -> JsObject(),
+          "file" -> JsString(uploadedZipFile.internalFilename)
+        )
+      )
+
+      // Send the JSON in a POST request to the Knora API server.
+      val createDocumentResourceRequest: HttpRequest = Post(
+        baseApiUrl + "/v1/resources",
+        HttpEntity(ContentTypes.`application/json`, createDocumentResourceParams.compactPrint)) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      val createDocumentResourceResponseJson: JsObject = getResponseJson(createDocumentResourceRequest)
+
+      // get the IRI of the document file resource
+      val resourceIri: String = createDocumentResourceResponseJson.fields.get("res_id") match {
+        case Some(JsString(res_id: String)) => res_id
+        case _                              => throw InvalidApiJsonException("member 'res_id' was expected")
+      }
+
+      zipResourceIri.set(resourceIri)
+
+      // Request the document resource from the Knora API server.
+      val documentResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
+      val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val zipUrl =
+        locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
+
+      // Request the file from Sipi.
+      val sipiGetRequest = Get(zipUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
+      checkResponseOK(sipiGetRequest)
+    }
+
+    "change the Zip file attached to a resource" in {
+      // Upload the file to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToTestZip, mimeType = MediaTypes.`application/zip`))
+      )
+
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.originalFilename should ===(testZipOriginalFilename)
+
+      // JSON describing the new file to Knora.
+      val knoraParams = JsObject(
+        Map(
+          "file" -> JsString(s"${uploadedFile.internalFilename}")
+        )
+      )
+
+      // Send the JSON in a PUT request to the Knora API server.
+      val knoraPutRequest = Put(
+        baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(zipResourceIri.get, "UTF-8"),
+        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      checkResponseOK(knoraPutRequest)
+
+      // Request the document resource from the Knora API server.
+      val documentResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(zipResourceIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
+      val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val zipUrl =
+        locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
+
+      // Request the file from Sipi.
+      val sipiGetRequest = Get(zipUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
+      checkResponseOK(sipiGetRequest)
     }
   }
 }

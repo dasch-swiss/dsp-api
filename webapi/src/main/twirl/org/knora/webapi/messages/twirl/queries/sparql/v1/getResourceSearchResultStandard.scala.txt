@@ -68,7 +68,9 @@ WHERE {
         }
     }
 
-    ?resourceIri knora-base:isDeleted false .
+    FILTER NOT EXISTS {
+        ?resourceIri knora-base:isDeleted true .
+    }
 
     @restypeIriOption match {
 
@@ -98,9 +100,11 @@ WHERE {
             ?resourceIri ?property ?valueObjectIri .
             ?property knora-base:objectClassConstraint knora-base:TextValue .
             ?valueObjectIri knora-base:valueHasString ?valueString ;
-                knora-base:isDeleted false ;
                 knora-base:valueHasOrder ?valueOrder .
 
+            FILTER NOT EXISTS {
+                ?valueObjectIri knora-base:isDeleted true .
+            }
         }
 
     }
