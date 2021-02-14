@@ -335,6 +335,7 @@ case class UserProfileV1(userData: UserDataV1 = UserDataV1(lang = "en"),
   * Represents basic information about a user.
   *
   * @param user_id   The user's IRI.
+  * @param username  The user's username.
   * @param email     The user's email address.
   * @param password  The user's hashed password.
   * @param token     The API token. Can be used instead of email/password for authentication.
