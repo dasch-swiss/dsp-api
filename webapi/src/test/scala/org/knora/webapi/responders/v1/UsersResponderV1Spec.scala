@@ -88,11 +88,13 @@ class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with Im
 
       "return a profile if the user (incunabula user) is known" in {
         responderManager ! UserProfileByIRIGetV1(
-          incunabulaUserIri,
-          UserProfileTypeV1.FULL,
+          userIri = incunabulaUserIri,
+          userProfileType = UserProfileTypeV1.FULL,
           featureFactoryConfig = defaultFeatureFactoryConfig
         )
-        expectMsg(Some(incunabulaUser.ofType(UserProfileTypeV1.FULL)))
+        val response = expectMsgType[Option[UserProfileV1]](timeout)
+        // println(response)
+        response should equal(Some(incunabulaUser.ofType(UserProfileTypeV1.FULL)))
       }
 
       "return 'NotFoundException' when the user is unknown " in {

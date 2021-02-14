@@ -527,6 +527,7 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
           case None           => settings.fallbackLanguage
         },
         user_id = Some(returnedUserIri),
+        username = groupedUserData.get(OntologyConstants.KnoraAdmin.Username).map(_.head),
         email = groupedUserData.get(OntologyConstants.KnoraAdmin.Email).map(_.head),
         firstname = groupedUserData.get(OntologyConstants.KnoraAdmin.GivenName).map(_.head),
         lastname = groupedUserData.get(OntologyConstants.KnoraAdmin.FamilyName).map(_.head),

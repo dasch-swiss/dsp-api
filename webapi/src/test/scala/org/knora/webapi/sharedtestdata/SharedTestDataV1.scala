@@ -185,87 +185,13 @@ object SharedTestDataV1 {
   val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/0803"
 
   /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
-  def incunabulaProjectAdminUser = UserProfileV1(
-    userData = UserDataV1(
-      user_id = Some("http://rdfh.ch/users/b83acc5f05"),
-      firstname = Some("User"),
-      lastname = Some("Test"),
-      email = Some("user.test@example.com"),
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"), // -> "test"
-      token = None,
-      status = Some(true),
-      lang = "de"
-    ),
-    groups = Vector.empty[IRI],
-    projects_info = Map(INCUNABULA_PROJECT_IRI -> incunabulaProjectInfo),
-    sessionId = None,
-    permissionData = PermissionsDataADM(
-      groupsPerProject = Map(
-        INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}",
-                                       s"${OntologyConstants.KnoraAdmin.ProjectAdmin}")
-      ),
-      administrativePermissionsPerProject = Map(
-        INCUNABULA_PROJECT_IRI -> Set(
-          PermissionADM.ProjectAdminAllPermission,
-          PermissionADM.ProjectResourceCreateAllPermission
-        )
-      )
-    )
-  )
+  def incunabulaProjectAdminUser = SharedTestDataADM.incunabulaProjectAdminUser.asUserProfileV1
 
   /* represents 'root-alt' (Incunabula ProjectMember) as found in admin-data.ttl  */
-  def incunabulaCreatorUser = UserProfileV1(
-    userData = UserDataV1(
-      user_id = Some("http://rdfh.ch/users/91e19f1e01"),
-      firstname = Some("Administrator-alt"),
-      lastname = Some("Admin-alt"),
-      email = Some("root-alt@example.com"),
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"), // -> "test"
-      token = None,
-      status = Some(true),
-      lang = "de"
-    ),
-    groups = Vector.empty[IRI],
-    projects_info = Map(INCUNABULA_PROJECT_IRI -> incunabulaProjectInfo),
-    sessionId = None,
-    permissionData = PermissionsDataADM(
-      groupsPerProject = Map(
-        INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}")
-      ),
-      administrativePermissionsPerProject = Map(
-        INCUNABULA_PROJECT_IRI -> Set(
-          PermissionADM.ProjectResourceCreateAllPermission
-        )
-      )
-    )
-  )
+  def incunabulaCreatorUser = SharedTestDataADM.incunabulaProjectAdminUser.asUserProfileV1
 
   /* represents 'root-alt' (Incunabula Creator and ProjectMember) as found in admin-data.ttl  */
-  def incunabulaMemberUser = UserProfileV1(
-    userData = UserDataV1(
-      user_id = Some("http://rdfh.ch/users/incunabulaMemberUser"),
-      firstname = Some("User"),
-      lastname = Some("Test2"),
-      email = Some("test.user2@test.ch"),
-      password = Some("$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"), // -> "test"
-      token = None,
-      status = Some(true),
-      lang = "de"
-    ),
-    groups = Vector.empty[IRI],
-    projects_info = Map(INCUNABULA_PROJECT_IRI -> incunabulaProjectInfo),
-    sessionId = None,
-    permissionData = PermissionsDataADM(
-      groupsPerProject = Map(
-        INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}")
-      ),
-      administrativePermissionsPerProject = Map(
-        INCUNABULA_PROJECT_IRI -> Set(
-          PermissionADM.ProjectResourceCreateAllPermission
-        )
-      )
-    )
-  )
+  def incunabulaMemberUser = SharedTestDataADM.incunabulaMemberUser.asUserProfileV1
 
   /* represents the ProjectInfoV1 of the incunabula project */
   def incunabulaProjectInfo = ProjectInfoV1(
