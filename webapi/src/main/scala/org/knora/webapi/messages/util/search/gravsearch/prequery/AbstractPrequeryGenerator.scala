@@ -2057,10 +2057,9 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
   protected def removeEntitiesInferredFromProperty(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
 
     // Collect all entities which are used as subject or object of an OptionalPattern.
-    val optionalEntities = patterns
-      .filter {
-        case OptionalPattern(_) => true
-        case _                  => false
+    val optionalEntities: Seq[TypeableEntity] = patterns
+      .collect {
+        case optionalPattern: OptionalPattern => optionalPattern
       }
       .flatMap {
         case optionalPattern: OptionalPattern =>
@@ -2068,13 +2067,15 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
             case pattern: StatementPattern =>
               GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.subj) ++ GravsearchTypeInspectionUtil
                 .maybeTypeableEntity(pattern.obj)
+
             case _ => None
           }
+
         case _ => None
       }
 
     // remove statements whose predicate is rdf:type, type of subject is inferred from a property, and the subject is not in optionalEntities.
-    val optimisedPatterns = patterns.filter {
+    patterns.filter {
       case statementPattern: StatementPattern =>
         statementPattern.pred match {
           case iriRef: IriRef =>
@@ -2091,32 +2092,34 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         }
       case _ => true
     }
-    optimisedPatterns
   }
 
   private def createAndSortGraph(statementPatterns: Seq[StatementPattern]): Seq[QueryPattern] = {
+    @scala.annotation.tailrec
     def makeGraphWithoutCycles(graphComponents: Seq[(String, String)]): Graph[String, DiHyperEdge] = {
       val graph = graphComponents.foldLeft(Graph.empty[String, DiHyperEdge]) { (graph, edgeDef) =>
         val edge = DiHyperEdge(edgeDef._1, edgeDef._2)
         graph + edge // add nodes and edges to graph
       }
-      val acyclicGraph = if (graph.isCyclic) {
+
+      if (graph.isCyclic) {
         // get the cycle
         val cycle: graph.Cycle = graph.findCycle.get
+
         // the cyclic node is the one that cycle starts and ends with
         val cyclicNode: graph.NodeT = cycle.endNode
         val cyclicEdge: graph.EdgeT = cyclicNode.edges.last
         val originNodeOfCyclicEdge: String = cyclicEdge._1.value
         val TargetNodeOfCyclicEdge: String = cyclicEdge._2.value
-        val graphComponenetsWithOutCycle =
+        val graphComponentsWithOutCycle =
           graphComponents.filterNot(edgeDef => edgeDef.equals((originNodeOfCyclicEdge, TargetNodeOfCyclicEdge)))
 
-        makeGraphWithoutCycles(graphComponenetsWithOutCycle)
+        makeGraphWithoutCycles(graphComponentsWithOutCycle)
       } else {
         graph
       }
-      acyclicGraph
     }
+
     def createGraph: Graph[String, DiHyperEdge] = {
       val graphComponents: Seq[(String, String)] = statementPatterns.map { statementPattern =>
         // transform every statementPattern to pair of nodes that will consist an edge.
@@ -2124,8 +2127,10 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         val node2 = statementPattern.obj.toSparql
         (node1, node2)
       }
+
       makeGraphWithoutCycles(graphComponents)
     }
+
     def sortStatementPatterns(createdGraph: Graph[String, DiHyperEdge],
                               statementPatterns: Seq[StatementPattern]): Seq[QueryPattern] = {
       // Try topological sorting of graph
@@ -2141,62 +2146,73 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         }
 
       // Is there a topological order found?
-      val sortedPatterns = if (topologicalOrderSeq.nonEmpty) {
-        // Topological sort algorithm return only one perturbation; i.e. one topologicalOrder.
+      if (topologicalOrderSeq.nonEmpty) {
+        // Yes. Topological sort algorithm return only one perturbation; i.e. one topologicalOrder.
         val topologicalOrder: Iterable[createdGraph.NodeT] = topologicalOrderSeq.head
+
         // Start from the end of the ordered list (the nodes with lowest degree);
         // for each node, find statements which have the node as object and bring them to top.
-        val sortedStatements: Seq[QueryPattern] =
-          topologicalOrder.foldRight(Vector.empty[QueryPattern]) { (node, sortedStatements) =>
-            val statementsOfNode: Set[QueryPattern] = statementPatterns
-              .filter(p => p.obj.toSparql.equals(node.value))
-              .toSet[QueryPattern]
-            sortedStatements ++ statementsOfNode.toVector
-          }
-        sortedStatements
+        topologicalOrder.foldRight(Vector.empty[QueryPattern]) { (node, sortedStatements) =>
+          val statementsOfNode: Set[QueryPattern] = statementPatterns
+            .filter(p => p.obj.toSparql.equals(node.value))
+            .toSet[QueryPattern]
+          sortedStatements ++ statementsOfNode.toVector
+        }
       } else {
+        // No topological order found.
         statementPatterns
       }
-      sortedPatterns
     }
 
-    val createdGraph = createGraph
-    sortStatementPatterns(createdGraph, statementPatterns)
-
+    sortStatementPatterns(createGraph, statementPatterns)
   }
 
+  /**
+    * Optimises query patterns by reordering them on the basis of dependencies between subjects and objects.
+    *
+    * @param patterns the patterns to be optimised.
+    * @return the optimised patterns.
+    */
   protected def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+    // Separate the statement patterns from the other patterns.
+    val (statementPatterns: Seq[StatementPattern], otherPatterns: Seq[QueryPattern]) =
+      patterns.foldLeft((Vector.empty[StatementPattern], Vector.empty[QueryPattern])) {
+        case ((statementPatternAcc, otherPatternAcc), pattern: QueryPattern) =>
+          pattern match {
+            case statementPattern: StatementPattern => (statementPatternAcc :+ statementPattern, otherPatternAcc)
+            case _                                  => (statementPatternAcc, otherPatternAcc :+ pattern)
+          }
+      }
 
-    val statementPatterns: Seq[StatementPattern] = patterns.collect { case pattern: StatementPattern => pattern }
     val sortedStatementPatterns: Seq[QueryPattern] = createAndSortGraph(statementPatterns)
-    val otherPatterns: Seq[QueryPattern] = patterns.filterNot(p => p.isInstanceOf[StatementPattern])
+
     val sortedOtherPatterns: Seq[QueryPattern] = otherPatterns.map {
       // sort statements inside each UnionPattern block
-      case unionPattern: UnionPattern => {
+      case unionPattern: UnionPattern =>
         val sortedUnionBlocks: Seq[Seq[QueryPattern]] =
-          unionPattern.blocks.map(block => reorderPatternsByDependency(block).toSeq)
+          unionPattern.blocks.map(block => reorderPatternsByDependency(block))
         UnionPattern(blocks = sortedUnionBlocks)
-      }
+
       // sort statements inside OptionalPattern
-      case optionalPattern: OptionalPattern => {
+      case optionalPattern: OptionalPattern =>
         val sortedOptionalPatterns: Seq[QueryPattern] = reorderPatternsByDependency(optionalPattern.patterns)
-        OptionalPattern(patterns = sortedOptionalPatterns.toSeq)
-      }
+        OptionalPattern(patterns = sortedOptionalPatterns)
+
       // sort statements inside MinusPattern
-      case minusPattern: MinusPattern => {
+      case minusPattern: MinusPattern =>
         val sortedMinusPatterns: Seq[QueryPattern] = reorderPatternsByDependency(minusPattern.patterns)
-        MinusPattern(patterns = sortedMinusPatterns.toSeq)
-      }
+        MinusPattern(patterns = sortedMinusPatterns)
+
       // sort statements inside FilterNotExistsPattern
-      case filterNotExistsPattern: FilterNotExistsPattern => {
+      case filterNotExistsPattern: FilterNotExistsPattern =>
         val sortedFilterNotExistsPatterns: Seq[QueryPattern] =
           reorderPatternsByDependency(filterNotExistsPattern.patterns)
         FilterNotExistsPattern(patterns = sortedFilterNotExistsPatterns)
-      }
+
       // return any other query pattern as it is
       case pattern: QueryPattern => pattern
     }
-    val sorted = sortedStatementPatterns ++ sortedOtherPatterns
-    sorted
+
+    sortedStatementPatterns ++ sortedOtherPatterns
   }
 }

@@ -5,7 +5,7 @@ import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.messages.util.{MessageUtil, ResponderData}
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.prequery.NonTriplestoreSpecificGravsearchToPrequeryTransformer
 import org.knora.webapi.messages.util.search.gravsearch.types.{
@@ -967,12 +967,13 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
 
   val transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex: SelectQuery =
     SelectQuery(
+      fromClause = None,
       variables = Vector(
         QueryVariable(variableName = "thing"),
         GroupConcat(
           inputVariable = QueryVariable(variableName = "decimal"),
           separator = StringFormatter.INFORMATION_SEPARATOR_ONE,
-          outputVariableName = "decimal__Concat",
+          outputVariableName = "decimal__Concat"
         )
       ),
       offset = 0,
@@ -991,7 +992,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         )
       ),
       whereClause = WhereClause(
-        patterns = ArrayBuffer(
+        patterns = Vector(
           StatementPattern(
             subj = QueryVariable(variableName = "thing"),
             pred = IriRef(
@@ -1022,6 +1023,15 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           ),
           OptionalPattern(
             patterns = Vector(
+              StatementPattern(
+                subj = QueryVariable(variableName = "decimal"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = QueryVariable(variableName = "decimalVal"),
+                namedGraph = None
+              ),
               StatementPattern(
                 subj = QueryVariable(variableName = "thing"),
                 pred = IriRef(
@@ -1059,15 +1069,6 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                     iri = "http://www.knora.org/explicit".toSmartIri,
                     propertyPathOperator = None
                   ))
-              ),
-              StatementPattern(
-                subj = QueryVariable(variableName = "decimal"),
-                pred = IriRef(
-                  iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
-                  propertyPathOperator = None
-                ),
-                obj = QueryVariable(variableName = "decimalVal"),
-                namedGraph = None
               ),
               FilterPattern(expression = CompareExpression(
                 leftArg = QueryVariable(variableName = "decimalVal"),
@@ -1114,7 +1115,8 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           |}
         """.stripMargin
 
-  val TransformedQueryWithRdfsLabelAndLiteral: SelectQuery = SelectQuery(
+  val TransformedQueryWithRdfsLabelAndLiteralVersion1: SelectQuery = SelectQuery(
+    fromClause = None,
     variables = Vector(QueryVariable(variableName = "book")),
     offset = 0,
     groupBy = Vector(QueryVariable(variableName = "book")),
@@ -1124,7 +1126,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         isAscending = true
       )),
     whereClause = WhereClause(
-      patterns = ArrayBuffer(
+      patterns = Vector(
         StatementPattern(
           subj = QueryVariable(variableName = "book"),
           pred = IriRef(
@@ -1162,6 +1164,66 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           obj = XsdLiteral(
             value = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
             datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+          ),
+          namedGraph = None
+        )
+      ),
+      positiveEntities = Set(),
+      querySchema = None
+    ),
+    limit = Some(25),
+    useDistinct = true
+  )
+
+  val TransformedQueryWithRdfsLabelAndLiteralVersion2: SelectQuery = SelectQuery(
+    fromClause = None,
+    variables = Vector(QueryVariable(variableName = "book")),
+    offset = 0,
+    groupBy = Vector(QueryVariable(variableName = "book")),
+    orderBy = Vector(
+      OrderCriterion(
+        queryVariable = QueryVariable(variableName = "book"),
+        isAscending = true
+      )),
+    whereClause = WhereClause(
+      patterns = Vector(
+        StatementPattern(
+          subj = QueryVariable(variableName = "book"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "false",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          ),
+          namedGraph = Some(
+            IriRef(
+              iri = "http://www.knora.org/explicit".toSmartIri,
+              propertyPathOperator = None
+            ))
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "book"),
+          pred = IriRef(
+            iri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
+            datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+          ),
+          namedGraph = None
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "book"),
+          pred = IriRef(
+            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = IriRef(
+            iri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+            propertyPathOperator = None
           ),
           namedGraph = None
         )
@@ -1232,6 +1294,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           |}""".stripMargin
 
   val TransformedQueryWithRdfsLabelAndVariable: SelectQuery = SelectQuery(
+    fromClause = None,
     variables = Vector(QueryVariable(variableName = "book")),
     offset = 0,
     groupBy = Vector(QueryVariable(variableName = "book")),
@@ -1241,7 +1304,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         isAscending = true
       )),
     whereClause = WhereClause(
-      patterns = ArrayBuffer(
+      patterns = Vector(
         StatementPattern(
           subj = QueryVariable(variableName = "book"),
           pred = IriRef(
@@ -1297,6 +1360,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
   )
 
   val TransformedQueryWithRdfsLabelAndRegex: SelectQuery = SelectQuery(
+    fromClause = None,
     variables = Vector(QueryVariable(variableName = "book")),
     offset = 0,
     groupBy = Vector(QueryVariable(variableName = "book")),
@@ -1306,7 +1370,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         isAscending = true
       )),
     whereClause = WhereClause(
-      patterns = ArrayBuffer(
+      patterns = Vector(
         StatementPattern(
           subj = QueryVariable(variableName = "book"),
           pred = IriRef(
@@ -1425,6 +1489,47 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         OptionalPattern(
           patterns = Vector(
             StatementPattern(
+              subj = QueryVariable(variableName = "recipient"),
+              pred = IriRef(
+                iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                propertyPathOperator = None
+              ),
+              obj = XsdLiteral(
+                value = "false",
+                datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+              ),
+              namedGraph = Some(
+                IriRef(
+                  iri = "http://www.knora.org/explicit".toSmartIri,
+                  propertyPathOperator = None
+                ))
+            ),
+            StatementPattern(
+              subj = QueryVariable(variableName = "recipient"),
+              pred = IriRef(
+                iri = "http://www.knora.org/ontology/0801/beol#hasFamilyName".toSmartIri,
+                propertyPathOperator = None
+              ),
+              obj = QueryVariable(variableName = "familyName"),
+              namedGraph = None
+            ),
+            StatementPattern(
+              subj = QueryVariable(variableName = "familyName"),
+              pred = IriRef(
+                iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+                propertyPathOperator = None
+              ),
+              obj = XsdLiteral(
+                value = "false",
+                datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+              ),
+              namedGraph = Some(
+                IriRef(
+                  iri = "http://www.knora.org/explicit".toSmartIri,
+                  propertyPathOperator = None
+                ))
+            ),
+            StatementPattern(
               subj = QueryVariable(variableName = "document"),
               pred = IriRef(
                 iri = "http://www.knora.org/ontology/0801/beol#hasRecipient".toSmartIri,
@@ -1485,47 +1590,6 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                 propertyPathOperator = None
               ),
               obj = QueryVariable(variableName = "recipient"),
-              namedGraph = Some(
-                IriRef(
-                  iri = "http://www.knora.org/explicit".toSmartIri,
-                  propertyPathOperator = None
-                ))
-            ),
-            StatementPattern(
-              subj = QueryVariable(variableName = "recipient"),
-              pred = IriRef(
-                iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-                propertyPathOperator = None
-              ),
-              obj = XsdLiteral(
-                value = "false",
-                datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-              ),
-              namedGraph = Some(
-                IriRef(
-                  iri = "http://www.knora.org/explicit".toSmartIri,
-                  propertyPathOperator = None
-                ))
-            ),
-            StatementPattern(
-              subj = QueryVariable(variableName = "recipient"),
-              pred = IriRef(
-                iri = "http://www.knora.org/ontology/0801/beol#hasFamilyName".toSmartIri,
-                propertyPathOperator = None
-              ),
-              obj = QueryVariable(variableName = "familyName"),
-              namedGraph = None
-            ),
-            StatementPattern(
-              subj = QueryVariable(variableName = "familyName"),
-              pred = IriRef(
-                iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-                propertyPathOperator = None
-              ),
-              obj = XsdLiteral(
-                value = "false",
-                datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-              ),
               namedGraph = Some(
                 IriRef(
                   iri = "http://www.knora.org/explicit".toSmartIri,
@@ -1803,7 +1867,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
    |  ?thing2 anything:hasOtherThing ?thing . 
    |} """.stripMargin
 
-  val queryToReorderWithMinus =
+  val queryToReorderWithMinus: String =
     """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
       |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
       |
@@ -1964,12 +2028,26 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
     }
 
     "transform an input query using rdfs:label and a literal in the simple schema" in {
-      val transformedQuery =
-        QueryHandler.transformQuery(InputQueryWithRdfsLabelAndLiteralInSimpleSchema, responderData, settings)
+      val result = new ArrayBuffer[String]
 
-      assert(transformedQuery === TransformedQueryWithRdfsLabelAndLiteral)
+      for (i <- 1 to 20) {
+        val transformedQuery =
+          QueryHandler.transformQuery(InputQueryWithRdfsLabelAndLiteralInSimpleSchema, responderData, settings)
+
+        if (transformedQuery === TransformedQueryWithRdfsLabelAndLiteralVersion1) {
+          result += s"$i. transformedQuery == TransformedQueryWithRdfsLabelAndLiteralVersion1"
+        } else if (transformedQuery === TransformedQueryWithRdfsLabelAndLiteralVersion2) {
+          result += s"$i. transformedQuery == TransformedQueryWithRdfsLabelAndLiteralVersion2"
+        } else {
+          throw new Exception(
+            "transformedQuery is different from both TransformedQueryWithRdfsLabelAndLiteralVersion1 and TransformedQueryWithRdfsLabelAndLiteralVersion2")
+        }
+      }
+
+      throw new Exception(result.mkString("\n"))
     }
 
+    /*
     "transform an input query using rdfs:label and a literal in the complex schema" in {
       val transformedQuery =
         QueryHandler.transformQuery(InputQueryWithRdfsLabelAndLiteralInComplexSchema, responderData, settings)
@@ -2010,7 +2088,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(InputQueryWithUnionScopes, responderData, settings)
 
       assert(transformedQuery === TransformedQueryWithUnionScopes)
-    }
+    } */
 //
 //    "reorder query patterns in where clause" in {
 //      val constructQuery = GravsearchParser.parseQuery(queryToReorder)
