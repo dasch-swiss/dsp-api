@@ -20,122 +20,12 @@ import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
-import scalax.collection.Graph
-import scalax.collection.GraphEdge.DiHyperEdge
-
-import scala.collection.immutable.ListSet
-import scala.util.Failure
 
 private object QueryHandler {
 
   private val timeout = 10.seconds
 
   val anythingUser: UserADM = SharedTestDataADM.anythingAdminUser
-  case class edgeLabel(label: String)
-  def createAndSortGraph(statementPatterns: Seq[StatementPattern]): Seq[QueryPattern] = {
-    def makeGraphWithoutCycles(graphComponents: Seq[(String, String)]): Graph[String, DiHyperEdge] = {
-      val graph = graphComponents.foldLeft(Graph.empty[String, DiHyperEdge]) { (graph, edgeDef) =>
-        val edge = DiHyperEdge(edgeDef._1, edgeDef._2)
-        graph + edge // add nodes and edges to graph
-      }
-      val acyclicGraph = if (graph.isCyclic) {
-        // get the cycle
-        val cycle: graph.Cycle = graph.findCycle.get
-        // the cyclic node is the one that cycle starts and ends with
-        val cyclicNode: graph.NodeT = cycle.endNode
-        val cyclicEdge: graph.EdgeT = cyclicNode.edges.last
-        val originNodeOfCyclicEdge: String = cyclicEdge._1.value
-        val TargetNodeOfCyclicEdge: String = cyclicEdge._2.value
-        val graphComponenetsWithOutCycle =
-          graphComponents.filterNot(edgeDef => edgeDef.equals((originNodeOfCyclicEdge, TargetNodeOfCyclicEdge)))
-
-        makeGraphWithoutCycles(graphComponenetsWithOutCycle)
-      } else {
-        graph
-      }
-      acyclicGraph
-    }
-    def createGraph: Graph[String, DiHyperEdge] = {
-      val graphComponents: Seq[(String, String)] = statementPatterns.map { statementPattern =>
-        // transform every statementPattern to pair of nodes that will consist an edge.
-        val node1 = statementPattern.subj.toSparql
-        val node2 = statementPattern.obj.toSparql
-        (node1, node2)
-      }
-      makeGraphWithoutCycles(graphComponents)
-    }
-    def sortStatementPatterns(createdGraph: Graph[String, DiHyperEdge],
-                              statementPatterns: Seq[StatementPattern]): Seq[QueryPattern] = {
-      // Try topological sorting of graph
-      val topologicalOrderSeq: Seq[createdGraph.TopologicalOrder[createdGraph.NodeT]] =
-        createdGraph.topologicalSort match {
-          // Is there still a cycle in the graph?
-          case Left(cycleNode) =>
-            // Don't try sorting, return statements as they are given.
-            Seq.empty[createdGraph.TopologicalOrder[createdGraph.NodeT]]
-          case Right(topOrder) =>
-            // No. return the topological order
-            Seq(topOrder)
-        }
-
-      // Is there a topological order found?
-      val sortedPatterns = if (topologicalOrderSeq.nonEmpty) {
-        // Topological sort algorithm return only one perturbation; i.e. one topologicalOrder.
-        val topologicalOrder: Iterable[createdGraph.NodeT] = topologicalOrderSeq.head
-        // Start from the end of the ordered list (the nodes with lowest degree);
-        // for each node, find statements which have the node as object and bring them to top.
-        val sortedStatements: Seq[QueryPattern] =
-          topologicalOrder.foldRight(Vector.empty[QueryPattern]) { (node, sortedStatements) =>
-            val statementsOfNode: Set[QueryPattern] = statementPatterns
-              .filter(p => p.obj.toSparql.equals(node.value))
-              .toSet[QueryPattern]
-            sortedStatements ++ statementsOfNode.toVector
-          }
-        sortedStatements
-      } else {
-        statementPatterns
-      }
-      sortedPatterns
-    }
-
-    val createdGraph = createGraph
-    sortStatementPatterns(createdGraph, statementPatterns)
-
-  }
-  def reorderPatternsByDependency(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-
-    val statementPatterns: Seq[StatementPattern] = patterns.collect { case pattern: StatementPattern => pattern }
-    val sortedStatementPatterns: Seq[QueryPattern] = createAndSortGraph(statementPatterns)
-    val otherPatterns: Seq[QueryPattern] = patterns.filterNot(p => p.isInstanceOf[StatementPattern])
-    val sortedOtherPatterns: Seq[QueryPattern] = otherPatterns.map {
-      // sort statements inside each UnionPattern block
-      case unionPattern: UnionPattern => {
-        val sortedUnionBlocks: Seq[Seq[QueryPattern]] =
-          unionPattern.blocks.map(block => reorderPatternsByDependency(block).toSeq)
-        UnionPattern(blocks = sortedUnionBlocks)
-      }
-      // sort statements inside OptionalPattern
-      case optionalPattern: OptionalPattern => {
-        val sortedOptionalPatterns: Seq[QueryPattern] = reorderPatternsByDependency(optionalPattern.patterns)
-        OptionalPattern(patterns = sortedOptionalPatterns.toSeq)
-      }
-      // sort statements inside MinusPattern
-      case minusPattern: MinusPattern => {
-        val sortedMinusPatterns: Seq[QueryPattern] = reorderPatternsByDependency(minusPattern.patterns)
-        MinusPattern(patterns = sortedMinusPatterns.toSeq)
-      }
-      // sort statements inside FilterNotExistsPattern
-      case filterNotExistsPattern: FilterNotExistsPattern => {
-        val sortedFilterNotExistsPatterns: Seq[QueryPattern] =
-          reorderPatternsByDependency(filterNotExistsPattern.patterns)
-        FilterNotExistsPattern(patterns = sortedFilterNotExistsPatterns)
-      }
-      // return any other query pattern as it is
-      case pattern: QueryPattern => pattern
-    }
-    val sorted = sortedStatementPatterns ++ sortedOtherPatterns
-    sorted
-  }
 
   def transformQuery(query: String, responderData: ResponderData, settings: KnoraSettingsImpl): SelectQuery = {
 
@@ -2121,78 +2011,78 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
 
       assert(transformedQuery === TransformedQueryWithUnionScopes)
     }
-
-    "reorder query patterns in where clause" in {
-      val constructQuery = GravsearchParser.parseQuery(queryToReorder)
-      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
-      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
-      // check that statements are brought to top
-      val topElements = sortedPatterns.slice(0, statements.size)
-      assert(topElements.equals(statements))
-      // check the order of statements
-      val mainResourceStatements = statements.slice(statements.size - 3, statements.size)
-      assert(!mainResourceStatements.exists(p => p.asInstanceOf[StatementPattern].subj.toSparql !== "?letter"))
-    }
-    "reorder query patterns in where clause with union" in {
-      val constructQuery = GravsearchParser.parseQuery(queryToReorderWithUnion)
-      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
-      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
-      // check that statements are brought to top
-      val topElements = sortedPatterns.slice(0, statements.size)
-      assert(topElements.equals(statements))
-      //check order of statements in each block
-      val unionPattern: Seq[UnionPattern] = sortedPatterns.collect { case pattern: UnionPattern => pattern }
-      val firstBlock = unionPattern.head.blocks.head
-      val firstBlockStatements = firstBlock.collect {
-        case pattern: StatementPattern => pattern
-      }
-      assert(firstBlockStatements.head.subj.toSparql == "?int")
-      assert(firstBlockStatements.head.obj.asInstanceOf[XsdLiteral].value == "1")
-      assert(firstBlockStatements.last.subj.toSparql == "?thing")
-      val secondBlock = unionPattern.head.blocks.last
-      val secondBlockStatements = secondBlock.collect {
-        case pattern: StatementPattern => pattern
-      }
-      assert(secondBlockStatements.head.subj.toSparql == "?int")
-      assert(secondBlockStatements.head.obj.asInstanceOf[XsdLiteral].value == "3")
-      assert(secondBlockStatements.last.subj.toSparql == "?thing")
-    }
-
-    "reorder query patterns in where clause with optional" in {
-      val constructQuery = GravsearchParser.parseQuery(queryWithOptional)
-      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
-      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
-      // check that statements are brought to top
-      val topElements = sortedPatterns.slice(0, statements.size)
-      assert(topElements.equals(statements))
-      // check statements inside optional pattern
-      val optionalPattern: Seq[OptionalPattern] = sortedPatterns.collect { case pattern: OptionalPattern => pattern }
-      val optionalPatternStatements = optionalPattern.head.patterns.collect {
-        case pattern: StatementPattern => pattern
-      }
-      assert(optionalPatternStatements.last.subj.toSparql == "?document")
-      assert(optionalPatternStatements.last.obj.toSparql == "?recipient")
-    }
-
-    "reorder query patterns with minus scope" in {
-      val constructQuery = GravsearchParser.parseQuery(queryToReorderWithMinus)
-      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
-      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
-      // check that statements are brought to top
-      val topElements = sortedPatterns.slice(0, statements.size)
-      assert(topElements.equals(statements))
-      // check statements inside minus pattern
-      val minusPattern: Seq[MinusPattern] = sortedPatterns.collect { case pattern: MinusPattern        => pattern }
-      val minusPatternStatements = minusPattern.head.patterns.collect { case pattern: StatementPattern => pattern }
-      assert(minusPatternStatements.last.subj.toSparql == "?thing")
-      assert(minusPatternStatements.last.obj.toSparql == "?intVal")
-    }
-    "reorder a query with a cycle" in {
-      val constructQuery = GravsearchParser.parseQuery(queryToReorderWithCycle)
-      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
-      // checks that all statement patterns which created a cycle are returned
-      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
-      assert(statements.size === 3)
-    }
+//
+//    "reorder query patterns in where clause" in {
+//      val constructQuery = GravsearchParser.parseQuery(queryToReorder)
+//      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
+//      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
+//      // check that statements are brought to top
+//      val topElements = sortedPatterns.slice(0, statements.size)
+//      assert(topElements.equals(statements))
+//      // check the order of statements
+//      val mainResourceStatements = statements.slice(statements.size - 3, statements.size)
+//      assert(!mainResourceStatements.exists(p => p.asInstanceOf[StatementPattern].subj.toSparql !== "?letter"))
+//    }
+//    "reorder query patterns in where clause with union" in {
+//      val constructQuery = GravsearchParser.parseQuery(queryToReorderWithUnion)
+//      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
+//      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
+//      // check that statements are brought to top
+//      val topElements = sortedPatterns.slice(0, statements.size)
+//      assert(topElements.equals(statements))
+//      //check order of statements in each block
+//      val unionPattern: Seq[UnionPattern] = sortedPatterns.collect { case pattern: UnionPattern => pattern }
+//      val firstBlock = unionPattern.head.blocks.head
+//      val firstBlockStatements = firstBlock.collect {
+//        case pattern: StatementPattern => pattern
+//      }
+//      assert(firstBlockStatements.head.subj.toSparql == "?int")
+//      assert(firstBlockStatements.head.obj.asInstanceOf[XsdLiteral].value == "1")
+//      assert(firstBlockStatements.last.subj.toSparql == "?thing")
+//      val secondBlock = unionPattern.head.blocks.last
+//      val secondBlockStatements = secondBlock.collect {
+//        case pattern: StatementPattern => pattern
+//      }
+//      assert(secondBlockStatements.head.subj.toSparql == "?int")
+//      assert(secondBlockStatements.head.obj.asInstanceOf[XsdLiteral].value == "3")
+//      assert(secondBlockStatements.last.subj.toSparql == "?thing")
+//    }
+//
+//    "reorder query patterns in where clause with optional" in {
+//      val constructQuery = GravsearchParser.parseQuery(queryWithOptional)
+//      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
+//      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
+//      // check that statements are brought to top
+//      val topElements = sortedPatterns.slice(0, statements.size)
+//      assert(topElements.equals(statements))
+//      // check statements inside optional pattern
+//      val optionalPattern: Seq[OptionalPattern] = sortedPatterns.collect { case pattern: OptionalPattern => pattern }
+//      val optionalPatternStatements = optionalPattern.head.patterns.collect {
+//        case pattern: StatementPattern => pattern
+//      }
+//      assert(optionalPatternStatements.last.subj.toSparql == "?document")
+//      assert(optionalPatternStatements.last.obj.toSparql == "?recipient")
+//    }
+//
+//    "reorder query patterns with minus scope" in {
+//      val constructQuery = GravsearchParser.parseQuery(queryToReorderWithMinus)
+//      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
+//      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
+//      // check that statements are brought to top
+//      val topElements = sortedPatterns.slice(0, statements.size)
+//      assert(topElements.equals(statements))
+//      // check statements inside minus pattern
+//      val minusPattern: Seq[MinusPattern] = sortedPatterns.collect { case pattern: MinusPattern        => pattern }
+//      val minusPatternStatements = minusPattern.head.patterns.collect { case pattern: StatementPattern => pattern }
+//      assert(minusPatternStatements.last.subj.toSparql == "?thing")
+//      assert(minusPatternStatements.last.obj.toSparql == "?intVal")
+//    }
+//    "reorder a query with a cycle" in {
+//      val constructQuery = GravsearchParser.parseQuery(queryToReorderWithCycle)
+//      val sortedPatterns = QueryHandler.reorderPatternsByDependency(constructQuery.whereClause.patterns)
+//      // checks that all statement patterns which created a cycle are returned
+//      val statements = sortedPatterns.filter(p => p.isInstanceOf[StatementPattern])
+//      assert(statements.size === 3)
+//    }
   }
 }

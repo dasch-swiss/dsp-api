@@ -408,6 +408,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
     * @return the optimised query patterns.
     */
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-    removeEntitiesInferredFromProperty(patterns)
+    val patternsWithoutInferredEntities = removeEntitiesInferredFromProperty(patterns)
+    reorderPatternsByDependency(patternsWithoutInferredEntities)
   }
 }
