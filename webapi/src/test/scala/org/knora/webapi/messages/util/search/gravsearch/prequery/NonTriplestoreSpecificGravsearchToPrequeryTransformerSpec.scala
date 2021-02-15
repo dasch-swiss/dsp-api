@@ -2030,13 +2030,18 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
     "transform an input query using rdfs:label and a literal in the simple schema" in {
       val result = new ArrayBuffer[String]
 
+      println("=========== Version 1 ============")
+      println(TransformedQueryWithRdfsLabelAndLiteralVersion1.toSparql)
+      println("=========== Version 2 ============")
+      println(TransformedQueryWithRdfsLabelAndLiteralVersion2.toSparql)
+
       for (i <- 1 to 20) {
         val transformedQuery =
           QueryHandler.transformQuery(InputQueryWithRdfsLabelAndLiteralInSimpleSchema, responderData, settings)
 
-        if (transformedQuery === TransformedQueryWithRdfsLabelAndLiteralVersion1) {
+        if (transformedQuery == TransformedQueryWithRdfsLabelAndLiteralVersion1) {
           result += s"$i. transformedQuery == TransformedQueryWithRdfsLabelAndLiteralVersion1"
-        } else if (transformedQuery === TransformedQueryWithRdfsLabelAndLiteralVersion2) {
+        } else if (transformedQuery == TransformedQueryWithRdfsLabelAndLiteralVersion2) {
           result += s"$i. transformedQuery == TransformedQueryWithRdfsLabelAndLiteralVersion2"
         } else {
           throw new Exception(
