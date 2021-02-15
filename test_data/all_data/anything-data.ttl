@@ -1892,7 +1892,20 @@
   knora-base:listNodeName "List014";
   knora-base:hasRootNode <http://rdfh.ch/lists/0001/notUsedList>;
   knora-base:listNodePosition 3;
-  rdfs:label "List014"@en .
+  rdfs:label "List014"@en ;
+  knora-base:hasSubListNode <http://rdfh.ch/lists/0001/notUsedList0141>, <http://rdfh.ch/lists/0001/notUsedList0142>.
+
+<http://rdfh.ch/lists/0001/notUsedList0141> a knora-base:ListNode;
+  knora-base:listNodeName "first child of node 014";
+  knora-base:hasRootNode <http://rdfh.ch/lists/0001/notUsedList>;
+  knora-base:listNodePosition 0;
+  rdfs:label "first child of node 014"@en .
+
+<http://rdfh.ch/lists/0001/notUsedList0142> a knora-base:ListNode;
+    knora-base:listNodeName "second child of node 014";
+    knora-base:hasRootNode <http://rdfh.ch/lists/0001/notUsedList>;
+    knora-base:listNodePosition 0;
+    rdfs:label "second child of node 014"@en .
 
 <http://rdfh.ch/lists/0001/notUsedList015> a knora-base:ListNode;
   knora-base:listNodeName "List015";

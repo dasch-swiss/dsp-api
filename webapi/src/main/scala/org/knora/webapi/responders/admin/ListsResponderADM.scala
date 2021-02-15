@@ -1794,7 +1794,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         // shift the siblings that were positioned after the deleted node, one place to left.
-        updatedChildren <- if (remainingChildren.size > 1) {
+        updatedChildren <- if (remainingChildren.size > 0) {
           for {
             shiftedChildren <- shiftNodes(
               startPos = positionOfDeletedNode + 1,
