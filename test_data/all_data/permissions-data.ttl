@@ -132,7 +132,7 @@
                       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser"^^xsd:string .
 
 
-### Default Object Access Permissions on ProjectMember Group
+### Default Object Access Permissions on KnownUser Group
 <http://rdfh.ch/permissions/00FF/d2>
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
