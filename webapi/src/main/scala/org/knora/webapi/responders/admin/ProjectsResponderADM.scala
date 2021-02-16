@@ -39,15 +39,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.{
   UserIdentifierADM,
   UserInformationTypeADM
 }
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{
-  AdministrativePermissionCreateRequestADM,
-  AdministrativePermissionCreateResponseADM,
-  CreateAdministrativePermissionAPIRequestADM,
-  CreateDefaultObjectAccessPermissionAPIRequestADM,
-  DefaultObjectAccessPermissionCreateRequestADM,
-  DefaultObjectAccessPermissionCreateResponseADM,
-  PermissionADM
-}
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
+
 import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceGetProjectADM,
   CacheServicePutProjectADM,
