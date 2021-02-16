@@ -2134,6 +2134,10 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     def sortStatementPatterns(createdGraph: Graph[String, DiHyperEdge],
                               statementPatterns: Seq[StatementPattern]): Seq[QueryPattern] = {
       // Try topological sorting of graph
+
+      // TODO: get all valid orders using TopologicalSortUtil, get the lowest ordered node.
+      // From statements, find the statements whose object is this node.
+      // check the predicate of these statements, choose the order with the node that is object of a statement whose predicate is not rdf:type
       val topologicalOrderSeq: Seq[createdGraph.TopologicalOrder[createdGraph.NodeT]] =
         createdGraph.topologicalSort match {
           // Is there still a cycle in the graph?
