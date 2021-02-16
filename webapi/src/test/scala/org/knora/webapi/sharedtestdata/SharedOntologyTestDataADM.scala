@@ -64,6 +64,7 @@ object SharedOntologyTestDataADM {
   val INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost: IRI = INCUNABULA_ONTOLOGY_IRI_LocalHost + "#" + "book"
   val INCUNABULA_PAGE_RESOURCE_CLASS: IRI = INCUNABULA_ONTOLOGY_IRI + "#" + "page"
   val INCUNABULA_PAGE_RESOURCE_CLASS_LocalHost: IRI = INCUNABULA_ONTOLOGY_IRI_LocalHost + "#" + "page"
+  val INCUNABULA_PartOf_Property: IRI = INCUNABULA_ONTOLOGY_IRI + "#" + "partOfValue"
   val INCUNABULA_PartOf_Property_LocalHost: IRI = INCUNABULA_ONTOLOGY_IRI_LocalHost + "#" + "partOfValue"
 
   // dokubib

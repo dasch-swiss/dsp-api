@@ -1451,19 +1451,19 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         _ = checkResult match {
           case Some(doap: DefaultObjectAccessPermissionADM) =>
             val errorMessage = if (doap.forGroup.nonEmpty) {
-              s"and group: '${doap.forGroup.get}'"
+              s"and group: '${doap.forGroup.get}' "
             } else {
               val resourceClassExists = if (doap.forResourceClass.nonEmpty) {
-                s"and resourceClass: '${doap.forResourceClass.get}'"
+                s"and resourceClass: '${doap.forResourceClass.get}' "
               } else ""
               val propExists = if (doap.forProperty.nonEmpty) {
-                s"and property: '${doap.forProperty.get}'"
+                s"and property: '${doap.forProperty.get}' "
               } else ""
               resourceClassExists + propExists
             }
             throw DuplicateValueException(
               s"A default object access permission for project: '${createRequest.forProject}' " +
-                errorMessage + " combination already exists. " +
+                errorMessage + "combination already exists. " +
                 s"This permission currently has the scope '${PermissionUtilADM
                   .formatPermissionADMs(doap.hasPermissions, PermissionType.OAP)}'. " +
                 s"Use its IRI ${doap.iri} to modify it, if necessary.")

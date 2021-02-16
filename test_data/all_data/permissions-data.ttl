@@ -210,6 +210,28 @@
 
                       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"^^xsd:string .
 
+### Default Object Access Permissions on incunabula:partOfValue property
+<http://rdfh.ch/permissions/0803/003-d4>
+
+                      rdf:type knora-admin:DefaultObjectAccessPermission ;
+
+                      knora-admin:forProject <http://rdfh.ch/projects/0803> ;
+
+                      knora-admin:forProperty incunabula:partOfValue ;
+
+                      knora-base:hasPermissions "V knora-admin:KnownUser|RV knora-admin:UnknownUser"^^xsd:string .
+
+
+### Default Object Access Permissions on incunabula:partOfValue property
+<http://rdfh.ch/permissions/0803/003-d5>
+
+                      rdf:type knora-admin:DefaultObjectAccessPermission ;
+
+                      knora-admin:forProject <http://rdfh.ch/projects/0803> ;
+                      knora-admin:forResourceClass incunabula:page ;
+                      knora-admin:forProperty incunabula:partOfValue ;
+
+                      knora-base:hasPermissions "M knora-admin:ProjectMember"^^xsd:string .
 
 ##########################################################
 #
