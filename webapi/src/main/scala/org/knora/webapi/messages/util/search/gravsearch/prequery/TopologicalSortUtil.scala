@@ -19,7 +19,6 @@
 
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
-import org.knora.webapi.exceptions.AssertionException
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiHyperEdge
 
@@ -37,29 +36,27 @@ object TopologicalSortUtil {
 	 * @param graph the graph to be sorted.
 	 * @tparam T the type of the nodes in the graph.
 	 */
-  def allTopologicalOrders[T](graph: Graph[T, DiHyperEdge]): Set[List[graph.NodeT]] = {
+  def findAllTopologicalOrders[T](graph: Graph[T, DiHyperEdge]): Set[Vector[Graph[T, DiHyperEdge]#NodeT]] = {
+    type NodeT = Graph[T, DiHyperEdge]#NodeT
 
     /**
 		 * Represents arguments to be put on the simulated call stack.
 		 */
-    case class StackItem(sources: Set[graph.NodeT],
-                         inDegrees: Map[graph.NodeT, Int],
-                         topOrder: List[graph.NodeT],
-                         count: Int)
+    case class StackItem(sources: Set[NodeT], inDegrees: Map[NodeT, Int], topOrder: Vector[NodeT], count: Int)
 
-    val inDegree: Map[graph.NodeT, Int] = graph.nodes.map(node => (node, node.inDegree)).toMap
+    val inDegrees: Map[NodeT, Int] = graph.nodes.map(node => (node, node.inDegree)).toMap
 
-    def isSource(node: graph.NodeT): Boolean = inDegree(node) == 0
-    def getSources: Set[graph.NodeT] = graph.nodes.filter(node => isSource(node)).toSet
+    def isSource(node: NodeT): Boolean = inDegrees(node) == 0
+    def getSources: Set[NodeT] = graph.nodes.filter(node => isSource(node)).toSet
 
     // Replaces the program stack by our own.
     val stack: mutable.ArrayStack[StackItem] = new mutable.ArrayStack()
 
     // Accumulates topological orders.
-    var allOrders = Set[List[graph.NodeT]]()
+    var allTopologicalOrders = Set[Vector[NodeT]]()
 
     // Push arguments onto the stack.
-    stack.push(StackItem(getSources, inDegree, List[graph.NodeT](), 0))
+    stack.push(StackItem(sources = getSources, inDegrees = inDegrees, topOrder = Vector[NodeT](), count = 0))
 
     while (stack.nonEmpty) {
       // Fetch arguments
@@ -68,7 +65,7 @@ object TopologicalSortUtil {
       if (stackItem.sources.nonEmpty) {
         // `sources` contains all the nodes we can pick. Generate all possibilities.
         for (source <- stackItem.sources) {
-          val newTopOrder = source :: stackItem.topOrder
+          val newTopOrder = source +: stackItem.topOrder
           var newSources = stackItem.sources - source
 
           // Decrease the in-degree of all adjacent nodes.
@@ -87,12 +84,13 @@ object TopologicalSortUtil {
           stack.push(StackItem(newSources, newInDegrees, newTopOrder, stackItem.count + 1))
         }
       } else if (stackItem.count != graph.nodes.size) {
-        throw AssertionException("Expected an an acyclic graph, but there is a cycle")
+        // The graph has a cycle, so don't try to sort it.
+        ()
       } else {
-        allOrders += stackItem.topOrder.reverse
+        allTopologicalOrders += stackItem.topOrder.reverse
       }
     }
 
-    allOrders
+    allTopologicalOrders.filter(_.nonEmpty)
   }
 }

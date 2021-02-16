@@ -771,7 +771,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
       case xsdLiteral: XsdLiteral if xsdLiteral.datatype.toString == OntologyConstants.KnoraApiV2Simple.ListNode =>
         xsdLiteral.value
 
-      case other =>
+      case _ =>
         throw GravsearchException(s"Invalid type for literal ${OntologyConstants.KnoraApiV2Simple.ListNode}")
     }
 
@@ -1261,7 +1261,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     val langLiteral: XsdLiteral = compareExpression.rightArg match {
       case strLiteral: XsdLiteral if strLiteral.datatype == OntologyConstants.Xsd.String.toSmartIri => strLiteral
 
-      case other =>
+      case _ =>
         throw GravsearchException(
           s"Right argument of comparison statement must be a string literal for use with 'lang' function call")
     }
@@ -2131,31 +2131,87 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
       makeGraphWithoutCycles(graphComponents)
     }
 
-    def sortStatementPatterns(createdGraph: Graph[String, DiHyperEdge],
-                              statementPatterns: Seq[StatementPattern]): Seq[QueryPattern] = {
-      // Try topological sorting of graph
+    /**
+      * Tries to find the best topological order for the graph, by finding all possible topological orders,
+      * and eliminating those whose first node is the object of rdf:type.
+      *
+      * @param graph the graph to be ordered.
+      * @param statementPatterns the statement patterns that were used to create the graph.
+      * @return a topological order.
+      */
+    def findBestTopologicalOrder(graph: Graph[String, DiHyperEdge],
+                                 statementPatterns: Seq[StatementPattern]): Vector[Graph[String, DiHyperEdge]#NodeT] = {
+      type NodeT = Graph[String, DiHyperEdge]#NodeT
 
-      // TODO: get all valid orders using TopologicalSortUtil, get the lowest ordered node.
-      // From statements, find the statements whose object is this node.
-      // check the predicate of these statements, choose the order with the node that is object of a statement whose predicate is not rdf:type
-      val topologicalOrderSeq: Seq[createdGraph.TopologicalOrder[createdGraph.NodeT]] =
-        createdGraph.topologicalSort match {
-          // Is there still a cycle in the graph?
-          case Left(cycleNode) =>
-            // Don't try sorting, return statements as they are given.
-            Seq.empty[createdGraph.TopologicalOrder[createdGraph.NodeT]]
-          case Right(topOrder) =>
-            // No. return the topological order
-            Seq(topOrder)
+      /**
+        * An ordering for sorting topological orders.
+        */
+      object TopologicalOrderOrdering extends Ordering[Vector[NodeT]] {
+        private def orderToString(order: Vector[NodeT]) = order.map(_.value).mkString("|")
+
+        override def compare(left: Vector[NodeT], right: Vector[NodeT]): Int =
+          orderToString(left).compare(orderToString(right))
+      }
+
+      // Get all the possible topological orders for the graph.
+      val allTopologicalOrders: Set[Vector[NodeT]] = TopologicalSortUtil.findAllTopologicalOrders(graph)
+
+      if (allTopologicalOrders.isEmpty) {
+        Vector.empty
+      } else {
+        // Is there only one order?
+        val preferredOrders: Set[Vector[NodeT]] = if (allTopologicalOrders.size == 1) {
+          // Yes. Don't bother filtering.
+          allTopologicalOrders
+        } else {
+          // There's more than one order. Find the nodes that are objects of rdf:type in the statement patterns.
+          val nodesThatAreObjectsOfRdfType: Set[String] = statementPatterns
+            .filter { statementPattern =>
+              statementPattern.pred match {
+                case iriRef: IriRef => iriRef.iri.toString == OntologyConstants.Rdf.Type
+                case _              => false
+              }
+            }
+            .map { statementPattern =>
+              statementPattern.obj.toSparql
+            }
+            .toSet
+
+          // Filter out the topological orders that end with any of those nodes.
+          allTopologicalOrders.filterNot { order: Vector[NodeT] =>
+            order.lastOption match {
+              case Some(node) => nodesThatAreObjectsOfRdfType.contains(node.value)
+              case None       => true
+            }
+          }
         }
 
-      // Is there a topological order found?
-      if (topologicalOrderSeq.nonEmpty) {
-        // Yes. Topological sort algorithm return only one perturbation; i.e. one topologicalOrder.
-        val topologicalOrder: Iterable[createdGraph.NodeT] = topologicalOrderSeq.head
+        // Are there any preferred orders?
+        val ordersToSort = if (preferredOrders.nonEmpty) {
+          // Yes. Use one of those.
+          preferredOrders
+        } else {
+          // No. Use any order.
+          allTopologicalOrders
+        }
 
-        // Start from the end of the ordered list (the nodes with lowest degree);
-        // for each node, find statements which have the node as object and bring them to top.
+        // Sort the orders into a deterministic order, and return the first one.
+        ordersToSort.toArray.min(TopologicalOrderOrdering)
+      }
+    }
+
+    def sortStatementPatterns(createdGraph: Graph[String, DiHyperEdge],
+                              statementPatterns: Seq[StatementPattern]): Seq[QueryPattern] = {
+      type NodeT = Graph[String, DiHyperEdge]#NodeT
+
+      // Try to find the best topological order for the graph.
+      val topologicalOrder: Vector[NodeT] =
+        findBestTopologicalOrder(graph = createdGraph, statementPatterns = statementPatterns)
+
+      // Was a topological order found?
+      if (topologicalOrder.nonEmpty) {
+        // Start from the end of the ordered list (the nodes with lowest degree).
+        // For each node, find statements which have the node as object and bring them to top.
         topologicalOrder.foldRight(Vector.empty[QueryPattern]) { (node, sortedStatements) =>
           val statementsOfNode: Set[QueryPattern] = statementPatterns
             .filter(p => p.obj.toSparql.equals(node.value))
