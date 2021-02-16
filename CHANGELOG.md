@@ -1,5 +1,12 @@
 # Changelog
 
+### [13.3.2](https://www.github.com/dasch-swiss/dsp-api/compare/v13.3.1...v13.3.2) (2021-02-16)
+
+
+### Bug Fixes
+
+* **Lists:** fix bug in shifting the second of two children after deletion of the first one. ([#1820](https://www.github.com/dasch-swiss/dsp-api/issues/1820)) ([d92bb01](https://www.github.com/dasch-swiss/dsp-api/commit/d92bb0194d3245cef86dc91b1cbd83a8dfc0eb05))
+
 ### [13.3.1](https://www.github.com/dasch-swiss/dsp-api/compare/v13.3.0...v13.3.1) (2021-02-09)
 
 
