@@ -31,6 +31,11 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, NotFoundException}
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{
+  AdministrativePermissionGetResponseADM,
+  DefaultObjectAccessPermissionGetResponseADM,
+  PermissionByIriGetRequestADM
+}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -229,7 +234,30 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
           Seq(StringLiteralV2(value = "project description", language = Some("en"))))
 
         newProjectIri.set(received.project.id)
-        //println(s"newProjectIri: ${newProjectIri.get}")
+
+        //check that default permissions are also created
+        responderManager ! PermissionByIriGetRequestADM(
+          permissionIri = "http://rdfh.ch/permissions/111C/defaultApForAdmin",
+          requestingUser = rootUser
+        )
+        expectMsgType[AdministrativePermissionGetResponseADM]
+        responderManager ! PermissionByIriGetRequestADM(
+          permissionIri = "http://rdfh.ch/permissions/111C/defaultApForMember",
+          requestingUser = rootUser
+        )
+        expectMsgType[AdministrativePermissionGetResponseADM]
+
+        responderManager ! PermissionByIriGetRequestADM(
+          permissionIri = "http://rdfh.ch/permissions/111C/defaultDoapForAdmin",
+          requestingUser = rootUser
+        )
+        expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
+
+        responderManager ! PermissionByIriGetRequestADM(
+          permissionIri = "http://rdfh.ch/permissions/111C/defaultDoapForMember",
+          requestingUser = rootUser
+        )
+        expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
       }
 
       "CREATE a project and return the project info if the supplied shortname and shortcode is unique" in {

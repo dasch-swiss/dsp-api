@@ -31,6 +31,7 @@ import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{
   UserADM,
@@ -986,11 +987,13 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       * @param projectIri the IRI of the new project.
       * @throws BadRequestException if a permission is not created.
       */
-    def createPermissionsForAdminsAndMembersOfNewProject(projectIri: IRI): Future[Unit] =
+    def createPermissionsForAdminsAndMembersOfNewProject(projectIri: IRI, projectShortCode: String): Future[Unit] =
       for {
+        baseIri: String <- Future.successful(s"http://$IriDomain/permissions/$projectShortCode/")
         // Give the admins of the new project rights for any operation in project level, and rights to create resources.
         apPermissionForProjectAdmin: AdministrativePermissionCreateResponseADM <- (responderManager ? AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
+            id = Some(baseIri + "defaultApForAdmin"),
             forProject = projectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
             hasPermissions =
@@ -1004,6 +1007,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         // Give the members of the new project rights to create resources.
         apPermissionForProjectAdmin: AdministrativePermissionCreateResponseADM <- (responderManager ? AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
+            id = Some(baseIri + "defaultApForMember"),
             forProject = projectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
@@ -1017,6 +1021,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         // and restricted view of all resources and values that belong to the project.
         doapForProjctAdmin <- (responderManager ? DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+            id = Some(baseIri + "defaultDoapForAdmin"),
             forProject = projectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             hasPermissions = Set(
@@ -1036,6 +1041,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         // that belong to the project.
         doapForProjctAdmin <- (responderManager ? DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+            id = Some(baseIri + "defaultDoapForMember"),
             forProject = projectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(
@@ -1126,8 +1132,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
           throw UpdateNotPerformedException(
             s"Project $newProjectIRI was not created. Please report this as a possible bug.")
         )
-        //create permissions for admins and members of the new group
-        _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI)
+        // create permissions for admins and members of the new group
+        _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI, newProjectADM.shortcode)
 
       } yield ProjectOperationResponseADM(project = newProjectADM)
 
