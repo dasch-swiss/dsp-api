@@ -100,7 +100,13 @@ Additionally, each project can have an optional custom IRI (of [Knora IRI](../ap
         "selfjoin": false
     }   
 ```
+When a new project is created, following default permissions are added to its admins and members:
+- ProjectAdmin group receives an administrative permission to do all project level operations and to create resources 
+within the new project. This group also gets default object access permission to change rights, delete, modify, view, 
+and restricted view of any entity that belongs to the project.
 
+- ProjectMember group receives an administrative permission to create resources within the new project. This group also 
+gets default object access permission to modify, view, and restricted view of any entity that belongs to the project.   
 ### Update project information:
 
   - Required permission: SystemAdmin / ProjectAdmin
