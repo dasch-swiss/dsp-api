@@ -275,6 +275,34 @@ object SharedPermissionsTestData {
       )
     )
 
+  val perm003_d4: doap =
+    doap(
+      iri = "http://rdfh.ch/permissions/0803/003-d4",
+      p = DefaultObjectAccessPermissionADM(
+        iri = "http://rdfh.ch/permissions/0803/003-d4",
+        forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+        forProperty = Some(INCUNABULA_PartOf_Property),
+        hasPermissions = Set(
+          PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),
+          PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
+        )
+      )
+    )
+
+  val perm003_d5: doap =
+    doap(
+      iri = "http://rdfh.ch/permissions/0803/003-d5",
+      p = DefaultObjectAccessPermissionADM(
+        iri = "http://rdfh.ch/permissions/0803/003-d5",
+        forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+        forResourceClass = Some(INCUNABULA_PAGE_RESOURCE_CLASS),
+        forProperty = Some(INCUNABULA_PartOf_Property),
+        hasPermissions = Set(
+          PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+        )
+      )
+    )
+
   /************************************/
   /** Anything Project Permissions   **/
   /************************************/

@@ -30,7 +30,13 @@ import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, NotFoundException}
-import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{
+  AdministrativePermissionGetResponseADM,
+  DefaultObjectAccessPermissionGetResponseADM,
+  PermissionADM,
+  PermissionByIriGetRequestADM
+}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -205,10 +211,11 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       val newProjectIri = new MutableTestIri
 
       "CREATE a project and return the project info if the supplied shortname is unique" in {
+        val shortCode = "111c"
         responderManager ! ProjectCreateRequestADM(
           CreateProjectApiRequestADM(
             shortname = "newproject",
-            shortcode = "111c", // lower case
+            shortcode = shortCode, // lower case
             longname = Some("project longname"),
             description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
             keywords = Seq("keywords"),
@@ -223,13 +230,79 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
 
         received.project.shortname should be("newproject")
-        received.project.shortcode should be("111C") // upper case
+        received.project.shortcode should be(shortCode.toUpperCase) // upper case
         received.project.longname should contain("project longname")
         received.project.description should be(
           Seq(StringLiteralV2(value = "project description", language = Some("en"))))
 
         newProjectIri.set(received.project.id)
-        //println(s"newProjectIri: ${newProjectIri.get}")
+
+        /* Check that ProjectAdmin group has got administrative and default object access permissions */
+        // Check Administrative Permission of ProjectAdmin
+        responderManager ! PermissionByIriGetRequestADM(
+          permissionIri = s"http://rdfh.ch/permissions/${shortCode.toUpperCase}/defaultApForAdmin",
+          requestingUser = rootUser
+        )
+
+        val receivedApAdmin: AdministrativePermissionGetResponseADM =
+          expectMsgType[AdministrativePermissionGetResponseADM]
+        receivedApAdmin.administrativePermission.forProject should be(received.project.id)
+        receivedApAdmin.administrativePermission.forGroup should be(OntologyConstants.KnoraAdmin.ProjectAdmin)
+        val expectedAdminApPermissions: Set[PermissionADM] =
+          Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission)
+        assert(receivedApAdmin.administrativePermission.hasPermissions === expectedAdminApPermissions)
+
+        // Check Default Object Access permission of ProjectAdmin
+        responderManager ! PermissionByIriGetRequestADM(
+          permissionIri = s"http://rdfh.ch/permissions/${shortCode.toUpperCase}/defaultDoapForAdmin",
+          requestingUser = rootUser
+        )
+        val receivedDoapAdmin: DefaultObjectAccessPermissionGetResponseADM =
+          expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
+        receivedDoapAdmin.defaultObjectAccessPermission.forProject should be(received.project.id)
+        receivedDoapAdmin.defaultObjectAccessPermission.forGroup should be(
+          Some(OntologyConstants.KnoraAdmin.ProjectAdmin))
+        val expectedAdminDoapPermissions: Set[PermissionADM] =
+          Set(
+            PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+            PermissionADM.deletePermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+            PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+            PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+            PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin)
+          )
+        assert(receivedDoapAdmin.defaultObjectAccessPermission.hasPermissions === expectedAdminDoapPermissions)
+
+        /* Check that ProjectMember group has got administrative and default object access permissions */
+        // Check Administrative Permission of ProjectMember
+        responderManager ! PermissionByIriGetRequestADM(
+          permissionIri = s"http://rdfh.ch/permissions/${shortCode.toUpperCase}/defaultApForMember",
+          requestingUser = rootUser
+        )
+        val receivedApMember: AdministrativePermissionGetResponseADM =
+          expectMsgType[AdministrativePermissionGetResponseADM]
+        receivedApMember.administrativePermission.forProject should be(received.project.id)
+        receivedApMember.administrativePermission.forGroup should be(OntologyConstants.KnoraAdmin.ProjectMember)
+        val expectedMemberApPermissions: Set[PermissionADM] =
+          Set(PermissionADM.ProjectResourceCreateAllPermission)
+        assert(receivedApMember.administrativePermission.hasPermissions === expectedMemberApPermissions)
+
+        // Check Default Object Access permission of ProjectMember
+        responderManager ! PermissionByIriGetRequestADM(
+          permissionIri = s"http://rdfh.ch/permissions/${shortCode.toUpperCase}/defaultDoapForMember",
+          requestingUser = rootUser
+        )
+        val receivedDoapMember: DefaultObjectAccessPermissionGetResponseADM =
+          expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
+        receivedDoapMember.defaultObjectAccessPermission.forProject should be(received.project.id)
+        receivedDoapMember.defaultObjectAccessPermission.forGroup should be(
+          Some(OntologyConstants.KnoraAdmin.ProjectMember))
+        val expectedMemberDoapPermissions: Set[PermissionADM] =
+          Set(
+            PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+            PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+            PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+          )
+        assert(receivedDoapMember.defaultObjectAccessPermission.hasPermissions === expectedMemberDoapPermissions)
       }
 
       "CREATE a project and return the project info if the supplied shortname and shortcode is unique" in {

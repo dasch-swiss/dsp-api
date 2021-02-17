@@ -288,9 +288,9 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
         val permissionPayload =
           s"""{
-              |    "forGroup":"http://www.knora.org/ontology/knora-admin#ProjectMember",
+              |    "forGroup":"http://www.knora.org/ontology/knora-admin#KnownUser",
               |    "forProject":"$projectIri",
-              |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
+              |	   "hasPermissions":[{"additionalInformation":null,"name":"ProjectResourceCreateAllPermission","permissionCode":null}]
               |}""".stripMargin
 
         val permissionRequest = Post(baseApiUrl + s"/admin/permissions/ap",
