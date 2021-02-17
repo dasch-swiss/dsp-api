@@ -2074,23 +2074,78 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
         case _ => None
       }
 
-    // remove statements whose predicate is rdf:type, type of subject is inferred from a property, and the subject is not in optionalEntities.
-    patterns.filter {
+    // Remove statements whose predicate is rdf:type, type of subject is inferred from a property,
+    // and the subject is not in optionalEntities. If the subject is a standoff tag, remove the statement only
+    // if the object is the IRI knora-api:StandoffTag, because type inspection doesn't return subtypes of StandoffTag.
+    patterns.filterNot {
       case statementPattern: StatementPattern =>
+        // Is the predicate an IRI?
         statementPattern.pred match {
-          case iriRef: IriRef =>
-            val subject = GravsearchTypeInspectionUtil.maybeTypeableEntity(statementPattern.subj)
-            subject match {
-              case Some(typeableEntity) =>
-                !(iriRef.iri.toString == OntologyConstants.Rdf.Type && typeInspectionResult.entitiesInferredFromProperties.keySet
-                  .contains(typeableEntity)
-                  && !optionalEntities.contains(typeableEntity))
-              case _ => true
+          case predicateIriRef: IriRef =>
+            // Yes. Is this an rdf:type statement?
+            if (predicateIriRef.iri.toString == OntologyConstants.Rdf.Type) {
+              // Yes. Is the subject a typeable entity?
+              val subjectAsTypeableEntity = GravsearchTypeInspectionUtil.maybeTypeableEntity(statementPattern.subj)
+
+              subjectAsTypeableEntity match {
+                case Some(typeableEntity) =>
+                  // Yes. Determine whether it represents a standoff tag.
+                  val subjectIsStandoffTag: Boolean =
+                    typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
+                      case Some(definedSubjectType) =>
+                        definedSubjectType match {
+                          case nonPropertyTypeInfo: NonPropertyTypeInfo
+                              if nonPropertyTypeInfo.typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag =>
+                            true
+                          case _ => false
+                        }
+
+                      case None =>
+                        throw GravsearchException(s"No type information found for ${statementPattern.subj.toSparql}")
+                    }
+
+                  // Determine whether the object is the IRI knora-api:StandoffTag.
+                  val objectIsStandoffTagType: Boolean = statementPattern.obj match {
+                    case iriRef: IriRef => iriRef.iri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag
+                    case _              => false
+                  }
+
+                  // Was the type of the subject inferred from another predicate?
+                  if (typeInspectionResult.entitiesInferredFromProperties.keySet.contains(typeableEntity)) {
+                    // Yes. Is the subject in optional entities?
+                    if (optionalEntities.contains(typeableEntity)) {
+                      // Yes. Keep the statement.
+                      false
+                    } else if (subjectIsStandoffTag && !objectIsStandoffTagType) {
+                      // No. The subject is a standoff tag, and the object is not knora-api:StandoffTag. Keep
+                      // the statement.
+                      false
+                    } else {
+                      // Remove the statement.
+                      true
+                    }
+                  } else {
+                    // The type of the subject was not inferred from another predicate. Keep the statement.
+                    false
+                  }
+
+                case _ =>
+                  // The subject isn't a typeable entity. Keep the statement.
+                  false
+              }
+            } else {
+              // This isn't an rdf:type statement. Keep it.
+              false
             }
 
-          case _ => true
+          case _ =>
+            // The predicate isn't an IRI. Keep the statement.
+            false
         }
-      case _ => true
+
+      case _ =>
+        // This isn't a statement pattern. Keep it.
+        false
     }
   }
 
@@ -2132,8 +2187,39 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     }
 
     /**
-      * Tries to find the best topological order for the graph, by finding all possible topological orders,
-      * and eliminating those whose first node is the object of rdf:type.
+      * Finds topological orders that don't end with an object of rdf:type.
+      *
+      * @param orders the orders to be filtered.
+      * @param statementPatterns the statement patterns that the orders are based on.
+      * @return the filtered topological orders.
+      */
+    def findOrdersNotEndingWithObjectOfRdfType(
+        orders: Set[Vector[Graph[String, DiHyperEdge]#NodeT]],
+        statementPatterns: Seq[StatementPattern]): Set[Vector[Graph[String, DiHyperEdge]#NodeT]] = {
+      type NodeT = Graph[String, DiHyperEdge]#NodeT
+
+      // Find the nodes that are objects of rdf:type in the statement patterns.
+      val nodesThatAreObjectsOfRdfType: Set[String] = statementPatterns
+        .filter { statementPattern =>
+          statementPattern.pred match {
+            case iriRef: IriRef => iriRef.iri.toString == OntologyConstants.Rdf.Type
+            case _              => false
+          }
+        }
+        .map { statementPattern =>
+          statementPattern.obj.toSparql
+        }
+        .toSet
+
+      // Filter out the topological orders that end with any of those nodes.
+      orders.filterNot { order: Vector[NodeT] =>
+        nodesThatAreObjectsOfRdfType.contains(order.last.value)
+      }
+    }
+
+    /**
+      * Tries to find the best topological order for the graph, by finding all possible topological orders
+      * and eliminating those whose last node is the object of rdf:type.
       *
       * @param graph the graph to be ordered.
       * @param statementPatterns the statement patterns that were used to create the graph.
@@ -2156,47 +2242,32 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
       // Get all the possible topological orders for the graph.
       val allTopologicalOrders: Set[Vector[NodeT]] = TopologicalSortUtil.findAllTopologicalOrders(graph)
 
+      // Did we find any topological orders?
       if (allTopologicalOrders.isEmpty) {
+        // No, the graph is cyclical.
         Vector.empty
       } else {
-        // Is there only one order?
-        val preferredOrders: Set[Vector[NodeT]] = if (allTopologicalOrders.size == 1) {
+        // Yes. Is there only one possible order?
+        if (allTopologicalOrders.size == 1) {
           // Yes. Don't bother filtering.
-          allTopologicalOrders
+          allTopologicalOrders.head
         } else {
-          // There's more than one order. Find the nodes that are objects of rdf:type in the statement patterns.
-          val nodesThatAreObjectsOfRdfType: Set[String] = statementPatterns
-            .filter { statementPattern =>
-              statementPattern.pred match {
-                case iriRef: IriRef => iriRef.iri.toString == OntologyConstants.Rdf.Type
-                case _              => false
-              }
-            }
-            .map { statementPattern =>
-              statementPattern.obj.toSparql
-            }
-            .toSet
+          // There's more than one possible order. Find orders that don't end with an object of rdf:type.
+          val ordersNotEndingWithObjectOfRdfType: Set[Vector[NodeT]] =
+            findOrdersNotEndingWithObjectOfRdfType(allTopologicalOrders, statementPatterns)
 
-          // Filter out the topological orders that end with any of those nodes.
-          allTopologicalOrders.filterNot { order: Vector[NodeT] =>
-            order.lastOption match {
-              case Some(node) => nodesThatAreObjectsOfRdfType.contains(node.value)
-              case None       => true
-            }
+          // Are there any?
+          val preferredOrders = if (ordersNotEndingWithObjectOfRdfType.nonEmpty) {
+            // Yes. Use one of those.
+            ordersNotEndingWithObjectOfRdfType
+          } else {
+            // No. Use any order.
+            allTopologicalOrders
           }
-        }
 
-        // Are there any preferred orders?
-        val ordersToSort = if (preferredOrders.nonEmpty) {
-          // Yes. Use one of those.
-          preferredOrders
-        } else {
-          // No. Use any order.
-          allTopologicalOrders
+          // Sort the preferred orders to produce a deterministic result, and return one of them.
+          preferredOrders.min(TopologicalOrderOrdering)
         }
-
-        // Sort the orders into a deterministic order, and return the first one.
-        ordersToSort.toArray.min(TopologicalOrderOrdering)
       }
     }
 
