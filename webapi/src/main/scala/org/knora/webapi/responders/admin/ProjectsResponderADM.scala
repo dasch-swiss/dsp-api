@@ -998,7 +998,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         )).mapTo[AdministrativePermissionCreateResponseADM]
 
         // Give the members of the new project rights to create resources.
-        apPermissionForProjectAdmin: AdministrativePermissionCreateResponseADM <- (responderManager ? AdministrativePermissionCreateRequestADM(
+        apPermissionForProjectMember: AdministrativePermissionCreateResponseADM <- (responderManager ? AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
             id = Some(baseIri + "defaultApForMember"),
             forProject = projectIri,
@@ -1012,7 +1012,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
         // Give the admins of the new project rights to change rights, modify, delete, view,
         // and restricted view of all resources and values that belong to the project.
-        doapForProjctAdmin <- (responderManager ? DefaultObjectAccessPermissionCreateRequestADM(
+        doapForProjectAdmin <- (responderManager ? DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             id = Some(baseIri + "defaultDoapForAdmin"),
             forProject = projectIri,
@@ -1032,7 +1032,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
         // Give the members of the new project rights to modify, view, and restricted view of all resources and values
         // that belong to the project.
-        doapForProjctAdmin <- (responderManager ? DefaultObjectAccessPermissionCreateRequestADM(
+        doapForProjectMember <- (responderManager ? DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             id = Some(baseIri + "defaultDoapForMember"),
             forProject = projectIri,
