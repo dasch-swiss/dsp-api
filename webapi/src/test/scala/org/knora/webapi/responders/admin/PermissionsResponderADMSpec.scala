@@ -28,7 +28,7 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, ForbiddenException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedPermissionsTestData._
 import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM, SharedTestDataV1}
@@ -241,7 +241,10 @@ class PermissionsResponderADMSpec
           apiRequestID = UUID.randomUUID()
         )
         expectMsg(Failure(DuplicateValueException(
-          s"Permission for project: '${SharedTestDataADM.IMAGES_PROJECT_IRI}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists.")))
+          s"An administrative permission for project: '${SharedTestDataADM.IMAGES_PROJECT_IRI}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists. " +
+            s"This permission currently has the scope '${PermissionUtilADM
+              .formatPermissionADMs(perm002_a1.p.hasPermissions, PermissionType.AP)}'. " +
+            s"Use its IRI ${perm002_a1.iri} to modify it, if necessary.")))
       }
 
       "create and return an administrative permission with a custom IRI" in {
@@ -492,7 +495,7 @@ class PermissionsResponderADMSpec
             .contains(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator)))
       }
 
-      "fail and return a 'DuplicateValueException' when permission for project / group / resource class / property  combination already exists" in {
+      "fail and return a 'DuplicateValueException' when a doap permission for project and group combination already exists" in {
         responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
@@ -503,7 +506,80 @@ class PermissionsResponderADMSpec
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
-        expectMsg(Failure(DuplicateValueException(s"Default object access permission already exists.")))
+        expectMsg(Failure(DuplicateValueException(
+          s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' " +
+            "combination already exists. " +
+            s"This permission currently has the scope '${PermissionUtilADM
+              .formatPermissionADMs(perm003_d1.p.hasPermissions, PermissionType.OAP)}'. " +
+            s"Use its IRI ${perm003_d1.iri} to modify it, if necessary.")))
+      }
+
+      "fail and return a 'DuplicateValueException' when a doap permission for project and resourceClass combination already exists" in {
+        responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+            forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+            forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS),
+            hasPermissions = Set(
+              PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
+              PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+            )
+          ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = rootUser,
+          apiRequestID = UUID.randomUUID()
+        )
+        expectMsg(Failure(DuplicateValueException(
+          s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS}' " +
+            "combination already exists. " +
+            s"This permission currently has the scope '${PermissionUtilADM
+              .formatPermissionADMs(perm003_d2.p.hasPermissions, PermissionType.OAP)}'. " +
+            s"Use its IRI ${perm003_d2.iri} to modify it, if necessary.")))
+      }
+
+      "fail and return a 'DuplicateValueException' when a doap permission for project and property combination already exists" in {
+        responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+            forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+            forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
+            hasPermissions = Set(
+              PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser)
+            )
+          ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = rootUser,
+          apiRequestID = UUID.randomUUID()
+        )
+        expectMsg(Failure(DuplicateValueException(
+          s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
+            "combination already exists. " +
+            s"This permission currently has the scope '${PermissionUtilADM
+              .formatPermissionADMs(perm003_d4.p.hasPermissions, PermissionType.OAP)}'. " +
+            s"Use its IRI ${perm003_d4.iri} to modify it, if necessary.")))
+      }
+
+      "fail and return a 'DuplicateValueException' when a doap permission for project, resource class, and property combination already exists" in {
+        responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
+          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+            forProject = SharedTestDataV1.INCUNABULA_PROJECT_IRI,
+            forResourceClass = Some(SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS),
+            forProperty = Some(SharedOntologyTestDataADM.INCUNABULA_PartOf_Property),
+            hasPermissions = Set(
+              PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
+              PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+            )
+          ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = rootUser,
+          apiRequestID = UUID.randomUUID()
+        )
+        expectMsg(
+          Failure(DuplicateValueException(
+            s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS}' " +
+              s"and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
+              "combination already exists. " +
+              s"This permission currently has the scope '${PermissionUtilADM
+                .formatPermissionADMs(perm003_d5.p.hasPermissions, PermissionType.OAP)}'. " +
+              s"Use its IRI ${perm003_d5.iri} to modify it, if necessary.")))
       }
     }
 
@@ -533,7 +609,9 @@ class PermissionsResponderADMSpec
             PermissionInfoADM(perm003_a2.iri, OntologyConstants.KnoraAdmin.AdministrativePermission),
             PermissionInfoADM(perm003_d1.iri, OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission),
             PermissionInfoADM(perm003_d2.iri, OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission),
-            PermissionInfoADM(perm003_d3.iri, OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission)
+            PermissionInfoADM(perm003_d3.iri, OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission),
+            PermissionInfoADM(perm003_d4.iri, OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission),
+            PermissionInfoADM(perm003_d5.iri, OntologyConstants.KnoraAdmin.DefaultObjectAccessPermission)
           )))
       }
     }

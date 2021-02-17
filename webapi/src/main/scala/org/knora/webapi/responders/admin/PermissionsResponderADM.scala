@@ -613,16 +613,19 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       for {
 
         // does the permission already exist
-        checkResult <- administrativePermissionForProjectGroupGetADM(
+        checkResult: Option[AdministrativePermissionADM] <- administrativePermissionForProjectGroupGetADM(
           createRequest.forProject,
           createRequest.forGroup,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
 
         _ = checkResult match {
-          case Some(ap) =>
+          case Some(ap: AdministrativePermissionADM) =>
             throw DuplicateValueException(
-              s"Permission for project: '${createRequest.forProject}' and group: '${createRequest.forGroup}' combination already exists.")
+              s"An administrative permission for project: '${createRequest.forProject}' and group: '${createRequest.forGroup}' combination already exists. " +
+                s"This permission currently has the scope '${PermissionUtilADM
+                  .formatPermissionADMs(ap.hasPermissions, PermissionType.AP)}'. " +
+                s"Use its IRI ${ap.iri} to modify it, if necessary.")
           case None => ()
         }
 
@@ -653,6 +656,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
               throw NotFoundException(s"Group '${createRequest.forGroup}' not found. Aborting request."))
           } yield group.id
         }
+
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
         newPermissionIri: IRI <- checkOrCreateEntityIri(customPermissionIri,
                                                         stringFormatter.makeRandomPermissionIri(project.shortcode))
@@ -1445,8 +1449,25 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                                            createRequest.forProperty)
 
         _ = checkResult match {
-          case Some(doap) => throw DuplicateValueException(s"Default object access permission already exists.")
-          case None       => ()
+          case Some(doap: DefaultObjectAccessPermissionADM) =>
+            val errorMessage = if (doap.forGroup.nonEmpty) {
+              s"and group: '${doap.forGroup.get}' "
+            } else {
+              val resourceClassExists = if (doap.forResourceClass.nonEmpty) {
+                s"and resourceClass: '${doap.forResourceClass.get}' "
+              } else ""
+              val propExists = if (doap.forProperty.nonEmpty) {
+                s"and property: '${doap.forProperty.get}' "
+              } else ""
+              resourceClassExists + propExists
+            }
+            throw DuplicateValueException(
+              s"A default object access permission for project: '${createRequest.forProject}' " +
+                errorMessage + "combination already exists. " +
+                s"This permission currently has the scope '${PermissionUtilADM
+                  .formatPermissionADMs(doap.hasPermissions, PermissionType.OAP)}'. " +
+                s"Use its IRI ${doap.iri} to modify it, if necessary.")
+          case None => ()
         }
 
         // get project

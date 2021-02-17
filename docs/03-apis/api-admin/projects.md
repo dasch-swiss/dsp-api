@@ -100,6 +100,24 @@ Additionally, each project can have an optional custom IRI (of [Knora IRI](../ap
         "selfjoin": false
     }   
 ```
+#### Default set of permissions for a new project:
+When a new project is created, following default permissions are added to its admins and members:
+- ProjectAdmin group receives an administrative permission to do all project level operations and to create resources 
+within the new project. This administrative permission is retrievable through its IRI:
+`http://rdfh.ch/permissions/[projectShortcode]/defaultApForAdmin`
+
+ProjectAdmin group also gets a default object access permission to change rights, delete, modify, view, 
+and restricted view of any entity that belongs to the project. This default object access permission is retrievable 
+through its IRI: 
+`http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForAdmin`
+
+- ProjectMember group receives an administrative permission to create resources within the new project. This 
+administrative permission is retrievable through its IRI:
+`http://rdfh.ch/permissions/[projectShortcode]/defaultApForMember`
+
+ProjectMember group also gets a default object access permission to modify, view, and restricted view of any entity that 
+belongs to the project. This default object access permission is retrievable through its IRI: 
+`http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForMember`
 
 ### Update project information:
 
