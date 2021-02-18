@@ -57,10 +57,6 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
   // suffix appended to variables that are returned by a SPARQL aggregation function.
   protected val groupConcatVariableSuffix = "__Concat"
 
-  // A set of types that can be treated as dates by the knora-api:toSimpleDate function.
-  private val dateTypes: Set[IRI] =
-    Set(OntologyConstants.KnoraApiV2Complex.DateValue, OntologyConstants.KnoraApiV2Complex.StandoffTag)
-
   /**
     * A container for a generated variable representing a value literal.
     *
@@ -354,14 +350,14 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
     }
 
-    val (maybeSubjectTypeIri: Option[SmartIri], subjectIsResource: Boolean) =
+    val maybeSubjectType: Option[NonPropertyTypeInfo] =
       typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
-        case Some(NonPropertyTypeInfo(subjectTypeIri, isResourceType, _)) => (Some(subjectTypeIri), isResourceType)
-        case _                                                            => (None, false)
+        case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) => Some(nonPropertyTypeInfo)
+        case _                                              => None
       }
 
     // Is the subject of the statement a resource?
-    if (subjectIsResource) {
+    if (maybeSubjectType.exists(_.isResourceType)) {
       // Yes. Is the object of the statement also a resource?
       if (propertyTypeInfo.objectIsResourceType) {
         // Yes. This is a link property. Make sure that the object is either an IRI or a variable (cannot be a literal).
@@ -492,7 +488,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
       if (querySchema == ApiV2Complex) {
         // Yes. If the subject is a standoff tag and the object is a resource, that's an error, because the client
         // has to use the knora-api:standoffLink function instead.
-        if (maybeSubjectTypeIri.contains(OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri) && propertyTypeInfo.objectIsResourceType) {
+        if (maybeSubjectType.exists(_.isStandoffTagType) && propertyTypeInfo.objectIsResourceType) {
           throw GravsearchException(
             s"Invalid statement pattern (use the knora-api:standoffLink function instead): ${statementPattern.toSparql.trim}")
         } else {
@@ -1823,9 +1819,8 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     val standoffTagVar = functionCallExpression.getArgAsQueryVar(pos = 1)
 
     typeInspectionResult.getTypeOfEntity(standoffTagVar) match {
-      case Some(nonPropertyTypeInfo: NonPropertyTypeInfo)
-          if nonPropertyTypeInfo.typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag =>
-        ()
+      case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) if nonPropertyTypeInfo.isStandoffTagType => ()
+
       case _ =>
         throw GravsearchException(
           s"The second argument of ${functionIri.toSparql} must represent a knora-api:StandoffTag")
@@ -1932,7 +1927,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
     typeInspectionResult.getTypeOfEntity(dateBaseVar) match {
       case Some(nonPropInfo: NonPropertyTypeInfo) =>
-        if (!dateTypes.contains(nonPropInfo.typeIri.toString)) {
+        if (!(nonPropInfo.isStandoffTagType || nonPropInfo.typeIri.toString == OntologyConstants.KnoraApiV2Complex.DateValue)) {
           throw GravsearchException(
             s"${dateBaseVar.toSparql} must represent a knora-api:DateValue or a knora-api:StandoffDateTag")
         }
@@ -2075,8 +2070,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
       }
 
     // Remove statements whose predicate is rdf:type, type of subject is inferred from a property,
-    // and the subject is not in optionalEntities. If the subject is a standoff tag, remove the statement only
-    // if the object is the IRI knora-api:StandoffTag, because type inspection doesn't return subtypes of StandoffTag.
+    // and the subject is not in optionalEntities.
     patterns.filterNot {
       case statementPattern: StatementPattern =>
         // Is the predicate an IRI?
@@ -2089,36 +2083,11 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
               subjectAsTypeableEntity match {
                 case Some(typeableEntity) =>
-                  // Yes. Determine whether it represents a standoff tag.
-                  val subjectIsStandoffTag: Boolean =
-                    typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
-                      case Some(definedSubjectType) =>
-                        definedSubjectType match {
-                          case nonPropertyTypeInfo: NonPropertyTypeInfo
-                              if nonPropertyTypeInfo.typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag =>
-                            true
-                          case _ => false
-                        }
-
-                      case None =>
-                        throw GravsearchException(s"No type information found for ${statementPattern.subj.toSparql}")
-                    }
-
-                  // Determine whether the object is the IRI knora-api:StandoffTag.
-                  val objectIsStandoffTagType: Boolean = statementPattern.obj match {
-                    case iriRef: IriRef => iriRef.iri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag
-                    case _              => false
-                  }
-
-                  // Was the type of the subject inferred from another predicate?
+                  // Yes. Was the type of the subject inferred from another predicate?
                   if (typeInspectionResult.entitiesInferredFromProperties.keySet.contains(typeableEntity)) {
                     // Yes. Is the subject in optional entities?
                     if (optionalEntities.contains(typeableEntity)) {
                       // Yes. Keep the statement.
-                      false
-                    } else if (subjectIsStandoffTag && !objectIsStandoffTagType) {
-                      // No. The subject is a standoff tag, and the object is not knora-api:StandoffTag. Keep
-                      // the statement.
                       false
                     } else {
                       // Remove the statement.
