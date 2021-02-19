@@ -767,86 +767,198 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
     entities = Map(
       TypeableVariable(variableName = "book4") -> NonPropertyTypeInfo(
         typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
-        isResourceType = true),
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      ),
       TypeableVariable(variableName = "titleProp1") -> PropertyTypeInfo(
         objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        objectIsValueType = true),
+        objectIsResourceType = false,
+        objectIsValueType = true,
+        objectIsStandoffTagType = false
+      ),
       TypeableVariable(variableName = "page1") -> NonPropertyTypeInfo(
         typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri,
-        isResourceType = true),
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      ),
       TypeableVariable(variableName = "book1") -> NonPropertyTypeInfo(
         typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
-        isResourceType = true),
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      ),
       TypeableVariable(variableName = "titleProp2") -> PropertyTypeInfo(
         objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        objectIsValueType = true),
+        objectIsResourceType = false,
+        objectIsValueType = true,
+        objectIsStandoffTagType = false
+      ),
       TypeableVariable(variableName = "page3") -> NonPropertyTypeInfo(
         typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri,
-        isResourceType = true),
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      ),
       TypeableIri(iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#partOf".toSmartIri) -> PropertyTypeInfo(
         objectTypeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
-        objectIsResourceType = true),
+        objectIsResourceType = true,
+        objectIsValueType = false,
+        objectIsStandoffTagType = false
+      ),
       TypeableIri(iri = "http://rdfh.ch/1749ad09ac06".toSmartIri) -> NonPropertyTypeInfo(
         typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Region".toSmartIri,
-        isResourceType = true),
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      ),
       TypeableVariable(variableName = "linkObj") -> NonPropertyTypeInfo(
         typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
-        isResourceType = true),
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      ),
       TypeableVariable(variableName = "title2") -> NonPropertyTypeInfo(
         typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        isValueType = true),
+        isResourceType = false,
+        isValueType = true,
+        isStandoffTagType = false
+      ),
       TypeableIri(iri = "http://rdfh.ch/52431ecfab06".toSmartIri) -> NonPropertyTypeInfo(
         typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Region".toSmartIri,
-        isResourceType = true),
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      ),
       TypeableVariable(variableName = "title3") -> NonPropertyTypeInfo(
         typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        isValueType = true),
+        isResourceType = false,
+        isValueType = true,
+        isStandoffTagType = false
+      ),
       TypeableIri(iri = "http://rdfh.ch/dc4e3c44ac06".toSmartIri) -> NonPropertyTypeInfo(
         typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Region".toSmartIri,
-        isResourceType = true),
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      ),
       TypeableIri(iri = "http://api.knora.org/ontology/knora-api/simple/v2#isRegionOf".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri,
-        objectIsResourceType = true),
+        objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Representation".toSmartIri,
+        objectIsResourceType = true,
+        objectIsValueType = false,
+        objectIsStandoffTagType = false
+      ),
       TypeableVariable(variableName = "page2") -> NonPropertyTypeInfo(
         typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri,
-        isResourceType = true),
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      ),
       TypeableVariable(variableName = "page4") -> NonPropertyTypeInfo(
         typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri,
-        isResourceType = true),
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      ),
       TypeableIri(iri = "http://api.knora.org/ontology/knora-api/simple/v2#hasLinkTo".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Region".toSmartIri,
-        objectIsResourceType = true),
+        objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
+        objectIsResourceType = true,
+        objectIsValueType = false,
+        objectIsStandoffTagType = false
+      ),
       TypeableVariable(variableName = "titleProp4") -> PropertyTypeInfo(
         objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        objectIsValueType = true),
+        objectIsResourceType = false,
+        objectIsValueType = true,
+        objectIsStandoffTagType = false
+      ),
       TypeableIri(iri = "http://rdfh.ch/8d3d8f94ab06".toSmartIri) -> NonPropertyTypeInfo(
         typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Region".toSmartIri,
-        isResourceType = true),
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      ),
       TypeableVariable(variableName = "title1") -> NonPropertyTypeInfo(
         typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        isValueType = true),
+        isResourceType = false,
+        isValueType = true,
+        isStandoffTagType = false
+      ),
       TypeableVariable(variableName = "titleProp3") -> PropertyTypeInfo(
         objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        objectIsValueType = true),
+        objectIsResourceType = false,
+        objectIsValueType = true,
+        objectIsStandoffTagType = false
+      ),
       TypeableVariable(variableName = "linkProp2") -> PropertyTypeInfo(
         objectTypeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri,
-        objectIsResourceType = true),
+        objectIsResourceType = true,
+        objectIsValueType = false,
+        objectIsStandoffTagType = false
+      ),
       TypeableVariable(variableName = "partOfProp") -> PropertyTypeInfo(
         objectTypeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
-        objectIsResourceType = true),
+        objectIsResourceType = true,
+        objectIsValueType = false,
+        objectIsStandoffTagType = false
+      ),
       TypeableVariable(variableName = "title4") -> NonPropertyTypeInfo(
         typeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
-        isValueType = true),
+        isResourceType = false,
+        isValueType = true,
+        isStandoffTagType = false
+      ),
       TypeableVariable(variableName = "book3") -> NonPropertyTypeInfo(
         typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
-        isResourceType = true),
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      ),
       TypeableVariable(variableName = "linkProp1") -> PropertyTypeInfo(
         objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Region".toSmartIri,
-        objectIsResourceType = true),
+        objectIsResourceType = true,
+        objectIsValueType = false,
+        objectIsStandoffTagType = false
+      ),
       TypeableVariable(variableName = "book2") -> NonPropertyTypeInfo(
         typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
-        isResourceType = true)
-    ))
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      )
+    ),
+    entitiesInferredFromProperties = Map(
+      TypeableVariable(variableName = "page1") -> Set(
+        NonPropertyTypeInfo(
+          typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#page".toSmartIri,
+          isResourceType = true,
+          isValueType = false,
+          isStandoffTagType = false
+        )),
+      TypeableVariable(variableName = "linkObj") -> Set(
+        NonPropertyTypeInfo(
+          typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
+          isResourceType = true,
+          isValueType = false,
+          isStandoffTagType = false
+        )),
+      TypeableIri(iri = "http://rdfh.ch/8d3d8f94ab06".toSmartIri) -> Set(
+        NonPropertyTypeInfo(
+          typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Region".toSmartIri,
+          isResourceType = true,
+          isValueType = false,
+          isStandoffTagType = false
+        )),
+      TypeableVariable(variableName = "book1") -> Set(
+        NonPropertyTypeInfo(
+          typeIri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book".toSmartIri,
+          isResourceType = true,
+          isValueType = false,
+          isStandoffTagType = false
+        ))
+    )
+  )
 
   val TypeInferenceResult1: GravsearchTypeInspectionResult = GravsearchTypeInspectionResult(
     entities = Map(
@@ -984,21 +1096,50 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
     entities = Map(
       TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/v2#hasText".toSmartIri) -> PropertyTypeInfo(
         objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri,
-        objectIsValueType = true),
+        objectIsResourceType = false,
+        objectIsValueType = true,
+        objectIsStandoffTagType = false
+      ),
       TypeableVariable(variableName = "text") -> NonPropertyTypeInfo(
         typeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri,
-        isValueType = true),
+        isResourceType = false,
+        isValueType = true,
+        isStandoffTagType = false
+      ),
       TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(
         typeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#letter".toSmartIri,
-        isResourceType = true),
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      ),
       TypeableIri(iri = "http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA".toSmartIri) -> NonPropertyTypeInfo(
         typeIri = "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri,
-        isResourceType = true),
+        isResourceType = true,
+        isValueType = false,
+        isStandoffTagType = false
+      ),
       TypeableIri(iri = "http://api.knora.org/ontology/knora-api/v2#textValueHasStandoff".toSmartIri) -> PropertyTypeInfo(
-        objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffTag".toSmartIri),
+        objectTypeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffTag".toSmartIri,
+        objectIsResourceType = false,
+        objectIsValueType = false,
+        objectIsStandoffTagType = true
+      ),
       TypeableVariable(variableName = "standoffLinkTag") -> NonPropertyTypeInfo(
-        typeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffTag".toSmartIri)
-    ))
+        typeIri = "http://api.knora.org/ontology/knora-api/v2#StandoffLinkTag".toSmartIri,
+        isResourceType = false,
+        isValueType = false,
+        isStandoffTagType = true
+      )
+    ),
+    entitiesInferredFromProperties = Map(
+      TypeableVariable(variableName = "text") -> Set(
+        NonPropertyTypeInfo(
+          typeIri = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri,
+          isResourceType = false,
+          isValueType = true,
+          isStandoffTagType = false
+        )))
+  )
 
   val QueryWithRdfsLabelAndLiteral: String =
     """
@@ -1508,7 +1649,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
       assert(result.entities == TypeInferenceResult6.entities)
     }
 
-    "infer the types in a query that requires 6 iterations" in {
+    "infer the types in a query that requires 6 iterations test1" in {
       val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
       val parsedQuery = GravsearchParser.parseQuery(PathologicalQuery)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
