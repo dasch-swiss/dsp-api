@@ -1649,7 +1649,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
       assert(result.entities == TypeInferenceResult6.entities)
     }
 
-    "infer the types in a query that requires 6 iterations test1" in {
+    "infer the types in a query that requires 6 iterations" in {
       val typeInspectionRunner = new GravsearchTypeInspectionRunner(responderData = responderData, inferTypes = true)
       val parsedQuery = GravsearchParser.parseQuery(PathologicalQuery)
       val resultFuture: Future[GravsearchTypeInspectionResult] =
