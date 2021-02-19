@@ -22,19 +22,11 @@ package org.knora.webapi.messages.util.search.gravsearch.prequery
 import org.knora.webapi.ApiV2Schema
 import org.knora.webapi.feature.{Feature, FeatureFactory, FeatureFactoryConfig}
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.{
   GravsearchTypeInspectionResult,
   GravsearchTypeInspectionUtil,
   TypeableEntity
-}
-import org.knora.webapi.messages.util.search.{
-  FilterNotExistsPattern,
-  IriRef,
-  MinusPattern,
-  OptionalPattern,
-  QueryPattern,
-  StatementPattern,
-  UnionPattern
 }
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiHyperEdge
