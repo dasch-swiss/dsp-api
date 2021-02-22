@@ -267,8 +267,7 @@ DELETE {
 
             case audioFileValue: AudioFileValueV1 => {
                 ?newValue knora-base:internalFilename """@audioFileValue.internalFilename""" ;
-                          knora-base:internalMimeType """@audioFileValue.internalMimeType""" ;
-                          knora-base:duration "@audioFileValue.duration" .
+                          knora-base:internalMimeType """@audioFileValue.internalMimeType""" .
 
                 @audioFileValue.originalFilename match {
                     case Some(definedOriginalFilename) => {
@@ -281,6 +280,14 @@ DELETE {
                 @audioFileValue.originalMimeType match {
                     case Some(definedOriginalMimeType) => {
                         ?newValue knora-base:originalMimeType """@definedOriginalMimeType""" .
+                    }
+
+                    case None => {}
+                }
+
+                @audioFileValue.duration match {
+                    case Some(definedDuration) => {
+                        ?newValue knora-base:duration """@definedDuration""" .
                     }
 
                     case None => {}

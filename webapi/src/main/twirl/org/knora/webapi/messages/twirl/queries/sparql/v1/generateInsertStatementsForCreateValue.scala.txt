@@ -223,8 +223,7 @@
 
             case audioFileValue: AudioFileValueV1 => {
                 <@newValueIri> knora-base:internalFilename """@audioFileValue.internalFilename""" ;
-                               knora-base:internalMimeType """@audioFileValue.internalMimeType""" ;
-                               knora-base:duration "@audioFileValue.duration" .
+                               knora-base:internalMimeType """@audioFileValue.internalMimeType""" .
 
                 @audioFileValue.originalFilename match {
                     case Some(definedOriginalFilename) => {
@@ -237,6 +236,14 @@
                 @audioFileValue.originalMimeType match {
                     case Some(definedOriginalMimeType) => {
                         <@newValueIri> knora-base:originalMimeType """@definedOriginalMimeType""" .
+                    }
+
+                    case None => {}
+                }
+
+                @audioFileValue.duration match {
+                    case Some(definedDuration) => {
+                        <@newValueIri> knora-base:duration """@definedDuration""" .
                     }
 
                     case None => {}

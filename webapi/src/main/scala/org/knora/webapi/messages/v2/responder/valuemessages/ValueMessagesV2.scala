@@ -3473,7 +3473,7 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
   */
 case class AudioFileValueContentV2(ontologySchema: OntologySchema,
                                    fileValue: FileValueV2,
-                                   duration: BigDecimal,
+                                   duration: Option[BigDecimal] = None,
                                    comment: Option[String] = None)
     extends FileValueContentV2 {
   override def valueType: SmartIri = {
@@ -3557,8 +3557,7 @@ object AudioFileValueContentV2 extends ValueContentReaderV2[AudioFileValueConten
       AudioFileValueContentV2(
         ontologySchema = ApiV2Complex,
         fileValue = fileValueWithSipiMetadata.fileValue,
-        duration = fileValueWithSipiMetadata.sipiFileMetadata.duration
-          .getOrElse(throw SipiException(s"Sipi did not return the audio file duration")),
+        duration = fileValueWithSipiMetadata.sipiFileMetadata.duration,
         comment = getComment(jsonLDObject)
       )
   }

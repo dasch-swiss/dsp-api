@@ -1643,7 +1643,7 @@ case class AudioFileValueV1(internalMimeType: String,
                             originalFilename: Option[String],
                             originalMimeType: Option[String] = None,
                             projectShortcode: String,
-                            duration: BigDecimal)
+                            duration: Option[BigDecimal] = None)
     extends FileValueV1 {
 
   def valueTypeIri: IRI = OntologyConstants.KnoraBase.AudioFileValue
@@ -1681,7 +1681,16 @@ case class AudioFileValueV1(internalMimeType: String,
   }
 
   override def toFileValueContentV2: FileValueContentV2 = {
-    throw NotImplementedException("Moving image file values are not supported in Knora API v1")
+    AudioFileValueContentV2(
+      ontologySchema = InternalSchema,
+      fileValue = FileValueV2(
+        internalFilename = internalFilename,
+        internalMimeType = internalMimeType,
+        originalFilename = originalFilename,
+        originalMimeType = Some(internalMimeType)
+      ),
+      duration = duration
+    )
   }
 }
 

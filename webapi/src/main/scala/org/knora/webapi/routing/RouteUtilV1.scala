@@ -343,8 +343,7 @@ object RouteUtilV1 {
         originalFilename = fileMetadataResponse.originalFilename,
         originalMimeType = fileMetadataResponse.originalMimeType,
         projectShortcode = projectShortcode,
-        duration = fileMetadataResponse.duration.getOrElse(
-          throw SipiException("Sipi did not return the duration of the audio file"))
+        duration = fileMetadataResponse.duration
       )
     } else {
       throw BadRequestException(s"MIME type ${fileMetadataResponse.internalMimeType} not supported in Knora API v1")

@@ -156,7 +156,7 @@ class KnoraSipiIntegrationV2ITSpec
     * @param url              the file's URL.
     * @param duration         the duration of the audio in seconds.
     */
-  case class SavedAudioFile(internalFilename: String, url: String, duration: BigDecimal)
+  case class SavedAudioFile(internalFilename: String, url: String, duration: Option[BigDecimal])
 
   /**
     * Given a JSON-LD document representing a resource, returns a JSON-LD array containing the values of the specified
@@ -295,7 +295,7 @@ class KnoraSipiIntegrationV2ITSpec
       validationFun = stringFormatter.toSparqlEncodedString
     )
 
-    val duration = savedValue.requireDatatypeValueInObject(
+    val duration: Option[BigDecimal] = savedValue.maybeDatatypeValueInObject(
       key = OntologyConstants.KnoraApiV2Complex.AudioFileValueHasDuration,
       expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
       validationFun = stringFormatter.validateBigDecimal
@@ -1093,21 +1093,20 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity =
         s"""{
-           |  "@type" : "anything:ThingWithRepresentation",
-           |  "knora-api:hasRepresentationValue" : {
+           |  "@type" : "knora-api:AudioRepresentation",
+           |  "knora-api:hasAudioFileValue" : {
            |    "@type" : "knora-api:AudioFileValue",
            |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
            |  },
            |  "knora-api:attachedToProject" : {
            |    "@id" : "http://rdfh.ch/projects/0001"
            |  },
-           |  "rdfs:label" : "test thing with audio file",
+           |  "rdfs:label" : "test audio representation",
            |  "@context" : {
            |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
            |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
            |  }
            |}""".stripMargin
 
@@ -1117,10 +1116,10 @@ class KnoraSipiIntegrationV2ITSpec
       wavResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
       // Get the resource from Knora.
-      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
+      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(wavResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingWithRepresentation")
+        resource.requireTypeAsKnoraTypeIri.toString == "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation")
 
       // Get the new file value from the resource.
 
@@ -1144,7 +1143,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       val savedAudioFile: SavedAudioFile = savedValueToSavedAudioFile(savedValueObj)
       assert(savedAudioFile.internalFilename == uploadedFile.internalFilename)
-      assert(savedAudioFile.duration == minimalWavDuration)
+      assert(savedAudioFile.duration.forall(_ == minimalWavDuration))
 
       // Request the permanently stored file from Sipi.
       val sipiGetFileRequest = Get(savedAudioFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))

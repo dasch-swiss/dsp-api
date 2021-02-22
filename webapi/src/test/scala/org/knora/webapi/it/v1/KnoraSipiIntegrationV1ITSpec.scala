@@ -100,7 +100,6 @@ class KnoraSipiIntegrationV1ITSpec
 
   private val minimalWavOriginalFilename = "minimal.wav"
   private val pathToMinimalWav = s"test_data/test_route/files/$minimalWavOriginalFilename"
-  private val minimalWavDuration = BigDecimal("0.0")
 
   /**
     * Adds the IRI of a XSL transformation to the given mapping.
@@ -925,7 +924,7 @@ class KnoraSipiIntegrationV1ITSpec
       // Create a resource for the WAV file.
       val createAudioResourceParams = JsObject(
         Map(
-          "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#ThingWithRepresentation"),
+          "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#AudioRepresentation"),
           "label" -> JsString("Wav file"),
           "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),

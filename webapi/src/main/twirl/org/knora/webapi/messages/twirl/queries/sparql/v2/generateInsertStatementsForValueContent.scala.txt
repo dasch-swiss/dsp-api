@@ -205,6 +205,17 @@
                         }
                     }
 
+                    case audioFileValue: AudioFileValueContentV2 => {
+                        @audioFileValue.duration match {
+                            case Some(definedDuration) => {
+                                <@newValueIri> knora-base:duration @definedDuration .
+                            }
+
+                            case None => {}
+                        }
+
+                    }
+
                     case _ => {}
                 }
             }
