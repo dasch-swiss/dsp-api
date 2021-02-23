@@ -31,7 +31,7 @@ import scala.collection.mutable
 object TopologicalSortUtil {
 
   /**
-	 * Finds all possible topological orders of a graph.
+	 * Finds all possible topological orders of a graph. If the graph is cyclical, returns an empty set.
 	 *
 	 * @param graph the graph to be sorted.
 	 * @tparam T the type of the nodes in the graph.
