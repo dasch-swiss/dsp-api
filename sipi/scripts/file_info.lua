@@ -23,6 +23,7 @@ require "util"
 TEXT = "text"
 IMAGE = "image"
 DOCUMENT = "document"
+AUDIO = "audio"
 
 -------------------------------------------------------------------------------
 -- Mimetype constants
@@ -37,7 +38,9 @@ local TEXT_XML = "text/xml"
 local TEXT_PLAIN = "text/plain"
 local AUDIO_MP3 = "audio/mpeg"
 local AUDIO_MP4 = "audio/mp4"
-local AUDIO_WAV = "audio/x-wav"
+local AUDIO_WAV = "audio/wav"
+local AUDIO_X_WAV = "audio/x-wav"
+local AUDIO_VND_WAVE = "audio/vnd.wave"
 local APPLICATION_PDF = "application/pdf"
 local APPLICATION_DOC = "application/msword"
 local APPLICATION_DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -61,7 +64,9 @@ local image_mime_types = {
 local audio_mime_types = {
     AUDIO_MP3,
     AUDIO_MP4,
-    AUDIO_WAV
+    AUDIO_WAV,
+    AUDIO_X_WAV,
+    AUDIO_VND_WAVE
 }
 
 local text_mime_types = {
