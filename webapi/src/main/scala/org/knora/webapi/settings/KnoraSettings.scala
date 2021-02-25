@@ -125,6 +125,24 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
     }
     .toSet
 
+  val audioMimeTypes: Set[String] = config
+    .getList("app.sipi.audio-mime-types")
+    .iterator
+    .asScala
+    .map { mType: ConfigValue =>
+      mType.unwrapped.toString
+    }
+    .toSet
+
+  val videoMimeTypes: Set[String] = config
+    .getList("app.sipi.video-mime-types")
+    .iterator
+    .asScala
+    .map { mType: ConfigValue =>
+      mType.unwrapped.toString
+    }
+    .toSet
+
   val internalSipiProtocol: String = config.getString("app.sipi.internal-protocol")
   val internalSipiHost: String = config.getString("app.sipi.internal-host")
   val internalSipiPort: Int = config.getInt("app.sipi.internal-port")

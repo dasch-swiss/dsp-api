@@ -88,6 +88,8 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         makeStillImageValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.TextFileValue =>
         makeTextFileValue(valueProps, projectShortcode, responderManager, userProfile)
+      case OntologyConstants.KnoraBase.AudioFileValue =>
+        makeAudioFileValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.DocumentFileValue =>
         makeDocumentFileValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, responderManager, userProfile)
@@ -122,16 +124,20 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     * Creates a URL for accessing a text file via Sipi.
     *
     * @param textFileValue the text file value representing the text file.
-    * @param external      a flag denoting the type of URL that should be generated.
     * @return a Sipi URL.
     */
-  def makeSipiTextFileGetUrlFromFilename(textFileValue: TextFileValueV1, external: Boolean = true): String = {
+  def makeSipiTextFileGetUrlFromFilename(textFileValue: TextFileValueV1): String = {
+    s"${settings.externalSipiBaseUrl}/${textFileValue.projectShortcode}/${textFileValue.internalFilename}"
+  }
 
-    if (external) {
-      s"${settings.externalSipiBaseUrl}/${textFileValue.projectShortcode}/${textFileValue.internalFilename}"
-    } else {
-      s"${settings.internalSipiBaseUrl}/${textFileValue.projectShortcode}/${textFileValue.internalFilename}"
-    }
+  /**
+    * Creates a URL for accessing an audio file via Sipi.
+    *
+    * @param audioFileValue the file value representing the audio file.
+    * @return a Sipi URL.
+    */
+  def makeSipiAudioFileGetUrlFromFilename(audioFileValue: AudioFileValueV1): String = {
+    s"${settings.externalSipiIIIFGetUrl}/${audioFileValue.projectShortcode}/${audioFileValue.internalFilename}/file"
   }
 
   // A Map of MIME types to Knora API v1 binary format name.
@@ -158,9 +164,11 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       "text/csv" -> "CSV",
       "application/zip" -> "ZIP",
       "application/x-compressed-zip" -> "ZIP",
-      "audio/x-wav" -> "AUDIO",
+      "audio/mpeg" -> "AUDIO",
       "audio/mp4" -> "AUDIO",
-      "audio/mpeg" -> "AUDIO"
+      "audio/wav" -> "AUDIO",
+      "audio/x-wav" -> "AUDIO",
+      "audio/vnd.wave" -> "AUDIO"
     ), { key: String =>
       s"Unknown MIME type: $key"
     }
@@ -199,6 +207,14 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
           origname = textFileValue.originalFilename,
           path = makeSipiTextFileGetUrlFromFilename(textFileValue)
         )
+
+      case audioFileValue: AudioFileValueV1 =>
+        LocationV1(
+          format_name = mimeType2V1Format(audioFileValue.internalMimeType),
+          origname = audioFileValue.originalFilename,
+          path = makeSipiAudioFileGetUrlFromFilename(audioFileValue)
+        )
+
       case otherType => throw NotImplementedException(s"Type not yet implemented: ${otherType.valueTypeIri}")
     }
   }
@@ -364,11 +380,13 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
 
       case _: LinkV1 => basicObjectResponse
 
-      case _: StillImageFileValueV1 => basicObjectResponse // TODO: implement this.
+      case _: StillImageFileValueV1 => basicObjectResponse
 
       case _: TextFileValueV1 => basicObjectResponse
 
       case _: DocumentFileValueV1 => basicObjectResponse
+
+      case _: AudioFileValueV1 => basicObjectResponse
 
       case _: HierarchicalListValueV1 => basicObjectResponse
 
@@ -853,6 +871,31 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         pageCount = predicates.get(OntologyConstants.KnoraBase.PageCount).flatMap(_.literals.headOption.map(_.toInt)),
         dimX = predicates.get(OntologyConstants.KnoraBase.DimX).flatMap(_.literals.headOption.map(_.toInt)),
         dimY = predicates.get(OntologyConstants.KnoraBase.DimY).flatMap(_.literals.headOption.map(_.toInt))
+      ))
+  }
+
+  /**
+    * Converts a [[ValueProps]] into a [[AudioFileValueV1]].
+    *
+    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+    * @return a [[DocumentFileValueV1]].
+    */
+  private def makeAudioFileValue(
+      valueProps: ValueProps,
+      projectShortcode: String,
+      responderManager: ActorRef,
+      userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    val predicates = valueProps.literalData
+
+    Future(
+      AudioFileValueV1(
+        internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
+        internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
+        originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
+        projectShortcode = projectShortcode,
+        duration = predicates
+          .get(OntologyConstants.KnoraBase.Duration)
+          .map(valueLiterals => BigDecimal(valueLiterals.literals.head))
       ))
   }
 

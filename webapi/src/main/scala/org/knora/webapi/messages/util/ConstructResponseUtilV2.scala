@@ -1087,6 +1087,19 @@ object ConstructResponseUtilV2 {
             fileValue = fileValue,
             comment = valueCommentOption
           ))
+
+      case OntologyConstants.KnoraBase.AudioFileValue =>
+        FastFuture.successful(
+          AudioFileValueContentV2(
+            ontologySchema = InternalSchema,
+            fileValue = fileValue,
+            duration = valueObject
+              .maybeStringObject(OntologyConstants.KnoraBase.Duration.toSmartIri)
+              .map(definedDuration => BigDecimal(definedDuration)),
+            comment = valueCommentOption
+          ))
+
+      case _ => throw InconsistentRepositoryDataException(s"Unexpected file value type: $valueType")
     }
   }
 

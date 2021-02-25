@@ -91,13 +91,15 @@ class SipiConnector extends Actor with ActorLogging {
     * @param width            the file's width in pixels, if applicable.
     * @param height           the file's height in pixels, if applicable.
     * @param numpages         the number of pages in the file, if applicable.
+    * @param duration         the duration of the file in seconds, if applicable.
     */
   case class SipiKnoraJsonResponse(originalFilename: Option[String],
                                    originalMimeType: Option[String],
                                    internalMimeType: String,
                                    width: Option[Int],
                                    height: Option[Int],
-                                   numpages: Option[Int]) {
+                                   numpages: Option[Int],
+                                   duration: Option[BigDecimal]) {
     if (originalFilename.contains("")) {
       throw SipiException(s"Sipi returned an empty originalFilename")
     }
@@ -108,7 +110,7 @@ class SipiConnector extends Actor with ActorLogging {
   }
 
   object SipiKnoraJsonResponseProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-    implicit val sipiKnoraJsonResponseFormat: RootJsonFormat[SipiKnoraJsonResponse] = jsonFormat6(SipiKnoraJsonResponse)
+    implicit val sipiKnoraJsonResponseFormat: RootJsonFormat[SipiKnoraJsonResponse] = jsonFormat7(SipiKnoraJsonResponse)
   }
 
   /**
@@ -133,7 +135,8 @@ class SipiConnector extends Actor with ActorLogging {
         internalMimeType = sipiResponse.internalMimeType,
         width = sipiResponse.width,
         height = sipiResponse.height,
-        pageCount = sipiResponse.numpages
+        pageCount = sipiResponse.numpages,
+        duration = sipiResponse.duration
       )
   }
 
