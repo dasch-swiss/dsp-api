@@ -44,10 +44,9 @@ class TopologicalSortUtilSpec extends CoreSpec() {
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
         TopologicalSortUtil
-          .findAllTopologicalOrders(graph))
+          .findAllTopologicalOrderPermutations(graph))
 
       val expectedOrders = Set(
-        Vector(2, 4, 5, 7),
         Vector(2, 4, 7, 5),
         Vector(2, 7, 4, 5)
       )
@@ -60,7 +59,7 @@ class TopologicalSortUtilSpec extends CoreSpec() {
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
         TopologicalSortUtil
-          .findAllTopologicalOrders(graph))
+          .findAllTopologicalOrderPermutations(graph))
 
       assert(allOrders.isEmpty)
     }
@@ -71,7 +70,7 @@ class TopologicalSortUtilSpec extends CoreSpec() {
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
         TopologicalSortUtil
-          .findAllTopologicalOrders(graph))
+          .findAllTopologicalOrderPermutations(graph))
 
       assert(allOrders.isEmpty)
     }
