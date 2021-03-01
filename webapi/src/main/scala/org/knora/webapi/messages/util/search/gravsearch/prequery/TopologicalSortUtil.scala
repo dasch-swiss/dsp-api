@@ -38,11 +38,13 @@ object TopologicalSortUtil {
     */
   def findAllTopologicalOrderPermutations[T](graph: Graph[T, DiHyperEdge]): Set[Vector[Graph[T, DiHyperEdge]#NodeT]] = {
     type NodeT = Graph[T, DiHyperEdge]#NodeT
+
     def findPermutations(listOfLists: List[Vector[NodeT]]): List[Vector[NodeT]] = {
       def makePermutations(next: Vector[NodeT], acc: List[Vector[NodeT]]): List[Vector[NodeT]] = {
         next.permutations.toList.flatMap(i => acc.map(j => j ++ i))
       }
 
+      @scala.annotation.tailrec
       def makePermutationsRec(next: Vector[NodeT],
                               rest: List[Vector[NodeT]],
                               acc: List[Vector[NodeT]]): List[Vector[NodeT]] = {
@@ -61,20 +63,23 @@ object TopologicalSortUtil {
     }
 
     // Accumulates topological orders.
-    val allOrders = graph.topologicalSort match {
+    val allOrders: Set[Vector[NodeT]] = graph.topologicalSort match {
       // Is there any topological order?
       case Right(topOrder) =>
-        // Yes, find all valid permutations
+        // Yes. Find all valid permutations.
         val nodesOfLayers: List[Vector[NodeT]] =
           topOrder.toLayered.iterator.foldRight(List.empty[Vector[NodeT]]) { (layer, acc) =>
             val layerNodes: Vector[NodeT] = layer._2.toVector
             layerNodes +: acc
           }
+
         findPermutations(nodesOfLayers).toSet
+
       case Left(_) =>
         // No, The graph has a cycle, so don't try to sort it.
         Set.empty[Vector[NodeT]]
     }
+
     allOrders.filter(_.nonEmpty)
   }
 }
