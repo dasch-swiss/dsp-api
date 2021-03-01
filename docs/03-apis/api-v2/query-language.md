@@ -1211,3 +1211,62 @@ CONSTRUCT {
 }
 ORDER BY (?int)
 ```
+
+## Query Optimization by Topological Sorting of Statements
+The query performance of triplestores, such as Fuseki, highly depends on the order of query statements. 
+To increase the 
+speed of queries without losing the accuracy of results, we have defined an optimization based on Kahn's [topological 
+sorting algorithm](https://www.wikiwand.com/en/Topological_sorting) to automatically reorder the statements of a gravsearch 
+query. Currently, this optimization is defined under the `gravsearch-dependency-optimisation` 
+[feature toggle](../feature-toggles.md) that must be activated when sending the gravsearch query request to the API.
+
+Let's consider, the following gravsearch query:
+```sparql
+PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+
+CONSTRUCT {
+  ?letter knora-api:isMainResource true .
+  ?letter ?linkingProp1  ?person1 .
+  ?letter ?linkingProp2  ?person2 .
+  ?letter beol:creationDate ?date .
+} WHERE {
+  ?letter beol:creationDate ?date .
+
+  ?letter ?linkingProp1 ?person1 .
+  FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+
+  ?letter ?linkingProp2 ?person2 .
+  FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
+
+  ?person1 beol:hasIAFIdentifier ?gnd1 .
+  ?gnd1 knora-api:valueAsString "(DE-588)118531379" .
+
+  ?person2 beol:hasIAFIdentifier ?gnd2 .
+  ?gnd2 knora-api:valueAsString "(DE-588)118696149" .
+} ORDER BY ?date
+```
+
+This query, as it is, would take a considerably long time with Fuseki. The query time would have been much less, if the 
+statements such as 
+```
+  ?gnd1 knora-api:valueAsString "(DE-588)118531379" .
+  ?gnd2 knora-api:valueAsString "(DE-588)118696149" .
+```
+were given at the top of the query followed by 
+```
+  ?person1 beol:hasIAFIdentifier ?gnd1 .
+  ?person2 beol:hasIAFIdentifier ?gnd2 .
+  ?letter ?linkingProp1 ?person1 .
+  FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+
+  ?letter ?linkingProp2 ?person2 .
+  FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
+ ?letter beol:creationDate ?date .
+```
+
+To automatically rearrange the statements of the given query in the above order, upon receiving the gravsearch query, the 
+optimization algorithm converts the query to a graph and sorts it using topological sorting algorithm. From all valid 
+topological orders returned by the sorting algorithm, the best one is chosen and used to reorder the query statements 
+before converting the query to SPARQL and submitting it to the triplestore.
+
