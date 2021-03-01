@@ -1860,6 +1860,18 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           namedGraph = None
         ),
         StatementPattern(
+          subj = QueryVariable(variableName = "gnd1"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#valueHasString".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "(DE-588)118531379",
+            datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+          ),
+          namedGraph = None
+        ),
+        StatementPattern(
           subj = QueryVariable(variableName = "person2"),
           pred = IriRef(
             iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
@@ -1886,6 +1898,47 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         ),
         StatementPattern(
           subj = QueryVariable(variableName = "gnd2"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "false",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          ),
+          namedGraph = Some(
+            IriRef(
+              iri = "http://www.knora.org/explicit".toSmartIri,
+              propertyPathOperator = None
+            ))
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "person1"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "false",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          ),
+          namedGraph = Some(
+            IriRef(
+              iri = "http://www.knora.org/explicit".toSmartIri,
+              propertyPathOperator = None
+            ))
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "person1"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/0801/beol#hasIAFIdentifier".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = QueryVariable(variableName = "gnd1"),
+          namedGraph = None
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "gnd1"),
           pred = IriRef(
             iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
             propertyPathOperator = None
@@ -1967,59 +2020,6 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
             propertyPathOperator = None
           ),
           obj = QueryVariable(variableName = "person2"),
-          namedGraph = Some(
-            IriRef(
-              iri = "http://www.knora.org/explicit".toSmartIri,
-              propertyPathOperator = None
-            ))
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "gnd1"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#valueHasString".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = XsdLiteral(
-            value = "(DE-588)118531379",
-            datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
-          ),
-          namedGraph = None
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "person1"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = XsdLiteral(
-            value = "false",
-            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = Some(
-            IriRef(
-              iri = "http://www.knora.org/explicit".toSmartIri,
-              propertyPathOperator = None
-            ))
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "person1"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/0801/beol#hasIAFIdentifier".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = QueryVariable(variableName = "gnd1"),
-          namedGraph = None
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "gnd1"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = XsdLiteral(
-            value = "false",
-            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
           namedGraph = Some(
             IriRef(
               iri = "http://www.knora.org/explicit".toSmartIri,
@@ -2680,6 +2680,18 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
           blocks = Vector(
             Vector(
               StatementPattern(
+                subj = QueryVariable(variableName = "int"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/knora-base#valueHasInteger".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = XsdLiteral(
+                  value = "1",
+                  datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
+                ),
+                namedGraph = None
+              ),
+              StatementPattern(
                 subj = QueryVariable(variableName = "thing"),
                 pred = IriRef(
                   iri = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
@@ -2703,18 +2715,6 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                     iri = "http://www.knora.org/explicit".toSmartIri,
                     propertyPathOperator = None
                   ))
-              ),
-              StatementPattern(
-                subj = QueryVariable(variableName = "int"),
-                pred = IriRef(
-                  iri = "http://www.knora.org/ontology/knora-base#valueHasInteger".toSmartIri,
-                  propertyPathOperator = None
-                ),
-                obj = XsdLiteral(
-                  value = "1",
-                  datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
-                ),
-                namedGraph = None
               ),
               StatementPattern(
                 subj = QueryVariable(variableName = "thing"),
@@ -2774,6 +2774,18 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
             ),
             Vector(
               StatementPattern(
+                subj = QueryVariable(variableName = "int"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/knora-base#valueHasInteger".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = XsdLiteral(
+                  value = "3",
+                  datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
+                ),
+                namedGraph = None
+              ),
+              StatementPattern(
                 subj = QueryVariable(variableName = "thing"),
                 pred = IriRef(
                   iri = "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri,
@@ -2797,18 +2809,6 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                     iri = "http://www.knora.org/explicit".toSmartIri,
                     propertyPathOperator = None
                   ))
-              ),
-              StatementPattern(
-                subj = QueryVariable(variableName = "int"),
-                pred = IriRef(
-                  iri = "http://www.knora.org/ontology/knora-base#valueHasInteger".toSmartIri,
-                  propertyPathOperator = None
-                ),
-                obj = XsdLiteral(
-                  value = "3",
-                  datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
-                ),
-                namedGraph = None
               ),
               StatementPattern(
                 subj = QueryVariable(variableName = "thing"),

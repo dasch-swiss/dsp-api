@@ -31,66 +31,50 @@ import scala.collection.mutable
 object TopologicalSortUtil {
 
   /**
-	 * Finds all possible topological orders of a graph. If the graph is cyclical, returns an empty set.
-	 *
-	 * @param graph the graph to be sorted.
-	 * @tparam T the type of the nodes in the graph.
-	 */
-  def findAllTopologicalOrders[T](graph: Graph[T, DiHyperEdge]): Set[Vector[Graph[T, DiHyperEdge]#NodeT]] = {
+    * Finds all possible topological order permutations of a graph. If the graph is cyclical, returns an empty set.
+    *
+    * @param graph the graph to be sorted.
+    * @tparam T the type of the nodes in the graph.
+    */
+  def findAllTopologicalOrderPermutations[T](graph: Graph[T, DiHyperEdge]): Set[Vector[Graph[T, DiHyperEdge]#NodeT]] = {
     type NodeT = Graph[T, DiHyperEdge]#NodeT
+    def findPermutations(listOfLists: List[Vector[NodeT]]): List[Vector[NodeT]] = {
+      def makePermutations(next: Vector[NodeT], acc: List[Vector[NodeT]]): List[Vector[NodeT]] = {
+        next.permutations.toList.flatMap(i => acc.map(j => j ++ i))
+      }
 
-    /**
-		 * Represents arguments to be put on the simulated call stack.
-		 */
-    case class StackItem(sources: Set[NodeT], inDegrees: Map[NodeT, Int], topOrder: Vector[NodeT], count: Int)
-
-    val inDegrees: Map[NodeT, Int] = graph.nodes.map(node => (node, node.inDegree)).toMap
-
-    def isSource(node: NodeT): Boolean = inDegrees(node) == 0
-    def getSources: Set[NodeT] = graph.nodes.filter(node => isSource(node)).toSet
-
-    // Replaces the program stack by our own.
-    val stack: mutable.ArrayStack[StackItem] = new mutable.ArrayStack()
-
-    // Accumulates topological orders.
-    var allTopologicalOrders = Set[Vector[NodeT]]()
-
-    // Push arguments onto the stack.
-    stack.push(StackItem(sources = getSources, inDegrees = inDegrees, topOrder = Vector[NodeT](), count = 0))
-
-    while (stack.nonEmpty) {
-      // Fetch arguments
-      val stackItem = stack.pop()
-
-      if (stackItem.sources.nonEmpty) {
-        // `sources` contains all the nodes we can pick. Generate all possibilities.
-        for (source <- stackItem.sources) {
-          val newTopOrder = source +: stackItem.topOrder
-          var newSources = stackItem.sources - source
-
-          // Decrease the in-degree of all adjacent nodes.
-          var newInDegrees = stackItem.inDegrees
-
-          for (adjacent <- source.diSuccessors) {
-            val newInDegree = newInDegrees(adjacent) - 1
-            newInDegrees = newInDegrees.updated(adjacent, newInDegree)
-
-            // If in-degree becomes zero, add to sources.
-            if (newInDegree == 0) {
-              newSources = newSources + adjacent
-            }
-          }
-
-          stack.push(StackItem(newSources, newInDegrees, newTopOrder, stackItem.count + 1))
+      def makePermutationsRec(next: Vector[NodeT],
+                              rest: List[Vector[NodeT]],
+                              acc: List[Vector[NodeT]]): List[Vector[NodeT]] = {
+        if (rest.isEmpty) {
+          makePermutations(next, acc)
+        } else {
+          makePermutationsRec(rest.head, rest.tail, makePermutations(next, acc))
         }
-      } else if (stackItem.count != graph.nodes.size) {
-        // The graph has a cycle, so don't try to sort it.
-        ()
-      } else {
-        allTopologicalOrders += stackItem.topOrder.reverse
+      }
+
+      listOfLists match {
+        case Nil                => Nil
+        case one :: Nil         => one.permutations.toList
+        case one :: two :: tail => makePermutationsRec(two, tail, one.permutations.toList)
       }
     }
 
-    allTopologicalOrders.filter(_.nonEmpty)
+    // Accumulates topological orders.
+    val allOrders = graph.topologicalSort match {
+      // Is there any topological order?
+      case Right(topOrder) =>
+        // Yes, find all valid permutations
+        val nodesOfLayers: List[Vector[NodeT]] =
+          topOrder.toLayered.iterator.foldRight(List.empty[Vector[NodeT]]) { (layer, acc) =>
+            val layerNodes: Vector[NodeT] = layer._2.toVector
+            layerNodes +: acc
+          }
+        findPermutations(nodesOfLayers).toSet
+      case Left(_) =>
+        // No, The graph has a cycle, so don't try to sort it.
+        Set.empty[Vector[NodeT]]
+    }
+    allOrders.filter(_.nonEmpty)
   }
 }

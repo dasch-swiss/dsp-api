@@ -278,7 +278,7 @@ class ReorderPatternsByDependencyOptimisationFeature(typeInspectionResult: Gravs
       }
 
       // Get all the possible topological orders for the graph.
-      val allTopologicalOrders: Set[Vector[NodeT]] = TopologicalSortUtil.findAllTopologicalOrders(graph)
+      val allTopologicalOrders: Set[Vector[NodeT]] = TopologicalSortUtil.findAllTopologicalOrderPermutations(graph)
 
       // Did we find any topological orders?
       if (allTopologicalOrders.isEmpty) {
