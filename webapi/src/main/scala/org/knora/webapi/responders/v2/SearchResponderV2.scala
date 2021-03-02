@@ -407,7 +407,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToCountPrequeryTransformer = new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
         constructClause = inputQuery.constructClause,
         typeInspectionResult = typeInspectionResult,
-        querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
+        querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
+        featureFactoryConfig = featureFactoryConfig
       )
 
       nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
@@ -493,7 +494,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         constructClause = inputQuery.constructClause,
         typeInspectionResult = typeInspectionResult,
         querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
-        settings = settings
+        settings = settings,
+        featureFactoryConfig = featureFactoryConfig
       )
 
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly

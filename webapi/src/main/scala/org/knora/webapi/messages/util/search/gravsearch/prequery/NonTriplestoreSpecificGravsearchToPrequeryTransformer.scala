@@ -21,6 +21,7 @@ package org.knora.webapi.messages.util.search.gravsearch.prequery
 
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{AssertionException, GravsearchException}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.{
   GravsearchTypeInspectionResult,
@@ -39,11 +40,13 @@ import org.knora.webapi.settings.KnoraSettingsImpl
   * @param typeInspectionResult the result of type inspection of the input query.
   * @param querySchema          the ontology schema used in the input query.
   * @param settings             application settings.
+  * @param featureFactoryConfig the feature factory configuration.
   */
 class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: ConstructClause,
                                                             typeInspectionResult: GravsearchTypeInspectionResult,
                                                             querySchema: ApiV2Schema,
-                                                            settings: KnoraSettingsImpl)
+                                                            settings: KnoraSettingsImpl,
+                                                            featureFactoryConfig: FeatureFactoryConfig)
     extends AbstractPrequeryGenerator(
       constructClause = constructClause,
       typeInspectionResult = typeInspectionResult,
@@ -408,6 +411,10 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformer(constructClause: Con
     * @return the optimised query patterns.
     */
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-    removeEntitiesInferredFromProperty(patterns)
+    GravsearchQueryOptimisationFactory
+      .getGravsearchQueryOptimisationFeature(typeInspectionResult = typeInspectionResult,
+                                             querySchema = querySchema,
+                                             featureFactoryConfig = featureFactoryConfig)
+      .optimiseQueryPatterns(patterns)
   }
 }

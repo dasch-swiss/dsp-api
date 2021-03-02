@@ -333,3 +333,165 @@ replaces `knora-api:standoffTagHasStartAncestor` with `knora-base:standoffTagHas
 The triplestore-specific transformers in `SparqlTransformer.scala` can run optimisations on the generated SPARQL, in
 the method `optimiseQueryPatterns` inherited from `WhereTransformer`. For example, `moveLuceneToBeginning` moves
 Lucene queries to the beginning of the block in which they occur.
+
+## Query Optimization by Topological Sorting of Statements
+
+GraphDB seems to have inherent algorithms to optimize the query time, however query performance of Fuseki highly depends 
+on the order of the query statements. For example, a query such as the one below:
+
+```sparql
+PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+
+CONSTRUCT {
+  ?letter knora-api:isMainResource true .
+  ?letter ?linkingProp1  ?person1 .
+  ?letter ?linkingProp2  ?person2 .
+  ?letter beol:creationDate ?date .
+} WHERE {
+  ?letter beol:creationDate ?date .
+
+  ?letter ?linkingProp1 ?person1 .
+  FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+
+  ?letter ?linkingProp2 ?person2 .
+  FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
+
+  ?person1 beol:hasIAFIdentifier ?gnd1 .
+  ?gnd1 knora-api:valueAsString "(DE-588)118531379" .
+
+  ?person2 beol:hasIAFIdentifier ?gnd2 .
+  ?gnd2 knora-api:valueAsString "(DE-588)118696149" .
+} ORDER BY ?date
+```
+
+takes a very long time with Fuseki. The performance of this query can be improved
+by moving up the statements with literal objects that are not dependent on any other statement:
+
+```
+  ?gnd1 knora-api:valueAsString "(DE-588)118531379" .
+  ?gnd2 knora-api:valueAsString "(DE-588)118696149" .
+```
+
+The rest of the query then reads:
+
+```
+  ?person1 beol:hasIAFIdentifier ?gnd1 .
+  ?person2 beol:hasIAFIdentifier ?gnd2 .
+  ?letter ?linkingProp1 ?person1 .
+  FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+
+  ?letter ?linkingProp2 ?person2 .
+  FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
+ ?letter beol:creationDate ?date .
+```
+
+Since we cannot expect clients to know about performance of triplestores in order to write efficient queries, we have 
+implemented an optimization method to automatically rearrange the statements of the given queries. 
+Upon receiving the Gravsearch query, the algorithm converts the query to a graph. For each statement pattern,
+the subject of the statement is the origin node, the predicate is a directed edge, and the object 
+is the target node. For the query above, this conversion would result in the following graph:
+
+![query_graph](figures/query_graph.png)
+
+The [Graph for Scala](http://www.scala-graph.org/) library is used to construct the graph and sort it using [Kahn's 
+topological sorting algorithm](https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm).
+
+The algorithm returns the nodes of the graph ordered in several layers, where the 
+root element `?letter` is in layer 0, `[?date, ?person1, ?person2]` are in layer 1, `[?gnd1, ?gnd2]` in layer 2, and the 
+leaf nodes `[(DE-588)118531379, (DE-588)118696149]` are given in the last layer (i.e. layer 3). 
+According to Kahn's algorithm, there are multiple valid permutations of the topological order. The graph in the example 
+ above has 24 valid permutations of topological order. Here are two of them (nodes are ordered from left to right with the highest 
+ order to the lowest):
+ 
+- `(?letter, ?date, ?person2, ?person1, ?gnd2, ?gnd1, (DE-588)118696149, (DE-588)118531379)`   
+- `(?letter, ?date, ?person1, ?person2, ?gnd1, ?gnd2, (DE-588)118531379, (DE-588)118696149)`.   
+
+From all valid topological orders, one is chosen based on certain criteria; for example, the leaf should node should not 
+belong to a statement that has predicate `rdf:type`, since that could match all resources of the specified type.
+Once the best order is chosen, it is used to re-arrange the query 
+statements. Starting from the last leaf node, i.e. 
+`(DE-588)118696149`, the method finds the statement pattern which has this node as its object, and brings this statement 
+to the top of the query. This rearrangement continues so that the statements with the fewest dependencies on other 
+statements are all brought to the top of the query. The resulting query is as follows:
+
+```sparql
+PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+
+CONSTRUCT {
+  ?letter knora-api:isMainResource true .
+  ?letter ?linkingProp1  ?person1 .
+  ?letter ?linkingProp2  ?person2 .
+  ?letter beol:creationDate ?date .
+} WHERE {
+  ?gnd2 knora-api:valueAsString "(DE-588)118696149" .
+  ?gnd1 knora-api:valueAsString "(DE-588)118531379" .
+  ?person2 beol:hasIAFIdentifier ?gnd2 .
+  ?person1 beol:hasIAFIdentifier ?gnd1 .
+  ?letter ?linkingProp2 ?person2 .
+  ?letter ?linkingProp1 ?person1 .
+  ?letter beol:creationDate ?date .
+  FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+  FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
+} ORDER BY ?date
+```
+
+Note that position of the FILTER statements does not play a significant role in the optimization. 
+
+If a Gravsearch query contains statements in `UNION`, `OPTIONAL`, `MINUS`, or 
+`FILTER NOT EXISTS`, they are reordered 
+by defining a graph per block. For example, consider the following query with `UNION`:
+
+```sparql
+{
+    ?thing anything:hasRichtext ?richtext .
+    FILTER knora-api:matchText(?richtext, "test")
+    ?thing anything:hasInteger ?int .
+    ?int knora-api:intValueAsInt 1 .
+}
+UNION
+{
+    ?thing anything:hasText ?text .
+    FILTER knora-api:matchText(?text, "test")
+    ?thing anything:hasInteger ?int .
+    ?int knora-api:intValueAsInt 3 .
+}
+```
+This would result in one graph per block of the `UNION`. Each graph is then sorted, and the statements of its 
+block are rearranged according to the topological order of graph. This is the result:
+
+```sparql
+{
+   ?int knora-api:intValueAsInt 1 .
+    ?thing anything:hasRichtext ?richtext .
+    ?thing anything:hasInteger ?int .
+    FILTER(knora-api:matchText(?richtext, "test"))
+} UNION {
+    ?int knora-api:intValueAsInt 3 .
+    ?thing anything:hasText ?text .
+    ?thing anything:hasInteger ?int .
+    FILTER(knora-api:matchText(?text, "test"))
+}
+```
+
+### Cyclic Graphs
+
+The topological sorting algorithm can only be used for DAGs (directed acyclic graphs). However,
+a Gravsearch query can contains statements that result in a cyclic graph, e.g.:
+
+```
+PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+
+CONSTRUCT {
+    ?thing knora-api:isMainResource true .
+} WHERE {
+  ?thing anything:hasOtherThing ?thing1 .
+  ?thing1 anything:hasOtherThing ?thing2 .
+  ?thing2 anything:hasOtherThing ?thing . 
+
+```
+
+In this case, the algorithm tries to break the cycles in order to sort the graph. If this is not possible,
+the query statements are not reordered.

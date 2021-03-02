@@ -1211,3 +1211,61 @@ CONSTRUCT {
 }
 ORDER BY (?int)
 ```
+
+## Query Optimization by Dependency
+
+The query performance of triplestores, such as Fuseki, is highly dependent on the order of query
+patterns. To improve performance, Gravsearch automatically reorders the
+statement patterns in the WHERE clause according to their dependencies on each other, to minimise
+the number of possible matches for each pattern.
+This optimization can be controlled using `gravsearch-dependency-optimisation` 
+[feature toggle](../feature-toggles.md), which is turned on by default.
+
+Consider the following Gravsearch query:
+
+```sparql
+PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+
+CONSTRUCT {
+  ?letter knora-api:isMainResource true .
+  ?letter ?linkingProp1  ?person1 .
+  ?letter ?linkingProp2  ?person2 .
+  ?letter beol:creationDate ?date .
+} WHERE {
+  ?letter beol:creationDate ?date .
+
+  ?letter ?linkingProp1 ?person1 .
+  FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+
+  ?letter ?linkingProp2 ?person2 .
+  FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
+
+  ?person1 beol:hasIAFIdentifier ?gnd1 .
+  ?gnd1 knora-api:valueAsString "(DE-588)118531379" .
+
+  ?person2 beol:hasIAFIdentifier ?gnd2 .
+  ?gnd2 knora-api:valueAsString "(DE-588)118696149" .
+} ORDER BY ?date
+```
+
+Gravsearch optimises the performance of this query by moving these statements
+to the top of the WHERE clause:
+
+```
+  ?gnd1 knora-api:valueAsString "(DE-588)118531379" .
+  ?gnd2 knora-api:valueAsString "(DE-588)118696149" .
+```
+
+The rest of the WHERE clause then reads:
+
+```
+  ?person1 beol:hasIAFIdentifier ?gnd1 .
+  ?person2 beol:hasIAFIdentifier ?gnd2 .
+  ?letter ?linkingProp1 ?person1 .
+  FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient )
+
+  ?letter ?linkingProp2 ?person2 .
+  FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
+ ?letter beol:creationDate ?date .
+```
