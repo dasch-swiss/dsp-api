@@ -335,6 +335,7 @@ the method `optimiseQueryPatterns` inherited from `WhereTransformer`. For exampl
 Lucene queries to the beginning of the block in which they occur.
 
 ## Query Optimization by Topological Sorting of Statements
+
 GraphDB seems to have inherent algorithms to optimize the query time, however query performance of Fuseki highly depends 
 on the order of the query statements. For example, a query such as the one below:
 
@@ -364,13 +365,16 @@ CONSTRUCT {
 } ORDER BY ?date
 ```
 
-takes a very long time with Fuseki. The query time would have been much less, if the 
-statements with literal object values that are not dependent on any other query statement, such as 
+takes a very long time with Fuseki. The performance of this query can be improved
+by moving up the statements with literal objects that are not dependent on any other statement:
+
 ```
   ?gnd1 knora-api:valueAsString "(DE-588)118531379" .
   ?gnd2 knora-api:valueAsString "(DE-588)118696149" .
 ```
-were given at the top of the query followed by 
+
+The rest of the query then reads:
+
 ```
   ?person1 beol:hasIAFIdentifier ?gnd1 .
   ?person2 beol:hasIAFIdentifier ?gnd2 .
@@ -381,31 +385,35 @@ were given at the top of the query followed by
   FILTER(?linkingProp2 = beol:hasAuthor || ?linkingProp2 = beol:hasRecipient )
  ?letter beol:creationDate ?date .
 ```
+
 Since we cannot expect clients to know about performance of triplestores in order to write efficient queries, we have 
 implemented an optimization method to automatically rearrange the statements of the given queries. 
-Upon receiving the gravsearch query, the algorithm converts the query to a graph by defining graph components for every 
-statement pattern where subject of the statement defines the origin node, predicate defines a directed edge, and object 
-defines the target node. 
-For the query above, this conversion would result in the following graph:
+Upon receiving the Gravsearch query, the algorithm converts the query to a graph. For each statement pattern,
+the subject of the statement is the origin node, the predicate is a directed edge, and the object 
+is the target node. For the query above, this conversion would result in the following graph:
+
 ![query_graph](figures/query_graph.png)
 
-The [Graph for Scala](http://www.scala-graph.org/) library is used to construct the graph and sort it using the 
-topological sorting algorithm. The sorting algorithm returns the nodes of the graph ordered in several layers where the 
+The [Graph for Scala](http://www.scala-graph.org/) library is used to construct the graph and sort it using [Kahn's 
+topological sorting algorithm](https://en.wikipedia.org/wiki/Topological_sorting#Kahn's_algorithm).
+
+The algorithm returns the nodes of the graph ordered in several layers, where the 
 root element `?letter` is in layer 0, `[?date, ?person1, ?person2]` are in layer 1, `[?gnd1, ?gnd2]` in layer 2, and the 
 leaf nodes `[(DE-588)118531379, (DE-588)118696149]` are given in the last layer (i.e. layer 3). 
-According to Kahn's algorithm, there are multiple valid permutations of the topological order, the graph in the example 
- above has 24 valid permutations of topological order, such as (nodes are ordered from left to right with the highest 
- order to the lowest):   
-`(?letter, ?date, ?person2, ?person1, ?gnd2, ?gnd1, (DE-588)118696149, (DE-588)118531379)`   
-and    
-   `(?letter, ?date, ?person1, ?person2, ?gnd1, ?gnd2, (DE-588)118531379, (DE-588)118696149)`.   
+According to Kahn's algorithm, there are multiple valid permutations of the topological order. The graph in the example 
+ above has 24 valid permutations of topological order. Here are two of them (nodes are ordered from left to right with the highest 
+ order to the lowest):
+ 
+- `(?letter, ?date, ?person2, ?person1, ?gnd2, ?gnd1, (DE-588)118696149, (DE-588)118531379)`   
+- `(?letter, ?date, ?person1, ?person2, ?gnd1, ?gnd2, (DE-588)118531379, (DE-588)118696149)`.   
 
-From all valid topological order, one is chosen based on certain criteria; for example, the leaf should node should not 
-belong to a statement that has predicate `rdf:type`. Once the best order is chosen, it is used to re-arrange the query 
+From all valid topological orders, one is chosen based on certain criteria; for example, the leaf should node should not 
+belong to a statement that has predicate `rdf:type`, since that could match all resources of the specified type.
+Once the best order is chosen, it is used to re-arrange the query 
 statements. Starting from the last leaf node, i.e. 
-`(DE-588)118696149`, the method finds the statement pattern which has this node as its object and brings this statement 
-to the top of the query. This re-arrangement continues so that the statements with the least dependencies on other 
-statements are all brought to the top of the query. Resulting in
+`(DE-588)118696149`, the method finds the statement pattern which has this node as its object, and brings this statement 
+to the top of the query. This rearrangement continues so that the statements with the fewest dependencies on other 
+statements are all brought to the top of the query. The resulting query is as follows:
 
 ```sparql
 PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
@@ -429,10 +437,11 @@ CONSTRUCT {
 } ORDER BY ?date
 ```
 
-Note that position of the above given filter statements does not play a significant role in the optimization of the performance. 
-In case a gravsearch query contains statements given in `UnionPattern`, `OptionalPattern`, `MinusPattern`, or 
-`FilterNotExistsPattern`, they are reordered accordingly 
-by defining a graph per block. For example, the following query with a `UNION` 
+Note that position of the FILTER statements does not play a significant role in the optimization. 
+
+If a Gravsearch query contains statements in `UNION`, `OPTIONAL`, `MINUS`, or 
+`FILTER NOT EXISTS`, they are reordered 
+by defining a graph per block. For example, consider the following query with `UNION`:
 
 ```sparql
 {
@@ -449,8 +458,9 @@ UNION
     ?int knora-api:intValueAsInt 3 .
 }
 ```
-would result in one graph per block of the `UNION`. Each graph is then sorted and the statements of its correspoding 
-block are re-arranged with respect to the topological order of graph, resulting in:
+This would result in one graph per block of the `UNION`. Each graph is then sorted, and the statements of its 
+block are rearranged according to the topological order of graph. This is the result:
+
 ```sparql
 {
    ?int knora-api:intValueAsInt 1 .
@@ -465,9 +475,11 @@ block are re-arranged with respect to the topological order of graph, resulting 
 }
 ```
 
-###Cyclic Graphs
-The topological sorting algorithm can only be used for DAGs (directed acyclic graphs). Therefore, in case a 
-gravsearch query contains statements that result in a cyclic graph, for example 
+### Cyclic Graphs
+
+The topological sorting algorithm can only be used for DAGs (directed acyclic graphs). However,
+a Gravsearch query can contains statements that result in a cyclic graph, e.g.:
+
 ```
 PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
 PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
@@ -481,5 +493,5 @@ CONSTRUCT {
 
 ```
 
-the algorithm tries to break the cycles in order to sort the graph. If breaking a cycle was not possible, the query 
-statements are not reordered and the query is submitted to the triplestore as given.
+In this case, the algorithm tries to break the cycles in order to sort the graph. If this is not possible,
+the query statements are not reordered.
