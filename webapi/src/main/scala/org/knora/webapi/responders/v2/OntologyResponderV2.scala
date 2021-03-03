@@ -2159,11 +2159,20 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           changeOntologyMetadataRequest.label
         }
 
+        // Is there any new comment given?
+        comment = if (changeOntologyMetadataRequest.comment.isEmpty) {
+          // No. Consider the old comment for checking the update.
+          oldMetadata.comment
+        } else {
+          // Yes. Consider the new comment for checking the update.
+          changeOntologyMetadataRequest.comment
+        }
+
         unescapedNewMetadata = OntologyMetadataV2(
           ontologyIri = internalOntologyIri,
           projectIri = Some(projectIri),
           label = label,
-          comment = changeOntologyMetadataRequest.comment,
+          comment = comment,
           lastModificationDate = Some(currentTime)
         ).unescape
 
