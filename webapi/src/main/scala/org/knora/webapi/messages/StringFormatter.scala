@@ -3236,4 +3236,16 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
 
     customValueIri
   }
+
+  /**
+    * Throws [[BadRequestException]] if a Knora API v2 definition API has an ontology name that can only be used
+    * in the internal schema.
+    *
+    * @param iri the IRI to be checked.
+    */
+  def checkExternalOntologyName(iri: SmartIri): Unit = {
+    if (iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName)) {
+      throw BadRequestException(s"Invalid IRI: <$iri>")
+    }
+  }
 }

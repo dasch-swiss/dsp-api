@@ -159,6 +159,14 @@ object OntologyConstants {
   )
 
   /**
+    * Ontology labels that are used only in the internal schema.
+    */
+  val InternalOntologyLabels: Set[String] = Set(
+    KnoraBase.KnoraBaseOntologyLabel,
+    KnoraAdmin.KnoraAdminOntologyLabel
+  )
+
+  /**
     * Ontology labels that are reserved for built-in ontologies.
     */
   val BuiltInOntologyLabels: Set[String] = Set(
