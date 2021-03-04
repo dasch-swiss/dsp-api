@@ -1025,6 +1025,18 @@ The request body can also contain a new label and a new comment for the ontology
 A successful response will be a JSON-LD document providing only the
 ontology's metadata.
 
+### Deleting an Ontology's comment
+
+```
+HTTP DELETE to http://host/v2/ontologies/comment/ONTOLOGY_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
+```
+
+The ontology IRI and the ontology's last modification date must be
+URL-encoded.
+
+A successful response will be a JSON-LD document containing the ontology's
+updated metadata.
+
 ### Deleting an Ontology
 
 An ontology can be deleted only if it is not used in data.
