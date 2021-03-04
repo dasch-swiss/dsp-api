@@ -136,6 +136,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     case createOntologyRequest: CreateOntologyRequestV2 => createOntology(createOntologyRequest)
     case changeOntologyMetadataRequest: ChangeOntologyMetadataRequestV2 =>
       changeOntologyMetadata(changeOntologyMetadataRequest)
+    case deleteOntologyCommentRequest: DeleteOntologyCommentRequestV2 =>
+      deleteOntologyComment(deleteOntologyCommentRequest)
     case createClassRequest: CreateClassRequestV2 => createClass(createClassRequest)
     case changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2 =>
       changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest)
@@ -2140,6 +2142,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             ontologyIri = internalOntologyIri,
             newLabel = changeOntologyMetadataRequest.label,
             hasOldComment = ontologyHasComment,
+            deleteOldComment = ontologyHasComment && changeOntologyMetadataRequest.comment.nonEmpty,
             newComment = changeOntologyMetadataRequest.comment,
             lastModificationDate = changeOntologyMetadataRequest.lastModificationDate,
             currentTime = currentTime
@@ -2209,6 +2212,99 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
       taskResult <- IriLocker.runWithIriLock(
         apiRequestID = changeOntologyMetadataRequest.apiRequestID,
+        iri = ONTOLOGY_CACHE_LOCK_IRI,
+        task = () => makeTaskFuture(internalOntologyIri = internalOntologyIri)
+      )
+    } yield taskResult
+  }
+
+  def deleteOntologyComment(
+      deleteOntologyCommentRequestV2: DeleteOntologyCommentRequestV2): Future[ReadOntologyMetadataV2] = {
+    def makeTaskFuture(internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] = {
+      for {
+        cacheData <- getCacheData
+
+        // Check that the user has permission to update the ontology.
+        projectIri <- checkPermissionsForOntologyUpdate(
+          internalOntologyIri = internalOntologyIri,
+          requestingUser = deleteOntologyCommentRequestV2.requestingUser
+        )
+
+        // Check that the ontology exists and has not been updated by another user since the client last read its metadata.
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
+          internalOntologyIri = internalOntologyIri,
+          expectedLastModificationDate = deleteOntologyCommentRequestV2.lastModificationDate,
+          featureFactoryConfig = deleteOntologyCommentRequestV2.featureFactoryConfig
+        )
+
+        // get the metadata of the ontology.
+        oldMetadata: OntologyMetadataV2 = cacheData.ontologies(internalOntologyIri).ontologyMetadata
+        // Was there a comment in the ontology metadata?
+        ontologyHasComment: Boolean = oldMetadata.comment.nonEmpty
+
+        // Update the metadata.
+
+        currentTime: Instant = Instant.now
+
+        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .changeOntologyMetadata(
+            triplestore = settings.triplestoreType,
+            ontologyNamedGraphIri = internalOntologyIri,
+            ontologyIri = internalOntologyIri,
+            newLabel = None,
+            hasOldComment = ontologyHasComment,
+            deleteOldComment = true,
+            newComment = None,
+            lastModificationDate = deleteOntologyCommentRequestV2.lastModificationDate,
+            currentTime = currentTime
+          )
+          .toString()
+
+        _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+
+        // Check that the update was successful.
+
+        unescapedNewMetadata = OntologyMetadataV2(
+          ontologyIri = internalOntologyIri,
+          projectIri = Some(projectIri),
+          label = oldMetadata.label,
+          comment = None,
+          lastModificationDate = Some(currentTime)
+        ).unescape
+
+        maybeLoadedOntologyMetadata: Option[OntologyMetadataV2] <- loadOntologyMetadata(
+          internalOntologyIri = internalOntologyIri,
+          featureFactoryConfig = deleteOntologyCommentRequestV2.featureFactoryConfig
+        )
+
+        _ = maybeLoadedOntologyMetadata match {
+          case Some(loadedOntologyMetadata) =>
+            if (loadedOntologyMetadata != unescapedNewMetadata) {
+              throw UpdateNotPerformedException()
+            }
+
+          case None => throw UpdateNotPerformedException()
+        }
+
+        // Update the ontology cache with the unescaped metadata.
+
+        _ = storeCacheData(
+          cacheData.copy(
+            ontologies = cacheData.ontologies + (internalOntologyIri -> cacheData
+              .ontologies(internalOntologyIri)
+              .copy(ontologyMetadata = unescapedNewMetadata))
+          ))
+
+      } yield ReadOntologyMetadataV2(ontologies = Set(unescapedNewMetadata))
+    }
+
+    for {
+      _ <- checkExternalOntologyIriForUpdate(deleteOntologyCommentRequestV2.ontologyIri)
+      internalOntologyIri = deleteOntologyCommentRequestV2.ontologyIri.toOntologySchema(InternalSchema)
+
+      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
+      taskResult <- IriLocker.runWithIriLock(
+        apiRequestID = deleteOntologyCommentRequestV2.apiRequestID,
         iri = ONTOLOGY_CACHE_LOCK_IRI,
         task = () => makeTaskFuture(internalOntologyIri = internalOntologyIri)
       )
