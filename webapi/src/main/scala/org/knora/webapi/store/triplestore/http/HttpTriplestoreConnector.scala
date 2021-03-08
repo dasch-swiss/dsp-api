@@ -1028,18 +1028,24 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       val response = client.execute(targetHost, request, context)
       maybeResponse = Some(response)
       val statusCode: Int = response.getStatusLine.getStatusCode
-      val statusCategory: Int = statusCode / 100
 
-      if (statusCategory != 2) {
-        Option(response.getEntity)
-          .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)) match {
-          case Some(responseEntityStr) =>
-            log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
-            throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
+      if (statusCode == 404) {
+        throw NotFoundException("The requested data was not found")
+      } else {
+        val statusCategory: Int = statusCode / 100
 
-          case None =>
-            log.error(s"Triplestore responded with HTTP code $statusCode")
-            throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode")
+        if (statusCategory != 2) {
+          Option(response.getEntity)
+            .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)) match {
+            case Some(responseEntityStr) =>
+              log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
+              throw TriplestoreResponseException(
+                s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
+
+            case None =>
+              log.error(s"Triplestore responded with HTTP code $statusCode")
+              throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode")
+          }
         }
       }
 
@@ -1060,6 +1066,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
           "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
         log.error(socketTimeoutException, message)
         throw TriplestoreTimeoutException(message = message, e = socketTimeoutException, log = log)
+
+      case notFound: NotFoundException => throw notFound
 
       case e: Exception =>
         val message = "Failed to connect to triplestore"
