@@ -49,32 +49,54 @@ PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
 
+@* Delete the existing cardinalities and insert the new ones in separate update operations,
+   because the WHERE clause for deleting the existing ones returns several solutions.
+   If the INSERT was done in the same update, it would be run once for each solution,
+   which would cause redundant blank nodes to be inserted. *@
+
 DELETE {
-    GRAPH ?ontologyNamedGraph {
-        ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
-        ?class rdfs:subClassOf ?restriction .
+    GRAPH <@ontologyNamedGraphIri> {
+        <@classIri> rdfs:subClassOf ?restriction .
         ?restriction ?restrictionPred ?restrictionObj .
     }
-} INSERT {
-    GRAPH ?ontologyNamedGraph {
-        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> rdf:type owl:Ontology ;
+            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
 
+        <@classIri> rdf:type owl:Class .
+
+        OPTIONAL {
+            <@classIri> rdfs:subClassOf ?restriction .
+            FILTER isBlank(?restriction)
+            ?restriction rdf:type owl:Restriction ;
+                ?restrictionPred ?restrictionObj .
+        }
+    }
+};
+INSERT {
+    GRAPH <@ontologyNamedGraphIri> {
         @for((propertyIri, knoraCardinality) <- newCardinalities) {
 
             @defining(Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)) { owlCardinalityInfo =>
 
-                ?class rdfs:subClassOf [ rdf:type owl:Restriction ;
-                                         owl:onProperty <@propertyIri> ;
+                <@classIri> rdfs:subClassOf [ rdf:type owl:Restriction ;
+                    owl:onProperty <@propertyIri> ;
 
-                                         @owlCardinalityInfo.guiOrder match {
-                                             case Some(guiOrder) => {
-                                                 salsah-gui:guiOrder "@guiOrder"^^xsd:nonNegativeInteger ;
-                                             }
+                    @owlCardinalityInfo.guiOrder match {
+                       case Some(guiOrder) => {
+                           salsah-gui:guiOrder "@guiOrder"^^xsd:nonNegativeInteger ;
+                       }
 
-                                             case None => {}
-                                         }
+                       case None => {}
+                    }
 
-                                         <@owlCardinalityInfo.owlCardinalityIri> "@owlCardinalityInfo.owlCardinalityValue"^^xsd:nonNegativeInteger ] .
+                    <@owlCardinalityInfo.owlCardinalityIri> "@owlCardinalityInfo.owlCardinalityValue"^^xsd:nonNegativeInteger ] .
 
             }
         }
@@ -85,21 +107,29 @@ DELETE {
     USING <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
-    BIND(IRI("@ontologyIri") AS ?ontology)
-    BIND(IRI("@classIri") AS ?class)
-
-    GRAPH ?ontologyNamedGraph {
-        ?ontology rdf:type owl:Ontology ;
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> rdf:type owl:Ontology ;
             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
 
-        ?class rdf:type owl:Class .
-
-        OPTIONAL {
-            ?class rdfs:subClassOf ?restriction .
-            FILTER isBlank(?restriction)
-            ?restriction rdf:type owl:Restriction ;
-                ?restrictionPred ?restrictionObj .
-        }
+        <@classIri> rdf:type owl:Class .
+    }
+};
+DELETE {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
+    }
+} INSERT {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
+    }
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> rdf:type owl:Ontology ;
+            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
     }
 }

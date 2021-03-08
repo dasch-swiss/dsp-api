@@ -1847,9 +1847,329 @@ class OntologyV2R2RSpec extends R2RSpec {
         responseAsInput.properties should ===(paramsAsInput.properties)
 
         // Check that the ontology's last modification date was updated.
-        val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
-        assert(newAnythingLastModDate.isAfter(uselessLastModDate))
-        uselessLastModDate = newAnythingLastModDate
+        val newLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+        assert(newLastModDate.isAfter(uselessLastModDate))
+        uselessLastModDate = newLastModDate
+      }
+    }
+
+    "create a class with several cardinalities, then remove one of the cardinalities" in {
+      // Create a class with no cardinalities.
+
+      val createClassRequestJson =
+        s"""{
+           |  "@id" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$anythingLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:TestClass",
+           |    "@type" : "owl:Class",
+           |    "rdfs:label" : {
+           |      "@language" : "en",
+           |      "@value" : "test class"
+           |    },
+           |    "rdfs:comment" : {
+           |      "@language" : "en",
+           |      "@value" : "A test class"
+           |    },
+           |    "rdfs:subClassOf" : [
+           |      {
+           |        "@id": "knora-api:Resource"
+           |      }
+           |    ]
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+
+      Post("/v2/ontologies/classes", HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJson)) ~> addCredentials(
+        BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+        val responseJsonDoc = responseToJsonLDDocument(response)
+
+        val responseAsInput: InputOntologyV2 =
+          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+
+        anythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+      }
+
+      // Create a text property.
+
+      val createTestTextPropRequestJson =
+        s"""{
+           |  "@id" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$anythingLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |      "@id" : "anything:testTextProp",
+           |      "@type" : "owl:ObjectProperty",
+           |      "knora-api:subjectType" : {
+           |        "@id" : "anything:TestClass"
+           |      },
+           |      "knora-api:objectType" : {
+           |        "@id" : "knora-api:TextValue"
+           |      },
+           |      "rdfs:comment" : {
+           |        "@language" : "en",
+           |        "@value" : "A test text property"
+           |      },
+           |      "rdfs:label" : {
+           |        "@language" : "en",
+           |        "@value" : "test text property"
+           |      },
+					 |      "rdfs:subPropertyOf" : {
+           |        "@id" : "knora-api:hasValue"
+           |      }
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
+           |  }
+           |}""".stripMargin
+
+      Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, createTestTextPropRequestJson)) ~> addCredentials(
+        BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
+        val responseAsInput: InputOntologyV2 =
+          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+        anythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+
+      }
+
+      // Create an integer property.
+
+      val createTestIntegerPropRequestJson =
+        s"""{
+           |  "@id" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$anythingLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |      "@id" : "anything:testIntProp",
+           |      "@type" : "owl:ObjectProperty",
+           |      "knora-api:subjectType" : {
+           |        "@id" : "anything:TestClass"
+           |      },
+           |      "knora-api:objectType" : {
+           |        "@id" : "knora-api:IntValue"
+           |      },
+           |      "rdfs:comment" : {
+           |        "@language" : "en",
+           |        "@value" : "A test int property"
+           |      },
+           |      "rdfs:label" : {
+           |        "@language" : "en",
+           |        "@value" : "test int property"
+           |      },
+           |      "rdfs:subPropertyOf" : {
+           |        "@id" : "knora-api:hasValue"
+           |      }
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
+           |  }
+           |}""".stripMargin
+
+      Post("/v2/ontologies/properties",
+           HttpEntity(RdfMediaTypes.`application/ld+json`, createTestIntegerPropRequestJson)) ~> addCredentials(
+        BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
+        val responseAsInput: InputOntologyV2 =
+          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+        anythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+      }
+
+      // Create a link property.
+
+      val createTestLinkPropRequestJson =
+        s"""{
+           |  "@id" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$anythingLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |      "@id" : "anything:testLinkProp",
+           |      "@type" : "owl:ObjectProperty",
+           |      "knora-api:subjectType" : {
+           |        "@id" : "anything:TestClass"
+           |      },
+           |      "knora-api:objectType" : {
+           |        "@id" : "anything:TestClass"
+           |      },
+           |      "rdfs:comment" : {
+           |        "@language" : "en",
+           |        "@value" : "A test link property"
+           |      },
+           |      "rdfs:label" : {
+           |        "@language" : "en",
+           |        "@value" : "test link property"
+           |      },
+           |      "rdfs:subPropertyOf" : {
+           |        "@id" : "knora-api:hasLinkTo"
+           |      }
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
+           |  }
+           |}""".stripMargin
+
+      Post("/v2/ontologies/properties", HttpEntity(RdfMediaTypes.`application/ld+json`, createTestLinkPropRequestJson)) ~> addCredentials(
+        BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
+        val responseAsInput: InputOntologyV2 =
+          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+        anythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+      }
+
+      // Add cardinalities to the class.
+
+      val addCardinalitiesRequestJson =
+        s"""
+           |{
+           |  "@id" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$anythingLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:TestClass",
+           |    "@type" : "owl:Class",
+           |    "rdfs:subClassOf" : [ {
+           |      "@type": "owl:Restriction",
+           |      "owl:maxCardinality" : 1,
+           |      "owl:onProperty" : {
+           |        "@id" : "anything:testTextProp"
+           |      }
+					 |    },
+					 |    {
+           |      "@type": "owl:Restriction",
+           |      "owl:maxCardinality" : 1,
+           |      "owl:onProperty" : {
+           |        "@id" : "anything:testIntProp"
+           |      }
+					 |    },
+					 |    {
+           |      "@type": "owl:Restriction",
+           |      "owl:maxCardinality" : 1,
+           |      "owl:onProperty" : {
+           |        "@id" : "anything:testLinkProp"
+           |      }
+           |    } ]
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
+           |  }
+           |}
+            """.stripMargin
+
+      Post("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJson)) ~> addCredentials(
+        BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, response.toString)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
+        val responseAsInput: InputOntologyV2 =
+          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+        anythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+      }
+
+      // Remove the link value cardinality from to the class.
+      val params =
+        s"""
+           |{
+           |  "@id" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$anythingLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:TestClass",
+           |    "@type" : "owl:Class",
+           |    "rdfs:subClassOf" : [ {
+           |      "@type": "owl:Restriction",
+           |      "owl:maxCardinality" : 1,
+           |      "owl:onProperty" : {
+           |        "@id" : "anything:testTextProp"
+           |      }
+					 |    },
+           |    {
+           |      "@type": "owl:Restriction",
+           |      "owl:maxCardinality" : 1,
+           |      "owl:onProperty" : {
+           |        "@id" : "anything:testIntProp"
+           |      }
+           |    } ]
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
+           |  }
+           |}
+            """.stripMargin
+
+      Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, response.toString)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
+        val responseAsInput: InputOntologyV2 =
+          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+        anythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
       }
     }
   }
