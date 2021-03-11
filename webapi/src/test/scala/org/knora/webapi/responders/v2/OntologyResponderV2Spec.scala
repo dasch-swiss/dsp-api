@@ -28,6 +28,7 @@ import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
@@ -4688,6 +4689,306 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
           assert(newAnythingLastModDate.isAfter(anythingLastModDate))
           anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
+    "create a class with several cardinalities, then remove one of the cardinalities" in {
+      // Create a class with no cardinalities.
+
+      responderManager ! CreateClassRequestV2(
+        classInfoContent = ClassInfoContentV2(
+          predicates = Map(
+            "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+              objects = Vector(
+                StringLiteralV2(
+                  value = "test class",
+                  language = Some("en")
+                ))
+            ),
+            "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+              objects = Vector(
+                StringLiteralV2(
+                  value = "A test class",
+                  language = Some("en")
+                ))
+            ),
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
+            )
+          ),
+          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri,
+          ontologySchema = ApiV2Complex,
+          subClassOf = Set("http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri)
+        ),
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val newAnythingLastModDate = msg.ontologyMetadata.lastModificationDate
+            .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+
+      // Create a text property.
+
+      responderManager ! CreatePropertyRequestV2(
+        propertyInfoContent = PropertyInfoContentV2(
+          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#testTextProp".toSmartIri,
+          predicates = Map(
+            "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+              objects = Vector(
+                StringLiteralV2(
+                  value = "test text property",
+                  language = Some("en")
+                ))
+            ),
+            "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
+              objects =
+                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
+            ),
+            "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+              objects = Vector(
+                StringLiteralV2(
+                  value = "A test text property",
+                  language = Some("en")
+                ))
+            ),
+            "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
+              objects =
+                Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#TextValue".toSmartIri))
+            ),
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri))
+            )
+          ),
+          subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
+          ontologySchema = ApiV2Complex
+        ),
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val newAnythingLastModDate = msg.ontologyMetadata.lastModificationDate
+            .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+
+      // Create an integer property.
+
+      responderManager ! CreatePropertyRequestV2(
+        propertyInfoContent = PropertyInfoContentV2(
+          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#testIntProp".toSmartIri,
+          predicates = Map(
+            "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+              objects = Vector(
+                StringLiteralV2(
+                  value = "test int property",
+                  language = Some("en")
+                ))
+            ),
+            "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
+              objects =
+                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
+            ),
+            "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+              objects = Vector(
+                StringLiteralV2(
+                  value = "A test int property",
+                  language = Some("en")
+                ))
+            ),
+            "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
+              objects =
+                Vector(SmartIriLiteralV2(value = "http://api.knora.org/ontology/knora-api/v2#IntValue".toSmartIri))
+            ),
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri))
+            )
+          ),
+          subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasValue".toSmartIri),
+          ontologySchema = ApiV2Complex
+        ),
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val newAnythingLastModDate = msg.ontologyMetadata.lastModificationDate
+            .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+
+      // Create a link property.
+
+      responderManager ! CreatePropertyRequestV2(
+        propertyInfoContent = PropertyInfoContentV2(
+          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#testLinkProp".toSmartIri,
+          predicates = Map(
+            "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
+              objects = Vector(
+                StringLiteralV2(
+                  value = "test link property",
+                  language = Some("en")
+                ))
+            ),
+            "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
+              objects =
+                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
+            ),
+            "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
+              objects = Vector(
+                StringLiteralV2(
+                  value = "A test link property",
+                  language = Some("en")
+                ))
+            ),
+            "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
+              objects =
+                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
+            ),
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri))
+            )
+          ),
+          subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasLinkTo".toSmartIri),
+          ontologySchema = ApiV2Complex
+        ),
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val newAnythingLastModDate = msg.ontologyMetadata.lastModificationDate
+            .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+
+      // Add cardinalities to the class.
+
+      responderManager ! AddCardinalitiesToClassRequestV2(
+        classInfoContent = ClassInfoContentV2(
+          predicates = Map(
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
+            )),
+          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri,
+          ontologySchema = ApiV2Complex,
+          directCardinalities = Map(
+            "http://0.0.0.0:3333/ontology/0001/anything/v2#testTextProp".toSmartIri -> KnoraCardinalityInfo(
+              cardinality = Cardinality.MayHaveOne
+            ),
+            "http://0.0.0.0:3333/ontology/0001/anything/v2#testIntProp".toSmartIri -> KnoraCardinalityInfo(
+              cardinality = Cardinality.MayHaveOne
+            ),
+            "http://0.0.0.0:3333/ontology/0001/anything/v2#testLinkProp".toSmartIri -> KnoraCardinalityInfo(
+              cardinality = Cardinality.MayHaveOne
+            )
+          ),
+        ),
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val newAnythingLastModDate = msg.ontologyMetadata.lastModificationDate
+            .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+
+      // Remove the link value cardinality from the class.
+
+      responderManager ! ChangeCardinalitiesRequestV2(
+        classInfoContent = ClassInfoContentV2(
+          predicates = Map(
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
+            )),
+          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri,
+          ontologySchema = ApiV2Complex,
+          directCardinalities = Map(
+            "http://0.0.0.0:3333/ontology/0001/anything/v2#testTextProp".toSmartIri -> KnoraCardinalityInfo(
+              cardinality = Cardinality.MayHaveOne
+            ),
+            "http://0.0.0.0:3333/ontology/0001/anything/v2#testIntProp".toSmartIri -> KnoraCardinalityInfo(
+              cardinality = Cardinality.MayHaveOne
+            )
+          ),
+        ),
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val newAnythingLastModDate = msg.ontologyMetadata.lastModificationDate
+            .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+
+      // Check that the correct blank nodes were stored for the cardinalities.
+
+      storeManager ! SparqlSelectRequest(
+        """PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+          |PREFIX owl: <http://www.w3.org/2002/07/owl#>
+          |
+          |SELECT ?cardinalityProp
+          |WHERE {
+          |  <http://www.knora.org/ontology/0001/anything#TestClass> rdfs:subClassOf ?restriction .
+          |  FILTER isBlank(?restriction)
+          |  ?restriction owl:onProperty ?cardinalityProp .
+          |}""".stripMargin)
+
+      expectMsgPF(timeout) {
+        case msg: SparqlSelectResult =>
+          assert(
+            msg.results.bindings.map(_.rowMap("cardinalityProp")).sorted == Seq(
+              "http://www.knora.org/ontology/0001/anything#testIntProp",
+              "http://www.knora.org/ontology/0001/anything#testTextProp"))
       }
     }
 
