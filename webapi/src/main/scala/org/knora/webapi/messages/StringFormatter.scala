@@ -3245,7 +3245,7 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     */
   def checkExternalOntologyName(iri: SmartIri): Unit = {
     if (iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName)) {
-      throw BadRequestException(s"Invalid IRI: <$iri>")
+      throw BadRequestException(s"Internal ontology <$iri> cannot be served")
     }
   }
 }
