@@ -1,7 +1,6 @@
 package org.knora.webapi.e2e.v2
 
-import java.nio.file.{Path, Paths, Files}
-
+import java.nio.file.{Files, Path, Paths}
 import java.net.URLEncoder
 import java.time.Instant
 
@@ -12,6 +11,7 @@ import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
@@ -49,7 +49,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val ontologiesPath = new OntologiesRouteV2(routeData).knoraApiPath
+  private val ontologiesPath = DSPApiDirectives.handleErrors(system) { new OntologiesRouteV2(routeData).knoraApiPath }
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
@@ -381,6 +381,20 @@ class OntologyV2R2RSpec extends R2RSpec {
             }
           }
         }
+      }
+    }
+
+    "not allow the user to request the knora-base ontology" in {
+      Get("/v2/ontologies/allentities/http%3A%2F%2Fapi.knora.org%2Fontology%2Fknora-base%2Fv2") ~> ontologiesPath ~> check {
+        val responseStr: String = responseAs[String]
+        assert(response.status == StatusCodes.BadRequest, responseStr)
+      }
+    }
+
+    "not allow the user to request the knora-admin ontology" in {
+      Get("/v2/ontologies/allentities/http%3A%2F%2Fapi.knora.org%2Fontology%2Fknora-admin%2Fv2") ~> ontologiesPath ~> check {
+        val responseStr: String = responseAs[String]
+        assert(response.status == StatusCodes.BadRequest, responseStr)
       }
     }
 

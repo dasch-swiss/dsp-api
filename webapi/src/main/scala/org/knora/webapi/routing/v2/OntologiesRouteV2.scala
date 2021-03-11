@@ -94,6 +94,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
           val requestedOntology = requestedOntologyStr.toSmartIriWithErr(
             throw BadRequestException(s"Invalid ontology IRI: $requestedOntologyStr"))
 
+          stringFormatter.checkExternalOntologyName(requestedOntology)
+
           val targetSchema = requestedOntology.getOntologySchema match {
             case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
             case _                              => throw BadRequestException(s"Invalid ontology IRI: $requestedOntologyStr")
@@ -164,7 +166,6 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       put {
         entity(as[String]) { jsonRequest => requestContext =>
           {
-
             val requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
             val requestMessageFuture: Future[ChangeOntologyMetadataRequestV2] = for {
@@ -172,6 +173,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
                 requestContext = requestContext,
                 featureFactoryConfig = featureFactoryConfig
               )
+
               requestMessage: ChangeOntologyMetadataRequestV2 <- ChangeOntologyMetadataRequestV2.fromJsonLD(
                 jsonLDDocument = requestDoc,
                 apiRequestID = UUID.randomUUID,
@@ -209,6 +211,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
               requestContext = requestContext,
               featureFactoryConfig = featureFactoryConfig
             )
+
             validatedProjectIris = projectIris
               .map(iri => iri.toSmartIriWithErr(throw BadRequestException(s"Invalid project IRI: $iri")))
               .toSet
@@ -235,6 +238,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         {
           val requestedOntologyIri = externalOntologyIriStr.toSmartIriWithErr(
             throw BadRequestException(s"Invalid ontology IRI: $externalOntologyIriStr"))
+
+          stringFormatter.checkExternalOntologyName(requestedOntologyIri)
 
           val targetSchema = requestedOntologyIri.getOntologySchema match {
             case Some(apiV2Schema: ApiV2Schema) => apiV2Schema
@@ -278,13 +283,14 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       // Create a new class.
       entity(as[String]) { jsonRequest => requestContext =>
         {
-
           val requestMessageFuture: Future[CreateClassRequestV2] = for {
             requestingUser <- getUserADM(
               requestContext = requestContext,
               featureFactoryConfig = featureFactoryConfig
             )
+
             requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
             requestMessage: CreateClassRequestV2 <- CreateClassRequestV2.fromJsonLD(
               jsonLDDocument = requestDoc,
               apiRequestID = UUID.randomUUID,
@@ -317,13 +323,14 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       // Change the labels or comments of a class.
       entity(as[String]) { jsonRequest => requestContext =>
         {
-
           val requestMessageFuture: Future[ChangeClassLabelsOrCommentsRequestV2] = for {
             requestingUser <- getUserADM(
               requestContext = requestContext,
               featureFactoryConfig = featureFactoryConfig
             )
+
             requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
             requestMessage <- ChangeClassLabelsOrCommentsRequestV2.fromJsonLD(
               jsonLDDocument = requestDoc,
               apiRequestID = UUID.randomUUID,
@@ -357,13 +364,14 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         // Add cardinalities to a class.
         entity(as[String]) { jsonRequest => requestContext =>
           {
-
             val requestMessageFuture: Future[AddCardinalitiesToClassRequestV2] = for {
               requestingUser <- getUserADM(
                 requestContext = requestContext,
                 featureFactoryConfig = featureFactoryConfig
               )
+
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
               requestMessage: AddCardinalitiesToClassRequestV2 <- AddCardinalitiesToClassRequestV2.fromJsonLD(
                 jsonLDDocument = requestDoc,
                 apiRequestID = UUID.randomUUID,
@@ -397,13 +405,14 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         // Change a class's cardinalities.
         entity(as[String]) { jsonRequest => requestContext =>
           {
-
             val requestMessageFuture: Future[ChangeCardinalitiesRequestV2] = for {
               requestingUser <- getUserADM(
                 requestContext = requestContext,
                 featureFactoryConfig = featureFactoryConfig
               )
+
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
               requestMessage: ChangeCardinalitiesRequestV2 <- ChangeCardinalitiesRequestV2.fromJsonLD(
                 jsonLDDocument = requestDoc,
                 apiRequestID = UUID.randomUUID,
@@ -435,10 +444,11 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     path(OntologiesBasePath / "classes" / Segments) { externalResourceClassIris: List[IRI] =>
       get { requestContext =>
         {
-
           val classesAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalResourceClassIris.map { classIriStr: IRI =>
             val requestedClassIri: SmartIri =
               classIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid class IRI: $classIriStr"))
+
+            stringFormatter.checkExternalOntologyName(requestedClassIri)
 
             if (!requestedClassIri.isKnoraApiV2EntityIri) {
               throw BadRequestException(s"Invalid class IRI: $classIriStr")
@@ -509,6 +519,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
           }
 
           val classIri = classIriStr.toSmartIri
+          stringFormatter.checkExternalOntologyName(classIri)
 
           if (!classIri.getOntologySchema.contains(ApiV2Complex)) {
             throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
@@ -604,13 +615,14 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         // Create a new property.
         entity(as[String]) { jsonRequest => requestContext =>
           {
-
             val requestMessageFuture: Future[CreatePropertyRequestV2] = for {
               requestingUser <- getUserADM(
                 requestContext = requestContext,
                 featureFactoryConfig = featureFactoryConfig
               )
+
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
               requestMessage: CreatePropertyRequestV2 <- CreatePropertyRequestV2.fromJsonLD(
                 jsonLDDocument = requestDoc,
                 apiRequestID = UUID.randomUUID,
@@ -644,13 +656,14 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
         // Change the labels or comments of a property.
         entity(as[String]) { jsonRequest => requestContext =>
           {
-
             val requestMessageFuture: Future[ChangePropertyLabelsOrCommentsRequestV2] = for {
               requestingUser <- getUserADM(
                 requestContext = requestContext,
                 featureFactoryConfig = featureFactoryConfig
               )
+
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
               requestMessage: ChangePropertyLabelsOrCommentsRequestV2 <- ChangePropertyLabelsOrCommentsRequestV2
                 .fromJsonLD(
                   jsonLDDocument = requestDoc,
@@ -683,10 +696,11 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     path(OntologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
       get { requestContext =>
         {
-
           val propsAndSchemas: Set[(SmartIri, ApiV2Schema)] = externalPropertyIris.map { propIriStr: IRI =>
             val requestedPropIri: SmartIri =
               propIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid property IRI: $propIriStr"))
+
+            stringFormatter.checkExternalOntologyName(requestedPropIri)
 
             if (!requestedPropIri.isKnoraApiV2EntityIri) {
               throw BadRequestException(s"Invalid property IRI: $propIriStr")
@@ -750,13 +764,13 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     path(OntologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
       delete { requestContext =>
         {
-
           val propertyIriStr = externalPropertyIris match {
             case List(str) => str
             case _         => throw BadRequestException(s"Only one property can be deleted at a time")
           }
 
           val propertyIri = propertyIriStr.toSmartIri
+          stringFormatter.checkExternalOntologyName(propertyIri)
 
           if (!propertyIri.getOntologySchema.contains(ApiV2Complex)) {
             throw BadRequestException(s"Invalid property IRI for request: $propertyIri")
@@ -803,13 +817,14 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     post {
       entity(as[String]) { jsonRequest => requestContext =>
         {
-
           val requestMessageFuture: Future[CreateOntologyRequestV2] = for {
             requestingUser <- getUserADM(
               requestContext = requestContext,
               featureFactoryConfig = featureFactoryConfig
             )
+
             requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
             requestMessage: CreateOntologyRequestV2 <- CreateOntologyRequestV2.fromJsonLD(
               jsonLDDocument = requestDoc,
               apiRequestID = UUID.randomUUID,
@@ -841,8 +856,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     ontologyIriStr =>
       delete { requestContext =>
         {
-
           val ontologyIri = ontologyIriStr.toSmartIri
+          stringFormatter.checkExternalOntologyName(ontologyIri)
 
           if (!ontologyIri.isKnoraOntologyIri || ontologyIri.isKnoraBuiltInDefinitionIri || !ontologyIri.getOntologySchema
                 .contains(ApiV2Complex)) {
