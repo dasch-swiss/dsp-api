@@ -174,6 +174,79 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       fooLastModDate = newFooLastModDate
     }
 
+    "change both the label and the comment of the 'foo' ontology" in {
+      val aLabel = "a changed label"
+      val aComment = "a changed comment"
+
+      responderManager ! ChangeOntologyMetadataRequestV2(
+        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        label = Some(aLabel),
+        comment = Some(aComment),
+        lastModificationDate = fooLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = imagesUser
+      )
+
+      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+      assert(response.ontologies.size == 1)
+      val metadata = response.ontologies.head
+      assert(metadata.ontologyIri == fooIri.get.toSmartIri)
+      assert(metadata.label.contains(aLabel))
+      assert(metadata.comment.contains(aComment))
+      val newFooLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+      assert(newFooLastModDate.isAfter(fooLastModDate))
+      fooLastModDate = newFooLastModDate
+    }
+
+    "change the label of 'foo' again" in {
+      val newLabel = "a label changed again"
+
+      responderManager ! ChangeOntologyMetadataRequestV2(
+        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        label = Some(newLabel),
+        lastModificationDate = fooLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = imagesUser
+      )
+
+      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+      assert(response.ontologies.size == 1)
+      val metadata = response.ontologies.head
+      assert(metadata.ontologyIri == fooIri.get.toSmartIri)
+      assert(metadata.label.contains(newLabel))
+      assert(metadata.comment.contains("a changed comment"))
+      val newFooLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+      assert(newFooLastModDate.isAfter(fooLastModDate))
+      fooLastModDate = newFooLastModDate
+    }
+
+    "delete the comment from 'foo'" in {
+      val newLabel = "a label changed again"
+
+      responderManager ! DeleteOntologyCommentRequestV2(
+        ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
+        lastModificationDate = fooLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = imagesUser
+      )
+
+      val response = expectMsgType[ReadOntologyMetadataV2](timeout)
+      assert(response.ontologies.size == 1)
+      val metadata = response.ontologies.head
+      assert(metadata.ontologyIri == fooIri.get.toSmartIri)
+      assert(metadata.label.contains("a label changed again"))
+      assert(metadata.comment.isEmpty)
+      val newFooLastModDate = metadata.lastModificationDate.getOrElse(
+        throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+      assert(newFooLastModDate.isAfter(fooLastModDate))
+      fooLastModDate = newFooLastModDate
+    }
+
     "create an empty ontology called 'bar' with a comment" in {
       responderManager ! CreateOntologyRequestV2(
         ontologyName = "bar",

@@ -561,6 +561,31 @@ class OntologyV2R2RSpec extends R2RSpec {
       }
     }
 
+    "delete the comment from 'foo'" in {
+      val fooIriEncoded = URLEncoder.encode(fooIri.get, "UTF-8")
+      val lastModificationDate = URLEncoder.encode(fooLastModDate.toString, "UTF-8")
+
+      Delete(s"/v2/ontologies/comment/$fooIriEncoded?lastModificationDate=$lastModificationDate") ~> addCredentials(
+        BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+        val responseJsonDoc = responseToJsonLDDocument(response)
+        val metadata = responseJsonDoc.body
+        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
+        assert(ontologyIri == fooIri.get)
+        assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString("The modified foo ontology"))
+        assert(!metadata.value.contains(OntologyConstants.Rdfs.Comment))
+
+        val lastModDate = metadata.requireDatatypeValueInObject(
+          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+          validationFun = stringFormatter.xsdDateTimeStampToInstant
+        )
+
+        assert(lastModDate.isAfter(fooLastModDate))
+        fooLastModDate = lastModDate
+      }
+    }
+
     "delete the 'foo' ontology" in {
       val fooIriEncoded = URLEncoder.encode(fooIri.get, "UTF-8")
       val lastModificationDate = URLEncoder.encode(fooLastModDate.toString, "UTF-8")

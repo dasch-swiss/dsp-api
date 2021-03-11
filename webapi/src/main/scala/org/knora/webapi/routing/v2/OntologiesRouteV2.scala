@@ -63,6 +63,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       replaceCardinalities(featureFactoryConfig) ~
       getClasses(featureFactoryConfig) ~
       deleteClass(featureFactoryConfig) ~
+      deleteOntologyComment(featureFactoryConfig) ~
       createProperty(featureFactoryConfig) ~
       updateProperty(featureFactoryConfig) ~
       getProperties(featureFactoryConfig) ~
@@ -540,6 +541,54 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
           } yield
             DeleteClassRequestV2(
               classIri = classIri,
+              lastModificationDate = lastModificationDate,
+              apiRequestID = UUID.randomUUID,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser
+            )
+
+          RouteUtilV2.runRdfRouteWithFuture(
+            requestMessageF = requestMessageFuture,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log,
+            targetSchema = ApiV2Complex,
+            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+          )
+        }
+      }
+    }
+
+  private def deleteOntologyComment(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(OntologiesBasePath / "comment" / Segment) { ontologyIriStr: IRI =>
+      delete { requestContext =>
+        {
+
+          val ontologyIri = ontologyIriStr.toSmartIri
+
+          if (!ontologyIri.getOntologySchema.contains(ApiV2Complex)) {
+            throw BadRequestException(s"Invalid class IRI for request: $ontologyIriStr")
+          }
+
+          val lastModificationDateStr = requestContext.request.uri
+            .query()
+            .toMap
+            .getOrElse(LAST_MODIFICATION_DATE, throw BadRequestException(s"Missing parameter: $LAST_MODIFICATION_DATE"))
+
+          val lastModificationDate = stringFormatter.xsdDateTimeStampToInstant(
+            lastModificationDateStr,
+            throw BadRequestException(s"Invalid timestamp: $lastModificationDateStr"))
+
+          val requestMessageFuture: Future[DeleteOntologyCommentRequestV2] = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield
+            DeleteOntologyCommentRequestV2(
+              ontologyIri = ontologyIri,
               lastModificationDate = lastModificationDate,
               apiRequestID = UUID.randomUUID,
               featureFactoryConfig = featureFactoryConfig,
