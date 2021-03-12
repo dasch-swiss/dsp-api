@@ -19,8 +19,10 @@
 
 package org.knora.webapi.responders.v2
 
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi.IRI
+import org.knora.webapi.exceptions.NotFoundException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
@@ -55,8 +57,7 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
 
     // collect the Iris of the mappings referred to in the resources' text values
     val mappingIris: Set[IRI] = queryResultsSeparated.flatMap {
-      case (resourceIri: IRI, assertions: ResourceWithValueRdfData) =>
-        println(s"********* Getting standoff mappings for resource $resourceIri")
+      case (_, assertions: ResourceWithValueRdfData) =>
         ConstructResponseUtilV2.getMappingIrisFromValuePropertyAssertions(assertions.valuePropertyAssertions)
     }.toSet
 
@@ -80,18 +81,22 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
           for {
             // if given, get the default XSL transformation
             xsltOption: Option[String] <- if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
-              println(
-                s"******* Getting default XSL transformation ${mapping.mapping.defaultXSLTransformation.get} for mapping ${mapping.mappingIri}")
-
-              for {
+              val xslTransformationFuture = for {
                 xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(
                   mapping.mapping.defaultXSLTransformation.get,
                   featureFactoryConfig = featureFactoryConfig,
                   requestingUser = requestingUser
                 )).mapTo[GetXSLTransformationResponseV2]
               } yield Some(xslTransformation.xslt)
+
+              xslTransformationFuture.recover {
+                case _: NotFoundException =>
+                  throw NotFoundException(
+                    s"Default XSL transformation <${mapping.mapping.defaultXSLTransformation.get}> not found for mapping <${mapping.mappingIri}>")
+                case other => throw other
+              }
             } else {
-              Future(None)
+              FastFuture.successful(None)
             }
           } yield
             mapping.mappingIri -> MappingAndXSLTransformation(mapping = mapping.mapping,

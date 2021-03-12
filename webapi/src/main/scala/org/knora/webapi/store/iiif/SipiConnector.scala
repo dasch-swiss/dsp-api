@@ -221,13 +221,23 @@ class SipiConnector extends Actor with ActorLogging {
     } yield SipiGetTextFileResponse(responseStr)
 
     sipiResponseTry.recover {
+      case notFoundException: NotFoundException =>
+        throw NotFoundException(
+          s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${notFoundException.message}")
+
       case badRequestException: BadRequestException =>
         throw SipiException(
           s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${badRequestException.message}")
+
       case sipiException: SipiException =>
         throw SipiException(
           s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${sipiException.message}",
           sipiException.cause
+        )
+
+      case other =>
+        throw SipiException(
+          s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${other.getMessage}"
         )
     }
   }
