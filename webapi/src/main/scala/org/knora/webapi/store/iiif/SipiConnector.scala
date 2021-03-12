@@ -31,7 +31,7 @@ import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
-import org.knora.webapi.exceptions.{BadRequestException, SipiException}
+import org.knora.webapi.exceptions.{BadRequestException, NotFoundException, SipiException}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -254,45 +254,45 @@ class SipiConnector extends Actor with ActorLogging {
     */
   private def doSipiRequest(request: HttpRequest): Try[String] = {
     val httpContext: HttpClientContext = HttpClientContext.create
+    var maybeResponse: Option[CloseableHttpResponse] = None
 
     val sipiResponseTry = Try {
-      var maybeResponse: Option[CloseableHttpResponse] = None
+      maybeResponse = Some(httpClient.execute(targetHost, request, httpContext))
 
-      try {
-        maybeResponse = Some(httpClient.execute(targetHost, request, httpContext))
+      val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
+        case Some(responseEntity) => EntityUtils.toString(responseEntity)
+        case None                 => ""
+      }
 
-        val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
-          case Some(responseEntity) => EntityUtils.toString(responseEntity)
-          case None                 => ""
-        }
+      val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
+      val statusCategory: Int = statusCode / 100
 
-        val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
-        val statusCategory: Int = statusCode / 100
+      // Was the request successful?
+      if (statusCategory == 2) {
+        // Yes.
+        responseEntityStr
+      } else {
+        // No. Throw an appropriate exception.
+        val sipiErrorMsg = SipiUtil.getSipiErrorMessage(responseEntityStr)
 
-        // Was the request successful?
-        if (statusCategory == 2) {
-          // Yes.
-          responseEntityStr
+        if (statusCode == 404) {
+          throw NotFoundException(sipiErrorMsg)
+        } else if (statusCategory == 4) {
+          throw BadRequestException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
         } else {
-          // No. Throw an appropriate exception.
-          val sipiErrorMsg = SipiUtil.getSipiErrorMessage(responseEntityStr)
-
-          if (statusCategory == 4) {
-            throw BadRequestException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
-          } else {
-            throw SipiException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
-          }
-        }
-      } finally {
-        maybeResponse match {
-          case Some(response) => response.close()
-          case None           => ()
+          throw SipiException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
         }
       }
     }
 
+    maybeResponse match {
+      case Some(response) => response.close()
+      case None           => ()
+    }
+
     sipiResponseTry.recover {
       case badRequestException: BadRequestException => throw badRequestException
+      case notFoundException: NotFoundException     => throw notFoundException
       case sipiException: SipiException             => throw sipiException
       case e: Exception                             => throw SipiException("Failed to connect to Sipi", e, log)
     }
