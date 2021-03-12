@@ -90,9 +90,9 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
               } yield Some(xslTransformation.xslt)
 
               xslTransformationFuture.recover {
-                case _: NotFoundException =>
+                case notFound: NotFoundException =>
                   throw NotFoundException(
-                    s"Default XSL transformation <${mapping.mapping.defaultXSLTransformation.get}> not found for mapping <${mapping.mappingIri}>")
+                    s"Default XSL transformation <${mapping.mapping.defaultXSLTransformation.get}> not found for mapping <${mapping.mappingIri}>: ${notFound.message}")
                 case other => throw other
               }
             } else {
