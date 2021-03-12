@@ -55,7 +55,8 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
 
     // collect the Iris of the mappings referred to in the resources' text values
     val mappingIris: Set[IRI] = queryResultsSeparated.flatMap {
-      case (_, assertions: ResourceWithValueRdfData) =>
+      case (resourceIri: IRI, assertions: ResourceWithValueRdfData) =>
+        println(s"********* Getting standoff mappings for resource $resourceIri")
         ConstructResponseUtilV2.getMappingIrisFromValuePropertyAssertions(assertions.valuePropertyAssertions)
     }.toSet
 
@@ -79,6 +80,9 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
           for {
             // if given, get the default XSL transformation
             xsltOption: Option[String] <- if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
+              println(
+                s"******* Getting default XSL transformation ${mapping.mapping.defaultXSLTransformation.get} for mapping ${mapping.mappingIri}")
+
               for {
                 xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(
                   mapping.mapping.defaultXSLTransformation.get,
