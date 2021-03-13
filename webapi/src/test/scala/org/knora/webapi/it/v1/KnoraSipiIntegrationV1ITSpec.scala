@@ -729,7 +729,7 @@ class KnoraSipiIntegrationV1ITSpec
         Await.result(response.entity.toStrict(2.seconds).map(_.data.decodeString("UTF-8")), 2.seconds)
       assert(responseBodyStr.contains("Unable to get file"))
       assert(responseBodyStr.contains("as requested by org.knora.webapi.responders.v2.StandoffResponderV2"))
-      assert(responseBodyStr.contains("Sipi responded with HTTP status code 404"))
+      assert(responseBodyStr.contains("Not Found"))
     }
 
     "create a resource with a PDF file attached" in {
