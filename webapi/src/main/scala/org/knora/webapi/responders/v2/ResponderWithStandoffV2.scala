@@ -19,8 +19,10 @@
 
 package org.knora.webapi.responders.v2
 
+import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi.IRI
+import org.knora.webapi.exceptions.{NotFoundException, SipiException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.util.ConstructResponseUtilV2.{MappingAndXSLTransformation, ResourceWithValueRdfData}
@@ -79,15 +81,23 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
           for {
             // if given, get the default XSL transformation
             xsltOption: Option[String] <- if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
-              for {
+              val xslTransformationFuture = for {
                 xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(
                   mapping.mapping.defaultXSLTransformation.get,
                   featureFactoryConfig = featureFactoryConfig,
                   requestingUser = requestingUser
                 )).mapTo[GetXSLTransformationResponseV2]
               } yield Some(xslTransformation.xslt)
+
+              xslTransformationFuture.recover {
+                case notFound: NotFoundException =>
+                  throw SipiException(
+                    s"Default XSL transformation <${mapping.mapping.defaultXSLTransformation.get}> not found for mapping <${mapping.mappingIri}>: ${notFound.message}")
+
+                case other => throw other
+              }
             } else {
-              Future(None)
+              FastFuture.successful(None)
             }
           } yield
             mapping.mappingIri -> MappingAndXSLTransformation(mapping = mapping.mapping,
