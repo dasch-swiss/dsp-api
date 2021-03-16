@@ -3340,16 +3340,17 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
   }
 
   /**
-    * Undoes the SPARQL-escaping of the `rdfs:label` of this ontology. This method is meant to be used in tests after an update, when the
+    * Undoes the SPARQL-escaping of the `rdfs:label` and `rdfs:comment` of this ontology. This method is meant to be used in tests after an update, when the
     * input (which has been escaped for use in SPARQL) needs to be compared with the updated data
     * read back from the triplestore (which is not escaped).
     *
-    * @return a copy of this [[OntologyMetadataV2]] with the `rdfs:label` unescaped.
+    * @return a copy of this [[OntologyMetadataV2]] with the `rdfs:label` and `rdfs:comment` unescaped.
     */
   def unescape: OntologyMetadataV2 = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    copy(label = label.map(stringFormatter.fromSparqlEncodedString))
+    copy(label = label.map(stringFormatter.fromSparqlEncodedString),
+         comment = comment.map(stringFormatter.fromSparqlEncodedString))
   }
 
   def toJsonLD(targetSchema: ApiV2Schema): Map[String, JsonLDValue] = {

@@ -302,7 +302,9 @@ class OntologyV2R2RSpec extends R2RSpec {
   )
 
   private val fooIri = new MutableTestIri
+  private val barIri = new MutableTestIri
   private var fooLastModDate: Instant = Instant.now
+  private var barLastModDate: Instant = Instant.now
 
   private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
 
@@ -494,7 +496,16 @@ class OntologyV2R2RSpec extends R2RSpec {
         val metadata = responseJsonDoc.body
         val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
         assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/bar/v2")
-        assert(metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(comment))
+        assert(
+          metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
+            stringFormatter.fromSparqlEncodedString(comment)))
+        barIri.set(ontologyIri)
+        val lastModDate = metadata.requireDatatypeValueInObject(
+          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+          validationFun = stringFormatter.xsdDateTimeStampToInstant
+        )
+        barLastModDate = lastModDate
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -506,6 +517,38 @@ class OntologyV2R2RSpec extends R2RSpec {
             text = responseStr
           )
         )
+      }
+    }
+
+    "create an empty ontology called 'test' with a comment that has a special character" in {
+      val label = "The test ontology"
+      val comment = "some \\\"test\\\" comment"
+
+      val params =
+        s"""{
+           |    "knora-api:ontologyName": "test",
+           |    "knora-api:attachedToProject": {
+           |      "@id": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}"
+           |    },
+           |    "rdfs:label": "$label",
+           |    "rdfs:comment": "$comment",
+           |    "@context": {
+           |        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+           |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+           |    }
+           |}""".stripMargin
+
+      Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+        val metadata = responseJsonDoc.body
+        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
+        assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/test/v2")
+        assert(
+          metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
+            stringFormatter.fromSparqlEncodedString(comment)))
       }
     }
 
@@ -558,6 +601,46 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         assert(lastModDate.isAfter(fooLastModDate))
         fooLastModDate = lastModDate
+      }
+    }
+
+    "change the metadata of 'bar' ontology giving a comment containing a special character" in {
+      val newComment = "a \\\"new\\\" comment"
+
+      val params =
+        s"""{
+           |  "@id": "${barIri.get}",
+           |  "rdfs:comment": "$newComment",
+           |  "knora-api:lastModificationDate": {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$barLastModDate"
+           |  },
+           |  "@context": {
+           |    "xsd" :  "http://www.w3.org/2001/XMLSchema#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
+           |  }
+           |}""".stripMargin
+
+      Put("/v2/ontologies/metadata", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+        val responseJsonDoc = responseToJsonLDDocument(response)
+        val metadata = responseJsonDoc.body
+        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
+        assert(ontologyIri == barIri.get)
+        assert(
+          metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
+            stringFormatter.fromSparqlEncodedString(newComment)))
+
+        val lastModDate = metadata.requireDatatypeValueInObject(
+          key = OntologyConstants.KnoraApiV2Complex.LastModificationDate,
+          expectedDatatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri,
+          validationFun = stringFormatter.xsdDateTimeStampToInstant
+        )
+
+        assert(lastModDate.isAfter(barLastModDate))
+        barLastModDate = lastModDate
       }
     }
 
