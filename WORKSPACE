@@ -13,8 +13,8 @@ http_archive(
 )
 
 # download rules_scala repository
-rules_scala_version="8866f55712b30bbb96335cc11bc5ae5aad5cf8d4" # 18.11.2020
-rules_scala_version_sha256="cdc13aba7f0f89ae52c9c50394a10f24ac0e18923108598ac9dafce5be6a789a"
+rules_scala_version="5df8033f752be64fbe2cedfd1bdbad56e2033b15" # 13.01.2020
+rules_scala_version_sha256="b7fa29db72408a972e6b6685d1bc17465b3108b620cb56d9b1700cf6f70f624a"
 http_archive(
     name = "io_bazel_rules_scala",
     strip_prefix = "rules_scala-%s" % rules_scala_version,
@@ -32,7 +32,10 @@ scala_config(scala_version = "2.12.11")
 # register default and our custom scala toolchain
 load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
 scala_register_toolchains()
-register_toolchains("//toolchains:dsp_api_scala_toolchain")
+register_toolchains(
+    "//toolchains:dsp_api_scala_toolchain",
+    "//toolchains:dsp_api_proto_toolchain"
+)
 
 # needed by rules_scala
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
@@ -44,46 +47,26 @@ scalatest_repositories()
 scalatest_toolchain()
 
 #
-# Download the protobuf repository (needed by go and rules_scala_annex)
+# rules_proto defines abstract rules for building Protocol Buffers.
 #
-protobuf_tag = "3.12.3"
-protobuf_sha256 = "e5265d552e12c1f39c72842fa91d84941726026fa056d914ea6a25cd58d7bbf8"
+rules_proto_version = "84ba6ec814eebbf5312b2cc029256097ae0042c3"
+rules_proto_version_sha256 = "3bce0e2fcf502619119c7cac03613fb52ce3034b2159dd3ae9d35f7339558aa3"
 http_archive(
-    name = "com_google_protobuf",
-    strip_prefix = "protobuf-{}".format(protobuf_tag),
-    type = "zip",
-    url = "https://github.com/protocolbuffers/protobuf/archive/v{}.zip".format(protobuf_tag),
-    sha256 = protobuf_sha256,
+    name = "rules_proto",
+    strip_prefix = "rules_proto-%s" % rules_proto_version,
+    url = "https://github.com/bazelbuild/rules_proto/archive/%s.tar.gz" % rules_proto_version,
+    sha256 = rules_proto_version_sha256,
 )
 
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-protobuf_deps()
+# Recursively import rules_proto rules' dependencies and toolchains
+load("@rules_proto//proto:repositories.bzl", "rules_proto_dependencies", "rules_proto_toolchains")
+rules_proto_dependencies()
+rules_proto_toolchains()
 
 
-#
-# download rules_webtesting (for browser tests of salsah1)
-#
-rules_webtesting_release = "0.3.3"
-rules_webtesting_release_sha256 = "9bb461d5ef08e850025480bab185fd269242d4e533bca75bfb748001ceb343c3"
-http_archive(
-    name = "io_bazel_rules_webtesting",
-    sha256 = rules_webtesting_release_sha256,
-    urls = [
-        "https://github.com/bazelbuild/rules_webtesting/releases/download/%s/rules_webtesting.tar.gz" % rules_webtesting_release,
-    ],
-)
+load("@io_bazel_rules_scala//scala_proto:scala_proto.bzl", "scala_proto_repositories")
+scala_proto_repositories() # or whatever scala_version you're on
 
-load("@io_bazel_rules_webtesting//web:repositories.bzl", "web_test_repositories")
-
-web_test_repositories()
-
-load("@io_bazel_rules_webtesting//web/versioned:browsers-0.3.2.bzl", "browser_repositories")
-
-browser_repositories(chromium=True, firefox=True)
-
-load("@io_bazel_rules_webtesting//web:java_repositories.bzl", "java_repositories")
-
-java_repositories()
 
 #
 # download rules_jvm_external used for maven dependency resolution
