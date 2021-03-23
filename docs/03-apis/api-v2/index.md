@@ -32,5 +32,3 @@ License along with DSP.  If not, see <http://www.gnu.org/licenses/>.
 - [Querying, Creating, and Updating Ontologies](ontology-information.md)
 - [TEI/XML](tei-xml.md)
 - [Permalinks](permalinks.md)
-
-@@@
