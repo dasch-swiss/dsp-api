@@ -1,6 +1,7 @@
 syntax = "proto3";
 
-package proto; // Requried to generate valid code.
+package proto; // Required to generate valid code.
+option java_package = "proto";
 
 // Always import protos with a full path relative to the WORKSPACE file.
 import "proto/address.proto";
@@ -14,5 +15,5 @@ message Person {
   int32 id = 2;
   string email = 3;
   Address address = 4;
-  google.protobuf.Any favorite_thing = 5;
+  string favorite_thing = 5;
 }

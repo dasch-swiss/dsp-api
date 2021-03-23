@@ -1,6 +1,7 @@
 syntax = "proto3";
 
-package proto; // Requried to generate valid code.
+package proto; // Required to generate valid code.
+option java_package = "proto";
 
 message ZipCode {
   string code = 1;

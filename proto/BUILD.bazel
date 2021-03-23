@@ -1,15 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala_proto:scala_proto.bzl", "scala_proto_library")
 load("@rules_proto//proto:defs.bzl", "proto_library")
-
-# Convention:
-# A scala_proto_library that wraps a proto_library named foo_proto
-# should be called foo_scala_proto.
-scala_proto_library(
-    name = "person_scala_proto",
-    deps = [":person_proto"],
-)
+load("@io_bazel_rules_scala//scala_proto:scala_proto.bzl", "scala_proto_library")
 
 # Conventions:
 # 1. One proto_library rule per .proto file.
@@ -28,13 +20,39 @@ proto_library(
     ],
 )
 
+# Convention:
+# A scala_proto_library that wraps a proto_library named foo_proto
+# should be called foo_scala_proto.
+scala_proto_library(
+    name = "person_scala_proto",
+    deps = [
+        ":person_proto"
+    ],
+)
+
 proto_library(
     name = "address_proto",
     srcs = ["address.proto"],
-    deps = [":zip_code_proto"],
+    deps = [
+        ":zip_code_proto"
+    ],
+)
+
+scala_proto_library(
+    name = "address_scala_proto",
+    deps = [
+        ":address_proto"
+    ],
 )
 
 proto_library(
     name = "zip_code_proto",
     srcs = ["zip_code.proto"],
+)
+
+scala_proto_library(
+    name = "zip_code_scala_proto",
+    deps = [
+        ":zip_code_proto"
+    ],
 )

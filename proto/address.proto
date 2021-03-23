@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package proto; // Requried to generate valid code.
+package proto; // Required to generate valid code.
 
 // Always import protos with a full path relative to the WORKSPACE file.
 import "proto/zip_code.proto";
