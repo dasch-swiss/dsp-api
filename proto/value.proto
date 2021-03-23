@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package proto;
+
+message ReadValue {
+  string id =1 ;
+}
