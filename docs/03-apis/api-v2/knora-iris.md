@@ -69,7 +69,7 @@ http://www.knora.org/ontology/0001/example
 
 An ontology name must be a valid XML
 [NCName](https://www.w3.org/TR/xml-names/#NT-NCName).
-The following names are reserved for built-in internal Knora ontologies:
+The following names are reserved for built-in internal DSP ontologies:
 
   - `knora-base`
   - `standoff`
@@ -122,7 +122,7 @@ but also an API 'schema'. The DSP-API v2 is available in two schemas:
     objects. Its version identifier is `v2`.
   - A simple schema, which is suitable for reading data but not for
     editing it. The simple schema facilitates interoperability between
-    Knora ontologies and non-Knora ontologies, since it represents
+    DSP ontologies and non-DSP ontologies, since it represents
     values primarily as literals. Its version identifier is `simple/v2`.
 
 Other schemas could be added in the future for more specific use cases.
@@ -153,7 +153,7 @@ schema being used:
 
 ### Ontology Entity IRIs
 
-Knora ontologies use 'hash namespaces' (see [URI
+DSP ontologies use 'hash namespaces' (see [URI
 Namespaces](https://www.w3.org/2001/sw/BestPractices/VM/http-examples/2006-01-18/#naming)).
 This means that the IRI of an ontology entity (a class or property
 definition) is constructed by adding a hash character (`#`) to the

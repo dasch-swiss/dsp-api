@@ -22,11 +22,11 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 ## Overview
 
 The Knora base ontology is the main built-in Knora ontology. Each
-project that uses Knora must describe its data model by creating
+project that uses DSP-API must describe its data model by creating
 ontologies that extend this ontology.
 
 The Knora base ontology is identified by the IRI
-`http://www.knora.org/ontology/knora-base`. In the Knora documentation
+`http://www.knora.org/ontology/knora-base`. In the DSP-API documentation
 in general, it is identified by the prefix `knora-base`, but for
 brevity, in this document, we use `kb` or omit the prefix entirely.
 

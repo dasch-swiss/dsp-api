@@ -19,7 +19,7 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Introduction
 
-* [What Is Knora?](what-is-knora.md)
-* [Data Formats in Knora](data-formats.md)
+* [What Is DSP and DSP-API (previous Knora)?](what-is-knora.md)
+* [Data Formats in DSP-API](data-formats.md)
 * [Standoff/RDF Text Markup](standoff-rdf.md)
 * [An Example Project](example-project.md)

@@ -23,6 +23,6 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 * [The Knora Base Ontology](knora-base.md)
 * [The SALSAH GUI Ontology](salsah-gui.md)
 
-The Knora ontologies provide a generic framework for describing humanities
+The DSP ontologies provide a generic framework for describing humanities
 research data, allowing data from different projects to be combined, augmented,
 and reused.

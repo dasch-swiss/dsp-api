@@ -21,7 +21,7 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 * [DSP Ontologies](02-knora-ontologies/index.md)
 * [DSP APIs](03-apis/index.md)
 * [Publishing and Deployment](04-publishing-deployment/index.md)
-* [DSP Internals](05-internals/design/principles/index.md)
+* [DSP-API Internals](05-internals/design/principles/index.md)
 * [Sipi](07-sipi/index.md)
 * [Lucene](08-lucene/index.md)
 * [Frequently Asked Questions](faq/index.md)

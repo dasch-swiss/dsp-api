@@ -62,7 +62,7 @@ affect other ontologies or data that are based on it. See
 [Shared Ontologies](../02-knora-ontologies/introduction.md#shared-ontologies) for details.
 
 There will be a standardisation process for shared ontologies
-(issue [#523](https://github.com/dasch-swiss/knora-api/issues/523)).
+(issue [#523](https://github.com/dasch-swiss/dsp-api/issues/523)).
 
 ### Why doesn't Knora use `rdfs:domain` and `rdfs:range` for consistency checking?
 

@@ -99,12 +99,12 @@ schema, with one exception (see [Date Comparisons](#date-comparisons)).
 Gravsearch query results can be requested in the simple or complex schema;
 see [API Schema](introduction.md#api-schema).
 
-All examples hereafter run with Knora started locally as documented in the section [Getting Started with Knora](../../04-publishing-deployment/getting-started.md). If you access another Knora-Stack, you can check the IRI of the ontology you are targeting by requesting the [ontologies metadata](ontology-information.md#querying-ontology-metadata).
+All examples hereafter run with Knora started locally as documented in the section [Getting Started with DSP-API](../../04-publishing-deployment/getting-started.md). If you access another Knora-Stack, you can check the IRI of the ontology you are targeting by requesting the [ontologies metadata](ontology-information.md#querying-ontology-metadata).
 
 ### Using the Simple Schema
 
 To write a query in the simple schema, use the `knora-api` ontology in
-the simple schema, and use the simple schema for any other Knora ontologies
+the simple schema, and use the simple schema for any other DSP ontologies
 the query refers to, e.g.:
 
 ```
@@ -119,7 +119,7 @@ can be used `FILTER` expressions
 ### Using the Complex Schema
 
 To write a query in the complex schema, use the `knora-api` ontology in
-the complex schema, and use the complex schema for any other Knora ontologies
+the complex schema, and use the complex schema for any other DSP ontologies
 the query refers to, e.g.:
 
 ```

@@ -82,7 +82,7 @@ same entity is used in more than one place, it is inlined only once, and other
 uses just refer to its IRI. In Knora's flat JSON-LD, all entities with IRIs are located
 at the top level of the document (in a `@graph` if there is more than one of them).
 This setting does not affect blank nodes, which are always inlined (unlike in standard
-flat JSON-LD). Knora ontologies are always returned in the `flat` rendering; other kinds
+flat JSON-LD). DSP ontologies are always returned in the `flat` rendering; other kinds
 of responses default to `hierarchical`. To use this setting, submit the HTTP header
 `X-Knora-JSON-LD-Rendering` with the value `hierarchical` or `flat`.
 

@@ -54,7 +54,7 @@ it to `org.knora.webapi.store.triplestore.upgrade.RepositoryUpdater`.
 4. Read the N-Quads file into an `RdfModel`.
 
 5. Update the `RdfModel` by running the necessary transformations, and replacing the
-   built-in Knora ontologies with the current ones.
+   built-in DSP ontologies with the current ones.
 
 6. Save the `RdfModel` to a new N-Quads file.
 

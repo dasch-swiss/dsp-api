@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public
 License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Knora Design Principles
+# DSP-API Design Principles
 
 - [Design Overview](design-overview.md)
 - [Futures with Akka](futures-with-akka.md)

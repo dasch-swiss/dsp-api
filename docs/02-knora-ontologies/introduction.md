@@ -21,7 +21,7 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 ## Resource Description Framework (RDF)
 
-Knora uses a hierarchy of ontologies based on the Resource Description
+DSP-API uses a hierarchy of ontologies based on the Resource Description
 Framework
 ([RDF](http://www.w3.org/TR/2014/NOTE-rdf11-primer-20140624/)), RDF
 Schema ([RDFS](http://www.w3.org/TR/2014/REC-rdf-schema-20140225/)), and

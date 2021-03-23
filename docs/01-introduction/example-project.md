@@ -20,11 +20,11 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 # An Example Project
 
 This section introduces some of the basic concepts involved in creating
-ontologies for Knora projects, by means of a relatively simple example
+ontologies for DSP projects, by means of a relatively simple example
 project. Before reading this document, it will be helpful to have some
 familiarity with the basic concepts explained in knora-base.
 
-Knora comes with two example projects, called `incunabula` and
+DSP-API comes with two example projects, called `incunabula` and
 `images-demo`. Here we will consider the `incunabula` example, which is
 a reduced version of a real research project on early printed books. It
 is designed to store an image of each page of each book, as well as RDF
@@ -35,12 +35,12 @@ the images.
 The `incunabula` ontology is in the file `incunabula-onto.ttl`, and its
 data is in the file `incunabula-demo-data.ttl`. Both these files are in
 a standard RDF file format called
-[Turtle](https://www.w3.org/TR/turtle/). The Knora distribution includes
+[Turtle](https://www.w3.org/TR/turtle/). The DSP-API distribution includes
 sample scripts (in the `webapi/scripts` directory) for importing these
 files directly into different triplestores. If you are starting a new
 project from scratch, you can adapt these scripts to import your
 ontology (and any existing RDF data) into your triplestore for use with
-Knora.
+DSP-API.
 
 The syntax of Turtle is fairly simple: it is basically a sequence of
 triples. We will consider some details of Turtle syntax as we go along.
@@ -69,16 +69,16 @@ knora-base.) The `foaf` ontology contains classes and properties for
 representing people. The `dcterms` ontology represents [Dublin
 Core](http://dublincore.org/) metadata.
 
-Then we define prefixes for Knora ontologies:
+Then we define prefixes for DSP ontologies:
 
 ```
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 ```
 
-The `knora-base` ontology contains Knora's core abstractions, and is
+The `knora-base` ontology contains DSP-API's core abstractions, and is
 described in knora-base. The `salsah-gui` ontology includes properties
-that Knora projects must use to enable SALSAH, Knora's generic virtual
+that DSP projects must use to enable SALSAH, DSP-API's generic virtual
 research environment.
 
 For convenience, we can use the empty prefix to refer to the
@@ -93,11 +93,11 @@ an `incunabula` prefix to refer to the `incunabula` ontology.
 
 ### Properties
 
-All the content produced by a Knora project must be stored in Knora
-resources (see incunabula-resource-classes). Resources have properties
+All the content produced by a DSP project must be stored in Knora
+resources (see [incunabula-resource-classes](#resource-classes)). Resources have properties
 that point to different parts of their contents; for example, the
 `incunabula` project contains books, which have properties like `title`.
-Every property that poitns to a Knora value must be a subproperty of
+Every property that poitns to a DSP value must be a subproperty of
 `knora-base:hasValue`, and every property that points to another Knora
 resource must be a subproperty of `knora-base:hasLinkTo`.
 

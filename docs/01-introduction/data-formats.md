@@ -17,16 +17,16 @@ You should have received a copy of the GNU Affero General Public
 License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Data Formats in Knora
+# Data Formats in DSP-API
 
-As explained in [What Is Knora?](what-is-knora.md), Knora stores data
+As explained in [What Is DSP and DSP-API (previous Knora)?](what-is-knora.md), the DSP stores data
 in a small number of formats that are suitable for long-term preservation while
 facilitating data reuse.
 
 The following is a non-exhaustive list of data formats and how their content
-can be stored and managed by Knora:
+can be stored and managed by DSP-API:
 
-| Original Format                              | Format in Knora                                                                                                              |
+| Original Format                              | Format in DSP                                                                                                              |
 |----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
 | Text (XML, LaTeX, Microsoft Word, etc.)      | [Knora resources](../03-apis/api-v2/editing-resources.md) (RDF) containing [Standoff/RDF](standoff-rdf.md)            |
 | Tabular data, including relational databases | [Knora resources](../03-apis/api-v2/editing-resources.md)                                                                  |

@@ -50,7 +50,7 @@ provided.
     objects.
   - A simple schema, which is suitable for reading data but not for
     editing it. The simple schema facilitates interoperability between
-    Knora ontologies and non-Knora ontologies, since it represents
+    DSP ontologies and non-DSP ontologies, since it represents
     values primarily as literals.
 
 Each schema has its own type IRIs, which are derived from the ones used

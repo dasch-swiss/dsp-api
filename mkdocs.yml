@@ -97,7 +97,7 @@ nav:
               - How to Add an API v2 Route: 05-internals/design/api-v2/how-to-add-a-route.md
               - JSON-LD Parsing and Formatting: 05-internals/design/api-v2/json-ld.md
               - Ontology Management: 05-internals/design/api-v2/ontology-management.md
-              - Knora and Sipi: 05-internals/design/api-v2/sipi.md
+              - DSP-API and Sipi: 05-internals/design/api-v2/sipi.md
               - Gravsearch Design: 05-internals/design/api-v2/gravsearch.md
               - Standoff Markup: 05-internals/design/api-v2/standoff.md
               - Archival Resource Key (ARK) Identifiers: 05-internals/design/api-v2/ark.md
@@ -120,8 +120,8 @@ nav:
           - Generating Client Test Data: 05-internals/development/generating-client-test-data.md
           - Starting GraphDB: 05-internals/development/graphdb.md
           - Third-Party Dependencies: 05-internals/development/third-party.md
-  - Salsah:
-      - Index: 06-salsah/index.md
+  # - Salsah:
+  #     - Index: 06-salsah/index.md
   - SIPI:
       - Index: 07-sipi/index.md
       - Setting Up Sipi for DSP-API: 07-sipi/setup-sipi-for-knora.md

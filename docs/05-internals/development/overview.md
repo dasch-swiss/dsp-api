@@ -38,14 +38,14 @@ installation of Knora. The different parts are:
 
 A number of triplestore implementations are available, including [free
 software](http://www.gnu.org/philosophy/free-sw.en.html) as well as
-proprietary options. Knora is designed to work with any
+proprietary options. DSP-API is designed to work with any
 standards-compliant triplestore. It is primarily tested with [Ontotext
 GraphDB](http://ontotext.com/products/graphdb/), a high-performance,
 proprietary triplestore. We recommend GraphDB Standard Edition, but
 GraphDB Free (which is proprietary but available free of charge) also
 works.
 
-Knora includes support for [Apache Jena](https://jena.apache.org/),
+DSP-API includes support for [Apache Jena](https://jena.apache.org/),
 which is [free software](http://www.gnu.org/philosophy/free-sw.en.html),
 but use of Jena is deprecated, and support for it will probably be
 removed in the future.
@@ -120,7 +120,7 @@ $ docker run --name sipi \
 
 ## Redis Server
 
-The Knora-API server uses Redis for caching.
+The DSP-API server uses Redis for caching.
 
 On macOS you can install Redis through [Homebrew](https://brew.sh):
 
