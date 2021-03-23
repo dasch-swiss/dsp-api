@@ -17,17 +17,17 @@ You should have received a copy of the GNU Affero General Public
 License along with DSP.  If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# The Knora APIs
+# The DSP APIs
 
-The Knora APIs include:
+The DSP APIs include:
 
-* The Knora API versions [1](api-v1/index.md) and [2](api-v2/index.md), which is intended to be used by
+* The DSP API versions [1](api-v1/index.md) and [2](api-v2/index.md), which is intended to be used by
   virtual research environments and other clients for querying and updating
   data.
-* The Knora [Admin API](api-admin/index.md), which is intended to be used only by the
+* The DSP [Admin API](api-admin/index.md), which is intended to be used only by the
   [DSP-APP](https://github.com/dasch-swiss/dsp-app) user interface, for
   administering projects that use Knora as well as Knora itself.
-* The Knora [Util API](api-util/index.md), which is intended to be used for information retrieval
-  about the Knora-stack itself.
+* The DSP [Util API](api-util/index.md), which is intended to be used for information retrieval
+  about the DSP-stack itself.
 
-Knora API v2 and the admin API support [Feature Toggles](feature-toggles.md).
+DSP API v2 and the admin API support [Feature Toggles](feature-toggles.md).
