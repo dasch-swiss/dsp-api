@@ -19,7 +19,7 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Knora IRIs
 
-The IRIs used in Knora repositories and in the Knora API v2 follow
+The IRIs used in Knora repositories and in the DSP-API v2 follow
 certain conventions.
 
 ## Project Short-Codes
@@ -104,7 +104,7 @@ the hostname and port configured in `application.conf` under
 (the port is omitted if it is 80).
 
 This means that when a built-in or shared external ontology IRI is dereferenced,
-the ontology can be served by a Knora API server running at
+the ontology can be served by a DSP-API server running at
 `api.knora.org`. When the external IRI of a non-shared, project-specific ontology is
 dereferenced, the ontology can be served by Knora that
 hosts the project. During development and testing, this could be
@@ -115,7 +115,7 @@ corresponding internal ontology, with one exception: the external form
 of `knora-base` is called `knora-api`.
 
 The API version identifier indicates not only the version of the API,
-but also an API 'schema'. The Knora API v2 is available in two schemas:
+but also an API 'schema'. The DSP-API v2 is available in two schemas:
 
   - A complex schema, which is suitable both for reading and for editing
     data. The complex schema represents values primarily as complex
@@ -128,10 +128,10 @@ but also an API 'schema'. The Knora API v2 is available in two schemas:
 Other schemas could be added in the future for more specific use cases.
 
 When requesting an ontology, the client requests a particular schema.
-(This will also be true of most Knora API v2 requests: the client will
+(This will also be true of most DSP-API v2 requests: the client will
 be able to specify which schema the response should be provided in.)
 
-For example, suppose a Knora API server is running at
+For example, suppose a DSP-API server is running at
 `knora.example.org` and hosts an ontology whose internal IRI is
 `http://www.knora.org/ontology/0001/example`. That ontology can then be
 requested using either of these IRIs:

@@ -37,7 +37,7 @@ simple or the complex ontology schema. The complex schema is used by default.
 To receive a response in the simple schema, use the HTTP request header or URL
 parameter described in [API Schema](introduction.md#api-schema).
 
-Each Knora API v2 response describing one or more resources returns a
+Each DSP-API v2 response describing one or more resources returns a
 single RDF graph. For example, a request for a single resource returns that
 resource and all its values. In a full-text search, the resource is returned with the
 values that matched the search criteria. A response to an extended search

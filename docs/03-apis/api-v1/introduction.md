@@ -21,7 +21,7 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 ## RESTful API
 
-Knora API V1 is a RESTful API that allows for reading and adding of
+DSP-API V1 is a RESTful API that allows for reading and adding of
 resources from and to Knora and changing their values using HTTP
 requests. The actual data is submitted as JSON (request and response
 format). The diverse HTTP methods are applied according to the
@@ -38,7 +38,7 @@ IRI is required for every API operation to identify the resource in
 question. A Knora IRI has itself the format of a URL. For some API
 operations, the IRI has to be URL-encoded (HTTP GET requests).
 
-Unlike Knora API v2, Knora API v1 uses internal IRIs, i.e. the actual IRIs
+Unlike DSP-API v2, DSP-API v1 uses internal IRIs, i.e. the actual IRIs
 that are stored in the triplestore (see [Knora IRIs](../api-v2/knora-iris.md)).
 
 ## V1 Path Segment
@@ -48,7 +48,7 @@ Every request to API V1 includes `v1` as a path segment, e.g.
 Accordingly, requests to another version of the API will require another
 path segment.
 
-## Knora API Response Format
+## DSP-API Response Format
 
 In case an API request could be handled successfully, Knora responds
 with a 200 HTTP status code. The actual answer from Knora (the

@@ -227,9 +227,9 @@ the world (such as `ex:Painting`) and also belongs to a subclass of
 of file attached to it. For example, if paintings are represented only
 by still images, `ex:Painting` could be a subclass of
 `StillImageRepresentation`. This is the only approach supported in
-[Knora API v1](../03-apis/api-v1/index.md).
+[DSP-API v1](../03-apis/api-v1/index.md).
 
-The more flexible approach, which is supported by [Knora API
+The more flexible approach, which is supported by [DSP-API
 v2](../03-apis/api-v2/index.md), is for each `ex:Painting` to link (using
 `kb:hasRepresentation` or a subproperty) to other resources containing files
 that represent the painting. Each of these other resources can extend a
@@ -563,7 +563,7 @@ properties:
 
 `originalFilename` (0-1)
 
-:   The original name of the file when it was uploaded to the Knora API
+:   The original name of the file when it was uploaded to the DSP-API
     server.
 
 `originalMimeType` (0-1)
@@ -611,7 +611,7 @@ of file it describes. For example, still image files have dimensions,
 video files have frame rates, and so on.
 
 `FileValue` objects are versioned like other values, and the actual
-files stored by Knora are also versioned. Version 1 of the Knora API
+files stored by Knora are also versioned. Version 1 of the DSP-API
 does not provide a way to retrieve a previous version of a file, but
 this feature will be added in a subsequent version of the API.
 
@@ -1009,7 +1009,7 @@ The result can be visualized like this:
 Link values created automatically for resource references in standoff
 are visible to all users, and the creator of these link values is always
 `kb:SystemUser` (see [Users and Groups](#users-and-groups)). The
-Knora API server allows a user to see a standoff link if the user has
+DSP-API server allows a user to see a standoff link if the user has
 permission to see the source and target resources.
 
 #### Internal Links in a TextValue

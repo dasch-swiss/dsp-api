@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public
 License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Knora API v1 Design
+# DSP-API v1 Design
 
 - [JSON in API v1](json.md)
 - [How to Add an API v1 Route](how-to-add-a-route.md)

@@ -19,20 +19,20 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Overview
 
-Developing for Knora requires a complete local
+Developing for DSP-API requires a complete local
 installation of Knora. The different parts are:
 
-1.  The cloned [Knora](https://github.com/dasch-swiss/knora-api) Github
-    repository
-2.  One of the supplied triplestores in the Knora Github repository
+1. The cloned [DSP-API](https://github.com/dasch-swiss/dsp-api) Github
+   repository
+1. One of the supplied triplestores in the DSP-API Github repository
     (GraphDB-SE 8 or Fuseki 3).
-3.  Sipi by building from
+1. Sipi by building from
     [source](https://github.com/dasch-swiss/sipi) or using the docker
     [image](https://hub.docker.com/r/daschswiss/sipi/)
 
 ## Knora Github Repository
 
-    $ git clone https://github.com/dhlab-basel/Knora
+    $ git clone https://github.com/dasch-swiss/dsp-api
 
 ## Triplestore
 

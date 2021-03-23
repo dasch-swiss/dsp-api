@@ -139,7 +139,7 @@ predicate. The definition of `:title` says:
   objects of this property will be Knora values, it must be a
   subproperty of `knora-base:hasValue`. To facilitate searches, we
   have also chosen to make it a subproperty of `dcterms:title`. In the
-  Knora API v2, if you do a search for resources that have a certain
+  DSP-API v2, if you do a search for resources that have a certain
   `dcterms:title`, and there is a resource with a matching
   `incunabula:title`, the search results could include that resource.
 * `rdfs:label "Titel"@de`, etc.: It has the specified labels in
@@ -215,7 +215,7 @@ owner, the permissions it grants, and whether it has been deleted.
 Storing this metadata allows Knora to authorise users to see or modify
 the link, as well as to query a previous state of a repository in which
 a deleted link had not yet been deleted. (The ability to query previous
-states of a repository is planned for Knora API version 2.)
+states of a repository is planned for DSP-API version 2.)
 
 The name of a link property and its link value property must be related
 by the following naming convention: to determine the name of the link
@@ -332,7 +332,7 @@ type `incunabula:book`. A cardinality is indeed a kind of restriction:
 it means that a resource of this type may have, or must have, a certain
 number of instances of the specified property. For example,
 `incunabula:book` has cardinalities saying that a book must have at
-least one title and at most one publication date. In the Knora API
+least one title and at most one publication date. In the DSP-API
 version 1, the word 'occurrence' is used instead of 'cardinality'.
 
 The OWL cardinalities supported by Knora are described in
@@ -346,7 +346,7 @@ be wondering whether this cardinality could simply be omitted from the
 definition of `incunabula:book`. However, Knora requires every property
 of a resource to have some cardinality in the resource's class. This is
 because Knora uses the cardinalities to determine which properties are
-*possible* for instances of the class, and the Knora API relies on this
+*possible* for instances of the class, and the DSP-API relies on this
 information. If there was no cardinality for `incunabula:hasAuthor`,
 Knora would not allow a book to have an author.
 

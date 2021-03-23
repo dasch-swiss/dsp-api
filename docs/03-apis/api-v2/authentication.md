@@ -19,7 +19,7 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Authentication
 
-Access to the Knora API can for certain operations require a user to authenticate.
+Access to the DSP-API can for certain operations require a user to authenticate.
 Authentication can be performed in two ways:
 
 1. By providing *password credentials*, which are a combination of a *identifier* and

@@ -21,7 +21,7 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 ## General Principles
 
-  - Knora API v2 requests and responses are RDF documents. Any API v2
+  - DSP-API v2 requests and responses are RDF documents. Any API v2
     response can be returned as [JSON-LD](https://json-ld.org/spec/latest/json-ld/),
     [Turtle](https://www.w3.org/TR/turtle/),
     or [RDF/XML](https://www.w3.org/TR/rdf-syntax-grammar/).
@@ -187,7 +187,7 @@ There are in fact two instances of `StringFormatter`:
     available after Akka has started and has the API server's hostname
     (and can therefore provide `SmartIri` instances capable of parsing
     IRIs containing that hostname). This instance is used throughout the
-    Knora API server.
+    DSP-API server.
   - one returned by `StringFormatter.getInstanceForConstantOntologies`,
     which is available before Akka has started, and is used only by the
     hard-coded constant `knora-api` ontologies.

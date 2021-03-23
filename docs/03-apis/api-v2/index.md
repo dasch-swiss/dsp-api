@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public
 License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Knora API v2
+# DSP-API v2
 
 - [Introduction](introduction.md)
 - [Authentication](authentication.md)

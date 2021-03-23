@@ -72,7 +72,7 @@ To represent overlapping or non-hierarchical markup in exported and imported XML
 
 Future plans for Standoff/RDF include:
 
-- Creation and retrieval of standoff markup as such via the Knora API,
+- Creation and retrieval of standoff markup as such via the DSP-API,
   without using XML as an input/output format.
 - A user interface for editing standoff markup.
 - The ability to create resources that cite particular standoff tags in other resources.

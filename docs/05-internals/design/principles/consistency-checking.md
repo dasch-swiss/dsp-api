@@ -27,7 +27,7 @@ as far as is practical, in a triplestore-independent way (see
 useful to enforce consistency constraints in the triplestore itself, for
 two reasons:
 
-1.  To prevent inconsistencies resulting from bugs in the Knora API
+1.  To prevent inconsistencies resulting from bugs in the DSP-API
     server.
 2.  To prevent users from inserting inconsistent data directly into the
     triplestore, bypassing Knora.
@@ -43,7 +43,7 @@ for details):
     `knora-base:hasValue` or a `knora-base:hasLinkTo` (i.e. every
     property of a resource that points to a `knora-base:Value` or to
     another resource) is required have this constraint, because the
-    Knora API server relies on it to know what type of object to expect
+    DSP-API server relies on it to know what type of object to expect
     for the property. Use of `knora-base:subjectClassConstraint` is
     recommended but not required.
 2.  A class definition should use OWL cardinalities (see [OWL 2 Quick Reference Guide](https://www.w3.org/TR/owl2-quick-reference/))

@@ -170,7 +170,7 @@ or only the specified version).
 
 ## Response Header
 
-Knora API v2 and admin API responses contain the header
+DSP-API v2 and admin API responses contain the header
 `X-Knora-Feature-Toggles`. It lists all configured toggles,
 in the same format as the corresponding request header.
 

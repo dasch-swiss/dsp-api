@@ -226,7 +226,7 @@ provided.
 Knora supports the storage of certain types of data as files, using
 [Sipi](https://github.com/dhlab-basel/Sipi)
 (see [FileValue](../../02-knora-ontologies/knora-base.md#filevalue)).
-Knora API v2 currently supports using Sipi to store the following types of files:
+DSP-API v2 currently supports using Sipi to store the following types of files:
 
 * Images: JPEG, JPEG2000, TIFF, or PNG which are stored internally as JPEG2000
 * Documents: PDF

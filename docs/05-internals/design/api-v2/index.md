@@ -17,7 +17,7 @@ You should have received a copy of the GNU Affero General Public
 License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Knora API v2 Design
+# DSP-API v2 Design
 
 - [API v2 Design Overview](overview.md)
 - [Ontology Schemas](ontology-schemas.md)

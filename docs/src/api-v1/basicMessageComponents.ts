@@ -118,7 +118,7 @@ export module basicMessageComponents {
     export type KnoraAccess = string;
 
     /**
-     * Basic members of the Knora API V1 response format.
+     * Basic members of the DSP-API V1 response format.
      */
     export interface basicResponse {
         /**

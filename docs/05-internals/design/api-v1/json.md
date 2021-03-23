@@ -19,7 +19,7 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 ### JSON in API v1
 
-Knora API v1 parses and generates JSON using the
+DSP-API v1 parses and generates JSON using the
 [spray-json](https://github.com/spray/spray-json) library.
 
 The triplestore returns results in JSON, and these are parsed into

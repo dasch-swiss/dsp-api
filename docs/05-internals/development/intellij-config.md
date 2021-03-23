@@ -126,7 +126,7 @@ button:
 
 ![screenshot 'VisualVM sampler'](figures/visualvm-sampler.png)
 
-Now run some Knora API operations that you're interested in profiling,
+Now run some DSP-API operations that you're interested in profiling,
 preferably several times to allow the sampler to collect enough data.
 Then click on the "Snapshot" button:
 

@@ -42,7 +42,7 @@ has the resource IRI and the property IRI, but not the value IRI.
 A read wrapper can be wrapped in another read wrapper; for
 example, a `ReadResourceV2` contains `ReadValueV2` objects.
 
-In general, Knora API v2 responders deal only with the internal schema.
+In general, DSP-API v2 responders deal only with the internal schema.
 (The exception is `OntologyResponderV2`, which can return ontology information
 that exists only in an external schema.) Therefore, a content class needs
 to be able to convert itself from the internal schema to an external schema

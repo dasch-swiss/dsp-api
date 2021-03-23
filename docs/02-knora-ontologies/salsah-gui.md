@@ -168,13 +168,13 @@ identifier = letter , { letter } ;
 `Searchbox`
 
 :   A GUI element for searching for a resource by matching text in its
-    `rdfs:label`. For Knora API v1, a property definition that uses this
+    `rdfs:label`. For DSP-API v1, a property definition that uses this
     element may also contain this `guiAttribute` predicate:
 
     -   `"numprops=N"`, where `N` is an integer specifying the number of
         describing properties to be returned for each found resource.
 
-    For Knora API v2, the `guiAttribute` has no effect.
+    For DSP-API v2, the `guiAttribute` has no effect.
 
 `SimpleText`
 

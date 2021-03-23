@@ -350,7 +350,7 @@ with a confirmation message.
 ### Links to Deleted Resources
 
 If resource `A` has a link to resource `B`, and resource
-`B` is later marked as deleted, `A`'s link will still exist. Knora API
+`B` is later marked as deleted, `A`'s link will still exist. DSP-API
 v2 will still return the link when `A` is queried, but without any information
 about `B` (except for `B`'s IRI). If `A`'s link is necessary to
 meet the requirements of a cardinality, marking `B` as deleted will

@@ -89,7 +89,7 @@ There are in fact two instances of `StringFormatter`:
   available after Akka has started and has the API server's hostname
   (and can therefore provide `SmartIri` instances capable of parsing
   IRIs containing that hostname). This instance is used throughout the
-  Knora API server.
+  DSP-API server.
 - one returned by `StringFormatter.getInstanceForConstantOntologies`,
   which is available before Akka has started, and is used only by the
   hard-coded constant `knora-api` ontologies (see

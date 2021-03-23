@@ -27,7 +27,7 @@ instructions on how to start Sipi with Knora.
 
 ## Lua Scripts
 
-Knora API v2 uses custom Lua scripts to control Sipi. These scripts can be
+DSP-API v2 uses custom Lua scripts to control Sipi. These scripts can be
 found in `sipi/scripts` in the Knora source tree.
 
 Each of these scripts expects a [JSON Web Token](https://jwt.io/) in the

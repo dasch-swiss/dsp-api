@@ -76,7 +76,7 @@ content type must be set to `application/json`.
 
 When a value has been successfully changed, Knora sends back a JSON with
 the new value's IRI. The value IRI identifies the value and can be used
-to perform future Knora API V1 operations.
+to perform future DSP-API V1 operations.
 
 The JSON format of the response is described in the TypeScript interface
 `changeValueResponse` in module `changeValueFormats`.

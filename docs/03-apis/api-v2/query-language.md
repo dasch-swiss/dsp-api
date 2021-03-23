@@ -90,7 +90,7 @@ The response to a count query request is an object with one predicate,
 ## Gravsearch and API Schemas
 
 A Gravsearch query can be written in either of the two
-[Knora API v2 schemas](introduction.md#api-schema). The simple schema
+[DSP-API v2 schemas](introduction.md#api-schema). The simple schema
 is easier to work with, and is sufficient if you don't need to query
 anything below the level of a Knora value. If your query needs to refer to
 standoff markup, you must use the complex schema. Each query must use a single

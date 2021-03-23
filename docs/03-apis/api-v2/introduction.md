@@ -19,7 +19,7 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Introduction: Using API v2
 
-Version 2 of the Knora API aims to make both the response and request
+Version 2 of the DSP-API aims to make both the response and request
 formats more generic and consistent. Version 1 was basically the result
 of the reimplementation of the existing API of the SALSAH prototype.
 Since the development of this prototype has a long history and the
@@ -56,7 +56,7 @@ can request these formats using the following MIME types:
 
 Our preferred format for data exchange is
 [JSON-LD](https://json-ld.org/spec/latest/json-ld/). JSON-LD allows the
-Knora API server to provide responses that are relatively easy for
+DSP-API server to provide responses that are relatively easy for
 automated processes to interpret, since their structure and semantics is
 explicitly defined. For example, each user-created Knora resource
 property is identified by an IRI, which can be dereferenced to get more
@@ -93,13 +93,13 @@ is explained in [Knora IRIs](knora-iris.md).
 
 ## API Schema
 
-Knora API v2 uses RDF data structures that are simpler than the ones
+DSP-API v2 uses RDF data structures that are simpler than the ones
 actually stored in the triplestore, and more suitable for the development
 of client software. Thus we refer to the *internal* schema of data
 as it is stored in the triplestore, and to *external* schemas which
 are used to represent that data in API v2.
 
-Knora API v2 offers a complex schema and a simple one. The main difference
+DSP-API v2 offers a complex schema and a simple one. The main difference
 is that the complex schema exposes the complexity of value objects, while
 the simple version does not. A client that needs to edit values must use the
 complex schema in order to obtain the IRI of each value. A client that reads
@@ -109,7 +109,7 @@ context of Linked Open Data. It is therefore designed to use the
 simplest possible datatypes and to require minimal knowledge of Knora.
 
 In either case, the client deals only with data whose structure and
-semantics are defined by external Knora API ontologies, which are distinct from
+semantics are defined by external DSP-API ontologies, which are distinct from
 the internal ontologies that are used to store date in the triplestore. The Knora
 API server automatically converts back and forth between these internal
 and external representations. This approach encapsulates the internals

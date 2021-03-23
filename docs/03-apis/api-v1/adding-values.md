@@ -56,7 +56,7 @@ HTTP POST to http://host/v1/values
 
 When a value has been successfully created, Knora sends back a JSON with
 the new value's IRI. The value IRI identifies the value and can be used
-to perform future Knora API V1 operations.
+to perform future DSP-API V1 operations.
 
 The JSON format of the response is described in the TypeScript interface
 `addValueResponse` in module `addValueFormats`.
