@@ -20,8 +20,9 @@
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
 import org.knora.webapi.ApiV2Schema
+import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.feature.{Feature, FeatureFactory, FeatureFactoryConfig}
-import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.{
   GravsearchTypeInspectionResult,
@@ -73,13 +74,87 @@ object GravsearchQueryOptimisationFactory extends FeatureFactory {
         if (featureFactoryConfig.getToggle("gravsearch-dependency-optimisation").isEnabled) {
           new ReorderPatternsByDependencyOptimisationFeature(typeInspectionResult, querySchema).optimiseQueryPatterns(
             new RemoveEntitiesInferredFromPropertyOptimisationFeature(typeInspectionResult, querySchema)
-              .optimiseQueryPatterns(patterns)
+              .optimiseQueryPatterns(
+                new RemoveRedundantKnoraApiResourceOptimisationFeature(typeInspectionResult, querySchema)
+                  .optimiseQueryPatterns(patterns))
           )
         } else {
           new RemoveEntitiesInferredFromPropertyOptimisationFeature(typeInspectionResult, querySchema)
-            .optimiseQueryPatterns(patterns)
+            .optimiseQueryPatterns(
+              new RemoveRedundantKnoraApiResourceOptimisationFeature(typeInspectionResult, querySchema)
+                .optimiseQueryPatterns(patterns))
         }
       }
+    }
+  }
+}
+
+/**
+  * Removes a statement with rdf:type knora-api:Resource if there is another rdf:type statement with the same subject
+  * and a different type.
+  *
+  * @param typeInspectionResult the type inspection result.
+  * @param querySchema the query schema.
+  */
+class RemoveRedundantKnoraApiResourceOptimisationFeature(typeInspectionResult: GravsearchTypeInspectionResult,
+                                                         querySchema: ApiV2Schema)
+    extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema)
+    with Feature {
+
+  /**
+    * If the specified statement has rdf:type with an IRI as object, returns that IRI, otherwise None.
+    */
+  private def getObjOfRdfType(statementPattern: StatementPattern): Option[SmartIri] = {
+    statementPattern.pred match {
+      case predicateIriRef: IriRef =>
+        if (predicateIriRef.iri.toString == OntologyConstants.Rdf.Type) {
+          statementPattern.obj match {
+            case iriRef: IriRef => Some(iriRef.iri)
+            case _              => None
+          }
+        } else {
+          None
+        }
+
+      case _ => None
+    }
+  }
+
+  override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+    // Make a Set of subjects that have rdf:type statements whose objects are not knora-api:Resource.
+    val rdfTypesBySubj: Set[Entity] = patterns
+      .foldLeft(Set.empty[Entity]) {
+        case (acc, queryPattern: QueryPattern) =>
+          queryPattern match {
+            case statementPattern: StatementPattern =>
+              getObjOfRdfType(statementPattern) match {
+                case Some(typeIri) =>
+                  if (!OntologyConstants.KnoraApi.KnoraApiV2ResourceIris.contains(typeIri.toString)) {
+                    acc + statementPattern.subj
+                  } else {
+                    acc
+                  }
+
+                case None => acc
+              }
+
+            case _ => acc
+          }
+      }
+
+    patterns.filterNot {
+      case statementPattern: StatementPattern =>
+        // If this statement has rdf:type knora-api:Resource, and we also have another rdf:type statement
+        // with the same subject and a different type, remove this statement.
+        getObjOfRdfType(statementPattern) match {
+          case Some(typeIri) =>
+            OntologyConstants.KnoraApi.KnoraApiV2ResourceIris
+              .contains(typeIri.toString) && rdfTypesBySubj.contains(statementPattern.subj)
+
+          case None => false
+        }
+
+      case _ => false
     }
   }
 }
@@ -131,7 +206,8 @@ class RemoveEntitiesInferredFromPropertyOptimisationFeature(typeInspectionResult
             // Yes. Is this an rdf:type statement?
             if (predicateIriRef.iri.toString == OntologyConstants.Rdf.Type) {
               // Yes. Is the subject a typeable entity?
-              val subjectAsTypeableEntity = GravsearchTypeInspectionUtil.maybeTypeableEntity(statementPattern.subj)
+              val subjectAsTypeableEntity: Option[TypeableEntity] =
+                GravsearchTypeInspectionUtil.maybeTypeableEntity(statementPattern.subj)
 
               subjectAsTypeableEntity match {
                 case Some(typeableEntity) =>
