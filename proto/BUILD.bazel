@@ -56,3 +56,29 @@ scala_proto_library(
         ":zip_code_proto"
     ],
 )
+
+proto_library(
+    name = "value_proto",
+    srcs = ["value.proto"],
+    deps = [ "@com_google_protobuf//:timestamp_proto"],
+)
+
+scala_proto_library(
+    name = "value_scala_proto",
+    deps = [
+        ":value_proto"
+    ],
+)
+
+proto_library(
+    name = "resource_proto",
+    srcs = ["resource.proto"],
+    deps = [ ":value_proto",
+        "@com_google_protobuf//:timestamp_proto"
+        ],
+)
+
+scala_proto_library(
+    name = "resource_scala_proto",
+    deps = [":resource_proto"],
+)

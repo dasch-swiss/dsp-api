@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "proto/value.proto";
+
+package proto;
+
+message ReadResource{
+   string resourceIri = 1;
+   string label = 2;
+   string resourceClassIri = 3;
+   string attachedToUser = 4;
+   string projectIri = 5;
+   string permissions = 6;
+   string userPermission = 7;
+   map<string, ResourceValues> values = 8;
+   google.protobuf.Timestamp creationDate = 9;
+   google.protobuf.Timestamp lastModificationDate = 10;
+}
+
+message ResourceValues{
+  repeated ReadValue value = 1;
+}
+
+
+message DeleteInfo {
+   google.protobuf.Timestamp deleteDate =1;
+   string maybeDeleteComment =2;
+}
