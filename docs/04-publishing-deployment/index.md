@@ -17,9 +17,9 @@ You should have received a copy of the GNU Affero General Public
 License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Deploying Knora
+# Deploying DSP-API
 
 - [Publishing](publishing.md)
-- [Getting Started with Knora](getting-started.md)
+- [Getting Started with DSP-API](getting-started.md)
 - [Configuration](configuration.md)
-- [Updating Repositories When Upgrading Knora](updates.md)
+- [Updating Repositories When Upgrading DSP-API](updates.md)
