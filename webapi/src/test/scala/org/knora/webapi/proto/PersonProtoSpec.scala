@@ -41,11 +41,14 @@ class PersonProtoSpec extends AnyWordSpecLike with Matchers {
         favoriteThing = "blue thing"
       )
 
-      person.name should be("anyname")
-      person.id should be(123456)
-      person.email should be("any@example.org")
-      person.address should be(testAddress)
-      person.favoriteThing should be("blue thing")
+      val serialisedPerson: Array[Byte] = person.toByteArray
+      val parsedPerson: proto.person.Person = proto.person.Person.parseFrom(serialisedPerson)
+
+      parsedPerson.name should be("anyname")
+      parsedPerson.id should be(123456)
+      parsedPerson.email should be("any@example.org")
+      parsedPerson.address should be(testAddress)
+      parsedPerson.favoriteThing should be("blue thing")
     }
   }
 }

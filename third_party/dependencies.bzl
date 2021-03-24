@@ -118,6 +118,7 @@ def dependencies():
 
             # scala stuff
             "org.scala-lang.modules:scala-xml_2.12:1.2.0",
+            "com.thesamet.scalapb:scalapb-runtime_2.12:0.11.0",
 
             # testing
             "com.typesafe.akka:akka-testkit_2.12:%s" % (AKKA_VERSION),
@@ -191,6 +192,7 @@ BASE_TEST_DEPENDENCIES = [
     "@maven//:org_scalatest_scalatest_compatible",
     "@maven//:org_scalactic_scalactic_2_12",
     "@maven//:org_scala_graph_graph_core_2_12",
+    "@maven//:com_thesamet_scalapb_scalapb_runtime_2_12",
 ]
 
 BASE_TEST_DEPENDENCIES_WITH_JSON = BASE_TEST_DEPENDENCIES + [
