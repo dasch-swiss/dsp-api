@@ -747,6 +747,11 @@ sealed trait ReadValueV2 extends IOValueV2 {
       case ApiV2Simple => valueContentAsJsonLD
     }
   }
+
+  def toProtobuf: Array[Byte] = {
+    val testZip = Some(proto.zip_code.ZipCode(code = "4123"))
+    Array.empty[Byte]
+  }
 }
 
 /**
