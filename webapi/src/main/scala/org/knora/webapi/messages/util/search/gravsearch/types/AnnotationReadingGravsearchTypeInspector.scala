@@ -119,7 +119,7 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
       extends WhereVisitor[Vector[GravsearchTypeAnnotation]] {
     override def visitStatementInWhere(statementPattern: StatementPattern,
                                        acc: Vector[GravsearchTypeAnnotation]): Vector[GravsearchTypeAnnotation] = {
-      if (GravsearchTypeInspectionUtil.isAnnotationStatement(statementPattern)) {
+      if (GravsearchTypeInspectionUtil.canBeAnnotationStatement(statementPattern)) {
         acc :+ annotationStatementToAnnotation(statementPattern, querySchema)
       } else {
         acc
