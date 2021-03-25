@@ -3050,6 +3050,18 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
     useDistinct = true
   )
 
+  val queryWithKnoraApiResource: String =
+    """PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+      |CONSTRUCT {
+      |    ?resource knora-api:isMainResource true .
+      |    ?resource ?p ?text .
+      |} WHERE {
+      |    ?resource a knora-api:Resource .
+      |    ?resource ?p ?text .
+      |    ?p knora-api:objectType knora-api:TextValue .
+      |    FILTER knora-api:matchText(?text, "der")
+      |}""".stripMargin
+
   "The NonTriplestoreSpecificGravsearchToPrequeryGenerator object" should {
 
     "transform an input query with an optional property criterion without removing the rdf:type statement" in {
@@ -3310,6 +3322,25 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
         QueryHandler.transformQuery(queryToReorderWithCycle, responderData, settings, defaultFeatureFactoryConfig)
 
       assert(transformedQuery == transformedQueryToReorderWithCycle)
+    }
+
+    "not remove rdf:type knora-api:Resource if it's needed" in {
+      val transformedQuery =
+        QueryHandler.transformQuery(queryWithKnoraApiResource, responderData, settings, defaultFeatureFactoryConfig)
+
+      assert(
+        transformedQuery.whereClause.patterns.contains(StatementPattern(
+          subj = QueryVariable(variableName = "resource"),
+          pred = IriRef(
+            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#Resource".toSmartIri,
+            propertyPathOperator = None
+          ),
+          namedGraph = None
+        )))
     }
   }
 }
