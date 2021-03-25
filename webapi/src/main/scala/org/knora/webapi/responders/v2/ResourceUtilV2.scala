@@ -39,17 +39,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, Sp
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
 import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2}
-import org.knora.webapi.messages.v2.responder.valuemessages.{
-  FileValueContentV2,
-  LinkValueContentV2,
-  ReadLinkValueV2,
-  ReadOtherValueV2,
-  ReadTextValueV2,
-  ReadValueV2,
-  TextValueContentV2,
-  UnverifiedValueV2,
-  ValueContentV2
-}
+import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
 
 import scala.concurrent.{ExecutionContext, Future}
