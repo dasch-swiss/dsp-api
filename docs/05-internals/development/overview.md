@@ -1,51 +1,51 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Overview
 
-Developing for Knora requires a complete local
+Developing for DSP-API requires a complete local
 installation of Knora. The different parts are:
 
-1.  The cloned [Knora](https://github.com/dasch-swiss/knora-api) Github
-    repository
-2.  One of the supplied triplestores in the Knora Github repository
+1. The cloned [DSP-API](https://github.com/dasch-swiss/dsp-api) Github
+   repository
+1. One of the supplied triplestores in the DSP-API Github repository
     (GraphDB-SE 8 or Fuseki 3).
-3.  Sipi by building from
+1. Sipi by building from
     [source](https://github.com/dasch-swiss/sipi) or using the docker
     [image](https://hub.docker.com/r/daschswiss/sipi/)
 
 ## Knora Github Repository
 
-    $ git clone https://github.com/dhlab-basel/Knora
+    $ git clone https://github.com/dasch-swiss/dsp-api
 
 ## Triplestore
 
 A number of triplestore implementations are available, including [free
 software](http://www.gnu.org/philosophy/free-sw.en.html) as well as
-proprietary options. Knora is designed to work with any
+proprietary options. DSP-API is designed to work with any
 standards-compliant triplestore. It is primarily tested with [Ontotext
 GraphDB](http://ontotext.com/products/graphdb/), a high-performance,
 proprietary triplestore. We recommend GraphDB Standard Edition, but
 GraphDB Free (which is proprietary but available free of charge) also
 works.
 
-Knora includes support for [Apache Jena](https://jena.apache.org/),
+DSP-API includes support for [Apache Jena](https://jena.apache.org/),
 which is [free software](http://www.gnu.org/philosophy/free-sw.en.html),
 but use of Jena is deprecated, and support for it will probably be
 removed in the future.
@@ -120,7 +120,7 @@ $ docker run --name sipi \
 
 ## Redis Server
 
-The Knora-API server uses Redis for caching.
+The DSP-API server uses Redis for caching.
 
 On macOS you can install Redis through [Homebrew](https://brew.sh):
 

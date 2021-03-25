@@ -1,20 +1,20 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Gravsearch: Virtual Graph Search
@@ -90,7 +90,7 @@ The response to a count query request is an object with one predicate,
 ## Gravsearch and API Schemas
 
 A Gravsearch query can be written in either of the two
-[Knora API v2 schemas](introduction.md#api-schema). The simple schema
+[DSP-API v2 schemas](introduction.md#api-schema). The simple schema
 is easier to work with, and is sufficient if you don't need to query
 anything below the level of a Knora value. If your query needs to refer to
 standoff markup, you must use the complex schema. Each query must use a single
@@ -99,12 +99,12 @@ schema, with one exception (see [Date Comparisons](#date-comparisons)).
 Gravsearch query results can be requested in the simple or complex schema;
 see [API Schema](introduction.md#api-schema).
 
-All examples hereafter run with Knora started locally as documented in the section [Getting Started with Knora](../../04-publishing-deployment/getting-started.md). If you access another Knora-Stack, you can check the IRI of the ontology you are targeting by requesting the [ontologies metadata](ontology-information.md#querying-ontology-metadata).
+All examples hereafter run with Knora started locally as documented in the section [Getting Started with DSP-API](../../04-publishing-deployment/getting-started.md). If you access another Knora-Stack, you can check the IRI of the ontology you are targeting by requesting the [ontologies metadata](ontology-information.md#querying-ontology-metadata).
 
 ### Using the Simple Schema
 
 To write a query in the simple schema, use the `knora-api` ontology in
-the simple schema, and use the simple schema for any other Knora ontologies
+the simple schema, and use the simple schema for any other DSP ontologies
 the query refers to, e.g.:
 
 ```
@@ -119,7 +119,7 @@ can be used `FILTER` expressions
 ### Using the Complex Schema
 
 To write a query in the complex schema, use the `knora-api` ontology in
-the complex schema, and use the complex schema for any other Knora ontologies
+the complex schema, and use the complex schema for any other DSP ontologies
 the query refers to, e.g.:
 
 ```

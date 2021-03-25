@@ -1,25 +1,25 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Knora IRIs
 
-The IRIs used in Knora repositories and in the Knora API v2 follow
+The IRIs used in Knora repositories and in the DSP-API v2 follow
 certain conventions.
 
 ## Project Short-Codes
@@ -69,7 +69,7 @@ http://www.knora.org/ontology/0001/example
 
 An ontology name must be a valid XML
 [NCName](https://www.w3.org/TR/xml-names/#NT-NCName).
-The following names are reserved for built-in internal Knora ontologies:
+The following names are reserved for built-in internal DSP ontologies:
 
   - `knora-base`
   - `standoff`
@@ -104,7 +104,7 @@ the hostname and port configured in `application.conf` under
 (the port is omitted if it is 80).
 
 This means that when a built-in or shared external ontology IRI is dereferenced,
-the ontology can be served by a Knora API server running at
+the ontology can be served by a DSP-API server running at
 `api.knora.org`. When the external IRI of a non-shared, project-specific ontology is
 dereferenced, the ontology can be served by Knora that
 hosts the project. During development and testing, this could be
@@ -115,23 +115,23 @@ corresponding internal ontology, with one exception: the external form
 of `knora-base` is called `knora-api`.
 
 The API version identifier indicates not only the version of the API,
-but also an API 'schema'. The Knora API v2 is available in two schemas:
+but also an API 'schema'. The DSP-API v2 is available in two schemas:
 
   - A complex schema, which is suitable both for reading and for editing
     data. The complex schema represents values primarily as complex
     objects. Its version identifier is `v2`.
   - A simple schema, which is suitable for reading data but not for
     editing it. The simple schema facilitates interoperability between
-    Knora ontologies and non-Knora ontologies, since it represents
+    DSP ontologies and non-DSP ontologies, since it represents
     values primarily as literals. Its version identifier is `simple/v2`.
 
 Other schemas could be added in the future for more specific use cases.
 
 When requesting an ontology, the client requests a particular schema.
-(This will also be true of most Knora API v2 requests: the client will
+(This will also be true of most DSP-API v2 requests: the client will
 be able to specify which schema the response should be provided in.)
 
-For example, suppose a Knora API server is running at
+For example, suppose a DSP-API server is running at
 `knora.example.org` and hosts an ontology whose internal IRI is
 `http://www.knora.org/ontology/0001/example`. That ontology can then be
 requested using either of these IRIs:
@@ -153,7 +153,7 @@ schema being used:
 
 ### Ontology Entity IRIs
 
-Knora ontologies use 'hash namespaces' (see [URI
+DSP ontologies use 'hash namespaces' (see [URI
 Namespaces](https://www.w3.org/2001/sw/BestPractices/VM/http-examples/2006-01-18/#naming)).
 This means that the IRI of an ontology entity (a class or property
 definition) is constructed by adding a hash character (`#`) to the

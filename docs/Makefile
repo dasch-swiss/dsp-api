@@ -26,14 +26,14 @@ clean: ## to clean
 
 .PHONY: jsonformat
 jsonformat: ## to make a documentation of the json request and response format
-	$(TYPEDOC) --out $(FORMATDOCDIRV1) --exclude **/sampleRequests/* --readme none --name "Knora API V1 Format Documentation" --module commonjs $(FORMATSRCDIRV1)
-	$(TYPEDOC) --out $(FORMATDOCDIRV2) --exclude **/$(FORMATSRCDIRV2)/samples/* --readme none --name "Knora API V2 JSON-LD Format Documentation" --module commonjs $(FORMATSRCDIRV2)
+	$(TYPEDOC) --out $(FORMATDOCDIRV1) --exclude **/sampleRequests/* --readme none --name "DSP API V1 Format Documentation" --module commonjs $(FORMATSRCDIRV1)
+	$(TYPEDOC) --out $(FORMATDOCDIRV2) --exclude **/$(FORMATSRCDIRV2)/samples/* --readme none --name "DSP API V2 JSON-LD Format Documentation" --module commonjs $(FORMATSRCDIRV2)
 	@echo "Format Docs Build finished. The index page for V1 is $(FORMATDOCDIR)/index.html, for V2 $(FORMATDOCDIRV2)/index.html"
 
 .PHONY: jsonformattest
 jsonformattest: ## to make a documentation of the json request and response format
-	$(TYPEDOC) --out $(FORMATDOCDIRV1) --readme none --name "Knora API V1 Format Documentation" --module commonjs $(FORMATSRCDIRV1)
-	$(TYPEDOC) --out $(FORMATDOCDIRV2) --readme none --name "Knora API V2 JSON-LD Format Documentation" --module commonjs $(FORMATSRCDIRV2)
+	$(TYPEDOC) --out $(FORMATDOCDIRV1) --readme none --name "DSP API V1 Format Documentation" --module commonjs $(FORMATSRCDIRV1)
+	$(TYPEDOC) --out $(FORMATDOCDIRV2) --readme none --name "DSP API V2 JSON-LD Format Documentation" --module commonjs $(FORMATSRCDIRV2)
 	@echo "Sample requests test finished."
 
 .PHONY: graphvizfigures

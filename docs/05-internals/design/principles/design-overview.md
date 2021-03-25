@@ -1,23 +1,23 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Knora API Server Design Overview
+# DSP-API Server Design Overview
 
 ## Introduction
 
@@ -28,7 +28,7 @@ Knora's responsibilities include:
   data in a Knora repository.
 - Querying and updating the repository on behalf of clients.
 - Filtering query results according to the user's permissions.
-- Transforming query results into Knora API responses.
+- Transforming query results into DSP-API responses.
 - Ensuring that ontologies and data in the triplestore are consistent and
   conform to the requirements of the
   [knora-base](../../../02-knora-ontologies/knora-base.md) ontology.
@@ -47,9 +47,9 @@ for other triplestores coming soon).
 
 Knora supports different versions of its API for working with humanities data:
 
-- [Knora API v2](../../../03-apis/api-v2/index.md), a standards-based
+- [DSP-API v2](../../../03-apis/api-v2/index.md), a standards-based
   API currently under development.
-- [Knora API v1](../../../03-apis/api-v1/index.md), a stable, legacy API
+- [DSP-API v1](../../../03-apis/api-v1/index.md), a stable, legacy API
   that focuses on maintaining compatibility with applications that used
   Knora's prototype software.
 
@@ -58,7 +58,7 @@ administering Knora repositories.
 
 The Knora code base includes some functionality that is shared by these different
 APIs, as well as separate packages for each API. Internally, Knora APIs v1 and v2 both
-use functionality in the admin API. Knora API v1 uses some functionality from
+use functionality in the admin API. DSP-API v1 uses some functionality from
 API v2, but API v2 does not depend on API v1.
 
 ## Design Diagram
@@ -253,7 +253,7 @@ because this simplifies the code considerably (using `tell` would
 require actors to maintain complex mutable state), with no apparent
 reduction in performance.
 
-To manage asynchronous communication between actors, the Knora API
+To manage asynchronous communication between actors, the DSP-API
 server uses Scala's `Future` monad extensively. See
 [Futures with Akka](futures-with-akka.md) for details.
 
