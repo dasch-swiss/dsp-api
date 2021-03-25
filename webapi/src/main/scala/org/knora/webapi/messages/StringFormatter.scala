@@ -358,15 +358,16 @@ object StringFormatter {
   /**
     * Holds information extracted from the IRI.
     *
-    * @param iriType            the type of the IRI.
-    * @param projectCode        the IRI's project code, if any.
-    * @param ontologyName       the IRI's ontology name, if any.
-    * @param entityName         the IRI's entity name, if any.
-    * @param resourceID         if this is a resource IRI or value IRI, its resource ID.
-    * @param valueID            if this is a value IRI, its value ID.
-    * @param standoffStartIndex if this is a standoff IRI, its start index.
-    * @param ontologySchema     the IRI's ontology schema, or `None` if it is not a Knora definition IRI.
-    * @param isBuiltInDef       `true` if the IRI refers to a built-in Knora ontology or ontology entity.
+    * @param iriType              the type of the IRI.
+    * @param projectCode          the IRI's project code, if any.
+    * @param ontologyName         the IRI's ontology name, if any.
+    * @param entityName           the IRI's entity name, if any.
+    * @param resourceID           if this is a resource IRI or value IRI, its resource ID.
+    * @param valueID              if this is a value IRI, its value ID.
+    * @param standoffStartIndex   if this is a standoff IRI, its start index.
+    * @param ontologySchema       the IRI's ontology schema, or `None` if it is not a Knora definition IRI.
+    * @param isHostIndependentDef `true` if this is a host-independent Knora definition IRI.
+    * @param isBuiltInDef         `true` if the IRI refers to a built-in Knora ontology or ontology entity.
     */
   private case class SmartIriInfo(iriType: IriType,
                                   projectCode: Option[String] = None,
@@ -376,6 +377,7 @@ object StringFormatter {
                                   valueID: Option[String] = None,
                                   standoffStartIndex: Option[Int] = None,
                                   ontologySchema: Option[OntologySchema],
+                                  isHostIndependentDef: Boolean = false,
                                   isBuiltInDef: Boolean = false,
                                   sharedOntology: Boolean = false)
 
@@ -615,6 +617,23 @@ sealed trait SmartIri extends Ordered[SmartIri] with KnoraContentV2[SmartIri] {
     */
   def fromValueIriToArkUrl(valueUUID: UUID, maybeTimestamp: Option[Instant] = None): String
 
+  /**
+    * Returns `true` if this is a host-independent API v2 ontology definition IRI.
+    */
+  def isHostIndependentDefinitionIri: Boolean
+
+  /**
+    * Converts this IRI to a host-independent API v2 ontology definition IRI if possible, otherwise returns
+    * the same IRI.
+    */
+  def toHostIndependentDefinitionIri: SmartIri
+
+  /**
+    * Converts this IRI to a host-specific API v2 ontology definition IRI if possible, otherwise returns
+    * the same IRI.
+    */
+  def toToHostSpecificDefinitionIri: SmartIri
+
   override def equals(obj: scala.Any): Boolean = {
     // See the comment at the top of the SmartIri trait.
     obj match {
@@ -711,6 +730,9 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
 
   // The hostname used in built-in and shared Knora API v2 IRIs.
   private val CentralKnoraApiHostname = "api.knora.org"
+
+  // The hostname used in host-independent Knora API v2 IRIs.
+  private val HostIndependentHostname = "host.knora.org"
 
   // The strings that Knora data IRIs can start with.
   private val DataIriStarts: Set[String] = Set(
@@ -865,6 +887,9 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
   // A regex that parses a Knora ARK timestamp.
   private val ArkTimestampRegex: Regex =
     """^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(\d{1,9})?Z$""".r
+
+  // A regex that extracts the hostname from an IRI.
+  private val HostnameRegex: Regex = "^(http://).+?(/.*)$".r
 
   // A regex that finds trailing zeroes.
   private val TrailingZerosRegex: Regex =
@@ -1026,9 +1051,12 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
 
           val hostname = segments.head
 
-          val (ontologySchema: Option[OntologySchema], hasProjectSpecificHostname: Boolean) = hostname match {
-            case InternalIriHostname     => (Some(InternalSchema), false)
-            case CentralKnoraApiHostname => (Some(parseApiV2VersionSegments(segments)), false)
+          val (ontologySchema: Option[OntologySchema],
+               hasProjectSpecificHostname: Boolean,
+               isHostIndependentDef: Boolean) = hostname match {
+            case InternalIriHostname     => (Some(InternalSchema), false, false)
+            case CentralKnoraApiHostname => (Some(parseApiV2VersionSegments(segments)), false, false)
+            case HostIndependentHostname => (Some(parseApiV2VersionSegments(segments)), true, true)
 
             case _ =>
               // If our StringFormatter instance was initialised with the Knora API server's hostname,
@@ -1036,17 +1064,17 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
               knoraApiHostAndPort match {
                 case Some(hostAndPort) =>
                   if (hostname == hostAndPort) {
-                    (Some(parseApiV2VersionSegments(segments)), true)
+                    (Some(parseApiV2VersionSegments(segments)), true, false)
                   } else {
                     // If we don't recognise the hostname, this isn't a Knora IRI.
-                    (None, false)
+                    (None, false, false)
                   }
 
                 case None =>
                   // If we don't have the Knora API server's hostname (because we're using the
                   // StringFormatter instance for constant ontologies), we can't recognise
                   // project-specific Knora API v2 IRIs.
-                  (None, false)
+                  (None, false, false)
               }
           }
 
@@ -1121,6 +1149,7 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
               entityName = entityName,
               ontologySchema = ontologySchema,
               isBuiltInDef = hasBuiltInOntologyName,
+              isHostIndependentDef = isHostIndependentDef,
               sharedOntology = sharedOntology
             )
           } else {
@@ -1559,6 +1588,63 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
       arkUrlTry match {
         case Success(arkUrl) => arkUrl
         case Failure(ex)     => throw DataConversionException(s"Can't generate ARK URL for IRI <$iri>: ${ex.getMessage}")
+      }
+    }
+
+    override def isHostIndependentDefinitionIri: Boolean = iriInfo.isHostIndependentDef
+
+    override def toHostIndependentDefinitionIri: SmartIri = {
+      if (isKnoraApiV2DefinitionIri && !(iriInfo.isBuiltInDef || iriInfo.sharedOntology || iriInfo.isHostIndependentDef)) {
+        iri match {
+          case HostnameRegex(beforeHostname: String, afterHostname: String) =>
+            val convertedIriStr = beforeHostname + HostIndependentHostname + afterHostname
+
+            getOrCacheSmartIri(
+              iriStr = convertedIriStr,
+              creationFun = { () =>
+                val convertedSmartIriInfo = iriInfo.copy(
+                  isHostIndependentDef = true
+                )
+
+                new SmartIriImpl(
+                  iriStr = convertedIriStr,
+                  parsedIriInfo = Some(convertedSmartIriInfo)
+                )
+              }
+            )
+        }
+      } else {
+        this
+      }
+    }
+
+    override def toToHostSpecificDefinitionIri: SmartIri = {
+      if (isKnoraApiV2DefinitionIri && iriInfo.isHostIndependentDef) {
+        knoraApiHostAndPort match {
+          case Some(hostAndPort) =>
+            iri match {
+              case HostnameRegex(beforeHostname: String, afterHostname: String) =>
+                val convertedIriStr = beforeHostname + hostAndPort + afterHostname
+
+                getOrCacheSmartIri(
+                  iriStr = convertedIriStr,
+                  creationFun = { () =>
+                    val convertedSmartIriInfo = iriInfo.copy(
+                      isHostIndependentDef = false
+                    )
+
+                    new SmartIriImpl(
+                      iriStr = convertedIriStr,
+                      parsedIriInfo = Some(convertedSmartIriInfo)
+                    )
+                  }
+                )
+            }
+
+          case None => errorFun
+        }
+      } else {
+        this
       }
     }
   }

@@ -1137,7 +1137,7 @@ case class JsonLDDocument(body: JsonLDObject,
     *
     * @param flatten `true` if a flat JSON-LD document should be returned.
     */
-  private def makeCompactedJavaxJsonObject(flatten: Boolean): JsonObject = {
+  def makeCompactedJavaxJsonObject(flatten: Boolean = false): JsonObject = {
     // Flatten the document if requested.
     val documentFlattenedIfRequested: JsonLDDocument = if (flatten) {
       flattened
@@ -1352,18 +1352,13 @@ object JsonLDUtil {
   }
 
   /**
-    * Parses a JSON-LD string as a [[JsonLDDocument]] with an empty context.
+    * Converts a [[JsonStructure]] to a [[JsonLDDocument]] with an empty context.
     *
-    * @param jsonLDString the string to be parsed.
+    * @param jsonStructure the JSON to be converted.
     * @param flatten      `true` if a flat JSON-LD document should be returned.
     * @return a [[JsonLDDocument]].
     */
-  def parseJsonLD(jsonLDString: String, flatten: Boolean = false): JsonLDDocument = {
-    // Parse the string into a javax.json.JsonStructure.
-    val stringReader = new StringReader(jsonLDString)
-    val jsonReader: JsonReader = Json.createReader(stringReader)
-    val jsonStructure: JsonStructure = jsonReader.read()
-
+  def jsonToJsonLD(jsonStructure: JsonStructure, flatten: Boolean = false): JsonLDDocument = {
     // Convert the JsonStructure to a Titanium JsonDocument.
     val titaniumDocument: JsonDocument = JsonDocument.of(jsonStructure)
 
@@ -1382,6 +1377,21 @@ object JsonLDUtil {
       // No. Leave it as is.
       jsonLDDocument
     }
+  }
+
+  /**
+    * Parses a JSON-LD string as a [[JsonLDDocument]] with an empty context.
+    *
+    * @param jsonLDString the string to be parsed.
+    * @param flatten      `true` if a flat JSON-LD document should be returned.
+    * @return a [[JsonLDDocument]].
+    */
+  def parseJsonLD(jsonLDString: String, flatten: Boolean = false): JsonLDDocument = {
+    // Parse the string into a javax.json.JsonStructure.
+    val stringReader = new StringReader(jsonLDString)
+    val jsonReader: JsonReader = Json.createReader(stringReader)
+    val jsonStructure: JsonStructure = jsonReader.read()
+    jsonToJsonLD(jsonStructure = jsonStructure, flatten = flatten)
   }
 
   /**

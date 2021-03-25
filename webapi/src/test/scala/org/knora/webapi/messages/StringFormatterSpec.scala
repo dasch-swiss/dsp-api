@@ -285,6 +285,18 @@ class StringFormatterSpec extends CoreSpec() {
           internalEntityIri.getProjectCode.isEmpty)
     }
 
+    "convert http://www.knora.org/ontology/knora-base#TextValue to http://www.w3.org/2001/XMLSchema#string" in {
+      val internalEntityIri = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri
+      assert(
+        internalEntityIri.getOntologySchema.contains(InternalSchema) &&
+          internalEntityIri.isKnoraInternalEntityIri &&
+          internalEntityIri.isKnoraBuiltInDefinitionIri &&
+          internalEntityIri.getProjectCode.isEmpty)
+
+      val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
+      assert(externalEntityIri.toString == "http://www.w3.org/2001/XMLSchema#string" && !externalEntityIri.isKnoraIri)
+    }
+
     //////////////////////////////////////////
     // Non-shared, project-specific ontologies
 
@@ -424,16 +436,15 @@ class StringFormatterSpec extends CoreSpec() {
           internalEntityIri.getProjectCode.contains("00FF"))
     }
 
-    "convert http://www.knora.org/ontology/knora-base#TextValue to http://www.w3.org/2001/XMLSchema#string" in {
-      val internalEntityIri = "http://www.knora.org/ontology/knora-base#TextValue".toSmartIri
-      assert(
-        internalEntityIri.getOntologySchema.contains(InternalSchema) &&
-          internalEntityIri.isKnoraInternalEntityIri &&
-          internalEntityIri.isKnoraBuiltInDefinitionIri &&
-          internalEntityIri.getProjectCode.isEmpty)
-
-      val externalEntityIri = internalEntityIri.toOntologySchema(ApiV2Simple)
-      assert(externalEntityIri.toString == "http://www.w3.org/2001/XMLSchema#string" && !externalEntityIri.isKnoraIri)
+    "convert http://0.0.0.0:3333/ontology/00FF/images/v2#bild to http://host.knora.org/ontology/00FF/images/v2#bild" in {
+      val hostSpecificEntityIri = "http://0.0.0.0:3333/ontology/00FF/images/v2#bild".toSmartIri
+      assert(!hostSpecificEntityIri.isHostIndependentDefinitionIri)
+      val hostIndependentEntityIri = hostSpecificEntityIri.toHostIndependentDefinitionIri
+      assert(hostIndependentEntityIri.toString == "http://host.knora.org/ontology/00FF/images/v2#bild")
+      assert(hostIndependentEntityIri.isHostIndependentDefinitionIri)
+      val reconvertedHostSpecificEntityIri = hostIndependentEntityIri.toToHostSpecificDefinitionIri
+      assert(reconvertedHostSpecificEntityIri.toString == hostSpecificEntityIri.toString)
+      assert(!reconvertedHostSpecificEntityIri.isHostIndependentDefinitionIri)
     }
 
     /////////////////////////////////////////////////////////////

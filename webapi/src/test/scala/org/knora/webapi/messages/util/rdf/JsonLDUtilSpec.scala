@@ -21,8 +21,10 @@ package org.knora.webapi.util.rdf
 
 import java.nio.file.Paths
 
+import javax.json.{Json, JsonObjectBuilder}
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.feature._
+import org.knora.webapi.messages.util.JsonEvent
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.FileUtil
 import spray.json.{JsValue, JsonParser}
@@ -404,6 +406,88 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
       // Convert back to JSON-LD and check that it's the same.
       val jsonLDDocumentFromRdfModel = JsonLDUtil.fromRdfModel(rdfModel)
       assert(jsonLDDocumentFromRdfModel == expectedJsonLDDocument)
+    }
+
+    "convert a JsonEvent with embedded JSON-LD to a JSON string and back again" in {
+      // Make a JSON-LD document that we can embed in the event.
+      val jsonLDDocument: JsonLDDocument = JsonLDUtil.parseJsonLD(
+        """{
+          |  "@id" : "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw",
+          |  "@type" : "anything:Thing",
+          |  "anything:hasBoolean" : {
+          |    "@id" : "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/IN4R19yYR0ygi3K2VEHpUQ",
+          |    "@type" : "knora-api:BooleanValue",
+          |    "knora-api:arkUrl" : {
+          |      "@type" : "xsd:anyURI",
+          |      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk/IN4R19yYR0ygi3K2VEHpUQe"
+          |    },
+          |    "knora-api:attachedToUser" : {
+          |      "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+          |    },
+          |    "knora-api:booleanValueAsBoolean" : true,
+          |    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+          |    "knora-api:userHasPermission" : "RV",
+          |    "knora-api:valueCreationDate" : {
+          |      "@type" : "xsd:dateTimeStamp",
+          |      "@value" : "2018-05-28T15:52:03.897Z"
+          |    },
+          |    "knora-api:valueHasUUID" : "IN4R19yYR0ygi3K2VEHpUQ",
+          |    "knora-api:versionArkUrl" : {
+          |      "@type" : "xsd:anyURI",
+          |      "@value" : "http://ark.dasch.swiss/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk/IN4R19yYR0ygi3K2VEHpUQe.20180528T155203897Z"
+          |    }
+          |  },
+          |  "knora-api:arkUrl" : {
+          |    "@type" : "xsd:anyURI",
+          |    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk"
+          |  },
+          |  "knora-api:attachedToProject" : {
+          |    "@id" : "http://rdfh.ch/projects/0001"
+          |  },
+          |  "knora-api:attachedToUser" : {
+          |    "@id" : "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+          |  },
+          |  "knora-api:creationDate" : {
+          |    "@type" : "xsd:dateTimeStamp",
+          |    "@value" : "2018-05-28T15:52:03.897Z"
+          |  },
+          |  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+          |  "knora-api:userHasPermission" : "RV",
+          |  "knora-api:versionArkUrl" : {
+          |    "@type" : "xsd:anyURI",
+          |    "@value" : "http://ark.dasch.swiss/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk.20180528T155203897Z"
+          |  },
+          |  "rdfs:label" : "testding",
+          |  "@context" : {
+          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+          |    "anything" : "http://host.knora.org/ontology/0001/anything/v2#"
+          |  }
+          |}"""".stripMargin)
+
+      // Construct the event metadata.
+      val jsonObjectBuilder: JsonObjectBuilder = Json.createObjectBuilder()
+      jsonObjectBuilder.add("eventType", "ResourceCreated")
+      jsonObjectBuilder.add("timestamp", "2018-05-28T15:52:03.897Z")
+      val metadata = jsonObjectBuilder.build()
+
+      // Construct the event, embedding the JSON-LD document.
+      val jsonLDDocuments = Map("resource" -> jsonLDDocument)
+      val jsonEvent = JsonEvent(metadata = metadata, jsonLDDocuments)
+
+      // Format the event as a JSON string.
+      val jsonEventStr: String = jsonEvent.format
+
+      // Parse it.
+      val parsedJsonEvent = JsonEvent.parse(jsonEventStr)
+
+      // Check that its contents are correct.
+      assert(parsedJsonEvent.metadata == metadata)
+      val parsedJsonLDDocument: JsonLDDocument = parsedJsonEvent.jsonLDDocuments("resource")
+      assert(
+        parsedJsonLDDocument.toRdfModel(rdfModelFactory).isIsomorphicWith(jsonLDDocument.toRdfModel(rdfModelFactory)))
     }
   }
 }
