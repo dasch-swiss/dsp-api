@@ -25,7 +25,7 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{ForbiddenException, NotFoundException}
-import org.knora.webapi.messages.SmartIri
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{
   DefaultObjectAccessPermissionsStringForPropertyGetADM,
   DefaultObjectAccessPermissionsStringResponseADM
@@ -38,8 +38,18 @@ import org.knora.webapi.messages.store.sipimessages.{
 import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
 import org.knora.webapi.messages.util.PermissionUtilADM.EntityPermission
 import org.knora.webapi.messages.util.{KnoraSystemInstances, PermissionUtilADM}
-import org.knora.webapi.messages.v2.responder.resourcemessages.ReadResourceV2
-import org.knora.webapi.messages.v2.responder.valuemessages.{FileValueContentV2, ReadValueV2, ValueContentV2}
+import org.knora.webapi.messages.v2.responder.resourcemessages.{ReadResourceV2}
+import org.knora.webapi.messages.v2.responder.valuemessages.{
+  FileValueContentV2,
+  LinkValueContentV2,
+  ReadLinkValueV2,
+  ReadOtherValueV2,
+  ReadTextValueV2,
+  ReadValueV2,
+  TextValueContentV2,
+  UnverifiedValueV2,
+  ValueContentV2
+}
 import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultInProject}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -51,6 +61,27 @@ import scala.util.{Failure, Success}
 object ResourceUtilV2 {
 
   /**
+    * Get a user's permission to update an entity (resource or value).
+    *
+    * @param userIri          the IRI of the user that attempt to update the entity.
+    * @param projectIri        the IRI of the project the entity belongs to.
+    * @param permissions       the permissions that the entity grants to user groups.
+    * @param requestingUser    the requesting user.
+    */
+  def getUserPermissionToUpdateEntity(userIri: IRI,
+                                      projectIri: IRI,
+                                      permissions: String,
+                                      requestingUser: UserADM): Option[EntityPermission] = {
+    val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
+      entityCreator = userIri,
+      entityProject = projectIri,
+      entityPermissionLiteral = permissions,
+      requestingUser = requestingUser
+    )
+    maybeUserPermission
+  }
+
+  /**
     * Checks that a user has the specified permission on a resource.
     *
     * @param resourceInfo   the resource to be updated.
@@ -59,12 +90,11 @@ object ResourceUtilV2 {
   def checkResourcePermission(resourceInfo: ReadResourceV2,
                               permissionNeeded: EntityPermission,
                               requestingUser: UserADM): Unit = {
-    val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
-      entityCreator = resourceInfo.attachedToUser,
-      entityProject = resourceInfo.projectADM.id,
-      entityPermissionLiteral = resourceInfo.permissions,
-      requestingUser = requestingUser
-    )
+    val maybeUserPermission: Option[EntityPermission] = getUserPermissionToUpdateEntity(
+      userIri = resourceInfo.attachedToUser,
+      projectIri = resourceInfo.projectADM.id,
+      permissions = resourceInfo.permissions,
+      requestingUser = requestingUser)
 
     val hasRequiredPermission: Boolean = maybeUserPermission match {
       case Some(userPermission: EntityPermission) => userPermission >= permissionNeeded
@@ -88,12 +118,11 @@ object ResourceUtilV2 {
                            valueInfo: ReadValueV2,
                            permissionNeeded: EntityPermission,
                            requestingUser: UserADM): Unit = {
-    val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
-      entityCreator = valueInfo.attachedToUser,
-      entityProject = resourceInfo.projectADM.id,
-      entityPermissionLiteral = valueInfo.permissions,
-      requestingUser = requestingUser
-    )
+    val maybeUserPermission: Option[EntityPermission] = getUserPermissionToUpdateEntity(
+      userIri = valueInfo.attachedToUser,
+      projectIri = resourceInfo.projectADM.id,
+      permissions = valueInfo.permissions,
+      requestingUser = requestingUser)
 
     val hasRequiredPermission: Boolean = maybeUserPermission match {
       case Some(userPermission: EntityPermission) => userPermission >= permissionNeeded
@@ -215,5 +244,68 @@ object ResourceUtilV2 {
         // This wasn't a file value update. Return the future we were given.
         updateFuture
     }
+  }
+
+  /**
+    * Given a collection of values that are supposed to be created for a resource as [[UnverifiedValueV2]],
+    * it fakes the triplestore response for creation of values
+    * by returning a collection of the corresponding [[ReadValueV2]] messages.
+    *
+    * @param unverifiedValues  the resource's values that were supposed to be created.
+    * @param userPermissions   the user's permissions to create values.
+    * @param userIri           the IRI of the user creating the resource with these values.
+    * @return Map[[SmartIri, Seq[ReadResourceV2]]
+    */
+  def createFakeValuesFromUnverifiedValues(unverifiedValues: Map[SmartIri, Seq[UnverifiedValueV2]],
+                                           userPermissions: EntityPermission,
+                                           userIri: IRI): Map[SmartIri, Seq[ReadValueV2]] = {
+    /* Transforms the unverified values to ReadValueV2 messages */
+    def transformToReadValue(unverifiedVals: Seq[UnverifiedValueV2]): Seq[ReadValueV2] = {
+      unverifiedVals.map(unverifiedVal =>
+        unverifiedVal.valueContent.valueType.toString match {
+          case OntologyConstants.KnoraBase.TextValue =>
+            ReadTextValueV2(
+              valueIri = unverifiedVal.newValueIri,
+              attachedToUser = userIri,
+              permissions = unverifiedVal.permissions,
+              userPermission = userPermissions,
+              valueCreationDate = unverifiedVal.creationDate,
+              valueHasUUID = unverifiedVal.newValueUUID,
+              valueContent = unverifiedVal.valueContent.asInstanceOf[TextValueContentV2],
+              valueHasMaxStandoffStartIndex = None,
+              previousValueIri = None,
+              deletionInfo = None
+            )
+          case OntologyConstants.KnoraBase.LinkValue =>
+            ReadLinkValueV2(
+              valueIri = unverifiedVal.newValueIri,
+              attachedToUser = userIri,
+              permissions = unverifiedVal.permissions,
+              userPermission = userPermissions,
+              valueCreationDate = unverifiedVal.creationDate,
+              valueHasUUID = unverifiedVal.newValueUUID,
+              valueContent = unverifiedVal.valueContent.asInstanceOf[LinkValueContentV2],
+              valueHasRefCount = 0,
+              previousValueIri = None,
+              deletionInfo = None
+            )
+          case _ =>
+            ReadOtherValueV2(
+              valueIri = unverifiedVal.newValueIri,
+              attachedToUser = userIri,
+              permissions = unverifiedVal.permissions,
+              userPermission = userPermissions,
+              valueCreationDate = unverifiedVal.creationDate,
+              valueHasUUID = unverifiedVal.newValueUUID,
+              valueContent = unverifiedVal.valueContent,
+              previousValueIri = None,
+              deletionInfo = None
+            )
+      })
+
+    }
+
+    val readValuesMap: Map[SmartIri, Seq[ReadValueV2]] = unverifiedValues.mapValues(v => transformToReadValue(v))
+    readValuesMap
   }
 }

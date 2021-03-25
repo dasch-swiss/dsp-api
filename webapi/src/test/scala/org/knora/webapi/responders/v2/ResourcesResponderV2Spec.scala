@@ -928,6 +928,39 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
+    "only do pre-creation checks without creating the resource which has no values" in {
+
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceClassIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
+      val resourceLabel: String = "test thing"
+      val inputResource = CreateResourceV2(
+        resourceIri = Some(resourceIri.toSmartIri),
+        resourceClassIri = resourceClassIri,
+        label = resourceLabel,
+        values = Map.empty,
+        projectADM = SharedTestDataADM.anythingProject
+      )
+
+      responderManager ! CreateResourceRequestV2(
+        createResource = inputResource,
+        onlyCheck = true,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID
+      )
+
+      // Check that the returned ReadResourceV2 message for fake creation of the resource
+
+      expectMsgPF(timeout) {
+        case response: ReadResourcesSequenceV2 =>
+          val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
+          outputResource.resourceIri shouldEqual (resourceIri)
+          outputResource.label shouldEqual (resourceLabel)
+          outputResource.resourceClassIri shouldEqual (resourceClassIri)
+          assert(outputResource.values.isEmpty)
+      }
+    }
+
     "create a resource with no values" in {
       // Create the resource.
 
@@ -1013,6 +1046,164 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         defaultValuePermissions = defaultAnythingValuePermissions,
         requestingUser = anythingUserProfile
       )
+    }
+
+    "only do pre-creation checks for a request to create a resource with values" in {
+      // only do pre-creation checks
+
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = 3,
+              comment = Some("this is the number three")
+            ),
+            permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
+          ),
+          CreateValueInNewResourceV2(
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = 7
+            )
+          )
+        ),
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some("this is text that has no standoff")
+            )
+          )
+        ),
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = ApiV2Complex,
+              maybeValueHasString = Some("this is text that has standoff"),
+              standoff = sampleStandoff,
+              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+              mapping = standardMapping
+            )
+          )
+        ),
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = DecimalValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasDecimal = BigDecimal("120000000000000.000000000000001")
+            )
+          )
+        ),
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = DateValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasCalendar = CalendarNameGregorian,
+              valueHasStartJDN = 2264907,
+              valueHasStartPrecision = DatePrecisionYear,
+              valueHasEndJDN = 2265273,
+              valueHasEndPrecision = DatePrecisionYear
+            )
+          )
+        ),
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = BooleanValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasBoolean = false
+            )
+          )
+        ),
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = GeomValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasGeometry =
+                """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295776,"y":0.16741071428571428},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
+            )
+          )
+        ),
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = IntervalValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasIntervalStart = BigDecimal("1.21"),
+              valueHasIntervalEnd = BigDecimal("3.41")
+            )
+          )
+        ),
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = HierarchicalListValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasListNode = "http://rdfh.ch/lists/0001/treeList01"
+            )
+          )
+        ),
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = ColorValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasColor = "#ff7634"
+            )
+          )
+        ),
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = UriValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasUri = "https://www.example.com"
+            )
+          )
+        ),
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = GeonameValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasGeonameCode = "6299722"
+            )
+          )
+        ),
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = LinkValueContentV2(
+              ontologySchema = ApiV2Complex,
+              referredResourceIri = "http://rdfh.ch/0001/a-thing"
+            )
+          )
+        )
+      )
+
+      val resourceClassIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
+      val resourceLabel: String = "test thing with values"
+      val inputResource = CreateResourceV2(
+        resourceIri = Some(resourceIri.toSmartIri),
+        resourceClassIri = resourceClassIri,
+        label = resourceLabel,
+        values = inputValues,
+        projectADM = SharedTestDataADM.anythingProject
+      )
+
+      responderManager ! CreateResourceRequestV2(
+        createResource = inputResource,
+        onlyCheck = true,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgPF(timeout) {
+        case response: ReadResourcesSequenceV2 =>
+          val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
+          outputResource.resourceIri shouldEqual (resourceIri)
+          outputResource.label shouldEqual (resourceLabel)
+          outputResource.resourceClassIri shouldEqual (resourceClassIri)
+          outputResource.values.size shouldEqual (13)
+      }
+
     }
 
     "create a resource with values" in {

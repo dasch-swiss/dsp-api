@@ -65,6 +65,10 @@ import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultIn
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
+import org.knora.webapi.responders.v2.ResourceUtilV2.{
+  getUserPermissionToUpdateEntity,
+  createFakeValuesFromUnverifiedValues
+}
 import org.knora.webapi.util._
 
 import scala.concurrent.Future
@@ -141,7 +145,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     */
   private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ReadResourcesSequenceV2] = {
 
-    def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] = {
+    def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] =
       for {
         //check if resourceIri already exists holding a lock on the IRI
         result <- stringFormatter.checkIriExists(resourceIri, storeManager)
@@ -232,32 +236,70 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           requestingUser = createResourceRequestV2.requestingUser
         )
 
-        // Get the IRI of the named graph in which the resource will be created.
-        dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM)
+        // Should only perform pre-creation checks?
+        createResponse: ReadResourcesSequenceV2 <- if (createResourceRequestV2.onlyCheck) {
+          // Yes. Don't create the resource in triplestore, only return a fake ReadResourceV2 message.
 
-        // Generate SPARQL for creating the resource.
-        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-          .createNewResources(
-            dataNamedGraph = dataNamedGraph,
-            triplestore = settings.triplestoreType,
-            resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
+          val creatingUserIri = createResourceRequestV2.requestingUser.id
+          val defaultResourcePermissions =
+            "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
+          // get user's permissions to create the resource
+          val userPermissions: Option[PermissionUtilADM.EntityPermission] = getUserPermissionToUpdateEntity(
+            userIri = creatingUserIri,
             projectIri = createResourceRequestV2.createResource.projectADM.id,
-            creatorIri = createResourceRequestV2.requestingUser.id
+            permissions = createResourceRequestV2.createResource.permissions.getOrElse(defaultResourcePermissions),
+            requestingUser = createResourceRequestV2.requestingUser
           )
-          .toString()
 
-        // Do the update.
-        _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+          val fakeReadResource = ReadResourceV2(
+            resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri,
+            label = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel,
+            resourceClassIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri.toSmartIri,
+            attachedToUser = creatingUserIri,
+            projectADM = createResourceRequestV2.createResource.projectADM,
+            permissions = createResourceRequestV2.createResource.permissions.getOrElse(defaultResourcePermissions),
+            userPermission = userPermissions.get,
+            values =
+              createFakeValuesFromUnverifiedValues(resourceReadyToCreate.values, userPermissions.get, creatingUserIri),
+            creationDate = creationDate,
+            lastModificationDate = None,
+            versionDate = None,
+            deletionInfo = None
+          )
+          Future.successful(ReadResourcesSequenceV2(resources = Seq(fakeReadResource)))
+        } else {
+          // No. Create the resource.
+          for {
 
-        // Verify that the resource was created correctly.
-        previewOfCreatedResource: ReadResourcesSequenceV2 <- verifyResource(
-          resourceReadyToCreate = resourceReadyToCreate,
-          projectIri = createResourceRequestV2.createResource.projectADM.id,
-          featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
-          requestingUser = createResourceRequestV2.requestingUser
-        )
-      } yield previewOfCreatedResource
-    }
+            // Get the IRI of the named graph in which the resource will be created.
+            dataNamedGraph: IRI <- Future.successful(
+              stringFormatter.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM))
+
+            // Generate SPARQL for creating the resource.
+            sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+              .createNewResources(
+                dataNamedGraph = dataNamedGraph,
+                triplestore = settings.triplestoreType,
+                resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
+                projectIri = createResourceRequestV2.createResource.projectADM.id,
+                creatorIri = createResourceRequestV2.requestingUser.id
+              )
+              .toString()
+
+            // Do the update.
+            _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+
+            // Verify that the resource was created correctly.
+            previewOfCreatedResource: ReadResourcesSequenceV2 <- verifyResource(
+              resourceReadyToCreate = resourceReadyToCreate,
+              projectIri = createResourceRequestV2.createResource.projectADM.id,
+              featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
+              requestingUser = createResourceRequestV2.requestingUser
+            )
+          } yield previewOfCreatedResource
+        }
+
+      } yield createResponse
 
     val triplestoreUpdateFuture: Future[ReadResourcesSequenceV2] = for {
       // Don't allow anonymous users to create resources.

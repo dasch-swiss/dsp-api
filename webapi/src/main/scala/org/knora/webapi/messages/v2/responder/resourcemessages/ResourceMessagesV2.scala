@@ -318,7 +318,7 @@ sealed trait ResourceV2 {
   * @param attachedToUser       the user that created the resource.
   * @param projectADM           the project that the resource belongs to.
   * @param permissions          the permissions that the resource grants to user groups.
-  * @param userPermission       the permission the the requesting user has on the resource.
+  * @param userPermission       the permission that the requesting user has on the resource.
   * @param values               a map of property IRIs to values.
   * @param creationDate         the date when this resource was created.
   * @param lastModificationDate the date when this resource was last modified.
@@ -535,11 +535,13 @@ case class CreateResourceV2(resourceIri: Option[SmartIri],
   * Represents a request to create a resource.
   *
   * @param createResource       the resource to be created.
+  * @param onlyCheck            if true, should only do the pre-creation checks.
   * @param featureFactoryConfig the feature factory configuration.
   * @param requestingUser       the user making the request.
   * @param apiRequestID         the API request ID.
   */
 case class CreateResourceRequestV2(createResource: CreateResourceV2,
+                                   onlyCheck: Boolean = false,
                                    featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM,
                                    apiRequestID: UUID)
