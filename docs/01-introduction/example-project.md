@@ -1,30 +1,30 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # An Example Project
 
 This section introduces some of the basic concepts involved in creating
-ontologies for Knora projects, by means of a relatively simple example
+ontologies for DSP projects, by means of a relatively simple example
 project. Before reading this document, it will be helpful to have some
 familiarity with the basic concepts explained in knora-base.
 
-Knora comes with two example projects, called `incunabula` and
+DSP-API comes with two example projects, called `incunabula` and
 `images-demo`. Here we will consider the `incunabula` example, which is
 a reduced version of a real research project on early printed books. It
 is designed to store an image of each page of each book, as well as RDF
@@ -35,12 +35,12 @@ the images.
 The `incunabula` ontology is in the file `incunabula-onto.ttl`, and its
 data is in the file `incunabula-demo-data.ttl`. Both these files are in
 a standard RDF file format called
-[Turtle](https://www.w3.org/TR/turtle/). The Knora distribution includes
+[Turtle](https://www.w3.org/TR/turtle/). The DSP-API distribution includes
 sample scripts (in the `webapi/scripts` directory) for importing these
 files directly into different triplestores. If you are starting a new
 project from scratch, you can adapt these scripts to import your
 ontology (and any existing RDF data) into your triplestore for use with
-Knora.
+DSP-API.
 
 The syntax of Turtle is fairly simple: it is basically a sequence of
 triples. We will consider some details of Turtle syntax as we go along.
@@ -69,16 +69,16 @@ knora-base.) The `foaf` ontology contains classes and properties for
 representing people. The `dcterms` ontology represents [Dublin
 Core](http://dublincore.org/) metadata.
 
-Then we define prefixes for Knora ontologies:
+Then we define prefixes for DSP ontologies:
 
 ```
 @prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 ```
 
-The `knora-base` ontology contains Knora's core abstractions, and is
+The `knora-base` ontology contains DSP-API's core abstractions, and is
 described in knora-base. The `salsah-gui` ontology includes properties
-that Knora projects must use to enable SALSAH, Knora's generic virtual
+that DSP projects must use to enable SALSAH, DSP-API's generic virtual
 research environment.
 
 For convenience, we can use the empty prefix to refer to the
@@ -93,11 +93,11 @@ an `incunabula` prefix to refer to the `incunabula` ontology.
 
 ### Properties
 
-All the content produced by a Knora project must be stored in Knora
-resources (see incunabula-resource-classes). Resources have properties
+All the content produced by a DSP project must be stored in Knora
+resources (see [incunabula-resource-classes](#resource-classes)). Resources have properties
 that point to different parts of their contents; for example, the
 `incunabula` project contains books, which have properties like `title`.
-Every property that poitns to a Knora value must be a subproperty of
+Every property that poitns to a DSP value must be a subproperty of
 `knora-base:hasValue`, and every property that points to another Knora
 resource must be a subproperty of `knora-base:hasLinkTo`.
 
@@ -139,7 +139,7 @@ predicate. The definition of `:title` says:
   objects of this property will be Knora values, it must be a
   subproperty of `knora-base:hasValue`. To facilitate searches, we
   have also chosen to make it a subproperty of `dcterms:title`. In the
-  Knora API v2, if you do a search for resources that have a certain
+  DSP-API v2, if you do a search for resources that have a certain
   `dcterms:title`, and there is a resource with a matching
   `incunabula:title`, the search results could include that resource.
 * `rdfs:label "Titel"@de`, etc.: It has the specified labels in
@@ -215,7 +215,7 @@ owner, the permissions it grants, and whether it has been deleted.
 Storing this metadata allows Knora to authorise users to see or modify
 the link, as well as to query a previous state of a repository in which
 a deleted link had not yet been deleted. (The ability to query previous
-states of a repository is planned for Knora API version 2.)
+states of a repository is planned for DSP-API version 2.)
 
 The name of a link property and its link value property must be related
 by the following naming convention: to determine the name of the link
@@ -332,7 +332,7 @@ type `incunabula:book`. A cardinality is indeed a kind of restriction:
 it means that a resource of this type may have, or must have, a certain
 number of instances of the specified property. For example,
 `incunabula:book` has cardinalities saying that a book must have at
-least one title and at most one publication date. In the Knora API
+least one title and at most one publication date. In the DSP-API
 version 1, the word 'occurrence' is used instead of 'cardinality'.
 
 The OWL cardinalities supported by Knora are described in
@@ -346,7 +346,7 @@ be wondering whether this cardinality could simply be omitted from the
 definition of `incunabula:book`. However, Knora requires every property
 of a resource to have some cardinality in the resource's class. This is
 because Knora uses the cardinalities to determine which properties are
-*possible* for instances of the class, and the Knora API relies on this
+*possible* for instances of the class, and the DSP-API relies on this
 information. If there was no cardinality for `incunabula:hasAuthor`,
 Knora would not allow a book to have an author.
 

@@ -1,25 +1,25 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Getting Started with Knora
+# Getting Started with DSP-API
 
-Running Knora locally or on a server requires [Docker](https://www.docker.com), which
+Running DSP-API locally or on a server requires [Docker](https://www.docker.com), which
 can be freely downloaded. Please follow the instructions for installing
 [Docker Desktop](https://www.docker.com/products/docker-desktop).
 
@@ -54,13 +54,13 @@ export JAVA_HOME=`/usr/libexec/java_home -v 11`
 
 ## Choosing a Triplestore
 
-Knora requires a standards-compliant
+DSP-API requires a standards-compliant
 [RDF](https://www.w3.org/TR/rdf11-primer/) triplestore. A number of
 triplestore implementations are available, including [free
 software](http://www.gnu.org/philosophy/free-sw.en.html) as well as
 proprietary options.
 
-Knora is designed to work with any standards-compliant
+DSP-API is designed to work with any standards-compliant
 triplestore. It is primarily tested with
 [Apache Jena Fuseki](https://jena.apache.org), an open source triplestore.
 
@@ -69,9 +69,9 @@ triplestore [Ontotext GraphDB](http://ontotext.com/products/graphdb/) is
 provided but unmaintained (GraphDB must be licensed separately by the user).
 Other triplestores are planned.
 
-## Running the Knora-Stack
+## Running the DSP-Stack
 
-Use `git` to clone the Knora repository from [Github](https://github.com/dasch-swiss/knora-api).
+Use `git` to clone the DSP-API repository from [Github](https://github.com/dasch-swiss/dsp-api).
 
 The following environment variables are **optional**:
 
@@ -85,7 +85,7 @@ $ export KNORA_DB_IMPORT=/path/to/some/folder
 $ export KNORA_DB_HOME=/path/to/some/other_folder
 ```
 
-Then from inside the cloned `Knora-API` repository folder, run:
+Then from inside the cloned `DSP-API` repository folder, run:
 
 ```bash
 $ make stack-up
@@ -101,7 +101,7 @@ $ make init-db-test
 
 The scripts called by `make` can be found under `webapi/scripts`. You can
 create your own scripts based on these scripts, to create new
-repositories and optionally to load existing Knora-compliant RDF data
+repositories and optionally to load existing DSP-compliant RDF data
 into them.
 
 If you need to reload the test data, you need to stop and **delete** the

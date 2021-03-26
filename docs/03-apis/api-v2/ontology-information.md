@@ -1,20 +1,20 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Querying, Creating, and Updating Ontologies
@@ -22,7 +22,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ## Querying Ontology Information
 
 Before reading this document, you should have a basic understanding of
-Knora API v2 external ontology schemas (see [API Schema](introduction.md#api-schema)).
+DSP-API v2 external ontology schemas (see [API Schema](introduction.md#api-schema)).
 
 Each request returns a single RDF graph, which can be represented in
 [JSON-LD](https://json-ld.org/spec/latest/json-ld/),
@@ -158,7 +158,7 @@ or RDF/XML, add an HTTP `Accept` header
 (see [Response Formats](introduction.md#response-formats)).
 
 If the client dereferences a project-specific ontology IRI as a URL, the
-Knora API server running on the hostname in the IRI will serve the
+DSP-API server running on the hostname in the IRI will serve the
 ontology. For example, if the server is running on `0.0.0.0:3333`, the
 IRI `http://0.0.0.0:3333/ontology/00FF/images/simple/v2` can be
 dereferenced to request the `images` sample ontology in the simple
@@ -166,14 +166,14 @@ schema.
 
 If the client dereferences a built-in Knora ontology, such as
 `http://api.knora.org/ontology/knora-api/simple/v2`, there must be a
-Knora API server running at `api.knora.org` that can serve the ontology.
+DSP-API server running at `api.knora.org` that can serve the ontology.
 The [DaSCH](http://dasch.swiss/) intends to run such as server. For
 testing, you can configure your local `/etc/hosts` file to resolve
 `api.knora.org` as `localhost`.
 
 #### Differences Between Internal and External Ontologies
 
-The external ontologies used by Knora API v2 are different to the internal
+The external ontologies used by DSP-API v2 are different to the internal
 ontologies that are actually stored in the triplestore (see
 [API Schema](introduction.md#api-schema)). In general, the external
 ontologies use simpler data structures, but they also provide additional

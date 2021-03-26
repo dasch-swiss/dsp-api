@@ -1,20 +1,20 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Editing Resources
@@ -350,7 +350,7 @@ with a confirmation message.
 ### Links to Deleted Resources
 
 If resource `A` has a link to resource `B`, and resource
-`B` is later marked as deleted, `A`'s link will still exist. Knora API
+`B` is later marked as deleted, `A`'s link will still exist. DSP-API
 v2 will still return the link when `A` is queried, but without any information
 about `B` (except for `B`'s IRI). If `A`'s link is necessary to
 meet the requirements of a cardinality, marking `B` as deleted will

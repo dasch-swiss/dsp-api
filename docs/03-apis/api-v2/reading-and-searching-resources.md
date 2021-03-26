@@ -1,20 +1,20 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Reading and Searching Resources
@@ -37,7 +37,7 @@ simple or the complex ontology schema. The complex schema is used by default.
 To receive a response in the simple schema, use the HTTP request header or URL
 parameter described in [API Schema](introduction.md#api-schema).
 
-Each Knora API v2 response describing one or more resources returns a
+Each DSP-API v2 response describing one or more resources returns a
 single RDF graph. For example, a request for a single resource returns that
 resource and all its values. In a full-text search, the resource is returned with the
 values that matched the search criteria. A response to an extended search

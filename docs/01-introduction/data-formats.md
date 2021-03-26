@@ -1,32 +1,32 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Data Formats in Knora
+# Data Formats in DSP-API
 
-As explained in [What Is Knora?](what-is-knora.md), Knora stores data
+As explained in [What Is DSP and DSP-API (previous Knora)?](what-is-knora.md), the DSP stores data
 in a small number of formats that are suitable for long-term preservation while
 facilitating data reuse.
 
 The following is a non-exhaustive list of data formats and how their content
-can be stored and managed by Knora:
+can be stored and managed by DSP-API:
 
-| Original Format                              | Format in Knora                                                                                                              |
+| Original Format                              | Format in DSP                                                                                                              |
 |----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
 | Text (XML, LaTeX, Microsoft Word, etc.)      | [Knora resources](../03-apis/api-v2/editing-resources.md) (RDF) containing [Standoff/RDF](standoff-rdf.md)            |
 | Tabular data, including relational databases | [Knora resources](../03-apis/api-v2/editing-resources.md)                                                                  |
