@@ -62,13 +62,12 @@ object ResourceUtilV2 {
                                       projectIri: IRI,
                                       permissions: String,
                                       requestingUser: UserADM): Option[EntityPermission] = {
-    val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
+    PermissionUtilADM.getUserPermissionADM(
       entityCreator = userIri,
       entityProject = projectIri,
       entityPermissionLiteral = permissions,
       requestingUser = requestingUser
     )
-    maybeUserPermission
   }
 
   /**
@@ -250,8 +249,8 @@ object ResourceUtilV2 {
                                            userPermissions: EntityPermission,
                                            userIri: IRI): Map[SmartIri, Seq[ReadValueV2]] = {
     /* Transforms the unverified values to ReadValueV2 messages */
-    def transformToReadValue(unverifiedVals: Seq[UnverifiedValueV2]): Seq[ReadValueV2] = {
-      unverifiedVals.map(unverifiedVal =>
+    def transformToReadValue(unverifiedValues: Seq[UnverifiedValueV2]): Seq[ReadValueV2] = {
+      unverifiedValues.map(unverifiedVal =>
         unverifiedVal.valueContent.valueType.toString match {
           case OntologyConstants.KnoraBase.TextValue =>
             ReadTextValueV2(
@@ -266,6 +265,7 @@ object ResourceUtilV2 {
               previousValueIri = None,
               deletionInfo = None
             )
+
           case OntologyConstants.KnoraBase.LinkValue =>
             ReadLinkValueV2(
               valueIri = unverifiedVal.newValueIri,
@@ -279,6 +279,7 @@ object ResourceUtilV2 {
               previousValueIri = None,
               deletionInfo = None
             )
+
           case _ =>
             ReadOtherValueV2(
               valueIri = unverifiedVal.newValueIri,
@@ -295,7 +296,6 @@ object ResourceUtilV2 {
 
     }
 
-    val readValuesMap: Map[SmartIri, Seq[ReadValueV2]] = unverifiedValues.mapValues(v => transformToReadValue(v))
-    readValuesMap
+    unverifiedValues.mapValues(unverifiedValue => transformToReadValue(unverifiedValue))
   }
 }
