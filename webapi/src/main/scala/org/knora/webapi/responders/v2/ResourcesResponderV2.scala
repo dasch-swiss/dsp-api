@@ -147,26 +147,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] =
       for {
-        //check if resourceIri already exists holding a lock on the IRI
-        result <- stringFormatter.checkIriExists(resourceIri, storeManager)
-
-        _ = if (result) {
-          throw DuplicateValueException(s"Resource IRI: '${resourceIri}' already exists.")
-        }
 
         // Convert the resource to the internal ontology schema.
         internalCreateResource: CreateResourceV2 <- Future(
           createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
-
-        // Check link targets and list nodes that should exist.
-
-        _ <- checkStandoffLinkTargets(
-          values = internalCreateResource.flatValues,
-          featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
-          requestingUser = createResourceRequestV2.requestingUser
-        )
-
-        _ <- checkListNodes(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
 
         // Get the class IRIs of all the link targets in the request.
         linkTargetClasses: Map[IRI, SmartIri] <- getLinkTargetClasses(
@@ -240,33 +224,53 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         createResponse: ReadResourcesSequenceV2 <- if (createResourceRequestV2.onlyCheck) {
           // Yes. Don't create the resource in triplestore, only return a fake ReadResourceV2 message.
 
-          val creatingUserIri = createResourceRequestV2.requestingUser.id
-          val defaultResourcePermissions =
-            "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser"
-          // get user's permissions to create the resource
-          val userPermissions: Option[PermissionUtilADM.EntityPermission] = getUserPermissionToUpdateEntity(
-            userIri = creatingUserIri,
-            projectIri = createResourceRequestV2.createResource.projectADM.id,
-            permissions = createResourceRequestV2.createResource.permissions.getOrElse(defaultResourcePermissions),
-            requestingUser = createResourceRequestV2.requestingUser
-          )
+          for {
+            //check if resourceIri already exists holding a lock on the IRI
+            result <- stringFormatter.checkIriExists(resourceIri, storeManager)
 
-          val fakeReadResource = ReadResourceV2(
-            resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri,
-            label = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel,
-            resourceClassIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri.toSmartIri,
-            attachedToUser = creatingUserIri,
-            projectADM = createResourceRequestV2.createResource.projectADM,
-            permissions = createResourceRequestV2.createResource.permissions.getOrElse(defaultResourcePermissions),
-            userPermission = userPermissions.get,
-            values =
-              createFakeValuesFromUnverifiedValues(resourceReadyToCreate.values, userPermissions.get, creatingUserIri),
-            creationDate = creationDate,
-            lastModificationDate = None,
-            versionDate = None,
-            deletionInfo = None
-          )
-          Future.successful(ReadResourcesSequenceV2(resources = Seq(fakeReadResource)))
+            _ = if (result) {
+              throw DuplicateValueException(s"Resource IRI: '${resourceIri}' already exists.")
+            }
+            // Check link targets and list nodes that should exist.
+
+            _ <- checkStandoffLinkTargets(
+              values = internalCreateResource.flatValues,
+              featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
+              requestingUser = createResourceRequestV2.requestingUser
+            )
+
+            _ <- checkListNodes(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
+
+            creatingUserIri = createResourceRequestV2.requestingUser.id
+            defaultResourcePermissions: String = defaultResourcePermissionsMap(
+              createResourceRequestV2.createResource.resourceClassIri)
+
+            // get user's permissions to create the resource
+            userPermissions: Option[PermissionUtilADM.EntityPermission] = getUserPermissionToUpdateEntity(
+              userIri = creatingUserIri,
+              projectIri = createResourceRequestV2.createResource.projectADM.id,
+              permissions = createResourceRequestV2.createResource.permissions.getOrElse(defaultResourcePermissions),
+              requestingUser = createResourceRequestV2.requestingUser
+            )
+
+            fakeReadResource = ReadResourceV2(
+              resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri,
+              label = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel,
+              resourceClassIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri.toSmartIri,
+              attachedToUser = creatingUserIri,
+              projectADM = createResourceRequestV2.createResource.projectADM,
+              permissions = createResourceRequestV2.createResource.permissions.getOrElse(defaultResourcePermissions),
+              userPermission = userPermissions.get,
+              values = createFakeValuesFromUnverifiedValues(resourceReadyToCreate.values,
+                                                            userPermissions.get,
+                                                            creatingUserIri),
+              creationDate = creationDate,
+              lastModificationDate = None,
+              versionDate = None,
+              deletionInfo = None
+            )
+
+          } yield ReadResourcesSequenceV2(resources = Seq(fakeReadResource))
         } else {
           // No. Create the resource.
           for {
