@@ -44,8 +44,7 @@ import org.knora.webapi.messages.util.PermissionUtilADM.{
   AGreaterThanB,
   DeletePermission,
   ModifyPermission,
-  PermissionComparisonResult,
-  parsePermissions
+  PermissionComparisonResult
 }
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
@@ -80,6 +79,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
   /* actor materializer needed for http requests */
   implicit val materializer: Materializer = Materializer.matFromSystem(system)
+
+  // The global resource lock. This lock is needed to prevent simultaneous operations on a resource.
+  private val RESOURCE_GLOBAL_LOCK_IRI = "http://rdfh.ch/resources"
 
   /**
     * Represents a resource that is ready to be created and whose contents can be verified afterwards.
@@ -377,7 +379,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
       taskResult <- IriLocker.runWithIriLock(
         createResourceRequestV2.apiRequestID,
-        resourceIri,
+        RESOURCE_GLOBAL_LOCK_IRI,
         () => makeTaskFuture(resourceIri)
       )
     } yield taskResult
@@ -517,7 +519,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
         updateResourceMetadataRequestV2.apiRequestID,
-        updateResourceMetadataRequestV2.resourceIri,
+        RESOURCE_GLOBAL_LOCK_IRI,
         () => makeTaskFuture
       )
     } yield taskResult
@@ -631,7 +633,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
         deleteResourceV2.apiRequestID,
-        deleteResourceV2.resourceIri,
+        RESOURCE_GLOBAL_LOCK_IRI,
         () => makeTaskFuture
       )
     } yield taskResult
@@ -725,7 +727,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Do the pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
         eraseResourceV2.apiRequestID,
-        eraseResourceV2.resourceIri,
+        RESOURCE_GLOBAL_LOCK_IRI,
         () => makeTaskFuture
       )
     } yield taskResult
