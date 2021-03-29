@@ -1433,6 +1433,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
@@ -1481,6 +1482,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
@@ -1523,6 +1525,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
@@ -1569,6 +1572,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
@@ -1603,6 +1607,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
@@ -1637,6 +1642,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
@@ -1707,6 +1713,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
@@ -1741,6 +1748,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
@@ -1775,6 +1783,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
@@ -1809,6 +1818,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
@@ -1833,6 +1843,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
@@ -1869,6 +1880,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
@@ -1892,6 +1904,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
@@ -2170,6 +2183,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesReviewerUser,
         apiRequestID = UUID.randomUUID
@@ -2251,6 +2265,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
+        onlyCheck = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesReviewerUser,
         apiRequestID = UUID.randomUUID

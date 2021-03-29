@@ -44,7 +44,8 @@ import org.knora.webapi.messages.util.PermissionUtilADM.{
   AGreaterThanB,
   DeletePermission,
   ModifyPermission,
-  PermissionComparisonResult
+  PermissionComparisonResult,
+  parsePermissions
 }
 import org.knora.webapi.messages.util._
 import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
@@ -66,11 +67,12 @@ import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2.{
-  getUserPermissionToUpdateEntity,
-  createFakeValuesFromUnverifiedValues
+  createFakeValuesFromUnverifiedValues,
+  getUserPermissionToUpdateEntity
 }
 import org.knora.webapi.util._
 
+import scala.collection.immutable
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
@@ -191,6 +193,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         defaultResourcePermissions: String = defaultResourcePermissionsMap(internalCreateResource.resourceClassIri)
 
+        // parsed and reformat custom resource permissions
+        (parsedResourcePermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]], resourcePermissions) = PermissionUtilADM
+          .parseAndReformatPermissions(createResourceRequestV2.createResource.permissions, defaultResourcePermissions)
+
         // Get the default permissions of each property used.
 
         defaultPropertyPermissionsMap: Map[SmartIri, Map[SmartIri, String]] <- getDefaultPropertyPermissions(
@@ -205,18 +211,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // Make a versionDate for the resource and its values.
         creationDate: Instant = internalCreateResource.creationDate.getOrElse(Instant.now)
 
-        // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
-        // for creating the resource.
+        // make a ResourceReadyToCreate describing the SPARQL for creating the resource.
         resourceReadyToCreate: ResourceReadyToCreate <- generateResourceReadyToCreate(
           resourceIri = resourceIri,
           internalCreateResource = internalCreateResource,
-          linkTargetClasses = linkTargetClasses,
-          entityInfo = allEntityInfo,
           clientResourceIDs = Map.empty[IRI, String],
-          defaultResourcePermissions = defaultResourcePermissions,
+          resourcePermissions = resourcePermissions,
           defaultPropertyPermissions = defaultPropertyPermissions,
           creationDate = creationDate,
-          featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
           requestingUser = createResourceRequestV2.requestingUser
         )
 
@@ -241,9 +243,23 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
             _ <- checkListNodes(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
 
+            // Do the remaining pre-update checks
+            _ <- doPreCreationChecksForResourceAndValues(
+              resourceIri = resourceIri,
+              internalCreateResource = internalCreateResource,
+              linkTargetClasses = linkTargetClasses,
+              entityInfo = allEntityInfo,
+              clientResourceIDs = Map.empty[IRI, String],
+              defaultResourcePermissions = defaultResourcePermissions,
+              parsedResourcePermissions = parsedResourcePermissions,
+              reformattedCustomResourcePermissions = resourcePermissions,
+              defaultPropertyPermissions = defaultPropertyPermissions,
+              creationDate = creationDate,
+              featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
+              requestingUser = createResourceRequestV2.requestingUser
+            )
+
             creatingUserIri = createResourceRequestV2.requestingUser.id
-            defaultResourcePermissions: String = defaultResourcePermissionsMap(
-              createResourceRequestV2.createResource.resourceClassIri)
 
             // get user's permissions to create the resource
             userPermissions: Option[PermissionUtilADM.EntityPermission] = getUserPermissionToUpdateEntity(
@@ -716,7 +732,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Generates a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating a resource and its values.
     * This method does pre-update checks that have to be done for each new resource individually, even when
     * multiple resources are being created in a single request.
     *
@@ -727,23 +742,27 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     *                                   belong to.
     * @param clientResourceIDs          a map of IRIs of resources to be created to client IDs for the same resources, if any.
     * @param defaultResourcePermissions the default permissions to be given to the resource, if it does not have custom permissions.
+    * @param parsedResourcePermissions  the parsed custom resource permissions.
+    * @param reformattedCustomResourcePermissions the reformatted form of the custom resource permissions.
     * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
     *                                   have custom permissions. This is a map of property IRIs to permission strings.
     * @param creationDate               the versionDate to be attached to the resource and its values.
     * @param featureFactoryConfig       the feature factory configuration.
     * @param requestingUser             the user making the request.
-    * @return a [[ResourceReadyToCreate]].
     */
-  private def generateResourceReadyToCreate(resourceIri: IRI,
-                                            internalCreateResource: CreateResourceV2,
-                                            linkTargetClasses: Map[IRI, SmartIri],
-                                            entityInfo: EntityInfoGetResponseV2,
-                                            clientResourceIDs: Map[IRI, String],
-                                            defaultResourcePermissions: String,
-                                            defaultPropertyPermissions: Map[SmartIri, String],
-                                            creationDate: Instant,
-                                            featureFactoryConfig: FeatureFactoryConfig,
-                                            requestingUser: UserADM): Future[ResourceReadyToCreate] = {
+  private def doPreCreationChecksForResourceAndValues(
+      resourceIri: IRI,
+      internalCreateResource: CreateResourceV2,
+      linkTargetClasses: Map[IRI, SmartIri],
+      entityInfo: EntityInfoGetResponseV2,
+      clientResourceIDs: Map[IRI, String],
+      defaultResourcePermissions: String,
+      parsedResourcePermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]],
+      reformattedCustomResourcePermissions: String,
+      defaultPropertyPermissions: Map[SmartIri, String],
+      creationDate: Instant,
+      featureFactoryConfig: FeatureFactoryConfig,
+      requestingUser: UserADM): Future[Unit] = {
     val resourceIDForErrorMsg: String =
       clientResourceIDs.get(resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
 
@@ -808,14 +827,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         resourceIDForErrorMsg = resourceIDForErrorMsg
       )
 
-      // Validate and reformat any custom permissions in the request, and set all permissions to defaults if custom
+      // Validate any custom permissions in the request, and set all permissions to defaults if custom
       // permissions are not provided.
 
-      resourcePermissions: String <- internalCreateResource.permissions match {
-        case Some(permissionStr) =>
+      _ <- internalCreateResource.permissions match {
+        case Some(_) =>
           for {
-            validatedCustomPermissions: String <- PermissionUtilADM.validatePermissions(
-              permissionLiteral = permissionStr,
+            _ <- PermissionUtilADM.validatePermissions(
+              parsedPermissions = parsedResourcePermissions,
               featureFactoryConfig = featureFactoryConfig,
               responderManager = responderManager
             )
@@ -828,7 +847,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               val permissionComparisonResult: PermissionComparisonResult = PermissionUtilADM.comparePermissionsADM(
                 entityCreator = requestingUser.id,
                 entityProject = internalCreateResource.projectADM.id,
-                permissionLiteralA = validatedCustomPermissions,
+                permissionLiteralA = reformattedCustomResourcePermissions,
                 permissionLiteralB = defaultResourcePermissions,
                 requestingUser = requestingUser
               )
@@ -838,12 +857,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                   s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions")
               }
             }
-          } yield validatedCustomPermissions
+          } yield ()
 
-        case None => FastFuture.successful(defaultResourcePermissions)
+        case None => FastFuture.successful(())
       }
 
-      valuesWithValidatedPermissions: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]] <- validateAndFormatValuePermissions(
+      _ <- validateValuePermissions(
         project = internalCreateResource.projectADM,
         values = internalCreateResource.values,
         defaultPropertyPermissions = defaultPropertyPermissions,
@@ -852,6 +871,32 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         requestingUser = requestingUser
       )
 
+    } yield ()
+
+  }
+
+  /**
+    * Generates a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating a resource and its values.
+**/
+  private def generateResourceReadyToCreate(resourceIri: IRI,
+                                            internalCreateResource: CreateResourceV2,
+                                            clientResourceIDs: Map[IRI, String],
+                                            resourcePermissions: String,
+                                            defaultPropertyPermissions: Map[SmartIri, String],
+                                            creationDate: Instant,
+                                            requestingUser: UserADM): Future[ResourceReadyToCreate] = {
+    val resourceIDForErrorMsg: String =
+      clientResourceIDs.get(resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
+
+    for {
+
+      valuesWithValidatedPermissions: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]] <- createSparqlsForValuesInNewResource(
+        project = internalCreateResource.projectADM,
+        values = internalCreateResource.values,
+        defaultPropertyPermissions = defaultPropertyPermissions,
+        resourceIDForErrorMsg = resourceIDForErrorMsg,
+        requestingUser = requestingUser
+      )
       // Ask the values responder for SPARQL for generating the values.
       sparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV2 <- (responderManager ?
         GenerateSparqlToCreateMultipleValuesRequestV2(
@@ -860,8 +905,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           creationDate = creationDate,
           requestingUser = requestingUser
         )).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
-    } yield
-      ResourceReadyToCreate(
+
+      resourceToCreate = ResourceReadyToCreate(
         sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
           resourceIri = resourceIri,
           permissions = resourcePermissions,
@@ -873,6 +918,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         values = sparqlForValuesResponse.unverifiedValues,
         hasStandoffLink = sparqlForValuesResponse.hasStandoffLink
       )
+    } yield resourceToCreate
   }
 
   /**
@@ -1101,8 +1147,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Given a map of property IRIs to values to be created in a new resource, validates and reformats any custom
-    * permissions in the values, and sets all value permissions to defaults if custom permissions are not provided.
+    * Given a map of property IRIs to values to be created in a new resource, validates any custom
+    * permissions in the values.
     *
     * @param project                    the project in which the resource is to be created.
     * @param values                     the values whose permissions are to be validated.
@@ -1113,72 +1159,96 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @return a map of property IRIs to sequences of [[GenerateSparqlForValueInNewResourceV2]], in which
     *         all permissions have been validated and defined.
     */
-  private def validateAndFormatValuePermissions(
+  private def validateValuePermissions(project: ProjectADM,
+                                       values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
+                                       defaultPropertyPermissions: Map[SmartIri, String],
+                                       resourceIDForErrorMsg: String,
+                                       featureFactoryConfig: FeatureFactoryConfig,
+                                       requestingUser: UserADM): Future[Map[SmartIri, Seq[String]]] = {
+    val permissionFutures: Map[SmartIri, Seq[Future[String]]] = values.map {
+      case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
+        val validatedPermissions: Seq[Future[String]] = valuesToCreate.map { valueToCreate =>
+          val (parsedValuePermissions, customValuePermission) =
+            PermissionUtilADM.parseAndReformatPermissions(valueToCreate.permissions,
+                                                          defaultPropertyPermissions(propertyIri))
+          // Does this value have custom permissions?
+          valueToCreate.permissions match {
+            case Some(_) =>
+              // Yes. Validate and reformat them.
+              for {
+                _ <- PermissionUtilADM.validatePermissions(
+                  parsedPermissions = parsedValuePermissions,
+                  featureFactoryConfig = featureFactoryConfig,
+                  responderManager = responderManager
+                )
+
+                // Is the requesting user a system admin, or an admin of this project?
+                _ = if (!(requestingUser.permissions.isProjectAdmin(project.id) || requestingUser.permissions.isSystemAdmin)) {
+
+                  // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+
+                  val permissionComparisonResult: PermissionComparisonResult =
+                    PermissionUtilADM.comparePermissionsADM(
+                      entityCreator = requestingUser.id,
+                      entityProject = project.id,
+                      permissionLiteralA = customValuePermission,
+                      permissionLiteralB = defaultPropertyPermissions(propertyIri),
+                      requestingUser = requestingUser
+                    )
+
+                  if (permissionComparisonResult == AGreaterThanB) {
+                    throw ForbiddenException(
+                      s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions")
+                  }
+                }
+              } yield customValuePermission
+
+            case None => Future.successful(defaultPropertyPermissions(propertyIri))
+          }
+        }
+        propertyIri -> validatedPermissions
+    }
+    ActorUtil.sequenceSeqFuturesInMap(permissionFutures)
+  }
+
+  /**
+    * Given a map of property IRIs to values to be created in a new resource, validates any custom
+    * permissions in the values.
+    *
+    * @param project                    the project in which the resource is to be created.
+    * @param values                     the values whose permissions are to be validated.
+    * @param defaultPropertyPermissions a map of property IRIs to default permissions.
+    * @param resourceIDForErrorMsg      a string that can be prepended to an error message to specify the client's
+    *                                   ID for the containing resource, if provided.
+    * @param requestingUser             the user making the request.
+    * @return a map of property IRIs to sequences of [[GenerateSparqlForValueInNewResourceV2]], in which
+    *         all permissions have been validated and defined.
+    */
+  private def createSparqlsForValuesInNewResource(
       project: ProjectADM,
       values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
       defaultPropertyPermissions: Map[SmartIri, String],
       resourceIDForErrorMsg: String,
-      featureFactoryConfig: FeatureFactoryConfig,
       requestingUser: UserADM): Future[Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]]] = {
     val propertyValuesWithValidatedPermissionsFutures
       : Map[SmartIri, Seq[Future[GenerateSparqlForValueInNewResourceV2]]] = values.map {
       case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
-        val validatedPermissionFutures: Seq[Future[GenerateSparqlForValueInNewResourceV2]] = valuesToCreate.map {
+        val sparqlsForValuesFutures: Seq[Future[GenerateSparqlForValueInNewResourceV2]] = valuesToCreate.map {
           valueToCreate =>
-            // Does this value have custom permissions?
-            valueToCreate.permissions match {
-              case Some(permissionStr: String) =>
-                // Yes. Validate and reformat them.
-                for {
-                  validatedCustomPermissions <- PermissionUtilADM.validatePermissions(
-                    permissionLiteral = permissionStr,
-                    featureFactoryConfig = featureFactoryConfig,
-                    responderManager = responderManager
-                  )
-
-                  // Is the requesting user a system admin, or an admin of this project?
-                  _ = if (!(requestingUser.permissions.isProjectAdmin(project.id) || requestingUser.permissions.isSystemAdmin)) {
-
-                    // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
-
-                    val permissionComparisonResult: PermissionComparisonResult =
-                      PermissionUtilADM.comparePermissionsADM(
-                        entityCreator = requestingUser.id,
-                        entityProject = project.id,
-                        permissionLiteralA = validatedCustomPermissions,
-                        permissionLiteralB = defaultPropertyPermissions(propertyIri),
-                        requestingUser = requestingUser
-                      )
-
-                    if (permissionComparisonResult == AGreaterThanB) {
-                      throw ForbiddenException(
-                        s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions")
-                    }
-                  }
-                } yield
-                  GenerateSparqlForValueInNewResourceV2(
-                    valueContent = valueToCreate.valueContent,
-                    customValueIri = valueToCreate.customValueIri,
-                    customValueUUID = valueToCreate.customValueUUID,
-                    customValueCreationDate = valueToCreate.customValueCreationDate,
-                    permissions = validatedCustomPermissions
-                  )
-
-              case None =>
-                // No. Use the default permissions.
-                FastFuture.successful {
-                  GenerateSparqlForValueInNewResourceV2(
-                    valueContent = valueToCreate.valueContent,
-                    customValueIri = valueToCreate.customValueIri,
-                    customValueUUID = valueToCreate.customValueUUID,
-                    customValueCreationDate = valueToCreate.customValueCreationDate,
-                    permissions = defaultPropertyPermissions(propertyIri)
-                  )
-                }
-            }
+            val (parsedValuePermissions, valuePermissions) =
+              PermissionUtilADM.parseAndReformatPermissions(valueToCreate.permissions,
+                                                            defaultPropertyPermissions(propertyIri))
+            Future.successful(
+              GenerateSparqlForValueInNewResourceV2(
+                valueContent = valueToCreate.valueContent,
+                customValueIri = valueToCreate.customValueIri,
+                customValueUUID = valueToCreate.customValueUUID,
+                customValueCreationDate = valueToCreate.customValueCreationDate,
+                permissions = valuePermissions
+              ))
         }
 
-        propertyIri -> validatedPermissionFutures
+        propertyIri -> sparqlsForValuesFutures
     }
 
     ActorUtil.sequenceSeqFuturesInMap(propertyValuesWithValidatedPermissionsFutures)

@@ -238,14 +238,16 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
           requestingUser = createValueRequest.requestingUser,
           responderManager = responderManager
         )
-
+        (parsedValuePermissions, customValuePermissions) = PermissionUtilADM.parseAndReformatPermissions(
+          createValueRequest.createValue.permissions,
+          defaultValuePermissions)
         // Did the user submit permissions for the new value?
         newValuePermissionLiteral <- createValueRequest.createValue.permissions match {
-          case Some(permissions: String) =>
+          case Some(_) =>
             // Yes. Validate them.
             for {
-              validatedCustomPermissions <- PermissionUtilADM.validatePermissions(
-                permissionLiteral = permissions,
+              _ <- PermissionUtilADM.validatePermissions(
+                parsedPermissions = parsedValuePermissions,
                 featureFactoryConfig = createValueRequest.featureFactoryConfig,
                 responderManager = responderManager
               )
@@ -259,7 +261,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 val permissionComparisonResult: PermissionComparisonResult = PermissionUtilADM.comparePermissionsADM(
                   entityCreator = createValueRequest.requestingUser.id,
                   entityProject = resourceInfo.projectADM.id,
-                  permissionLiteralA = validatedCustomPermissions,
+                  permissionLiteralA = customValuePermissions,
                   permissionLiteralB = defaultValuePermissions,
                   requestingUser = createValueRequest.requestingUser
                 )
@@ -269,7 +271,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                     s"The specified value permissions would give a value's creator a higher permission on the value than the default permissions")
                 }
               }
-            } yield validatedCustomPermissions
+            } yield customValuePermissions
 
           case None =>
             // No. Use the default permissions.
@@ -972,22 +974,21 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         currentValue: ReadValueV2 = resourcePropertyValue.value
 
         // Validate and reformat the submitted permissions.
-
-        newValuePermissionLiteral: String <- PermissionUtilADM.validatePermissions(
-          permissionLiteral = updateValuePermissionsV2.permissions,
+        newPermissionsParsed = parsePermissions(permissionLiteral = updateValuePermissionsV2.permissions, errorFun = {
+          literal =>
+            throw BadRequestException(s"Invalid permission literal: $literal")
+        })
+        _ <- PermissionUtilADM.validatePermissions(
+          parsedPermissions = newPermissionsParsed,
           featureFactoryConfig = updateValueRequest.featureFactoryConfig,
           responderManager = responderManager
         )
-
+        newValuePermissionLiteral: String = reformatCustomPermission(newPermissionsParsed)
         // Check that the user has ChangeRightsPermission on the value, and that the new permissions are
         // different from the current ones.
 
         currentPermissionsParsed: Map[EntityPermission, Set[IRI]] = PermissionUtilADM.parsePermissions(
           currentValue.permissions)
-        newPermissionsParsed: Map[EntityPermission, Set[IRI]] = PermissionUtilADM.parsePermissions(
-          updateValuePermissionsV2.permissions, { permissionLiteral: String =>
-            throw AssertionException(s"Invalid permission literal: $permissionLiteral")
-          })
 
         _ = if (newPermissionsParsed == currentPermissionsParsed) {
           throw BadRequestException(s"The submitted permissions are the same as the current ones")
@@ -1077,12 +1078,17 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         newValueVersionPermissionLiteral <- updateValueContentV2.permissions match {
           case Some(permissions) =>
             // Yes. Validate them.
-            PermissionUtilADM.validatePermissions(
-              permissionLiteral = permissions,
-              featureFactoryConfig = updateValueRequest.featureFactoryConfig,
-              responderManager = responderManager
-            )
-
+            for {
+              parsedPermission <- Future.successful(parsePermissions(permissionLiteral = permissions, errorFun = {
+                literal =>
+                  throw BadRequestException(s"Invalid permission literal: $literal")
+              }))
+              _ <- PermissionUtilADM.validatePermissions(
+                parsedPermissions = parsedPermission,
+                featureFactoryConfig = updateValueRequest.featureFactoryConfig,
+                responderManager = responderManager
+              )
+            } yield reformatCustomPermission(parsedPermission)
           case None =>
             // No. Use the permissions on the current version of the value.
             FastFuture.successful(currentValue.permissions)

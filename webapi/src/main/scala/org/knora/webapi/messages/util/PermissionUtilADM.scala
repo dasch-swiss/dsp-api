@@ -708,30 +708,24 @@ object PermissionUtilADM extends LazyLogging {
   }
 
   /**
-    * Given a permission literal, checks that it refers to valid permissions and groups.
+    * Given parsed custom permissions, checks that they refer to valid permissions and groups.
     *
-    * @param permissionLiteral the permission literal.
+    * @param parsedPermissions the parsed custom permissions.
     * @param featureFactoryConfig the feature factory configuration.
     * @param responderManager  a reference to the responder manager.
     * @param timeout           a timeout for `ask` messages.
     * @param executionContext  an execution context for futures.
-    * @return the validated permission literal, normalised and reformatted.
     */
   def validatePermissions(
-      permissionLiteral: String,
+      parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]],
       featureFactoryConfig: FeatureFactoryConfig,
-      responderManager: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] = {
-    val stringFormatter = StringFormatter.getGeneralInstance
-
+      responderManager: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[Unit] =
     for {
-      // Parse the permission literal.
-      parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]] <- Future(
-        parsePermissions(permissionLiteral = permissionLiteral, errorFun = { literal =>
-          throw BadRequestException(s"Invalid permission literal: $literal")
-        }))
-
       // Get the group IRIs that are mentioned, minus the built-in groups.
-      projectSpecificGroupIris: Set[IRI] = parsedPermissions.values.flatten.toSet -- OntologyConstants.KnoraAdmin.BuiltInGroups
+      projectSpecificGroupIris: Set[IRI] <- Future.successful(
+        parsedPermissions.values.flatten.toSet -- OntologyConstants.KnoraAdmin.BuiltInGroups)
+
+      stringFormatter = StringFormatter.getGeneralInstance
 
       validatedProjectSpecificGroupIris: Set[IRI] = projectSpecificGroupIris.map(iri =>
         stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid group IRI: $iri")))
@@ -742,16 +736,46 @@ object PermissionUtilADM extends LazyLogging {
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )).mapTo[Set[GroupGetResponseADM]]
+    } yield ()
 
-      // Reformat the permission literal.
-      permissionADMs: Set[PermissionADM] = parsedPermissions.flatMap {
-        case (entityPermission, groupIris) =>
-          groupIris.map { groupIri =>
-            entityPermission.toPermissionADM(groupIri)
-          }
-      }.toSet
-    } yield formatPermissionADMs(permissions = permissionADMs, permissionType = PermissionType.OAP)
+  /**
+    * Given parsed custom permissions, reformats the given permission literal.
+    *
+    * @param parsedPermissions the parsed custom permissions.
+    * @return the normalised and reformatted permission literal.
+    */
+  def reformatCustomPermission(parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]]): String = {
+    // Reformat the permission literal.
+    val permissionADMs: Set[PermissionADM] = parsedPermissions.flatMap {
+      case (entityPermission, groupIris) =>
+        groupIris.map { groupIri =>
+          entityPermission.toPermissionADM(groupIri)
+        }
+    }.toSet
+    formatPermissionADMs(permissions = permissionADMs, permissionType = PermissionType.OAP)
   }
+
+  /**
+    * if a custom permission is given for an entity (resource or value), it parses it and returns parsedPermission and
+    * reformatted permission literal. Otherwise, returns the default permission of the entity and an empty set of parsed permissions.
+    *
+    * @param customPermissions the given custom permissions.
+    * @param defaultPermissions the default permissions of the entity.
+    * @return the parsed permissions and normalised and reformatted permission literal.
+    */
+  def parseAndReformatPermissions(
+      customPermissions: Option[String],
+      defaultPermissions: String): (Map[PermissionUtilADM.EntityPermission, Set[IRI]], String) =
+    customPermissions match {
+      case Some(permissionStr) =>
+        val parsedPermissions = parsePermissions(permissionLiteral = permissionStr, errorFun = { literal =>
+          throw BadRequestException(s"Invalid permission literal: $literal")
+        })
+        val reformattedCustomResourcePermissions =
+          PermissionUtilADM.reformatCustomPermission(parsedPermissions)
+        (parsedPermissions, reformattedCustomResourcePermissions)
+      case None => (Map.empty[PermissionUtilADM.EntityPermission, Set[IRI]], defaultPermissions)
+    }
 
   /////////////////////////////////////////
   // API v1 methods
