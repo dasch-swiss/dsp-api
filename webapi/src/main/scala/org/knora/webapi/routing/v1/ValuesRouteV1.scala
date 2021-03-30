@@ -224,7 +224,7 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             Future(TimeValueV1(timeStamp), apiRequest.comment)
 
           case OntologyConstants.KnoraBase.GeonameValue =>
-            Future(GeonameValueV1(apiRequest.geom_value.get), apiRequest.comment)
+            Future(GeonameValueV1(apiRequest.geoname_value.get), apiRequest.comment)
 
           case _ => throw BadRequestException(s"No value submitted")
         }
