@@ -56,6 +56,7 @@ import org.xmlunit.diff.Diff
 import scala.concurrent.duration._
 
 object EventBasedResourcesResponderV2Spec {
+  StringFormatter.initForTest()
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
 
   private val anythingUserProfile = SharedTestDataADM.anythingUser2
