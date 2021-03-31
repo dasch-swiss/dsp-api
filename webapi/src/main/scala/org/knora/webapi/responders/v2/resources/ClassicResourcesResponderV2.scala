@@ -17,7 +17,7 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v2
+package org.knora.webapi.responders.v2.resources
 
 import java.time.Instant
 import java.util.UUID
@@ -27,7 +27,7 @@ import akka.pattern._
 import akka.stream.Materializer
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
-import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.feature.{Feature, FeatureFactoryConfig}
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{
   DefaultObjectAccessPermissionsStringForResourceClassGetADM,
@@ -65,39 +65,34 @@ import org.knora.webapi.messages.v2.responder.{SuccessResponseV2, UpdateResultIn
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.v2.ResourceUtilV2.{
-  createFakeValuesFromUnverifiedValues,
-  getUserPermissionToUpdateEntity
-}
+import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.util._
 
-import scala.collection.immutable
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
-class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithStandoffV2(responderData) {
+class ClassicResourcesResponderV2(responderData: ResponderData)
+    extends ResourcesResponderV2(responderData)
+    with Feature {
 
   /* actor materializer needed for http requests */
   implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
-  // The global resource lock. This lock is needed to prevent simultaneous operations on a resource.
-  private val RESOURCE_GLOBAL_LOCK_IRI = "http://rdfh.ch/resources"
-
   /**
-    * Represents a resource that is ready to be created and whose contents can be verified afterwards.
-    *
-    * @param sparqlTemplateResourceToCreate a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating
-    *                                       the resource.
-    * @param values                         the resource's values for verification.
-    * @param hasStandoffLink                `true` if the property `knora-base:hasStandoffLinkToValue` was automatically added.
-    */
+	 * Represents a resource that is ready to be created and whose contents can be verified afterwards.
+	 *
+	 * @param sparqlTemplateResourceToCreate a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating
+	 *                                       the resource.
+	 * @param values                         the resource's values for verification.
+	 * @param hasStandoffLink                `true` if the property `knora-base:hasStandoffLinkToValue` was automatically added.
+	 */
   private case class ResourceReadyToCreate(sparqlTemplateResourceToCreate: SparqlTemplateResourceToCreate,
                                            values: Map[SmartIri, Seq[UnverifiedValueV2]],
                                            hasStandoffLink: Boolean)
 
   /**
-    * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
-    */
+	 * Receives a message of type [[ResourcesResponderRequestV2]], and returns an appropriate response message.
+	 */
   def receive(msg: ResourcesResponderRequestV2) = msg match {
     case ResourcesGetRequestV2(resIris,
                                propertyIri,
@@ -142,19 +137,35 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Creates a new resource.
-    *
-    * @param createResourceRequestV2 the request to create the resource.
-    * @return a [[ReadResourcesSequenceV2]] containing a preview of the resource.
-    */
+	 * Creates a new resource.
+	 *
+	 * @param createResourceRequestV2 the request to create the resource.
+	 * @return a [[ReadResourcesSequenceV2]] containing a preview of the resource.
+	 */
   private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ReadResourcesSequenceV2] = {
 
-    def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] =
+    def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] = {
       for {
+        //check if resourceIri already exists holding a lock on the IRI
+        result <- stringFormatter.checkIriExists(resourceIri, storeManager)
+
+        _ = if (result) {
+          throw DuplicateValueException(s"Resource IRI: '${resourceIri}' already exists.")
+        }
 
         // Convert the resource to the internal ontology schema.
         internalCreateResource: CreateResourceV2 <- Future(
           createResourceRequestV2.createResource.toOntologySchema(InternalSchema))
+
+        // Check link targets and list nodes that should exist.
+
+        _ <- checkStandoffLinkTargets(
+          values = internalCreateResource.flatValues,
+          featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
+          requestingUser = createResourceRequestV2.requestingUser
+        )
+
+        _ <- checkListNodes(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
 
         // Get the class IRIs of all the link targets in the request.
         linkTargetClasses: Map[IRI, SmartIri] <- getLinkTargetClasses(
@@ -195,10 +206,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         defaultResourcePermissions: String = defaultResourcePermissionsMap(internalCreateResource.resourceClassIri)
 
-        // parsed and reformat custom resource permissions
-        (parsedResourcePermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]], resourcePermissions) = PermissionUtilADM
-          .parseAndReformatPermissions(createResourceRequestV2.createResource.permissions, defaultResourcePermissions)
-
         // Get the default permissions of each property used.
 
         defaultPropertyPermissionsMap: Map[SmartIri, Map[SmartIri, String]] <- getDefaultPropertyPermissions(
@@ -213,115 +220,47 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // Make a versionDate for the resource and its values.
         creationDate: Instant = internalCreateResource.creationDate.getOrElse(Instant.now)
 
-        // make a ResourceReadyToCreate describing the SPARQL for creating the resource.
+        // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
+        // for creating the resource.
         resourceReadyToCreate: ResourceReadyToCreate <- generateResourceReadyToCreate(
           resourceIri = resourceIri,
           internalCreateResource = internalCreateResource,
+          linkTargetClasses = linkTargetClasses,
+          entityInfo = allEntityInfo,
           clientResourceIDs = Map.empty[IRI, String],
-          resourcePermissions = resourcePermissions,
+          defaultResourcePermissions = defaultResourcePermissions,
           defaultPropertyPermissions = defaultPropertyPermissions,
           creationDate = creationDate,
+          featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
           requestingUser = createResourceRequestV2.requestingUser
         )
 
-        // Should only perform pre-creation checks?
-        createResponse: ReadResourcesSequenceV2 <- if (createResourceRequestV2.onlyCheck) {
-          // Yes. Don't create the resource in triplestore, only return a fake ReadResourceV2 message.
+        // Get the IRI of the named graph in which the resource will be created.
+        dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM)
 
-          for {
-            //check if resourceIri already exists holding a lock on the IRI
-            result <- stringFormatter.checkIriExists(resourceIri, storeManager)
+        // Generate SPARQL for creating the resource.
+        sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .createNewResources(
+            dataNamedGraph = dataNamedGraph,
+            triplestore = settings.triplestoreType,
+            resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
+            projectIri = createResourceRequestV2.createResource.projectADM.id,
+            creatorIri = createResourceRequestV2.requestingUser.id
+          )
+          .toString()
 
-            _ = if (result) {
-              throw DuplicateValueException(s"Resource IRI: '${resourceIri}' already exists.")
-            }
-            // Check link targets and list nodes that should exist.
+        // Do the update.
+        _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
-            _ <- checkStandoffLinkTargets(
-              values = internalCreateResource.flatValues,
-              featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
-              requestingUser = createResourceRequestV2.requestingUser
-            )
-
-            _ <- checkListNodes(internalCreateResource.flatValues, createResourceRequestV2.requestingUser)
-
-            // Do the remaining pre-update checks
-            _ <- doPreCreationChecksForResourceAndValues(
-              resourceIri = resourceIri,
-              internalCreateResource = internalCreateResource,
-              linkTargetClasses = linkTargetClasses,
-              entityInfo = allEntityInfo,
-              clientResourceIDs = Map.empty[IRI, String],
-              defaultResourcePermissions = defaultResourcePermissions,
-              parsedResourcePermissions = parsedResourcePermissions,
-              reformattedCustomResourcePermissions = resourcePermissions,
-              defaultPropertyPermissions = defaultPropertyPermissions,
-              creationDate = creationDate,
-              featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
-              requestingUser = createResourceRequestV2.requestingUser
-            )
-
-            creatingUserIri = createResourceRequestV2.requestingUser.id
-
-            // get user's permissions to create the resource
-            userPermissions: Option[PermissionUtilADM.EntityPermission] = getUserPermissionToUpdateEntity(
-              userIri = creatingUserIri,
-              projectIri = createResourceRequestV2.createResource.projectADM.id,
-              permissions = createResourceRequestV2.createResource.permissions.getOrElse(defaultResourcePermissions),
-              requestingUser = createResourceRequestV2.requestingUser
-            )
-
-            fakeReadResource = ReadResourceV2(
-              resourceIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceIri,
-              label = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceLabel,
-              resourceClassIri = resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri.toSmartIri,
-              attachedToUser = creatingUserIri,
-              projectADM = createResourceRequestV2.createResource.projectADM,
-              permissions = createResourceRequestV2.createResource.permissions.getOrElse(defaultResourcePermissions),
-              userPermission = userPermissions.get,
-              values = createFakeValuesFromUnverifiedValues(resourceReadyToCreate.values,
-                                                            userPermissions.get,
-                                                            creatingUserIri),
-              creationDate = creationDate,
-              lastModificationDate = None,
-              versionDate = None,
-              deletionInfo = None
-            )
-
-          } yield ReadResourcesSequenceV2(resources = Seq(fakeReadResource))
-        } else {
-          // No. Create the resource.
-          for {
-
-            // Get the IRI of the named graph in which the resource will be created.
-            dataNamedGraph: IRI <- Future.successful(
-              stringFormatter.projectDataNamedGraphV2(createResourceRequestV2.createResource.projectADM))
-
-            // Generate SPARQL for creating the resource.
-            sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-              .createNewResources(
-                dataNamedGraph = dataNamedGraph,
-                triplestore = settings.triplestoreType,
-                resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
-                projectIri = createResourceRequestV2.createResource.projectADM.id,
-                creatorIri = createResourceRequestV2.requestingUser.id
-              )
-              .toString()
-
-            // Do the update.
-            _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
-
-            // Verify that the resource was created correctly.
-            previewOfCreatedResource: ReadResourcesSequenceV2 <- verifyResource(
-              resourceReadyToCreate = resourceReadyToCreate,
-              projectIri = createResourceRequestV2.createResource.projectADM.id,
-              featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
-              requestingUser = createResourceRequestV2.requestingUser
-            )
-          } yield previewOfCreatedResource
-        }
-
-      } yield createResponse
+        // Verify that the resource was created correctly.
+        previewOfCreatedResource: ReadResourcesSequenceV2 <- verifyResource(
+          resourceReadyToCreate = resourceReadyToCreate,
+          projectIri = createResourceRequestV2.createResource.projectADM.id,
+          featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
+          requestingUser = createResourceRequestV2.requestingUser
+        )
+      } yield previewOfCreatedResource
+    }
 
     val triplestoreUpdateFuture: Future[ReadResourcesSequenceV2] = for {
       // Don't allow anonymous users to create resources.
@@ -379,7 +318,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
       taskResult <- IriLocker.runWithIriLock(
         createResourceRequestV2.apiRequestID,
-        RESOURCE_GLOBAL_LOCK_IRI,
+        resourceIri,
         () => makeTaskFuture(resourceIri)
       )
     } yield taskResult
@@ -394,11 +333,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Updates a resources metadata.
-    *
-    * @param updateResourceMetadataRequestV2 the update request.
-    * @return a [[SuccessResponseV2]].
-    */
+	 * Updates a resources metadata.
+	 *
+	 * @param updateResourceMetadataRequestV2 the update request.
+	 * @return a [[SuccessResponseV2]].
+	 */
   private def updateResourceMetadataV2(
       updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2): Future[SuccessResponseV2] = {
     def makeTaskFuture: Future[SuccessResponseV2] = {
@@ -519,18 +458,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
         updateResourceMetadataRequestV2.apiRequestID,
-        RESOURCE_GLOBAL_LOCK_IRI,
+        updateResourceMetadataRequestV2.resourceIri,
         () => makeTaskFuture
       )
     } yield taskResult
   }
 
   /**
-    * Either marks a resource as deleted or erases it from the triplestore, depending on the value of `erase`
-    * in the request message.
-    *
-    * @param deleteOrEraseResourceV2 the request message.
-    */
+	 * Either marks a resource as deleted or erases it from the triplestore, depending on the value of `erase`
+	 * in the request message.
+	 *
+	 * @param deleteOrEraseResourceV2 the request message.
+	 */
   private def deleteOrEraseResourceV2(
       deleteOrEraseResourceV2: DeleteOrEraseResourceRequestV2): Future[SuccessResponseV2] = {
     if (deleteOrEraseResourceV2.erase) {
@@ -541,10 +480,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Marks a resource as deleted.
-    *
-    * @param deleteResourceV2 the request message.
-    */
+	 * Marks a resource as deleted.
+	 *
+	 * @param deleteResourceV2 the request message.
+	 */
   private def markResourceAsDeletedV2(deleteResourceV2: DeleteOrEraseResourceRequestV2): Future[SuccessResponseV2] = {
     def makeTaskFuture: Future[SuccessResponseV2] = {
       for {
@@ -633,17 +572,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Do the remaining pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
         deleteResourceV2.apiRequestID,
-        RESOURCE_GLOBAL_LOCK_IRI,
+        deleteResourceV2.resourceIri,
         () => makeTaskFuture
       )
     } yield taskResult
   }
 
   /**
-    * Erases a resource from the triplestore.
-    *
-    * @param eraseResourceV2 the request message.
-    */
+	 * Erases a resource from the triplestore.
+	 *
+	 * @param eraseResourceV2 the request message.
+	 */
   private def eraseResourceV2(eraseResourceV2: DeleteOrEraseResourceRequestV2): Future[SuccessResponseV2] = {
     def makeTaskFuture: Future[SuccessResponseV2] = {
       for {
@@ -727,44 +666,41 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Do the pre-update checks and the update while holding an update lock on the resource.
       taskResult <- IriLocker.runWithIriLock(
         eraseResourceV2.apiRequestID,
-        RESOURCE_GLOBAL_LOCK_IRI,
+        eraseResourceV2.resourceIri,
         () => makeTaskFuture
       )
     } yield taskResult
   }
 
   /**
-    * This method does pre-update checks that have to be done for each new resource individually, even when
-    * multiple resources are being created in a single request.
-    *
-    * @param internalCreateResource     the resource to be created.
-    * @param linkTargetClasses          a map of resources that are link targets to the IRIs of those resources' classes.
-    * @param entityInfo                 an [[EntityInfoGetResponseV2]] containing definitions of the class of the resource to
-    *                                   be created, as well as the classes that all the link targets
-    *                                   belong to.
-    * @param clientResourceIDs          a map of IRIs of resources to be created to client IDs for the same resources, if any.
-    * @param defaultResourcePermissions the default permissions to be given to the resource, if it does not have custom permissions.
-    * @param parsedResourcePermissions  the parsed custom resource permissions.
-    * @param reformattedCustomResourcePermissions the reformatted form of the custom resource permissions.
-    * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
-    *                                   have custom permissions. This is a map of property IRIs to permission strings.
-    * @param creationDate               the versionDate to be attached to the resource and its values.
-    * @param featureFactoryConfig       the feature factory configuration.
-    * @param requestingUser             the user making the request.
-    */
-  private def doPreCreationChecksForResourceAndValues(
-      resourceIri: IRI,
-      internalCreateResource: CreateResourceV2,
-      linkTargetClasses: Map[IRI, SmartIri],
-      entityInfo: EntityInfoGetResponseV2,
-      clientResourceIDs: Map[IRI, String],
-      defaultResourcePermissions: String,
-      parsedResourcePermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]],
-      reformattedCustomResourcePermissions: String,
-      defaultPropertyPermissions: Map[SmartIri, String],
-      creationDate: Instant,
-      featureFactoryConfig: FeatureFactoryConfig,
-      requestingUser: UserADM): Future[Unit] = {
+	 * Generates a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating a resource and its values.
+	 * This method does pre-update checks that have to be done for each new resource individually, even when
+	 * multiple resources are being created in a single request.
+	 *
+	 * @param internalCreateResource     the resource to be created.
+	 * @param linkTargetClasses          a map of resources that are link targets to the IRIs of those resources' classes.
+	 * @param entityInfo                 an [[EntityInfoGetResponseV2]] containing definitions of the class of the resource to
+	 *                                   be created, as well as the classes that all the link targets
+	 *                                   belong to.
+	 * @param clientResourceIDs          a map of IRIs of resources to be created to client IDs for the same resources, if any.
+	 * @param defaultResourcePermissions the default permissions to be given to the resource, if it does not have custom permissions.
+	 * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
+	 *                                   have custom permissions. This is a map of property IRIs to permission strings.
+	 * @param creationDate               the versionDate to be attached to the resource and its values.
+	 * @param featureFactoryConfig       the feature factory configuration.
+	 * @param requestingUser             the user making the request.
+	 * @return a [[ResourceReadyToCreate]].
+	 */
+  private def generateResourceReadyToCreate(resourceIri: IRI,
+                                            internalCreateResource: CreateResourceV2,
+                                            linkTargetClasses: Map[IRI, SmartIri],
+                                            entityInfo: EntityInfoGetResponseV2,
+                                            clientResourceIDs: Map[IRI, String],
+                                            defaultResourcePermissions: String,
+                                            defaultPropertyPermissions: Map[SmartIri, String],
+                                            creationDate: Instant,
+                                            featureFactoryConfig: FeatureFactoryConfig,
+                                            requestingUser: UserADM): Future[ResourceReadyToCreate] = {
     val resourceIDForErrorMsg: String =
       clientResourceIDs.get(resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
 
@@ -829,14 +765,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         resourceIDForErrorMsg = resourceIDForErrorMsg
       )
 
-      // Validate any custom permissions in the request, and set all permissions to defaults if custom
+      // Validate and reformat any custom permissions in the request, and set all permissions to defaults if custom
       // permissions are not provided.
 
-      _ <- internalCreateResource.permissions match {
-        case Some(_) =>
+      resourcePermissions: String <- internalCreateResource.permissions match {
+        case Some(permissionStr) =>
+          val parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]] =
+            PermissionUtilADM.parsePermissions(permissionStr)
+          val reformattedPermissions: String = PermissionUtilADM.reformatCustomPermission(parsedPermissions)
+
           for {
             _ <- PermissionUtilADM.validatePermissions(
-              parsedPermissions = parsedResourcePermissions,
+              parsedPermissions = parsedPermissions,
               featureFactoryConfig = featureFactoryConfig,
               responderManager = responderManager
             )
@@ -849,7 +789,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               val permissionComparisonResult: PermissionComparisonResult = PermissionUtilADM.comparePermissionsADM(
                 entityCreator = requestingUser.id,
                 entityProject = internalCreateResource.projectADM.id,
-                permissionLiteralA = reformattedCustomResourcePermissions,
+                permissionLiteralA = reformattedPermissions,
                 permissionLiteralB = defaultResourcePermissions,
                 requestingUser = requestingUser
               )
@@ -859,12 +799,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                   s"${resourceIDForErrorMsg}The specified permissions would give the resource's creator a higher permission on the resource than the default permissions")
               }
             }
-          } yield ()
+          } yield reformattedPermissions
 
-        case None => FastFuture.successful(())
+        case None => FastFuture.successful(defaultResourcePermissions)
       }
 
-      _ <- validateValuePermissions(
+      valuesWithValidatedPermissions: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]] <- validateAndFormatValuePermissions(
         project = internalCreateResource.projectADM,
         values = internalCreateResource.values,
         defaultPropertyPermissions = defaultPropertyPermissions,
@@ -873,32 +813,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         requestingUser = requestingUser
       )
 
-    } yield ()
-
-  }
-
-  /**
-    * Generates a [[SparqlTemplateResourceToCreate]] describing SPARQL for creating a resource and its values.
-**/
-  private def generateResourceReadyToCreate(resourceIri: IRI,
-                                            internalCreateResource: CreateResourceV2,
-                                            clientResourceIDs: Map[IRI, String],
-                                            resourcePermissions: String,
-                                            defaultPropertyPermissions: Map[SmartIri, String],
-                                            creationDate: Instant,
-                                            requestingUser: UserADM): Future[ResourceReadyToCreate] = {
-    val resourceIDForErrorMsg: String =
-      clientResourceIDs.get(resourceIri).map(resourceID => s"In resource '$resourceID': ").getOrElse("")
-
-    for {
-
-      valuesWithValidatedPermissions: Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]] <- createSparqlsForValuesInNewResource(
-        project = internalCreateResource.projectADM,
-        values = internalCreateResource.values,
-        defaultPropertyPermissions = defaultPropertyPermissions,
-        resourceIDForErrorMsg = resourceIDForErrorMsg,
-        requestingUser = requestingUser
-      )
       // Ask the values responder for SPARQL for generating the values.
       sparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV2 <- (responderManager ?
         GenerateSparqlToCreateMultipleValuesRequestV2(
@@ -907,8 +821,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           creationDate = creationDate,
           requestingUser = requestingUser
         )).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
-
-      resourceToCreate = ResourceReadyToCreate(
+    } yield
+      ResourceReadyToCreate(
         sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
           resourceIri = resourceIri,
           permissions = resourcePermissions,
@@ -920,19 +834,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         values = sparqlForValuesResponse.unverifiedValues,
         hasStandoffLink = sparqlForValuesResponse.hasStandoffLink
       )
-    } yield resourceToCreate
   }
 
   /**
-    * Given a sequence of resources to be created, gets the class IRIs of all the resources that are the targets of
-    * link values in the new resources, whether these already exist in the triplestore or are among the resources
-    * to be created.
-    *
-    * @param internalCreateResources the resources to be created.
-    * @param featureFactoryConfig    the feature factory configuration.
-    * @param requestingUser          the user making the request.
-    * @return a map of resource IRIs to class IRIs.
-    */
+	 * Given a sequence of resources to be created, gets the class IRIs of all the resources that are the targets of
+	 * link values in the new resources, whether these already exist in the triplestore or are among the resources
+	 * to be created.
+	 *
+	 * @param internalCreateResources the resources to be created.
+	 * @param featureFactoryConfig    the feature factory configuration.
+	 * @param requestingUser          the user making the request.
+	 * @return a map of resource IRIs to class IRIs.
+	 */
   private def getLinkTargetClasses(resourceIri: IRI,
                                    internalCreateResources: Seq[CreateResourceV2],
                                    featureFactoryConfig: FeatureFactoryConfig,
@@ -978,13 +891,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Checks that values to be created in a new resource do not contain duplicates.
-    *
-    * @param values                a map of property IRIs to values to be created (in the internal schema).
-    * @param clientResourceIDs     a map of IRIs of resources to be created to client IDs for the same resources, if any.
-    * @param resourceIDForErrorMsg something that can be prepended to an error message to specify the client's ID for the
-    *                              resource to be created, if any.
-    */
+	 * Checks that values to be created in a new resource do not contain duplicates.
+	 *
+	 * @param values                a map of property IRIs to values to be created (in the internal schema).
+	 * @param clientResourceIDs     a map of IRIs of resources to be created to client IDs for the same resources, if any.
+	 * @param resourceIDForErrorMsg something that can be prepended to an error message to specify the client's ID for the
+	 *                              resource to be created, if any.
+	 */
   private def checkForDuplicateValues(values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
                                       clientResourceIDs: Map[IRI, String] = Map.empty[IRI, String],
                                       resourceIDForErrorMsg: IRI): Unit = {
@@ -1007,17 +920,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Checks that values to be created in a new resource are compatible with the object class constraints
-    * of the resource's properties.
-    *
-    * @param values                a map of property IRIs to values to be created (in the internal schema).
-    * @param linkTargetClasses     a map of resources that are link targets to the IRIs of those resource's classes.
-    * @param entityInfo            an [[EntityInfoGetResponseV2]] containing definitions of the classes that all the link targets
-    *                              belong to.
-    * @param clientResourceIDs     a map of IRIs of resources to be created to client IDs for the same resources, if any.
-    * @param resourceIDForErrorMsg something that can be prepended to an error message to specify the client's ID for the
-    *                              resource to be created, if any.
-    */
+	 * Checks that values to be created in a new resource are compatible with the object class constraints
+	 * of the resource's properties.
+	 *
+	 * @param values                a map of property IRIs to values to be created (in the internal schema).
+	 * @param linkTargetClasses     a map of resources that are link targets to the IRIs of those resource's classes.
+	 * @param entityInfo            an [[EntityInfoGetResponseV2]] containing definitions of the classes that all the link targets
+	 *                              belong to.
+	 * @param clientResourceIDs     a map of IRIs of resources to be created to client IDs for the same resources, if any.
+	 * @param resourceIDForErrorMsg something that can be prepended to an error message to specify the client's ID for the
+	 *                              resource to be created, if any.
+	 */
   private def checkObjectClassConstraints(values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
                                           linkTargetClasses: Map[IRI, SmartIri],
                                           entityInfo: EntityInfoGetResponseV2,
@@ -1095,14 +1008,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Given a sequence of values to be created in a new resource, checks the targets of standoff links in text
-    * values. For each link, if the target is expected to exist, checks that it exists and that the user has
-    * permission to see it.
-    *
-    * @param values               the values to be checked.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    */
+	 * Given a sequence of values to be created in a new resource, checks the targets of standoff links in text
+	 * values. For each link, if the target is expected to exist, checks that it exists and that the user has
+	 * permission to see it.
+	 *
+	 * @param values               the values to be checked.
+	 * @param featureFactoryConfig the feature factory configuration.
+	 * @param requestingUser       the user making the request.
+	 */
   private def checkStandoffLinkTargets(values: Iterable[CreateValueInNewResourceV2],
                                        featureFactoryConfig: FeatureFactoryConfig,
                                        requestingUser: UserADM): Future[Unit] = {
@@ -1124,12 +1037,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Given a sequence of values to be created in a new resource, checks the existence of the list nodes referred to
-    * in list values.
-    *
-    * @param values         the values to be checked.
-    * @param requestingUser the user making the request.
-    */
+	 * Given a sequence of values to be created in a new resource, checks the existence of the list nodes referred to
+	 * in list values.
+	 *
+	 * @param values         the values to be checked.
+	 * @param requestingUser the user making the request.
+	 */
   private def checkListNodes(values: Iterable[CreateValueInNewResourceV2], requestingUser: UserADM): Future[Unit] = {
     val listNodesThatShouldExist: Set[IRI] = values.foldLeft(Set.empty[IRI]) {
       case (acc: Set[IRI], valueToCreate: CreateValueInNewResourceV2) =>
@@ -1149,121 +1062,102 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Given a map of property IRIs to values to be created in a new resource, validates any custom
-    * permissions in the values.
-    *
-    * @param project                    the project in which the resource is to be created.
-    * @param values                     the values whose permissions are to be validated.
-    * @param defaultPropertyPermissions a map of property IRIs to default permissions.
-    * @param resourceIDForErrorMsg      a string that can be prepended to an error message to specify the client's
-    *                                   ID for the containing resource, if provided.
-    * @param requestingUser             the user making the request.
-    * @return a map of property IRIs to sequences of [[GenerateSparqlForValueInNewResourceV2]], in which
-    *         all permissions have been validated and defined.
-    */
-  private def validateValuePermissions(project: ProjectADM,
-                                       values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
-                                       defaultPropertyPermissions: Map[SmartIri, String],
-                                       resourceIDForErrorMsg: String,
-                                       featureFactoryConfig: FeatureFactoryConfig,
-                                       requestingUser: UserADM): Future[Map[SmartIri, Seq[String]]] = {
-    val permissionFutures: Map[SmartIri, Seq[Future[String]]] = values.map {
-      case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
-        val validatedPermissions: Seq[Future[String]] = valuesToCreate.map { valueToCreate =>
-          val (parsedValuePermissions, customValuePermission) =
-            PermissionUtilADM.parseAndReformatPermissions(valueToCreate.permissions,
-                                                          defaultPropertyPermissions(propertyIri))
-          // Does this value have custom permissions?
-          valueToCreate.permissions match {
-            case Some(_) =>
-              // Yes. Validate and reformat them.
-              for {
-                _ <- PermissionUtilADM.validatePermissions(
-                  parsedPermissions = parsedValuePermissions,
-                  featureFactoryConfig = featureFactoryConfig,
-                  responderManager = responderManager
-                )
-
-                // Is the requesting user a system admin, or an admin of this project?
-                _ = if (!(requestingUser.permissions.isProjectAdmin(project.id) || requestingUser.permissions.isSystemAdmin)) {
-
-                  // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
-
-                  val permissionComparisonResult: PermissionComparisonResult =
-                    PermissionUtilADM.comparePermissionsADM(
-                      entityCreator = requestingUser.id,
-                      entityProject = project.id,
-                      permissionLiteralA = customValuePermission,
-                      permissionLiteralB = defaultPropertyPermissions(propertyIri),
-                      requestingUser = requestingUser
-                    )
-
-                  if (permissionComparisonResult == AGreaterThanB) {
-                    throw ForbiddenException(
-                      s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions")
-                  }
-                }
-              } yield customValuePermission
-
-            case None => Future.successful(defaultPropertyPermissions(propertyIri))
-          }
-        }
-        propertyIri -> validatedPermissions
-    }
-    ActorUtil.sequenceSeqFuturesInMap(permissionFutures)
-  }
-
-  /**
-    * Given a map of property IRIs to values to be created in a new resource, validates any custom
-    * permissions in the values.
-    *
-    * @param project                    the project in which the resource is to be created.
-    * @param values                     the values whose permissions are to be validated.
-    * @param defaultPropertyPermissions a map of property IRIs to default permissions.
-    * @param resourceIDForErrorMsg      a string that can be prepended to an error message to specify the client's
-    *                                   ID for the containing resource, if provided.
-    * @param requestingUser             the user making the request.
-    * @return a map of property IRIs to sequences of [[GenerateSparqlForValueInNewResourceV2]], in which
-    *         all permissions have been validated and defined.
-    */
-  private def createSparqlsForValuesInNewResource(
+	 * Given a map of property IRIs to values to be created in a new resource, validates and reformats any custom
+	 * permissions in the values, and sets all value permissions to defaults if custom permissions are not provided.
+	 *
+	 * @param project                    the project in which the resource is to be created.
+	 * @param values                     the values whose permissions are to be validated.
+	 * @param defaultPropertyPermissions a map of property IRIs to default permissions.
+	 * @param resourceIDForErrorMsg      a string that can be prepended to an error message to specify the client's
+	 *                                   ID for the containing resource, if provided.
+	 * @param requestingUser             the user making the request.
+	 * @return a map of property IRIs to sequences of [[GenerateSparqlForValueInNewResourceV2]], in which
+	 *         all permissions have been validated and defined.
+	 */
+  private def validateAndFormatValuePermissions(
       project: ProjectADM,
       values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
       defaultPropertyPermissions: Map[SmartIri, String],
       resourceIDForErrorMsg: String,
+      featureFactoryConfig: FeatureFactoryConfig,
       requestingUser: UserADM): Future[Map[SmartIri, Seq[GenerateSparqlForValueInNewResourceV2]]] = {
     val propertyValuesWithValidatedPermissionsFutures
       : Map[SmartIri, Seq[Future[GenerateSparqlForValueInNewResourceV2]]] = values.map {
       case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
-        val sparqlsForValuesFutures: Seq[Future[GenerateSparqlForValueInNewResourceV2]] = valuesToCreate.map {
+        val validatedPermissionFutures: Seq[Future[GenerateSparqlForValueInNewResourceV2]] = valuesToCreate.map {
           valueToCreate =>
-            val (parsedValuePermissions, valuePermissions) =
-              PermissionUtilADM.parseAndReformatPermissions(valueToCreate.permissions,
-                                                            defaultPropertyPermissions(propertyIri))
-            Future.successful(
-              GenerateSparqlForValueInNewResourceV2(
-                valueContent = valueToCreate.valueContent,
-                customValueIri = valueToCreate.customValueIri,
-                customValueUUID = valueToCreate.customValueUUID,
-                customValueCreationDate = valueToCreate.customValueCreationDate,
-                permissions = valuePermissions
-              ))
+            // Does this value have custom permissions?
+            valueToCreate.permissions match {
+              case Some(permissionStr: String) =>
+                // Yes. Validate and reformat them.
+
+                val parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]] =
+                  PermissionUtilADM.parsePermissions(permissionStr)
+                val reformattedPermissions: String = PermissionUtilADM.reformatCustomPermission(parsedPermissions)
+
+                for {
+                  _ <- PermissionUtilADM.validatePermissions(
+                    parsedPermissions = parsedPermissions,
+                    featureFactoryConfig = featureFactoryConfig,
+                    responderManager = responderManager
+                  )
+
+                  // Is the requesting user a system admin, or an admin of this project?
+                  _ = if (!(requestingUser.permissions.isProjectAdmin(project.id) || requestingUser.permissions.isSystemAdmin)) {
+
+                    // No. Make sure they don't give themselves higher permissions than they would get from the default permissions.
+
+                    val permissionComparisonResult: PermissionComparisonResult =
+                      PermissionUtilADM.comparePermissionsADM(
+                        entityCreator = requestingUser.id,
+                        entityProject = project.id,
+                        permissionLiteralA = reformattedPermissions,
+                        permissionLiteralB = defaultPropertyPermissions(propertyIri),
+                        requestingUser = requestingUser
+                      )
+
+                    if (permissionComparisonResult == AGreaterThanB) {
+                      throw ForbiddenException(
+                        s"${resourceIDForErrorMsg}The specified value permissions would give a value's creator a higher permission on the value than the default permissions")
+                    }
+                  }
+                } yield
+                  GenerateSparqlForValueInNewResourceV2(
+                    valueContent = valueToCreate.valueContent,
+                    customValueIri = valueToCreate.customValueIri,
+                    customValueUUID = valueToCreate.customValueUUID,
+                    customValueCreationDate = valueToCreate.customValueCreationDate,
+                    permissions = reformattedPermissions
+                  )
+
+              case None =>
+                // No. Use the default permissions.
+                FastFuture.successful {
+                  GenerateSparqlForValueInNewResourceV2(
+                    valueContent = valueToCreate.valueContent,
+                    customValueIri = valueToCreate.customValueIri,
+                    customValueUUID = valueToCreate.customValueUUID,
+                    customValueCreationDate = valueToCreate.customValueCreationDate,
+                    permissions = defaultPropertyPermissions(propertyIri)
+                  )
+                }
+            }
         }
 
-        propertyIri -> sparqlsForValuesFutures
+        propertyIri -> validatedPermissionFutures
     }
 
     ActorUtil.sequenceSeqFuturesInMap(propertyValuesWithValidatedPermissionsFutures)
   }
 
   /**
-    * Gets the default permissions for resource classs in a project.
-    *
-    * @param projectIri        the IRI of the project.
-    * @param resourceClassIris the internal IRIs of the resource classes.
-    * @param requestingUser    the user making the request.
-    * @return a map of resource class IRIs to default permission strings.
-    */
+	 * Gets the default permissions for resource classs in a project.
+	 *
+	 * @param projectIri        the IRI of the project.
+	 * @param resourceClassIris the internal IRIs of the resource classes.
+	 * @param requestingUser    the user making the request.
+	 * @return a map of resource class IRIs to default permission strings.
+	 */
   private def getResourceClassDefaultPermissions(projectIri: IRI,
                                                  resourceClassIris: Set[SmartIri],
                                                  requestingUser: UserADM): Future[Map[SmartIri, String]] = {
@@ -1284,13 +1178,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Gets the default permissions for properties in a resource class in a project.
-    *
-    * @param projectIri              the IRI of the project.
-    * @param resourceClassProperties a map of internal resource class IRIs to sets of internal property IRIs.
-    * @param requestingUser          the user making the request.
-    * @return a map of internal resource class IRIs to maps of property IRIs to default permission strings.
-    */
+	 * Gets the default permissions for properties in a resource class in a project.
+	 *
+	 * @param projectIri              the IRI of the project.
+	 * @param resourceClassProperties a map of internal resource class IRIs to sets of internal property IRIs.
+	 * @param requestingUser          the user making the request.
+	 * @return a map of internal resource class IRIs to maps of property IRIs to default permission strings.
+	 */
   private def getDefaultPropertyPermissions(projectIri: IRI,
                                             resourceClassProperties: Map[SmartIri, Set[SmartIri]],
                                             requestingUser: UserADM): Future[Map[SmartIri, Map[SmartIri, String]]] = {
@@ -1313,14 +1207,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Checks that a resource was created correctly.
-    *
-    * @param resourceReadyToCreate the resource that should have been created.
-    * @param projectIri            the IRI of the project in which the resource should have been created.
-    * @param featureFactoryConfig  the feature factory configuration.
-    * @param requestingUser        the user that attempted to create the resource.
-    * @return a preview of the resource that was created.
-    */
+	 * Checks that a resource was created correctly.
+	 *
+	 * @param resourceReadyToCreate the resource that should have been created.
+	 * @param projectIri            the IRI of the project in which the resource should have been created.
+	 * @param featureFactoryConfig  the feature factory configuration.
+	 * @param requestingUser        the user that attempted to create the resource.
+	 * @return a preview of the resource that was created.
+	 */
   private def verifyResource(resourceReadyToCreate: ResourceReadyToCreate,
                              projectIri: IRI,
                              featureFactoryConfig: FeatureFactoryConfig,
@@ -1412,14 +1306,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * After the attempted creation of one or more resources, looks for file values among the values that were supposed
-    * to be created, and tells Sipi to move those files to permanent storage if the update succeeded, or to delete the
-    * temporary files if the update failed.
-    *
-    * @param updateFuture    the operation that was supposed to create the resources.
-    * @param createResources the resources that were supposed to be created.
-    * @param requestingUser  the user making the request.
-    */
+	 * After the attempted creation of one or more resources, looks for file values among the values that were supposed
+	 * to be created, and tells Sipi to move those files to permanent storage if the update succeeded, or to delete the
+	 * temporary files if the update failed.
+	 *
+	 * @param updateFuture    the operation that was supposed to create the resources.
+	 * @param createResources the resources that were supposed to be created.
+	 * @param requestingUser  the user making the request.
+	 */
   private def doSipiPostUpdateForResources[T <: UpdateResultInProject](updateFuture: Future[T],
                                                                        createResources: Seq[CreateResourceV2],
                                                                        requestingUser: UserADM): Future[T] = {
@@ -1443,18 +1337,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Gets the requested resources from the triplestore.
-    *
-    * @param resourceIris         the Iris of the requested resources.
-    * @param preview              `true` if a preview of the resource is requested.
-    * @param propertyIri          if defined, requests only the values of the specified explicit property.
-    * @param valueUuid            if defined, requests only the value with the specified UUID.
-    * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
-    *                             Cannot be used in conjunction with `preview`.
-    * @param queryStandoff        `true` if standoff should be queried.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @return a map of resource IRIs to RDF data.
-    */
+	 * Gets the requested resources from the triplestore.
+	 *
+	 * @param resourceIris         the Iris of the requested resources.
+	 * @param preview              `true` if a preview of the resource is requested.
+	 * @param propertyIri          if defined, requests only the values of the specified explicit property.
+	 * @param valueUuid            if defined, requests only the value with the specified UUID.
+	 * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
+	 *                             Cannot be used in conjunction with `preview`.
+	 * @param queryStandoff        `true` if standoff should be queried.
+	 * @param featureFactoryConfig the feature factory configuration.
+	 * @return a map of resource IRIs to RDF data.
+	 */
   private def getResourcesFromTriplestore(
       resourceIris: Seq[IRI],
       preview: Boolean,
@@ -1510,18 +1404,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Get one or several resources and return them as a sequence.
-    *
-    * @param resourceIris         the IRIs of the resources to be queried.
-    * @param propertyIri          if defined, requests only the values of the specified explicit property.
-    * @param valueUuid            if defined, requests only the value with the specified UUID.
-    * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
-    * @param targetSchema         the target API schema.
-    * @param schemaOptions        the schema options submitted with the request.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @return a [[ReadResourcesSequenceV2]].
-    */
+	 * Get one or several resources and return them as a sequence.
+	 *
+	 * @param resourceIris         the IRIs of the resources to be queried.
+	 * @param propertyIri          if defined, requests only the values of the specified explicit property.
+	 * @param valueUuid            if defined, requests only the value with the specified UUID.
+	 * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
+	 * @param targetSchema         the target API schema.
+	 * @param schemaOptions        the schema options submitted with the request.
+	 * @param featureFactoryConfig the feature factory configuration.
+	 * @param requestingUser       the user making the request.
+	 * @return a [[ReadResourcesSequenceV2]].
+	 */
   private def getResourcesV2(resourceIris: Seq[IRI],
                              propertyIri: Option[SmartIri] = None,
                              valueUuid: Option[UUID] = None,
@@ -1597,13 +1491,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Get the preview of a resource.
-    *
-    * @param resourceIris         the resource to query for.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the the user making the request.
-    * @return a [[ReadResourcesSequenceV2]].
-    */
+	 * Get the preview of a resource.
+	 *
+	 * @param resourceIris         the resource to query for.
+	 * @param featureFactoryConfig the feature factory configuration.
+	 * @param requestingUser       the the user making the request.
+	 * @return a [[ReadResourcesSequenceV2]].
+	 */
   private def getResourcePreviewV2(resourceIris: Seq[IRI],
                                    targetSchema: ApiV2Schema,
                                    featureFactoryConfig: FeatureFactoryConfig,
@@ -1647,13 +1541,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Obtains a Gravsearch template from Sipi.
-    *
-    * @param gravsearchTemplateIri the Iri of the resource representing the Gravsearch template.
-    * @param featureFactoryConfig  the feature factory configuration.
-    * @param requestingUser        the user making the request.
-    * @return the Gravsearch template.
-    */
+	 * Obtains a Gravsearch template from Sipi.
+	 *
+	 * @param gravsearchTemplateIri the Iri of the resource representing the Gravsearch template.
+	 * @param featureFactoryConfig  the feature factory configuration.
+	 * @param requestingUser        the user making the request.
+	 * @return the Gravsearch template.
+	 */
   private def getGravsearchTemplate(gravsearchTemplateIri: IRI,
                                     featureFactoryConfig: FeatureFactoryConfig,
                                     requestingUser: UserADM): Future[String] = {
@@ -1719,18 +1613,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Returns a resource as TEI/XML.
-    * This makes only sense for resources that have a text value containing standoff that is to be converted to the TEI body.
-    *
-    * @param resourceIri           the Iri of the resource to be converted to a TEI document (header and body).
-    * @param textProperty          the Iri of the property (text value with standoff) to be converted to the body of the TEI document.
-    * @param mappingIri            the Iri of the mapping to be used to convert standoff to XML, if a custom mapping is provided. The mapping is expected to contain an XSL transformation.
-    * @param gravsearchTemplateIri the Iri of the Gravsearch template to query for the metadata for the TEI header. The resource Iri is expected to be represented by the placeholder '$resourceIri' in a BIND.
-    * @param headerXSLTIri         the Iri of the XSL template to convert the metadata properties to the TEI header.
-    * @param featureFactoryConfig  the feature factory configuration.
-    * @param requestingUser        the user making the request.
-    * @return a [[ResourceTEIGetResponseV2]].
-    */
+	 * Returns a resource as TEI/XML.
+	 * This makes only sense for resources that have a text value containing standoff that is to be converted to the TEI body.
+	 *
+	 * @param resourceIri           the Iri of the resource to be converted to a TEI document (header and body).
+	 * @param textProperty          the Iri of the property (text value with standoff) to be converted to the body of the TEI document.
+	 * @param mappingIri            the Iri of the mapping to be used to convert standoff to XML, if a custom mapping is provided. The mapping is expected to contain an XSL transformation.
+	 * @param gravsearchTemplateIri the Iri of the Gravsearch template to query for the metadata for the TEI header. The resource Iri is expected to be represented by the placeholder '$resourceIri' in a BIND.
+	 * @param headerXSLTIri         the Iri of the XSL template to convert the metadata properties to the TEI header.
+	 * @param featureFactoryConfig  the feature factory configuration.
+	 * @param requestingUser        the user making the request.
+	 * @return a [[ResourceTEIGetResponseV2]].
+	 */
   private def getResourceAsTeiV2(resourceIri: IRI,
                                  textProperty: SmartIri,
                                  mappingIri: Option[IRI],
@@ -1740,11 +1634,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                  requestingUser: UserADM): Future[ResourceTEIGetResponseV2] = {
 
     /**
-      * Extract the text value to be converted to TEI/XML.
-      *
-      * @param readResource the resource which is expected to hold the text value.
-      * @return a [[TextValueContentV2]] representing the text value to be converted to TEI/XML.
-      */
+		 * Extract the text value to be converted to TEI/XML.
+		 *
+		 * @param readResource the resource which is expected to hold the text value.
+		 * @return a [[TextValueContentV2]] representing the text value to be converted to TEI/XML.
+		 */
     def getTextValueFromReadResource(readResource: ReadResourceV2): TextValueContentV2 = {
 
       readResource.values.get(textProperty) match {
@@ -1763,11 +1657,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     }
 
     /**
-      * Given a resource's values, convert the date values to Gregorian.
-      *
-      * @param values the values to be processed.
-      * @return the resource's values with date values converted to Gregorian.
-      */
+		 * Given a resource's values, convert the date values to Gregorian.
+		 *
+		 * @param values the values to be processed.
+		 * @return the resource's values with date values converted to Gregorian.
+		 */
     def convertDateToGregorian(values: Map[SmartIri, Seq[ReadValueV2]]): Map[SmartIri, Seq[ReadValueV2]] = {
       values.map {
         case (propIri: SmartIri, valueObjs: Seq[ReadValueV2]) =>
@@ -1978,24 +1872,24 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Gets a graph of resources that are reachable via links to or from a given resource.
-    *
-    * @param graphDataGetRequest a [[GraphDataGetRequestV2]] specifying the characteristics of the graph.
-    * @return a [[GraphDataGetResponseV2]] representing the requested graph.
-    */
+	 * Gets a graph of resources that are reachable via links to or from a given resource.
+	 *
+	 * @param graphDataGetRequest a [[GraphDataGetRequestV2]] specifying the characteristics of the graph.
+	 * @return a [[GraphDataGetResponseV2]] representing the requested graph.
+	 */
   private def getGraphDataResponseV2(graphDataGetRequest: GraphDataGetRequestV2): Future[GraphDataGetResponseV2] = {
     val excludePropertyInternal = graphDataGetRequest.excludeProperty.map(_.toOntologySchema(InternalSchema))
 
     /**
-      * The internal representation of a node returned by a SPARQL query generated by the `getGraphData` template.
-      *
-      * @param nodeIri         the IRI of the node.
-      * @param nodeClass       the IRI of the node's class.
-      * @param nodeLabel       the node's label.
-      * @param nodeCreator     the node's creator.
-      * @param nodeProject     the node's project.
-      * @param nodePermissions the node's permissions.
-      */
+		 * The internal representation of a node returned by a SPARQL query generated by the `getGraphData` template.
+		 *
+		 * @param nodeIri         the IRI of the node.
+		 * @param nodeClass       the IRI of the node's class.
+		 * @param nodeLabel       the node's label.
+		 * @param nodeCreator     the node's creator.
+		 * @param nodeProject     the node's project.
+		 * @param nodePermissions the node's permissions.
+		 */
     case class QueryResultNode(nodeIri: IRI,
                                nodeClass: SmartIri,
                                nodeLabel: String,
@@ -2004,16 +1898,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                nodePermissions: String)
 
     /**
-      * The internal representation of an edge returned by a SPARQL query generated by the `getGraphData` template.
-      *
-      * @param linkValueIri         the IRI of the link value.
-      * @param sourceNodeIri        the IRI of the source node.
-      * @param targetNodeIri        the IRI of the target node.
-      * @param linkProp             the IRI of the link property.
-      * @param linkValueCreator     the link value's creator.
-      * @param sourceNodeProject    the project of the source node.
-      * @param linkValuePermissions the link value's permissions.
-      */
+		 * The internal representation of an edge returned by a SPARQL query generated by the `getGraphData` template.
+		 *
+		 * @param linkValueIri         the IRI of the link value.
+		 * @param sourceNodeIri        the IRI of the source node.
+		 * @param targetNodeIri        the IRI of the target node.
+		 * @param linkProp             the IRI of the link property.
+		 * @param linkValueCreator     the link value's creator.
+		 * @param sourceNodeProject    the project of the source node.
+		 * @param linkValuePermissions the link value's permissions.
+		 */
     case class QueryResultEdge(linkValueIri: IRI,
                                sourceNodeIri: IRI,
                                targetNodeIri: IRI,
@@ -2023,24 +1917,24 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                linkValuePermissions: String)
 
     /**
-      * Represents results returned by a SPARQL query generated by the `getGraphData` template.
-      *
-      * @param nodes the nodes that were returned by the query.
-      * @param edges the edges that were returned by the query.
-      */
+		 * Represents results returned by a SPARQL query generated by the `getGraphData` template.
+		 *
+		 * @param nodes the nodes that were returned by the query.
+		 * @param edges the edges that were returned by the query.
+		 */
     case class GraphQueryResults(nodes: Set[QueryResultNode] = Set.empty[QueryResultNode],
                                  edges: Set[QueryResultEdge] = Set.empty[QueryResultEdge])
 
     /**
-      * Recursively queries outbound or inbound links from/to a resource.
-      *
-      * @param startNode      the node to use as the starting point of the query. The user is assumed to have permission
-      *                       to see this node.
-      * @param outbound       `true` to get outbound links, `false` to get inbound links.
-      * @param depth          the maximum depth of the query.
-      * @param traversedEdges edges that have already been traversed.
-      * @return a [[GraphQueryResults]].
-      */
+		 * Recursively queries outbound or inbound links from/to a resource.
+		 *
+		 * @param startNode      the node to use as the starting point of the query. The user is assumed to have permission
+		 *                       to see this node.
+		 * @param outbound       `true` to get outbound links, `false` to get inbound links.
+		 * @param depth          the maximum depth of the query.
+		 * @param traversedEdges edges that have already been traversed.
+		 * @return a [[GraphQueryResults]].
+		 */
     def traverseGraph(startNode: QueryResultNode,
                       outbound: Boolean,
                       depth: Int,
@@ -2293,11 +2187,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Returns the version history of a resource.
-    *
-    * @param resourceHistoryRequest the version history request.
-    * @return the resource's version history.
-    */
+	 * Returns the version history of a resource.
+	 *
+	 * @param resourceHistoryRequest the version history request.
+	 * @return the resource's version history.
+	 */
   def getResourceHistoryV2(
       resourceHistoryRequest: ResourceVersionHistoryGetRequestV2): Future[ResourceVersionHistoryResponseV2] = {
     for {

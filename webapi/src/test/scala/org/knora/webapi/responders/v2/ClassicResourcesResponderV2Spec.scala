@@ -44,15 +44,15 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
-import org.knora.webapi.settings.{KnoraDispatchers, _}
+import org.knora.webapi.responders.v2.resources.ClassicResourcesResponderV2
+import org.knora.webapi.settings._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
-
 import scala.concurrent.duration._
 
-object ResourcesResponderV2Spec {
+object ClassicResourcesResponderV2Spec {
   private val incunabulaUserProfile = SharedTestDataADM.incunabulaProjectAdminUser
 
   private val anythingUserProfile = SharedTestDataADM.anythingUser2
@@ -399,11 +399,11 @@ class GraphTestData {
 }
 
 /**
-  * Tests [[ResourcesResponderV2]].
+  * Tests [[ClassicResourcesResponderV2]].
   */
-class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
+class ClassicResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
-  import ResourcesResponderV2Spec._
+  import ClassicResourcesResponderV2Spec._
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val resourcesResponderV2SpecFullData = new ResourcesResponderV2SpecFullData

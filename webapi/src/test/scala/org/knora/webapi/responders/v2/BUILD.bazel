@@ -48,10 +48,10 @@ scala_test(
 )
 
 scala_test(
-    name = "ResourcesResponderV2Spec",
+    name = "ClassicResourcesResponderV2Spec",
     size = "medium",
     srcs = [
-        "ResourcesResponderV2Spec.scala",
+        "ClassicResourcesResponderV2Spec.scala",
         "ResourcesResponderV2SpecFullData.scala",
     ],
     data = [

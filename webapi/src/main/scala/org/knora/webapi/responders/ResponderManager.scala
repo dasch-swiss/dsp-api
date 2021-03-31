@@ -22,6 +22,7 @@ package org.knora.webapi.responders
 import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem}
 import akka.event.LoggingReceive
 import org.knora.webapi.core.ActorMaker
+import org.knora.webapi.feature.KnoraSettingsFeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsResponderRequestADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsResponderRequestADM
@@ -49,7 +50,8 @@ import org.knora.webapi.messages.v2.responder.valuemessages.ValuesResponderReque
 import org.knora.webapi.responders.admin._
 import org.knora.webapi.responders.v1._
 import org.knora.webapi.responders.v2._
-import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.responders.v2.resources.{ResourcesResponderFeatureFactoryV2, ResourcesResponderV2}
+import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 import org.knora.webapi.util.ActorUtil._
 
 import scala.concurrent.ExecutionContext
@@ -67,6 +69,11 @@ class ResponderManager(appActor: ActorRef) extends Actor with ActorLogging {
     * The responder's Akka actor system.
     */
   protected implicit val system: ActorSystem = context.system
+
+  private val settings: KnoraSettingsImpl = KnoraSettings(system)
+
+  private val featureFactoryConfig: KnoraSettingsFeatureFactoryConfig =
+    new KnoraSettingsFeatureFactoryConfig(settings)
 
   /**
     * The Akka actor system's execution context for futures.
@@ -203,7 +210,9 @@ class ResponderManager(appActor: ActorRef) extends Actor with ActorLogging {
   /**
     * Constructs the default [[ResourcesResponderV2]].
     */
-  protected final def makeDefaultResourcesResponderV2: ResourcesResponderV2 = new ResourcesResponderV2(responderData)
+  protected final def makeDefaultResourcesResponderV2: ResourcesResponderV2 =
+    ResourcesResponderFeatureFactoryV2.makeResourcesResponderV2(responderData = responderData,
+                                                                featureFactoryConfig = featureFactoryConfig)
 
   /**
     * Subclasses can override this member to substitute a custom implementation instead of the default resources responder.
