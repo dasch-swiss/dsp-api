@@ -28,6 +28,7 @@ import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.exceptions._
+import org.knora.webapi.feature._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -403,7 +404,10 @@ class GraphTestData {
   * Tests [[EventBasedResourcesResponderV2]].
   */
 class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
-
+  private val featureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
+    testToggles = Set(FeatureToggle("event-based-updates", ToggleStateOn(1))),
+    parent = new KnoraSettingsFeatureFactoryConfig(settings)
+  )
   import org.knora.webapi.responders.v2.EventBasedResourcesResponderV2Spec._
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -486,7 +490,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
     responderManager ! ResourcesGetRequestV2(
       resourceIris = Seq(resourceIri),
       targetSchema = ApiV2Complex,
-      featureFactoryConfig = defaultFeatureFactoryConfig,
+      featureFactoryConfig = featureFactoryConfig,
       requestingUser = anythingUserProfile
     )
 
@@ -573,7 +577,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
   "Load test data" in {
     responderManager ! GetMappingRequestV2(
       mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping",
-      featureFactoryConfig = defaultFeatureFactoryConfig,
+      featureFactoryConfig = featureFactoryConfig,
       requestingUser = KnoraSystemInstances.Users.SystemUser
     )
 
@@ -590,7 +594,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = incunabulaUserProfile
       )
 
@@ -627,7 +631,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceIris = Seq("http://rdfh.ch/0803/2a6221216701"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = incunabulaUserProfile
       )
 
@@ -646,7 +650,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = incunabulaUserProfile
       )
 
@@ -664,7 +668,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! ResourcesPreviewGetRequestV2(
         resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = incunabulaUserProfile
       )
 
@@ -683,7 +687,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceIris = Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = incunabulaUserProfile
       )
 
@@ -704,7 +708,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
           Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
         versionDate = None,
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = incunabulaUserProfile
       )
 
@@ -726,7 +730,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         mappingIri = None,
         gravsearchTemplateIri = None,
         headerXSLTIri = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -752,7 +756,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         mappingIri = None,
         gravsearchTemplateIri = None,
         headerXSLTIri = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -778,7 +782,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceIris = Seq(resourceIri),
         versionDate = Some(versionDate),
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -798,7 +802,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceIri = resourceIri,
         startDate = None,
         endDate = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -817,7 +821,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceIri = resourceIri,
         startDate = Some(startDate),
         endDate = Some(endDate),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -832,7 +836,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
         valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -850,7 +854,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
         versionDate = Some(Instant.parse("2019-02-12T09:05:10Z")),
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
@@ -945,7 +949,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -977,7 +981,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1028,7 +1032,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1191,7 +1195,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1346,7 +1350,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1400,7 +1404,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1435,7 +1439,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1484,7 +1488,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1527,7 +1531,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1574,7 +1578,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1609,7 +1613,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1644,7 +1648,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1715,7 +1719,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1750,7 +1754,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1785,7 +1789,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1820,7 +1824,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1845,7 +1849,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1882,7 +1886,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1906,7 +1910,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1921,7 +1925,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceIri = aThingIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some("new test label"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = incunabulaUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1938,7 +1942,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceIri = aThingIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#BlueThing".toSmartIri,
         maybeLabel = Some("new test label"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1960,7 +1964,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some(newLabel),
         maybePermissions = Some(newPermissions),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -1985,7 +1989,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceIri = aThingIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLabel = Some("another new test label"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2003,7 +2007,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(Instant.MIN),
         maybeLabel = Some("another new test label"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2023,7 +2027,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(aThingLastModificationDate),
         maybeLabel = Some(newLabel),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2047,7 +2051,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(aThingLastModificationDate),
         maybeNewModificationDate = Some(Instant.MIN),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2067,7 +2071,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(aThingLastModificationDate),
         maybeNewModificationDate = Some(newModificationDate),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2093,7 +2097,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         maybeDeleteComment = Some("This resource is too boring."),
         maybeDeleteDate = Some(deleteDate),
         maybeLastModificationDate = Some(aThingLastModificationDate),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -2111,7 +2115,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeDeleteComment = Some("This resource is too boring."),
         maybeLastModificationDate = Some(aThingLastModificationDate),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingUser1,
         apiRequestID = UUID.randomUUID
       )
@@ -2125,7 +2129,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! ResourcesGetRequestV2(
         resourceIris = Seq(aThingIri),
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingUser1
       )
 
@@ -2144,7 +2148,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         maybeDeleteComment = Some("This resource is too boring."),
         maybeDeleteDate = Some(deleteDate),
         maybeLastModificationDate = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = SharedTestDataADM.superUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2158,7 +2162,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! ResourcesGetRequestV2(
         resourceIris = Seq(resourceIri),
         targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingUser1
       )
 
@@ -2185,7 +2189,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesReviewerUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2210,7 +2214,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = SharedTestDataADM.rootUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2232,7 +2236,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesUser01,
         apiRequestID = UUID.randomUUID
       )
@@ -2267,7 +2271,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
         onlyCheck = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesReviewerUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2304,7 +2308,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = SharedTestDataADM.rootUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2338,7 +2342,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = SharedTestDataADM.imagesUser01,
         apiRequestID = UUID.randomUUID
       )
@@ -2379,7 +2383,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2409,7 +2413,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
             mapping = standardMapping
           )
         ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2446,7 +2450,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
         erase = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2488,7 +2492,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2505,7 +2509,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
         erase = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingAdminUser,
         apiRequestID = UUID.randomUUID
       )
@@ -2526,7 +2530,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         propertyIri = linkValuePropertyIri,
         valueIri = linkValue.valueIri,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = anythingUserProfile,
         apiRequestID = UUID.randomUUID
       )
@@ -2542,7 +2546,7 @@ class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender 
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         maybeLastModificationDate = Some(resourceToEraseLastModificationDate),
         erase = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingAdminUser,
         apiRequestID = UUID.randomUUID
       )
