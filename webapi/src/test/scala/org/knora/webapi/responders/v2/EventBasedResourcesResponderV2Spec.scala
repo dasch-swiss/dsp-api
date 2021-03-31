@@ -25,6 +25,7 @@ import java.util.UUID
 
 import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.app.ApplicationActor
 import org.knora.webapi.exceptions._
@@ -75,6 +76,26 @@ object EventBasedResourcesResponderV2Spec {
   private val secondValueIriToErase = new MutableTestIri
   private val standoffTagIrisToErase = collection.mutable.Set.empty[IRI]
   private var resourceToEraseLastModificationDate = Instant.now
+  val config: String =
+    """
+    |app {
+    |    feature-toggles {
+    |      event-based-updates {
+    |            description = "Experimental feature to use event sourcing for triplestore updates."
+    |
+    |            available-versions = [ 1 ]
+    |            default-version = 1
+    |            enabled-by-default = yes
+    |            override-allowed = yes
+    |
+    |            developer-emails = [
+    |                "Sepideh Alassi <sepideh.alassi@dasch.swiss>"
+    |                "Benjamin Geer <benjamin.geer@dasch.swiss>"
+    |            ]
+    |        }
+    |    }
+    |}
+    |""".stripMargin
 }
 
 class GraphTestData {
@@ -403,14 +424,16 @@ class GraphTestData {
 /**
   * Tests [[EventBasedResourcesResponderV2]].
   */
-class EventBasedResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
+class EventBasedResourcesResponderV2Spec
+    extends CoreSpec(config = ConfigFactory.parseString(EventBasedResourcesResponderV2Spec.config))
+    with ImplicitSender {
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val featureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
     testToggles = Set(FeatureToggle("event-based-updates", ToggleStateOn(1))),
     parent = new KnoraSettingsFeatureFactoryConfig(settings)
   )
   import org.knora.webapi.responders.v2.EventBasedResourcesResponderV2Spec._
 
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val resourcesResponderV2SpecFullData = new ResourcesResponderV2SpecFullData
 
   private var standardMapping: Option[MappingXMLtoStandoff] = None
