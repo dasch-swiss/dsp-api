@@ -768,12 +768,12 @@ class ClassicResourcesResponderV2(responderData: ResponderData)
       // Validate and reformat any custom permissions in the request, and set all permissions to defaults if custom
       // permissions are not provided.
 
+      // parsed and reformat custom resource permissions
+      (parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]], reformattedPermissions) = PermissionUtilADM
+        .parseAndReformatPermissions(internalCreateResource.permissions, defaultResourcePermissions)
+
       resourcePermissions: String <- internalCreateResource.permissions match {
         case Some(permissionStr) =>
-          val parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]] =
-            PermissionUtilADM.parsePermissions(permissionStr)
-          val reformattedPermissions: String = PermissionUtilADM.reformatCustomPermission(parsedPermissions)
-
           for {
             _ <- PermissionUtilADM.validatePermissions(
               parsedPermissions = parsedPermissions,
@@ -1086,14 +1086,13 @@ class ClassicResourcesResponderV2(responderData: ResponderData)
       case (propertyIri: SmartIri, valuesToCreate: Seq[CreateValueInNewResourceV2]) =>
         val validatedPermissionFutures: Seq[Future[GenerateSparqlForValueInNewResourceV2]] = valuesToCreate.map {
           valueToCreate =>
+            val (parsedPermissions, reformattedPermissions) =
+              PermissionUtilADM.parseAndReformatPermissions(valueToCreate.permissions,
+                                                            defaultPropertyPermissions(propertyIri))
             // Does this value have custom permissions?
             valueToCreate.permissions match {
               case Some(permissionStr: String) =>
                 // Yes. Validate and reformat them.
-
-                val parsedPermissions: Map[PermissionUtilADM.EntityPermission, Set[IRI]] =
-                  PermissionUtilADM.parsePermissions(permissionStr)
-                val reformattedPermissions: String = PermissionUtilADM.reformatCustomPermission(parsedPermissions)
 
                 for {
                   _ <- PermissionUtilADM.validatePermissions(
