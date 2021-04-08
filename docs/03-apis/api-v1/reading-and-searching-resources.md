@@ -301,6 +301,7 @@ operators:
 | Float Value      | EQ, !EQ, GT, GT_EQ, LT, LT_EQ, EXISTS                 |
 | Text Value       | MATCH_BOOLEAN, MATCH, EQ, !EQ, LIKE, !LIKE, EXISTS    |
 | Geometry Value   | EXISTS                                                |
+| Geoname Value    | EQ, EXISTS                                            |
 | Resource Pointer | EQ, EXISTS                                            |
 | Color Value      | EQ, EXISTS                                            |
 | List Value       | EQ, EXISTS                                            |
