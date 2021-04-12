@@ -281,6 +281,14 @@ WHERE {
 
                     }
 
+                    case "http://www.knora.org/ontology/knora-base#UriValue" => {
+
+                        ?valueObject@index knora-base:valueHasUri '@searchCriterion.searchValue'^^xsd:anyURI .
+
+                        BIND('@searchCriterion.searchValue' AS ?literal@index)
+
+                    }
+
                     case other => {
                         @{throw SparqlGenerationException(s"Value type $other is not supported with comparison operator ${searchCriterion.comparisonOperator}"); ()}
                     }

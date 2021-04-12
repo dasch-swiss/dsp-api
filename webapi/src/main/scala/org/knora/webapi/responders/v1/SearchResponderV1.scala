@@ -90,6 +90,10 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
       SearchComparisonOperatorV1.EQ,
       SearchComparisonOperatorV1.EXISTS
     ),
+    OntologyConstants.KnoraBase.UriValue -> Set(
+      SearchComparisonOperatorV1.EQ,
+      SearchComparisonOperatorV1.EXISTS
+    ),
     OntologyConstants.KnoraBase.Resource -> Set(
       SearchComparisonOperatorV1.EQ,
       SearchComparisonOperatorV1.EXISTS
@@ -526,6 +530,13 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
+              case OntologyConstants.KnoraBase.UriValue =>
+                // validate URI
+                val searchString = stringFormatter.validateAndEscapeIri(
+                  searchval,
+                  throw BadRequestException(s"Invalid URI: $searchval"))
+                searchParamWithoutValue.copy(searchValue = Some(searchString))
+
               case OntologyConstants.KnoraBase.ListValue =>
                 // check if string represents a node in a list
                 val searchString = stringFormatter.validateAndEscapeIri(
@@ -561,7 +572,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
         )
         .toString()
 
-      // _ = println(searchSparql)
+      _ = println(searchSparql)
 
       searchResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResult]
 
