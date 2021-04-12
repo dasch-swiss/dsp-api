@@ -329,6 +329,23 @@ class SearchV1R2RSpec extends R2RSpec {
 
     }
 
+    "perform an extended search for an anything:Thing with a URI" in {
+
+      val props =
+        "&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23hasUri&compop=EQ&searchval=http%3A%2F%2Fwww.google.ch"
+      val filter =
+        "&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2F0001%2Fanything%23Thing"
+
+      Get("/v1/search/?searchtype=extended" + props + filter) ~> searchPath ~> check {
+
+        assert(status == StatusCodes.OK, response.toString)
+
+        checkNumberOfHits(responseAs[String], 1)
+
+      }
+
+    }
+
   }
 
 }
