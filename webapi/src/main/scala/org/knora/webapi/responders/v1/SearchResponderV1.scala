@@ -572,7 +572,7 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
         )
         .toString()
 
-      _ = println(searchSparql)
+      // _ = println(searchSparql)
 
       searchResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(searchSparql)).mapTo[SparqlSelectResult]
 
