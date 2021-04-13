@@ -90,6 +90,10 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
       SearchComparisonOperatorV1.EQ,
       SearchComparisonOperatorV1.EXISTS
     ),
+    OntologyConstants.KnoraBase.UriValue -> Set(
+      SearchComparisonOperatorV1.EQ,
+      SearchComparisonOperatorV1.EXISTS
+    ),
     OntologyConstants.KnoraBase.Resource -> Set(
       SearchComparisonOperatorV1.EQ,
       SearchComparisonOperatorV1.EXISTS
@@ -524,6 +528,13 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
                 val searchString = stringFormatter
                   .toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid Geoname search string: '$searchval'"))
 
+                searchParamWithoutValue.copy(searchValue = Some(searchString))
+
+              case OntologyConstants.KnoraBase.UriValue =>
+                // validate URI
+                val searchString = stringFormatter.validateAndEscapeIri(
+                  searchval,
+                  throw BadRequestException(s"Invalid URI: $searchval"))
                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
               case OntologyConstants.KnoraBase.ListValue =>
