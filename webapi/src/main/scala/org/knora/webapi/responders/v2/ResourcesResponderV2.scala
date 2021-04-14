@@ -2275,6 +2275,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
       sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
-      // for each resource IRI return history [creation date/lastModificationDate, author]
+      // TODO: for each resource IRI return history [creation date/lastModificationDate, author]
     } yield (mainResourceIris)
 }

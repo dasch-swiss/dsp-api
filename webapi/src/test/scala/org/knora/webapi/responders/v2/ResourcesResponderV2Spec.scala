@@ -2384,5 +2384,29 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
           assert(entityUsedResponse.results.bindings.isEmpty, s"Link value was not erased")
       }
     }
+
+    "not return resources of a project which does not exist" in {
+      val getAllResources = ProjectResourcesWithHistoryGetRequestV2(
+        projectIri = "http://rdfh.ch/projects/1111",
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.anythingAdminUser
+      )
+
+      responderManager ! getAllResources
+      expectMsgPF(timeout) {
+        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      }
+    }
+
+    "return seq of resource IRIs of a project" in {
+      val getAllResources = ProjectResourcesWithHistoryGetRequestV2(
+        projectIri = "http://rdfh.ch/projects/0001",
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.anythingAdminUser
+      )
+
+      responderManager ! getAllResources
+      expectMsgType[Seq[IRI]](timeout)
+    }
   }
 }
