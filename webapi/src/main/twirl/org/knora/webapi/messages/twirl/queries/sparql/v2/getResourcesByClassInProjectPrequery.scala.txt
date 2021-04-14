@@ -41,7 +41,7 @@
 
 @if(triplestore.startsWith("graphdb")) {
     @{
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcesInProjectPrequeryGraphDB(projectIri = projectIri,
+        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcesByClassInProjectPrequeryGraphDB(projectIri = projectIri,
                                                                    resourceClassIri = resourceClassIri,
                                                                    maybeOrderByProperty = maybeOrderByProperty,
                                                                    maybeOrderByValuePredicate = maybeOrderByValuePredicate,
@@ -50,7 +50,7 @@
     }
 } else {
     @{
-        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcesInProjectPrequeryStandard(triplestore = triplestore,
+        org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcesByClassInProjectPrequeryStandard(triplestore = triplestore,
                                                                     projectIri = projectIri,
                                                                     resourceClassIri = resourceClassIri,
                                                                     maybeOrderByProperty = maybeOrderByProperty,
