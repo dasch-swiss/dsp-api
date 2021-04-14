@@ -34,7 +34,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{
   DefaultObjectAccessPermissionsStringResponseADM,
   ResourceCreateOperation
 }
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -130,7 +130,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       deleteOrEraseResourceV2(deleteOrEraseResourceRequestV2)
     case graphDataGetRequest: GraphDataGetRequestV2                 => getGraphDataResponseV2(graphDataGetRequest)
     case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 => getResourceHistoryV2(resourceHistoryRequest)
-    case other                                                      => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case projectResourcesWithHistoryRequestV2: ProjectResourcesWithHistoryGetRequestV2 =>
+      getProjectResourcesWithHistoryV2(projectResourcesWithHistoryRequestV2)
+    case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
   /**
@@ -2246,4 +2248,33 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         historyEntriesWithResourceCreation
       )
   }
+
+  /**
+    * Returns the resources of a project with version history ordered by date.
+    *
+    * @param projectResourcesGetRequest the resources with version history request.
+    * @return the all resources of project with ordered version history.
+    */
+  def getProjectResourcesWithHistoryV2(
+      projectResourcesGetRequest: ProjectResourcesWithHistoryGetRequestV2): Future[Seq[IRI]] =
+    for {
+      // Get the project; checks if a project with given IRI exists.
+      projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
+        identifier = ProjectIdentifierADM(maybeIri = Some(projectResourcesGetRequest.projectIri)),
+        featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
+        requestingUser = projectResourcesGetRequest.requestingUser
+      )).mapTo[ProjectGetResponseADM]
+
+      // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
+      prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        .getAllResourcesInProjectPrequery(
+          triplestore = settings.triplestoreType,
+          projectIri = projectInfoResponse.project.id
+        )
+        .toString
+
+      sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
+      mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
+      // for each resource IRI return history [creation date/lastModificationDate, author]
+    } yield (mainResourceIris)
 }
