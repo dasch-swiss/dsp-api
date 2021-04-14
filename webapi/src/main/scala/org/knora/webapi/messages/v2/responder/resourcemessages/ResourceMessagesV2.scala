@@ -114,6 +114,24 @@ case class ResourceVersionHistoryGetRequestV2(resourceIri: IRI,
     extends ResourcesResponderRequestV2
 
 /**
+  * Requests the version history of all resources of a project.
+  *
+  * @param projectIri          the IRI of the project.
+  * @param featureFactoryConfig the feature factory configuration.
+  * @param requestingUser       the user making the request.
+  */
+case class ProjectResourcesWithHistoryGetRequestV2(projectIri: IRI,
+                                                   featureFactoryConfig: FeatureFactoryConfig,
+                                                   requestingUser: UserADM)
+    extends ResourcesResponderRequestV2 {
+  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+  stringFormatter.validateAndEscapeIri(projectIri, throw BadRequestException(s"Invalid project IRI: $projectIri"))
+  if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
+    throw BadRequestException("Given IRI is not a project IRI.")
+  }
+}
+
+/**
   * Represents an item in the version history of a resource.
   *
   * @param versionDate the date when the modification occurred.

@@ -71,7 +71,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       getResourcesTei(featureFactoryConfig) ~
       getResourcesGraph(featureFactoryConfig) ~
       deleteResource(featureFactoryConfig) ~
-      eraseResource(featureFactoryConfig)
+      eraseResource(featureFactoryConfig) ~
+      getResourcesOfProjectWithHistory(featureFactoryConfig)
 
   private def createResource(featureFactoryConfig: FeatureFactoryConfig): Route = path(ResourcesBasePath) {
     post {
@@ -248,6 +249,36 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
               resourceIri = resourceIri,
               startDate = startDate,
               endDate = endDate,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser
+            )
+
+          RouteUtilV2.runRdfRouteWithFuture(
+            requestMessageF = requestMessageFuture,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log,
+            targetSchema = ApiV2Complex,
+            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+          )
+        }
+      }
+    }
+
+  private def getResourcesOfProjectWithHistory(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(ResourcesBasePath / "project" / Segment) { projectIri: IRI =>
+      get { requestContext =>
+        {
+          val requestMessageFuture: Future[ProjectResourcesWithHistoryGetRequestV2] = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield
+            ProjectResourcesWithHistoryGetRequestV2(
+              projectIri = projectIri,
               featureFactoryConfig = featureFactoryConfig,
               requestingUser = requestingUser
             )
