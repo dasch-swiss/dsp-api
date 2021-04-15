@@ -107,8 +107,8 @@ case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI],
   * @param requestingUser       the user making the request.
   */
 case class ResourceVersionHistoryGetRequestV2(resourceIri: IRI,
-                                              startDate: Option[Instant],
-                                              endDate: Option[Instant],
+                                              startDate: Option[Instant] = None,
+                                              endDate: Option[Instant] = None,
                                               featureFactoryConfig: FeatureFactoryConfig,
                                               requestingUser: UserADM)
     extends ResourcesResponderRequestV2

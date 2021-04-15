@@ -35,6 +35,8 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 SELECT DISTINCT ?resource
 WHERE {
     ?resource knora-base:attachedToProject <@projectIri> .
+    ?resource rdf:type ?resourceType .
+    ?resourceType rdfs:subClassOf* knora-base:Resource .
 
     FILTER NOT EXISTS {
         ?resource knora-base:isDeleted true .

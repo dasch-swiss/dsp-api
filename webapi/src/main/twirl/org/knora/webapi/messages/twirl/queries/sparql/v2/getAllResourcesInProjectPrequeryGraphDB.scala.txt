@@ -37,6 +37,8 @@ FROM <http://www.ontotext.com/explicit>
 WHERE {
     ?resource knora-base:attachedToProject <@projectIri> ;
         knora-base:isDeleted false .
+    ?resource rdf:type ?resourceType .
+    ?resourceType rdfs:subClassOf* knora-base:Resource .
 }
 ORDER BY
     ASC(?resource)

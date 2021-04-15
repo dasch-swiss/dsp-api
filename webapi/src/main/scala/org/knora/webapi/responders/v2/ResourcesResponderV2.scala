@@ -2255,8 +2255,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @param projectResourcesGetRequest the resources with version history request.
     * @return the all resources of project with ordered version history.
     */
-  def getProjectResourcesWithHistoryV2(
-      projectResourcesGetRequest: ProjectResourcesWithHistoryGetRequestV2): Future[Seq[IRI]] =
+  def getProjectResourcesWithHistoryV2(projectResourcesGetRequest: ProjectResourcesWithHistoryGetRequestV2)
+    : Future[Seq[ResourceVersionHistoryResponseV2]] =
     for {
       // Get the project; checks if a project with given IRI exists.
       projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
@@ -2275,6 +2275,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
       sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
-      // TODO: for each resource IRI return history [creation date/lastModificationDate, author]
-    } yield (mainResourceIris)
+      // For each resource IRI return history [creation date/lastModificationDate, author]
+      historyOfResourcesAsSeqOfFutures: Seq[Future[ResourceVersionHistoryResponseV2]] = mainResourceIris.map {
+        resourceIri =>
+          getResourceHistoryV2(
+            resourceHistoryRequest =
+              ResourceVersionHistoryGetRequestV2(resourceIri = resourceIri,
+                                                 featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
+                                                 requestingUser = projectResourcesGetRequest.requestingUser))
+      }
+      historyOfResources: Seq[ResourceVersionHistoryResponseV2] <- Future.sequence(historyOfResourcesAsSeqOfFutures)
+      // TODO: order the history by date
+    } yield historyOfResources
 }
