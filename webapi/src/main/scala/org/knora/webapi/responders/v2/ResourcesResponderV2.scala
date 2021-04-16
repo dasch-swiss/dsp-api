@@ -67,6 +67,7 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util._
 
+import scala.collection.immutable
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
@@ -2288,30 +2289,44 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         .sequence(historyOfResourcesAsSeqOfFutures.map(entry => entry._2.map(i => (entry._1, i))))
         .map(_.toMap)
 
-      // TODO: extract the changes from the full representation of resource in each time stamp
+      //get the full representation of resources in each time stamp in its history
+//      fullRespsFutures: Map[String, Future[Seq[ReadResourceV2]]] = historyOfResources
+//        .map {
+//          case (resourceIri, resourceHistory) =>
+//            val fullRespresentation = for {
+//              fullRep: Seq[ReadResourceV2] <- getFullRepresentationOfResourceForAllHistory(
+//                resourceIri = resourceIri,
+//                resourceVersionHistory = resourceHistory,
+//                featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
+//                requestingUser = projectResourcesGetRequest.requestingUser
+//              )
+//            } yield fullRep
+//            resourceIri -> fullRespresentation
+//        }
+//      fullRespresentations: Map[String, Seq[ReadResourceV2]] <- Future
+//        .sequence(fullRespsFutures.map(entry => entry._2.map(i => (entry._1, i))))
+//        .map(_.toMap)
     } yield historyOfResources
 
   def getFullRepresentationOfResourceForAllHistory(resourceIri: IRI,
+                                                   resourceVersionHistory: ResourceVersionHistoryResponseV2,
                                                    featureFactoryConfig: FeatureFactoryConfig,
-                                                   requestingUser: UserADM,
-                                                   resourceVersionHistory: ResourceVersionHistoryResponseV2)
-    : Future[Seq[ConstructResponseUtilV2.MainResourcesAndValueRdfData]] = {
-
-    val actualResourceAtSpecificTime: Seq[Future[ConstructResponseUtilV2.MainResourcesAndValueRdfData]] =
+                                                   requestingUser: UserADM): Future[Seq[ReadResourceV2]] = {
+    val actualResourceAtSpecificTime: Seq[Future[ReadResourceV2]] =
       resourceVersionHistory.history
         .map { historyEntry =>
           for {
-            fullRepresentation <- getResourcesFromTriplestore(
+            fullRepresentation <- getResourcesV2(
               resourceIris = Seq(resourceIri),
-              preview = false,
               versionDate = Some(historyEntry.versionDate),
-              queryStandoff = false,
               featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser
+              requestingUser = requestingUser,
+              targetSchema = ApiV2Complex,
+              schemaOptions = SchemaOptions.ForStandoffWithTextValues,
             )
-          } yield fullRepresentation
+          } yield fullRepresentation.resources.head
         }
-    val fullVersionHistoryOfResource: Future[Seq[ConstructResponseUtilV2.MainResourcesAndValueRdfData]] =
+    val fullVersionHistoryOfResource: Future[Seq[ReadResourceV2]] =
       Future.sequence(actualResourceAtSpecificTime)
     fullVersionHistoryOfResource
   }
