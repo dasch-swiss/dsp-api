@@ -1342,9 +1342,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   private def getResourcesFromTriplestore(
       resourceIris: Seq[IRI],
       preview: Boolean,
-      propertyIri: Option[SmartIri],
-      valueUuid: Option[UUID],
-      versionDate: Option[Instant],
+      propertyIri: Option[SmartIri] = None,
+      valueUuid: Option[UUID] = None,
+      versionDate: Option[Instant] = None,
       queryStandoff: Boolean,
       featureFactoryConfig: FeatureFactoryConfig,
       requestingUser: UserADM): Future[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
@@ -1500,9 +1500,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
         resourceIris = resourceIris,
         preview = true,
-        propertyIri = None,
-        valueUuid = None,
-        versionDate = None,
         queryStandoff = false, // This has no effect, because we are not querying values.
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
@@ -2256,7 +2253,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @return the all resources of project with ordered version history.
     */
   def getProjectResourcesWithHistoryV2(projectResourcesGetRequest: ProjectResourcesWithHistoryGetRequestV2)
-    : Future[Seq[ResourceVersionHistoryResponseV2]] =
+    : Future[Map[String, ResourceVersionHistoryResponseV2]] =
     for {
       // Get the project; checks if a project with given IRI exists.
       projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
@@ -2275,16 +2272,47 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
       sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
-      // For each resource IRI return history [creation date/lastModificationDate, author]
-      historyOfResourcesAsSeqOfFutures: Seq[Future[ResourceVersionHistoryResponseV2]] = mainResourceIris.map {
+      // For each resource IRI return history
+      historyOfResourcesAsSeqOfFutures: Map[String, Future[ResourceVersionHistoryResponseV2]] = mainResourceIris.map {
         resourceIri =>
-          getResourceHistoryV2(
-            resourceHistoryRequest =
-              ResourceVersionHistoryGetRequestV2(resourceIri = resourceIri,
-                                                 featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
-                                                 requestingUser = projectResourcesGetRequest.requestingUser))
-      }
-      historyOfResources: Seq[ResourceVersionHistoryResponseV2] <- Future.sequence(historyOfResourcesAsSeqOfFutures)
-      // TODO: order the history by date
+          val resourceHistoryRequest =
+            ResourceVersionHistoryGetRequestV2(resourceIri = resourceIri,
+                                               featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
+                                               requestingUser = projectResourcesGetRequest.requestingUser)
+          val resourceHistory: Future[ResourceVersionHistoryResponseV2] = getResourceHistoryV2(resourceHistoryRequest)
+          resourceIri -> resourceHistory
+
+      }.toMap
+
+      historyOfResources: Map[String, ResourceVersionHistoryResponseV2] <- Future
+        .sequence(historyOfResourcesAsSeqOfFutures.map(entry => entry._2.map(i => (entry._1, i))))
+        .map(_.toMap)
+
+      // TODO: extract the changes from the full representation of resource in each time stamp
     } yield historyOfResources
+
+  def getFullRepresentationOfResourceForAllHistory(resourceIri: IRI,
+                                                   featureFactoryConfig: FeatureFactoryConfig,
+                                                   requestingUser: UserADM,
+                                                   resourceVersionHistory: ResourceVersionHistoryResponseV2)
+    : Future[Seq[ConstructResponseUtilV2.MainResourcesAndValueRdfData]] = {
+
+    val actualResourceAtSpecificTime: Seq[Future[ConstructResponseUtilV2.MainResourcesAndValueRdfData]] =
+      resourceVersionHistory.history
+        .map { historyEntry =>
+          for {
+            fullRepresentation <- getResourcesFromTriplestore(
+              resourceIris = Seq(resourceIri),
+              preview = false,
+              versionDate = Some(historyEntry.versionDate),
+              queryStandoff = false,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser
+            )
+          } yield fullRepresentation
+        }
+    val fullVersionHistoryOfResource: Future[Seq[ConstructResponseUtilV2.MainResourcesAndValueRdfData]] =
+      Future.sequence(actualResourceAtSpecificTime)
+    fullVersionHistoryOfResource
+  }
 }

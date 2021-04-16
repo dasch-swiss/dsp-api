@@ -2406,7 +2406,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       responderManager ! getAllResources
-      expectMsgType[Seq[ResourceVersionHistoryResponseV2]](timeout)
+      expectMsgType[Map[String, ResourceVersionHistoryResponseV2]](timeout)
     }
   }
 }
