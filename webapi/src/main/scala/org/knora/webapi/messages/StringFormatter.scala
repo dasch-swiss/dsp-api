@@ -39,7 +39,7 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
+import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse, StringLiteralV2}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -3247,5 +3247,17 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     if (iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName)) {
       throw BadRequestException(s"Internal ontology <$iri> cannot be served")
     }
+  }
+
+  def escapeSpecialCharactersInStringLiteral(stringLiteral: StringLiteralV2): StringLiteralV2 = {
+    val escapedValue =
+      toSparqlEncodedString(stringLiteral.value, throw BadRequestException(s"Invalid string: ${stringLiteral.value}"))
+    StringLiteralV2(value = escapedValue, language = stringLiteral.language)
+  }
+
+  def unescapeSpecialCharactersInStringLiteral(stringLiteral: StringLiteralV2): StringLiteralV2 = {
+    val escapedValue =
+      fromSparqlEncodedString(stringLiteral.value)
+    StringLiteralV2(value = escapedValue, language = stringLiteral.language)
   }
 }

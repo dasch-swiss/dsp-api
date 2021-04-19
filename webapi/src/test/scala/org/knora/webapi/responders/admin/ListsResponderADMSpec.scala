@@ -26,6 +26,7 @@ import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, UpdateNotPerformedException}
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
@@ -51,6 +52,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
   // The default timeout for receiving reply messages from actors.
   implicit private val timeout = 5.seconds
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -179,7 +181,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             name = Some("neuelistename"),
             labels = Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))),
             comments = Seq.empty[StringLiteralV2]
-          ),
+          ).escape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -206,8 +208,46 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         newListIri.set(listInfo.id)
       }
 
+      "create a list with special characters in its labels" in {
+        val labelWithSpecialCharacter = "Neue \\\"Liste\\\""
+        val commentWithSpecialCharacter = "Neue \\\"Kommentar\\\""
+        val nameWithSpecialCharacter = "a new \\\"name\\\""
+        responderManager ! ListCreateRequestADM(
+          createRootNode = CreateNodeApiRequestADM(
+            projectIri = IMAGES_PROJECT_IRI,
+            name = Some(nameWithSpecialCharacter),
+            labels = Seq(StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))),
+            comments = Seq(StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))),
+          ).escape,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID
+        )
+
+        val received: ListGetResponseADM = expectMsgType[ListGetResponseADM](timeout)
+
+        val listInfo = received.list.listinfo
+        listInfo.projectIri should be(IMAGES_PROJECT_IRI)
+
+        listInfo.name should be(Some(stringFormatter.fromSparqlEncodedString(nameWithSpecialCharacter)))
+
+        val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
+        labels.size should be(1)
+        val givenLabel = labels.head
+        givenLabel.value shouldEqual stringFormatter.fromSparqlEncodedString(labelWithSpecialCharacter)
+        givenLabel.language shouldEqual Some("de")
+
+        val comments = received.list.listinfo.comments.stringLiterals
+        val givenComment = comments.head
+        givenComment.language shouldEqual Some("de")
+        givenComment.value shouldEqual stringFormatter.fromSparqlEncodedString(commentWithSpecialCharacter)
+
+        val children = received.list.children
+        children.size should be(0)
+      }
+
       "update basic list information" in {
-        responderManager ! NodeInfoChangeRequestADM(
+        val changeNodeInfoRequest = NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = ChangeNodeInfoApiRequestADM(
             listIri = newListIri.get,
@@ -216,18 +256,19 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             labels = Some(
               Seq(
                 StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                StringLiteralV2(value = "Changed list", language = Some("en"))
+                StringLiteralV2(value = "Changed List", language = Some("en"))
               )),
             comments = Some(
               Seq(
                 StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                StringLiteralV2(value = "New comment", language = Some("en"))
+                StringLiteralV2(value = "New Comment", language = Some("en"))
               ))
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
+        responderManager ! changeNodeInfoRequest
 
         val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
 
@@ -239,7 +280,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         labels.sorted should be(
           Seq(
             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-            StringLiteralV2(value = "Changed list", language = Some("en"))
+            StringLiteralV2(value = "Changed List", language = Some("en"))
           ).sorted)
 
         val comments = listInfo.comments.stringLiterals
@@ -247,7 +288,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         comments.sorted should be(
           Seq(
             StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-            StringLiteralV2(value = "New comment", language = Some("en"))
+            StringLiteralV2(value = "New Comment", language = Some("en"))
           ).sorted)
       }
 
