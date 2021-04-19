@@ -27,6 +27,12 @@ def dependencies():
             "com.typesafe.akka:akka-http-jackson_2.12:%s" % (AKKA_HTTP_VERSION),
             "com.typesafe:config:1.3.3",
 
+            # ZIO and friends
+            "dev.zio:zio_2.12:1.0.3",
+
+            # EventStoreDB
+            "com.eventstore:db-client-java:1.0.0",
+
             # CORS support
             "ch.megard:akka-http-cors_2.12:1.0.0",
 

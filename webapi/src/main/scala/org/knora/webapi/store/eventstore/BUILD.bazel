@@ -1,0 +1,14 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+
+scala_library(
+    name = "eventstore",
+    srcs = ["EventStore.scala"],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "@maven//:dev_zio_zio_2_12",
+        "@maven//:com_eventstore_db_client_java"
+    ],
+)

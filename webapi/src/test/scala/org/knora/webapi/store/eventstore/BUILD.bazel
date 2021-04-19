@@ -1,0 +1,26 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
+
+scala_test(
+    name = "EventStoreSpec",
+    size = "small",  # 60s
+    srcs = [
+        "EventStoreSpec.scala",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/store/eventstore",
+        "@maven//:com_fasterxml_jackson_core_jackson_annotations",
+        "@maven//:io_perfmark_perfmark_api",
+        "@maven//:org_scalatest_scalatest_2_12",
+        "@maven//:org_scalatest_scalatest_core_2_12",
+        "@maven//:org_scalatest_scalatest_wordspec_2_12",
+        "@maven//:org_scalatest_scalatest_matchers_core_2_12",
+        "@maven//:org_scalatest_scalatest_shouldmatchers_2_12",
+        "@maven//:org_scalatest_scalatest_compatible",
+        "@maven//:org_scalactic_scalactic_2_12",
+    ]
+)
