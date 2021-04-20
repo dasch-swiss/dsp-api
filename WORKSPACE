@@ -27,7 +27,7 @@ http_archive(
 # 2.12 is a default version, other versions can be use by passing them explicitly:
 # scala_config(scala_version = "2.11.12")
 load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
-scala_config(scala_version = "2.12.11")
+scala_config(scala_version = "2.12.13")
 
 # register default and our custom scala toolchain
 load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
@@ -38,10 +38,17 @@ register_toolchains("//toolchains:dsp_api_scala_toolchain")
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
 scala_repositories()
 
+
+
 # register the test toolchain for rules_scala
 load("@io_bazel_rules_scala//testing:scalatest.bzl", "scalatest_repositories", "scalatest_toolchain")
 scalatest_repositories()
 scalatest_toolchain()
+
+# register the test toolchain for JUnit 4
+load("@io_bazel_rules_scala//testing:junit.bzl", "junit_repositories", "junit_toolchain")
+junit_repositories()
+junit_toolchain()
 
 #
 # Download the protobuf repository (needed by go and rules_scala_annex)

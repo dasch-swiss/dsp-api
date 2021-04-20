@@ -29,6 +29,8 @@ def dependencies():
 
             # ZIO and friends
             "dev.zio:zio_2.12:1.0.3",
+            "dev.zio:zio-test_2.12:1.0.3",
+            "dev.zio:zio-test-junit_2.12:1.0.3",
 
             # EventStoreDB
             "com.eventstore:db-client-java:1.0.0",
@@ -136,7 +138,7 @@ def dependencies():
             "org.scalatest:scalatest-shouldmatchers_2.12:3.2.2",
             "org.scalatest:scalatest-compatible:3.2.2",
             "org.testcontainers:testcontainers:1.15.1",
-            "junit:junit:4.13",
+            "junit:junit:4.13.2",
             "io.gatling.highcharts:gatling-charts-highcharts:3.2.1",
             "io.gatling:gatling-test-framework:3.2.1",
 

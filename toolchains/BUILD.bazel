@@ -1,4 +1,6 @@
 load("@io_bazel_rules_scala//scala:scala_toolchain.bzl", "scala_toolchain")
+load("@io_bazel_rules_scala//testing/toolchain:toolchain.bzl", "scala_testing_toolchain")
+load("@io_bazel_rules_scala//scala:providers.bzl", "declare_deps_provider")
 
 # scalac options like in KnoraBuild.sbt (warn-unused is added, as it seems good)
 scala_toolchain(
