@@ -302,6 +302,7 @@ operators:
 | Text Value       | MATCH_BOOLEAN, MATCH, EQ, !EQ, LIKE, !LIKE, EXISTS    |
 | Geometry Value   | EXISTS                                                |
 | Geoname Value    | EQ, EXISTS                                            |
+| URI Value        | EQ, EXISTS                                            |
 | Resource Pointer | EQ, EXISTS                                            |
 | Color Value      | EQ, EXISTS                                            |
 | List Value       | EQ, EXISTS                                            |
