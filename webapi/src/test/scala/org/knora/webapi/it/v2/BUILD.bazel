@@ -5,7 +5,7 @@ load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TES
 
 scala_test(
     name = "KnoraSipiIntegrationV2ITSpec",
-    size = "medium",
+    size = "large",
     srcs = [
         "KnoraSipiIntegrationV2ITSpec.scala",
     ],
