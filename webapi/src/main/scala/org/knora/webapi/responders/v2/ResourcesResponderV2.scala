@@ -133,7 +133,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 => getResourceHistoryV2(resourceHistoryRequest)
     case projectResourcesWithHistoryRequestV2: ProjectResourcesWithHistoryGetRequestV2 =>
       getProjectResourcesWithHistoryV2(projectResourcesWithHistoryRequestV2)
-    case other => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case resourceFullHistRequest: ResourceFullHistoryGetRequestV2 => getResourceFullHist(resourceFullHistRequest)
+    case other                                                    => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
   /**
@@ -2254,7 +2255,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @return the all resources of project with ordered version history.
     */
   def getProjectResourcesWithHistoryV2(projectResourcesGetRequest: ProjectResourcesWithHistoryGetRequestV2)
-    : Future[Map[String, ResourceVersionHistoryResponseV2]] =
+    : Future[Map[String, Seq[ResourceAndValueHistoryV2]]] =
     for {
       // Get the project; checks if a project with given IRI exists.
       projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
@@ -2288,46 +2289,80 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       historyOfResources: Map[String, ResourceVersionHistoryResponseV2] <- Future
         .sequence(historyOfResourcesAsSeqOfFutures.map(entry => entry._2.map(i => (entry._1, i))))
         .map(_.toMap)
+      allhistFutures: Map[String, Future[Seq[ResourceAndValueHistoryV2]]] = historyOfResources.map {
+        case (resourceIri, resourceHistory) =>
+          val resourceFullHist: Future[Seq[ResourceAndValueHistoryV2]] = getResourceFullHist(
+            ResourceFullHistoryGetRequestV2(
+              resourceIri = resourceIri,
+              resourceVersionHistory = resourceHistory.history,
+              featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
+              requestingUser = projectResourcesGetRequest.requestingUser
+            ))
+          resourceIri -> resourceFullHist
+      }.toMap
 
-      //get the full representation of resources in each time stamp in its history
-//      fullRespsFutures: Map[String, Future[Seq[ReadResourceV2]]] = historyOfResources
-//        .map {
-//          case (resourceIri, resourceHistory) =>
-//            val fullRespresentation = for {
-//              fullRep: Seq[ReadResourceV2] <- getFullRepresentationOfResourceForAllHistory(
-//                resourceIri = resourceIri,
-//                resourceVersionHistory = resourceHistory,
-//                featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
-//                requestingUser = projectResourcesGetRequest.requestingUser
-//              )
-//            } yield fullRep
-//            resourceIri -> fullRespresentation
-//        }
-//      fullRespresentations: Map[String, Seq[ReadResourceV2]] <- Future
-//        .sequence(fullRespsFutures.map(entry => entry._2.map(i => (entry._1, i))))
-//        .map(_.toMap)
-    } yield historyOfResources
+      projectHis: Map[String, Seq[ResourceAndValueHistoryV2]] <- Future
+        .sequence(allhistFutures.map(entry => entry._2.map(i => (entry._1, i))))
+        .map(_.toMap)
 
-  def getFullRepresentationOfResourceForAllHistory(resourceIri: IRI,
-                                                   resourceVersionHistory: ResourceVersionHistoryResponseV2,
-                                                   featureFactoryConfig: FeatureFactoryConfig,
-                                                   requestingUser: UserADM): Future[Seq[ReadResourceV2]] = {
-    val actualResourceAtSpecificTime: Seq[Future[ReadResourceV2]] =
-      resourceVersionHistory.history
-        .map { historyEntry =>
-          for {
-            fullRepresentation <- getResourcesV2(
-              resourceIris = Seq(resourceIri),
-              versionDate = Some(historyEntry.versionDate),
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser,
-              targetSchema = ApiV2Complex,
-              schemaOptions = SchemaOptions.ForStandoffWithTextValues,
-            )
-          } yield fullRepresentation.resources.head
-        }
-    val fullVersionHistoryOfResource: Future[Seq[ReadResourceV2]] =
-      Future.sequence(actualResourceAtSpecificTime)
-    fullVersionHistoryOfResource
+    } yield projectHis
+
+  def getResourceFullHist(
+      resourceFullHistRequest: ResourceFullHistoryGetRequestV2): Future[Seq[ResourceAndValueHistoryV2]] = {
+
+    val resourceHist = resourceFullHistRequest.resourceVersionHistory.reverse
+    val resourceVersionAtCreationDate = resourceHist.head
+    for {
+      resourceCreateEvent <- getResourceAtCreationDate(
+        resourceIri = resourceFullHistRequest.resourceIri,
+        versionHist = resourceVersionAtCreationDate,
+        featureFactoryConfig = resourceFullHistRequest.featureFactoryConfig,
+        requestingUser = resourceFullHistRequest.requestingUser
+      )
+      histEvents: Seq[ResourceAndValueHistoryV2] = Seq(resourceCreateEvent)
+      // TODO: add values full hist
+    } yield histEvents
+  }
+
+  def getResourceAtCreationDate(resourceIri: IRI,
+                                versionHist: ResourceHistoryEntry,
+                                featureFactoryConfig: FeatureFactoryConfig,
+                                requestingUser: UserADM): Future[ResourceAndValueHistoryV2] = {
+    for {
+      resourceFullRepAtCreationTime: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(
+        resourceIris = Seq(resourceIri),
+        versionDate = Some(versionHist.versionDate),
+        targetSchema = ApiV2Complex,
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser
+      )).mapTo[ReadResourcesSequenceV2]
+      resourceAtCreationTime: ReadResourceV2 = resourceFullRepAtCreationTime.resources.head
+      requestPayload: ResourceEventPayload = ResourceEventPayload(
+        resourceIri = resourceIri,
+        resourceClassIri = resourceAtCreationTime.resourceClassIri,
+        label = resourceAtCreationTime.label,
+        values = resourceAtCreationTime.values.mapValues(readValues => convertReadValuesToCreateNewValues(readValues)),
+        attachedToProject = resourceAtCreationTime.projectADM.id,
+        permissions = resourceAtCreationTime.permissions,
+        creationDate = resourceAtCreationTime.creationDate
+      )
+    } yield
+      ResourceAndValueHistoryV2(
+        eventType = ResourceAndValueEventsUtil.CREATE_RESOURCE_EVENT,
+        versionDate = versionHist.versionDate,
+        author = versionHist.author,
+        payload = requestPayload
+      )
+  }
+
+  def convertReadValuesToCreateNewValues(readValues: Seq[ReadValueV2]): Seq[CreateValueInNewResourceV2] = {
+    readValues.map { readValue =>
+      CreateValueInNewResourceV2(
+        valueContent = readValue.valueContent,
+        customValueIri = Some(readValue.valueIri.toSmartIri),
+        customValueUUID = Some(readValue.valueHasUUID),
+        customValueCreationDate = Some(readValue.valueCreationDate)
+      )
+    }
   }
 }

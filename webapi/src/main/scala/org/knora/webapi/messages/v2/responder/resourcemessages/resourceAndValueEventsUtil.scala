@@ -5,9 +5,8 @@ package org.knora.webapi.messages.v2.responder.resourcemessages
   */
 object ResourceAndValueEventsUtil {
 
-  val CREATE_RESOURCE_EVENT = "createResourceEvent"
-  val UPDATE_RESOURCE_METADATA_EVENT = "updateResourceMetadata"
-  val UPDATE_VALUE_EVENT = "updateValueEvent"
-  val CREATE_VALUE_EVENT = "createValueEvent"
+  val CREATE_RESOURCE_EVENT = "createResource"
+  val CREATE_VALUE_EVENT = "createValue"
+  val UPDATE_VALUE_EVENT = "updateValue"
   val DELETE_VALUE_EVENT = "deleteValue"
 }

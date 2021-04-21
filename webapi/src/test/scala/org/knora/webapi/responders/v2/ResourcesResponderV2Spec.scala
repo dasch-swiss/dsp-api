@@ -2398,7 +2398,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "return seq of resource IRIs of a project" in {
+    "return seq of full history events for each resource of a project" in {
       val getAllResources = ProjectResourcesWithHistoryGetRequestV2(
         projectIri = "http://rdfh.ch/projects/0001",
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -2406,7 +2406,30 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       responderManager ! getAllResources
-      expectMsgType[Map[String, ResourceVersionHistoryResponseV2]](timeout)
+      val response = expectMsgType[Map[String, Seq[ResourceAndValueHistoryV2]]](timeout)
+      response.size should be(52)
+    }
+
+    "return full history of a resource" in {
+      val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+
+      responderManager ! ResourceVersionHistoryGetRequestV2(
+        resourceIri = resourceIri,
+        startDate = None,
+        endDate = None,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile
+      )
+      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
+
+      responderManager ! ResourceFullHistoryGetRequestV2(
+        resourceIri = resourceIri,
+        resourceVersionHistory = response.history,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile
+      )
+      val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      events.size should be(1)
     }
   }
 }

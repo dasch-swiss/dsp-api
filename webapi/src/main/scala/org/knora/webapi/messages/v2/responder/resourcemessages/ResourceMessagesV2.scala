@@ -113,6 +113,12 @@ case class ResourceVersionHistoryGetRequestV2(resourceIri: IRI,
                                               requestingUser: UserADM)
     extends ResourcesResponderRequestV2
 
+case class ResourceFullHistoryGetRequestV2(resourceIri: IRI,
+                                           resourceVersionHistory: Seq[ResourceHistoryEntry],
+                                           featureFactoryConfig: FeatureFactoryConfig,
+                                           requestingUser: UserADM)
+    extends ResourcesResponderRequestV2
+
 /**
   * Requests the version history of all resources of a project.
   *
@@ -1292,65 +1298,78 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
   * @param author       the user which had performed the operation.
   *
   */
-//TODO: extend this to content that is of value operation type
-case class ResourceAndValueHistoryV2(eventType: String, versionDate: Instant, author: IRI, payload: ReadResourceV2)
+case class ResourceAndValueHistoryV2(eventType: String,
+                                     versionDate: Instant,
+                                     author: IRI,
+                                     payload: ResourceOrValueEventPayload)
 
-/**
-  * Represents the history of the project resources and values.
-  */
-case class ResourceAndValueVersionHistoryResponseV2(projectHistory: Seq[ResourceAndValueHistoryV2])
-    extends KnoraJsonLDResponseV2 {
+abstract class ResourceOrValueEventPayload
+case class ResourceEventPayload(resourceIri: IRI,
+                                resourceClassIri: SmartIri,
+                                label: String,
+                                values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
+                                attachedToProject: IRI,
+                                permissions: String,
+                                creationDate: Instant)
+    extends ResourceOrValueEventPayload
+case class ValueEventPayload() extends ResourceOrValueEventPayload
 
-  /**
-    * Converts the response to a data structure that can be used to generate JSON-LD.
-    *
-    * @param targetSchema the Knora API schema to be used in the JSON-LD document.
-    * @return a [[JsonLDDocument]] representing the response.
-    */
-  override def toJsonLDDocument(targetSchema: ApiV2Schema,
-                                settings: KnoraSettingsImpl,
-                                schemaOptions: Set[SchemaOption]): JsonLDDocument = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    if (targetSchema != ApiV2Complex) {
-      throw AssertionException("Version history can be returned only in the complex schema")
-    }
-
-    // Convert the history entries to an array of JSON-LD objects.
-
-    val projectHistoryAsJsonLD: Seq[JsonLDObject] = projectHistory.map { historyEntry: ResourceAndValueHistoryV2 =>
-      JsonLDObject(
-        Map(
-          JsonLDKeywords.TYPE -> JsonLDString(historyEntry.eventType),
-          OntologyConstants.KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
-            value = historyEntry.versionDate.toString,
-            datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
-          ),
-          OntologyConstants.KnoraApiV2Complex.Author -> JsonLDUtil.iriToJsonLDObject(historyEntry.author),
-          "payload" -> historyEntry.payload.toJsonLD(
-            targetSchema = targetSchema,
-            settings = settings,
-            schemaOptions = schemaOptions
-          )
-        )
-      )
-    }
-
-    // Make the JSON-LD context.
-
-    val context = JsonLDUtil.makeContext(
-      fixedPrefixes = Map(
-        "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
-        "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
-        "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion,
-        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
-      )
-    )
-
-    // Make the JSON-LD document.
-
-    val body = JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(projectHistoryAsJsonLD)))
-
-    JsonLDDocument(body = body, context = context)
-  }
-}
+///**
+//  * Represents the history of the project resources and values.
+//  */
+//case class ResourceAndValueVersionHistoryResponseV2(projectHistory: Seq[ResourceAndValueHistoryV2])
+//    extends KnoraJsonLDResponseV2 {
+//
+//  /**
+//    * Converts the response to a data structure that can be used to generate JSON-LD.
+//    *
+//    * @param targetSchema the Knora API schema to be used in the JSON-LD document.
+//    * @return a [[JsonLDDocument]] representing the response.
+//    */
+//  override def toJsonLDDocument(targetSchema: ApiV2Schema,
+//                                settings: KnoraSettingsImpl,
+//                                schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+//    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+//
+//    if (targetSchema != ApiV2Complex) {
+//      throw AssertionException("Version history can be returned only in the complex schema")
+//    }
+//
+//    // Convert the history entries to an array of JSON-LD objects.
+//
+//    val projectHistoryAsJsonLD: Seq[JsonLDObject] = projectHistory.map { historyEntry: ResourceAndValueHistoryV2 =>
+//      JsonLDObject(
+//        Map(
+//          JsonLDKeywords.TYPE -> JsonLDString(historyEntry.eventType),
+//          OntologyConstants.KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+//            value = historyEntry.versionDate.toString,
+//            datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+//          ),
+//          OntologyConstants.KnoraApiV2Complex.Author -> JsonLDUtil.iriToJsonLDObject(historyEntry.author),
+//          "payload" -> historyEntry.payload.toJsonLD(
+//            targetSchema = targetSchema,
+//            settings = settings,
+//            schemaOptions = schemaOptions
+//          )
+//        )
+//      )
+//    }
+//
+//    // Make the JSON-LD context.
+//
+//    val context = JsonLDUtil.makeContext(
+//      fixedPrefixes = Map(
+//        "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
+//        "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+//        "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion,
+//        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+//      )
+//    )
+//
+//    // Make the JSON-LD document.
+//
+//    val body = JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(projectHistoryAsJsonLD)))
+//
+//    JsonLDDocument(body = body, context = context)
+//  }
+//}
