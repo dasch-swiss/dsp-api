@@ -9,8 +9,8 @@
     - Benjamin Geer <https://github.com/benjamingeer>
     - Ivan Subotic <https://github.com/subotic>
     - Tobias Schweizer <https://github.com/tobiasschweizer>
-    - Loïc Jaouen <https://github.com/loicjaouen>
     - Sepideh Alassi <https://github.com/SepidehAlassi>
+    - Loïc Jaouen <https://github.com/loicjaouen>
     - André Kilchenmann <https://github.com/kilchenmann>
     - Stefan Münnich <https://github.com/musicEnfanthen>
     - Lukas Stöckli <https://github.com/LukasStoeckli>

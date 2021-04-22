@@ -86,6 +86,14 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
     OntologyConstants.KnoraBase.GeomValue -> Set(
       SearchComparisonOperatorV1.EXISTS
     ),
+    OntologyConstants.KnoraBase.GeonameValue -> Set(
+      SearchComparisonOperatorV1.EQ,
+      SearchComparisonOperatorV1.EXISTS
+    ),
+    OntologyConstants.KnoraBase.UriValue -> Set(
+      SearchComparisonOperatorV1.EQ,
+      SearchComparisonOperatorV1.EXISTS
+    ),
     OntologyConstants.KnoraBase.Resource -> Set(
       SearchComparisonOperatorV1.EQ,
       SearchComparisonOperatorV1.EXISTS
@@ -514,6 +522,20 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
               case OntologyConstants.KnoraBase.GeomValue =>
                 // this only will be used with compop EXISTS
                 searchParamWithoutValue.copy(searchValue = Some(""))
+
+              case OntologyConstants.KnoraBase.GeonameValue =>
+                // sanitize Geoname search string
+                val searchString = stringFormatter
+                  .toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid Geoname search string: '$searchval'"))
+
+                searchParamWithoutValue.copy(searchValue = Some(searchString))
+
+              case OntologyConstants.KnoraBase.UriValue =>
+                // validate URI
+                val searchString = stringFormatter.validateAndEscapeIri(
+                  searchval,
+                  throw BadRequestException(s"Invalid URI: $searchval"))
+                searchParamWithoutValue.copy(searchValue = Some(searchString))
 
               case OntologyConstants.KnoraBase.ListValue =>
                 // check if string represents a node in a list
