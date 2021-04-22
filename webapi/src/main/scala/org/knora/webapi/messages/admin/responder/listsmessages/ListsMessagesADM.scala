@@ -125,7 +125,11 @@ case class CreateNodeApiRequestADM(id: Option[IRI] = None,
   }
 
   def toJsValue: JsValue = createListNodeApiRequestADMFormat.write(this)
-  // Escapes special characters within strings
+
+  /**
+    * Escapes special characters within strings
+    *
+    */
   def escape: CreateNodeApiRequestADM = {
     val escapedlabels: Seq[StringLiteralV2] = labels.map { label =>
       stringFormatter.escapeSpecialCharactersInStringLiteral(label)
@@ -649,6 +653,10 @@ case class ListRootNodeInfoADM(id: IRI,
     )
   }
 
+  /**
+    * unescapes the special characters in labels, comments, and name for comparison in tests.
+    *
+    */
   def unescape: ListRootNodeInfoADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -715,6 +723,10 @@ case class ListChildNodeInfoADM(id: IRI,
     )
   }
 
+  /**
+    * unescapes the special characters in labels, comments, and name for comparison in tests.
+    *
+    */
   def unescape: ListChildNodeInfoADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -841,6 +853,10 @@ case class ListRootNodeADM(id: IRI,
     )
   }
 
+  /**
+    * unescapes the special characters in labels, comments, and name for comparison in tests.
+    *
+    */
   def unescape: ListRootNodeADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -919,6 +935,10 @@ case class ListChildNodeADM(id: IRI,
     )
   }
 
+  /**
+    * unescapes the special characters in labels, comments, and name for comparison in tests.
+    *
+    */
   def unescape: ListChildNodeADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
