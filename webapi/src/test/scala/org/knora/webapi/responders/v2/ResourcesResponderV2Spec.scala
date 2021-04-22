@@ -2407,7 +2407,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! getAllResources
       val response = expectMsgType[Map[String, Seq[ResourceAndValueHistoryV2]]](timeout)
-      response.size should be(52)
+      response.size should be > 50
     }
 
     "return full history of a resource" in {
