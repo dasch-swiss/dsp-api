@@ -63,8 +63,8 @@ protobuf_deps()
 # download rules_jvm_external used for maven dependency resolution
 # defined in the third_party sub-folder
 #
-rules_jvm_external_version = "3.3" # 7.07.2020
-rules_jvm_external_version_sha256 = "d85951a92c0908c80bd8551002d66cb23c3434409c814179c0ff026b53544dab"
+rules_jvm_external_version = "4.0" # 6.01.2021
+rules_jvm_external_version_sha256 = "31701ad93dbfe544d597dbe62c9a1fdd76d81d8a9150c2bf1ecf928ecdf97169"
 
 http_archive(
     name = "rules_jvm_external",
