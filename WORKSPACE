@@ -59,32 +59,6 @@ http_archive(
 load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
 protobuf_deps()
 
-
-#
-# download rules_webtesting (for browser tests of salsah1)
-#
-rules_webtesting_release = "0.3.3"
-rules_webtesting_release_sha256 = "9bb461d5ef08e850025480bab185fd269242d4e533bca75bfb748001ceb343c3"
-http_archive(
-    name = "io_bazel_rules_webtesting",
-    sha256 = rules_webtesting_release_sha256,
-    urls = [
-        "https://github.com/bazelbuild/rules_webtesting/releases/download/%s/rules_webtesting.tar.gz" % rules_webtesting_release,
-    ],
-)
-
-load("@io_bazel_rules_webtesting//web:repositories.bzl", "web_test_repositories")
-
-web_test_repositories()
-
-load("@io_bazel_rules_webtesting//web/versioned:browsers-0.3.2.bzl", "browser_repositories")
-
-browser_repositories(chromium=True, firefox=True)
-
-load("@io_bazel_rules_webtesting//web:java_repositories.bzl", "java_repositories")
-
-java_repositories()
-
 #
 # download rules_jvm_external used for maven dependency resolution
 # defined in the third_party sub-folder
