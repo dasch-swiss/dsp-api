@@ -22,3 +22,4 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 The Lucene full-text index provided by the triplestore is used to perform full-text searches in Knora. 
 The exact behavior can be different depending on the triplestore, e.g., GraphDB or Fuseki.
 
+* [Lucene Query Parser Syntax](lucene-query-parser-syntax.md)

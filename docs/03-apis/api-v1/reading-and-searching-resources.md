@@ -310,7 +310,7 @@ operators:
 
 Explanation of the comparison operators:
 
-* `EQ`: checks if a resource's value *equals* the search value. In
+* `EQ` (equal): checks if a resource's value *equals* the search value. In
   case of a text value type, it checks for identity of the strings
   compared. In case of a date value type, equality is given if the
   dates overlap in any way. Since dates are internally always
@@ -318,24 +318,24 @@ Explanation of the comparison operators:
   ends after or equals the start of the defined period and a date
   value's period starts before or equals the end of the defined
   period.
-* `!EQ`: checks if a resource's value *does not equal* the search
+* `!EQ` (not equal): checks if a resource's value *does not equal* the search
   value. In case of a text value type, it checks if the compared
   strings are different. In case of a date value type, inequality
   is given if the dates do not overlap in any way, meaning that a
   date starts after the end of the defined period or ends before
   the beginning of the defined period (dates are internally always
   treated as periods, see above).
-* `GT`: checks if a resource's value is *greater than* the search
+* `GT` (greater than): checks if a resource's value is *greater than* the search
   value. In case of a date value type, it assures that a period
   begins after the indicated period's end.
-* `GT_EQ`: checks if a resource's value *equals or is greater
+* `GT_EQ` (greater than or equal): checks if a resource's value *equals or is greater
   than* the search value. In case of a date value type, it assures
   that the periods overlap in any way (see `EQ`) **or** that the
   period starts after the indicated period's end (see `GT`).
-* `LT`: checks if a resource's value is *lower than* the search
+* `LT` (less than): checks if a resource's value is *lower than* the search
   value. In case of a date value type, it assures that a period
   ends before the indicated period's start.
-* `LT_EQ`: checks if a resource's value *equals or is lower than*
+* `LT_EQ` (less than or equal): checks if a resource's value *equals or is lower than*
   the search value. In case of a date value type, it assures that
   the periods overlap in any way (see `EQ`) **or** that the period
   ends before the indicated period's start (see `LT`).
@@ -344,12 +344,13 @@ Explanation of the comparison operators:
   value when using EXISTS: "searchval="**. Otherwise, the query
   syntax rules would be violated.
 * `MATCH`: checks if a resource's text value *matches* the search
-  value. The behaviour depends on the used triplestore's full text
-  index, see [Lucene](../../08-lucene/index.md).
+  value, see [Lucene Query Parser Syntax](../../08-lucene/lucene-query-parser-syntax.md).
 * `LIKE`: checks if the search value is contained in a resource's
-  text value.
-* `!LIKE`: checks if the search value is not contained in a
-  resource's text value.
+  text value using the SPARQL [REGEX](https://www.w3.org/TR/sparql11-query/#func-regex) function,
+  thus supporting regular expressions.
+* `!LIKE` (not like): checks if the search value is not contained in a
+  resource's text value using the SPARQL [REGEX](https://www.w3.org/TR/sparql11-query/#func-regex) function,
+  thus supporting regular expressions.
 * `MATCH_BOOLEAN`: checks if a resource's text value *matches* the
   provided list of positive (exist) and negative (do not exist)
   terms. The list takes this form: `([+-]term\s)+`.
