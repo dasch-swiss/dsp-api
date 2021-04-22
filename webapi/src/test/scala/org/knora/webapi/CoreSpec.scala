@@ -19,6 +19,19 @@
 
 package org.knora.webapi
 
+import app.{ApplicationActor, LiveManagers}
+import core.Core
+import feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
+import messages.StringFormatter
+import messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
+import messages.store.cacheservicemessages.CacheServiceFlushDB
+import messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
+import messages.util.rdf.RdfFeatureFactory
+import messages.util.{KnoraSystemInstances, ResponderData}
+import messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
+import settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
+import util.StartupUtils
+
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingAdapter
 import akka.pattern.ask
@@ -26,18 +39,6 @@ import akka.stream.Materializer
 import akka.testkit.{ImplicitSender, TestKit}
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
-import org.knora.webapi.app.{ApplicationActor, LiveManagers}
-import org.knora.webapi.core.Core
-import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, ResetRepositoryContent}
-import org.knora.webapi.messages.util.rdf.RdfFeatureFactory
-import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
-import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
-import org.knora.webapi.util.StartupUtils
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -45,6 +46,7 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.language.postfixOps
+import scala.util.{Failure, Success, Try}
 
 object CoreSpec {
 
@@ -149,16 +151,27 @@ abstract class CoreSpec(_system: ActorSystem)
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
     logger.info("Loading test data started ...")
     implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-    Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds)
+    Try(Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds)) match {
+      case Success(res) => logger.info("... loading test data done.")
+      case Failure(e)   => logger.error(s"Loading test data failed: ${e.getMessage}")
+    }
 
-    Await.result(appActor ? LoadOntologiesRequestV2(
-                   featureFactoryConfig = defaultFeatureFactoryConfig,
-                   requestingUser = KnoraSystemInstances.Users.SystemUser
-                 ),
-                 1 minute)
+    logger.info("Loading load ontologies into cache started ...")
+    Try(
+      Await.result(appActor ? LoadOntologiesRequestV2(
+                     featureFactoryConfig = defaultFeatureFactoryConfig,
+                     requestingUser = KnoraSystemInstances.Users.SystemUser
+                   ),
+                   1 minute)) match {
+      case Success(res) => logger.info("... loading ontologies into cache done.")
+      case Failure(e)   => logger.error(s"Loading ontologies into cache failed: ${e.getMessage}")
+    }
 
-    Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)
-    logger.info("... loading test data done.")
+    logger.info("Flush Redis cache started ...")
+    Try(Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)) match {
+      case Success(res) => logger.info("... flushing Redis cache done.")
+      case Failure(e)   => logger.error(s"Flushing Redis cache failed: ${e.getMessage}")
+    }
   }
 
   def memusage(): Unit = {
