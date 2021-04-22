@@ -13,8 +13,8 @@ http_archive(
 )
 
 # download rules_scala repository
-rules_scala_version="8866f55712b30bbb96335cc11bc5ae5aad5cf8d4" # 18.11.2020
-rules_scala_version_sha256="cdc13aba7f0f89ae52c9c50394a10f24ac0e18923108598ac9dafce5be6a789a"
+rules_scala_version="0ac75d3a044b8e316d1b11b90a7d044685bd72e8" # 22.04.2021
+rules_scala_version_sha256="7624c95c19b60df943dbde90c54d09ecad9aca9432b1211da8352f131776ac36"
 http_archive(
     name = "io_bazel_rules_scala",
     strip_prefix = "rules_scala-%s" % rules_scala_version,
