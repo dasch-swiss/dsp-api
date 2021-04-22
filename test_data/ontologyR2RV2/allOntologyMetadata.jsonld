@@ -74,10 +74,10 @@
             "rdfs:label": "The dokubib ontology"
         },
         {
-            "@id": "http://0.0.0.0:3333/ontology/08AE/webern/v2",
+            "@id": "http://0.0.0.0:3333/ontology/0806/webern/v2",
             "@type": "owl:Ontology",
             "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/08AE"
+                "@id": "http://rdfh.ch/projects/0806"
             },
             "rdfs:label": "The Anton Webern project ontology"
         },
