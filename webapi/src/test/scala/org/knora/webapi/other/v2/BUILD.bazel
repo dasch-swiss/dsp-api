@@ -5,7 +5,7 @@ load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TES
 
 scala_test(
     name = "LumieresLausanneV2E2ESpec",
-    size = "medium",
+    size = "small",
     srcs = [
         "LumieresLausanneV2E2ESpec.scala",
     ],

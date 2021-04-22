@@ -24,7 +24,7 @@ scala_test(
 
 scala_test(
     name = "PermissionsADME2ESpec",
-    size = "medium",
+    size = "small",
     srcs = [
         "PermissionsADME2ESpec.scala",
     ],
@@ -42,7 +42,7 @@ scala_test(
 
 scala_test(
     name = "ProjectsADME2ESpec",
-    size = "medium",
+    size = "small",
     srcs = [
         "ProjectsADME2ESpec.scala",
         "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
@@ -62,7 +62,7 @@ scala_test(
 
 scala_test(
     name = "SipiADME2ESpec",
-    size = "medium",
+    size = "small",
     srcs = [
         "SipiADME2ESpec.scala",
         "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
@@ -81,7 +81,7 @@ scala_test(
 
 scala_test(
     name = "StoreADME2ESpec",
-    size = "medium",
+    size = "small",
     srcs = [
         "StoreADME2ESpec.scala",
     ],
@@ -99,7 +99,7 @@ scala_test(
 
 scala_test(
     name = "UsersADME2ESpec",
-    size = "medium",
+    size = "small",
     srcs = [
         "UsersADME2ESpec.scala",
         "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",

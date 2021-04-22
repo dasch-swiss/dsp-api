@@ -92,7 +92,7 @@ scala_test(
 ## //webapi/src/test/scala/org/knora/webapi/e2e/v2:ResourcesRouteV2E2ESpec
 scala_test(
     name = "ResourcesRouteV2E2ESpec",
-    size = "large",
+    size = "medium",
     srcs = [
         "ResourcesRouteV2E2ESpec.scala",
     ],
@@ -171,7 +171,7 @@ scala_test(
 
 scala_test(
     name = "ValuesRouteV2E2ESpec",
-    size = "large",
+    size = "medium",
     srcs = [
         "ValuesRouteV2E2ESpec.scala"
     ],

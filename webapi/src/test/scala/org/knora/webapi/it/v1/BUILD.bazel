@@ -5,7 +5,7 @@ load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TES
 
 scala_test(
     name = "DrawingsGodsV1ITSpec",
-    size = "medium",
+    size = "small",
     srcs = [
         "DrawingsGodsV1ITSpec.scala",
     ],
@@ -23,7 +23,7 @@ scala_test(
 
 scala_test(
     name = "ErrorV1ITSpec",
-    size = "medium",
+    size = "small",
     srcs = [
         "ErrorV1ITSpec.scala",
     ],
@@ -41,7 +41,7 @@ scala_test(
 
 scala_test(
     name = "KnoraSipiIntegrationV1ITSpec",
-    size = "large",
+    size = "small",
     srcs = [
         "KnoraSipiIntegrationV1ITSpec.scala",
     ],

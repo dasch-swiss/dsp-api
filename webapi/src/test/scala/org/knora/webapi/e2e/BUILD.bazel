@@ -14,7 +14,7 @@ filegroup(
 
 scala_test(
     name = "CORSSupportE2ESpec",
-    size = "medium",
+    size = "small",
     srcs = [
         "CORSSupportE2ESpec.scala",
     ],
@@ -68,7 +68,7 @@ scala_test(
 
 scala_test(
     name = "InstanceCheckerSpec",
-    size = "medium",
+    size = "small",
     srcs = [
         "InstanceChecker.scala",
         "InstanceCheckerSpec.scala",
@@ -87,7 +87,7 @@ scala_test(
 
 scala_test(
     name = "RejectingRouteE2ESpec",
-    size = "medium",
+    size = "small",
     srcs = [
         "RejectingRouteE2ESpec.scala",
     ],
