@@ -131,18 +131,23 @@ case class CreateNodeApiRequestADM(id: Option[IRI] = None,
     *
     */
   def escape: CreateNodeApiRequestADM = {
-    val escapedlabels: Seq[StringLiteralV2] = labels.map { label =>
-      stringFormatter.escapeSpecialCharactersInStringLiteral(label)
+    val escapedLabels: Seq[StringLiteralV2] = labels.map { label =>
+      val escapedLabel =
+        stringFormatter.toSparqlEncodedString(label.value, throw BadRequestException(s"Invalid label: ${label.value}"))
+      StringLiteralV2(value = escapedLabel, language = label.language)
     }
-    val escapedcomments = comments.map { comment =>
-      stringFormatter.escapeSpecialCharactersInStringLiteral(comment)
+    val escapedComments = comments.map { comment =>
+      val escapedComment =
+        stringFormatter.toSparqlEncodedString(comment.value,
+                                              throw BadRequestException(s"Invalid comment: ${comment.value}"))
+      StringLiteralV2(value = escapedComment, language = comment.language)
     }
     val escapedName: Option[String] = name match {
       case None => None
       case Some(value: String) =>
         Some(stringFormatter.toSparqlEncodedString(value, throw BadRequestException(s"Invalid string: $value")))
     }
-    copy(labels = escapedlabels, comments = escapedcomments, name = escapedName)
+    copy(labels = escapedLabels, comments = escapedComments, name = escapedName)
   }
 }
 
@@ -660,19 +665,14 @@ case class ListRootNodeInfoADM(id: IRI,
   def unescape: ListRootNodeInfoADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val unescapesLabels = StringLiteralSequenceV2(
-      stringLiterals =
-        labels.stringLiterals.map(label => stringFormatter.unescapeSpecialCharactersInStringLiteral(label))
-    )
-    val unescapesComments = StringLiteralSequenceV2(
-      stringLiterals =
-        comments.stringLiterals.map(comment => stringFormatter.unescapeSpecialCharactersInStringLiteral(comment))
-    )
+    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
+
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
     val unescapedName: Option[String] = name match {
       case None        => None
       case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
     }
-    copy(name = unescapedName, labels = unescapesLabels, comments = unescapesComments)
+    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
   }
 
   /**
@@ -730,19 +730,14 @@ case class ListChildNodeInfoADM(id: IRI,
   def unescape: ListChildNodeInfoADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val unescapesLabels = StringLiteralSequenceV2(
-      stringLiterals =
-        labels.stringLiterals.map(label => stringFormatter.unescapeSpecialCharactersInStringLiteral(label))
-    )
-    val unescapesComments = StringLiteralSequenceV2(
-      stringLiterals =
-        comments.stringLiterals.map(comment => stringFormatter.unescapeSpecialCharactersInStringLiteral(comment))
-    )
+    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
+
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
     val unescapedName: Option[String] = name match {
       case None        => None
       case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
     }
-    copy(name = unescapedName, labels = unescapesLabels, comments = unescapesComments)
+    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
   }
 
   /**
@@ -860,19 +855,13 @@ case class ListRootNodeADM(id: IRI,
   def unescape: ListRootNodeADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val unescapesLabels = StringLiteralSequenceV2(
-      stringLiterals =
-        labels.stringLiterals.map(label => stringFormatter.unescapeSpecialCharactersInStringLiteral(label))
-    )
-    val unescapesComments = StringLiteralSequenceV2(
-      stringLiterals =
-        comments.stringLiterals.map(comment => stringFormatter.unescapeSpecialCharactersInStringLiteral(comment))
-    )
+    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
     val unescapedName: Option[String] = name match {
       case None        => None
       case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
     }
-    copy(name = unescapedName, labels = unescapesLabels, comments = unescapesComments)
+    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
   }
 
   /**
@@ -942,19 +931,14 @@ case class ListChildNodeADM(id: IRI,
   def unescape: ListChildNodeADM = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val unescapesLabels = StringLiteralSequenceV2(
-      stringLiterals =
-        labels.stringLiterals.map(label => stringFormatter.unescapeSpecialCharactersInStringLiteral(label))
-    )
-    val unescapesComments = StringLiteralSequenceV2(
-      stringLiterals =
-        comments.stringLiterals.map(comment => stringFormatter.unescapeSpecialCharactersInStringLiteral(comment))
-    )
+    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
+
     val unescapedName: Option[String] = name match {
       case None        => None
       case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
     }
-    copy(name = unescapedName, labels = unescapesLabels, comments = unescapesComments)
+    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
   }
 
   /**
