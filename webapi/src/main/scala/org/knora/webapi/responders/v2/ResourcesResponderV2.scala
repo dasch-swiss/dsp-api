@@ -67,7 +67,6 @@ import org.knora.webapi.responders.IriLocker
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.util._
 
-import scala.collection.immutable
 import scala.concurrent.Future
 import scala.util.{Failure, Success}
 
@@ -2310,37 +2309,48 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       resourceFullHistRequest: ResourceFullHistoryGetRequestV2): Future[Seq[ResourceAndValueHistoryV2]] = {
 
     val resourceHist = resourceFullHistRequest.resourceVersionHistory.reverse
-    val resourceVersionAtCreationDate = resourceHist.head
-    val valueChangesHist = resourceHist.tail
+    // Collect the full representations of the resource for each version date
+    val histories: Seq[Future[(ResourceHistoryEntry, ReadResourceV2)]] = resourceHist.map { hist =>
+      for {
+        fullRepresentations <- getResourceAtGivenTime(
+          resourceIri = resourceFullHistRequest.resourceIri,
+          versionHist = hist,
+          featureFactoryConfig = resourceFullHistRequest.featureFactoryConfig,
+          requestingUser = resourceFullHistRequest.requestingUser
+        )
+      } yield fullRepresentations
+    }
     for {
-      resourceCreateEvent <- getResourceAtCreationDate(
-        resourceIri = resourceFullHistRequest.resourceIri,
-        versionHist = resourceVersionAtCreationDate,
-        featureFactoryConfig = resourceFullHistRequest.featureFactoryConfig,
-        requestingUser = resourceFullHistRequest.requestingUser
-      )
-      histEvents: Seq[ResourceAndValueHistoryV2] = Seq(resourceCreateEvent)
-      // Add history events of values
-      valuesEvents: Seq[ResourceAndValueHistoryV2] = valueChangesHist.foldLeft(Seq.empty[ResourceAndValueHistoryV2]) {
-        (acc, valueHist) =>
-          for {
-            valueHist: Seq[ResourceAndValueHistoryV2] <- getValueHist(
-              resourceIri = resourceFullHistRequest.resourceIri,
-              versionHist = valueHist,
-              featureFactoryConfig = resourceFullHistRequest.featureFactoryConfig,
-              requestingUser = resourceFullHistRequest.requestingUser
-            )
-          } yield acc ++ valueHist
-          acc
-      }
+      fullReps: Seq[(ResourceHistoryEntry, ReadResourceV2)] <- Future.sequence(histories)
 
-    } yield histEvents
+      // Create an event for the resource at creation time
+      (creationTimeHist, resourceAtCreation) = fullReps.head
+      resourceCreateEvent: ResourceAndValueHistoryV2 = getResourceAtCreationDate(resourceAtCreation, creationTimeHist)
+      histEvents: Seq[ResourceAndValueHistoryV2] = Seq(resourceCreateEvent)
+
+      // Add history events of values
+      resourceAtValueChanges = fullReps.tail
+
+      // For each value version, form an event
+      valuesEvents: Seq[ResourceAndValueHistoryV2] = resourceAtValueChanges.map {
+        case (versionHist, readResource) => getValueAtGivenVersionDate(readResource, versionHist)
+
+      }.flatten
+
+    } yield histEvents ++ valuesEvents
   }
 
-  private def getResourceAtCreationDate(resourceIri: IRI,
-                                        versionHist: ResourceHistoryEntry,
-                                        featureFactoryConfig: FeatureFactoryConfig,
-                                        requestingUser: UserADM): Future[ResourceAndValueHistoryV2] =
+  /**
+    * Returns the full representation of a resource at a given date.
+    *
+    * @param resourceIri the IRI of the resource.
+    * @param versionHist the history info of the version; i.e. versionDate and author.
+    * @return the full representation of the resource at the given version date.
+    */
+  private def getResourceAtGivenTime(resourceIri: IRI,
+                                     versionHist: ResourceHistoryEntry,
+                                     featureFactoryConfig: FeatureFactoryConfig,
+                                     requestingUser: UserADM): Future[(ResourceHistoryEntry, ReadResourceV2)] =
     for {
       resourceFullRepAtCreationTime: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(
         resourceIris = Seq(resourceIri),
@@ -2350,153 +2360,165 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         requestingUser = requestingUser
       )).mapTo[ReadResourcesSequenceV2]
       resourceAtCreationTime: ReadResourceV2 = resourceFullRepAtCreationTime.resources.head
-      requestPayload: ResourceEventPayload = ResourceEventPayload(
-        label = resourceAtCreationTime.label,
-        values = resourceAtCreationTime.values.mapValues(readValues => convertReadValuesToCreateNewValues(readValues)),
-        attachedToProject = resourceAtCreationTime.projectADM.id,
-        permissions = resourceAtCreationTime.permissions,
-        creationDate = resourceAtCreationTime.creationDate
-      )
-    } yield
-      ResourceAndValueHistoryV2(
-        eventType = ResourceAndValueEventsUtil.CREATE_RESOURCE_EVENT,
-        versionDate = versionHist.versionDate,
-        author = versionHist.author,
-        resourceIri = resourceIri,
-        resourceClassIri = resourceAtCreationTime.resourceClassIri,
-        payload = requestPayload
-      )
+    } yield versionHist -> resourceAtCreationTime
 
-  private def convertReadValuesToCreateNewValues(readValues: Seq[ReadValueV2]): Seq[CreateValueInNewResourceV2] = {
-    readValues.map { readValue =>
-      CreateValueInNewResourceV2(
-        valueContent = readValue.valueContent,
-        customValueIri = Some(readValue.valueIri.toSmartIri),
-        customValueUUID = Some(readValue.valueHasUUID),
-        customValueCreationDate = Some(readValue.valueCreationDate)
-      )
+  /**
+    * Returns a createResource event as [[ResourceAndValueHistoryV2]] with payload of the form [[ResourceEventPayload]].
+    *
+    * @param resourceAtTimeOfCreation the full representation of the resource at creation date.
+    * @param versionInfoAtCreation the history info of the version; i.e. versionDate and author.
+    * @return a createResource event.
+    */
+  private def getResourceAtCreationDate(resourceAtTimeOfCreation: ReadResourceV2,
+                                        versionInfoAtCreation: ResourceHistoryEntry): ResourceAndValueHistoryV2 = {
+
+    /**
+      * converts a [[ReadValueV2]] to a [[CreateValueInNewResourceV2]].
+      *
+      */
+    def convertReadValuesToCreateNewValues(readValues: Seq[ReadValueV2]): Seq[CreateValueInNewResourceV2] = {
+      readValues.map { readValue =>
+        CreateValueInNewResourceV2(
+          valueContent = readValue.valueContent,
+          customValueIri = Some(readValue.valueIri.toSmartIri),
+          customValueUUID = Some(readValue.valueHasUUID),
+          customValueCreationDate = Some(readValue.valueCreationDate)
+        )
+      }
     }
+    val requestPayload: ResourceEventPayload = ResourceEventPayload(
+      label = resourceAtTimeOfCreation.label,
+      values = resourceAtTimeOfCreation.values.mapValues(readValues => convertReadValuesToCreateNewValues(readValues)),
+      attachedToProject = resourceAtTimeOfCreation.projectADM.id,
+      permissions = resourceAtTimeOfCreation.permissions,
+      creationDate = resourceAtTimeOfCreation.creationDate
+    )
+
+    ResourceAndValueHistoryV2(
+      eventType = ResourceAndValueEventsUtil.CREATE_RESOURCE_EVENT,
+      versionDate = versionInfoAtCreation.versionDate,
+      author = versionInfoAtCreation.author,
+      resourceIri = resourceAtTimeOfCreation.resourceIri,
+      resourceClassIri = resourceAtTimeOfCreation.resourceClassIri,
+      payload = requestPayload
+    )
   }
 
-  private def getValueHist(resourceIri: IRI,
-                           versionHist: ResourceHistoryEntry,
-                           featureFactoryConfig: FeatureFactoryConfig,
-                           requestingUser: UserADM): Future[Seq[ResourceAndValueHistoryV2]] = {
+  /**
+    * Returns a value event as [[ResourceAndValueHistoryV2]] with payload of the form [[ValueEventPayload]].
+    *
+    * @param resourceAtGivenTime the full representation of the resource at the given time.
+    * @param versionHist the history info of the version; i.e. versionDate and author.
+    * @return a create/update/delete value event.
+    */
+  private def getValueAtGivenVersionDate(resourceAtGivenTime: ReadResourceV2,
+                                         versionHist: ResourceHistoryEntry): Seq[ResourceAndValueHistoryV2] = {
+    val resourceIri = resourceAtGivenTime.resourceIri
+
+    /** returns the values of the resource which have the given version date. */
     def findValuesWithGivenVersionDate(values: Map[SmartIri, Seq[ReadValueV2]]): Map[SmartIri, ReadValueV2] = {
       val valuesWithVersionDate: Map[SmartIri, ReadValueV2] = values.foldLeft(Map.empty[SmartIri, ReadValueV2]) {
         case (acc, (propIri, readValue)) =>
-          val valuesWithGivenVersion: ReadValueV2 =
-            readValue.filter(readValue => readValue.valueCreationDate == versionHist.versionDate).head
-          acc + (propIri -> valuesWithGivenVersion)
+          val valuesWithGivenVersion: Seq[ReadValueV2] =
+            readValue.filter(readValue => readValue.valueCreationDate == versionHist.versionDate)
+          if (valuesWithGivenVersion.size > 0) {
+            acc + (propIri -> valuesWithGivenVersion.head)
+          } else { acc }
       }
       valuesWithVersionDate
     }
 
-    for {
-      resourceFullRepAtCreationTime: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(
-        resourceIris = Seq(resourceIri),
-        versionDate = Some(versionHist.versionDate),
-        targetSchema = ApiV2Complex,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = requestingUser
-      )).mapTo[ReadResourcesSequenceV2]
-
-      resourceAtGivenTime: ReadResourceV2 = resourceFullRepAtCreationTime.resources.head
-      valuesWithAskedVersionDate: Map[SmartIri, ReadValueV2] = findValuesWithGivenVersionDate(
-        resourceAtGivenTime.values)
-      valueEvents: Seq[ResourceAndValueHistoryV2] = valuesWithAskedVersionDate.map {
-        case (propIri, readValue) =>
-          // Is the given date a creation date, i.e. value does not have a previous version?
-          val event = if (readValue.previousValueIri.isEmpty) {
-            // Yes. return a createValue event with its payload
-            val createValuePayload = ValueEventPayload(
+    val valuesWithAskedVersionDate: Map[SmartIri, ReadValueV2] = findValuesWithGivenVersionDate(
+      resourceAtGivenTime.values)
+    val valueEvents: Seq[ResourceAndValueHistoryV2] = valuesWithAskedVersionDate.map {
+      case (propIri, readValue) =>
+        // Is the given date a creation date, i.e. value does not have a previous version?
+        val event = if (readValue.previousValueIri.isEmpty) {
+          // Yes. return a createValue event with its payload
+          val createValuePayload = ValueEventPayload(
+            propertyIri = propIri,
+            valueIri = readValue.valueIri,
+            valueTypeIri = readValue.valueContent.valueType,
+            valueContent = Some(readValue.valueContent),
+            valueUUID = Some(readValue.valueHasUUID),
+            valueCreationDate = Some(readValue.valueCreationDate),
+            permissions = Some(readValue.permissions)
+          )
+          ResourceAndValueHistoryV2(
+            eventType = ResourceAndValueEventsUtil.CREATE_VALUE_EVENT,
+            versionDate = versionHist.versionDate,
+            author = versionHist.author,
+            resourceIri = resourceIri,
+            resourceClassIri = resourceAtGivenTime.resourceClassIri,
+            payload = createValuePayload
+          )
+        } else {
+          // No. Is the given date a deletion date?
+          if (readValue.deletionInfo.exists(deletionInfo => deletionInfo.deleteDate == versionHist.versionDate)) {
+            // Yes. Return a deleteValue event
+            val deletionInfo: DeletionInfo = readValue.deletionInfo.get
+            val deleteValuePayload = ValueEventPayload(
               propertyIri = propIri,
               valueIri = readValue.valueIri,
               valueTypeIri = readValue.valueContent.valueType,
-              valueContent = Some(readValue.valueContent),
-              valueUUID = Some(readValue.valueHasUUID),
-              valueCreationDate = Some(readValue.valueCreationDate),
-              permissions = Some(readValue.permissions)
+              deleteComment = deletionInfo.maybeDeleteComment,
+              deleteDate = Some(deletionInfo.deleteDate)
             )
             ResourceAndValueHistoryV2(
-              eventType = ResourceAndValueEventsUtil.CREATE_VALUE_EVENT,
+              eventType = ResourceAndValueEventsUtil.DELETE_VALUE_EVENT,
               versionDate = versionHist.versionDate,
               author = versionHist.author,
               resourceIri = resourceIri,
               resourceClassIri = resourceAtGivenTime.resourceClassIri,
-              payload = createValuePayload
+              payload = deleteValuePayload
             )
           } else {
-            // No. Is the given date a deletion date?
-            if (readValue.deletionInfo.exists(deletionInfo => deletionInfo.deleteDate == versionHist.versionDate)) {
-              // Yes. Return a deleteValue event
-              val deletionInfo: DeletionInfo = readValue.deletionInfo.get
-              val deleteValuePayload = ValueEventPayload(
-                propertyIri = propIri,
-                valueIri = readValue.valueIri,
-                valueTypeIri = readValue.valueContent.valueType,
-                deleteComment = deletionInfo.maybeDeleteComment,
-                deleteDate = Some(deletionInfo.deleteDate)
-              )
-              ResourceAndValueHistoryV2(
-                eventType = ResourceAndValueEventsUtil.DELETE_VALUE_EVENT,
-                versionDate = versionHist.versionDate,
-                author = versionHist.author,
-                resourceIri = resourceIri,
-                resourceClassIri = resourceAtGivenTime.resourceClassIri,
-                payload = deleteValuePayload
-              )
-            } else {
-              // No. return updateValue event
-              val (updateEventType: String, updateEventPayload: ValueEventPayload) =
-                getUpdateEventType(propIri, resourceAtGivenTime.values(propIri), readValue)
-              ResourceAndValueHistoryV2(
-                eventType = updateEventType,
-                versionDate = versionHist.versionDate,
-                author = versionHist.author,
-                resourceIri = resourceIri,
-                resourceClassIri = resourceAtGivenTime.resourceClassIri,
-                payload = updateEventPayload
-              )
-            }
-
+            // No. return updateValue event
+            val (updateEventType: String, updateEventPayload: ValueEventPayload) =
+              getUpdateEventType(propIri, resourceAtGivenTime.values(propIri), readValue)
+            ResourceAndValueHistoryV2(
+              eventType = updateEventType,
+              versionDate = versionHist.versionDate,
+              author = versionHist.author,
+              resourceIri = resourceIri,
+              resourceClassIri = resourceAtGivenTime.resourceClassIri,
+              payload = updateEventPayload
+            )
           }
-          event
-      }.toSeq
 
-    } yield valueEvents
+        }
+        event
+    }.toSeq
+
+    valueEvents
   }
+
+  /**
+    * Since update value operation can be used to update value content or value permissions, using the previsous version
+    * of a value, it determines the type of the update and returns eventType: updateValuePermission/updateValueContent
+    * together with the payload to do the update.
+    *
+    * @param propertyIri the IRI of the property.
+    * @param allVersionsOfPropValue all version values of this property.
+    * @param currentVersionOfValue the current value version.
+    * @return (eventType, update event payload)
+    */
   private def getUpdateEventType(propertyIri: SmartIri,
                                  allVersionsOfPropValue: Seq[ReadValueV2],
                                  currentVersionOfValue: ReadValueV2): (String, ValueEventPayload) = {
     val previousValueIri: IRI = currentVersionOfValue.previousValueIri.getOrElse(
       throw BadRequestException("No previous value IRI found for the value, Please report this as a bug."))
-    val previousValue: ReadValueV2 = allVersionsOfPropValue
-      .find(value => value.valueIri == previousValueIri)
-      .getOrElse(
-        throw NotFoundException(s"No value with IRI: ${previousValueIri} is found, Please report this as a bug."))
-    // Is the value content changed?
-    val (eventType, eventPayload) = if (previousValue.valueContent != currentVersionOfValue.valueContent) {
-      // Yes. return an updateValueContent event.
-      val updateValueContentPayload = ValueEventPayload(
-        propertyIri = propertyIri,
-        valueIri = currentVersionOfValue.valueIri,
-        valueTypeIri = currentVersionOfValue.valueContent.valueType,
-        valueContent = Some(currentVersionOfValue.valueContent),
-        valueUUID = Some(currentVersionOfValue.valueHasUUID),
-        valueCreationDate = Some(currentVersionOfValue.valueCreationDate)
-      )
-      (ResourceAndValueEventsUtil.UPDATE_VALUE_CONTENT_EVENT, updateValueContentPayload)
-    } else {
-      //No. permission has changed. return an updateValuePermission event.
-      val updateValuePermissionPayload = ValueEventPayload(
-        propertyIri = propertyIri,
-        valueIri = currentVersionOfValue.valueIri,
-        valueTypeIri = currentVersionOfValue.valueContent.valueType,
-        permissions = Some(currentVersionOfValue.permissions)
-      )
-      (ResourceAndValueEventsUtil.UPDATE_VALUE_PERMISSION_EVENT, updateValuePermissionPayload)
-    }
-    (eventType, eventPayload)
+
+    val updateValueContentPayload = ValueEventPayload(
+      propertyIri = propertyIri,
+      valueIri = currentVersionOfValue.valueIri,
+      valueTypeIri = currentVersionOfValue.valueContent.valueType,
+      valueContent = Some(currentVersionOfValue.valueContent),
+      valueUUID = Some(currentVersionOfValue.valueHasUUID),
+      valueCreationDate = Some(currentVersionOfValue.valueCreationDate)
+    )
+    (ResourceAndValueEventsUtil.UPDATE_VALUE_CONTENT_EVENT, updateValueContentPayload)
+    //TODO: using previsousValueIri get that value, check if the content has changed then return updateValueContentEvent
+    // otherwise permission has changed, return updateValuePermission event.
   }
 }

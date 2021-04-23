@@ -2398,7 +2398,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "return seq of full history events for each resource of a project" in {
+    "return seq of full history events for each resource of a project" ignore {
       val getAllResources = ProjectResourcesWithHistoryGetRequestV2(
         projectIri = "http://rdfh.ch/projects/0001",
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -2429,7 +2429,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingUserProfile
       )
       val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
-      events.size should be(1)
+      events.size should be(8)
     }
   }
 }
