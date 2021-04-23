@@ -1301,18 +1301,27 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
 case class ResourceAndValueHistoryV2(eventType: String,
                                      versionDate: Instant,
                                      author: IRI,
+                                     resourceIri: IRI,
+                                     resourceClassIri: SmartIri,
                                      payload: ResourceOrValueEventPayload)
 
 abstract class ResourceOrValueEventPayload
-case class ResourceEventPayload(resourceIri: IRI,
-                                resourceClassIri: SmartIri,
-                                label: String,
+case class ResourceEventPayload(label: String,
                                 values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
                                 attachedToProject: IRI,
                                 permissions: String,
                                 creationDate: Instant)
     extends ResourceOrValueEventPayload
-case class ValueEventPayload() extends ResourceOrValueEventPayload
+case class ValueEventPayload(propertyIri: SmartIri,
+                             valueIri: IRI,
+                             valueTypeIri: SmartIri,
+                             valueContent: Option[ValueContentV2] = None,
+                             deleteComment: Option[String] = None,
+                             deleteDate: Option[Instant] = None,
+                             valueUUID: Option[UUID] = None,
+                             valueCreationDate: Option[Instant] = None,
+                             permissions: Option[String] = None)
+    extends ResourceOrValueEventPayload
 
 ///**
 //  * Represents the history of the project resources and values.

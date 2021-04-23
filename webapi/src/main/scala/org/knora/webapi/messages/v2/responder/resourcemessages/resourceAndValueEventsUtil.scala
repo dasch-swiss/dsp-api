@@ -7,6 +7,7 @@ object ResourceAndValueEventsUtil {
 
   val CREATE_RESOURCE_EVENT = "createResource"
   val CREATE_VALUE_EVENT = "createValue"
-  val UPDATE_VALUE_EVENT = "updateValue"
+  val UPDATE_VALUE_CONTENT_EVENT = "updateValueContent"
+  val UPDATE_VALUE_PERMISSION_EVENT = "updateValuePermission"
   val DELETE_VALUE_EVENT = "deleteValue"
 }
