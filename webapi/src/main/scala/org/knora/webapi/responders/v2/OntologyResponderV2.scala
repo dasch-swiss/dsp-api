@@ -2973,6 +2973,17 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             internalClassIri,
             throw BadRequestException(s"Class ${changeGuiOrderRequest.classInfoContent.classIri} does not exist"))
 
+        // Check that the properties submitted already have cardinalities.
+
+        wrongProperties: Set[SmartIri] = internalClassDef.directCardinalities.keySet -- currentReadClassInfo.entityInfoContent.directCardinalities.keySet
+
+        _ = if (wrongProperties.nonEmpty) {
+          throw BadRequestException(
+            s"One or more submitted properties do not have cardinalities in class ${changeGuiOrderRequest.classInfoContent.classIri}: ${wrongProperties
+              .map(_.toOntologySchema(ApiV2Complex))
+              .mkString(", ")}")
+        }
+
         // Make an updated class definition.
 
         newReadClassInfo = currentReadClassInfo.copy(
