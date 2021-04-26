@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -125,6 +125,30 @@ case class CreateNodeApiRequestADM(id: Option[IRI] = None,
   }
 
   def toJsValue: JsValue = createListNodeApiRequestADMFormat.write(this)
+
+  /**
+    * Escapes special characters within strings
+    *
+    */
+  def escape: CreateNodeApiRequestADM = {
+    val escapedLabels: Seq[StringLiteralV2] = labels.map { label =>
+      val escapedLabel =
+        stringFormatter.toSparqlEncodedString(label.value, throw BadRequestException(s"Invalid label: ${label.value}"))
+      StringLiteralV2(value = escapedLabel, language = label.language)
+    }
+    val escapedComments = comments.map { comment =>
+      val escapedComment =
+        stringFormatter.toSparqlEncodedString(comment.value,
+                                              throw BadRequestException(s"Invalid comment: ${comment.value}"))
+      StringLiteralV2(value = escapedComment, language = comment.language)
+    }
+    val escapedName: Option[String] = name match {
+      case None => None
+      case Some(value: String) =>
+        Some(stringFormatter.toSparqlEncodedString(value, throw BadRequestException(s"Invalid string: $value")))
+    }
+    copy(labels = escapedLabels, comments = escapedComments, name = escapedName)
+  }
 }
 
 /**
@@ -635,6 +659,23 @@ case class ListRootNodeInfoADM(id: IRI,
   }
 
   /**
+    * unescapes the special characters in labels, comments, and name for comparison in tests.
+    *
+    */
+  def unescape: ListRootNodeInfoADM = {
+    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
+
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
+    val unescapedName: Option[String] = name match {
+      case None        => None
+      case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
+    }
+    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
+  }
+
+  /**
     * Gets the label in the user's preferred language.
     *
     * @param userLang     the user's preferred language.
@@ -680,6 +721,23 @@ case class ListChildNodeInfoADM(id: IRI,
       position = position,
       hasRootNode = hasRootNode
     )
+  }
+
+  /**
+    * unescapes the special characters in labels, comments, and name for comparison in tests.
+    *
+    */
+  def unescape: ListChildNodeInfoADM = {
+    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
+
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
+    val unescapedName: Option[String] = name match {
+      case None        => None
+      case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
+    }
+    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
   }
 
   /**
@@ -791,6 +849,22 @@ case class ListRootNodeADM(id: IRI,
   }
 
   /**
+    * unescapes the special characters in labels, comments, and name for comparison in tests.
+    *
+    */
+  def unescape: ListRootNodeADM = {
+    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
+    val unescapedName: Option[String] = name match {
+      case None        => None
+      case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
+    }
+    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
+  }
+
+  /**
     * Gets the label in the user's preferred language.
     *
     * @param userLang     the user's preferred language.
@@ -848,6 +922,23 @@ case class ListChildNodeADM(id: IRI,
       hasRootNode = hasRootNode,
       children = children.sortBy(_.position).map(_.sorted)
     )
+  }
+
+  /**
+    * unescapes the special characters in labels, comments, and name for comparison in tests.
+    *
+    */
+  def unescape: ListChildNodeADM = {
+    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
+
+    val unescapedName: Option[String] = name match {
+      case None        => None
+      case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
+    }
+    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
   }
 
   /**

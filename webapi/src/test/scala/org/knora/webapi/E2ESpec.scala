@@ -19,7 +19,15 @@
 
 package org.knora.webapi
 
-import java.nio.file.{Files, Path, Paths}
+import app.{ApplicationActor, LiveManagers}
+import core.Core
+import feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
+import messages.StringFormatter
+import messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
+import messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
+import messages.util.rdf._
+import settings._
+import util.{FileUtil, StartupUtils}
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.event.LoggingAdapter
@@ -29,23 +37,17 @@ import akka.http.scaladsl.model._
 import akka.stream.Materializer
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.app.{ApplicationActor, LiveManagers}
-import org.knora.webapi.core.Core
-import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig, TestFeatureFactoryConfig}
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.app.appmessages.{AppStart, AppStop, SetAllowReloadOverHTTPState}
-import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, TriplestoreJsonProtocol}
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.settings._
-import org.knora.webapi.util.{FileUtil, StartupUtils}
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 import org.scalatest.{BeforeAndAfterAll, Suite}
 import spray.json._
 
+import java.nio.file.{Files, Path, Paths}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.languageFeature.postfixOps
+import scala.util.{Failure, Success, Try}
 
 object E2ESpec {
   val defaultConfig: Config = ConfigFactory.load()
@@ -62,6 +64,7 @@ class E2ESpec(_system: ActorSystem)
     with Suite
     with AnyWordSpecLike
     with Matchers
+    with ScalaFutures
     with BeforeAndAfterAll
     with RequestBuilding
     with LazyLogging {
@@ -116,6 +119,7 @@ class E2ESpec(_system: ActorSystem)
 
     // loadTestData
     loadTestData(rdfDataObjects)
+
   }
 
   override def afterAll: Unit = {
@@ -127,8 +131,12 @@ class E2ESpec(_system: ActorSystem)
     logger.info("Loading test data started ...")
     val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent",
                        HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
-    singleAwaitingRequest(request, 479999.milliseconds)
-    logger.info("... loading test data done.")
+    val response = Http().singleRequest(request)
+
+    Try(Await.result(response, 479999.milliseconds)) match {
+      case Success(res) => logger.info("... loading test data done.")
+      case Failure(e)   => logger.error(s"Loading test data failed: ${e.getMessage}")
+    }
   }
 
   // duration is intentionally like this, so that it could be found with search if seen in a stack trace

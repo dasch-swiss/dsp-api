@@ -154,7 +154,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             name = name,
             labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
             comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
-          )
+          ).unescape
       }
 
       // _ = log.debug("listsGetAdminRequest - items: {}", items)
@@ -200,7 +200,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
           rootNodeInfo = maybeRootNodeInfo match {
             case Some(info: ListRootNodeInfoADM) => info.asInstanceOf[ListRootNodeInfoADM]
-            case Some(info: ListChildNodeInfoADM) =>
+            case Some(_: ListChildNodeInfoADM) =>
               throw InconsistentRepositoryDataException(
                 "A child node info was found, although we are expecting a root node info. Please report this as a possible bug.")
             case Some(_) | None =>
@@ -393,7 +393,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                   .map(_.head.asInstanceOf[StringLiteralV2].value),
                 labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
                 comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
-              )
+              ).unescape
             } else {
               ListChildNodeInfoADM(
                 id = nodeIri.toString,
@@ -408,7 +408,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 hasRootNode = hasRootNodeOption.getOrElse(
                   throw InconsistentRepositoryDataException(
                     s"Required hasRootNode property missing for list node $nodeIri."))
-              )
+              ).unescape
             }
         }
         Some(nodeInfo)
@@ -663,7 +663,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         children = children.map(_.sorted),
         position = position,
         hasRootNode = hasRootNode
-      )
+      ).unescape
     }
 
     for {
@@ -891,8 +891,10 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       /* verify that the list node name is unique for the project */
       projectUniqueNodeName <- listNodeNameIsProjectUnique(createNodeRequest.projectIri, createNodeRequest.name)
       _ = if (!projectUniqueNodeName) {
+        val escapedName = createNodeRequest.name.get
+        val unescapedName = stringFormatter.fromSparqlEncodedString(escapedName)
         throw BadRequestException(
-          s"The node name ${createNodeRequest.name.get} is already used by a list inside the project ${createNodeRequest.projectIri}.")
+          s"The node name ${unescapedName} is already used by a list inside the project ${createNodeRequest.projectIri}.")
       }
 
       // calculate the data named graph

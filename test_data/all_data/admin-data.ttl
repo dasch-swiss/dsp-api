@@ -492,9 +492,9 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 # WEBERN                          #
 ###################################
 
-<http://rdfh.ch/projects/08AE> a knora-admin:knoraProject ;
+<http://rdfh.ch/projects/0806> a knora-admin:knoraProject ;
   knora-admin:projectShortname "webern"^^xsd:string ;
-  knora-admin:projectShortcode "08AE"^^xsd:string ;
+  knora-admin:projectShortcode "0806"^^xsd:string ;
   knora-admin:projectLongname "Anton Webern Gesamtausgabe"^^xsd:string ;
   knora-admin:projectDescription "Historisch-kritische Edition des Gesamtschaffens von Anton Webern."^^xsd:string ;
   knora-admin:status "true"^^xsd:boolean ;
@@ -509,7 +509,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-admin:email "webern-nutzer@example.ch"^^xsd:string ;
   knora-admin:preferredLanguage "de"^^xsd:string ;
   knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:isInProject <http://rdfh.ch/projects/08AE> ;
+  knora-admin:isInProject <http://rdfh.ch/projects/0806> ;
   knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 ## Project Admin
@@ -521,7 +521,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-admin:email "webern-admin@example.ch"^^xsd:string ;
   knora-admin:preferredLanguage "de"^^xsd:string ;
   knora-admin:status "true"^^xsd:boolean ;
-  knora-admin:isInProject <http://rdfh.ch/projects/08AE> ;
+  knora-admin:isInProject <http://rdfh.ch/projects/0806> ;
   knora-admin:isInSystemAdminGroup "false"^^xsd:boolean ;
-  knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/08AE> .
+  knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0806> .
 

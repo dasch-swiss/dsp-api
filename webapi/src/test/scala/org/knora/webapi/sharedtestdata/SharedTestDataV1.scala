@@ -441,18 +441,18 @@ object SharedTestDataV1 {
   /** **********************************/
   /** WEBERN                          **/
   /** **********************************/
-  val WEBERN_PROJECT_IRI = "http://rdfh.ch/projects/08AE"
+  val WEBERN_PROJECT_IRI = "http://rdfh.ch/projects/0806"
 
   def webernProjectInfo = ProjectInfoV1(
     id = WEBERN_PROJECT_IRI,
     shortname = "webern",
-    shortcode = "08AE",
+    shortcode = "0806",
     longname = Some("Anton Webern Gesamtausgabe"),
     description = Some("Historisch-kritische Edition des Gesamtschaffens von Anton Webern."),
     keywords = None,
     logo = None,
     institution = None,
-    ontologies = Seq("http://www.knora.org/ontology/08AE/webern"),
+    ontologies = Seq("http://www.knora.org/ontology/0806/webern"),
     status = false,
     selfjoin = false
   )

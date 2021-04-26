@@ -61,7 +61,7 @@ scala_test(
 
 scala_test(
     name = "PermissionsHandlingV1E2ESpec",
-    size = "medium",  # 900s
+    size = "medium",
     srcs = [
         "PermissionsHandlingV1E2ESpec.scala",
     ],
@@ -79,7 +79,7 @@ scala_test(
 
 scala_test(
     name = "ProjectsV1E2ESpec",
-    size = "small",  # 60s
+    size = "small",
     srcs = [
         "ProjectsV1E2ESpec.scala",
         "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
