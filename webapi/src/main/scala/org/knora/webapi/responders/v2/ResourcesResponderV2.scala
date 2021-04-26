@@ -2520,7 +2520,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       .getOrElse(throw NotFoundException(s"Could not find the previous value of ${currentVersionOfValue.valueIri}"))
 
     // check that the version date of the previousValue is before the version date of the current value.
-    if (previousVersionDate.versionDate > currentVersionOfValue.valueCreationDate) {
+    if (previousVersionDate.versionDate.isAfter(currentVersionOfValue.valueCreationDate)) {
       throw ForbiddenException(
         s"Previous version of the value ${currentVersionOfValue.valueIri} that has previousValueIRI ${previousValueIri} " +
           s"has a date after the current value.")
