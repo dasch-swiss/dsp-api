@@ -2333,7 +2333,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
       // For each value version, form an event
       valuesEvents: Seq[ResourceAndValueHistoryV2] = resourceAtValueChanges.map {
-        case (versionHist, readResource) => getValueAtGivenVersionDate(readResource, versionHist)
+        case (versionHist, readResource) => getValueAtGivenVersionDate(readResource, versionHist, fullReps)
 
       }.flatten
 
@@ -2411,8 +2411,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @param versionHist the history info of the version; i.e. versionDate and author.
     * @return a create/update/delete value event.
     */
-  private def getValueAtGivenVersionDate(resourceAtGivenTime: ReadResourceV2,
-                                         versionHist: ResourceHistoryEntry): Seq[ResourceAndValueHistoryV2] = {
+  private def getValueAtGivenVersionDate(
+      resourceAtGivenTime: ReadResourceV2,
+      versionHist: ResourceHistoryEntry,
+      allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)]): Seq[ResourceAndValueHistoryV2] = {
     val resourceIri = resourceAtGivenTime.resourceIri
 
     /** returns the values of the resource which have the given version date. */
@@ -2475,7 +2477,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           } else {
             // No. return updateValue event
             val (updateEventType: String, updateEventPayload: ValueEventPayload) =
-              getUpdateEventType(propIri, resourceAtGivenTime.values(propIri), readValue)
+              getUpdateEventType(propIri, readValue, allResourceVersions)
             ResourceAndValueHistoryV2(
               eventType = updateEventType,
               versionDate = versionHist.versionDate,
@@ -2499,26 +2501,57 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * together with the payload to do the update.
     *
     * @param propertyIri the IRI of the property.
-    * @param allVersionsOfPropValue all version values of this property.
     * @param currentVersionOfValue the current value version.
+    * @param allResourceVersions all versions of resource.
     * @return (eventType, update event payload)
     */
-  private def getUpdateEventType(propertyIri: SmartIri,
-                                 allVersionsOfPropValue: Seq[ReadValueV2],
-                                 currentVersionOfValue: ReadValueV2): (String, ValueEventPayload) = {
+  private def getUpdateEventType(
+      propertyIri: SmartIri,
+      currentVersionOfValue: ReadValueV2,
+      allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)]): (String, ValueEventPayload) = {
     val previousValueIri: IRI = currentVersionOfValue.previousValueIri.getOrElse(
       throw BadRequestException("No previous value IRI found for the value, Please report this as a bug."))
 
-    val updateValueContentPayload = ValueEventPayload(
-      propertyIri = propertyIri,
-      valueIri = currentVersionOfValue.valueIri,
-      valueTypeIri = currentVersionOfValue.valueContent.valueType,
-      valueContent = Some(currentVersionOfValue.valueContent),
-      valueUUID = Some(currentVersionOfValue.valueHasUUID),
-      valueCreationDate = Some(currentVersionOfValue.valueCreationDate)
-    )
-    (ResourceAndValueEventsUtil.UPDATE_VALUE_CONTENT_EVENT, updateValueContentPayload)
-    //TODO: using previsousValueIri get that value, check if the content has changed then return updateValueContentEvent
-    // otherwise permission has changed, return updateValuePermission event.
+    //find the version of resource which has a value with previousValueIri
+    val (previousVersionDate, previousVersionOfResource): (ResourceHistoryEntry, ReadResourceV2) = allResourceVersions
+      .find(resourceWithHist =>
+        resourceWithHist._2.values.exists(item =>
+          item._1 == propertyIri && item._2.exists(value => value.valueIri == previousValueIri)))
+      .getOrElse(throw NotFoundException(s"Could not find the previous value of ${currentVersionOfValue.valueIri}"))
+
+    // check that the version date of the previousValue is before the version date of the current value.
+    if (previousVersionDate.versionDate > currentVersionOfValue.valueCreationDate) {
+      throw ForbiddenException(
+        s"Previous version of the value ${currentVersionOfValue.valueIri} that has previousValueIRI ${previousValueIri} " +
+          s"has a date after the current value.")
+    }
+
+    // get the previous value
+    val previousValue: ReadValueV2 =
+      previousVersionOfResource.values(propertyIri).find(value => value.valueIri == previousValueIri).get
+
+    // Is the content of previous version of value the same as content of the current version?
+    val event = if (previousValue.valueContent == currentVersionOfValue.valueContent) {
+      //Yes. Permission must have been updated; return a permission update event.
+      val updateValueContentPayload = ValueEventPayload(
+        propertyIri = propertyIri,
+        valueIri = currentVersionOfValue.valueIri,
+        valueTypeIri = currentVersionOfValue.valueContent.valueType,
+        permissions = Some(currentVersionOfValue.permissions)
+      )
+      (ResourceAndValueEventsUtil.UPDATE_VALUE_PERMISSION_EVENT, updateValueContentPayload)
+    } else {
+      // No. Content must have been updated; return a content update event.
+      val updateValueContentPayload = ValueEventPayload(
+        propertyIri = propertyIri,
+        valueIri = currentVersionOfValue.valueIri,
+        valueTypeIri = currentVersionOfValue.valueContent.valueType,
+        valueContent = Some(currentVersionOfValue.valueContent),
+        valueUUID = Some(currentVersionOfValue.valueHasUUID),
+        valueCreationDate = Some(currentVersionOfValue.valueCreationDate)
+      )
+      (ResourceAndValueEventsUtil.UPDATE_VALUE_CONTENT_EVENT, updateValueContentPayload)
+    }
+    event
   }
 }

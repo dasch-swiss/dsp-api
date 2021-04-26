@@ -2410,13 +2410,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       response.size should be > 50
     }
 
-    "return full history of a resource" in {
+    "return full history of a resource as events" in {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
 
       responderManager ! ResourceVersionHistoryGetRequestV2(
         resourceIri = resourceIri,
-        startDate = None,
-        endDate = None,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
@@ -2430,6 +2428,49 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
       val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
       events.size should be(8)
+    }
+
+    "update value permission to test update permission event" in {
+      val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+      // Update the value permission.
+
+      responderManager ! UpdateValueRequestV2(
+        UpdateValuePermissionsV2(
+          resourceIri = resourceIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
+          valueIri = "http://rdfh.ch/0001/thing-with-history/values/1c",
+          valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
+          permissions = "CR knora-admin:Creator|V knora-admin:KnownUser"
+        ),
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID
+      )
+
+      val updateValuePermissionResponse = expectMsgType[UpdateValueResponseV2](timeout)
+
+      responderManager ! ResourceVersionHistoryGetRequestV2(
+        resourceIri = resourceIri,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile
+      )
+      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
+
+      responderManager ! ResourceFullHistoryGetRequestV2(
+        resourceIri = resourceIri,
+        resourceVersionHistory = response.history,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile
+      )
+      val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      events.size should be(9)
+      val updatePermissionEvent: Option[ResourceAndValueHistoryV2] =
+        events.find(event => event.eventType == ResourceAndValueEventsUtil.UPDATE_VALUE_PERMISSION_EVENT)
+      assert(updatePermissionEvent.isDefined == true)
+      val updatePermissionPayload = updatePermissionEvent.get.payload
+        .asInstanceOf[ValueEventPayload]
+      updatePermissionPayload.valueIri shouldEqual (updateValuePermissionResponse.valueIri)
     }
   }
 }
