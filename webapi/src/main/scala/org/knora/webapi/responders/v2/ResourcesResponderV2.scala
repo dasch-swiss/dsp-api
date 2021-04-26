@@ -2253,8 +2253,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @param projectResourcesGetRequest the resources with version history request.
     * @return the all resources of project with ordered version history.
     */
-  def getProjectResourcesWithHistoryV2(projectResourcesGetRequest: ProjectResourcesWithHistoryGetRequestV2)
-    : Future[Map[String, Seq[ResourceAndValueHistoryV2]]] =
+  def getProjectResourcesWithHistoryV2(
+      projectResourcesGetRequest: ProjectResourcesWithHistoryGetRequestV2): Future[Seq[ResourceAndValueHistoryV2]] =
     for {
       // Get the project; checks if a project with given IRI exists.
       projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
@@ -2274,14 +2274,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
       mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
       // For each resource IRI return history events
-      historyOfResourcesAsSeqOfFutures: Map[String, Future[Seq[ResourceAndValueHistoryV2]]] = mainResourceIris.map {
+      historyOfResourcesAsSeqOfFutures: Seq[Future[Seq[ResourceAndValueHistoryV2]]] = mainResourceIris.map {
         resourceIri =>
-          val resourceHistoryRequest =
-            ResourceVersionHistoryGetRequestV2(resourceIri = resourceIri,
-                                               featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
-                                               requestingUser = projectResourcesGetRequest.requestingUser)
-          val resourceHistory: Future[Seq[ResourceAndValueHistoryV2]] = for {
-            resourceHistory: ResourceVersionHistoryResponseV2 <- getResourceHistoryV2(resourceHistoryRequest)
+          for {
+            resourceHistory: ResourceVersionHistoryResponseV2 <- getResourceHistoryV2(
+              ResourceVersionHistoryGetRequestV2(resourceIri = resourceIri,
+                                                 featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
+                                                 requestingUser = projectResourcesGetRequest.requestingUser))
             resourceFullHist: Seq[ResourceAndValueHistoryV2] <- getResourceHistoryEvents(
               ResourceFullHistoryGetRequestV2(
                 resourceIri = resourceIri,
@@ -2290,14 +2289,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 requestingUser = projectResourcesGetRequest.requestingUser
               ))
           } yield resourceFullHist
-          resourceIri -> resourceHistory
-      }.toMap
+      }
 
-      projectHis: Map[String, Seq[ResourceAndValueHistoryV2]] <- Future
-        .sequence(historyOfResourcesAsSeqOfFutures.map(entry => entry._2.map(i => (entry._1, i))))
-        .map(_.toMap)
+      projectHis: Seq[Seq[ResourceAndValueHistoryV2]] <- Future.sequence(historyOfResourcesAsSeqOfFutures)
 
-    } yield projectHis
+    } yield projectHis.flatten
 
   /**
     * Returns the full history of a resource as events ordered by date.

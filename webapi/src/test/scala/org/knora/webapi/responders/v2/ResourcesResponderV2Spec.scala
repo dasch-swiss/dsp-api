@@ -2386,28 +2386,52 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not return resources of a project which does not exist" in {
-      val getAllResources = ProjectResourcesWithHistoryGetRequestV2(
+
+      responderManager ! ProjectResourcesWithHistoryGetRequestV2(
         projectIri = "http://rdfh.ch/projects/1111",
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingAdminUser
       )
-
-      responderManager ! getAllResources
       expectMsgPF(timeout) {
         case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
 
-    "return seq of full history events for each resource of a project" ignore {
-      val getAllResources = ProjectResourcesWithHistoryGetRequestV2(
+    "return seq of full history events for each resource of a project" in {
+      responderManager ! ProjectResourcesWithHistoryGetRequestV2(
         projectIri = "http://rdfh.ch/projects/0001",
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingAdminUser
       )
+      expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+    }
 
-      responderManager ! getAllResources
-      val response = expectMsgType[Map[String, Seq[ResourceAndValueHistoryV2]]](timeout)
-      response.size should be > 50
+    "return full history of a-thing-picture resource" in {
+      val resourceIri = "http://rdfh.ch/0001/a-thing-picture"
+      responderManager ! ResourceVersionHistoryGetRequestV2(
+        resourceIri = resourceIri,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile
+      )
+      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
+
+      responderManager ! ResourceFullHistoryGetRequestV2(
+        resourceIri = resourceIri,
+        resourceVersionHistory = response.history,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile
+      )
+      val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      events.size shouldEqual (3)
+      val createResourceEvents =
+        events.filter(historyEvent => historyEvent.eventType == ResourceAndValueEventsUtil.CREATE_RESOURCE_EVENT)
+      createResourceEvents.size should be(1)
+      val createValueEvents =
+        events.filter(historyEvent => historyEvent.eventType == ResourceAndValueEventsUtil.CREATE_VALUE_EVENT)
+      createValueEvents.size should be(1)
+      val updateValueEvents =
+        events.filter(historyEvent => historyEvent.eventType == ResourceAndValueEventsUtil.UPDATE_VALUE_CONTENT_EVENT)
+      updateValueEvents.size should be(1)
     }
 
     "return full history of a resource as events" in {
