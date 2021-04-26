@@ -26,7 +26,7 @@ import org.knora.webapi.messages.store.StoreRequest
 sealed trait CacheServiceRequest extends StoreRequest
 
 /**
-  * Message equesting to write project to cache.
+  * Message requesting to write project to cache.
   */
 case class CacheServicePutProjectADM(value: ProjectADM) extends CacheServiceRequest
 

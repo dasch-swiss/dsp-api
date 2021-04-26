@@ -25,10 +25,12 @@ import org.knora.webapi.core.{LiveActorMaker, _}
 import org.knora.webapi.exceptions.UnexpectedMessageException
 import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
+import org.knora.webapi.messages.store.eventstore.EventStoreRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import org.knora.webapi.store.cacheservice.CacheServiceManager
+import org.knora.webapi.store.eventstore.{EventStore, EventStoreManager}
 import org.knora.webapi.store.iiif.IIIFManager
 import org.knora.webapi.store.triplestore.TriplestoreManager
 
@@ -41,8 +43,9 @@ import scala.concurrent.ExecutionContext
   * of 'stores' and their requests.
   *
   * @param appActor a reference to the main application actor.
+  * @param es a reference to the EventStore implementation.
   */
-class StoreManager(appActor: ActorRef) extends Actor with ActorLogging {
+class StoreManager(appActor: ActorRef, es: EventStore) extends Actor with ActorLogging {
   this: ActorMaker =>
 
   /**
@@ -93,10 +96,15 @@ class StoreManager(appActor: ActorRef) extends Actor with ActorLogging {
     Props(new CacheServiceManager).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     RedisManagerActorName)
 
+  protected lazy val eventStoreManager: ActorRef = makeActor(
+    Props(new EventStoreManager(es)).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+    EventStoreManagerActorName)
+
   def receive: Receive = LoggingReceive {
     case tripleStoreMessage: TriplestoreRequest => triplestoreManager forward tripleStoreMessage
     case iiifMessages: IIIFRequest              => iiifManager forward iiifMessages
     case redisMessages: CacheServiceRequest     => redisManager forward redisMessages
+    case eventStoreMessages: EventStoreRequest  => eventStoreManager forward eventStoreMessages
     case other =>
       sender ! Status.Failure(UnexpectedMessageException(s"StoreManager received an unexpected message: $other"))
   }

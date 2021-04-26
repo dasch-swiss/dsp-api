@@ -15,6 +15,7 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/messages",
         "//webapi/src/main/scala/org/knora/webapi/routing",
         "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/store/eventstore",
         "//webapi/src/main/scala/org/knora/webapi/util",
         "@maven//:com_twitter_chill_2_12",
         "@maven//:com_typesafe_akka_akka_actor_2_12",

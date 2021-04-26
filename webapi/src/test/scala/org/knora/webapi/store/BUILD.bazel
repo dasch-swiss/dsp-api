@@ -7,5 +7,5 @@ filegroup(
     srcs = [
         "//webapi/src/test/scala/org/knora/webapi/store/iiif:srcs",
         "MockableStoreManager.scala",
-    ],
+    ]
 )

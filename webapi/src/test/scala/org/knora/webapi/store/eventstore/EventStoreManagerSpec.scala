@@ -20,9 +20,22 @@
 
 package org.knora.webapi.store.eventstore
 
-import org.scalatest._
-import matchers.should.Matchers._
-import org.scalatest.wordspec.AsyncWordSpec
+import com.eventstore.dbclient.WriteResult
+import com.typesafe.config.ConfigFactory
+import org.knora.webapi.CoreSpec
+import org.knora.webapi.messages.store.eventstore.{
+  EventStoreGetResourceEventsRequest,
+  EventStoreSaveResourceEventRequest
+}
+
+import scala.concurrent.duration._
+
+object EventStoreManagerSpec {
+  val config = ConfigFactory.parseString("""
+          akka.loglevel = "DEBUG"
+          akka.stdout-loglevel = "DEBUG"
+        """.stripMargin)
+}
 
 /**
   * 1. test read/write
@@ -35,19 +48,20 @@ import org.scalatest.wordspec.AsyncWordSpec
   * b. create event for resource
   * c. listen for created event
   */
-class EventStoreSpec extends AsyncWordSpec {
-  "the event store" should {
-    "allow storing and reading the event" in {
-      val save = EventStoreImpl.saveResourceEvent("IRI", "event")
-      save map { result =>
-        assert(result)
-      }
+class EventStoreManagerSpec extends CoreSpec(EventStoreManagerSpec.config) {
+  "The EventStoreManager" should {
 
-      for {
-        result <- EventStoreImpl.loadResourceEvents("IRI")
-        resourceCreatedEvent = result.head.asInstanceOf[ResourceCreated]
-      } yield resourceCreatedEvent shouldBe ResourceCreated("IRI", "event")
+    "successfully store an event" in {
+      val resourceIri = "IRI"
+      val event = "event content"
+      storeManager ! EventStoreSaveResourceEventRequest(resourceIri, event)
+      val received = expectMsgType[WriteResult](5.seconds)
     }
-    // "allow subscribing and receiving events" in {}
+
+    "successfully retrieve resource events by IRI" in {
+      val resourceIri = "IRI"
+      storeManager ! EventStoreGetResourceEventsRequest(resourceIri)
+      val received = expectMsgType[List[ResourceEvent]](5.seconds)
+    }
   }
 }

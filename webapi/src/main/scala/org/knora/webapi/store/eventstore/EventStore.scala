@@ -20,14 +20,22 @@
 
 package org.knora.webapi.store.eventstore
 
-import com.eventstore.dbclient.{EventData, EventStoreDBClient, EventStoreDBConnectionString, ReadStreamOptions}
+import com.eventstore.dbclient.{
+  EventData,
+  EventStoreDBClient,
+  EventStoreDBConnectionString,
+  ReadStreamOptions,
+  WriteResult
+}
 import org.knora.webapi.IRI
-import zio.{BootstrapRuntime, Task}
+import zio.blocking.Blocking
+import zio.{BootstrapRuntime, IO, RIO, Task, UIO, ZIO}
 
-import scala.concurrent.{ExecutionContext, Future}
+import java.util.concurrent.CompletableFuture
+import scala.concurrent.{ExecutionContext, Future, promise}
 
 trait EventStore {
-  def saveResourceEvent(resourceIri: IRI, event: String)(implicit ec: ExecutionContext): Future[Boolean]
+  def saveResourceEvent(resourceIri: IRI, event: String): Future[WriteResult]
   def loadResourceEvents(resourceIri: IRI)(implicit ec: ExecutionContext): Future[List[ResourceEvent]]
 }
 
@@ -36,11 +44,32 @@ object EventStoreImpl extends EventStore {
   private val settings = EventStoreDBConnectionString.parse("esdb://localhost:2113?tls=false")
   private val client = EventStoreDBClient.create(settings)
 
-  override def saveResourceEvent(resourceIri: IRI, event: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+  override def saveResourceEvent(resourceIri: IRI, event: String): Future[WriteResult] = {
+    val eventData = packageEvent(resourceIri, event)
+    LegacyRuntime.fromTask(appendToStream(resourceIri, eventData))
+    // appendToStream(resourceIri, eventData)
+  }
+
+  def packageEvent(resourceIri: IRI, event: String): EventData = {
     val eventToSave = ResourceCreated(resourceIri, event)
     val eventData = EventData.builderAsJson("ResourceCreated", eventToSave).build()
-    val res = client.appendToStream(s"resource-$resourceIri", eventData).get()
-    Future(true)
+    eventData
+  }
+
+  def appendToStream(resourceIri: IRI, eventData: EventData): Task[WriteResult] = {
+    // val result: CompletableFuture[WriteResult] = client.appendToStream(s"resource-$resourceIri", eventData)
+    // scala.compat.java8.FutureConverters.toScala(result)
+
+    IO.effectAsync[Throwable, WriteResult] { callback =>
+      client
+        .appendToStream(s"resource-$resourceIri", eventData)
+        .handle[Unit]((result: WriteResult, err) => {
+          err match {
+            case null => callback(IO.succeed(result))
+            case ex   => callback(IO.fail(ex))
+          }
+        })
+    }
   }
 
   override def loadResourceEvents(resourceIri: IRI)(implicit ec: ExecutionContext): Future[List[ResourceEvent]] = {

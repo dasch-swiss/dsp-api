@@ -22,10 +22,11 @@ package org.knora.webapi.store
 import akka.actor.{ActorRef, Props}
 import org.knora.webapi.core.LiveActorMaker
 import org.knora.webapi.settings.{KnoraDispatchers, _}
+import org.knora.webapi.store.eventstore.EventStore
 import org.knora.webapi.store.iiif.MockableIIIFManager
 
-class MockableStoreManager(mockStoreConnectors: Map[String, ActorRef], appActor: ActorRef)
-    extends StoreManager(appActor)
+class MockableStoreManager(mockStoreConnectors: Map[String, ActorRef], appActor: ActorRef, es: EventStore)
+    extends StoreManager(appActor, es)
     with LiveActorMaker {
 
   /**

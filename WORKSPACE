@@ -38,7 +38,7 @@ register_toolchains("//toolchains:dsp_api_scala_toolchain")
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
 scala_repositories()
 
-
+register_toolchains("@io_bazel_rules_scala//testing:testing_toolchain")
 
 # register the test toolchain for rules_scala
 load("@io_bazel_rules_scala//testing:scalatest.bzl", "scalatest_repositories", "scalatest_toolchain")
@@ -49,6 +49,11 @@ scalatest_toolchain()
 load("@io_bazel_rules_scala//testing:junit.bzl", "junit_repositories", "junit_toolchain")
 junit_repositories()
 junit_toolchain()
+
+# Specs2 with Junit
+load("@io_bazel_rules_scala//testing:specs2_junit.bzl", "specs2_junit_repositories", "specs2_junit_toolchain")
+specs2_junit_repositories()
+specs2_junit_toolchain()
 
 #
 # Download the protobuf repository (needed by go and rules_scala_annex)

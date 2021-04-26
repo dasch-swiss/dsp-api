@@ -19,6 +19,7 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/routing",
         "//webapi/src/main/scala/org/knora/webapi/settings",
         "//webapi/src/main/scala/org/knora/webapi/store",
+        "//webapi/src/main/scala/org/knora/webapi/store/eventstore",
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
         "@maven//:ch_megard_akka_http_cors_2_12",
         "@maven//:com_github_swagger_akka_http_swagger_akka_http_2_12",

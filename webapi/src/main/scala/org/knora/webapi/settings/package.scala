@@ -134,4 +134,8 @@ package object settings {
   val RedisManagerActorName: String = "redisManager"
   val RedisManagerActorPath: String = StoreManagerActorPath + "/" + RedisManagerActorName
 
+  /* EventStore */
+  val EventStoreManagerActorName: String = "eventStoreManager"
+  val EventStoreManagerActorPath: String = StoreManagerActorPath + "/" + EventStoreManagerActorName
+
 }
