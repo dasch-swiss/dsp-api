@@ -913,6 +913,60 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
   }
 }
 
+case class ChangeGuiOrderRequestV2(classInfoContent: ClassInfoContentV2,
+                                   lastModificationDate: Instant,
+                                   apiRequestID: UUID,
+                                   featureFactoryConfig: FeatureFactoryConfig,
+                                   requestingUser: UserADM)
+    extends OntologiesResponderRequestV2
+
+object ChangeGuiOrderRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeGuiOrderRequestV2] {
+  override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                          apiRequestID: UUID,
+                          requestingUser: UserADM,
+                          responderManager: ActorRef,
+                          storeManager: ActorRef,
+                          featureFactoryConfig: FeatureFactoryConfig,
+                          settings: KnoraSettingsImpl,
+                          log: LoggingAdapter)(implicit timeout: Timeout,
+                                               executionContext: ExecutionContext): Future[ChangeGuiOrderRequestV2] = {
+    Future {
+      fromJsonLDSync(
+        jsonLDDocument = jsonLDDocument,
+        apiRequestID = apiRequestID,
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser
+      )
+    }
+  }
+
+  private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
+                             apiRequestID: UUID,
+                             featureFactoryConfig: FeatureFactoryConfig,
+                             requestingUser: UserADM): ChangeGuiOrderRequestV2 = {
+    // Get the class definition and the ontology's last modification date from the JSON-LD.
+
+    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+    val classInfoContent = classUpdateInfo.classInfoContent
+    val lastModificationDate = classUpdateInfo.lastModificationDate
+
+    // The request must provide cardinalities.
+
+    if (classInfoContent.directCardinalities.isEmpty) {
+      throw BadRequestException("No cardinalities specified")
+    }
+
+    ChangeGuiOrderRequestV2(
+      classInfoContent = classInfoContent,
+      lastModificationDate = lastModificationDate,
+      apiRequestID = apiRequestID,
+      featureFactoryConfig = featureFactoryConfig,
+      requestingUser = requestingUser
+    )
+  }
+}
+
 /**
   * Requests a change in the metadata of an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
   *
