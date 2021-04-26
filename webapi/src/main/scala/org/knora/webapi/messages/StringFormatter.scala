@@ -39,7 +39,12 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.store.triplestoremessages.{SparqlAskRequest, SparqlAskResponse}
+import org.knora.webapi.messages.store.triplestoremessages.{
+  SparqlAskRequest,
+  SparqlAskResponse,
+  StringLiteralSequenceV2,
+  StringLiteralV2
+}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
@@ -3247,5 +3252,13 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     if (iri.isKnoraApiV2DefinitionIri && OntologyConstants.InternalOntologyLabels.contains(iri.getOntologyName)) {
       throw BadRequestException(s"Internal ontology <$iri> cannot be served")
     }
+  }
+
+  def unescapeStringLiteralSeq(stringLiteralSeq: StringLiteralSequenceV2): StringLiteralSequenceV2 = {
+    StringLiteralSequenceV2(
+      stringLiterals = stringLiteralSeq.stringLiterals.map(stringLiteral =>
+        StringLiteralV2(value = fromSparqlEncodedString(stringLiteral.value), language = stringLiteral.language))
+    )
+
   }
 }
