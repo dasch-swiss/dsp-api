@@ -2291,9 +2291,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           } yield resourceFullHist
       }
 
-      projectHis: Seq[Seq[ResourceAndValueHistoryV2]] <- Future.sequence(historyOfResourcesAsSeqOfFutures)
+      projectHistory: Seq[Seq[ResourceAndValueHistoryV2]] <- Future.sequence(historyOfResourcesAsSeqOfFutures)
+      sortedProjectHistory: Seq[ResourceAndValueHistoryV2] = projectHistory.flatten.sortBy(_.versionDate)
 
-    } yield projectHis.flatten
+    } yield sortedProjectHistory
 
   /**
     * Returns the full history of a resource as events ordered by date.
@@ -2328,10 +2329,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       resourceAtValueChanges = fullReps.tail
 
       // For each value version, form an event
-      valuesEvents: Seq[ResourceAndValueHistoryV2] = resourceAtValueChanges.map {
+      valuesEvents: Seq[ResourceAndValueHistoryV2] = resourceAtValueChanges.flatMap {
         case (versionHist, readResource) => getValueAtGivenVersionDate(readResource, versionHist, fullReps)
-
-      }.flatten
+      }
 
     } yield histEvents ++ valuesEvents
   }
