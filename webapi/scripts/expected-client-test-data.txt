@@ -213,6 +213,7 @@ test-data/v2/ontologies/minimal-ontology.json
 test-data/v2/ontologies/remove-class-cardinalities-request.json
 test-data/v2/ontologies/remove-property-cardinality-request.json
 test-data/v2/ontologies/replace-class-cardinalities-request.json
+test-data/v2/ontologies/change-gui-order-request.json
 test-data/v2/ontologies/update-ontology-metadata-request.json
 test-data/v2/resources/
 test-data/v2/resources/create-resource-as-user.json
