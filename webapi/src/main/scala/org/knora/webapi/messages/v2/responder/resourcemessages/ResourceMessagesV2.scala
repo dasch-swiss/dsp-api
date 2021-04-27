@@ -1308,77 +1308,131 @@ case class ResourceAndValueHistoryV2(eventType: String,
 abstract class ResourceOrValueEventPayload
 case class ResourceEventPayload(label: String,
                                 values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
-                                attachedToProject: IRI,
                                 permissions: String,
-                                creationDate: Instant)
-    extends ResourceOrValueEventPayload
+                                creationDate: Instant,
+                                attachedToProject: IRI)
+    extends ResourceOrValueEventPayload {
+  def toJsonLD(): JsonLDObject = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    // Todo: add values
+    JsonLDObject(
+      Map(
+        OntologyConstants.Rdfs.Label -> JsonLDString(label),
+        OntologyConstants.KnoraBase.HasPermissions -> JsonLDString(permissions),
+        OntologyConstants.KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+          value = creationDate.toString,
+          datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+        ),
+        OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(attachedToProject)
+      )
+    )
+  }
+}
+
 case class ValueEventPayload(propertyIri: SmartIri,
                              valueIri: IRI,
                              valueTypeIri: SmartIri,
                              valueContent: Option[ValueContentV2] = None,
-                             deleteComment: Option[String] = None,
-                             deleteDate: Option[Instant] = None,
                              valueUUID: Option[UUID] = None,
                              valueCreationDate: Option[Instant] = None,
-                             permissions: Option[String] = None)
-    extends ResourceOrValueEventPayload
+                             permissions: Option[String] = None,
+                             valueComment: Option[String] = None,
+                             deletionInfo: Option[DeletionInfo] = None)
+    extends ResourceOrValueEventPayload {
 
-///**
-//  * Represents the history of the project resources and values.
-//  */
-//case class ResourceAndValueVersionHistoryResponseV2(projectHistory: Seq[ResourceAndValueHistoryV2])
-//    extends KnoraJsonLDResponseV2 {
-//
-//  /**
-//    * Converts the response to a data structure that can be used to generate JSON-LD.
-//    *
-//    * @param targetSchema the Knora API schema to be used in the JSON-LD document.
-//    * @return a [[JsonLDDocument]] representing the response.
-//    */
-//  override def toJsonLDDocument(targetSchema: ApiV2Schema,
-//                                settings: KnoraSettingsImpl,
-//                                schemaOptions: Set[SchemaOption]): JsonLDDocument = {
-//    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-//
-//    if (targetSchema != ApiV2Complex) {
-//      throw AssertionException("Version history can be returned only in the complex schema")
-//    }
-//
-//    // Convert the history entries to an array of JSON-LD objects.
-//
-//    val projectHistoryAsJsonLD: Seq[JsonLDObject] = projectHistory.map { historyEntry: ResourceAndValueHistoryV2 =>
-//      JsonLDObject(
-//        Map(
-//          JsonLDKeywords.TYPE -> JsonLDString(historyEntry.eventType),
-//          OntologyConstants.KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
-//            value = historyEntry.versionDate.toString,
-//            datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
-//          ),
-//          OntologyConstants.KnoraApiV2Complex.Author -> JsonLDUtil.iriToJsonLDObject(historyEntry.author),
-//          "payload" -> historyEntry.payload.toJsonLD(
-//            targetSchema = targetSchema,
-//            settings = settings,
-//            schemaOptions = schemaOptions
-//          )
-//        )
-//      )
-//    }
-//
-//    // Make the JSON-LD context.
-//
-//    val context = JsonLDUtil.makeContext(
-//      fixedPrefixes = Map(
-//        "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
-//        "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
-//        "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion,
-//        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
-//      )
-//    )
-//
-//    // Make the JSON-LD document.
-//
-//    val body = JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(projectHistoryAsJsonLD)))
-//
-//    JsonLDDocument(body = body, context = context)
-//  }
-//}
+  def toJsonLD(): JsonLDObject = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    // Todo: add value content
+    val valueUUIDAsJsonLD: Option[(IRI, JsonLDValue)] = valueUUID.map { valueHasUUID =>
+      OntologyConstants.KnoraBase.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueHasUUID))
+    }
+
+    val valueCreationDateAsJsonLD: Option[(IRI, JsonLDValue)] = valueCreationDate.map { valueHasCreationDate =>
+      OntologyConstants.KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+        value = valueHasCreationDate.toString,
+        datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+      )
+    }
+    val valuePermissionsAsJSONLD: Option[(IRI, JsonLDValue)] = permissions.map { hasPermissions =>
+      OntologyConstants.KnoraBase.HasPermissions -> JsonLDString(hasPermissions)
+    }
+
+    val deletionInfoAsJsonLD: Map[IRI, JsonLDValue] = deletionInfo match {
+      case Some(definedDeletionInfo) => definedDeletionInfo.toJsonLDFields(ApiV2Complex)
+      case None                      => Map.empty[IRI, JsonLDValue]
+    }
+    val valueHasCommentAsJsonLD: Option[(IRI, JsonLDValue)] = valueComment.map { definedComment =>
+      OntologyConstants.KnoraApiV2Complex.ValueHasComment -> JsonLDString(definedComment)
+    }
+    JsonLDObject(
+      Map(
+        JsonLDKeywords.ID -> JsonLDString(valueIri),
+        JsonLDKeywords.TYPE -> JsonLDString(valueTypeIri.toString),
+        OntologyConstants.Rdf.Property -> JsonLDString(propertyIri.toString),
+      ) ++ valueUUIDAsJsonLD ++ valueCreationDateAsJsonLD ++ valuePermissionsAsJSONLD ++ deletionInfoAsJsonLD ++ valueHasCommentAsJsonLD
+    )
+  }
+}
+
+/**
+  * Represents the history of the project resources and values.
+  */
+case class ResourceAndValueVersionHistoryResponseV2(projectHistory: Seq[ResourceAndValueHistoryV2])
+    extends KnoraJsonLDResponseV2 {
+
+  /**
+    * Converts the response to a data structure that can be used to generate JSON-LD.
+    *
+    * @param targetSchema the Knora API schema to be used in the JSON-LD document.
+    * @return a [[JsonLDDocument]] representing the response.
+    */
+  override def toJsonLDDocument(targetSchema: ApiV2Schema,
+                                settings: KnoraSettingsImpl,
+                                schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Version history can be returned only in the complex schema")
+    }
+
+    // Convert the history entries to an array of JSON-LD objects.
+
+    val projectHistoryAsJsonLD: Seq[JsonLDObject] = projectHistory.map { historyEntry: ResourceAndValueHistoryV2 =>
+      // convert event payload to JsonLD object
+      val payloadAsJsonLD: JsonLDObject = historyEntry.payload match {
+        case valueEventPayload: ValueEventPayload       => valueEventPayload.toJsonLD()
+        case resourceEventPayload: ResourceEventPayload => resourceEventPayload.toJsonLD()
+        case _                                          => throw NotFoundException(s"Payload is missing or has wrong type.")
+      }
+
+      JsonLDObject(
+        Map(
+          JsonLDKeywords.TYPE -> JsonLDString(historyEntry.eventType),
+          OntologyConstants.KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+            value = historyEntry.versionDate.toString,
+            datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+          ),
+          OntologyConstants.KnoraApiV2Complex.Author -> JsonLDUtil.iriToJsonLDObject(historyEntry.author),
+          "payload" -> payloadAsJsonLD
+        )
+      )
+    }
+
+    // Make the JSON-LD context.
+
+    val context = JsonLDUtil.makeContext(
+      fixedPrefixes = Map(
+        "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
+        "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+        "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion,
+        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+      )
+    )
+
+    // Make the JSON-LD document.
+
+    val body = JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(projectHistoryAsJsonLD)))
+
+    JsonLDDocument(body = body, context = context)
+  }
+}

@@ -2253,8 +2253,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @param projectResourcesGetRequest the resources with version history request.
     * @return the all resources of project with ordered version history.
     */
-  def getProjectResourcesWithHistoryV2(
-      projectResourcesGetRequest: ProjectResourcesWithHistoryGetRequestV2): Future[Seq[ResourceAndValueHistoryV2]] =
+  def getProjectResourcesWithHistoryV2(projectResourcesGetRequest: ProjectResourcesWithHistoryGetRequestV2)
+    : Future[ResourceAndValueVersionHistoryResponseV2] =
     for {
       // Get the project; checks if a project with given IRI exists.
       projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
@@ -2294,7 +2294,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       projectHistory: Seq[Seq[ResourceAndValueHistoryV2]] <- Future.sequence(historyOfResourcesAsSeqOfFutures)
       sortedProjectHistory: Seq[ResourceAndValueHistoryV2] = projectHistory.flatten.sortBy(_.versionDate)
 
-    } yield sortedProjectHistory
+    } yield ResourceAndValueVersionHistoryResponseV2(projectHistory = sortedProjectHistory)
 
   /**
     * Returns the full history of a resource as events ordered by date.
@@ -2419,7 +2419,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         case (acc, (propIri, readValue)) =>
           val valuesWithGivenVersion: Seq[ReadValueV2] =
             readValue.filter(readValue => readValue.valueCreationDate == versionHist.versionDate)
-          if (valuesWithGivenVersion.size > 0) {
+          if (valuesWithGivenVersion.nonEmpty) {
             acc + (propIri -> valuesWithGivenVersion.head)
           } else { acc }
       }
@@ -2440,7 +2440,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             valueContent = Some(readValue.valueContent),
             valueUUID = Some(readValue.valueHasUUID),
             valueCreationDate = Some(readValue.valueCreationDate),
-            permissions = Some(readValue.permissions)
+            permissions = Some(readValue.permissions),
+            valueComment = readValue.valueContent.comment
           )
           ResourceAndValueHistoryV2(
             eventType = ResourceAndValueEventsUtil.CREATE_VALUE_EVENT,
@@ -2454,13 +2455,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           // No. Is the given date a deletion date?
           if (readValue.deletionInfo.exists(deletionInfo => deletionInfo.deleteDate == versionHist.versionDate)) {
             // Yes. Return a deleteValue event
-            val deletionInfo: DeletionInfo = readValue.deletionInfo.get
             val deleteValuePayload = ValueEventPayload(
               propertyIri = propIri,
               valueIri = readValue.valueIri,
               valueTypeIri = readValue.valueContent.valueType,
-              deleteComment = deletionInfo.maybeDeleteComment,
-              deleteDate = Some(deletionInfo.deleteDate)
+              deletionInfo = readValue.deletionInfo
             )
             ResourceAndValueHistoryV2(
               eventType = ResourceAndValueEventsUtil.DELETE_VALUE_EVENT,
@@ -2533,7 +2532,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         propertyIri = propertyIri,
         valueIri = currentVersionOfValue.valueIri,
         valueTypeIri = currentVersionOfValue.valueContent.valueType,
-        permissions = Some(currentVersionOfValue.permissions)
+        permissions = Some(currentVersionOfValue.permissions),
+        valueComment = currentVersionOfValue.valueContent.comment
       )
       (ResourceAndValueEventsUtil.UPDATE_VALUE_PERMISSION_EVENT, updateValueContentPayload)
     } else {
@@ -2544,7 +2544,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         valueTypeIri = currentVersionOfValue.valueContent.valueType,
         valueContent = Some(currentVersionOfValue.valueContent),
         valueUUID = Some(currentVersionOfValue.valueHasUUID),
-        valueCreationDate = Some(currentVersionOfValue.valueCreationDate)
+        valueCreationDate = Some(currentVersionOfValue.valueCreationDate),
+        valueComment = currentVersionOfValue.valueContent.comment
       )
       (ResourceAndValueEventsUtil.UPDATE_VALUE_CONTENT_EVENT, updateValueContentPayload)
     }

@@ -66,13 +66,13 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       updateResourceMetadata(featureFactoryConfig) ~
       getResourcesInProject(featureFactoryConfig) ~
       getResourceHistory(featureFactoryConfig) ~
+      getProjectResourceAndValueHistory(featureFactoryConfig) ~
       getResources(featureFactoryConfig) ~
       getResourcesPreview(featureFactoryConfig) ~
       getResourcesTei(featureFactoryConfig) ~
       getResourcesGraph(featureFactoryConfig) ~
       deleteResource(featureFactoryConfig) ~
-      eraseResource(featureFactoryConfig) ~
-      getResourcesOfProjectWithHistory(featureFactoryConfig)
+      eraseResource(featureFactoryConfig)
 
   private def createResource(featureFactoryConfig: FeatureFactoryConfig): Route = path(ResourcesBasePath) {
     post {
@@ -267,8 +267,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       }
     }
 
-  private def getResourcesOfProjectWithHistory(featureFactoryConfig: FeatureFactoryConfig): Route =
-    path(ResourcesBasePath / "project" / Segment) { projectIri: IRI =>
+  private def getProjectResourceAndValueHistory(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(ResourcesBasePath / "projectHistory" / Segment) { projectIri: IRI =>
       get { requestContext =>
         {
           val requestMessageFuture: Future[ProjectResourcesWithHistoryGetRequestV2] = for {

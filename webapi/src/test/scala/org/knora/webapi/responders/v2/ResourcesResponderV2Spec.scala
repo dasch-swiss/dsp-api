@@ -2403,7 +2403,10 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingAdminUser
       )
-      expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      val response: ResourceAndValueVersionHistoryResponseV2 =
+        expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
+      response.projectHistory.size should be > 1
+
     }
 
     "return full history of a-thing-picture resource" in {
