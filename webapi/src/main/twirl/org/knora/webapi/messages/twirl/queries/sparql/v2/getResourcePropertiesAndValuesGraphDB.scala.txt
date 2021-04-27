@@ -30,6 +30,7 @@
  *
  * @param resourceIris               the IRIs of the requested resources.
  * @param preview                    indicates if the request should only return preview information.
+ * @withDeletedValues                indicates if the deleted values should be returned or not.
  * @param maybePropertyIri           if defined, only returns values of the specified explicit property.
  *                                   Cannot be used in conjunction with preview.
  * @param maybeValueUuid             if defined, requests only the value with the specified UUID.
@@ -47,6 +48,7 @@
  *@
 @(resourceIris: Seq[IRI],
   preview: Boolean,
+  withDeletedValues: Boolean,
   maybePropertyIri: Option[SmartIri],
   maybeValueUuid: Option[UUID],
   maybeVersionDate: Option[Instant],
@@ -149,10 +151,12 @@ CONSTRUCT {
                         }
                     }
 
-                    @* If the value was deleted on or before the target date, ignore all its versions. *@
-                    FILTER NOT EXISTS {
-                        ?currentValue knora-base:deleteDate ?currentValueDeleteDate .
-                        FILTER(?currentValueDeleteDate <= "@versionDate"^^xsd:dateTime)
+                   @* If deleted values are not required and the value was deleted on or before the target date, ignore all its versions. *@
+                   @if(!withDeletedValues) {
+                        FILTER NOT EXISTS {
+                            ?currentValue knora-base:deleteDate ?currentValueDeleteDate .
+                            FILTER(?currentValueDeleteDate <= "@versionDate"^^xsd:dateTime)
+                        }
                     }
 
                     @* Get the current version's UUID, because we're going to return it with the requested version. *@

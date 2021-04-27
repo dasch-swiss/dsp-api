@@ -32,6 +32,7 @@
  * @param triplestore                the name of the triplestore being used.
  * @param resourceIris               the IRIs of the requested resources.
  * @param preview                    indicates if the request should only return preview information.
+ * @withDeletedValues                indicates if the deleted values should be returned or not.
  * @param maybePropertyIri           if defined, only returns values of the specified explicit property.
  *                                   Cannot be used in conjunction with preview.
  * @param maybeValueUuid             if defined, requests only the value with the specified UUID.
@@ -50,6 +51,7 @@
 @(triplestore: String,
   resourceIris: Seq[IRI],
   preview: Boolean,
+  withDeletedValues: Boolean,
   queryAllNonStandoff: Boolean,
   maybePropertyIri: Option[SmartIri] = None,
   maybeValueUuid: Option[UUID] = None,
@@ -67,6 +69,7 @@
     @{
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcePropertiesAndValuesGraphDB(resourceIris = resourceIris,
                                                                     preview = preview,
+                                                                    withDeletedValues= withDeletedValues,
                                                                     maybePropertyIri = maybePropertyIri,
                                                                     maybeValueUuid = maybeValueUuid,
                                                                     maybeVersionDate = maybeVersionDate,
@@ -81,6 +84,7 @@
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt.getResourcePropertiesAndValuesStandard(triplestore = triplestore,
                                                                     resourceIris = resourceIris,
                                                                     preview = preview,
+                                                                    withDeletedValues= withDeletedValues,
                                                                     maybePropertyIri = maybePropertyIri,
                                                                     maybeValueUuid = maybeValueUuid,
                                                                     maybeVersionDate = maybeVersionDate,

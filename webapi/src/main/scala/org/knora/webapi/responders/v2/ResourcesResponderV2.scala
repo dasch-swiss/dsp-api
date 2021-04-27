@@ -95,6 +95,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                propertyIri,
                                valueUuid,
                                versionDate,
+                               withDeletedValues,
                                targetSchema,
                                schemaOptions,
                                featureFactoryConfig,
@@ -103,6 +104,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                      propertyIri,
                      valueUuid,
                      versionDate,
+                     withDeletedValues,
                      targetSchema,
                      schemaOptions,
                      featureFactoryConfig,
@@ -1343,9 +1345,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   private def getResourcesFromTriplestore(
       resourceIris: Seq[IRI],
       preview: Boolean,
+      withDeletedValues: Boolean = false,
       propertyIri: Option[SmartIri] = None,
       valueUuid: Option[UUID] = None,
       versionDate: Option[Instant] = None,
+      withDeleted: Boolean = false,
       queryStandoff: Boolean,
       featureFactoryConfig: FeatureFactoryConfig,
       requestingUser: UserADM): Future[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
@@ -1367,6 +1371,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             triplestore = settings.triplestoreType,
             resourceIris = resourceIrisDistinct,
             preview = preview,
+            withDeletedValues = withDeletedValues,
             maybePropertyIri = propertyIri,
             maybeValueUuid = valueUuid,
             maybeVersionDate = versionDate,
@@ -1411,6 +1416,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                              propertyIri: Option[SmartIri] = None,
                              valueUuid: Option[UUID] = None,
                              versionDate: Option[Instant] = None,
+                             withDeletedValues: Boolean = false,
                              targetSchema: ApiV2Schema,
                              schemaOptions: Set[SchemaOption],
                              featureFactoryConfig: FeatureFactoryConfig,
@@ -1428,6 +1434,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
         resourceIris = resourceIris,
         preview = false,
+        withDeletedValues = withDeletedValues,
         propertyIri = propertyIri,
         valueUuid = valueUuid,
         versionDate = versionDate,
@@ -2351,6 +2358,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       resourceFullRepAtCreationTime: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(
         resourceIris = Seq(resourceIri),
         versionDate = Some(versionHist.versionDate),
+        withDeletedValues = true,
         targetSchema = ApiV2Complex,
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
@@ -2418,48 +2426,32 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       val valuesWithVersionDate: Map[SmartIri, ReadValueV2] = values.foldLeft(Map.empty[SmartIri, ReadValueV2]) {
         case (acc, (propIri, readValue)) =>
           val valuesWithGivenVersion: Seq[ReadValueV2] =
-            readValue.filter(readValue => readValue.valueCreationDate == versionHist.versionDate)
+            readValue.filter(readValue =>
+              readValue.valueCreationDate == versionHist.versionDate || readValue.deletionInfo.exists(deleteInfo =>
+                deleteInfo.deleteDate == versionHist.versionDate))
           if (valuesWithGivenVersion.nonEmpty) {
             acc + (propIri -> valuesWithGivenVersion.head)
           } else { acc }
       }
+
       valuesWithVersionDate
+
     }
 
     val valuesWithAskedVersionDate: Map[SmartIri, ReadValueV2] = findValuesWithGivenVersionDate(
       resourceAtGivenTime.values)
     val valueEvents: Seq[ResourceAndValueHistoryV2] = valuesWithAskedVersionDate.map {
       case (propIri, readValue) =>
-        // Is the given date a creation date, i.e. value does not have a previous version?
-        val event = if (readValue.previousValueIri.isEmpty) {
-          // Yes. return a createValue event with its payload
-          val createValuePayload = ValueEventPayload(
-            propertyIri = propIri,
-            valueIri = readValue.valueIri,
-            valueTypeIri = readValue.valueContent.valueType,
-            valueContent = Some(readValue.valueContent),
-            valueUUID = Some(readValue.valueHasUUID),
-            valueCreationDate = Some(readValue.valueCreationDate),
-            permissions = Some(readValue.permissions),
-            valueComment = readValue.valueContent.comment
-          )
-          ResourceAndValueHistoryV2(
-            eventType = ResourceAndValueEventsUtil.CREATE_VALUE_EVENT,
-            versionDate = versionHist.versionDate,
-            author = versionHist.author,
-            resourceIri = resourceIri,
-            resourceClassIri = resourceAtGivenTime.resourceClassIri,
-            payload = createValuePayload
-          )
-        } else {
-          // No. Is the given date a deletion date?
+        val event =
+          //Is the given date a deletion date?
           if (readValue.deletionInfo.exists(deletionInfo => deletionInfo.deleteDate == versionHist.versionDate)) {
             // Yes. Return a deleteValue event
             val deleteValuePayload = ValueEventPayload(
               propertyIri = propIri,
               valueIri = readValue.valueIri,
               valueTypeIri = readValue.valueContent.valueType,
-              deletionInfo = readValue.deletionInfo
+              deletionInfo = readValue.deletionInfo,
+              previousValueIri = readValue.previousValueIri
             )
             ResourceAndValueHistoryV2(
               eventType = ResourceAndValueEventsUtil.DELETE_VALUE_EVENT,
@@ -2470,20 +2462,41 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               payload = deleteValuePayload
             )
           } else {
-            // No. return updateValue event
-            val (updateEventType: String, updateEventPayload: ValueEventPayload) =
-              getUpdateEventType(propIri, readValue, allResourceVersions)
-            ResourceAndValueHistoryV2(
-              eventType = updateEventType,
-              versionDate = versionHist.versionDate,
-              author = versionHist.author,
-              resourceIri = resourceIri,
-              resourceClassIri = resourceAtGivenTime.resourceClassIri,
-              payload = updateEventPayload
-            )
+            // No. Is the given date a creation date, i.e. value does not have a previous version?
+            if (readValue.previousValueIri.isEmpty) {
+              // Yes. return a createValue event with its payload
+              val createValuePayload = ValueEventPayload(
+                propertyIri = propIri,
+                valueIri = readValue.valueIri,
+                valueTypeIri = readValue.valueContent.valueType,
+                valueContent = Some(readValue.valueContent),
+                valueUUID = Some(readValue.valueHasUUID),
+                valueCreationDate = Some(readValue.valueCreationDate),
+                permissions = Some(readValue.permissions),
+                valueComment = readValue.valueContent.comment
+              )
+              ResourceAndValueHistoryV2(
+                eventType = ResourceAndValueEventsUtil.CREATE_VALUE_EVENT,
+                versionDate = versionHist.versionDate,
+                author = versionHist.author,
+                resourceIri = resourceIri,
+                resourceClassIri = resourceAtGivenTime.resourceClassIri,
+                payload = createValuePayload
+              )
+            } else {
+              // No. return updateValue event
+              val (updateEventType: String, updateEventPayload: ValueEventPayload) =
+                getUpdateEventType(propIri, readValue, allResourceVersions)
+              ResourceAndValueHistoryV2(
+                eventType = updateEventType,
+                versionDate = versionHist.versionDate,
+                author = versionHist.author,
+                resourceIri = resourceIri,
+                resourceClassIri = resourceAtGivenTime.resourceClassIri,
+                payload = updateEventPayload
+              )
+            }
           }
-
-        }
         event
     }.toSeq
 
@@ -2545,7 +2558,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         valueContent = Some(currentVersionOfValue.valueContent),
         valueUUID = Some(currentVersionOfValue.valueHasUUID),
         valueCreationDate = Some(currentVersionOfValue.valueCreationDate),
-        valueComment = currentVersionOfValue.valueContent.comment
+        valueComment = currentVersionOfValue.valueContent.comment,
+        previousValueIri = currentVersionOfValue.previousValueIri
       )
       (ResourceAndValueEventsUtil.UPDATE_VALUE_CONTENT_EVENT, updateValueContentPayload)
     }

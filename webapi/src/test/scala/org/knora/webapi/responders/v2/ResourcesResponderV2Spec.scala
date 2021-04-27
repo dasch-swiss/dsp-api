@@ -2397,18 +2397,6 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "return seq of full history events for each resource of a project" in {
-      responderManager ! ProjectResourcesWithHistoryGetRequestV2(
-        projectIri = "http://rdfh.ch/projects/0001",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = SharedTestDataADM.anythingAdminUser
-      )
-      val response: ResourceAndValueVersionHistoryResponseV2 =
-        expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
-      response.projectHistory.size should be > 1
-
-    }
-
     "return full history of a-thing-picture resource" in {
       val resourceIri = "http://rdfh.ch/0001/a-thing-picture"
       responderManager ! ResourceVersionHistoryGetRequestV2(
@@ -2454,7 +2442,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingUserProfile
       )
       val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
-      events.size should be(8)
+      events.size should be(9)
     }
 
     "update value permission to test update permission event" in {
@@ -2491,13 +2479,123 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingUserProfile
       )
       val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
-      events.size should be(9)
+      events.size should be(10)
       val updatePermissionEvent: Option[ResourceAndValueHistoryV2] =
         events.find(event => event.eventType == ResourceAndValueEventsUtil.UPDATE_VALUE_PERMISSION_EVENT)
-      assert(updatePermissionEvent.isDefined == true)
+      assert(updatePermissionEvent.isDefined)
       val updatePermissionPayload = updatePermissionEvent.get.payload
         .asInstanceOf[ValueEventPayload]
       updatePermissionPayload.valueIri shouldEqual (updateValuePermissionResponse.valueIri)
+    }
+
+    "create a new value to test create value history event" in {
+      val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+      val newValueIri = "http://rdfh.ch/0001/thing-with-history/values/newText"
+      val testValue = "a test value"
+      // create new value.
+
+      responderManager ! CreateValueRequestV2(
+        CreateValueV2(
+          resourceIri = resourceIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
+          valueContent = TextValueContentV2(
+            ontologySchema = ApiV2Complex,
+            maybeValueHasString = Some(testValue)
+          ),
+          valueIri = Some(newValueIri.toSmartIri),
+          permissions = Some("CR knora-admin:Creator|V knora-admin:KnownUser")
+        ),
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgType[CreateValueResponseV2](timeout)
+
+      responderManager ! ResourceVersionHistoryGetRequestV2(
+        resourceIri = resourceIri,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile
+      )
+      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
+
+      responderManager ! ResourceFullHistoryGetRequestV2(
+        resourceIri = resourceIri,
+        resourceVersionHistory = response.history,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile
+      )
+      val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      events.size should be(11)
+      val createValueEvent: Option[ResourceAndValueHistoryV2] =
+        events.find(
+          event =>
+            event.eventType == ResourceAndValueEventsUtil.CREATE_VALUE_EVENT && event.payload
+              .asInstanceOf[ValueEventPayload]
+              .valueIri == newValueIri)
+      assert(createValueEvent.isDefined)
+      val createValuePayloadContent = createValueEvent.get.payload
+        .asInstanceOf[ValueEventPayload]
+        .valueContent
+      assert(createValuePayloadContent.isDefined)
+      val payloadContent = createValuePayloadContent.get
+      assert(payloadContent.valueType == OntologyConstants.KnoraBase.TextValue.toSmartIri)
+      assert(payloadContent.valueHasString == testValue)
+    }
+
+    "delete the newly created value to check the delete value event of resource history" in {
+      val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+      val valueToDelete = "http://rdfh.ch/0001/thing-with-history/values/newText"
+      val deleteComment = "delete value test"
+      // delete the new value.
+
+      responderManager ! DeleteValueRequestV2(
+        resourceIri = resourceIri,
+        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+        propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri,
+        valueIri = valueToDelete,
+        valueTypeIri = OntologyConstants.KnoraApiV2Complex.TextValue.toSmartIri,
+        deleteComment = Some(deleteComment),
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID
+      )
+      expectMsgType[SuccessResponseV2](timeout)
+      responderManager ! ResourceVersionHistoryGetRequestV2(
+        resourceIri = resourceIri,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile
+      )
+      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
+
+      responderManager ! ResourceFullHistoryGetRequestV2(
+        resourceIri = resourceIri,
+        resourceVersionHistory = response.history,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile
+      )
+      val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      events.size should be(12)
+      val deleteValueEvent: Option[ResourceAndValueHistoryV2] =
+        events.find(
+          event =>
+            event.eventType == ResourceAndValueEventsUtil.DELETE_VALUE_EVENT && event.payload
+              .asInstanceOf[ValueEventPayload]
+              .valueIri == valueToDelete)
+      assert(deleteValueEvent.isDefined)
+    }
+
+    "return seq of full history events for each resource of a project" in {
+      responderManager ! ProjectResourcesWithHistoryGetRequestV2(
+        projectIri = "http://rdfh.ch/projects/0001",
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.anythingAdminUser
+      )
+      val response: ResourceAndValueVersionHistoryResponseV2 =
+        expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
+      response.projectHistory.size should be > 1
+
     }
   }
 }

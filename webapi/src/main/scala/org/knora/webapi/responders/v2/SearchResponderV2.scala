@@ -798,6 +798,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 triplestore = settings.triplestoreType,
                 resourceIris = mainResourceIris,
                 preview = false,
+                withDeletedValues = false,
                 queryAllNonStandoff = true,
                 maybePropertyIri = None,
                 maybeVersionDate = None,

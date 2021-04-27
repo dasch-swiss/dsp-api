@@ -77,6 +77,7 @@ case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
                                  propertyIri: Option[SmartIri] = None,
                                  valueUuid: Option[UUID] = None,
                                  versionDate: Option[Instant] = None,
+                                 withDeletedValues: Boolean = false,
                                  targetSchema: ApiV2Schema,
                                  schemaOptions: Set[SchemaOption] = Set.empty,
                                  featureFactoryConfig: FeatureFactoryConfig,
@@ -1335,6 +1336,7 @@ case class ValueEventPayload(propertyIri: SmartIri,
                              valueContent: Option[ValueContentV2] = None,
                              valueUUID: Option[UUID] = None,
                              valueCreationDate: Option[Instant] = None,
+                             previousValueIri: Option[IRI] = None,
                              permissions: Option[String] = None,
                              valueComment: Option[String] = None,
                              deletionInfo: Option[DeletionInfo] = None)
@@ -1364,12 +1366,17 @@ case class ValueEventPayload(propertyIri: SmartIri,
     val valueHasCommentAsJsonLD: Option[(IRI, JsonLDValue)] = valueComment.map { definedComment =>
       OntologyConstants.KnoraApiV2Complex.ValueHasComment -> JsonLDString(definedComment)
     }
+
+    val previousValueAsJsonLD: Option[(IRI, JsonLDValue)] = previousValueIri.map { previousIri =>
+      OntologyConstants.KnoraBase.PreviousValue -> JsonLDString(previousIri.toString)
+    }
     JsonLDObject(
       Map(
         JsonLDKeywords.ID -> JsonLDString(valueIri),
         JsonLDKeywords.TYPE -> JsonLDString(valueTypeIri.toString),
         OntologyConstants.Rdf.Property -> JsonLDString(propertyIri.toString),
-      ) ++ valueUUIDAsJsonLD ++ valueCreationDateAsJsonLD ++ valuePermissionsAsJSONLD ++ deletionInfoAsJsonLD ++ valueHasCommentAsJsonLD
+      ) ++ previousValueAsJsonLD ++ valueUUIDAsJsonLD ++ valueCreationDateAsJsonLD ++ valuePermissionsAsJSONLD
+        ++ deletionInfoAsJsonLD ++ valueHasCommentAsJsonLD
     )
   }
 }
