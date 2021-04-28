@@ -2367,7 +2367,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     } yield versionHist -> resourceAtCreationTime
 
   /**
-    * Returns a createResource event as [[ResourceAndValueHistoryV2]] with payload of the form [[ResourceEventPayload]].
+    * Returns a createResource event as [[ResourceAndValueHistoryV2]] with request body of the form [[ResourceEventBody]].
     *
     * @param resourceAtTimeOfCreation the full representation of the resource at creation date.
     * @param versionInfoAtCreation the history info of the version; i.e. versionDate and author.
@@ -2390,7 +2390,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         )
       }
     }
-    val requestPayload: ResourceEventPayload = ResourceEventPayload(
+    val requestBody: ResourceEventBody = ResourceEventBody(
       label = resourceAtTimeOfCreation.label,
       values = resourceAtTimeOfCreation.values.mapValues(readValues => convertReadValuesToCreateNewValues(readValues)),
       attachedToProject = resourceAtTimeOfCreation.projectADM.id,
@@ -2404,12 +2404,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       author = versionInfoAtCreation.author,
       resourceIri = resourceAtTimeOfCreation.resourceIri,
       resourceClassIri = resourceAtTimeOfCreation.resourceClassIri,
-      payload = requestPayload
+      eventBody = requestBody
     )
   }
 
   /**
-    * Returns a value event as [[ResourceAndValueHistoryV2]] with payload of the form [[ValueEventPayload]].
+    * Returns a value event as [[ResourceAndValueHistoryV2]] with body of the form [[ValueEventBody]].
     *
     * @param resourceAtGivenTime the full representation of the resource at the given time.
     * @param versionHist the history info of the version; i.e. versionDate and author.
@@ -2446,7 +2446,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           //Is the given date a deletion date?
           if (readValue.deletionInfo.exists(deletionInfo => deletionInfo.deleteDate == versionHist.versionDate)) {
             // Yes. Return a deleteValue event
-            val deleteValuePayload = ValueEventPayload(
+            val deleteValueRequestBody = ValueEventBody(
               propertyIri = propIri,
               valueIri = readValue.valueIri,
               valueTypeIri = readValue.valueContent.valueType,
@@ -2459,13 +2459,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               author = versionHist.author,
               resourceIri = resourceIri,
               resourceClassIri = resourceAtGivenTime.resourceClassIri,
-              payload = deleteValuePayload
+              eventBody = deleteValueRequestBody
             )
           } else {
             // No. Is the given date a creation date, i.e. value does not have a previous version?
             if (readValue.previousValueIri.isEmpty) {
-              // Yes. return a createValue event with its payload
-              val createValuePayload = ValueEventPayload(
+              // Yes. return a createValue event with its request body
+              val createValueRequestBody = ValueEventBody(
                 propertyIri = propIri,
                 valueIri = readValue.valueIri,
                 valueTypeIri = readValue.valueContent.valueType,
@@ -2481,11 +2481,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 author = versionHist.author,
                 resourceIri = resourceIri,
                 resourceClassIri = resourceAtGivenTime.resourceClassIri,
-                payload = createValuePayload
+                eventBody = createValueRequestBody
               )
             } else {
               // No. return updateValue event
-              val (updateEventType: String, updateEventPayload: ValueEventPayload) =
+              val (updateEventType: String, updateEventRequestBody: ValueEventBody) =
                 getUpdateEventType(propIri, readValue, allResourceVersions)
               ResourceAndValueHistoryV2(
                 eventType = updateEventType,
@@ -2493,7 +2493,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 author = versionHist.author,
                 resourceIri = resourceIri,
                 resourceClassIri = resourceAtGivenTime.resourceClassIri,
-                payload = updateEventPayload
+                eventBody = updateEventRequestBody
               )
             }
           }
@@ -2506,17 +2506,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   /**
     * Since update value operation can be used to update value content or value permissions, using the previsous version
     * of a value, it determines the type of the update and returns eventType: updateValuePermission/updateValueContent
-    * together with the payload to do the update.
+    * together with the request body to do the update.
     *
     * @param propertyIri the IRI of the property.
     * @param currentVersionOfValue the current value version.
     * @param allResourceVersions all versions of resource.
-    * @return (eventType, update event payload)
+    * @return (eventType, update event request body)
     */
   private def getUpdateEventType(
       propertyIri: SmartIri,
       currentVersionOfValue: ReadValueV2,
-      allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)]): (String, ValueEventPayload) = {
+      allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)]): (String, ValueEventBody) = {
     val previousValueIri: IRI = currentVersionOfValue.previousValueIri.getOrElse(
       throw BadRequestException("No previous value IRI found for the value, Please report this as a bug."))
 
@@ -2541,17 +2541,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     // Is the content of previous version of value the same as content of the current version?
     val event = if (previousValue.valueContent == currentVersionOfValue.valueContent) {
       //Yes. Permission must have been updated; return a permission update event.
-      val updateValueContentPayload = ValueEventPayload(
+      val updateValuePermissionsRequestBody = ValueEventBody(
         propertyIri = propertyIri,
         valueIri = currentVersionOfValue.valueIri,
         valueTypeIri = currentVersionOfValue.valueContent.valueType,
         permissions = Some(currentVersionOfValue.permissions),
         valueComment = currentVersionOfValue.valueContent.comment
       )
-      (ResourceAndValueEventsUtil.UPDATE_VALUE_PERMISSION_EVENT, updateValueContentPayload)
+      (ResourceAndValueEventsUtil.UPDATE_VALUE_PERMISSION_EVENT, updateValuePermissionsRequestBody)
     } else {
       // No. Content must have been updated; return a content update event.
-      val updateValueContentPayload = ValueEventPayload(
+      val updateValueContentRequestBody = ValueEventBody(
         propertyIri = propertyIri,
         valueIri = currentVersionOfValue.valueIri,
         valueTypeIri = currentVersionOfValue.valueContent.valueType,
@@ -2561,7 +2561,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         valueComment = currentVersionOfValue.valueContent.comment,
         previousValueIri = currentVersionOfValue.previousValueIri
       )
-      (ResourceAndValueEventsUtil.UPDATE_VALUE_CONTENT_EVENT, updateValueContentPayload)
+      (ResourceAndValueEventsUtil.UPDATE_VALUE_CONTENT_EVENT, updateValueContentRequestBody)
     }
     event
   }

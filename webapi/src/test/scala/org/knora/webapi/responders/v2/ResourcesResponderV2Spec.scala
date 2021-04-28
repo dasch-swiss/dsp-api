@@ -2483,8 +2483,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val updatePermissionEvent: Option[ResourceAndValueHistoryV2] =
         events.find(event => event.eventType == ResourceAndValueEventsUtil.UPDATE_VALUE_PERMISSION_EVENT)
       assert(updatePermissionEvent.isDefined)
-      val updatePermissionPayload = updatePermissionEvent.get.payload
-        .asInstanceOf[ValueEventPayload]
+      val updatePermissionPayload = updatePermissionEvent.get.eventBody
+        .asInstanceOf[ValueEventBody]
       updatePermissionPayload.valueIri shouldEqual (updateValuePermissionResponse.valueIri)
     }
 
@@ -2531,12 +2531,12 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val createValueEvent: Option[ResourceAndValueHistoryV2] =
         events.find(
           event =>
-            event.eventType == ResourceAndValueEventsUtil.CREATE_VALUE_EVENT && event.payload
-              .asInstanceOf[ValueEventPayload]
+            event.eventType == ResourceAndValueEventsUtil.CREATE_VALUE_EVENT && event.eventBody
+              .asInstanceOf[ValueEventBody]
               .valueIri == newValueIri)
       assert(createValueEvent.isDefined)
-      val createValuePayloadContent = createValueEvent.get.payload
-        .asInstanceOf[ValueEventPayload]
+      val createValuePayloadContent = createValueEvent.get.eventBody
+        .asInstanceOf[ValueEventBody]
         .valueContent
       assert(createValuePayloadContent.isDefined)
       val payloadContent = createValuePayloadContent.get
@@ -2580,8 +2580,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val deleteValueEvent: Option[ResourceAndValueHistoryV2] =
         events.find(
           event =>
-            event.eventType == ResourceAndValueEventsUtil.DELETE_VALUE_EVENT && event.payload
-              .asInstanceOf[ValueEventPayload]
+            event.eventType == ResourceAndValueEventsUtil.DELETE_VALUE_EVENT && event.eventBody
+              .asInstanceOf[ValueEventBody]
               .valueIri == valueToDelete)
       assert(deleteValueEvent.isDefined)
     }

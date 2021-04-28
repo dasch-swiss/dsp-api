@@ -1304,18 +1304,19 @@ case class ResourceAndValueHistoryV2(eventType: String,
                                      author: IRI,
                                      resourceIri: IRI,
                                      resourceClassIri: SmartIri,
-                                     payload: ResourceOrValueEventPayload)
+                                     eventBody: ResourceOrValueEventBody)
 
-abstract class ResourceOrValueEventPayload
-case class ResourceEventPayload(label: String,
-                                values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
-                                permissions: String,
-                                creationDate: Instant,
-                                attachedToProject: IRI)
-    extends ResourceOrValueEventPayload {
+abstract class ResourceOrValueEventBody
+case class ResourceEventBody(label: String,
+                             values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
+                             permissions: String,
+                             creationDate: Instant,
+                             attachedToProject: IRI)
+    extends ResourceOrValueEventBody {
   def toJsonLD(): JsonLDObject = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     // Todo: add values
+
     JsonLDObject(
       Map(
         OntologyConstants.Rdfs.Label -> JsonLDString(label),
@@ -1330,21 +1331,21 @@ case class ResourceEventPayload(label: String,
   }
 }
 
-case class ValueEventPayload(propertyIri: SmartIri,
-                             valueIri: IRI,
-                             valueTypeIri: SmartIri,
-                             valueContent: Option[ValueContentV2] = None,
-                             valueUUID: Option[UUID] = None,
-                             valueCreationDate: Option[Instant] = None,
-                             previousValueIri: Option[IRI] = None,
-                             permissions: Option[String] = None,
-                             valueComment: Option[String] = None,
-                             deletionInfo: Option[DeletionInfo] = None)
-    extends ResourceOrValueEventPayload {
+case class ValueEventBody(propertyIri: SmartIri,
+                          valueIri: IRI,
+                          valueTypeIri: SmartIri,
+                          valueContent: Option[ValueContentV2] = None,
+                          valueUUID: Option[UUID] = None,
+                          valueCreationDate: Option[Instant] = None,
+                          previousValueIri: Option[IRI] = None,
+                          permissions: Option[String] = None,
+                          valueComment: Option[String] = None,
+                          deletionInfo: Option[DeletionInfo] = None)
+    extends ResourceOrValueEventBody {
 
   def toJsonLD(): JsonLDObject = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    // Todo: add value content
+
     val valueUUIDAsJsonLD: Option[(IRI, JsonLDValue)] = valueUUID.map { valueHasUUID =>
       OntologyConstants.KnoraBase.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueHasUUID))
     }
@@ -1406,21 +1407,21 @@ case class ResourceAndValueVersionHistoryResponseV2(projectHistory: Seq[Resource
 
     val projectHistoryAsJsonLD: Seq[JsonLDObject] = projectHistory.map { historyEntry: ResourceAndValueHistoryV2 =>
       // convert event payload to JsonLD object
-      val payloadAsJsonLD: JsonLDObject = historyEntry.payload match {
-        case valueEventPayload: ValueEventPayload       => valueEventPayload.toJsonLD()
-        case resourceEventPayload: ResourceEventPayload => resourceEventPayload.toJsonLD()
-        case _                                          => throw NotFoundException(s"Payload is missing or has wrong type.")
+      val eventBodyAsJsonLD: JsonLDObject = historyEntry.eventBody match {
+        case valueEventBody: ValueEventBody       => valueEventBody.toJsonLD()
+        case resourceEventBody: ResourceEventBody => resourceEventBody.toJsonLD()
+        case _                                    => throw NotFoundException(s"Event body is missing or has wrong type.")
       }
 
       JsonLDObject(
         Map(
-          JsonLDKeywords.TYPE -> JsonLDString(historyEntry.eventType),
+          OntologyConstants.KnoraApiV2Complex.EventType -> JsonLDString(historyEntry.eventType),
           OntologyConstants.KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = historyEntry.versionDate.toString,
             datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
           ),
           OntologyConstants.KnoraApiV2Complex.Author -> JsonLDUtil.iriToJsonLDObject(historyEntry.author),
-          "payload" -> payloadAsJsonLD
+          OntologyConstants.KnoraApiV2Complex.EventBody -> eventBodyAsJsonLD
         )
       )
     }
@@ -1432,7 +1433,8 @@ case class ResourceAndValueVersionHistoryResponseV2(projectHistory: Seq[Resource
         "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
         "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
         "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion,
-        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion,
+        OntologyConstants.KnoraBase.KnoraBaseOntologyLabel -> OntologyConstants.KnoraBase.KnoraBasePrefixExpansion
       )
     )
 
