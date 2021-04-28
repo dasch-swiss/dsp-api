@@ -2380,20 +2380,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       * converts a [[ReadValueV2]] to a [[CreateValueInNewResourceV2]].
       *
       */
-    def convertReadValuesToCreateNewValues(readValues: Seq[ReadValueV2]): Seq[CreateValueInNewResourceV2] = {
-      readValues.map { readValue =>
-        CreateValueInNewResourceV2(
-          valueContent = readValue.valueContent,
-          customValueIri = Some(readValue.valueIri.toSmartIri),
-          customValueUUID = Some(readValue.valueHasUUID),
-          customValueCreationDate = Some(readValue.valueCreationDate)
-        )
-      }
-    }
     val requestBody: ResourceEventBody = ResourceEventBody(
       label = resourceAtTimeOfCreation.label,
-      values = resourceAtTimeOfCreation.values.mapValues(readValues => convertReadValuesToCreateNewValues(readValues)),
-      attachedToProject = resourceAtTimeOfCreation.projectADM.id,
+      values =
+        resourceAtTimeOfCreation.values.mapValues(readValues => readValues.map(readValue => readValue.valueContent)),
+      projectADM = resourceAtTimeOfCreation.projectADM,
       permissions = resourceAtTimeOfCreation.permissions,
       creationDate = resourceAtTimeOfCreation.creationDate
     )
@@ -2413,6 +2404,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     *
     * @param resourceAtGivenTime the full representation of the resource at the given time.
     * @param versionHist the history info of the version; i.e. versionDate and author.
+    * @param allResourceVersions all full representations of resource for each version date in its history.
     * @return a create/update/delete value event.
     */
   private def getValueAtGivenVersionDate(
@@ -2447,6 +2439,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           if (readValue.deletionInfo.exists(deletionInfo => deletionInfo.deleteDate == versionHist.versionDate)) {
             // Yes. Return a deleteValue event
             val deleteValueRequestBody = ValueEventBody(
+              projectADM = resourceAtGivenTime.projectADM,
               propertyIri = propIri,
               valueIri = readValue.valueIri,
               valueTypeIri = readValue.valueContent.valueType,
@@ -2466,6 +2459,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             if (readValue.previousValueIri.isEmpty) {
               // Yes. return a createValue event with its request body
               val createValueRequestBody = ValueEventBody(
+                projectADM = resourceAtGivenTime.projectADM,
                 propertyIri = propIri,
                 valueIri = readValue.valueIri,
                 valueTypeIri = readValue.valueContent.valueType,
@@ -2486,7 +2480,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             } else {
               // No. return updateValue event
               val (updateEventType: String, updateEventRequestBody: ValueEventBody) =
-                getUpdateEventType(propIri, readValue, allResourceVersions)
+                getUpdateEventType(propIri, readValue, allResourceVersions, resourceAtGivenTime)
               ResourceAndValueHistoryV2(
                 eventType = updateEventType,
                 versionDate = versionHist.versionDate,
@@ -2511,12 +2505,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @param propertyIri the IRI of the property.
     * @param currentVersionOfValue the current value version.
     * @param allResourceVersions all versions of resource.
+    * @param resourceAtGivenTime the full representation of the resource at time of value update.
     * @return (eventType, update event request body)
     */
-  private def getUpdateEventType(
-      propertyIri: SmartIri,
-      currentVersionOfValue: ReadValueV2,
-      allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)]): (String, ValueEventBody) = {
+  private def getUpdateEventType(propertyIri: SmartIri,
+                                 currentVersionOfValue: ReadValueV2,
+                                 allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)],
+                                 resourceAtGivenTime: ReadResourceV2): (String, ValueEventBody) = {
     val previousValueIri: IRI = currentVersionOfValue.previousValueIri.getOrElse(
       throw BadRequestException("No previous value IRI found for the value, Please report this as a bug."))
 
@@ -2542,6 +2537,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     val event = if (previousValue.valueContent == currentVersionOfValue.valueContent) {
       //Yes. Permission must have been updated; return a permission update event.
       val updateValuePermissionsRequestBody = ValueEventBody(
+        projectADM = resourceAtGivenTime.projectADM,
         propertyIri = propertyIri,
         valueIri = currentVersionOfValue.valueIri,
         valueTypeIri = currentVersionOfValue.valueContent.valueType,
@@ -2552,6 +2548,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     } else {
       // No. Content must have been updated; return a content update event.
       val updateValueContentRequestBody = ValueEventBody(
+        projectADM = resourceAtGivenTime.projectADM,
         propertyIri = propertyIri,
         valueIri = currentVersionOfValue.valueIri,
         valueTypeIri = currentVersionOfValue.valueContent.valueType,

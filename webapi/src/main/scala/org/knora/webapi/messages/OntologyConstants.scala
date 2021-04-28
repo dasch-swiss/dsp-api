@@ -737,6 +737,8 @@ object OntologyConstants {
     val MayHaveMoreResults: IRI = KnoraApiV2PrefixExpansion + "mayHaveMoreResults"
     val EventType: IRI = KnoraApiV2PrefixExpansion + "eventType"
     val EventBody: IRI = KnoraApiV2PrefixExpansion + "eventBody"
+    val ResourceClassIri: IRI = KnoraApiV2PrefixExpansion + "resourceClassIri"
+    val ResourceIri: IRI = KnoraApiV2PrefixExpansion + "resourceIri"
 
     val IsShared: IRI = KnoraApiV2PrefixExpansion + "isShared"
     val IsBuiltIn: IRI = KnoraApiV2PrefixExpansion + "isBuiltIn"

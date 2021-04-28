@@ -1308,30 +1308,49 @@ case class ResourceAndValueHistoryV2(eventType: String,
 
 abstract class ResourceOrValueEventBody
 case class ResourceEventBody(label: String,
-                             values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
+                             values: Map[SmartIri, Seq[ValueContentV2]],
                              permissions: String,
                              creationDate: Instant,
-                             attachedToProject: IRI)
+                             projectADM: ProjectADM)
     extends ResourceOrValueEventBody {
-  def toJsonLD(): JsonLDObject = {
+
+  def toJsonLD(targetSchema: ApiV2Schema,
+               settings: KnoraSettingsImpl,
+               schemaOptions: Set[SchemaOption]): JsonLDObject = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    // Todo: add values
+
+    val propertiesAndValuesAsJsonLD: Map[IRI, JsonLDArray] = values.map {
+      case (propIri: SmartIri, valueContents: Seq[ValueContentV2]) =>
+        val valueContentsAsJsonLD: Seq[JsonLDValue] = valueContents.map { content =>
+          content
+            .toOntologySchema(targetSchema)
+            .toJsonLDValue(
+              targetSchema = targetSchema,
+              projectADM = projectADM,
+              settings = settings,
+              schemaOptions = schemaOptions
+            )
+        }
+
+        propIri.toString -> JsonLDArray(valueContentsAsJsonLD)
+    }
 
     JsonLDObject(
       Map(
         OntologyConstants.Rdfs.Label -> JsonLDString(label),
-        OntologyConstants.KnoraBase.HasPermissions -> JsonLDString(permissions),
+        OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(permissions),
         OntologyConstants.KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
           value = creationDate.toString,
           datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
         ),
-        OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(attachedToProject)
-      )
+        OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id)
+      ) ++ propertiesAndValuesAsJsonLD
     )
   }
 }
 
-case class ValueEventBody(propertyIri: SmartIri,
+case class ValueEventBody(projectADM: ProjectADM,
+                          propertyIri: SmartIri,
                           valueIri: IRI,
                           valueTypeIri: SmartIri,
                           valueContent: Option[ValueContentV2] = None,
@@ -1343,11 +1362,25 @@ case class ValueEventBody(propertyIri: SmartIri,
                           deletionInfo: Option[DeletionInfo] = None)
     extends ResourceOrValueEventBody {
 
-  def toJsonLD(): JsonLDObject = {
+  def toJsonLD(targetSchema: ApiV2Schema,
+               settings: KnoraSettingsImpl,
+               schemaOptions: Set[SchemaOption]): JsonLDObject = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+    val contentAsJsonLD: Option[(String, JsonLDValue)] = valueContent.map { content =>
+      val contentJsonLD = content
+        .toOntologySchema(targetSchema)
+        .toJsonLDValue(
+          targetSchema = targetSchema,
+          projectADM = projectADM,
+          settings = settings,
+          schemaOptions = schemaOptions
+        )
+      propertyIri.toString -> contentJsonLD
+    }
+
     val valueUUIDAsJsonLD: Option[(IRI, JsonLDValue)] = valueUUID.map { valueHasUUID =>
-      OntologyConstants.KnoraBase.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueHasUUID))
+      OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueHasUUID))
     }
 
     val valueCreationDateAsJsonLD: Option[(IRI, JsonLDValue)] = valueCreationDate.map { valueHasCreationDate =>
@@ -1357,7 +1390,7 @@ case class ValueEventBody(propertyIri: SmartIri,
       )
     }
     val valuePermissionsAsJSONLD: Option[(IRI, JsonLDValue)] = permissions.map { hasPermissions =>
-      OntologyConstants.KnoraBase.HasPermissions -> JsonLDString(hasPermissions)
+      OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(hasPermissions)
     }
 
     val deletionInfoAsJsonLD: Map[IRI, JsonLDValue] = deletionInfo match {
@@ -1376,7 +1409,7 @@ case class ValueEventBody(propertyIri: SmartIri,
         JsonLDKeywords.ID -> JsonLDString(valueIri),
         JsonLDKeywords.TYPE -> JsonLDString(valueTypeIri.toString),
         OntologyConstants.Rdf.Property -> JsonLDString(propertyIri.toString),
-      ) ++ previousValueAsJsonLD ++ valueUUIDAsJsonLD ++ valueCreationDateAsJsonLD ++ valuePermissionsAsJSONLD
+      ) ++ previousValueAsJsonLD ++ contentAsJsonLD ++ valueUUIDAsJsonLD ++ valueCreationDateAsJsonLD ++ valuePermissionsAsJSONLD
         ++ deletionInfoAsJsonLD ++ valueHasCommentAsJsonLD
     )
   }
@@ -1406,10 +1439,10 @@ case class ResourceAndValueVersionHistoryResponseV2(projectHistory: Seq[Resource
     // Convert the history entries to an array of JSON-LD objects.
 
     val projectHistoryAsJsonLD: Seq[JsonLDObject] = projectHistory.map { historyEntry: ResourceAndValueHistoryV2 =>
-      // convert event payload to JsonLD object
+      // convert event body to JsonLD object
       val eventBodyAsJsonLD: JsonLDObject = historyEntry.eventBody match {
-        case valueEventBody: ValueEventBody       => valueEventBody.toJsonLD()
-        case resourceEventBody: ResourceEventBody => resourceEventBody.toJsonLD()
+        case valueEventBody: ValueEventBody       => valueEventBody.toJsonLD(targetSchema, settings, schemaOptions)
+        case resourceEventBody: ResourceEventBody => resourceEventBody.toJsonLD(targetSchema, settings, schemaOptions)
         case _                                    => throw NotFoundException(s"Event body is missing or has wrong type.")
       }
 
@@ -1421,6 +1454,8 @@ case class ResourceAndValueVersionHistoryResponseV2(projectHistory: Seq[Resource
             datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
           ),
           OntologyConstants.KnoraApiV2Complex.Author -> JsonLDUtil.iriToJsonLDObject(historyEntry.author),
+          OntologyConstants.KnoraApiV2Complex.ResourceIri -> JsonLDString(historyEntry.resourceIri),
+          OntologyConstants.KnoraApiV2Complex.ResourceClassIri -> JsonLDString(historyEntry.resourceClassIri.toString),
           OntologyConstants.KnoraApiV2Complex.EventBody -> eventBodyAsJsonLD
         )
       )
