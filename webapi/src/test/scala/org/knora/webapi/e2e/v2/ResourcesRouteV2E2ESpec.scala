@@ -618,40 +618,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val projectHistoryResponse: HttpResponse = singleAwaitingRequest(projectHistoryRequest)
       val historyResponseAsString = responseToString(projectHistoryResponse)
       assert(projectHistoryResponse.status == StatusCodes.OK, historyResponseAsString)
-
-//      val parsedReceivedJsonLD = JsonLDUtil.parseJsonLD(historyResponseAsString)
-//      val projectHistory: Seq[JsonLDValue] =
-//        parsedReceivedJsonLD.body.value(JsonLDKeywords.GRAPH).asInstanceOf[JsonLDArray].value
-//      val testPayload = JsonLDObject(
-//        Map(
-//          OntologyConstants.Rdfs.Label -> JsonLDString("A thing with version history"),
-//          OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(
-//            "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser"),
-//          OntologyConstants.KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
-//            value = "2019-02-08T15:05:10Z",
-//            datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
-//          ),
-//          OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(
-//            "http://rdfh.ch/projects/0001")
-//        )
-//      )
-//      val testEvent = JsonLDObject(
-//        Map(
-//          OntologyConstants.KnoraApiV2Complex.EventType -> JsonLDString("createResource"),
-//          OntologyConstants.KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
-//            value = "2019-02-08T15:05:10Z",
-//            datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
-//          ),
-//          OntologyConstants.KnoraApiV2Complex.Author -> JsonLDUtil.iriToJsonLDObject(
-//            "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"),
-//          OntologyConstants.KnoraApiV2Complex.ResourceIri -> JsonLDString("http://rdfh.ch/0001/thing-with-history"),
-//          OntologyConstants.KnoraApiV2Complex.ResourceClassIri -> JsonLDString(
-//            "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"),
-//          OntologyConstants.KnoraApiV2Complex.EventBody -> testPayload
-//        ))
-//
-//      assert(projectHistory.contains(testEvent))
-
     }
 
     "return a graph of resources reachable via links from/to a given resource" in {

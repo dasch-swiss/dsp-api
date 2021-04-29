@@ -39,7 +39,7 @@
         "@id": "http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q"
     },
     "knora-api:versionArkUrl": {
-        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=picture0.20160302T150510Z",
+        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=picture0.20110302T150510Z",
         "@type": "xsd:anyURI"
     },
     "knora-api:attachedToProject": {
