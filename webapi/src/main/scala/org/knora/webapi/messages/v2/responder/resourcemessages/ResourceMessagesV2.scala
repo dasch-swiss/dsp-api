@@ -114,6 +114,14 @@ case class ResourceVersionHistoryGetRequestV2(resourceIri: IRI,
                                               requestingUser: UserADM)
     extends ResourcesResponderRequestV2
 
+/**
+  * Requests the full version history of a resource and its values as events.
+  *
+  * @param resourceIri            the IRI of the resource.
+  * @param resourceVersionHistory the version history of the resource and its values.
+  * @param featureFactoryConfig   the feature factory configuration.
+  * @param requestingUser         the user making the request.
+  */
 case class ResourceFullHistoryGetRequestV2(resourceIri: IRI,
                                            resourceVersionHistory: Seq[ResourceHistoryEntry],
                                            featureFactoryConfig: FeatureFactoryConfig,
@@ -1292,12 +1300,15 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
 }
 
 /**
-  * Represents the event for history of a resource and its values.
+  * Represents the version history of a resource or a values as events.
   *
   * @param eventType    the type of the operation that is one of [[ResourceAndValueEventsUtil]]
   * @param versionDate  the version date of the event.
   * @param author       the user which had performed the operation.
-  *
+  * @param resourceIri  the IRI of the resource.
+  * @param resourceClassIri the class of the resource.
+  * @param eventBody    the request body in the form of [[ResourceOrValueEventBody]] needed for the operation indicated
+  *                     by eventType.
   */
 case class ResourceAndValueHistoryV2(eventType: String,
                                      versionDate: Instant,
@@ -1307,6 +1318,16 @@ case class ResourceAndValueHistoryV2(eventType: String,
                                      eventBody: ResourceOrValueEventBody)
 
 abstract class ResourceOrValueEventBody
+
+/**
+  * Represents a resource event (createResource) body with all the information required for the request body of this operation.
+  *
+  * @param label         the label of the resource.
+  * @param values        the values of the resource at creation time.
+  * @param permissions   the permissions assigned to the new resource.
+  * @param creationDate  the creation date of the resource.
+  * @param projectADM    the project which the resource belongs to.
+  */
 case class ResourceEventBody(label: String,
                              values: Map[SmartIri, Seq[ValueContentV2]],
                              permissions: String,
@@ -1349,6 +1370,22 @@ case class ResourceEventBody(label: String,
   }
 }
 
+/**
+  * Represents a value event (create/update content/update permission/delete) body with all the information required for
+  * the request body of the operation.
+  *
+  * @param projectADM          the project which the resource belongs to.
+  * @param propertyIri         the IRI of the property.
+  * @param valueIri            the IRI of the value.
+  * @param valueTypeIri        the type of the value.
+  * @param valueContent        the content of the value.
+  * @param valueUUID           the UUID of the value.
+  * @param valueCreationDate   the creation date of the value.
+  * @param previousValueIri    in the case of update value/ delete value operation, this indicates the previous value IRI.
+  * @param permissions         the permissions assigned to the value.
+  * @param valueComment        the comment given for the value operation.
+  * @param deletionInfo        in case of delete value operation, it contains the date of deletion and the given comment.
+  */
 case class ValueEventBody(projectADM: ProjectADM,
                           propertyIri: SmartIri,
                           valueIri: IRI,

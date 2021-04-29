@@ -1334,6 +1334,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     *
     * @param resourceIris         the Iris of the requested resources.
     * @param preview              `true` if a preview of the resource is requested.
+    *  @param withDeletedValues    if defined, indicates if the deleted values should be returned or not.
     * @param propertyIri          if defined, requests only the values of the specified explicit property.
     * @param valueUuid            if defined, requests only the value with the specified UUID.
     * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
@@ -1349,7 +1350,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       propertyIri: Option[SmartIri] = None,
       valueUuid: Option[UUID] = None,
       versionDate: Option[Instant] = None,
-      withDeleted: Boolean = false,
       queryStandoff: Boolean,
       featureFactoryConfig: FeatureFactoryConfig,
       requestingUser: UserADM): Future[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
@@ -1406,6 +1406,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @param propertyIri          if defined, requests only the values of the specified explicit property.
     * @param valueUuid            if defined, requests only the value with the specified UUID.
     * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
+    * @param withDeletedValues    if defined, indicates if the deleted values should be returned or not.
     * @param targetSchema         the target API schema.
     * @param schemaOptions        the schema options submitted with the request.
     * @param featureFactoryConfig the feature factory configuration.
@@ -2304,7 +2305,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     } yield ResourceAndValueVersionHistoryResponseV2(projectHistory = sortedProjectHistory)
 
   /**
-    * Returns the full history of a resource as events ordered by date.
+    * Returns the full history of a resource as events.
     *
     * @param resourceFullHistRequest the version history of a resource.
     * @return the full history of resource as sequence of [[ResourceAndValueHistoryV2]].
@@ -2346,8 +2347,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   /**
     * Returns the full representation of a resource at a given date.
     *
-    * @param resourceIri the IRI of the resource.
-    * @param versionHist the history info of the version; i.e. versionDate and author.
+    * @param resourceIri                the IRI of the resource.
+    * @param versionHist                the history info of the version; i.e. versionDate and author.
+    * @param featureFactoryConfig       the feature factory configuration.
+    * @param requestingUser             the user making the request.
     * @return the full representation of the resource at the given version date.
     */
   private def getResourceAtGivenTime(resourceIri: IRI,
@@ -2376,10 +2379,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   private def getResourceAtCreationDate(resourceAtTimeOfCreation: ReadResourceV2,
                                         versionInfoAtCreation: ResourceHistoryEntry): ResourceAndValueHistoryV2 = {
 
-    /**
-      * converts a [[ReadValueV2]] to a [[CreateValueInNewResourceV2]].
-      *
-      */
     val requestBody: ResourceEventBody = ResourceEventBody(
       label = resourceAtTimeOfCreation.label,
       values =
@@ -2498,9 +2497,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Since update value operation can be used to update value content or value permissions, using the previsous version
-    * of a value, it determines the type of the update and returns eventType: updateValuePermission/updateValueContent
-    * together with the request body to do the update.
+    * Since update value operation can be used to update value content or value permissions, using the previous versions
+    * of the value, it determines the type of the update and returns eventType: updateValuePermission/updateValueContent
+    * together with the request body necessary to do the update.
     *
     * @param propertyIri the IRI of the property.
     * @param currentVersionOfValue the current value version.
