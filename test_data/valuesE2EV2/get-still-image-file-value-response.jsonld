@@ -47,7 +47,7 @@
     },
     "knora-api:userHasPermission": "CR",
     "knora-api:creationDate": {
-        "@value": "2016-03-02T15:05:10Z",
+        "@value": "2011-03-02T15:05:10Z",
         "@type": "xsd:dateTimeStamp"
     },
     "knora-api:attachedToUser": {
