@@ -128,7 +128,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           )
         } yield
           ListCreateRequestADM(
-            createRootNode = apiRequest,
+            createRootNode = apiRequest.escape,
             featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
@@ -266,7 +266,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
             )
           } yield
             ListChildNodeCreateRequestADM(
-              createChildNodeRequest = apiRequest,
+              createChildNodeRequest = apiRequest.escape,
               featureFactoryConfig = featureFactoryConfig,
               requestingUser = requestingUser,
               apiRequestID = UUID.randomUUID()

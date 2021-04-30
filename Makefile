@@ -41,6 +41,10 @@ docs-clean: ## cleans the project directory
 build: ## build all targets (excluding docs)
 	@bazel build //...
 
+.PHOBY: check-for-outdated-deps
+check-for-outdated-deps: ## check for outdated maven dependencies
+	@bazel run @maven//:outdated
+
 #################################
 # Docker targets
 #################################
