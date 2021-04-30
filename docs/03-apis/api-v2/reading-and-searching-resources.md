@@ -586,9 +586,10 @@ The project IRI must be URL-encoded. The response is a list of events describing
             "knora-api:author": {
                 "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
             },
-            "knora-api:resourceIri": "http://rdfh.ch/0001/thing-with-history",
             "knora-api:eventBody": {
                 "rdfs:label": "A thing with version history",
+                "knora-api:resourceIri": "http://rdfh.ch/0001/thing-with-history",
+                "knora-api:resourceClassIri": "http://www.knora.org/ontology/0001/anything#Thing",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
                 "knora-api:creationDate": {
                     "@value": "2019-02-08T15:05:10Z",
@@ -601,16 +602,16 @@ The project IRI must be URL-encoded. The response is a list of events describing
             "knora-api:versionDate": {
                 "@value": "2019-02-08T15:05:10Z",
                 "@type": "xsd:dateTimeStamp"
-            },
-            "knora-api:resourceClassIri": "http://www.knora.org/ontology/0001/anything#Thing"
+            }
         },
         {
             "knora-api:eventType": "createValue",
             "knora-api:author": {
                 "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
             },
-            "knora-api:resourceIri": "http://rdfh.ch/0001/thing-with-history",
             "knora-api:eventBody": {
+                "knora-api:resourceIri": "http://rdfh.ch/0001/thing-with-history",
+            "knora-api:resourceClassIri": "http://www.knora.org/ontology/0001/anything#Thing",
                 "knora-api:valueCreationDate": {
                     "@value": "2019-02-10T10:30:10Z",
                     "@type": "xsd:dateTimeStamp"
@@ -629,16 +630,16 @@ The project IRI must be URL-encoded. The response is a list of events describing
             "knora-api:versionDate": {
                 "@value": "2019-02-10T10:30:10Z",
                 "@type": "xsd:dateTimeStamp"
-            },
-            "knora-api:resourceClassIri": "http://www.knora.org/ontology/0001/anything#Thing"
+            }
         },
         {
             "knora-api:eventType": "updateValueContent",
             "knora-api:author": {
                 "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
             },
-            "knora-api:resourceIri": "http://rdfh.ch/0001/thing-with-history",
             "knora-api:eventBody": {
+                "knora-api:resourceIri": "http://rdfh.ch/0001/thing-with-history",
+                "knora-api:resourceClassIri": "http://www.knora.org/ontology/0001/anything#Thing"
                 "http://www.knora.org/ontology/0001/anything#hasText": {
                     "knora-api:valueAsString": "two"
                 },
@@ -655,16 +656,16 @@ The project IRI must be URL-encoded. The response is a list of events describing
             "knora-api:versionDate": {
                 "@value": "2019-02-11T10:05:10Z",
                 "@type": "xsd:dateTimeStamp"
-            },
-            "knora-api:resourceClassIri": "http://www.knora.org/ontology/0001/anything#Thing"
+            }
         },
         {
             "knora-api:eventType": "deleteValue",
             "knora-api:author": {
                 "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
             },
-            "knora-api:resourceIri": "http://rdfh.ch/0001/thing-with-history",
             "knora-api:eventBody": {
+                "knora-api:resourceIri": "http://rdfh.ch/0001/thing-with-history",
+                "knora-api:resourceClassIri": "http://www.knora.org/ontology/0001/anything#Thing",
                 "knora-base:previousValue": "http://rdfh.ch/0001/thing-with-history/values/3a",
                 "knora-api:deleteDate": {
                     "@type": "xsd:dateTimeStamp",
@@ -678,8 +679,7 @@ The project IRI must be URL-encoded. The response is a list of events describing
             "knora-api:versionDate": {
                 "@value": "2019-02-13T09:00:10Z",
                 "@type": "xsd:dateTimeStamp"
-            },
-            "knora-api:resourceClassIri": "http://www.knora.org/ontology/0001/anything#Thing"
+            }
         }
     ],
   "@context" : {

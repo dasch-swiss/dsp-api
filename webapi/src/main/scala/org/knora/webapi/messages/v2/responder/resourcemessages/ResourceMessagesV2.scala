@@ -1305,30 +1305,29 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
   * @param eventType    the type of the operation that is one of [[ResourceAndValueEventsUtil]]
   * @param versionDate  the version date of the event.
   * @param author       the user which had performed the operation.
-  * @param resourceIri  the IRI of the resource.
-  * @param resourceClassIri the class of the resource.
   * @param eventBody    the request body in the form of [[ResourceOrValueEventBody]] needed for the operation indicated
   *                     by eventType.
   */
 case class ResourceAndValueHistoryV2(eventType: String,
                                      versionDate: Instant,
                                      author: IRI,
-                                     resourceIri: IRI,
-                                     resourceClassIri: SmartIri,
                                      eventBody: ResourceOrValueEventBody)
 
 abstract class ResourceOrValueEventBody
 
 /**
   * Represents a resource event (createResource) body with all the information required for the request body of this operation.
-  *
+  * @param resourceIri  the IRI of the resource.
+  * @param resourceClassIri the class of the resource.
   * @param label         the label of the resource.
   * @param values        the values of the resource at creation time.
   * @param permissions   the permissions assigned to the new resource.
   * @param creationDate  the creation date of the resource.
   * @param projectADM    the project which the resource belongs to.
   */
-case class ResourceEventBody(label: String,
+case class ResourceEventBody(resourceIri: IRI,
+                             resourceClassIri: SmartIri,
+                             label: String,
                              values: Map[SmartIri, Seq[ValueContentV2]],
                              permissions: String,
                              creationDate: Instant,
@@ -1358,6 +1357,8 @@ case class ResourceEventBody(label: String,
 
     JsonLDObject(
       Map(
+        OntologyConstants.KnoraApiV2Complex.ResourceIri -> JsonLDString(resourceIri),
+        OntologyConstants.KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString),
         OntologyConstants.Rdfs.Label -> JsonLDString(label),
         OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(permissions),
         OntologyConstants.KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
@@ -1373,7 +1374,8 @@ case class ResourceEventBody(label: String,
 /**
   * Represents a value event (create/update content/update permission/delete) body with all the information required for
   * the request body of the operation.
-  *
+  * @param resourceIri  the IRI of the resource.
+  * @param resourceClassIri the class of the resource.
   * @param projectADM          the project which the resource belongs to.
   * @param propertyIri         the IRI of the property.
   * @param valueIri            the IRI of the value.
@@ -1386,7 +1388,9 @@ case class ResourceEventBody(label: String,
   * @param valueComment        the comment given for the value operation.
   * @param deletionInfo        in case of delete value operation, it contains the date of deletion and the given comment.
   */
-case class ValueEventBody(projectADM: ProjectADM,
+case class ValueEventBody(resourceIri: IRI,
+                          resourceClassIri: SmartIri,
+                          projectADM: ProjectADM,
                           propertyIri: SmartIri,
                           valueIri: IRI,
                           valueTypeIri: SmartIri,
@@ -1445,6 +1449,8 @@ case class ValueEventBody(projectADM: ProjectADM,
       Map(
         JsonLDKeywords.ID -> JsonLDString(valueIri),
         JsonLDKeywords.TYPE -> JsonLDString(valueTypeIri.toString),
+        OntologyConstants.KnoraApiV2Complex.ResourceIri -> JsonLDString(resourceIri),
+        OntologyConstants.KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString),
         OntologyConstants.Rdf.Property -> JsonLDString(propertyIri.toString),
       ) ++ previousValueAsJsonLD ++ contentAsJsonLD ++ valueUUIDAsJsonLD ++ valueCreationDateAsJsonLD ++ valuePermissionsAsJSONLD
         ++ deletionInfoAsJsonLD ++ valueHasCommentAsJsonLD
@@ -1491,8 +1497,6 @@ case class ResourceAndValueVersionHistoryResponseV2(projectHistory: Seq[Resource
             datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
           ),
           OntologyConstants.KnoraApiV2Complex.Author -> JsonLDUtil.iriToJsonLDObject(historyEntry.author),
-          OntologyConstants.KnoraApiV2Complex.ResourceIri -> JsonLDString(historyEntry.resourceIri),
-          OntologyConstants.KnoraApiV2Complex.ResourceClassIri -> JsonLDString(historyEntry.resourceClassIri.toString),
           OntologyConstants.KnoraApiV2Complex.EventBody -> eventBodyAsJsonLD
         )
       )

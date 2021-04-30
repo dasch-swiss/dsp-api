@@ -2380,6 +2380,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                         versionInfoAtCreation: ResourceHistoryEntry): ResourceAndValueHistoryV2 = {
 
     val requestBody: ResourceEventBody = ResourceEventBody(
+      resourceIri = resourceAtTimeOfCreation.resourceIri,
+      resourceClassIri = resourceAtTimeOfCreation.resourceClassIri,
       label = resourceAtTimeOfCreation.label,
       values =
         resourceAtTimeOfCreation.values.mapValues(readValues => readValues.map(readValue => readValue.valueContent)),
@@ -2392,8 +2394,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       eventType = ResourceAndValueEventsUtil.CREATE_RESOURCE_EVENT,
       versionDate = versionInfoAtCreation.versionDate,
       author = versionInfoAtCreation.author,
-      resourceIri = resourceAtTimeOfCreation.resourceIri,
-      resourceClassIri = resourceAtTimeOfCreation.resourceClassIri,
       eventBody = requestBody
     )
   }
@@ -2438,6 +2438,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           if (readValue.deletionInfo.exists(deletionInfo => deletionInfo.deleteDate == versionHist.versionDate)) {
             // Yes. Return a deleteValue event
             val deleteValueRequestBody = ValueEventBody(
+              resourceIri = resourceIri,
+              resourceClassIri = resourceAtGivenTime.resourceClassIri,
               projectADM = resourceAtGivenTime.projectADM,
               propertyIri = propIri,
               valueIri = readValue.valueIri,
@@ -2449,8 +2451,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               eventType = ResourceAndValueEventsUtil.DELETE_VALUE_EVENT,
               versionDate = versionHist.versionDate,
               author = versionHist.author,
-              resourceIri = resourceIri,
-              resourceClassIri = resourceAtGivenTime.resourceClassIri,
               eventBody = deleteValueRequestBody
             )
           } else {
@@ -2458,6 +2458,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             if (readValue.previousValueIri.isEmpty) {
               // Yes. return a createValue event with its request body
               val createValueRequestBody = ValueEventBody(
+                resourceIri = resourceIri,
+                resourceClassIri = resourceAtGivenTime.resourceClassIri,
                 projectADM = resourceAtGivenTime.projectADM,
                 propertyIri = propIri,
                 valueIri = readValue.valueIri,
@@ -2472,8 +2474,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 eventType = ResourceAndValueEventsUtil.CREATE_VALUE_EVENT,
                 versionDate = versionHist.versionDate,
                 author = versionHist.author,
-                resourceIri = resourceIri,
-                resourceClassIri = resourceAtGivenTime.resourceClassIri,
                 eventBody = createValueRequestBody
               )
             } else {
@@ -2484,8 +2484,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 eventType = updateEventType,
                 versionDate = versionHist.versionDate,
                 author = versionHist.author,
-                resourceIri = resourceIri,
-                resourceClassIri = resourceAtGivenTime.resourceClassIri,
                 eventBody = updateEventRequestBody
               )
             }
@@ -2536,6 +2534,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     val event = if (previousValue.valueContent == currentVersionOfValue.valueContent) {
       //Yes. Permission must have been updated; return a permission update event.
       val updateValuePermissionsRequestBody = ValueEventBody(
+        resourceIri = resourceAtGivenTime.resourceIri,
+        resourceClassIri = resourceAtGivenTime.resourceClassIri,
         projectADM = resourceAtGivenTime.projectADM,
         propertyIri = propertyIri,
         valueIri = currentVersionOfValue.valueIri,
@@ -2547,6 +2547,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     } else {
       // No. Content must have been updated; return a content update event.
       val updateValueContentRequestBody = ValueEventBody(
+        resourceIri = resourceAtGivenTime.resourceIri,
+        resourceClassIri = resourceAtGivenTime.resourceClassIri,
         projectADM = resourceAtGivenTime.projectADM,
         propertyIri = propertyIri,
         valueIri = currentVersionOfValue.valueIri,
