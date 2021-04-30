@@ -25,12 +25,11 @@ import org.knora.webapi.core.{LiveActorMaker, _}
 import org.knora.webapi.exceptions.UnexpectedMessageException
 import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceRequest
-import org.knora.webapi.messages.store.eventstore.EventStoreRequest
 import org.knora.webapi.messages.store.sipimessages.IIIFRequest
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreRequest
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import org.knora.webapi.store.cacheservice.CacheServiceManager
-import org.knora.webapi.store.eventstore.{EventStore, EventStoreManager}
+import org.knora.webapi.store.eventstore.{EventStore, EventStoreManager, EventStoreRequest}
 import org.knora.webapi.store.iiif.IIIFManager
 import org.knora.webapi.store.triplestore.TriplestoreManager
 

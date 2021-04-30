@@ -26,10 +26,6 @@ import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.UnexpectedMessageException
 import org.knora.webapi.instrumentation.InstrumentationSupport
-import org.knora.webapi.messages.store.eventstore.{
-  EventStoreGetResourceEventsRequest,
-  EventStoreSaveResourceEventRequest
-}
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 import org.knora.webapi.util.ActorUtil.future2Message
 
@@ -61,17 +57,17 @@ class EventStoreManager(es: EventStore) extends Actor with ActorLogging with Laz
   implicit val l: Logger = logger
 
   def receive = {
-    case EventStoreSaveResourceEventRequest(resourceIri: IRI, event: String) =>
-      future2Message(sender(), saveResourceEvent(resourceIri, event), log)
+    case EventStoreSaveResourceEventRequest(event: ResourceEvent) =>
+      future2Message(sender(), saveResourceEvent(event), log)
     case EventStoreGetResourceEventsRequest(resourceIri: IRI) =>
       future2Message(sender(), getResourcEvents(resourceIri), log)
     case other =>
       sender ! Status.Failure(UnexpectedMessageException(s"EventStoreManager received an unexpected message: $other"))
   }
 
-  private def saveResourceEvent(resourceIri: IRI, event: String): Future[WriteResult] =
+  private def saveResourceEvent(event: ResourceEvent): Future[WriteResult] =
     tracedFuture("event-store-save-resource-event") {
-      es.saveResourceEvent(resourceIri, event)
+      es.saveResourceEvent(event)
     }
 
   private def getResourcEvents(resourceIri: IRI): Future[List[ResourceEvent]] =

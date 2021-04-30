@@ -20,18 +20,19 @@
 
 package org.knora.webapi.store.eventstore
 
-import zio.test.junit.JUnitRunnableSpec
-import zio.test.{Assertion, assert, _}
+import org.knora.webapi.IRI
+import org.knora.webapi.messages.store.StoreRequest
 
-class EventStoreZSpec extends JUnitRunnableSpec {
-  def spec = suite("resources event-store repository implementation")(
-    test("allows storing and reading the event") {
-      // val data = EventStoreImpl.packageEvent("myIri", "myEvent")
-      // val res = EventStoreImpl.appendToStream("myIri", data)
-      assert(2)(Assertion.equalTo(2))
-    },
-    test("passing test") {
-      assert(1)(Assertion.equalTo(1))
-    }
-  )
-}
+sealed trait EventStoreRequest extends StoreRequest
+
+/**
+  * Message requesting to write a resource event.
+  * @param event the event to be stored.
+  */
+case class EventStoreSaveResourceEventRequest(event: ResourceEvent) extends EventStoreRequest
+
+/**
+  * Message requesting to retrieve all events for a resource.
+  * @param resourceIri the IRI of the resource.
+  */
+case class EventStoreGetResourceEventsRequest(resourceIri: IRI) extends EventStoreRequest

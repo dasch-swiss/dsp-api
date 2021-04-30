@@ -18,22 +18,12 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.store.eventstore
+package org.knora.webapi.store.eventstore
 
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.store.StoreRequest
 
-sealed trait EventStoreRequest extends StoreRequest
+sealed trait ResourceEvent {
+  val iri: IRI
+}
 
-/**
-  * Message requesting to write a resource event.
-  * @param resourceIri the IRI of the resource.
-  * @param event the event to be stored.
-  */
-case class EventStoreSaveResourceEventRequest(resourceIri: IRI, event: String) extends EventStoreRequest
-
-/**
-  * Message requesting to retrieve all events for a resource.
-  * @param resourceIri the IRI of the resource.
-  */
-case class EventStoreGetResourceEventsRequest(resourceIri: IRI) extends EventStoreRequest
+case class ResourceCreated(iri: IRI, event: String) extends ResourceEvent

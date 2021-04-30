@@ -23,10 +23,6 @@ package org.knora.webapi.store.eventstore
 import com.eventstore.dbclient.WriteResult
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.messages.store.eventstore.{
-  EventStoreGetResourceEventsRequest,
-  EventStoreSaveResourceEventRequest
-}
 
 import scala.concurrent.duration._
 
@@ -53,8 +49,8 @@ class EventStoreManagerSpec extends CoreSpec(EventStoreManagerSpec.config) {
 
     "successfully store an event" in {
       val resourceIri = "IRI"
-      val event = "event content"
-      storeManager ! EventStoreSaveResourceEventRequest(resourceIri, event)
+      val event = ResourceCreated("IRI", "event content")
+      storeManager ! EventStoreSaveResourceEventRequest(event)
       val received = expectMsgType[WriteResult](5.seconds)
     }
 

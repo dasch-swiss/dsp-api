@@ -20,22 +20,16 @@
 
 package org.knora.webapi.store.eventstore
 
-import com.eventstore.dbclient.{
-  EventData,
-  EventStoreDBClient,
-  EventStoreDBConnectionString,
-  ReadStreamOptions,
-  WriteResult
-}
+import com.eventstore.dbclient._
 import org.knora.webapi.IRI
-import zio.blocking.Blocking
-import zio.{BootstrapRuntime, IO, RIO, Task, UIO, ZIO}
+import org.knora.webapi.exceptions.DataConversionException
+import zio.json._
+import zio.{BootstrapRuntime, IO, Task}
 
-import java.util.concurrent.CompletableFuture
-import scala.concurrent.{ExecutionContext, Future, promise}
+import scala.concurrent.{ExecutionContext, Future}
 
 trait EventStore {
-  def saveResourceEvent(resourceIri: IRI, event: String): Future[WriteResult]
+  def saveResourceEvent(event: ResourceEvent): Future[WriteResult]
   def loadResourceEvents(resourceIri: IRI)(implicit ec: ExecutionContext): Future[List[ResourceEvent]]
 }
 
@@ -44,22 +38,29 @@ object EventStoreImpl extends EventStore {
   private val settings = EventStoreDBConnectionString.parse("esdb://localhost:2113?tls=false")
   private val client = EventStoreDBClient.create(settings)
 
-  override def saveResourceEvent(resourceIri: IRI, event: String): Future[WriteResult] = {
-    val eventData = packageEvent(resourceIri, event)
-    LegacyRuntime.fromTask(appendToStream(resourceIri, eventData))
-    // appendToStream(resourceIri, eventData)
+  override def saveResourceEvent(event: ResourceEvent): Future[WriteResult] = {
+    val eventData = packageEvent(event)
+    LegacyRuntime.fromTask(appendToStream(event.iri, eventData))
   }
 
-  def packageEvent(resourceIri: IRI, event: String): EventData = {
-    val eventToSave = ResourceCreated(resourceIri, event)
-    val eventData = EventData.builderAsJson("ResourceCreated", eventToSave).build()
-    eventData
+  /**
+    * Packages the [[ResourceEvent]] into a data structure that the event store expects.
+    * @param event a [[ResourceEvent]].
+    * @return [[com.eventstore.dbclient.EventData]].
+    */
+  def packageEvent(event: ResourceEvent): EventData = {
+    event match {
+      case e: ResourceCreated => EventDataBuilder.json("ResourceCreated", e.toJson).build()
+    }
   }
 
+  /**
+    * Appends (writes) the event data to the event store.
+    * @param resourceIri the IRI of the resource this event relates to.
+    * @param eventData the packaged event data.
+    * @return a [[zio.Task]] containing [[WriteResult]].
+    */
   def appendToStream(resourceIri: IRI, eventData: EventData): Task[WriteResult] = {
-    // val result: CompletableFuture[WriteResult] = client.appendToStream(s"resource-$resourceIri", eventData)
-    // scala.compat.java8.FutureConverters.toScala(result)
-
     IO.effectAsync[Throwable, WriteResult] { callback =>
       client
         .appendToStream(s"resource-$resourceIri", eventData)
@@ -76,21 +77,21 @@ object EventStoreImpl extends EventStore {
     import collection.JavaConverters._
     val options: ReadStreamOptions = ReadStreamOptions.get.forwards.fromStart
     val result = client.readStream(s"resource-$resourceIri", options).get
-    val recordedEvents = result.getEvents.asScala.toList
+    val recordedEvents: List[ResolvedEvent] = result.getEvents.asScala.toList
     val events: List[ResourceEvent] = recordedEvents.map { e =>
-      e.getOriginalEvent.getContentType match {
+      e.getEvent.getEventType match {
         case "ResourceCreated" => {
-          e.getOriginalEvent.getEventDataAs[ResourceCreated](classOf[ResourceCreated])
+          // e.getEvent.getEventDataAs(classOf[ResourceCreated])
+          val rawData: Array[Byte] = e.getEvent.getEventData
+          rawData.toString
+            .fromJson[ResourceCreated]
+            .getOrElse(throw DataConversionException("Problem deserializing event from event store."))
         }
       }
     }
     Future(events)
   }
-
 }
-
-sealed trait ResourceEvent
-case class ResourceCreated(iri: IRI, event: String) extends ResourceEvent
 
 //// ZIO helpers ////
 object LegacyRuntime {

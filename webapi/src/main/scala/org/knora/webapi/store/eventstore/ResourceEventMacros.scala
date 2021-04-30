@@ -18,20 +18,12 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.store.eventstore
+package org.knora.webapi
+package store.eventstore
 
-import zio.test.junit.JUnitRunnableSpec
-import zio.test.{Assertion, assert, _}
+import zio.json.{DeriveJsonDecoder, DeriveJsonEncoder, JsonDecoder, JsonEncoder}
 
-class EventStoreZSpec extends JUnitRunnableSpec {
-  def spec = suite("resources event-store repository implementation")(
-    test("allows storing and reading the event") {
-      // val data = EventStoreImpl.packageEvent("myIri", "myEvent")
-      // val res = EventStoreImpl.appendToStream("myIri", data)
-      assert(2)(Assertion.equalTo(2))
-    },
-    test("passing test") {
-      assert(1)(Assertion.equalTo(1))
-    }
-  )
+object ResourceEventMacros {
+  implicit val decoder: JsonDecoder[ResourceCreated] = DeriveJsonDecoder.gen[ResourceCreated]
+  implicit val encoder: JsonEncoder[ResourceCreated] = DeriveJsonEncoder.gen[ResourceCreated]
 }

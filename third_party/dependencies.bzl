@@ -29,6 +29,7 @@ def dependencies():
 
             # ZIO and friends
             "dev.zio:zio_2.12:1.0.3",
+            "dev.zio:zio-json_2.12:0.1.4",
             "dev.zio:zio-test_2.12:1.0.3",
             "dev.zio:zio-test-junit_2.12:1.0.3",
 
@@ -177,6 +178,7 @@ ALL_WEBAPI_MAIN_DEPENDENCIES = [
     "//webapi/src/main/scala/org/knora/webapi/routing",
     "//webapi/src/main/scala/org/knora/webapi/settings",
     "//webapi/src/main/scala/org/knora/webapi/store",
+    "//webapi/src/main/scala/org/knora/webapi/store/eventstore",
     "//webapi/src/main/scala/org/knora/webapi/util",
     "//webapi/src/main/scala/org/knora/webapi/util/cache",
 ]

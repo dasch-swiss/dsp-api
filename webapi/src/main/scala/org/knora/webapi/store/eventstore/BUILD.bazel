@@ -1,15 +1,18 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library", "scala_macro_library")
 
 scala_library(
     name = "eventstore",
     srcs = [
         "EventStore.scala",
-        "EventStoreManager.scala"
+        "EventStoreManager.scala",
+        "EventStoreMessage.scala",
     ],
     unused_dependency_checker_mode = "warn",
     deps = [
+        ":resource_event",
+        ":resource_event_macros",
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
         "//webapi/src/main/scala/org/knora/webapi/instrumentation",
@@ -17,6 +20,8 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/settings",
         "//webapi/src/main/scala/org/knora/webapi/util",
         "@maven//:dev_zio_zio_2_12",
+        "@maven//:dev_zio_zio_json_2_12",
+        "@maven//:com_fasterxml_jackson_module_jackson_module_scala_2_12",
         "@maven//:com_eventstore_db_client_java",
         "@maven//:com_typesafe_akka_akka_actor_2_12",
         "@maven//:com_typesafe_akka_akka_http_2_12",
@@ -26,5 +31,29 @@ scala_library(
         "@maven//:com_typesafe_config",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
         "@maven//:org_scala_lang_modules_scala_java8_compat_2_12",
+    ],
+)
+
+scala_library(
+    name = "resource_event",
+    srcs = [
+        "ResourceEvent.scala",
+    ],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+    ],
+)
+
+scala_macro_library(
+    name = "resource_event_macros",
+    srcs = [
+        "ResourceEventMacros.scala",
+    ],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        ":resource_event",
+        "@maven//:dev_zio_zio_2_12",
+        "@maven//:dev_zio_zio_json_2_12",
     ],
 )
