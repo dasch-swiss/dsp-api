@@ -605,10 +605,10 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return a preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
       responderManager ! ResourcesPreviewGetRequestV2(
-        Seq("http://rdfh.ch/0803/c5058f3a"),
-        ApiV2Complex,
+        resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
+        targetSchema = ApiV2Complex,
         featureFactoryConfig = defaultFeatureFactoryConfig,
-        incunabulaUserProfile
+        requestingUser = incunabulaUserProfile
       )
 
       expectMsgPF(timeout) {
