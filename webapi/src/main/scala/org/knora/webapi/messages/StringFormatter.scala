@@ -3259,6 +3259,5 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
       stringLiterals = stringLiteralSeq.stringLiterals.map(stringLiteral =>
         StringLiteralV2(value = fromSparqlEncodedString(stringLiteral.value), language = stringLiteral.language))
     )
-
   }
 }
