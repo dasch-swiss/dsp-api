@@ -2406,8 +2406,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       resourceIri = resourceAtTimeOfCreation.resourceIri,
       resourceClassIri = resourceAtTimeOfCreation.resourceClassIri,
       label = Some(resourceAtTimeOfCreation.label),
-      values =
-        resourceAtTimeOfCreation.values.mapValues(readValues => readValues.map(readValue => readValue.valueContent)),
+      values = resourceAtTimeOfCreation.values.view
+        .mapValues(readValues => readValues.map(readValue => readValue.valueContent))
+        .toMap,
       projectADM = resourceAtTimeOfCreation.projectADM,
       permissions = Some(resourceAtTimeOfCreation.permissions),
       creationDate = Some(resourceAtTimeOfCreation.creationDate)
