@@ -1,20 +1,20 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # The SALSAH GUI Ontology
@@ -168,13 +168,13 @@ identifier = letter , { letter } ;
 `Searchbox`
 
 :   A GUI element for searching for a resource by matching text in its
-    `rdfs:label`. For Knora API v1, a property definition that uses this
+    `rdfs:label`. For DSP-API v1, a property definition that uses this
     element may also contain this `guiAttribute` predicate:
 
     -   `"numprops=N"`, where `N` is an integer specifying the number of
         describing properties to be returned for each found resource.
 
-    For Knora API v2, the `guiAttribute` has no effect.
+    For DSP-API v2, the `guiAttribute` has no effect.
 
 `SimpleText`
 

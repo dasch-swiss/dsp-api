@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -1074,7 +1074,7 @@ object ConstructResponseUtilV2 {
           DocumentFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
-            pageCount = valueObject.requireIntObject(OntologyConstants.KnoraBase.PageCount.toSmartIri),
+            pageCount = valueObject.maybeIntObject(OntologyConstants.KnoraBase.PageCount.toSmartIri),
             dimX = valueObject.maybeIntObject(OntologyConstants.KnoraBase.DimX.toSmartIri),
             dimY = valueObject.maybeIntObject(OntologyConstants.KnoraBase.DimY.toSmartIri),
             comment = valueCommentOption
@@ -1087,6 +1087,19 @@ object ConstructResponseUtilV2 {
             fileValue = fileValue,
             comment = valueCommentOption
           ))
+
+      case OntologyConstants.KnoraBase.AudioFileValue =>
+        FastFuture.successful(
+          AudioFileValueContentV2(
+            ontologySchema = InternalSchema,
+            fileValue = fileValue,
+            duration = valueObject
+              .maybeStringObject(OntologyConstants.KnoraBase.Duration.toSmartIri)
+              .map(definedDuration => BigDecimal(definedDuration)),
+            comment = valueCommentOption
+          ))
+
+      case _ => throw InconsistentRepositoryDataException(s"Unexpected file value type: $valueType")
     }
   }
 

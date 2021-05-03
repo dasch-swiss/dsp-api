@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -118,6 +118,24 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
 
   val textMimeTypes: Set[String] = config
     .getList("app.sipi.text-mime-types")
+    .iterator
+    .asScala
+    .map { mType: ConfigValue =>
+      mType.unwrapped.toString
+    }
+    .toSet
+
+  val audioMimeTypes: Set[String] = config
+    .getList("app.sipi.audio-mime-types")
+    .iterator
+    .asScala
+    .map { mType: ConfigValue =>
+      mType.unwrapped.toString
+    }
+    .toSet
+
+  val videoMimeTypes: Set[String] = config
+    .getList("app.sipi.video-mime-types")
     .iterator
     .asScala
     .map { mType: ConfigValue =>

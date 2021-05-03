@@ -41,6 +41,10 @@ docs-clean: ## cleans the project directory
 build: ## build all targets (excluding docs)
 	@bazel build //...
 
+.PHOBY: check-for-outdated-deps
+check-for-outdated-deps: ## check for outdated maven dependencies
+	@bazel run @maven//:outdated
+
 #################################
 # Docker targets
 #################################
@@ -69,19 +73,11 @@ docker-build-knora-sipi-image: # build and publish knora-sipi docker image local
 docker-publish-knora-sipi-image: # publish knora-sipi image to Dockerhub
 	@bazel run //docker/knora-sipi:push
 
-.PHONY: docker-build-knora-salsah1-image
-docker-build-knora-salsah1-image: # build and publish knora-salsah1 docker image locally
-	@bazel run //docker/knora-salsah1:image
-
-.PHONY: docker-publish-knora-salsah1-image
-docker-publish-knora-salsah1-image: # publish knora-salsah1 image to Dockerhub
-	@bazel run //docker/knora-salsah1:push
-
 .PHONY: docker-build
-docker-build: docker-build-knora-api-image docker-build-knora-jena-fuseki-image docker-build-knora-sipi-image docker-build-knora-salsah1-image ## build and publish all Docker images locally
+docker-build: docker-build-knora-api-image docker-build-knora-jena-fuseki-image docker-build-knora-sipi-image ## build and publish all Docker images locally
 
 .PHONY: docker-publish
-docker-publish: docker-publish-knora-api-image docker-publish-knora-jena-fuseki-image docker-publish-knora-sipi-image docker-publish-knora-salsah1-image ## publish all Docker images to Dockerhub
+docker-publish: docker-publish-knora-api-image docker-publish-knora-jena-fuseki-image docker-publish-knora-sipi-image ## publish all Docker images to Dockerhub
 
 #################################
 ## Docker-Compose targets
@@ -114,11 +110,14 @@ endif
 #################################
 
 .PHONY: stack-up
-stack-up: docker-build env-file ## starts the knora-stack: fuseki, sipi, redis, api, salsah1.
+stack-up: docker-build env-file ## starts the knora-stack: fuseki, sipi, redis, api.
 	docker-compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 	docker-compose -f docker-compose.yml up -d
 	$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
+
+.PHONY: stack-up-with-metadata
+stack-up-with-metadata: stack-up metadata ## starts stack and adds metadata
 
 .PHONY: stack-up-fast
 stack-up-fast: docker-build-knora-api-image env-file ## starts the knora-stack by skipping rebuilding most of the images (only api image is rebuilt).
@@ -126,11 +125,11 @@ stack-up-fast: docker-build-knora-api-image env-file ## starts the knora-stack b
 
 .PHONY: stack-up-ci
 stack-up-ci: KNORA_DB_REPOSITORY_NAME := knora-test-unit
-stack-up-ci: docker-build env-file print-env-file ## starts the knora-stack using 'knora-test-unit' repository: fuseki, sipi, redis, api, salsah1.
+stack-up-ci: docker-build env-file print-env-file ## starts the knora-stack using 'knora-test-unit' repository: fuseki, sipi, redis, api.
 	docker-compose -f docker-compose.yml up -d
 
 .PHONY: stack-restart
-stack-restart: stack-up ## re-starts the knora-stack: fuseki, sipi, redis, api, salsah1.
+stack-restart: stack-up ## re-starts the knora-stack: fuseki, sipi, redis, api.
 	@docker-compose -f docker-compose.yml restart
 
 .PHONY: stack-restart-api
@@ -170,10 +169,6 @@ stack-logs-api: ## prints out and follows the logs of the 'api' container runnin
 stack-logs-api-no-follow: ## prints out the logs of the 'api' container running in knora-stack.
 	docker-compose -f docker-compose.yml logs api
 
-.PHONY: stack-logs-salsah1
-stack-logs-salsah1: ## prints out and follows the logs of the 'salsah1' container running in knora-stack.
-	docker-compose -f docker-compose.yml logs -f salsah1
-
 .PHONY: stack-health
 stack-health:
 	curl -f 0.0.0.0:3333/health
@@ -196,18 +191,13 @@ stack-config: env-file
 
 ## stack without api
 .PHONY: stack-without-api
-stack-without-api: stack-up ## starts the knora-stack without knora-api: fuseki, sipi, redis, salsah1.
+stack-without-api: stack-up ## starts the knora-stack without knora-api: fuseki, sipi, redis.
 	@docker-compose -f docker-compose.yml stop api
 
 .PHONY: stack-without-api-and-sipi
-stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api and sipi: fuseki, redis, salsah1.
+stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api and sipi: fuseki, redis.
 	@docker-compose -f docker-compose.yml stop api
 	@docker-compose -f docker-compose.yml stop sipi
-
-.PHONY: stack-without-api-and-salsah1
-stack-without-api-and-salsah1: stack-up ## starts the knora-stack without knora-api and salsah1: fuseki, redis, sipi.
-	@docker-compose -f docker-compose.yml stop api
-	@docker-compose -f docker-compose.yml stop salsah1
 
 .PHONY: stack-db-only
 stack-db-only: docker-build-knora-jena-fuseki-image env-file ## starts only fuseki.
@@ -217,6 +207,10 @@ stack-db-only: docker-build-knora-jena-fuseki-image env-file ## starts only fuse
 #################################
 ## Test Targets
 #################################
+
+.PHONY: test-docker
+test-docker: docker-build ## runs Docker image tests
+	bazel test //docker/...
 
 .PHONY: test-webapi
 test-webapi: docker-build ## runs all dsp-api tests.
@@ -248,10 +242,6 @@ client-test-data: docker-build ## runs the dsp-api e2e tests and generates clien
 .PHONY: test-it
 test-it: docker-build ## runs the dsp-api integration tests.
 	bazel test //webapi/src/test/scala/org/knora/webapi/it/...
-
-.PHONY: test-salsah1
-test-salsah1: docker-build ## runs salsah1 headless browser tests
-	bazel test //salsah1/...
 
 .PHONY: test-repository-upgrade
 test-repository-upgrade: init-db-test-minimal ## runs DB upgrade integration test
@@ -298,6 +288,40 @@ init-db-test-unit: stack-down-delete-volumes stack-db-only ## initializes the kn
 init-db-test-unit-minimal: stack-down-delete-volumes stack-db-only ## initializes the knora-test-unit repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit-minimal
+
+db_staging_dump.trig:
+	@echo $@
+	@curl -X GET -H "Accept: application/trig" -u "admin:${DB_STAGING_PASSWORD}" "https://db.staging.dasch.swiss/dsp-repo" > "db_staging_dump.trig"
+
+.PHONY: init-db-test-from-staging
+init-db-test-from-staging: db_staging_dump.trig init-db-test-empty ## init local database with data from staging
+	@echo $@
+	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_staging_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
+
+.PHONY: metadata
+metadata: metadata-standard metadata-minimal metadata-maximal ## add three example metadata sets
+
+.PHONY: metadata-standard
+metadata-standard: ## add pseudo-realistic metadata set to anything project
+	@echo $@
+	@mkdir -p .tmp
+	@curl https://raw.githubusercontent.com/dasch-swiss/dsp-ontologies/main/example/example-metadata.ttl -o .tmp/metadata.ttl -s
+	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001" -s -o /dev/null
+
+.PHONY: metadata-minimal
+metadata-minimal: ## add minimal metadata set to images project
+	@echo $@
+	@mkdir -p .tmp
+	@curl https://raw.githubusercontent.com/dasch-swiss/dsp-ontologies/main/example/example-metadata-minimal.ttl -o .tmp/metadata.ttl -s
+	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF" -s -o /dev/null
+
+.PHONY: metadata-maximal
+metadata-maximal: ## add maximal metadata set to dokubib project
+	@echo $@
+	@mkdir -p .tmp
+	@curl https://raw.githubusercontent.com/dasch-swiss/dsp-ontologies/main/example/example-metadata-maximal.ttl -o .tmp/metadata.ttl -s
+	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0804" -s -o /dev/null
 
 #################################
 ## Other

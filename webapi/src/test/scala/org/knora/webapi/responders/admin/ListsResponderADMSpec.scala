@@ -26,6 +26,7 @@ import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, UpdateNotPerformedException}
+import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
@@ -51,6 +52,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
   // The default timeout for receiving reply messages from actors.
   implicit private val timeout = 5.seconds
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
@@ -179,7 +181,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             name = Some("neuelistename"),
             labels = Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))),
             comments = Seq.empty[StringLiteralV2]
-          ),
+          ).escape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -206,8 +208,46 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         newListIri.set(listInfo.id)
       }
 
+      "create a list with special characters in its labels" in {
+        val labelWithSpecialCharacter = "Neue \\\"Liste\\\""
+        val commentWithSpecialCharacter = "Neue \\\"Kommentar\\\""
+        val nameWithSpecialCharacter = "a new \\\"name\\\""
+        responderManager ! ListCreateRequestADM(
+          createRootNode = CreateNodeApiRequestADM(
+            projectIri = IMAGES_PROJECT_IRI,
+            name = Some(nameWithSpecialCharacter),
+            labels = Seq(StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))),
+            comments = Seq(StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))),
+          ).escape,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID
+        )
+
+        val received: ListGetResponseADM = expectMsgType[ListGetResponseADM](timeout)
+
+        val listInfo = received.list.listinfo
+        listInfo.projectIri should be(IMAGES_PROJECT_IRI)
+
+        listInfo.name should be(Some(stringFormatter.fromSparqlEncodedString(nameWithSpecialCharacter)))
+
+        val labels: Seq[StringLiteralV2] = listInfo.labels.stringLiterals
+        labels.size should be(1)
+        val givenLabel = labels.head
+        givenLabel.value shouldEqual stringFormatter.fromSparqlEncodedString(labelWithSpecialCharacter)
+        givenLabel.language shouldEqual Some("de")
+
+        val comments = received.list.listinfo.comments.stringLiterals
+        val givenComment = comments.head
+        givenComment.language shouldEqual Some("de")
+        givenComment.value shouldEqual stringFormatter.fromSparqlEncodedString(commentWithSpecialCharacter)
+
+        val children = received.list.children
+        children.size should be(0)
+      }
+
       "update basic list information" in {
-        responderManager ! NodeInfoChangeRequestADM(
+        val changeNodeInfoRequest = NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = ChangeNodeInfoApiRequestADM(
             listIri = newListIri.get,
@@ -216,18 +256,19 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             labels = Some(
               Seq(
                 StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                StringLiteralV2(value = "Changed list", language = Some("en"))
+                StringLiteralV2(value = "Changed List", language = Some("en"))
               )),
             comments = Some(
               Seq(
                 StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                StringLiteralV2(value = "New comment", language = Some("en"))
+                StringLiteralV2(value = "New Comment", language = Some("en"))
               ))
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
+        responderManager ! changeNodeInfoRequest
 
         val received: RootNodeInfoGetResponseADM = expectMsgType[RootNodeInfoGetResponseADM](timeout)
 
@@ -239,7 +280,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         labels.sorted should be(
           Seq(
             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-            StringLiteralV2(value = "Changed list", language = Some("en"))
+            StringLiteralV2(value = "Changed List", language = Some("en"))
           ).sorted)
 
         val comments = listInfo.comments.stringLiterals
@@ -247,7 +288,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         comments.sorted should be(
           Seq(
             StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-            StringLiteralV2(value = "New comment", language = Some("en"))
+            StringLiteralV2(value = "New Comment", language = Some("en"))
           ).sorted)
       }
 
@@ -311,12 +352,13 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         firstChildIri.set(childNodeInfo.id)
       }
 
-      "add second child to list - to the root node" in {
+      "add second child to list in first position - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = CreateNodeApiRequestADM(
             parentNodeIri = Some(newListIri.get),
             projectIri = IMAGES_PROJECT_IRI,
             name = Some("second"),
+            position = Some(0),
             labels = Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
             comments = Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
           ),
@@ -347,7 +389,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         // check position
         val position = childNodeInfo.position
-        position should be(1)
+        position should be(0)
 
         // check has root node
         val rootNode = childNodeInfo.hasRootNode
@@ -400,6 +442,25 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         thirdChildIri.set(childNodeInfo.id)
       }
+
+      "not create a node if given new position is out of range" in {
+        val givenPosition = 20
+        responderManager ! ListChildNodeCreateRequestADM(
+          createChildNodeRequest = CreateNodeApiRequestADM(
+            parentNodeIri = Some(newListIri.get),
+            projectIri = IMAGES_PROJECT_IRI,
+            name = Some("fourth"),
+            position = Some(givenPosition),
+            labels = Seq(StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))),
+            comments = Seq(StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en")))
+          ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID
+        )
+        expectMsg(
+          Failure(BadRequestException(s"Invalid position given ${givenPosition}, maximum allowed position is = 2.")))
+      }
     }
 
     "used to reposition nodes" should {
@@ -446,21 +507,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         expectMsg(Failure(BadRequestException(s"Invalid position given, maximum allowed position is = 3.")))
-      }
-
-      "not reposition a node to another parent node if new position less than -1" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
-        responderManager ! NodePositionChangeRequestADM(
-          nodeIri = nodeIri,
-          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
-            position = -2,
-            parentIri = "http://rdfh.ch/lists/0001/notUsedList"
-          ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
-          requestingUser = SharedTestDataADM.anythingAdminUser,
-          apiRequestID = UUID.randomUUID
-        )
-        expectMsg(Failure(BadRequestException(s"Invalid position given, minimum allowed is -1.")))
       }
 
       "reposition node List014 from position 3 to 1 (shift to right)" in {
@@ -713,6 +759,46 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 3)
         isNodeUpdated should be(true)
       }
+
+      "reposition node in a position equal to length of new parents children" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList03"
+        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        responderManager ! NodePositionChangeRequestADM(
+          nodeIri = nodeIri,
+          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
+            position = 5,
+            parentIri = parentIri
+          ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser,
+          apiRequestID = UUID.randomUUID
+        )
+        val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
+        val parentNode = received.node
+        parentNode.getNodeId should be(parentIri)
+        val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 5)
+        isNodeUpdated should be(true)
+      }
+
+      "reposition List014 in position 0 of its sibling which does not have a child" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+        val parentIri = "http://rdfh.ch/lists/0001/notUsedList015"
+        responderManager ! NodePositionChangeRequestADM(
+          nodeIri = nodeIri,
+          changeNodePositionRequest = ChangeNodePositionApiRequestADM(
+            position = 0,
+            parentIri = parentIri
+          ),
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser,
+          apiRequestID = UUID.randomUUID
+        )
+        val received: NodePositionChangeResponseADM = expectMsgType[NodePositionChangeResponseADM](timeout)
+        val parentNode = received.node
+        parentNode.getNodeId should be(parentIri)
+        val isNodeUpdated = parentNode.getChildren.exists(child => child.id == nodeIri && child.position == 0)
+        isNodeUpdated should be(true)
+      }
     }
 
     "used to delete list items" should {
@@ -756,7 +842,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "delete a middle child node that is not in use" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
+        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = nodeIri,
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -766,19 +852,18 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val received: ChildNodeDeleteResponseADM = expectMsgType[ChildNodeDeleteResponseADM](timeout)
         val parentNode = received.node
         val remainingChildren = parentNode.getChildren
-        remainingChildren.size should be(2)
-        //last child should be shifted to left
-        remainingChildren.last.position should be(1)
+        remainingChildren.size should be(4)
+        //Tailing children should be shifted to left
+        remainingChildren.last.position should be(3)
 
-        // first node should still have its child
-        val firstChild = remainingChildren.head
-        firstChild.id should be("http://rdfh.ch/lists/0001/notUsedList01")
-        firstChild.position should be(0)
-        firstChild.children.size should be(5)
+        // node List015 should still have its child
+        val list015 = remainingChildren.filter(node => node.id == "http://rdfh.ch/lists/0001/notUsedList015").head
+        list015.position should be(2)
+        list015.children.size should be(1)
       }
 
       "delete a child node that is not in use" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = nodeIri,
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -790,7 +875,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val remainingChildren = parentNode.getChildren
         remainingChildren.size should be(1)
         val firstChild = remainingChildren.head
-        firstChild.id should be("http://rdfh.ch/lists/0001/notUsedList03")
+        firstChild.id should be("http://rdfh.ch/lists/0001/notUsedList01")
         firstChild.position should be(0)
       }
 
@@ -807,6 +892,5 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         received.deleted should be(true)
       }
     }
-
   }
 }

@@ -1,20 +1,20 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Projects Endpoint
@@ -100,6 +100,24 @@ Additionally, each project can have an optional custom IRI (of [Knora IRI](../ap
         "selfjoin": false
     }   
 ```
+#### Default set of permissions for a new project:
+When a new project is created, following default permissions are added to its admins and members:
+- ProjectAdmin group receives an administrative permission to do all project level operations and to create resources 
+within the new project. This administrative permission is retrievable through its IRI:
+`http://rdfh.ch/permissions/[projectShortcode]/defaultApForAdmin`
+
+ProjectAdmin group also gets a default object access permission to change rights, delete, modify, view, 
+and restricted view of any entity that belongs to the project. This default object access permission is retrievable 
+through its IRI: 
+`http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForAdmin`
+
+- ProjectMember group receives an administrative permission to create resources within the new project. This 
+administrative permission is retrievable through its IRI:
+`http://rdfh.ch/permissions/[projectShortcode]/defaultApForMember`
+
+ProjectMember group also gets a default object access permission to modify, view, and restricted view of any entity that 
+belongs to the project. This default object access permission is retrievable through its IRI: 
+`http://rdfh.ch/permissions/[projectShortcode]/defaultDoapForMember`
 
 ### Update project information:
 

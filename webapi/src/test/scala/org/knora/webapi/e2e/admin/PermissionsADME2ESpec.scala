@@ -263,6 +263,45 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         )
       }
 
+      "create a new administrative permission for a new project" in {
+        val projectIri = "http://rdfh.ch/projects/3333"
+        val projectPayload =
+          s"""
+             |{
+             |	"projectIri": "$projectIri",
+             |    "shortname": "newprojectWithIri",
+             |    "shortcode": "3333",
+             |    "longname": "new project with a custom IRI",
+             |    "description": [{"value": "a project created with a custom IRI", "language": "en"}],
+             |    "keywords": ["projectIRI"],
+             |    "logo": "/fu/bar/baz.jpg",
+             |    "status": true,
+             |    "selfjoin": false
+             |
+             |}
+             |""".stripMargin
+
+        val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, projectPayload)) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+
+        val permissionPayload =
+          s"""{
+              |    "forGroup":"http://www.knora.org/ontology/knora-admin#KnownUser",
+              |    "forProject":"$projectIri",
+              |	   "hasPermissions":[{"additionalInformation":null,"name":"ProjectResourceCreateAllPermission","permissionCode":null}]
+              |}""".stripMargin
+
+        val permissionRequest = Post(baseApiUrl + s"/admin/permissions/ap",
+                                     HttpEntity(ContentTypes.`application/json`, permissionPayload)) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+
+        val permissionResponse: HttpResponse = singleAwaitingRequest(permissionRequest)
+        assert(permissionResponse.status === StatusCodes.OK)
+
+      }
+
       "create a default object access permission" in {
         val createDefaultObjectAccessPermissionRequest: String =
           s"""{
@@ -636,6 +675,49 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "update-defaultObjectAccess-permission-forProperty-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+    }
+
+    "delete request" should {
+      "erase a defaultObjectAccess permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/DOAP-with-customIri"
+        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+        val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
+        deletedStatus.convertTo[Boolean] should be(true)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "delete-defaultObjectAccess-permission-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+      "erase an administrative permission" in {
+        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
+        val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+        val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
+        deletedStatus.convertTo[Boolean] should be(true)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "delete-administrative-permission-response",
               fileExtension = "json"
             ),
             text = responseToString(response)

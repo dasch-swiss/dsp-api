@@ -64,6 +64,7 @@ object SharedOntologyTestDataADM {
   val INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost: IRI = INCUNABULA_ONTOLOGY_IRI_LocalHost + "#" + "book"
   val INCUNABULA_PAGE_RESOURCE_CLASS: IRI = INCUNABULA_ONTOLOGY_IRI + "#" + "page"
   val INCUNABULA_PAGE_RESOURCE_CLASS_LocalHost: IRI = INCUNABULA_ONTOLOGY_IRI_LocalHost + "#" + "page"
+  val INCUNABULA_PartOf_Property: IRI = INCUNABULA_ONTOLOGY_IRI + "#" + "partOfValue"
   val INCUNABULA_PartOf_Property_LocalHost: IRI = INCUNABULA_ONTOLOGY_IRI_LocalHost + "#" + "partOfValue"
 
   // dokubib
@@ -72,9 +73,9 @@ object SharedOntologyTestDataADM {
   val DOKUBIB_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0804/dokubib"
 
   // webern
-  val WEBERN_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/08AE/webern"
-  val WEBERN_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/08AE/webern/v2"
-  val WEBERN_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/08AE/webern"
+  val WEBERN_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0806/webern"
+  val WEBERN_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/0806/webern/v2"
+  val WEBERN_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0806/webern"
 
   //foo ontology
   val FOO_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/00FF/foo/v2"

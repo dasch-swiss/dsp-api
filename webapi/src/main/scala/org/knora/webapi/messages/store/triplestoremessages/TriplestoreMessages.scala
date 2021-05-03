@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -354,6 +354,11 @@ case class CheckTriplestoreRequest() extends TriplestoreRequest
   * @param msg               further description.
   */
 case class CheckTriplestoreResponse(triplestoreStatus: TriplestoreStatus, msg: String)
+
+/**
+  * Simulates a triplestore timeout. Used only in testing.
+  */
+case class SimulateTimeoutRequest() extends TriplestoreRequest
 
 /**
   * Requests that the repository is updated to be compatible with the running version of Knora.

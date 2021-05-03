@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -913,6 +913,60 @@ object ChangeClassLabelsOrCommentsRequestV2 extends KnoraJsonLDRequestReaderV2[C
   }
 }
 
+case class ChangeGuiOrderRequestV2(classInfoContent: ClassInfoContentV2,
+                                   lastModificationDate: Instant,
+                                   apiRequestID: UUID,
+                                   featureFactoryConfig: FeatureFactoryConfig,
+                                   requestingUser: UserADM)
+    extends OntologiesResponderRequestV2
+
+object ChangeGuiOrderRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeGuiOrderRequestV2] {
+  override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                          apiRequestID: UUID,
+                          requestingUser: UserADM,
+                          responderManager: ActorRef,
+                          storeManager: ActorRef,
+                          featureFactoryConfig: FeatureFactoryConfig,
+                          settings: KnoraSettingsImpl,
+                          log: LoggingAdapter)(implicit timeout: Timeout,
+                                               executionContext: ExecutionContext): Future[ChangeGuiOrderRequestV2] = {
+    Future {
+      fromJsonLDSync(
+        jsonLDDocument = jsonLDDocument,
+        apiRequestID = apiRequestID,
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser
+      )
+    }
+  }
+
+  private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
+                             apiRequestID: UUID,
+                             featureFactoryConfig: FeatureFactoryConfig,
+                             requestingUser: UserADM): ChangeGuiOrderRequestV2 = {
+    // Get the class definition and the ontology's last modification date from the JSON-LD.
+
+    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+    val classInfoContent = classUpdateInfo.classInfoContent
+    val lastModificationDate = classUpdateInfo.lastModificationDate
+
+    // The request must provide cardinalities.
+
+    if (classInfoContent.directCardinalities.isEmpty) {
+      throw BadRequestException("No cardinalities specified")
+    }
+
+    ChangeGuiOrderRequestV2(
+      classInfoContent = classInfoContent,
+      lastModificationDate = lastModificationDate,
+      apiRequestID = apiRequestID,
+      featureFactoryConfig = featureFactoryConfig,
+      requestingUser = requestingUser
+    )
+  }
+}
+
 /**
   * Requests a change in the metadata of an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
   *
@@ -993,6 +1047,21 @@ object ChangeOntologyMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Change
     )
   }
 }
+
+/**
+  * Deletes the comment from an ontology. A successful response will be a [[ReadOntologyMetadataV2]].
+  *
+  * @param ontologyIri          the external ontology IRI.
+  * @param lastModificationDate the ontology's last modification date, returned in a previous operation.
+  * @param apiRequestID         the ID of the API request.
+  * @param requestingUser       the user making the request.
+  */
+case class DeleteOntologyCommentRequestV2(ontologyIri: SmartIri,
+                                          lastModificationDate: Instant,
+                                          apiRequestID: UUID,
+                                          featureFactoryConfig: FeatureFactoryConfig,
+                                          requestingUser: UserADM)
+    extends OntologiesResponderRequestV2
 
 /**
   * Requests all available information about a list of ontology entities (classes and/or properties). A successful response will be an
@@ -3325,16 +3394,17 @@ case class OntologyMetadataV2(ontologyIri: SmartIri,
   }
 
   /**
-    * Undoes the SPARQL-escaping of the `rdfs:label` of this ontology. This method is meant to be used in tests after an update, when the
+    * Undoes the SPARQL-escaping of the `rdfs:label` and `rdfs:comment` of this ontology. This method is meant to be used in tests after an update, when the
     * input (which has been escaped for use in SPARQL) needs to be compared with the updated data
     * read back from the triplestore (which is not escaped).
     *
-    * @return a copy of this [[OntologyMetadataV2]] with the `rdfs:label` unescaped.
+    * @return a copy of this [[OntologyMetadataV2]] with the `rdfs:label` and `rdfs:comment` unescaped.
     */
   def unescape: OntologyMetadataV2 = {
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    copy(label = label.map(stringFormatter.fromSparqlEncodedString))
+    copy(label = label.map(stringFormatter.fromSparqlEncodedString),
+         comment = comment.map(stringFormatter.fromSparqlEncodedString))
   }
 
   def toJsonLD(targetSchema: ApiV2Schema): Map[String, JsonLDValue] = {

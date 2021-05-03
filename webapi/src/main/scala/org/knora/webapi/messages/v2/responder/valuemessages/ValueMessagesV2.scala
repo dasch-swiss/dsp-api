@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -1328,6 +1328,17 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
 
         case OntologyConstants.KnoraApiV2Complex.TextFileValue =>
           TextFileValueContentV2.fromJsonLDObject(
+            jsonLDObject = jsonLDObject,
+            requestingUser = requestingUser,
+            responderManager = responderManager,
+            storeManager = storeManager,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            log = log
+          )
+
+        case OntologyConstants.KnoraApiV2Complex.AudioFileValue =>
+          AudioFileValueContentV2.fromJsonLDObject(
             jsonLDObject = jsonLDObject,
             requestingUser = requestingUser,
             responderManager = responderManager,
@@ -3253,7 +3264,7 @@ object StillImageFileValueContentV2 extends ValueContentReaderV2[StillImageFileV
   */
 case class DocumentFileValueContentV2(ontologySchema: OntologySchema,
                                       fileValue: FileValueV2,
-                                      pageCount: Int,
+                                      pageCount: Option[Int],
                                       dimX: Option[Int],
                                       dimY: Option[Int],
                                       comment: Option[String] = None)
@@ -3272,7 +3283,7 @@ case class DocumentFileValueContentV2(ontologySchema: OntologySchema,
                              projectADM: ProjectADM,
                              settings: KnoraSettingsImpl,
                              schemaOptions: Set[SchemaOption]): JsonLDValue = {
-    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}"
+    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
 
     targetSchema match {
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
@@ -3286,10 +3297,12 @@ case class DocumentFileValueContentV2(ontologySchema: OntologySchema,
           OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasDimY -> JsonLDInt(definedDimY)
         }
 
+        val maybePageCountStatement: Option[(IRI, JsonLDInt)] = pageCount.map { definedPageCount =>
+          OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasPageCount -> JsonLDInt(definedPageCount)
+        }
+
         JsonLDObject(
-          toJsonLDObjectMapInComplexSchema(fileUrl) ++ Map(
-            OntologyConstants.KnoraApiV2Complex.DocumentFileValueHasPageCount -> JsonLDInt(pageCount)
-          ) ++ maybeDimXStatement ++ maybeDimYStatement
+          toJsonLDObjectMapInComplexSchema(fileUrl) ++ maybeDimXStatement ++ maybeDimYStatement ++ maybePageCountStatement
         )
     }
   }
@@ -3350,8 +3363,7 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
       DocumentFileValueContentV2(
         ontologySchema = ApiV2Complex,
         fileValue = fileValueWithSipiMetadata.fileValue,
-        pageCount = fileValueWithSipiMetadata.sipiFileMetadata.pageCount
-          .getOrElse(throw SipiException("Sipi did not return a page count")),
+        pageCount = fileValueWithSipiMetadata.sipiFileMetadata.pageCount,
         dimX = fileValueWithSipiMetadata.sipiFileMetadata.width,
         dimY = fileValueWithSipiMetadata.sipiFileMetadata.height,
         comment = getComment(jsonLDObject)
@@ -3383,7 +3395,7 @@ case class TextFileValueContentV2(ontologySchema: OntologySchema,
                              projectADM: ProjectADM,
                              settings: KnoraSettingsImpl,
                              schemaOptions: Set[SchemaOption]): JsonLDValue = {
-    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}"
+    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
 
     targetSchema match {
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
@@ -3450,6 +3462,105 @@ object TextFileValueContentV2 extends ValueContentReaderV2[TextFileValueContentV
       TextFileValueContentV2(
         ontologySchema = ApiV2Complex,
         fileValue = fileValueWithSipiMetadata.fileValue,
+        comment = getComment(jsonLDObject)
+      )
+  }
+}
+
+/**
+  * Represents audio file metadata.
+  *
+  * @param fileValue the basic metadata about the file value.
+  * @param duration the duration of the audio file in seconds.
+  * @param comment a comment on this [[AudioFileValueContentV2]], if any.
+  */
+case class AudioFileValueContentV2(ontologySchema: OntologySchema,
+                                   fileValue: FileValueV2,
+                                   duration: Option[BigDecimal] = None,
+                                   comment: Option[String] = None)
+    extends FileValueContentV2 {
+  override def valueType: SmartIri = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    OntologyConstants.KnoraBase.AudioFileValue.toSmartIri.toOntologySchema(ontologySchema)
+  }
+
+  override def valueHasString: String = fileValue.internalFilename
+
+  override def toOntologySchema(targetSchema: OntologySchema): AudioFileValueContentV2 =
+    copy(ontologySchema = targetSchema)
+
+  override def toJsonLDValue(targetSchema: ApiV2Schema,
+                             projectADM: ProjectADM,
+                             settings: KnoraSettingsImpl,
+                             schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
+
+    targetSchema match {
+      case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
+
+      case ApiV2Complex =>
+        JsonLDObject(toJsonLDObjectMapInComplexSchema(fileUrl))
+    }
+  }
+
+  override def unescape: ValueContentV2 = {
+    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+  }
+
+  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean = {
+    that match {
+      case thatAudioFile: AudioFileValueContentV2 =>
+        fileValue == thatAudioFile.fileValue
+
+      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
+    }
+  }
+
+  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+    currentVersion match {
+      case thatAudioFile: AudioFileValueContentV2 =>
+        fileValue == thatAudioFile.fileValue &&
+          comment == thatAudioFile.comment
+
+      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+    }
+  }
+}
+
+/**
+  * Constructs [[AudioFileValueContentV2]] objects based on JSON-LD input.
+  */
+object AudioFileValueContentV2 extends ValueContentReaderV2[AudioFileValueContentV2] {
+  override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                requestingUser: UserADM,
+                                responderManager: ActorRef,
+                                storeManager: ActorRef,
+                                featureFactoryConfig: FeatureFactoryConfig,
+                                settings: KnoraSettingsImpl,
+                                log: LoggingAdapter)(
+      implicit timeout: Timeout,
+      executionContext: ExecutionContext): Future[AudioFileValueContentV2] = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    for {
+      fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
+        jsonLDObject = jsonLDObject,
+        requestingUser = requestingUser,
+        responderManager = responderManager,
+        storeManager = storeManager,
+        settings = settings,
+        log = log
+      )
+
+      _ = if (!settings.audioMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
+        throw BadRequestException(
+          s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for audio files")
+      }
+    } yield
+      AudioFileValueContentV2(
+        ontologySchema = ApiV2Complex,
+        fileValue = fileValueWithSipiMetadata.fileValue,
+        duration = fileValueWithSipiMetadata.sipiFileMetadata.duration,
         comment = getComment(jsonLDObject)
       )
   }

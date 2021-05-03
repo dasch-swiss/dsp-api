@@ -1,27 +1,25 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
-# Deploying Knora
+# Deploying DSP-API
 
 - [Publishing](publishing.md)
-- [Getting Started with Knora](getting-started.md)
+- [Getting Started with DSP-API](getting-started.md)
 - [Configuration](configuration.md)
-- [Updating Repositories When Upgrading Knora](updates.md)
-
-@@@
+- [Updating Repositories When Upgrading DSP-API](updates.md)

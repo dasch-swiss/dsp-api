@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -20,6 +20,7 @@
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
 import org.knora.webapi.ApiV2Schema
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInspectionResult
 
@@ -31,10 +32,12 @@ import org.knora.webapi.messages.util.search.gravsearch.types.GravsearchTypeInsp
   * @param constructClause      the CONSTRUCT clause from the input query.
   * @param typeInspectionResult the result of type inspection of the input query.
   * @param querySchema          the ontology schema used in the input query.
+  * @param featureFactoryConfig the feature factory configuration.
   */
 class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(constructClause: ConstructClause,
                                                                  typeInspectionResult: GravsearchTypeInspectionResult,
-                                                                 querySchema: ApiV2Schema)
+                                                                 querySchema: ApiV2Schema,
+                                                                 featureFactoryConfig: FeatureFactoryConfig)
     extends AbstractPrequeryGenerator(constructClause = constructClause,
                                       typeInspectionResult = typeInspectionResult,
                                       querySchema = querySchema)
@@ -87,7 +90,11 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(constructClause
   }
 
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-    removeEntitiesInferredFromProperty(patterns)
+    GravsearchQueryOptimisationFactory
+      .getGravsearchQueryOptimisationFeature(typeInspectionResult = typeInspectionResult,
+                                             querySchema = querySchema,
+                                             featureFactoryConfig = featureFactoryConfig)
+      .optimiseQueryPatterns(patterns)
   }
 
   override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =

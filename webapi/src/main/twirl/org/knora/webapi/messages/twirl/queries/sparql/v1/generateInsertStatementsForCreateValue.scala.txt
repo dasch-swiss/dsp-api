@@ -221,6 +221,80 @@
                 }
             }
 
+            case audioFileValue: AudioFileValueV1 => {
+                <@newValueIri> knora-base:internalFilename """@audioFileValue.internalFilename""" ;
+                               knora-base:internalMimeType """@audioFileValue.internalMimeType""" .
+
+                @audioFileValue.originalFilename match {
+                    case Some(definedOriginalFilename) => {
+                        <@newValueIri> knora-base:originalFilename """@definedOriginalFilename""" .
+                    }
+
+                    case None => {}
+                }
+
+                @audioFileValue.originalMimeType match {
+                    case Some(definedOriginalMimeType) => {
+                        <@newValueIri> knora-base:originalMimeType """@definedOriginalMimeType""" .
+                    }
+
+                    case None => {}
+                }
+
+                @audioFileValue.duration match {
+                    case Some(definedDuration) => {
+                        <@newValueIri> knora-base:duration """@definedDuration""" .
+                    }
+
+                    case None => {}
+                }
+            }
+
+            case documentFileValue: DocumentFileValueV1 => {
+                <@newValueIri> knora-base:internalFilename """@documentFileValue.internalFilename""" ;
+                               knora-base:internalMimeType """@documentFileValue.internalMimeType""" .
+
+                @documentFileValue.dimX match {
+                    case Some(definedDimX) => {
+                        <@newValueIri> knora-base:dimX @definedDimX .
+                    }
+
+                    case None => {}
+                }
+
+                @documentFileValue.dimY match {
+                    case Some(definedDimY) => {
+                        <@newValueIri> knora-base:dimY @definedDimY .
+                    }
+
+                    case None => {}
+                }
+
+                @documentFileValue.pageCount match {
+                    case Some(definedPageCount) => {
+                        <@newValueIri> knora-base:pageCount @definedPageCount .
+                    }
+
+                    case None => {}
+                }
+
+                @documentFileValue.originalFilename match {
+                    case Some(definedOriginalFilename) => {
+                        <@newValueIri> knora-base:originalFilename """@definedOriginalFilename""" .
+                    }
+
+                    case None => {}
+                }
+
+                @documentFileValue.originalMimeType match {
+                    case Some(definedOriginalMimeType) => {
+                        <@newValueIri> knora-base:originalMimeType """@definedOriginalMimeType""" .
+                    }
+
+                    case None => {}
+                }
+            }
+
             case listValue: HierarchicalListValueV1 => {
 
                 <@newValueIri> knora-base:valueHasListNode <@listValue.hierarchicalListIri> .

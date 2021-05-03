@@ -4,7 +4,7 @@ import java.net.URLEncoder
 import java.nio.file.Paths
 
 import akka.http.scaladsl.model.headers.{BasicHttpCredentials, RawHeader}
-import akka.http.scaladsl.model.{HttpEntity, HttpResponse}
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
 import org.knora.webapi._
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.routing.RouteUtilV2
@@ -97,6 +97,16 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
 
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status.isFailure())
+    }
+
+    "return HTTP 404 if nonexistent metadata is requested" in {
+      val turtleType = RdfMediaTypes.`text/turtle`.toString()
+      val header = RawHeader("Accept", turtleType)
+      val request = Get(
+        s"$baseApiUrl/v2/metadata/${URLEncoder.encode(SharedTestDataADM.INCUNABULA_PROJECT_IRI, "UTF-8")}") ~> addHeader(
+        header)
+      val response: HttpResponse = singleAwaitingRequest(request)
+      assert(response.status == StatusCodes.NotFound)
     }
 
   }

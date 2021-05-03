@@ -30,4 +30,4 @@
    - lhtt: `0806` // Living Histories of Theban Tombs
    - mls: `0807` // Musikalisches Lexikon der Schweiz
    - terlag: `0808`// Lager des Territorialdienstes 1942-1945
-   - webern: `08AE`
+   - webern: `0806`

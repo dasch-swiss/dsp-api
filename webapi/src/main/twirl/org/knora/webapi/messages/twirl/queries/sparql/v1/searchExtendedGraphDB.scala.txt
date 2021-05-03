@@ -281,6 +281,22 @@ WHERE {
 
                     }
 
+                    case "http://www.knora.org/ontology/knora-base#GeonameValue" => {
+
+                        ?valueObject@index knora-base:valueHasGeonameCode '@searchCriterion.searchValue' .
+
+                        BIND('@searchCriterion.searchValue' AS ?literal@index)
+
+                    }
+
+                    case "http://www.knora.org/ontology/knora-base#UriValue" => {
+
+                        ?valueObject@index knora-base:valueHasUri '@searchCriterion.searchValue'^^xsd:anyURI  .
+
+                        BIND('@searchCriterion.searchValue' AS ?literal@index)
+
+                    }
+
                     case other => {
                         @{throw SparqlGenerationException(s"Value type $other is not supported with comparison operator ${searchCriterion.comparisonOperator}"); ()}
                     }
@@ -627,7 +643,6 @@ WHERE {
     OPTIONAL {
         ?resource knora-base:hasStillImageFileValue ?fileValue .
         ?fileValue a knora-base:StillImageFileValue .
-        ?fileValue knora-base:isPreview true .
         ?fileValue knora-base:internalFilename ?previewPath .
 
         OPTIONAL {

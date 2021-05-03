@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -173,10 +173,10 @@ object GravsearchTypeInspectionUtil {
   private class AnnotationRemovingWhereTransformer extends WhereTransformer {
     override def transformStatementInWhere(statementPattern: StatementPattern,
                                            inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
-      if (!isAnnotationStatement(statementPattern)) {
-        Seq(statementPattern)
-      } else {
+      if (mustBeAnnotationStatement(statementPattern)) {
         Seq.empty[QueryPattern]
+      } else {
+        Seq(statementPattern)
       }
     }
 
@@ -186,6 +186,10 @@ object GravsearchTypeInspectionUtil {
 
     override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
       Seq(luceneQueryPattern)
+
+    override def enteringUnionBlock(): Unit = {}
+
+    override def leavingUnionBlock(): Unit = {}
   }
 
   /**
@@ -205,12 +209,43 @@ object GravsearchTypeInspectionUtil {
   }
 
   /**
-    * Determines whether a statement pattern represents a Gravsearch type annotation.
+    * Determines whether a statement pattern must represent a Gravsearch type annotation.
     *
     * @param statementPattern the statement pattern.
-    * @return `true` if the statement pattern represents a type annotation.
+    * @return `true` if the statement pattern must represent a type annotation.
     */
-  def isAnnotationStatement(statementPattern: StatementPattern): Boolean = {
+  def mustBeAnnotationStatement(statementPattern: StatementPattern): Boolean = {
+    // Does the statement have rdf:type knora-api:Resource (which is not necessarily a Gravsearch type annotation)?
+    def hasRdfTypeKnoraApiResource: Boolean = {
+      statementPattern.pred match {
+        case predIriRef: IriRef =>
+          if (predIriRef.iri.toString == OntologyConstants.Rdf.Type) {
+            statementPattern.obj match {
+              case objIriRef: IriRef =>
+                OntologyConstants.KnoraApi.KnoraApiV2ResourceIris.contains(objIriRef.iri.toString)
+
+              case _ => false
+            }
+          } else {
+            false
+          }
+
+        case _ => false
+      }
+    }
+
+    // If the statement can be a type annotation and doesn't have rdf:type knora-api:Resource, return true.
+    // Otherwise, return false.
+    canBeAnnotationStatement(statementPattern) && !hasRdfTypeKnoraApiResource
+  }
+
+  /**
+    * Determines whether a statement pattern can represent a Gravsearch type annotation.
+    *
+    * @param statementPattern the statement pattern.
+    * @return `true` if the statement pattern can represent a type annotation.
+    */
+  def canBeAnnotationStatement(statementPattern: StatementPattern): Boolean = {
 
     /**
       * Returns `true` if an entity is an IRI representing a type that is valid for use in a type annotation.

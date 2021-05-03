@@ -231,18 +231,31 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     case UploadRepositoryRequest(inputFile: Path) => try2Message(sender(), uploadRepository(inputFile), log)
     case InsertGraphDataContentRequest(graphContent: String, graphName: String) =>
       try2Message(sender(), insertDataGraphRequest(graphContent, graphName), log)
+    case SimulateTimeoutRequest() => try2Message(sender(), doSimulateTimeout(), log)
     case other =>
       sender ! Status.Failure(
         UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
   }
 
   /**
+    * Simulates a read timeout.
+    */
+  private def doSimulateTimeout(): Try[SparqlSelectResult] = {
+    val sparql = """SELECT ?foo WHERE {
+                   |    BIND("foo" AS ?foo)
+                   |}""".stripMargin
+
+    sparqlHttpSelect(sparql = sparql, simulateTimeout = true)
+  }
+
+  /**
     * Given a SPARQL SELECT query string, runs the query, returning the result as a [[SparqlSelectResult]].
     *
     * @param sparql the SPARQL SELECT query string.
+    * @param simulateTimeout if `true`, simulate a read timeout.
     * @return a [[SparqlSelectResult]].
     */
-  private def sparqlHttpSelect(sparql: String): Try[SparqlSelectResult] = {
+  private def sparqlHttpSelect(sparql: String, simulateTimeout: Boolean = false): Try[SparqlSelectResult] = {
     def parseJsonResponse(sparql: String, resultStr: String): Try[SparqlSelectResult] = {
       val parseTry = Try {
         resultStr.parseJson.convertTo[SparqlSelectResult]
@@ -265,7 +278,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         Try(FakeTriplestore.data(sparql))
       } else {
         // No: get the response from the real triplestore over HTTP.
-        getSparqlHttpResponse(sparql, isUpdate = false)
+        getSparqlHttpResponse(sparql, isUpdate = false, simulateTimeout = simulateTimeout)
       }
 
       // Are we preparing a fake triplestore?
@@ -833,11 +846,13 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     * @param sparql         the SPARQL request to be submitted.
     * @param isUpdate       `true` if this is an update request.
     * @param acceptMimeType the MIME type to be provided in the HTTP Accept header.
+    * @param simulateTimeout if `true`, simulate a read timeout.
     * @return the triplestore's response.
     */
   private def getSparqlHttpResponse(sparql: String,
                                     isUpdate: Boolean,
-                                    acceptMimeType: String = mimeTypeApplicationSparqlResultsJson): Try[String] = {
+                                    acceptMimeType: String = mimeTypeApplicationSparqlResultsJson,
+                                    simulateTimeout: Boolean = false): Try[String] = {
 
     val httpContext: HttpClientContext = makeHttpContext
 
@@ -869,7 +884,8 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       client = httpClient,
       request = httpPost,
       context = httpContext,
-      processResponse = returnResponseAsString
+      processResponse = returnResponseAsString,
+      simulateTimeout = simulateTimeout
     )
   }
 
@@ -990,34 +1006,46 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     * @param request         the request to be sent.
     * @param context         the request context to be used.
     * @param processResponse a function that processes the HTTP response.
+    * @param simulateTimeout if `true`, simulate a read timeout.
     * @tparam T the return type of `processResponse`.
     * @return the return value of `processResponse`.
     */
   private def doHttpRequest[T](client: CloseableHttpClient,
                                request: HttpRequest,
                                context: HttpClientContext,
-                               processResponse: CloseableHttpResponse => T): Try[T] = {
+                               processResponse: CloseableHttpResponse => T,
+                               simulateTimeout: Boolean = false): Try[T] = {
     // Make an Option wrapper for the response, so we can close it if we get one,
     // even if an error occurs.
     var maybeResponse: Option[CloseableHttpResponse] = None
 
     val triplestoreResponseTry = Try {
+      if (simulateTimeout) {
+        throw new java.net.SocketTimeoutException("Simulated read timeout")
+      }
+
       val start = System.currentTimeMillis()
       val response = client.execute(targetHost, request, context)
       maybeResponse = Some(response)
       val statusCode: Int = response.getStatusLine.getStatusCode
-      val statusCategory: Int = statusCode / 100
 
-      if (statusCategory != 2) {
-        Option(response.getEntity)
-          .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)) match {
-          case Some(responseEntityStr) =>
-            log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
-            throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
+      if (statusCode == 404) {
+        throw NotFoundException("The requested data was not found")
+      } else {
+        val statusCategory: Int = statusCode / 100
 
-          case None =>
-            log.error(s"Triplestore responded with HTTP code $statusCode")
-            throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode")
+        if (statusCategory != 2) {
+          Option(response.getEntity)
+            .map(responseEntity => EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)) match {
+            case Some(responseEntityStr) =>
+              log.error(s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
+              throw TriplestoreResponseException(
+                s"Triplestore responded with HTTP code $statusCode: $responseEntityStr")
+
+            case None =>
+              log.error(s"Triplestore responded with HTTP code $statusCode")
+              throw TriplestoreResponseException(s"Triplestore responded with HTTP code $statusCode")
+          }
         }
       }
 
@@ -1028,15 +1056,23 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
 
     maybeResponse.foreach(_.close)
 
-    // TODO: Can we throw a more user-friendly exception if the query timed out?
     // TODO: Can we make Fuseki abandon the query if it takes too long?
 
     triplestoreResponseTry.recover {
       case tre: TriplestoreResponseException => throw tre
 
+      case socketTimeoutException: java.net.SocketTimeoutException =>
+        val message =
+          "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
+        log.error(socketTimeoutException, message)
+        throw TriplestoreTimeoutException(message = message, e = socketTimeoutException, log = log)
+
+      case notFound: NotFoundException => throw notFound
+
       case e: Exception =>
-        log.error(e, s"Failed to connect to triplestore")
-        throw TriplestoreConnectionException(s"Failed to connect to triplestore", e, log)
+        val message = "Failed to connect to triplestore"
+        log.error(e, message)
+        throw TriplestoreConnectionException(message = message, e = e, log = log)
     }
   }
 

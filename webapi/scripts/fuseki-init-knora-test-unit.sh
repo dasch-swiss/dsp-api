@@ -31,5 +31,5 @@ upload-graph ../../test_data/ontologies/newton-onto.ttl http://www.knora.org/ont
 upload-graph ../../test_data/ontologies/leibniz-onto.ttl http://www.knora.org/ontology/0801/leibniz
 upload-graph ../../test_data/all_data/biblio-data.ttl http://www.knora.org/data/0801/biblio
 upload-graph ../../test_data/all_data/beol-data.ttl http://www.knora.org/data/0801/beol
-upload-graph ../../test_data/ontologies/webern-onto.ttl http://www.knora.org/ontology/08AE/webern
-upload-graph ../../test_data/all_data/webern-data.ttl http://www.knora.org/data/08AE/webern
+upload-graph ../../test_data/ontologies/webern-onto.ttl http://www.knora.org/ontology/0806/webern
+upload-graph ../../test_data/all_data/webern-data.ttl http://www.knora.org/data/0806/webern

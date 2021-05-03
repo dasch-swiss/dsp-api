@@ -392,6 +392,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       typeInspectionResult: GravsearchTypeInspectionResult <- gravsearchTypeInspectionRunner.inspectTypes(
         inputQuery.whereClause,
         requestingUser)
+
       whereClauseWithoutAnnotations: WhereClause = GravsearchTypeInspectionUtil.removeTypeAnnotations(
         inputQuery.whereClause)
 
@@ -406,10 +407,11 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       nonTriplestoreSpecificConstructToSelectTransformer: NonTriplestoreSpecificGravsearchToCountPrequeryTransformer = new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
         constructClause = inputQuery.constructClause,
         typeInspectionResult = typeInspectionResult,
-        querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
+        querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
+        featureFactoryConfig = featureFactoryConfig
       )
 
-      nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
+      nonTriplestoreSpecificPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
         inputQuery = inputQuery.copy(
           whereClause = whereClauseWithoutAnnotations,
           orderBy = Seq.empty[OrderCriterion] // count queries do not need any sorting criteria
@@ -434,7 +436,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       }
 
       triplestoreSpecificCountQuery = QueryTraverser.transformSelectToSelect(
-        inputQuery = nonTriplestoreSpecficPrequery,
+        inputQuery = nonTriplestoreSpecificPrequery,
         transformer = triplestoreSpecificQueryPatternTransformerSelect
       )
 
@@ -446,7 +448,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
       // query response should contain one result with one row with the name "count"
       _ = if (countResponse.results.bindings.length != 1) {
         throw GravsearchException(
-          s"Fulltext count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given")
+          s"Count query is expected to return exactly one row, but ${countResponse.results.bindings.size} given")
       }
 
       count: String = countResponse.results.bindings.head.rowMap("count")
@@ -492,7 +494,8 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
         constructClause = inputQuery.constructClause,
         typeInspectionResult = typeInspectionResult,
         querySchema = inputQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
-        settings = settings
+        settings = settings,
+        featureFactoryConfig = featureFactoryConfig
       )
 
       // TODO: if the ORDER BY criterion is a property whose occurrence is not 1, then the logic does not work correctly

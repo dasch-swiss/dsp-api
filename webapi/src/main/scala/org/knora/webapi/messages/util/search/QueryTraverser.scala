@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -58,6 +58,16 @@ trait WhereTransformer {
     * @return the optimised query patterns.
     */
   def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern]
+
+  /**
+    * Called before entering a UNION block.
+    */
+  def enteringUnionBlock(): Unit
+
+  /**
+    * Called before leaving a UNION block.
+    */
+  def leavingUnionBlock(): Unit
 
   /**
     * Transforms a [[StatementPattern]] in a WHERE clause into zero or more query patterns.
@@ -240,10 +250,13 @@ object QueryTraverser {
         Seq(OptionalPattern(patterns = transformedPatterns))
 
       case unionPattern: UnionPattern =>
-        val transformedBlocks: Seq[Seq[QueryPattern]] = unionPattern.blocks.map { blockPatterns =>
-          transformWherePatterns(patterns = blockPatterns,
-                                 whereTransformer = whereTransformer,
-                                 inputOrderBy = inputOrderBy)
+        val transformedBlocks: Seq[Seq[QueryPattern]] = unionPattern.blocks.map { blockPatterns: Seq[QueryPattern] =>
+          whereTransformer.enteringUnionBlock()
+          val transformedPatterns: Seq[QueryPattern] = transformWherePatterns(patterns = blockPatterns,
+                                                                              whereTransformer = whereTransformer,
+                                                                              inputOrderBy = inputOrderBy)
+          whereTransformer.leavingUnionBlock()
+          transformedPatterns
         }
 
         Seq(UnionPattern(blocks = transformedBlocks))

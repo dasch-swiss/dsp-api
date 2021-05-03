@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -55,8 +55,13 @@ case class CreateAdministrativePermissionAPIRequestADM(id: Option[IRI] = None,
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
   stringFormatter.validateProjectIri(forProject, throw BadRequestException(s"Invalid project IRI"))
-  stringFormatter.validateOptionalPermissionIri(id, throw BadRequestException(s"Invalid permission IRI"))
+  stringFormatter.validateOptionalPermissionIri(
+    id,
+    throw BadRequestException(s"Invalid permission IRI ${id.get} is given."))
   if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
+  if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(forGroup)) {
+    stringFormatter.validateGroupIri(forGroup, throw BadRequestException(s"Invalid group IRI ${forGroup}"))
+  }
 }
 
 /**
@@ -80,19 +85,27 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(id: Option[IRI] = No
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
   stringFormatter.validateProjectIri(forProject, throw BadRequestException(s"Invalid project IRI"))
-  stringFormatter.validateOptionalPermissionIri(id, throw BadRequestException(s"Invalid permission IRI"))
+  stringFormatter.validateOptionalPermissionIri(
+    id,
+    throw BadRequestException(s"Invalid permission IRI ${id.get} is given."))
+
   forGroup match {
     case Some(iri: IRI) =>
       if (forResourceClass.isDefined)
         throw BadRequestException("Not allowed to supply groupIri and resourceClassIri together.")
       else if (forProperty.isDefined)
         throw BadRequestException("Not allowed to supply groupIri and propertyIri together.")
-      else Some(iri)
+      else {
+        if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(iri)) {
+          stringFormatter.validateOptionalGroupIri(forGroup,
+                                                   throw BadRequestException(s"Invalid group IRI ${forGroup.get}"))
+        }
+      }
     case None =>
       if (forResourceClass.isEmpty && forProperty.isEmpty) {
         throw BadRequestException(
           "Either a group, a resource class, a property, or a combination of resource class and property must be given.")
-      } else None
+      }
   }
 
   forResourceClass match {
@@ -245,7 +258,7 @@ case class PermissionChangeGroupRequestADM(permissionIri: IRI,
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
   if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
-    throw BadRequestException(s"Invalid IRI is given: $permissionIri.")
+    throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
   }
 
 }
@@ -268,7 +281,7 @@ case class PermissionChangeHasPermissionsRequestADM(
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
   if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
-    throw BadRequestException(s"Invalid IRI is given: $permissionIri.")
+    throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
   }
 
 }
@@ -291,7 +304,7 @@ case class PermissionChangeResourceClassRequestADM(
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
   if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
-    throw BadRequestException(s"Invalid IRI is given: $permissionIri.")
+    throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
   }
 }
 
@@ -312,7 +325,7 @@ case class PermissionChangePropertyRequestADM(permissionIri: IRI,
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
   if (!stringFormatter.isKnoraPermissionIriStr(permissionIri)) {
-    throw BadRequestException(s"Invalid IRI is given: $permissionIri.")
+    throw BadRequestException(s"Invalid permission IRI $permissionIri is given.")
   }
 }
 
@@ -354,18 +367,11 @@ case class AdministrativePermissionForIriGetRequestADM(administrativePermissionI
                                                        requestingUser: UserADM,
                                                        apiRequestID: UUID)
     extends PermissionsResponderRequestADM {
-  // Check user's permission for the operation
-  //TODO: should get the project the permission is assigned to and check if the requesting user is the project admin
-  if (!requestingUser.isSystemAdmin
-      && !requestingUser.permissions.isProjectAdminInAnyProject()
-      && !requestingUser.isSystemUser) {
-    // not a system admin
-    throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
-  }
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validatePermissionIri(administrativePermissionIri,
-                                        throw BadRequestException(s"Invalid permission IRI"))
+  stringFormatter.validatePermissionIri(
+    administrativePermissionIri,
+    throw BadRequestException(s"Invalid permission IRI $administrativePermissionIri is given."))
 }
 
 /**
@@ -400,7 +406,15 @@ case class AdministrativePermissionForProjectGroupGetADM(projectIri: IRI, groupI
   * @param requestingUser
   */
 case class AdministrativePermissionForProjectGroupGetRequestADM(projectIri: IRI, groupIri: IRI, requestingUser: UserADM)
-    extends PermissionsResponderRequestADM
+    extends PermissionsResponderRequestADM {
+  // Check user's permission for the operation
+  if (!requestingUser.isSystemAdmin
+      && !requestingUser.permissions.isProjectAdmin(projectIri)
+      && !requestingUser.isSystemUser) {
+    // not a system admin
+    throw ForbiddenException("Administrative permission can only be queried by system and project admin.")
+  }
+}
 
 /**
   * Create a single [[AdministrativePermissionADM]].
@@ -421,7 +435,7 @@ case class AdministrativePermissionCreateRequestADM(createRequest: CreateAdminis
       && !requestingUser.permissions.isProjectAdmin(createRequest.forProject)
       && !requestingUser.isSystemUser) {
     // not a system admin
-    throw ForbiddenException("A new administrative permission can only be added by a system admin.")
+    throw ForbiddenException("A new administrative permission can only be added by system or project admin.")
   }
 }
 
@@ -434,14 +448,6 @@ case class AdministrativePermissionCreateRequestADM(createRequest: CreateAdminis
   */
 case class ObjectAccessPermissionsForResourceGetADM(resourceIri: IRI, requestingUser: UserADM)
     extends PermissionsResponderRequestADM {
-  // Check user's permission for the operation
-  //TODO: should get the project the resource belongs to and check if the requestingUser is the project admin
-  if (!requestingUser.isSystemAdmin
-      && !requestingUser.permissions.isProjectAdminInAnyProject()
-      && !requestingUser.isSystemUser) {
-    // not a system admin
-    throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
-  }
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
@@ -458,16 +464,6 @@ case class ObjectAccessPermissionsForResourceGetADM(resourceIri: IRI, requesting
   */
 case class ObjectAccessPermissionsForValueGetADM(valueIri: IRI, requestingUser: UserADM)
     extends PermissionsResponderRequestADM {
-
-  // Check user's permission for the operation
-  //TODO: should get the project the value belongs to and check if the requestingUser is the project admin
-
-  if (!requestingUser.isSystemAdmin
-      && !requestingUser.permissions.isProjectAdminInAnyProject()
-      && !requestingUser.isSystemUser) {
-    // not a system admin
-    throw ForbiddenException("Object access permissions can only be queried by system and project admin.")
-  }
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
@@ -573,17 +569,11 @@ case class DefaultObjectAccessPermissionForIriGetRequestADM(defaultObjectAccessP
                                                             requestingUser: UserADM,
                                                             apiRequestID: UUID)
     extends PermissionsResponderRequestADM {
-  // Check user's permission for the operation
-  if (!requestingUser.isSystemAdmin
-      && !requestingUser.permissions.isProjectAdminInAnyProject()
-      && !requestingUser.isSystemUser) {
-    // not a system admin
-    throw ForbiddenException("Default object access permissions can only be queried by system and project admin.")
-  }
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validatePermissionIri(defaultObjectAccessPermissionIri,
-                                        throw BadRequestException(s"Invalid permission IRI"))
+  stringFormatter.validatePermissionIri(
+    defaultObjectAccessPermissionIri,
+    throw BadRequestException(s"Invalid permission IRI $defaultObjectAccessPermissionIri is given."))
 }
 
 /**
@@ -697,6 +687,23 @@ case class PermissionByIriGetRequestADM(permissionIri: IRI, requestingUser: User
   stringFormatter.validatePermissionIri(permissionIri,
                                         throw BadRequestException(s"Invalid permission IRI $permissionIri is given."))
 }
+
+/**
+  * A message that requests deletion of a permission identified through its IRI.
+  * A successful response will be [[PermissionDeleteResponseADM]] with deleted=true.
+  *
+  * @param permissionIri               the iri of the permission object.
+  * @param requestingUser              the user initiating the request.
+  * @param apiRequestID                the API request ID.
+  */
+case class PermissionDeleteRequestADM(permissionIri: IRI, requestingUser: UserADM, apiRequestID: UUID)
+    extends PermissionsResponderRequestADM {
+
+  implicit protected val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+  stringFormatter.validatePermissionIri(permissionIri,
+                                        throw BadRequestException(s"Invalid permission IRI $permissionIri is given."))
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
 
@@ -791,6 +798,19 @@ case class DefaultObjectAccessPermissionCreateResponseADM(
   * @param permissionLiteral a permission literal string.
   */
 case class DefaultObjectAccessPermissionsStringResponseADM(permissionLiteral: String)
+
+/**
+  * Responds to deletion of a permission by returning a success message.
+  *
+  * @param permissionIri the IRI of the permission that is deleted.
+  * @param deleted       status of delete operation.
+  */
+case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean)
+    extends KnoraResponseADM
+    with PermissionsADMJsonProtocol {
+
+  def toJsValue = permissionDeleteResponseADMFormat.write(this)
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -1202,27 +1222,35 @@ trait PermissionsADMJsonProtocol
 
   implicit val permissionADMFormat: JsonFormat[PermissionADM] =
     jsonFormat(PermissionADM.apply, "name", "additionalInformation", "permissionCode")
+
   implicit val permissionInfoADMFormat: JsonFormat[PermissionInfoADM] = lazyFormat(
     jsonFormat(PermissionInfoADM, "iri", "permissionType"))
+
   implicit val administrativePermissionADMFormat: JsonFormat[AdministrativePermissionADM] = lazyFormat(
     jsonFormat(AdministrativePermissionADM, "iri", "forProject", "forGroup", "hasPermissions"))
+
   implicit val objectAccessPermissionADMFormat: JsonFormat[ObjectAccessPermissionADM] =
     jsonFormat(ObjectAccessPermissionADM, "forResource", "forValue", "hasPermissions")
+
   implicit val defaultObjectAccessPermissionADMFormat: JsonFormat[DefaultObjectAccessPermissionADM] = lazyFormat(
     jsonFormat6(DefaultObjectAccessPermissionADM))
+
   implicit val permissionsDataADMFormat: JsonFormat[PermissionsDataADM] = jsonFormat2(PermissionsDataADM)
 
   implicit val permissionsForProjectGetResponseADMFormat: RootJsonFormat[PermissionsForProjectGetResponseADM] =
     jsonFormat(PermissionsForProjectGetResponseADM, "permissions")
+
   implicit val administrativePermissionsForProjectGetResponseADMFormat
     : RootJsonFormat[AdministrativePermissionsForProjectGetResponseADM] =
     jsonFormat(AdministrativePermissionsForProjectGetResponseADM, "administrative_permissions")
+
   implicit val defaultObjectAccessPermissionsForProjectGetResponseADMFormat
     : RootJsonFormat[DefaultObjectAccessPermissionsForProjectGetResponseADM] =
     jsonFormat(DefaultObjectAccessPermissionsForProjectGetResponseADM, "default_object_access_permissions")
 
   implicit val administrativePermissionGetResponseADMFormat: RootJsonFormat[AdministrativePermissionGetResponseADM] =
     jsonFormat(AdministrativePermissionGetResponseADM, "administrative_permission")
+
   implicit val defaultObjectAccessPermissionGetResponseADMFormat
     : RootJsonFormat[DefaultObjectAccessPermissionGetResponseADM] =
     jsonFormat(DefaultObjectAccessPermissionGetResponseADM, "default_object_access_permission")
@@ -1231,6 +1259,7 @@ trait PermissionsADMJsonProtocol
     : RootJsonFormat[CreateAdministrativePermissionAPIRequestADM] = rootFormat(
     lazyFormat(
       jsonFormat(CreateAdministrativePermissionAPIRequestADM, "id", "forProject", "forGroup", "hasPermissions")))
+
   implicit val createDefaultObjectAccessPermissionAPIRequestADMFormat
     : RootJsonFormat[CreateDefaultObjectAccessPermissionAPIRequestADM] = rootFormat(
     lazyFormat(
@@ -1241,21 +1270,30 @@ trait PermissionsADMJsonProtocol
                  "forResourceClass",
                  "forProperty",
                  "hasPermissions")))
+
   implicit val administrativePermissionCreateResponseADMFormat
     : RootJsonFormat[AdministrativePermissionCreateResponseADM] = rootFormat(
     lazyFormat(jsonFormat(AdministrativePermissionCreateResponseADM, "administrative_permission")))
+
   implicit val defaultObjectAccessPermissionCreateResponseADMFormat
     : RootJsonFormat[DefaultObjectAccessPermissionCreateResponseADM] =
     jsonFormat(DefaultObjectAccessPermissionCreateResponseADM, "default_object_access_permission")
 
   implicit val changePermissionGroupApiRequestADMFormat: RootJsonFormat[ChangePermissionGroupApiRequestADM] =
     jsonFormat(ChangePermissionGroupApiRequestADM, "forGroup")
+
   implicit val changePermissionHasPermissionsApiRequestADMFormat
     : RootJsonFormat[ChangePermissionHasPermissionsApiRequestADM] =
     jsonFormat(ChangePermissionHasPermissionsApiRequestADM, "hasPermissions")
+
   implicit val changePermissionResourceClassApiRequestADMFormat
     : RootJsonFormat[ChangePermissionResourceClassApiRequestADM] =
     jsonFormat(ChangePermissionResourceClassApiRequestADM, "forResourceClass")
+
   implicit val changePermissionPropertyApiRequestADMFormat: RootJsonFormat[ChangePermissionPropertyApiRequestADM] =
     jsonFormat(ChangePermissionPropertyApiRequestADM, "forProperty")
+
+  implicit val permissionDeleteResponseADMFormat: RootJsonFormat[PermissionDeleteResponseADM] =
+    jsonFormat(PermissionDeleteResponseADM, "permissionIri", "deleted")
+
 }

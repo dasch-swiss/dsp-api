@@ -32,3 +32,10 @@ container_push(
 #  cmd = "docker load -i $(location //docker/knora-sipi:image) >$@",
 #  outs = ["build-output.txt"],
 #)
+
+# for documentation of yaml, please see https://github.com/GoogleContainerTools/container-structure-test
+container_test(
+    name = "sipi_image_test",
+    configs = ["sipi_image_test_config.yaml"],
+    image = ":image",
+)

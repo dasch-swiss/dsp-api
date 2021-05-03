@@ -1,20 +1,20 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Permissions Endpoint
@@ -79,6 +79,10 @@ As a response, the created administrative permission and its IRI are returned as
     }
 }
 ```
+Note that during the creation of a new project, a default set of administrative permissions are added to its ProjectAdmin and 
+ProjectMember groups (See [Default set of permissions for a new project](./projects.md#default-set-of-permissions-for-a-new-project)). 
+Therefore, it is not possible to create new administrative permissions for the ProjectAdmin and ProjectMember groups of 
+a project. However, the default permissions set for these groups can be modified (See [update permission](./permissions.md#updating-a-permissions-scope)).
 
 - `POST: /admin/permissions/doap` : create a new default object access permission. 
 A single instance of `knora-admin:DefaultObjectAccessPermission` must
@@ -133,6 +137,10 @@ The response contains the newly created permission and its IRI, as:
     }
 }
 ```
+Note that during the creation of a new project, a set of default object access permissions are created for its 
+ProjectAdmin and ProjectMember groups (See [Default set of permissions for a new project](./projects.md#default-set-of-permissions-for-a-new-project)). 
+Therefore, it is not possible to create new default object access permissions for the ProjectAdmin and ProjectMember 
+groups of a project. However, the default permissions set for these groups can be modified; see below for more information.
 
 ### Updating a Permission's Group:
 - `PUT: /admin/permissions/<permissionIri>/group` to change the group for which an administrative or a default object 
@@ -184,3 +192,8 @@ updating a default object acceess permission. The IRI of the new property must b
 Note that if the default object access permission was originally defined for a group, with this operation, the permission 
 will be defined for the given property instead of the group. That means the value of the `forGroup` will 
 be deleted.
+
+### Deleting a permission:
+- `DELETE: /admin/permissions/<permissionIri>` to delete an administrative, or a default object access permission. The 
+IRI of the permission must be given in encoded form. 
+

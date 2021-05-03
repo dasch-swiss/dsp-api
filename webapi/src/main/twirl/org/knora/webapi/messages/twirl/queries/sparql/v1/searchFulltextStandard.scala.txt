@@ -80,7 +80,9 @@ WHERE {
         }
     }
 
-    ?matchingSubject knora-base:isDeleted false .
+    FILTER NOT EXISTS {
+        ?matchingSubject knora-base:isDeleted true .
+    }
 
     # ?matchingSubject could be a resource (whose rdfs:label matched) or a value object
 
@@ -93,7 +95,10 @@ WHERE {
         ?resourceProperty rdfs:subPropertyOf* knora-base:hasValue .
 
         FILTER(?valueObjectType != knora-base:LinkValue)
-        ?containingResource knora-base:isDeleted false .
+
+        FILTER NOT EXISTS {
+            ?containingResource knora-base:isDeleted true .
+        }
 
         BIND(?matchingSubject AS ?valueObject)
 

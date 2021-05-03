@@ -1,20 +1,20 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Content Wrappers
@@ -42,7 +42,7 @@ has the resource IRI and the property IRI, but not the value IRI.
 A read wrapper can be wrapped in another read wrapper; for
 example, a `ReadResourceV2` contains `ReadValueV2` objects.
 
-In general, Knora API v2 responders deal only with the internal schema.
+In general, DSP-API v2 responders deal only with the internal schema.
 (The exception is `OntologyResponderV2`, which can return ontology information
 that exists only in an external schema.) Therefore, a content class needs
 to be able to convert itself from the internal schema to an external schema

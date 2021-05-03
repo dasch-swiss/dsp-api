@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -51,14 +51,16 @@ case class GetFileMetadataRequest(fileUrl: String, requestingUser: UserADM) exte
   * @param internalMimeType the file's internal MIME type. Always defined (https://dasch.myjetbrains.com/youtrack/issue/DSP-711).
   * @param width            the file's width in pixels, if applicable.
   * @param height           the file's height in pixels, if applicable.
-  * @param pageCount         the number of pages in the file, if applicable.
+  * @param pageCount        the number of pages in the file, if applicable.
+  * @param duration         the duration of the file in seconds, if applicable.
   */
 case class GetFileMetadataResponse(originalFilename: Option[String],
                                    originalMimeType: Option[String],
                                    internalMimeType: String,
                                    width: Option[Int],
                                    height: Option[Int],
-                                   pageCount: Option[Int])
+                                   pageCount: Option[Int],
+                                   duration: Option[BigDecimal])
 
 /**
   * Asks Sipi to move a file from temporary to permanent storage.

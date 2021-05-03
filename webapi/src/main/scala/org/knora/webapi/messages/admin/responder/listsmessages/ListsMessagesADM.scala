@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -77,8 +77,9 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
 
 /**
   * Represents an API request payload that asks the Knora API server to create a new node.
-  * If the IRI of the parent node is given, the new node is attached to the parent node as a sublist node. If other
-  * child nodes exist, the newly created list node will be appended to the end of the list of children.
+  * If the IRI of the parent node is given, the new node is attached to the parent node as a sublist node.
+  * If a specific position is given, insert the child node there. Otherwise, the newly created list node will be appended
+  * to the end of the list of children.
   * If no parent node IRI is given in the payload, a new list is created with this node as its root node.
   * At least one label needs to be supplied.
   *
@@ -86,13 +87,16 @@ case class CreateListApiRequestADM(id: Option[IRI] = None,
   * @param parentNodeIri the optional IRI of the parent node.
   * @param projectIri    the IRI of the project.
   * @param name          the optional name of the list node.
+  * @param position      the optional position of the node.
   * @param labels        labels of the list node.
   * @param comments      comments of the list node.
+  *
   */
 case class CreateNodeApiRequestADM(id: Option[IRI] = None,
                                    parentNodeIri: Option[IRI] = None,
                                    projectIri: IRI,
                                    name: Option[String] = None,
+                                   position: Option[Int] = None,
                                    labels: Seq[StringLiteralV2],
                                    comments: Seq[StringLiteralV2])
     extends ListADMJsonProtocol {
@@ -116,7 +120,35 @@ case class CreateNodeApiRequestADM(id: Option[IRI] = None,
     throw BadRequestException(LABEL_MISSING_ERROR)
   }
 
+  if (position.exists(_ < -1)) {
+    throw BadRequestException(INVALID_POSITION)
+  }
+
   def toJsValue: JsValue = createListNodeApiRequestADMFormat.write(this)
+
+  /**
+    * Escapes special characters within strings
+    *
+    */
+  def escape: CreateNodeApiRequestADM = {
+    val escapedLabels: Seq[StringLiteralV2] = labels.map { label =>
+      val escapedLabel =
+        stringFormatter.toSparqlEncodedString(label.value, throw BadRequestException(s"Invalid label: ${label.value}"))
+      StringLiteralV2(value = escapedLabel, language = label.language)
+    }
+    val escapedComments = comments.map { comment =>
+      val escapedComment =
+        stringFormatter.toSparqlEncodedString(comment.value,
+                                              throw BadRequestException(s"Invalid comment: ${comment.value}"))
+      StringLiteralV2(value = escapedComment, language = comment.language)
+    }
+    val escapedName: Option[String] = name match {
+      case None => None
+      case Some(value: String) =>
+        Some(stringFormatter.toSparqlEncodedString(value, throw BadRequestException(s"Invalid string: $value")))
+    }
+    copy(labels = escapedLabels, comments = escapedComments, name = escapedName)
+  }
 }
 
 /**
@@ -162,13 +194,13 @@ case class ChangeNodeInfoApiRequestADM(listIri: IRI,
   if (hasRootNode.isDefined && !stringFormatter.isKnoraListIriStr(hasRootNode.get)) {
     throw BadRequestException(s"Invalid root node IRI is given.")
   }
-  // If payload contains label or comments they should not be empty
+  // If payload contains labels, they should not be empty
   if (labels.exists(_.isEmpty)) {
-    throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
+    throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_ERROR)
   }
 
-  if (comments.exists(_.isEmpty)) {
-    throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR)
+  if (position.exists(_ < -1)) {
+    throw BadRequestException(INVALID_POSITION)
   }
 
   def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
@@ -220,6 +252,9 @@ case class ChangeNodePositionApiRequestADM(position: Int, parentIri: IRI) extend
     throw BadRequestException(s"Invalid IRI is given: $parentIri.")
   }
 
+  if (position < -1) {
+    throw BadRequestException(INVALID_POSITION)
+  }
   def toJsValue: JsValue = changeNodePositionApiRequestADMFormat.write(this)
 }
 
@@ -534,7 +569,7 @@ case class ListADM(listinfo: ListRootNodeInfoADM, children: Seq[ListChildNodeADM
   def sorted: ListADM = {
     ListADM(
       listinfo = listinfo,
-      children = children.sortBy(_.position) map (_.sorted)
+      children = children.sortBy(_.position).map(_.sorted)
     )
   }
 }
@@ -550,7 +585,7 @@ case class NodeADM(nodeinfo: ListChildNodeInfoADM, children: Seq[ListChildNodeAD
   def sorted: NodeADM = {
     NodeADM(
       nodeinfo = nodeinfo,
-      children = children.sortBy(_.position) map (_.sorted)
+      children = children.sortBy(_.position).map(_.sorted)
     )
   }
 }
@@ -624,6 +659,25 @@ case class ListRootNodeInfoADM(id: IRI,
   }
 
   /**
+    * unescapes the special characters in labels, comments, and name for comparison in tests.
+    *
+    */
+  def unescape: ListRootNodeInfoADM = {
+    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
+
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
+
+    val unescapedName: Option[String] = name match {
+      case None        => None
+      case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
+    }
+
+    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
+  }
+
+  /**
     * Gets the label in the user's preferred language.
     *
     * @param userLang     the user's preferred language.
@@ -669,6 +723,25 @@ case class ListChildNodeInfoADM(id: IRI,
       position = position,
       hasRootNode = hasRootNode
     )
+  }
+
+  /**
+    * unescapes the special characters in labels, comments, and name for comparison in tests.
+    *
+    */
+  def unescape: ListChildNodeInfoADM = {
+    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
+
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
+
+    val unescapedName: Option[String] = name match {
+      case None        => None
+      case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
+    }
+
+    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
   }
 
   /**
@@ -775,8 +848,26 @@ case class ListRootNodeADM(id: IRI,
       name = name,
       labels = labels.sortByStringValue,
       comments = comments.sortByStringValue,
-      children = children.sortBy(_.position) map (_.sorted)
+      children = children.sortBy(_.position).map(_.sorted)
     )
+  }
+
+  /**
+    * unescapes the special characters in labels, comments, and name for comparison in tests.
+    *
+    */
+  def unescape: ListRootNodeADM = {
+    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
+
+    val unescapedName: Option[String] = name match {
+      case None        => None
+      case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
+    }
+
+    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
   }
 
   /**
@@ -835,8 +926,26 @@ case class ListChildNodeADM(id: IRI,
       comments = comments.sortByStringValue,
       position = position,
       hasRootNode = hasRootNode,
-      children = children.sortBy(_.position) map (_.sorted)
+      children = children.sortBy(_.position).map(_.sorted)
     )
+  }
+
+  /**
+    * unescapes the special characters in labels, comments, and name for comparison in tests.
+    *
+    */
+  def unescape: ListChildNodeADM = {
+    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
+
+    val unescapedName: Option[String] = name match {
+      case None        => None
+      case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
+    }
+
+    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
   }
 
   /**
@@ -1283,7 +1392,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
   implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] =
     jsonFormat(CreateListApiRequestADM, "id", "projectIri", "name", "labels", "comments")
   implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateNodeApiRequestADM] =
-    jsonFormat(CreateNodeApiRequestADM, "id", "parentNodeIri", "projectIri", "name", "labels", "comments")
+    jsonFormat(CreateNodeApiRequestADM, "id", "parentNodeIri", "projectIri", "name", "position", "labels", "comments")
   implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeNodeInfoApiRequestADM] = jsonFormat(
     ChangeNodeInfoApiRequestADM,
     "listIri",

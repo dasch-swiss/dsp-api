@@ -52,17 +52,21 @@ WHERE {
 
             BIND(IRI("@resourceIri") as ?resource)
 
-            ?resource knora-base:isDeleted false .
-
             ?linkProp rdfs:subPropertyOf* knora-base:hasLinkTo .
 
             FILTER NOT EXISTS {
                 ?linkProp rdfs:subPropertyOf* knora-base:isPartOf .
             }
 
-            ?referringResource ?linkProp ?resource ;
-                knora-base:isDeleted false .
+            FILTER NOT EXISTS {
+                ?resource knora-base:isDeleted true .
+            }
 
+            ?referringResource ?linkProp ?resource .
+
+            FILTER NOT EXISTS {
+                ?referringResource knora-base:isDeleted true .
+            }
         } LIMIT 50
     }
 
@@ -84,8 +88,11 @@ WHERE {
         ?prop rdfs:subPropertyOf* knora-base:hasLinkToValue .
         ?referringResource ?prop ?obj .
 
-        ?obj knora-base:isDeleted false ;
-            ?objPred ?objObj .
+        ?obj ?objPred ?objObj .
+
+        FILTER NOT EXISTS {
+            ?obj knora-base:isDeleted true .
+        }
 
         BIND(true as ?isLinkValue)
     }

@@ -61,7 +61,7 @@ scala_test(
 
 scala_test(
     name = "PermissionsHandlingV1E2ESpec",
-    size = "medium",  # 900s
+    size = "medium",
     srcs = [
         "PermissionsHandlingV1E2ESpec.scala",
     ],
@@ -79,7 +79,7 @@ scala_test(
 
 scala_test(
     name = "ProjectsV1E2ESpec",
-    size = "small",  # 60s
+    size = "small",
     srcs = [
         "ProjectsV1E2ESpec.scala",
         "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",
@@ -113,6 +113,7 @@ scala_test(
         "//webapi:test_library",
         "@maven//:org_scala_lang_modules_scala_xml_2_12",
         "@maven//:org_xmlunit_xmlunit_core",
+        "@maven//:com_jsuereth_scala_arm_2_12",
     ] + BASE_TEST_DEPENDENCIES_WITH_JSON,
 )
 

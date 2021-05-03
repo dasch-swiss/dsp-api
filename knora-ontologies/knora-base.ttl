@@ -33,7 +33,7 @@
 
     :attachedToProject knora-admin:SystemProject ;
 
-    :ontologyVersion "knora-base v9" .
+    :ontologyVersion "knora-base v11" .
 
 
 
@@ -1674,7 +1674,7 @@
                 rdfs:subClassOf :FileValue ,
                                 [ rdf:type owl:Restriction ;
                                   owl:onProperty :duration ;
-                                  owl:cardinality "1"^^xsd:nonNegativeInteger
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
                                 ] ;
 
                 rdfs:comment "Represents an audio file"@en .
@@ -1792,7 +1792,7 @@
                    rdfs:subClassOf :FileValue ,
                    [ rdf:type owl:Restriction ;
                      owl:onProperty :pageCount ;
-                     owl:cardinality "1"^^xsd:nonNegativeInteger
+                     owl:maxCardinality "1"^^xsd:nonNegativeInteger
                    ] ,
                    [ rdf:type owl:Restriction ;
                      owl:onProperty :dimX ;
@@ -2163,7 +2163,7 @@
                                       ] ,
                                       [ rdf:type owl:Restriction ;
                                         owl:onProperty :duration ;
-                                        owl:cardinality "1"^^xsd:nonNegativeInteger
+                                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
                                       ] ;
 
                       rdfs:comment "Represents a moving image file"@en .

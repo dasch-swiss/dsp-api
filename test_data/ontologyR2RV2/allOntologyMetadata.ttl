@@ -37,8 +37,8 @@
   knora-api:attachedToProject <http://rdfh.ch/projects/0804>;
   rdfs:label "The dokubib ontology" .
 
-<http://0.0.0.0:3333/ontology/08AE/webern/v2> a owl:Ontology;
-  knora-api:attachedToProject <http://rdfh.ch/projects/08AE>;
+<http://0.0.0.0:3333/ontology/0806/webern/v2> a owl:Ontology;
+  knora-api:attachedToProject <http://rdfh.ch/projects/0806>;
   rdfs:label "The Anton Webern project ontology" .
 
 <http://api.knora.org/ontology/knora-admin/v2> a owl:Ontology;

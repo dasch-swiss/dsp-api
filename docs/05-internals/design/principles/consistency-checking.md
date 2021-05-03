@@ -1,20 +1,20 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Consistency Checking
@@ -27,7 +27,7 @@ as far as is practical, in a triplestore-independent way (see
 useful to enforce consistency constraints in the triplestore itself, for
 two reasons:
 
-1.  To prevent inconsistencies resulting from bugs in the Knora API
+1.  To prevent inconsistencies resulting from bugs in the DSP-API
     server.
 2.  To prevent users from inserting inconsistent data directly into the
     triplestore, bypassing Knora.
@@ -43,7 +43,7 @@ for details):
     `knora-base:hasValue` or a `knora-base:hasLinkTo` (i.e. every
     property of a resource that points to a `knora-base:Value` or to
     another resource) is required have this constraint, because the
-    Knora API server relies on it to know what type of object to expect
+    DSP-API server relies on it to know what type of object to expect
     for the property. Use of `knora-base:subjectClassConstraint` is
     recommended but not required.
 2.  A class definition should use OWL cardinalities (see [OWL 2 Quick Reference Guide](https://www.w3.org/TR/owl2-quick-reference/))

@@ -97,6 +97,21 @@ class DeleteListItemsRouteADME2ESpec
         response.status should be(StatusCodes.Forbidden)
       }
 
+      "delete first of two child node and remaining child" in {
+        val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList0141", "utf-8")
+        val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
+          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+        val node = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
+        node.getNodeId should be("http://rdfh.ch/lists/0001/notUsedList014")
+        val children = node.getChildren
+        children.size should be(1)
+        // last child must be shifted one place to left
+        val leftChild = children.head
+        leftChild.id should be("http://rdfh.ch/lists/0001/notUsedList0142")
+        leftChild.position should be(0)
+      }
       "delete a middle node and shift its siblings" in {
         val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList02", "utf-8")
         val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
@@ -110,6 +125,7 @@ class DeleteListItemsRouteADME2ESpec
         val lastChild = children.last
         lastChild.id should be("http://rdfh.ch/lists/0001/notUsedList03")
         lastChild.position should be(1)
+        lastChild.children.size should be(1)
         // first child must have its child
         val firstChild = children.head
         firstChild.children.size should be(5)
@@ -126,26 +142,39 @@ class DeleteListItemsRouteADME2ESpec
         )
       }
 
-      "delete a list entirely with all its children" in {
-        val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList", "utf-8")
+      "delete the single child of a node" in {
+        val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList031", "utf-8")
         val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
           BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
-        val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
-        deletedStatus.convertTo[Boolean] should be(true)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "delete-list-response",
-              fileExtension = "json"
-            ),
-            text = responseToString(response)
-          )
-        )
+        val node = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
+        node.getNodeId should be("http://rdfh.ch/lists/0001/notUsedList03")
+        val children = node.getChildren
+        children.size should be(0)
       }
     }
+
+    "delete a list entirely with all its children" in {
+      val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList", "utf-8")
+      val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
+        BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
+      val response: HttpResponse = singleAwaitingRequest(request)
+      response.status should be(StatusCodes.OK)
+      val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
+      deletedStatus.convertTo[Boolean] should be(true)
+
+      clientTestDataCollector.addFile(
+        TestDataFileContent(
+          filePath = TestDataFilePath(
+            directoryPath = clientTestDataPath,
+            filename = "delete-list-response",
+            fileExtension = "json"
+          ),
+          text = responseToString(response)
+        )
+      )
+    }
+
   }
 }

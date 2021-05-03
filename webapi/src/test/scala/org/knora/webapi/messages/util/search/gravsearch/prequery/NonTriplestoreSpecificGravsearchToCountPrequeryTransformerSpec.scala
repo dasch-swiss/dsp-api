@@ -2,6 +2,7 @@ package org.knora.webapi.util.search.gravsearch.prequery
 
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.AssertionException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -13,7 +14,6 @@ import org.knora.webapi.messages.util.search.gravsearch.types.{
   GravsearchTypeInspectionUtil
 }
 import org.knora.webapi.messages.util.search.gravsearch.{GravsearchParser, GravsearchQueryChecker}
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import scala.collection.mutable.ArrayBuffer
@@ -26,7 +26,9 @@ private object CountQueryHandler {
 
   val anythingUser: UserADM = SharedTestDataADM.anythingAdminUser
 
-  def transformQuery(query: String, responderData: ResponderData, settings: KnoraSettingsImpl): SelectQuery = {
+  def transformQuery(query: String,
+                     responderData: ResponderData,
+                     featureFactoryConfig: FeatureFactoryConfig): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
 
@@ -51,7 +53,8 @@ private object CountQueryHandler {
       new NonTriplestoreSpecificGravsearchToCountPrequeryTransformer(
         constructClause = constructQuery.constructClause,
         typeInspectionResult = typeInspectionResult,
-        querySchema = constructQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema"))
+        querySchema = constructQuery.querySchema.getOrElse(throw AssertionException(s"WhereClause has no querySchema")),
+        featureFactoryConfig = featureFactoryConfig
       )
 
     val nonTriplestoreSpecficPrequery: SelectQuery = QueryTraverser.transformConstructToSelect(
@@ -70,30 +73,6 @@ private object CountQueryHandler {
 class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends CoreSpec() {
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  "The NonTriplestoreSpecificGravsearchToCountPrequeryGenerator object" should {
-
-    "transform an input query with a decimal as an optional sort criterion and a filter" in {
-
-      val transformedQuery =
-        CountQueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilter, responderData, settings)
-
-      assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
-
-    }
-
-    "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)" in {
-
-      val transformedQuery =
-        CountQueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex,
-                                         responderData,
-                                         settings)
-
-      assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)
-
-    }
-
-  }
 
   val inputQueryWithDecimalOptionalSortCriterionAndFilter: String =
     """
@@ -244,17 +223,18 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
 
   val transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex: SelectQuery =
     SelectQuery(
+      fromClause = None,
       variables = Vector(
         Count(
-          inputVariable = QueryVariable(variableName = "thing"),
+          outputVariableName = "count",
           distinct = true,
-          outputVariableName = "count"
+          inputVariable = QueryVariable(variableName = "thing")
         )),
       offset = 0,
       groupBy = Nil,
       orderBy = Nil,
       whereClause = WhereClause(
-        patterns = ArrayBuffer(
+        patterns = Vector(
           StatementPattern(
             subj = QueryVariable(variableName = "thing"),
             pred = IriRef(
@@ -286,6 +266,15 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
           OptionalPattern(
             patterns = Vector(
               StatementPattern(
+                subj = QueryVariable(variableName = "decimal"),
+                pred = IriRef(
+                  iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
+                  propertyPathOperator = None
+                ),
+                obj = QueryVariable(variableName = "decimalVal"),
+                namedGraph = None
+              ),
+              StatementPattern(
                 subj = QueryVariable(variableName = "thing"),
                 pred = IriRef(
                   iri = "http://www.knora.org/ontology/0001/anything#hasDecimal".toSmartIri,
@@ -310,15 +299,6 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
                     propertyPathOperator = None
                   ))
               ),
-              StatementPattern(
-                subj = QueryVariable(variableName = "decimal"),
-                pred = IriRef(
-                  iri = "http://www.knora.org/ontology/knora-base#valueHasDecimal".toSmartIri,
-                  propertyPathOperator = None
-                ),
-                obj = QueryVariable(variableName = "decimalVal"),
-                namedGraph = None
-              ),
               FilterPattern(expression = CompareExpression(
                 leftArg = QueryVariable(variableName = "decimalVal"),
                 operator = CompareExpressionOperator.GREATER_THAN,
@@ -336,4 +316,29 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
       useDistinct = true
     )
 
+  "The NonTriplestoreSpecificGravsearchToCountPrequeryGenerator object" should {
+
+    "transform an input query with a decimal as an optional sort criterion and a filter" in {
+
+      val transformedQuery =
+        CountQueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilter,
+                                         responderData,
+                                         defaultFeatureFactoryConfig)
+
+      assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
+
+    }
+
+    "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)" in {
+
+      val transformedQuery =
+        CountQueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex,
+                                         responderData,
+                                         defaultFeatureFactoryConfig)
+
+      assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)
+
+    }
+
+  }
 }

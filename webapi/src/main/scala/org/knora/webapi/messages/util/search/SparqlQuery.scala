@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -66,6 +66,8 @@ trait SelectQueryColumn extends Entity
   */
 case class QueryVariable(variableName: String) extends SelectQueryColumn {
   override def toSparql: String = s"?$variableName"
+
+  override def getVariables: Set[QueryVariable] = Set(this)
 }
 
 /**
@@ -83,6 +85,8 @@ case class GroupConcat(inputVariable: QueryVariable, separator: Char, outputVari
   override def toSparql: String = {
     s"""(GROUP_CONCAT(DISTINCT(IF(BOUND(${inputVariable.toSparql}), STR(${inputVariable.toSparql}), "")); SEPARATOR='$separator') AS ${outputVariable.toSparql})"""
   }
+
+  override def getVariables: Set[QueryVariable] = Set(inputVariable)
 }
 
 /**
@@ -108,6 +112,7 @@ case class Count(inputVariable: QueryVariable, distinct: Boolean, outputVariable
     s"(COUNT($distinctAsStr ${inputVariable.toSparql}) AS ${outputVariable.toSparql})"
   }
 
+  override def getVariables: Set[QueryVariable] = Set(inputVariable, outputVariable)
 }
 
 /**
@@ -135,6 +140,8 @@ case class IriRef(iri: SmartIri, propertyPathOperator: Option[Char] = None) exte
   def toOntologySchema(targetSchema: OntologySchema): IriRef = {
     copy(iri = iri.toOntologySchema(targetSchema))
   }
+
+  override def getVariables: Set[QueryVariable] = Set.empty
 }
 
 /**
@@ -156,6 +163,8 @@ case class XsdLiteral(value: String, datatype: SmartIri) extends Entity {
 
     "\"" + value + "\"^^" + transformedDatatype.toSparql
   }
+
+  override def getVariables: Set[QueryVariable] = Set.empty
 }
 
 /**
@@ -198,7 +207,7 @@ case class StatementPattern(subj: Entity, pred: Entity, obj: Entity, namedGraph:
 
   private def entityToOntologySchema(entity: Entity, targetSchema: OntologySchema): Entity = {
     entity match {
-      case iriRef: IriRef => iriRef.toOntologySchema(InternalSchema)
+      case iriRef: IriRef => iriRef.toOntologySchema(targetSchema)
       case other          => other
     }
   }
@@ -314,7 +323,13 @@ object CompareExpressionOperator extends Enumeration {
 /**
   * Represents an expression that can be used in a FILTER.
   */
-sealed trait Expression extends SparqlGenerator
+sealed trait Expression extends SparqlGenerator {
+
+  /**
+    * Returns the set of query variables used in this expression.
+    */
+  def getVariables: Set[QueryVariable]
+}
 
 /**
   * Represents a comparison expression in a FILTER.
@@ -326,6 +341,8 @@ sealed trait Expression extends SparqlGenerator
 case class CompareExpression(leftArg: Expression, operator: CompareExpressionOperator.Value, rightArg: Expression)
     extends Expression {
   override def toSparql: String = s"(${leftArg.toSparql} $operator ${rightArg.toSparql})"
+
+  override def getVariables: Set[QueryVariable] = leftArg.getVariables ++ rightArg.getVariables
 }
 
 /**
@@ -336,6 +353,8 @@ case class CompareExpression(leftArg: Expression, operator: CompareExpressionOpe
   */
 case class AndExpression(leftArg: Expression, rightArg: Expression) extends Expression {
   override def toSparql: String = s"(${leftArg.toSparql} && ${rightArg.toSparql})"
+
+  override def getVariables: Set[QueryVariable] = leftArg.getVariables ++ rightArg.getVariables
 }
 
 /**
@@ -346,6 +365,8 @@ case class AndExpression(leftArg: Expression, rightArg: Expression) extends Expr
   */
 case class OrExpression(leftArg: Expression, rightArg: Expression) extends Expression {
   override def toSparql: String = s"(${leftArg.toSparql} || ${rightArg.toSparql})"
+
+  override def getVariables: Set[QueryVariable] = leftArg.getVariables ++ rightArg.getVariables
 }
 
 /**
@@ -372,6 +393,8 @@ case object MinusOperator extends ArithmeticOperator {
   */
 case class IntegerLiteral(value: Int) extends Expression {
   override def toSparql: String = value.toString
+
+  override def getVariables: Set[QueryVariable] = Set.empty
 }
 
 /**
@@ -380,6 +403,8 @@ case class IntegerLiteral(value: Int) extends Expression {
 case class ArithmeticExpression(leftArg: Expression, operator: ArithmeticOperator, rightArg: Expression)
     extends Expression {
   override def toSparql: String = s"""${leftArg.toSparql} $operator ${rightArg.toSparql}"""
+
+  override def getVariables: Set[QueryVariable] = leftArg.getVariables ++ rightArg.getVariables
 }
 
 /**
@@ -397,6 +422,8 @@ case class RegexFunction(textExpr: Expression, pattern: String, modifier: Option
     case None =>
       s"""regex(${textExpr.toSparql}, "$pattern")"""
   }
+
+  override def getVariables: Set[QueryVariable] = textExpr.getVariables
 }
 
 /**
@@ -406,6 +433,8 @@ case class RegexFunction(textExpr: Expression, pattern: String, modifier: Option
   */
 case class LangFunction(textValueVar: QueryVariable) extends Expression {
   override def toSparql: String = s"""lang(${textValueVar.toSparql})"""
+
+  override def getVariables: Set[QueryVariable] = Set(textValueVar)
 }
 
 /**
@@ -419,6 +448,8 @@ case class SubStrFunction(textLiteralVar: QueryVariable, startExpression: Expres
     extends Expression {
   override def toSparql: String =
     s"""substr(${textLiteralVar.toSparql}, ${startExpression.toSparql}, ${lengthExpression.toSparql})"""
+
+  override def getVariables: Set[QueryVariable] = Set(textLiteralVar)
 }
 
 /**
@@ -428,6 +459,8 @@ case class SubStrFunction(textLiteralVar: QueryVariable, startExpression: Expres
   */
 case class StrFunction(textLiteralVar: QueryVariable) extends Expression {
   override def toSparql: String = s"""str(${textLiteralVar.toSparql})"""
+
+  override def getVariables: Set[QueryVariable] = Set(textLiteralVar)
 }
 
 /**
@@ -482,6 +515,8 @@ case class FunctionCallExpression(functionIri: IriRef, args: Seq[Entity]) extend
     }
 
   }
+
+  override def getVariables: Set[QueryVariable] = args.toSet.flatMap((arg: Entity) => arg.getVariables)
 }
 
 /**

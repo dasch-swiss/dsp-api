@@ -142,7 +142,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
           createRequest = if (apiRequest.parentNodeIri.isEmpty) {
             // No, create a new list with given information of its root node.
             ListCreateRequestADM(
-              createRootNode = apiRequest,
+              createRootNode = apiRequest.escape,
               featureFactoryConfig = featureFactoryConfig,
               requestingUser = requestingUser,
               apiRequestID = UUID.randomUUID()
@@ -150,7 +150,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
           } else {
             // Yes, create a new child and attach it to the parent node.
             ListChildNodeCreateRequestADM(
-              createChildNodeRequest = apiRequest,
+              createChildNodeRequest = apiRequest.escape,
               featureFactoryConfig = featureFactoryConfig,
               requestingUser = requestingUser,
               apiRequestID = UUID.randomUUID()

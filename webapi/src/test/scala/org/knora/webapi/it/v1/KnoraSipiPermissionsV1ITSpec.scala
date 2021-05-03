@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -26,9 +26,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Tripl
   * End-to-End (E2E) test specification for testing Knora-Sipi integration. Sipi must be running with the config file
   * `sipi.knora-docker-it-config.lua`.
   */
-class KnoraSipiPermissionsV1ITSpec
-    extends ITKnoraLiveSpec
-    with TriplestoreJsonProtocol {
+class KnoraSipiPermissionsV1ITSpec extends ITKnoraLiveSpec with TriplestoreJsonProtocol {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),

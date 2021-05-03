@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -297,6 +297,20 @@ case class TriplestoreConnectionException(message: String, cause: Option[Throwab
 object TriplestoreConnectionException {
   def apply(message: String, e: Throwable, log: LoggingAdapter): TriplestoreConnectionException =
     TriplestoreConnectionException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
+}
+
+/**
+  * Indicates that a read timeout occurred while waiting for data from the triplestore.
+  *
+  * @param message a description of the error.
+  * @param cause   the original exception representing the cause of the error, if any.
+  */
+case class TriplestoreTimeoutException(message: String, cause: Option[Throwable] = None)
+    extends TriplestoreException(message, cause)
+
+object TriplestoreTimeoutException {
+  def apply(message: String, e: Throwable, log: LoggingAdapter): TriplestoreTimeoutException =
+    TriplestoreTimeoutException(message, Some(ExceptionUtil.logAndWrapIfNotSerializable(e, log)))
 }
 
 /**

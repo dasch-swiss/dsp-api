@@ -1,20 +1,20 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Adding Resources
@@ -100,7 +100,7 @@ set to `application/json`.
 When a resource has been successfully created, Knora sends back a JSON
 containing the new resource's IRI (`res_id`) and its properties. The
 resource IRI identifies the resource and can be used to perform future
-Knora API V1 operations.
+DSP-API V1 operations.
 
 The JSON format of the response is described in the TypeScript interface
 `createResourceResponse` in module `createResourceFormats`.
@@ -201,7 +201,7 @@ containing three files:
 #### 2. Upload Files to Sipi
 
 See [Upload Files to Sipi](../api-v2/editing-values.md#upload-files-to-sipi) in
-the Knora API v2 documentation.
+the DSP-API v2 documentation.
 
 #### 3. Generate XML Import Document
 

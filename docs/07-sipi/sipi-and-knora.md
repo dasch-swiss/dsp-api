@@ -1,20 +1,20 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Interaction Between Sipi and Knora
@@ -42,7 +42,7 @@ Knora. The implementation of this procedure is described in
 [Knora and Sipi](../05-internals/design/api-v2/sipi.md). Instructions
 for the client are given in
 [Creating File Values](../03-apis/api-v2/editing-values.md#creating-file-values)
-(for Knora API v2) and in
+(for DSP-API v2) and in
 [Adding Resources with Image Files](../03-apis/api-v1/adding-resources.md#adding-resources-with-image-files)
 (for API v1).
 
@@ -50,7 +50,7 @@ for the client are given in
 
 ### File URLs in API v2
 
-In Knora API v2, image file URLs are provided in [IIIF](https://iiif.io/) format. In the simple
+In DSP-API v2, image file URLs are provided in [IIIF](https://iiif.io/) format. In the simple
 [ontology schema](../03-apis/api-v2/introduction.md#api-schema), a file value is simply
 a IIIF URL that can be used to retrieve the file from Sipi. In the complex schema,
 it is a `StillImageFileValue` with additional properties that the client can use to construct
@@ -111,5 +111,5 @@ browser (using either `V1` or `V2` authentication route), a session cookie conta
 the user is stored in the user's client. This session cookie is then read by Sipi and used to ask Knora for
 the user's image permissions.
 
-For the session cookie to be sent to Sipi, both the Knora API and Sipi endpoints need to
+For the session cookie to be sent to Sipi, both the DSP-API and Sipi endpoints need to
 be under the same domain, e.g., `api.example.com` and `iiif.example.com`.

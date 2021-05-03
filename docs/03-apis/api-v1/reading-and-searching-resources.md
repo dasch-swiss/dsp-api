@@ -1,20 +1,20 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Reading and Searching Resources
@@ -301,6 +301,8 @@ operators:
 | Float Value      | EQ, !EQ, GT, GT_EQ, LT, LT_EQ, EXISTS                 |
 | Text Value       | MATCH_BOOLEAN, MATCH, EQ, !EQ, LIKE, !LIKE, EXISTS    |
 | Geometry Value   | EXISTS                                                |
+| Geoname Value    | EQ, EXISTS                                            |
+| URI Value        | EQ, EXISTS                                            |
 | Resource Pointer | EQ, EXISTS                                            |
 | Color Value      | EQ, EXISTS                                            |
 | List Value       | EQ, EXISTS                                            |
@@ -308,7 +310,7 @@ operators:
 
 Explanation of the comparison operators:
 
-* `EQ`: checks if a resource's value *equals* the search value. In
+* `EQ` (equal): checks if a resource's value *equals* the search value. In
   case of a text value type, it checks for identity of the strings
   compared. In case of a date value type, equality is given if the
   dates overlap in any way. Since dates are internally always
@@ -316,24 +318,24 @@ Explanation of the comparison operators:
   ends after or equals the start of the defined period and a date
   value's period starts before or equals the end of the defined
   period.
-* `!EQ`: checks if a resource's value *does not equal* the search
+* `!EQ` (not equal): checks if a resource's value *does not equal* the search
   value. In case of a text value type, it checks if the compared
   strings are different. In case of a date value type, inequality
   is given if the dates do not overlap in any way, meaning that a
   date starts after the end of the defined period or ends before
   the beginning of the defined period (dates are internally always
   treated as periods, see above).
-* `GT`: checks if a resource's value is *greater than* the search
+* `GT` (greater than): checks if a resource's value is *greater than* the search
   value. In case of a date value type, it assures that a period
   begins after the indicated period's end.
-* `GT_EQ`: checks if a resource's value *equals or is greater
+* `GT_EQ` (greater than or equal): checks if a resource's value *equals or is greater
   than* the search value. In case of a date value type, it assures
   that the periods overlap in any way (see `EQ`) **or** that the
   period starts after the indicated period's end (see `GT`).
-* `LT`: checks if a resource's value is *lower than* the search
+* `LT` (less than): checks if a resource's value is *lower than* the search
   value. In case of a date value type, it assures that a period
   ends before the indicated period's start.
-* `LT_EQ`: checks if a resource's value *equals or is lower than*
+* `LT_EQ` (less than or equal): checks if a resource's value *equals or is lower than*
   the search value. In case of a date value type, it assures that
   the periods overlap in any way (see `EQ`) **or** that the period
   ends before the indicated period's start (see `LT`).
@@ -342,12 +344,13 @@ Explanation of the comparison operators:
   value when using EXISTS: "searchval="**. Otherwise, the query
   syntax rules would be violated.
 * `MATCH`: checks if a resource's text value *matches* the search
-  value. The behaviour depends on the used triplestore's full text
-  index, see [Lucene](../../08-lucene/index.md).
+  value, see [Lucene Query Parser Syntax](../../08-lucene/lucene-query-parser-syntax.md).
 * `LIKE`: checks if the search value is contained in a resource's
-  text value.
-* `!LIKE`: checks if the search value is not contained in a
-  resource's text value.
+  text value using the SPARQL [REGEX](https://www.w3.org/TR/sparql11-query/#func-regex) function,
+  thus supporting regular expressions.
+* `!LIKE` (not like): checks if the search value is not contained in a
+  resource's text value using the SPARQL [REGEX](https://www.w3.org/TR/sparql11-query/#func-regex) function,
+  thus supporting regular expressions.
 * `MATCH_BOOLEAN`: checks if a resource's text value *matches* the
   provided list of positive (exist) and negative (do not exist)
   terms. The list takes this form: `([+-]term\s)+`.

@@ -154,7 +154,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             name = name,
             labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
             comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
-          )
+          ).unescape
       }
 
       // _ = log.debug("listsGetAdminRequest - items: {}", items)
@@ -200,7 +200,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
           rootNodeInfo = maybeRootNodeInfo match {
             case Some(info: ListRootNodeInfoADM) => info.asInstanceOf[ListRootNodeInfoADM]
-            case Some(info: ListChildNodeInfoADM) =>
+            case Some(_: ListChildNodeInfoADM) =>
               throw InconsistentRepositoryDataException(
                 "A child node info was found, although we are expecting a root node info. Please report this as a possible bug.")
             case Some(_) | None =>
@@ -393,7 +393,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                   .map(_.head.asInstanceOf[StringLiteralV2].value),
                 labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
                 comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language))
-              )
+              ).unescape
             } else {
               ListChildNodeInfoADM(
                 id = nodeIri.toString,
@@ -408,7 +408,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                 hasRootNode = hasRootNodeOption.getOrElse(
                   throw InconsistentRepositoryDataException(
                     s"Required hasRootNode property missing for list node $nodeIri."))
-              )
+              ).unescape
             }
         }
         Some(nodeInfo)
@@ -663,7 +663,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         children = children.map(_.sorted),
         position = position,
         hasRootNode = hasRootNode
-      )
+      ).unescape
     }
 
     for {
@@ -808,10 +808,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                          featureFactoryConfig: FeatureFactoryConfig): Future[IRI] = {
 
     def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
-      val position = if (children.isEmpty) {
-        0
-      } else {
+      if (createNodeRequest.position.exists(_ > children.size)) {
+        val givenPosition = createNodeRequest.position.get
+        throw BadRequestException(
+          s"Invalid position given $givenPosition, maximum allowed position is = ${children.size}.")
+      }
+
+      val position = if (createNodeRequest.position.isEmpty || createNodeRequest.position.exists(_.equals(-1))) {
         children.size
+      } else {
+        createNodeRequest.position.get
       }
       position
     }
@@ -823,7 +829,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       }
     }
 
-    def getRootNodeAndPositionOfNewChild(parentNodeIri: IRI, featureFactoryConfig: FeatureFactoryConfig) = {
+    def getRootNodeAndPositionOfNewChild(parentNodeIri: IRI,
+                                         dataNamedGraph: IRI,
+                                         featureFactoryConfig: FeatureFactoryConfig): Future[(Some[Int], Some[IRI])] = {
       for {
         /* Verify that the list node exists by retrieving the whole node including children one level deep (need for position calculation) */
         maybeParentListNode <- listNodeGetADM(
@@ -839,8 +847,27 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           case Some(_) | None               => throw BadRequestException(s"List node '$parentNodeIri' not found.")
         }
 
-        // append child to the end
+        // get position of the new child
         position = getPositionOfNewChild(children)
+
+        // Is the node supposed to be inserted in a specific position in array of children?
+        _ <- if (position != children.size) {
+          // Yes. Shift the siblings after the given position to right in order to free the position.
+          for {
+            // shift siblings that are after given position to right
+            updatedSiblings <- shiftNodes(
+              startPos = position,
+              endPos = children.size - 1,
+              nodes = children,
+              shiftToLeft = false,
+              dataNamedGraph = dataNamedGraph,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield updatedSiblings
+        } else {
+          // No. new node will be appended to the end, no shifting is necessary.
+          Future.successful(children)
+        }
 
         /* get the root node, depending on the type of the parent */
         rootNodeIri = getRootNodeIri(parentListNode)
@@ -864,19 +891,23 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       /* verify that the list node name is unique for the project */
       projectUniqueNodeName <- listNodeNameIsProjectUnique(createNodeRequest.projectIri, createNodeRequest.name)
       _ = if (!projectUniqueNodeName) {
+        val escapedName = createNodeRequest.name.get
+        val unescapedName = stringFormatter.fromSparqlEncodedString(escapedName)
         throw BadRequestException(
-          s"The node name ${createNodeRequest.name.get} is already used by a list inside the project ${createNodeRequest.projectIri}.")
-      }
-
-      // if parent node is known, find the root node of the list and the position of the new child node
-      (position, rootNodeIri) <- if (createNodeRequest.parentNodeIri.nonEmpty) {
-        getRootNodeAndPositionOfNewChild(createNodeRequest.parentNodeIri.get, featureFactoryConfig)
-      } else {
-        Future(None, None)
+          s"The node name ${unescapedName} is already used by a list inside the project ${createNodeRequest.projectIri}.")
       }
 
       // calculate the data named graph
       dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
+
+      // if parent node is known, find the root node of the list and the position of the new child node
+      (position: Option[Int], rootNodeIri: Option[IRI]) <- if (createNodeRequest.parentNodeIri.nonEmpty) {
+        getRootNodeAndPositionOfNewChild(parentNodeIri = createNodeRequest.parentNodeIri.get,
+                                         dataNamedGraph = dataNamedGraph,
+                                         featureFactoryConfig = featureFactoryConfig)
+      } else {
+        Future(None, None)
+      }
 
       // check the custom IRI; if not given, create an unused IRI
       customListIri: Option[SmartIri] = createNodeRequest.id.map(iri => iri.toSmartIri)
@@ -1499,7 +1530,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       } yield newPosition
 
     /**
-      * Changes position of the node, remove from current parent and add to the sepcified parent.
+      * Changes position of the node, remove from current parent and add to the specified parent.
       * It shifts the new siblings and old siblings.
       *
       * @param node           the node whose position should be updated.
@@ -1561,7 +1592,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         )
 
         // Is node supposed to be added to the end of new parent's children list?
-        _ <- if (givenPosition == -1) {
+        _ <- if (givenPosition == -1 || givenPosition == newSiblings.size) {
           // Yes. New siblings should not be shifted
           Future(newSiblings)
         } else {
@@ -1765,14 +1796,20 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         // shift the siblings that were positioned after the deleted node, one place to left.
-        updatedChildren <- shiftNodes(
-          startPos = positionOfDeletedNode + 1,
-          endPos = remainingChildren.last.position,
-          nodes = remainingChildren,
-          shiftToLeft = true,
-          dataNamedGraph = dataNamedGraph,
-          featureFactoryConfig = featureFactoryConfig
-        )
+        updatedChildren <- if (remainingChildren.size > 0) {
+          for {
+            shiftedChildren <- shiftNodes(
+              startPos = positionOfDeletedNode + 1,
+              endPos = remainingChildren.last.position,
+              nodes = remainingChildren,
+              shiftToLeft = true,
+              dataNamedGraph = dataNamedGraph,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield shiftedChildren
+        } else {
+          Future.successful(remainingChildren)
+        }
 
         // return updated parent node with shifted children.
         updatedParentNode = parentNode match {

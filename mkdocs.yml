@@ -1,20 +1,25 @@
-site_name: Knora Documentation
+site_name: DSP-API documentation
+
+repo_url: https://github.com/dasch-swiss/dsp-api
+repo_name: dasch-swiss/dsp-api
+edit_uri: blob/main/docs/
+copyright: "&copy; 2017 - 2021 <a href='https://dasch.swiss' target='_blank'>Data and Service Center for the Humanities (DaSCH)</a>"
 
 nav:
   - Home: index.md
   - Introduction:
       - Index: 01-introduction/index.md
-      - What is Knora?: 01-introduction/what-is-knora.md
-      - Data Formats in Knora: 01-introduction/data-formats.md
+      - What is DSP?: 01-introduction/what-is-knora.md
+      - Data Formats in DSP-API: 01-introduction/data-formats.md
       - Standoff/RDF Text Markup: 01-introduction/standoff-rdf.md
       - An Example Project: 01-introduction/example-project.md
-  - Knora Ontologies:
+  - DSP Ontologies:
       - Index: 02-knora-ontologies/index.md
       - Introduction: 02-knora-ontologies/introduction.md
       - The Knora Base Ontology: 02-knora-ontologies/knora-base.md
       - The SALSAH GUI Ontology: 02-knora-ontologies/salsah-gui.md
   - APIs:
-      - The Knora APIs:
+      - The DSP APIs:
           - Index: 03-apis/index.md
           - Feature Toggles: 03-apis/feature-toggles.md
       - API V1:
@@ -63,12 +68,12 @@ nav:
   - Publishing and Deployment:
       - Index: 04-publishing-deployment/index.md
       - Publishing: 04-publishing-deployment/publishing.md
-      - Getting Started with Knora: 04-publishing-deployment/getting-started.md
+      - Getting Started with DSP-API: 04-publishing-deployment/getting-started.md
       - Configuration: 04-publishing-deployment/configuration.md
-      - Updating Repositories when Upgrading Knora: 04-publishing-deployment/updates.md
-  - Knora Internals:
+      - Updating Repositories when Upgrading DSP-API: 04-publishing-deployment/updates.md
+  - DSP Internals:
       - Design:
-          - Knora Design Principles:
+          - DSP-API Design Principles:
               - Index: 05-internals/design/principles/index.md
               - Design Overview: 05-internals/design/principles/design-overview.md
               - Futures with Akka: 05-internals/design/principles/futures-with-akka.md
@@ -92,7 +97,7 @@ nav:
               - How to Add an API v2 Route: 05-internals/design/api-v2/how-to-add-a-route.md
               - JSON-LD Parsing and Formatting: 05-internals/design/api-v2/json-ld.md
               - Ontology Management: 05-internals/design/api-v2/ontology-management.md
-              - Knora and Sipi: 05-internals/design/api-v2/sipi.md
+              - DSP-API and Sipi: 05-internals/design/api-v2/sipi.md
               - Gravsearch Design: 05-internals/design/api-v2/gravsearch.md
               - Standoff Markup: 05-internals/design/api-v2/standoff.md
               - Archival Resource Key (ARK) Identifiers: 05-internals/design/api-v2/ark.md
@@ -104,52 +109,47 @@ nav:
           - Index: 05-internals/development/index.md
           - Overview: 05-internals/development/overview.md
           - Build and Running: 05-internals/development/building-and-running.md
-          - Setup IntelliJ for development of Knora: 05-internals/development/intellij-config.md
+          - Setup IntelliJ for development of DSP-API: 05-internals/development/intellij-config.md
           - Bazel Notes: 05-internals/development/bazel.md
           - Testing: 05-internals/development/testing.md
           - Docker Cheat Sheet: 05-internals/development/docker-cheat-sheet.md
-          - Monitoring Knora: 05-internals/development/monitoring.md
-          - Profiling Knora: 05-internals/development/profiling.md
-          - Starting the Knora-Stack inside Docker Container: 05-internals/development/docker-compose.md
+          - Monitoring DSP-API: 05-internals/development/monitoring.md
+          - Profiling DSP-API: 05-internals/development/profiling.md
+          - Starting the DSP-Stack inside Docker Container: 05-internals/development/docker-compose.md
           - Updating Repositories: 05-internals/development/updating-repositories.md
           - Generating Client Test Data: 05-internals/development/generating-client-test-data.md
           - Starting GraphDB: 05-internals/development/graphdb.md
           - Third-Party Dependencies: 05-internals/development/third-party.md
-  - Salsah:
-      - Index: 06-salsah/index.md
+  # - Salsah:
+  #     - Index: 06-salsah/index.md
   - SIPI:
       - Index: 07-sipi/index.md
-      - Setting Up Sipi for Knora: 07-sipi/setup-sipi-for-knora.md
-      - Interaction between Sipi and Knora: 07-sipi/sipi-and-knora.md
+      - Setting Up Sipi for DSP-API: 07-sipi/setup-sipi-for-knora.md
+      - Interaction between Sipi and DSP-API: 07-sipi/sipi-and-knora.md
   - Lucene:
       - Overview: 08-lucene/index.md
       - Lucene Query Parser Syntax: 08-lucene/lucene-query-parser-syntax.md
   - Frequently Asked Questions: faq/index.md
   - Release Notes:
-      - Overview: 00-release-notes/index.md
-      - Migration Notes: 00-release-notes/migration.md
-      - Next Release: 00-release-notes/next.md
-      - v1.1.0: 00-release-notes/v1.1.0.md
-      - v1.2.0: 00-release-notes/v1.2.0.md
-      - v1.3.0: 00-release-notes/v1.3.0.md
-      - v1.4.0: 00-release-notes/v1.4.0.md
-      - v1.5.0: 00-release-notes/v1.5.0.md
-      - v1.6.0: 00-release-notes/v1.6.0.md
-      - v1.7.0: 00-release-notes/v1.7.0.md
-      - v2.x.x: 00-release-notes/v2.x.x.md
-      - v3.x.x: 00-release-notes/v3.x.x.md
-      - v4.x.x: 00-release-notes/v4.x.x.md
-      - v5.x.x: 00-release-notes/v5.x.x.md
-      - v6.x.x: 00-release-notes/v6.x.x.md
+      - Changelog: 00-release-notes/index.md
+
+plugins:
+    - include-markdown
+    - search
+    - git-revision-date
 
 theme:
   name: material
-  logo: 'assets/images/dasch-icon-white.svg'
-  favicon: 'assets/images/dasch-favicon.ico'
+  logo: 'assets/icons/dasch-icon-white.svg'
+  favicon: 'assets/icons/dasch-favicon.ico'
+  icon:
+    repo: fontawesome/brands/github
   palette:
     primary: 'deep purple'
     accent: 'deep purple'
   features:
     - navigation.tabs
+    - navigation.sections
+
 extra_css:
   - 'assets/style/theme.css'

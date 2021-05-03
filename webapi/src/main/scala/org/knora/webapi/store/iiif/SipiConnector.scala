@@ -31,7 +31,7 @@ import org.apache.http.impl.client.{CloseableHttpClient, HttpClients}
 import org.apache.http.message.BasicNameValuePair
 import org.apache.http.util.EntityUtils
 import org.apache.http.{Consts, HttpHost, HttpRequest, NameValuePair}
-import org.knora.webapi.exceptions.{BadRequestException, SipiException}
+import org.knora.webapi.exceptions.{BadRequestException, NotFoundException, SipiException}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.sipimessages._
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
@@ -91,13 +91,15 @@ class SipiConnector extends Actor with ActorLogging {
     * @param width            the file's width in pixels, if applicable.
     * @param height           the file's height in pixels, if applicable.
     * @param numpages         the number of pages in the file, if applicable.
+    * @param duration         the duration of the file in seconds, if applicable.
     */
   case class SipiKnoraJsonResponse(originalFilename: Option[String],
                                    originalMimeType: Option[String],
                                    internalMimeType: String,
                                    width: Option[Int],
                                    height: Option[Int],
-                                   numpages: Option[Int]) {
+                                   numpages: Option[Int],
+                                   duration: Option[BigDecimal]) {
     if (originalFilename.contains("")) {
       throw SipiException(s"Sipi returned an empty originalFilename")
     }
@@ -108,7 +110,7 @@ class SipiConnector extends Actor with ActorLogging {
   }
 
   object SipiKnoraJsonResponseProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-    implicit val sipiKnoraJsonResponseFormat: RootJsonFormat[SipiKnoraJsonResponse] = jsonFormat6(SipiKnoraJsonResponse)
+    implicit val sipiKnoraJsonResponseFormat: RootJsonFormat[SipiKnoraJsonResponse] = jsonFormat7(SipiKnoraJsonResponse)
   }
 
   /**
@@ -133,7 +135,8 @@ class SipiConnector extends Actor with ActorLogging {
         internalMimeType = sipiResponse.internalMimeType,
         width = sipiResponse.width,
         height = sipiResponse.height,
-        pageCount = sipiResponse.numpages
+        pageCount = sipiResponse.numpages,
+        duration = sipiResponse.duration
       )
   }
 
@@ -218,13 +221,23 @@ class SipiConnector extends Actor with ActorLogging {
     } yield SipiGetTextFileResponse(responseStr)
 
     sipiResponseTry.recover {
+      case notFoundException: NotFoundException =>
+        throw NotFoundException(
+          s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${notFoundException.message}")
+
       case badRequestException: BadRequestException =>
         throw SipiException(
           s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${badRequestException.message}")
+
       case sipiException: SipiException =>
         throw SipiException(
           s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${sipiException.message}",
           sipiException.cause
+        )
+
+      case other =>
+        throw SipiException(
+          s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${other.getMessage}"
         )
     }
   }
@@ -251,45 +264,45 @@ class SipiConnector extends Actor with ActorLogging {
     */
   private def doSipiRequest(request: HttpRequest): Try[String] = {
     val httpContext: HttpClientContext = HttpClientContext.create
+    var maybeResponse: Option[CloseableHttpResponse] = None
 
     val sipiResponseTry = Try {
-      var maybeResponse: Option[CloseableHttpResponse] = None
+      maybeResponse = Some(httpClient.execute(targetHost, request, httpContext))
 
-      try {
-        maybeResponse = Some(httpClient.execute(targetHost, request, httpContext))
+      val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
+        case Some(responseEntity) => EntityUtils.toString(responseEntity)
+        case None                 => ""
+      }
 
-        val responseEntityStr: String = Option(maybeResponse.get.getEntity) match {
-          case Some(responseEntity) => EntityUtils.toString(responseEntity)
-          case None                 => ""
-        }
+      val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
+      val statusCategory: Int = statusCode / 100
 
-        val statusCode: Int = maybeResponse.get.getStatusLine.getStatusCode
-        val statusCategory: Int = statusCode / 100
+      // Was the request successful?
+      if (statusCategory == 2) {
+        // Yes.
+        responseEntityStr
+      } else {
+        // No. Throw an appropriate exception.
+        val sipiErrorMsg = SipiUtil.getSipiErrorMessage(responseEntityStr)
 
-        // Was the request successful?
-        if (statusCategory == 2) {
-          // Yes.
-          responseEntityStr
+        if (statusCode == 404) {
+          throw NotFoundException(sipiErrorMsg)
+        } else if (statusCategory == 4) {
+          throw BadRequestException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
         } else {
-          // No. Throw an appropriate exception.
-          val sipiErrorMsg = SipiUtil.getSipiErrorMessage(responseEntityStr)
-
-          if (statusCategory == 4) {
-            throw BadRequestException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
-          } else {
-            throw SipiException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
-          }
-        }
-      } finally {
-        maybeResponse match {
-          case Some(response) => response.close()
-          case None           => ()
+          throw SipiException(s"Sipi responded with HTTP status code $statusCode: $sipiErrorMsg")
         }
       }
     }
 
+    maybeResponse match {
+      case Some(response) => response.close()
+      case None           => ()
+    }
+
     sipiResponseTry.recover {
       case badRequestException: BadRequestException => throw badRequestException
+      case notFoundException: NotFoundException     => throw notFoundException
       case sipiException: SipiException             => throw sipiException
       case e: Exception                             => throw SipiException("Failed to connect to Sipi", e, log)
     }

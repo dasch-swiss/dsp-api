@@ -1,20 +1,20 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Querying, Creating, and Updating Ontologies
@@ -22,7 +22,7 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 ## Querying Ontology Information
 
 Before reading this document, you should have a basic understanding of
-Knora API v2 external ontology schemas (see [API Schema](introduction.md#api-schema)).
+DSP-API v2 external ontology schemas (see [API Schema](introduction.md#api-schema)).
 
 Each request returns a single RDF graph, which can be represented in
 [JSON-LD](https://json-ld.org/spec/latest/json-ld/),
@@ -158,7 +158,7 @@ or RDF/XML, add an HTTP `Accept` header
 (see [Response Formats](introduction.md#response-formats)).
 
 If the client dereferences a project-specific ontology IRI as a URL, the
-Knora API server running on the hostname in the IRI will serve the
+DSP-API server running on the hostname in the IRI will serve the
 ontology. For example, if the server is running on `0.0.0.0:3333`, the
 IRI `http://0.0.0.0:3333/ontology/00FF/images/simple/v2` can be
 dereferenced to request the `images` sample ontology in the simple
@@ -166,14 +166,14 @@ schema.
 
 If the client dereferences a built-in Knora ontology, such as
 `http://api.knora.org/ontology/knora-api/simple/v2`, there must be a
-Knora API server running at `api.knora.org` that can serve the ontology.
+DSP-API server running at `api.knora.org` that can serve the ontology.
 The [DaSCH](http://dasch.swiss/) intends to run such as server. For
 testing, you can configure your local `/etc/hosts` file to resolve
 `api.knora.org` as `localhost`.
 
 #### Differences Between Internal and External Ontologies
 
-The external ontologies used by Knora API v2 are different to the internal
+The external ontologies used by DSP-API v2 are different to the internal
 ontologies that are actually stored in the triplestore (see
 [API Schema](introduction.md#api-schema)). In general, the external
 ontologies use simpler data structures, but they also provide additional
@@ -1025,6 +1025,18 @@ The request body can also contain a new label and a new comment for the ontology
 A successful response will be a JSON-LD document providing only the
 ontology's metadata.
 
+### Deleting an Ontology's comment
+
+```
+HTTP DELETE to http://host/v2/ontologies/comment/ONTOLOGY_IRI?lastModificationDate=ONTOLOGY_LAST_MODIFICATION_DATE
+```
+
+The ontology IRI and the ontology's last modification date must be
+URL-encoded.
+
+A successful response will be a JSON-LD document containing the ontology's
+updated metadata.
+
 ### Deleting an Ontology
 
 An ontology can be deleted only if it is not used in data.
@@ -1054,7 +1066,7 @@ HTTP POST to http://host/v2/ontologies/classes
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "CLASS_IRI" : {
+    {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
       "rdfs:label" : {
@@ -1107,7 +1119,7 @@ HTTP POST to http://host/v2/ontologies/classes
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "CLASS_IRI" : {
+    {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
       "rdfs:label" : {
@@ -1173,7 +1185,7 @@ HTTP PUT to http://host/v2/ontologies/classes
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "CLASS_IRI" : {
+    {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
       "rdfs:label" : {
@@ -1212,7 +1224,7 @@ HTTP PUT to http://host/v2/ontologies/classes
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "CLASS_IRI" : {
+    {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
       "rdfs:comment" : {
@@ -1250,7 +1262,7 @@ HTTP POST to http://host/v2/ontologies/properties
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "PROPERTY_IRI" : {
+    {
       "@id" : "PROPERTY_IRI",
       "@type" : "owl:ObjectProperty",
       "knora-api:subjectType" : {
@@ -1339,7 +1351,7 @@ HTTP PUT to http://host/v2/ontologies/properties
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "PROPERTY_IRI" : {
+    {
       "@id" : "PROPERTY_IRI",
       "@type" : "owl:ObjectProperty",
       "rdfs:label" : {
@@ -1377,7 +1389,7 @@ HTTP PUT to http://host/v2/ontologies/properties
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "PROPERTY_IRI" : {
+    {
       "@id" : "PROPERTY_IRI",
       "@type" : "owl:ObjectProperty",
       "rdfs:comment" : {
@@ -1416,7 +1428,7 @@ HTTP POST to http://host/v2/ontologies/cardinalities
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "CLASS_IRI" : {
+    {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
       "rdfs:subClassOf" : {
@@ -1475,7 +1487,7 @@ HTTP PUT to http://host/v2/ontologies/cardinalities
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "CLASS_IRI" : {
+    {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
       "rdfs:subClassOf" : {
@@ -1508,6 +1520,54 @@ on the corresponding link value property is automatically added (see
 
 A successful response will be a JSON-LD document providing the new class
 definition (but not any of the other entities in the ontology).
+
+### Changing the GUI Order of Cardinalities
+
+To change the GUI order of one or more cardinalities in a class:
+
+```
+HTTP PUT to http://host/v2/ontologies/guiorder
+```
+
+This can be done even if the class is used in data.
+
+The request body includes the cardinalities whose GUI order should be changed,
+using the predicate `salsah-gui:guiOrder`, whose object is an integer:
+
+```jsonld
+{
+  "@id" : "ONTOLOGY_IRI",
+  "@type" : "owl:Ontology",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
+  "@graph" : [ {
+    "@id" : "CLASS_IRI",
+    "@type" : "owl:Class",
+    "rdfs:subClassOf" : {
+      "@type": "owl:Restriction",
+      "OWL_CARDINALITY_PREDICATE": "OWL_CARDINALITY_VALUE",
+      "owl:onProperty": {
+        "@id" : "PROPERTY_IRI"
+      },
+      "salsah-gui:guiOrder": "GUI_ORDER_VALUE"
+    }
+  } ],
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+    "owl" : "http://www.w3.org/2002/07/owl#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+  }
+}
+```
+
+Only the cardinalities whose GUI order is to be changed need to be included
+in the request. The `OWL_CARDINALITY_PREDICATE` and `OWL_CARDINALITY_VALUE`
+are ignored; only the `GUI_ORDER_VALUE` is changed.
 
 ### Deleting a Property
 

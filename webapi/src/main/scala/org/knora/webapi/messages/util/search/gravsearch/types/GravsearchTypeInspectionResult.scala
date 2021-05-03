@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -33,12 +33,24 @@ sealed trait GravsearchEntityTypeInfo
   * @param objectTypeIri        an IRI representing the type of the objects of the property.
   * @param objectIsResourceType `true` if the property's object type is a resource type. Property is a link.
   * @param objectIsValueType    `true` if the property's object type is a value type. Property is not a link.
+  * @param objectIsStandoffTagType    `true` if the property's object type is a standoff tag type. Property is not a link.
   */
 case class PropertyTypeInfo(objectTypeIri: SmartIri,
                             objectIsResourceType: Boolean = false,
-                            objectIsValueType: Boolean = false)
+                            objectIsValueType: Boolean = false,
+                            objectIsStandoffTagType: Boolean = false)
     extends GravsearchEntityTypeInfo {
   override def toString: String = s"knora-api:objectType ${IriRef(objectTypeIri).toSparql}"
+
+  /**
+    * Converts this [[PropertyTypeInfo]] to a [[NonPropertyTypeInfo]].
+    */
+  def toNonPropertyTypeInfo: NonPropertyTypeInfo = NonPropertyTypeInfo(
+    typeIri = objectTypeIri,
+    isResourceType = objectIsResourceType,
+    isValueType = objectIsValueType,
+    isStandoffTagType = objectIsStandoffTagType
+  )
 }
 
 /**
@@ -48,10 +60,24 @@ case class PropertyTypeInfo(objectTypeIri: SmartIri,
   * @param typeIri        an IRI representing the entity's type.
   * @param isResourceType `true` if this is a resource type.
   * @param isValueType    `true` if this is a value type.
+  * @param isStandoffTagType `true` if this is a standoff tag type.
   */
-case class NonPropertyTypeInfo(typeIri: SmartIri, isResourceType: Boolean = false, isValueType: Boolean = false)
+case class NonPropertyTypeInfo(typeIri: SmartIri,
+                               isResourceType: Boolean = false,
+                               isValueType: Boolean = false,
+                               isStandoffTagType: Boolean = false)
     extends GravsearchEntityTypeInfo {
   override def toString: String = s"rdf:type ${IriRef(typeIri).toSparql}"
+
+  /**
+    * Converts this [[NonPropertyTypeInfo]] to a [[PropertyTypeInfo]].
+    */
+  def toPropertyTypeInfo: PropertyTypeInfo = PropertyTypeInfo(
+    objectTypeIri = typeIri,
+    objectIsResourceType = isResourceType,
+    objectIsValueType = isValueType,
+    objectIsStandoffTagType = isStandoffTagType
+  )
 }
 
 /**

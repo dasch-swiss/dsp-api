@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -34,7 +34,13 @@ import scala.reflect.runtime.{universe => ru}
 object MessageUtil {
 
   // Set of case class field names to skip.
-  private val fieldsToSkip = Set("stringFormatter", "base64Decoder", "knoraIdUtil", "standoffLinkTagTargetResourceIris")
+  private val fieldsToSkip =
+    Set("stringFormatter",
+        "base64Decoder",
+        "knoraIdUtil",
+        "standoffLinkTagTargetResourceIris",
+        "knoraSettings",
+        "featureFactoryConfig")
 
   /**
     * Recursively converts a Scala object to Scala source code for constructing the object (with named parameters). This is useful
@@ -142,7 +148,7 @@ object MessageUtil {
         val members: Iterable[String] = objType.members.filter(member => !member.isMethod).flatMap { member =>
           val memberName = member.name.toString.trim
 
-          if (!(memberName.contains("$") || memberName.endsWith("Format"))) {
+          if (!(memberName.contains("$") || memberName.endsWith("Format") || fieldsToSkip.contains(memberName))) {
             val fieldMirror = try {
               instanceMirror.reflectField(member.asTerm)
             } catch {

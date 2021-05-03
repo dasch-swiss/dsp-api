@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -119,7 +119,7 @@ class AnnotationReadingGravsearchTypeInspector(nextInspector: Option[GravsearchT
       extends WhereVisitor[Vector[GravsearchTypeAnnotation]] {
     override def visitStatementInWhere(statementPattern: StatementPattern,
                                        acc: Vector[GravsearchTypeAnnotation]): Vector[GravsearchTypeAnnotation] = {
-      if (GravsearchTypeInspectionUtil.isAnnotationStatement(statementPattern)) {
+      if (GravsearchTypeInspectionUtil.canBeAnnotationStatement(statementPattern)) {
         acc :+ annotationStatementToAnnotation(statementPattern, querySchema)
       } else {
         acc

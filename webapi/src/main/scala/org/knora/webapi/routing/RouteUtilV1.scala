@@ -33,7 +33,13 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
-import org.knora.webapi.messages.v1.responder.valuemessages.{FileValueV1, StillImageFileValueV1, TextFileValueV1}
+import org.knora.webapi.messages.v1.responder.valuemessages.{
+  AudioFileValueV1,
+  DocumentFileValueV1,
+  FileValueV1,
+  StillImageFileValueV1,
+  TextFileValueV1
+}
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.standoffmessages.{GetMappingRequestV2, GetMappingResponseV2}
 import org.knora.webapi.settings.KnoraSettingsImpl
@@ -258,6 +264,38 @@ object RouteUtilV1 {
   )
 
   /**
+    * MIME types used in Sipi to store document files.
+    */
+  private val documentMimeTypes: Set[String] = Set(
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/zip",
+    "application/x-tar",
+    "application/x-iso9660-image",
+    "application/gzip"
+  )
+
+  /**
+    * MIME types used in Sipi to store audio files.
+    */
+  private val audioMimeTypes: Set[String] = Set(
+    "application/xml",
+    "text/xml",
+    "text/csv",
+    "text/plain",
+    "audio/mpeg",
+    "audio/mp4",
+    "audio/wav",
+    "audio/x-wav",
+    "audio/vnd.wave"
+  )
+
+  /**
     * Converts file metadata from Sipi into a [[FileValueV1]].
     *
     * @param filename             the filename.
@@ -286,6 +324,26 @@ object RouteUtilV1 {
         originalFilename = fileMetadataResponse.originalFilename,
         originalMimeType = fileMetadataResponse.originalMimeType,
         projectShortcode = projectShortcode
+      )
+    } else if (documentMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
+      DocumentFileValueV1(
+        internalFilename = filename,
+        internalMimeType = fileMetadataResponse.internalMimeType,
+        originalFilename = fileMetadataResponse.originalFilename,
+        originalMimeType = fileMetadataResponse.originalMimeType,
+        projectShortcode = projectShortcode,
+        pageCount = fileMetadataResponse.pageCount,
+        dimX = fileMetadataResponse.width,
+        dimY = fileMetadataResponse.height
+      )
+    } else if (audioMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
+      AudioFileValueV1(
+        internalFilename = filename,
+        internalMimeType = fileMetadataResponse.internalMimeType,
+        originalFilename = fileMetadataResponse.originalFilename,
+        originalMimeType = fileMetadataResponse.originalMimeType,
+        projectShortcode = projectShortcode,
+        duration = fileMetadataResponse.duration
       )
     } else {
       throw BadRequestException(s"MIME type ${fileMetadataResponse.internalMimeType} not supported in Knora API v1")

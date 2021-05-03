@@ -1789,10 +1789,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             requestingUser = requestingUser
           )
 
-          for {
+          val xslTransformationFuture = for {
             xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? teiHeaderXsltRequest)
               .mapTo[GetXSLTransformationResponseV2]
           } yield Some(xslTransformation.xslt)
+
+          xslTransformationFuture.recover {
+            case notFound: NotFoundException =>
+              throw SipiException(s"TEI header XSL transformation <$headerIri> not found: ${notFound.message}")
+
+            case other => throw other
+          }
 
         case None => Future(None)
       }
@@ -1838,11 +1845,18 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                 requestingUser = requestingUser
               )
 
-              for {
+              val xslTransformationFuture = for {
                 xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? teiBodyXsltRequest)
                   .mapTo[GetXSLTransformationResponseV2]
               } yield xslTransformation.xslt
 
+              xslTransformationFuture.recover {
+                case notFound: NotFoundException =>
+                  throw SipiException(
+                    s"Default XSL transformation <${teiMapping.mapping.defaultXSLTransformation.get}> not found for mapping <${teiMapping.mappingIri}>: ${notFound.message}")
+
+                case other => throw other
+              }
             case None => throw BadRequestException(s"Default XSL Transformation expected for mapping $otherMapping")
           }
       }

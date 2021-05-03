@@ -23,6 +23,7 @@ import java.util.UUID
 
 import akka.pattern._
 import org.knora.webapi._
+import org.knora.webapi.exceptions.{NotFoundException, SipiException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
@@ -72,7 +73,7 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
                                    featureFactoryConfig: FeatureFactoryConfig,
                                    userProfile: UserADM): Future[GetXSLTransformationResponseV1] = {
 
-    for {
+    val xslTransformationFuture = for {
       xsltTransformation <- (responderManager ? GetXSLTransformationRequestV2(
         xsltTextRepresentationIri = xslTransformationIri,
         featureFactoryConfig = featureFactoryConfig,
@@ -82,6 +83,13 @@ class StandoffResponderV1(responderData: ResponderData) extends Responder(respon
       GetXSLTransformationResponseV1(
         xslt = xsltTransformation.xslt
       )
+
+    xslTransformationFuture.recover {
+      case notFound: NotFoundException =>
+        throw SipiException(s"XSL transformation $xslTransformationIri not found: ${notFound.message}")
+
+      case other => throw other
+    }
   }
 
   /**

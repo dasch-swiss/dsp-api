@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -55,10 +55,6 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
   // suffix appended to variables that are returned by a SPARQL aggregation function.
   protected val groupConcatVariableSuffix = "__Concat"
 
-  // A set of types that can be treated as dates by the knora-api:toSimpleDate function.
-  private val dateTypes: Set[IRI] =
-    Set(OntologyConstants.KnoraApiV2Complex.DateValue, OntologyConstants.KnoraApiV2Complex.StandoffTag)
-
   /**
     * A container for a generated variable representing a value literal.
     *
@@ -67,15 +63,47 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     */
   private case class GeneratedQueryVariable(variable: QueryVariable, useInOrderBy: Boolean)
 
-  // variables that are created when processing filter statements or for a value object var used as a sort criterion
-  // they represent the value of a literal pointed to by a value object
-  private val valueVariablesAutomaticallyGenerated = mutable.Map.empty[QueryVariable, Set[GeneratedQueryVariable]]
+  // Variables that are created when processing filter statements or for a value object var used as a sort criterion.
+  // They represent the value of a literal pointed to by a value object. There is a stack of collections of these
+  // variables, with an element for the top level of the WHERE clause, and an element for each level of UNION blocks,
+  // because we can't assume that variables at the top level will be bound in a UNION block.
+  private var valueVariablesAutomaticallyGenerated: List[Map[QueryVariable, Set[GeneratedQueryVariable]]] =
+    List(Map.empty[QueryVariable, Set[GeneratedQueryVariable]])
+
+  // Variables mentioned in the UNION block that is currently being processed, so we can ensure that a variable
+  // is bound before it is used in a FILTER. This is a stack of sets, with one element per level of union blocks.
+  private var variablesInUnionBlocks: List[Set[QueryVariable]] = List.empty
 
   // variables the represent resource metadata
   private val resourceMetadataVariables = mutable.Set.empty[QueryVariable]
 
   // The query can set this to false to disable inference.
   var useInference = true
+
+  /**
+    * When we enter a UNION block, pushes an empty collection of generated variables on to the stack
+    * valueVariablesAutomaticallyGenerated.
+    */
+  override def enteringUnionBlock(): Unit = {
+    valueVariablesAutomaticallyGenerated = Map
+      .empty[QueryVariable, Set[GeneratedQueryVariable]] :: valueVariablesAutomaticallyGenerated
+
+    variablesInUnionBlocks = Set.empty[QueryVariable] :: variablesInUnionBlocks
+  }
+
+  /**
+    * When we leave a UNION block, pops that block's collection of generated variables off the
+    * stack valueVariablesAutomaticallyGenerated.
+    */
+  override def leavingUnionBlock(): Unit = {
+    valueVariablesAutomaticallyGenerated = valueVariablesAutomaticallyGenerated.tail
+
+    variablesInUnionBlocks = variablesInUnionBlocks.tail
+  }
+
+  private def inUnionBlock: Boolean = {
+    variablesInUnionBlocks.nonEmpty
+  }
 
   /**
     * Saves a generated variable representing a value literal, if it hasn't been saved already.
@@ -88,17 +116,24 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
   private def addGeneratedVariableForValueLiteral(valueVar: QueryVariable,
                                                   generatedVar: QueryVariable,
                                                   useInOrderBy: Boolean = true): Boolean = {
-    val currentGeneratedVars =
-      valueVariablesAutomaticallyGenerated.getOrElse(valueVar, Set.empty[GeneratedQueryVariable])
+    val currentGeneratedVarsForBlock: Map[QueryVariable, Set[GeneratedQueryVariable]] =
+      valueVariablesAutomaticallyGenerated.head
 
-    if (!currentGeneratedVars.exists(currentGeneratedVar => currentGeneratedVar.variable == generatedVar)) {
-      valueVariablesAutomaticallyGenerated.put(
-        valueVar,
-        currentGeneratedVars + GeneratedQueryVariable(generatedVar, useInOrderBy))
-      true
-    } else {
-      false
-    }
+    val currentGeneratedVarsForValueVar: Set[GeneratedQueryVariable] =
+      currentGeneratedVarsForBlock.getOrElse(valueVar, Set.empty[GeneratedQueryVariable])
+
+    val newGeneratedVarsForBlock =
+      if (!currentGeneratedVarsForValueVar.exists(currentGeneratedVar => currentGeneratedVar.variable == generatedVar)) {
+        currentGeneratedVarsForBlock + (valueVar -> (currentGeneratedVarsForValueVar + GeneratedQueryVariable(
+          generatedVar,
+          useInOrderBy)))
+      } else {
+        currentGeneratedVarsForBlock
+      }
+
+    valueVariablesAutomaticallyGenerated = newGeneratedVarsForBlock :: valueVariablesAutomaticallyGenerated.tail
+
+    newGeneratedVarsForBlock != currentGeneratedVarsForBlock
   }
 
   /**
@@ -108,7 +143,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     * @return a generated variable that represents a value literal and can be used in ORDER BY, or `None` if no such variable has been saved.
     */
   protected def getGeneratedVariableForValueLiteralInOrderBy(valueVar: QueryVariable): Option[QueryVariable] = {
-    valueVariablesAutomaticallyGenerated.get(valueVar) match {
+    valueVariablesAutomaticallyGenerated.head.get(valueVar) match {
       case Some(generatedVars: Set[GeneratedQueryVariable]) =>
         val generatedVarsForOrderBy: Set[QueryVariable] = generatedVars.filter(_.useInOrderBy).map(_.variable)
 
@@ -313,14 +348,14 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
     }
 
-    val (maybeSubjectTypeIri: Option[SmartIri], subjectIsResource: Boolean) =
+    val maybeSubjectType: Option[NonPropertyTypeInfo] =
       typeInspectionResult.getTypeOfEntity(statementPattern.subj) match {
-        case Some(NonPropertyTypeInfo(subjectTypeIri, isResourceType, _)) => (Some(subjectTypeIri), isResourceType)
-        case _                                                            => (None, false)
+        case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) => Some(nonPropertyTypeInfo)
+        case _                                              => None
       }
 
     // Is the subject of the statement a resource?
-    if (subjectIsResource) {
+    if (maybeSubjectType.exists(_.isResourceType)) {
       // Yes. Is the object of the statement also a resource?
       if (propertyTypeInfo.objectIsResourceType) {
         // Yes. This is a link property. Make sure that the object is either an IRI or a variable (cannot be a literal).
@@ -451,7 +486,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
       if (querySchema == ApiV2Complex) {
         // Yes. If the subject is a standoff tag and the object is a resource, that's an error, because the client
         // has to use the knora-api:standoffLink function instead.
-        if (maybeSubjectTypeIri.contains(OntologyConstants.KnoraApiV2Complex.StandoffTag.toSmartIri) && propertyTypeInfo.objectIsResourceType) {
+        if (maybeSubjectType.exists(_.isStandoffTagType) && propertyTypeInfo.objectIsResourceType) {
           throw GravsearchException(
             s"Invalid statement pattern (use the knora-api:standoffLink function instead): ${statementPattern.toSparql.trim}")
         } else {
@@ -492,6 +527,38 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     }
   }
 
+  /**
+    * If we're in a UNION block, records any variables that are used in the specified statement,
+    * so we can make sure that they're defined before they're used in a FILTER pattern.
+    *
+    * @param statementPattern the statement pattern being processed.
+    */
+  private def recordVariablesInUnionBlock(statementPattern: StatementPattern): Unit = {
+    def entityAsVariable(entity: Entity): Option[QueryVariable] = {
+      entity match {
+        case queryVariable: QueryVariable => Some(queryVariable)
+        case _                            => None
+      }
+    }
+
+    // Are we in a UNION block?
+    variablesInUnionBlocks match {
+      case variablesInCurrentBlock :: tail =>
+        // Yes. Collect any variables in the statement.
+        val newVariablesInCurrentBlock: Set[QueryVariable] = variablesInCurrentBlock ++ entityAsVariable(
+          statementPattern.subj) ++
+          entityAsVariable(statementPattern.pred) ++
+          entityAsVariable(statementPattern.obj)
+
+        // Record them.
+        variablesInUnionBlocks = newVariablesInCurrentBlock :: tail
+
+      case Nil =>
+        // No. Nothing to do here.
+        ()
+    }
+  }
+
   protected def processStatementPatternFromWhereClause(statementPattern: StatementPattern,
                                                        inputOrderBy: Seq[OrderCriterion]): Seq[QueryPattern] = {
 
@@ -528,6 +595,10 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
           typeInspectionResult = typeInspectionResult,
           conversionFuncForPropertyType = convertStatementForPropertyType(inputOrderBy)
         )
+
+        // If we're in a UNION block, record any variables that are used in the statement,
+        // so we can make sure that they're defined before they're used in a FILTER pattern.
+        recordVariablesInUnionBlock(statementPattern)
 
         additionalStatementsForSubj ++ additionalStatementsForWholeStatement ++ additionalStatementsForObj
     }
@@ -694,7 +765,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
       case xsdLiteral: XsdLiteral if xsdLiteral.datatype.toString == OntologyConstants.KnoraApiV2Simple.ListNode =>
         xsdLiteral.value
 
-      case other =>
+      case _ =>
         throw GravsearchException(s"Invalid type for literal ${OntologyConstants.KnoraApiV2Simple.ListNode}")
     }
 
@@ -1184,7 +1255,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     val langLiteral: XsdLiteral = compareExpression.rightArg match {
       case strLiteral: XsdLiteral if strLiteral.datatype == OntologyConstants.Xsd.String.toSmartIri => strLiteral
 
-      case other =>
+      case _ =>
         throw GravsearchException(
           s"Right argument of comparison statement must be a string literal for use with 'lang' function call")
     }
@@ -1746,9 +1817,8 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     val standoffTagVar = functionCallExpression.getArgAsQueryVar(pos = 1)
 
     typeInspectionResult.getTypeOfEntity(standoffTagVar) match {
-      case Some(nonPropertyTypeInfo: NonPropertyTypeInfo)
-          if nonPropertyTypeInfo.typeIri.toString == OntologyConstants.KnoraApiV2Complex.StandoffTag =>
-        ()
+      case Some(nonPropertyTypeInfo: NonPropertyTypeInfo) if nonPropertyTypeInfo.isStandoffTagType => ()
+
       case _ =>
         throw GravsearchException(
           s"The second argument of ${functionIri.toSparql} must represent a knora-api:StandoffTag")
@@ -1855,7 +1925,7 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
 
     typeInspectionResult.getTypeOfEntity(dateBaseVar) match {
       case Some(nonPropInfo: NonPropertyTypeInfo) =>
-        if (!dateTypes.contains(nonPropInfo.typeIri.toString)) {
+        if (!(nonPropInfo.isStandoffTagType || nonPropInfo.typeIri.toString == OntologyConstants.KnoraApiV2Complex.DateValue)) {
           throw GravsearchException(
             s"${dateBaseVar.toSparql} must represent a knora-api:DateValue or a knora-api:StandoffDateTag")
         }
@@ -1875,11 +1945,22 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
     *
     * @param filterExpression     the `FILTER` expression to be transformed.
     * @param typeInspectionResult the results of type inspection.
+    * @param isTopLevel `true` if this is the top-level expression in the filter.
     * @return a [[TransformedFilterPattern]].
     */
   protected def transformFilterPattern(filterExpression: Expression,
                                        typeInspectionResult: GravsearchTypeInspectionResult,
                                        isTopLevel: Boolean): TransformedFilterPattern = {
+    // Are we looking at a top-level filter expression in a UNION block?
+    if (isTopLevel && inUnionBlock) {
+      // Yes. Make sure that all the variables used in the FILTER have already been bound in the same block.
+      val unboundVariables: Set[QueryVariable] = filterExpression.getVariables -- variablesInUnionBlocks.head
+
+      if (unboundVariables.nonEmpty) {
+        throw GravsearchException(
+          s"One or more variables used in a filter have not been bound in the same UNION block: ${unboundVariables.map(_.toSparql).mkString(", ")}")
+      }
+    }
 
     filterExpression match {
 
@@ -1955,54 +2036,5 @@ abstract class AbstractPrequeryGenerator(constructClause: ConstructClause,
       case other => throw NotImplementedException(s"$other not supported as FilterExpression")
     }
 
-  }
-
-  /**
-    * Optimises a query by removing `rdf:type` statements that are known to be redundant. A redundant
-    * `rdf:type` statement gives the type of a variable whose type is already restricted by its
-    * use with a property that can only be used with that type (unless the property
-    * statement is in an `OPTIONAL` block).
-    *
-    * @param patterns the query patterns.
-    * @return the optimised query patterns.
-    */
-  protected def removeEntitiesInferredFromProperty(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-
-    // Collect all entities which are used as subject or object of an OptionalPattern.
-    val optionalEntities = patterns
-      .filter {
-        case OptionalPattern(_) => true
-        case _                  => false
-      }
-      .flatMap {
-        case optionalPattern: OptionalPattern =>
-          optionalPattern.patterns.flatMap {
-            case pattern: StatementPattern =>
-              GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.subj) ++ GravsearchTypeInspectionUtil
-                .maybeTypeableEntity(pattern.obj)
-            case _ => None
-          }
-        case _ => None
-      }
-
-    // remove statements whose predicate is rdf:type, type of subject is inferred from a property, and the subject is not in optionalEntities.
-    val optimisedPatterns = patterns.filter {
-      case statementPattern: StatementPattern =>
-        statementPattern.pred match {
-          case iriRef: IriRef =>
-            val subject = GravsearchTypeInspectionUtil.maybeTypeableEntity(statementPattern.subj)
-            subject match {
-              case Some(typeableEntity) =>
-                !(iriRef.iri.toString == OntologyConstants.Rdf.Type && typeInspectionResult.entitiesInferredFromProperties.keySet
-                  .contains(typeableEntity)
-                  && !optionalEntities.contains(typeableEntity))
-              case _ => true
-            }
-
-          case _ => true
-        }
-      case _ => true
-    }
-    optimisedPatterns
   }
 }

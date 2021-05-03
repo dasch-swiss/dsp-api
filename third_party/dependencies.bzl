@@ -129,7 +129,7 @@ def dependencies():
             "org.scalatest:scalatest-matchers-core_2.12:3.2.2",
             "org.scalatest:scalatest-shouldmatchers_2.12:3.2.2",
             "org.scalatest:scalatest-compatible:3.2.2",
-            "org.testcontainers:testcontainers:1.15.1",
+            "org.testcontainers:testcontainers:1.15.3",
             "junit:junit:4.13",
             "io.gatling.highcharts:gatling-charts-highcharts:3.2.1",
             "io.gatling:gatling-test-framework:3.2.1",
@@ -137,6 +137,9 @@ def dependencies():
             # Additional Selenium libraries besides the ones pulled in during init
             # of io_bazel_rules_webtesting
             "org.seleniumhq.selenium:selenium-support:3.141.59",
+
+            # Graph for Scala
+            "org.scala-graph:graph-core_2.12:1.13.1",
         ],
         repositories = [
             "https://repo.maven.apache.org/maven2",
@@ -187,6 +190,7 @@ BASE_TEST_DEPENDENCIES = [
     "@maven//:org_scalatest_scalatest_shouldmatchers_2_12",
     "@maven//:org_scalatest_scalatest_compatible",
     "@maven//:org_scalactic_scalactic_2_12",
+    "@maven//:org_scala_graph_graph_core_2_12",
 ]
 
 BASE_TEST_DEPENDENCIES_WITH_JSON = BASE_TEST_DEPENDENCIES + [

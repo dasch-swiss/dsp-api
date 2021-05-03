@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -63,6 +63,10 @@ object SparqlTransformer {
         Some(FromClause(IriRef(OntologyConstants.NamedGraphs.GraphDBExplicitNamedGraph.toSmartIri)))
       }
     }
+
+    override def enteringUnionBlock(): Unit = {}
+
+    override def leavingUnionBlock(): Unit = {}
   }
 
   /**
@@ -91,6 +95,10 @@ object SparqlTransformer {
       transformLuceneQueryPatternForFuseki(luceneQueryPattern)
 
     override def getFromClause: Option[FromClause] = None
+
+    override def enteringUnionBlock(): Unit = {}
+
+    override def leavingUnionBlock(): Unit = {}
   }
 
   /**
@@ -115,6 +123,10 @@ object SparqlTransformer {
 
     override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
       transformLuceneQueryPatternForGraphDB(luceneQueryPattern)
+
+    override def enteringUnionBlock(): Unit = {}
+
+    override def leavingUnionBlock(): Unit = {}
   }
 
   /**
@@ -138,6 +150,10 @@ object SparqlTransformer {
 
     override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
       transformLuceneQueryPatternForFuseki(luceneQueryPattern)
+
+    override def enteringUnionBlock(): Unit = {}
+
+    override def leavingUnionBlock(): Unit = {}
   }
 
   /**

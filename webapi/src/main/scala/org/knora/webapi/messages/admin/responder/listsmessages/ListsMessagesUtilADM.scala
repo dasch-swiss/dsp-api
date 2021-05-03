@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
  *  This file is part of Knora.
  *
@@ -30,5 +30,6 @@ object ListsMessagesUtilADM {
   val LIST_CREATE_PERMISSION_ERROR = "A list can only be created by the project or system administrator."
   val LIST_NODE_CREATE_PERMISSION_ERROR = "A list node can only be created by the project or system administrator."
   val LIST_CHANGE_PERMISSION_ERROR = "A list can only be changed by the project or system administrator."
-  val UPDATE_REQUEST_EMPTY_LABEL_OR_COMMENT_ERROR = "List labels and comments cannot be empty."
+  val UPDATE_REQUEST_EMPTY_LABEL_ERROR = "List labels cannot be empty."
+  val INVALID_POSITION = "Invalid position value is given, position should be either a positive value or -1."
 }

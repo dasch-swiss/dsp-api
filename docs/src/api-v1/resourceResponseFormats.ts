@@ -1,20 +1,20 @@
 /*
  * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
- * This file is part of Knora.
+ * This file is part of DSP — DaSCH Service Platform.
  *
- * Knora is free software: you can redistribute it and/or modify
+ * DSP is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published
  * by the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * Knora is distributed in the hope that it will be useful,
+ * DSP is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Affero General Public License for more details.
  *
  * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ * License along with DSP. If not, see <http://www.gnu.org/licenses/>.
  */
 
 import {basicMessageComponents} from "./basicMessageComponents"
@@ -626,7 +626,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a resource type request for a vocabulary.
+     * Represents the DSP-API V1 response to a resource type request for a vocabulary.
      *
      * HTTP GET to http://host/v1/resourcetypes?vocabulary=vocabularyIRI
      */
@@ -639,7 +639,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a resource type request.
+     * Represents the DSP-API V1 response to a resource type request.
      *
      * HTTP GET to http://host/v1/resourcetypes/resourceClassIRI
      */
@@ -652,7 +652,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a properties request for a resource.
+     * Represents the DSP-API V1 response to a properties request for a resource.
      * This response just returns a resource's properties.
      *
      * HTTP GET to http://host/v1/properties/resourceIRI
@@ -669,7 +669,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a full resource request.
+     * Represents the DSP-API V1 response to a full resource request.
      *
      * HTTP GET to http://host/v1/resources/resourceIRI
      */
@@ -704,7 +704,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a resource info request (reqtype=info).
+     * Represents the DSP-API V1 response to a resource info request (reqtype=info).
      *
      * HTTP GET to http://host/v1/resources/resourceIRI?reqtype=info
      */
@@ -722,7 +722,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a resource rights request (reqtype=rights).
+     * Represents the DSP-API V1 response to a resource rights request (reqtype=rights).
      *
      * HTTP GET to http://host/v1/resources/resourceIRI?reqtype=rights
      */
@@ -735,7 +735,7 @@ export module resourceResponseFormats {
     }
 
     /**
-     * Represents the Knora API V1 response to a context request (reqtype=context) with or without resinfo (resinfo=true).
+     * Represents the DSP-API V1 response to a context request (reqtype=context) with or without resinfo (resinfo=true).
      *
      * HTTP GET to http://host/v1/resources/resourceIRI?reqtype=context[&resinfo=true]
      */

@@ -1,24 +1,24 @@
 <!---
 Copyright © 2015-2021 the contributors (see Contributors.md).
 
-This file is part of Knora.
+This file is part of DSP — DaSCH Service Platform.
 
-Knora is free software: you can redistribute it and/or modify
+DSP is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
 by the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-Knora is distributed in the hope that it will be useful,
+DSP is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public
-License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 -->
 
 # Lists Endpoint
-## To use some of the routes in this endpoint the [feature toggle](../feature-toggles.md), `new-list-admin-routes:1` must
+## To use the routes in this endpoint the [feature toggle](../feature-toggles.md), `new-list-admin-routes:1` must
  be activated.
 
 ## Endpoint Overview
@@ -170,6 +170,23 @@ The response will contain the basic information of the node, `nodeinfo`, as belo
     }
 }
 ```
+
+The new node can be created and inserted in a specific position which must be given in the payload as shown below. If necessary, 
+according to the given position, the sibling nodes will be shifted. Note that `position` cannot have a value higher than 
+number of existing children.
+
+```json
+{   "parentNodeIri": "http://rdfh.ch/lists/0001/a-list",
+    "projectIri": "http://rdfh.ch/projects/0001",
+    "name": "Inserted new child",
+    "position": 0,
+    "labels": [{ "value": "New List Node", "language": "en"}],
+    "comments": []
+}
+```
+
+In case the new node should be appended to the list of current children, either `position: -1` must be given in the 
+payload or the `position` parameter must be left out of the payload. 
 
 ### Update basic information (entire list or a node)
 The basic information of a list or a node such as its labels, comments, name, or all of them can be updated. The parameters that 
