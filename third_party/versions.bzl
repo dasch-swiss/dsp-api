@@ -1,8 +1,8 @@
 """Primary location for setting Knora-API project wide versions"""
 
-SCALA_VERSION = "2.12.11"
+SCALA_VERSION = "2.13.5"
 AKKA_VERSION = "2.6.5"
-AKKA_HTTP_VERSION = "10.2.0"
+AKKA_HTTP_VERSION = "10.2.4"
 JENA_VERSION = "3.14.0"
 METRICS_VERSION = "4.0.1"
 

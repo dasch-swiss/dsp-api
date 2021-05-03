@@ -38,6 +38,7 @@ import org.apache.commons.validator.routines.UrlValidator
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.OntologyConstants.SalsahGui
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.store.triplestoremessages.{
   SparqlAskRequest,
@@ -49,7 +50,6 @@ import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v2.responder.KnoraContentV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.util.JavaUtil.Optional
 import org.knora.webapi.util.{Base64UrlCheckDigit, JavaUtil}
 import spray.json._
 
@@ -1851,14 +1851,11 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     */
   def toSalsahGuiAttributeDefinition(s: String, errorFun: => Nothing): SalsahGuiAttributeDefinition = {
     s match {
-      case SalsahGuiAttributeDefinitionRegex(attributeName,
-                                             Optional(maybeRequired),
-                                             allowedTypeStr,
-                                             _,
-                                             Optional(maybeEnumeratedValuesStr)) =>
-        val allowedType = OntologyConstants.SalsahGui.SalsahGuiAttributeType.lookup(allowedTypeStr)
+      case SalsahGuiAttributeDefinitionRegex(attributeName, required, allowedTypeStr, _, enumeratedValuesStr) =>
+        val allowedType: SalsahGui.SalsahGuiAttributeType.Value =
+          OntologyConstants.SalsahGui.SalsahGuiAttributeType.lookup(allowedTypeStr)
 
-        val enumeratedValues: Set[String] = maybeEnumeratedValuesStr match {
+        val enumeratedValues: Set[String] = Option(enumeratedValuesStr) match {
           case Some(enumeratedValuesStr) =>
             if (allowedType != OntologyConstants.SalsahGui.SalsahGuiAttributeType.Str) {
               errorFun
@@ -1871,13 +1868,14 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
 
         SalsahGuiAttributeDefinition(
           attributeName = attributeName,
-          isRequired = maybeRequired.nonEmpty,
+          isRequired = Option(required).nonEmpty,
           allowedType = allowedType,
           enumeratedValues = enumeratedValues,
           unparsedString = s
         )
 
-      case _ => errorFun
+      case _ =>
+        errorFun
     }
   }
 
@@ -1972,14 +1970,14 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     */
   def arkTimestampToInstant(timestampStr: String, errorFun: => Nothing): Instant = {
     timestampStr match {
-      case ArkTimestampRegex(year, month, day, hour, minute, second, Optional(maybeFraction)) =>
-        val nanoOfSecond: Int = maybeFraction match {
+      case ArkTimestampRegex(year, month, day, hour, minute, second, fraction) =>
+        val nanoOfSecond: Int = Option(fraction) match {
           case None => 0
 
-          case Some(fraction) =>
+          case Some(definedFraction) =>
             // Pad the nano-of-second with trailing zeroes so it has 9 digits, then convert it
             // to an integer.
-            fraction.padTo(9, '0').toInt
+            definedFraction.padTo(9, '0').toInt
         }
 
         try {
@@ -2326,11 +2324,11 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     */
   def xmlImportNamespaceToInternalOntologyIriV1(namespace: String, errorFun: => Nothing): SmartIri = {
     namespace match {
-      case ProjectSpecificXmlImportNamespaceRegex(Optional(maybeShared), _, Optional(maybeProjectCode), ontologyName)
+      case ProjectSpecificXmlImportNamespaceRegex(shared, _, projectCode, ontologyName)
           if !isBuiltInOntologyName(ontologyName) =>
-        val isShared = maybeShared.nonEmpty
+        val isShared = Option(shared).nonEmpty
 
-        val projectCode = maybeProjectCode match {
+        val definedProjectCode = Option(projectCode) match {
           case Some(code) => code
           case None       => if (isShared) DefaultSharedOntologiesProjectCode else errorFun
         }
@@ -2338,7 +2336,7 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
         makeProjectSpecificInternalOntologyIri(
           internalOntologyName = externalToInternalOntologyName(ontologyName),
           isShared = isShared,
-          projectCode = projectCode
+          projectCode = definedProjectCode
         )
 
       case _ => errorFun
@@ -2372,15 +2370,16 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     */
   def toPropertyIriFromOtherOntologyInXmlImport(prefixLabelAndLocalName: String): Option[IRI] = {
     prefixLabelAndLocalName match {
-      case PropertyFromOtherOntologyInXmlImportRegex(_, Optional(maybeProjectID), prefixLabel, localName) =>
-        maybeProjectID match {
-          case Some(projectID) =>
+      case PropertyFromOtherOntologyInXmlImportRegex(_, projectID, prefixLabel, localName) =>
+        Option(projectID) match {
+          case Some(definedProjectID) =>
             // Is this ia shared ontology?
             // TODO: when multiple shared project ontologies are supported, this will need to be done differently.
-            if (projectID == DefaultSharedOntologiesProjectCode) {
+            if (definedProjectID == DefaultSharedOntologiesProjectCode) {
               Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/shared/$prefixLabel#$localName")
             } else {
-              Some(s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/$projectID/$prefixLabel#$localName")
+              Some(
+                s"${OntologyConstants.KnoraInternal.InternalOntologyStart}/$definedProjectID/$prefixLabel#$localName")
             }
 
           case None =>
