@@ -571,12 +571,10 @@ HTTP GET to http://host/v2/resources/projectHistory/projectIRI
 The project IRI must be URL-encoded. The response is a list of events describing changes made to the resource and its values,
  in chronological order. Each entry has the properties: 
  `knora-api:eventType` (the type of the operation performed on a specific date. The operation can be either
- `createResource`, `createValue`, `updateValueContent`, `updateValuePermissions`, or `deleteValue`.), 
+ `createResource`, `deleteResource`, `createValue`, `updateValueContent`, `updateValuePermissions`, or `deleteValue`.), 
 `knora-api:versionDate` (the date when the change was made),
 `knora-api:author` (the IRI of the user who made the change),
-`knora-api:eventBody` (the information necessary to make the same request),
- `knora-api:resourceIri` (the IRI of the created or changed resource),
- `knora-api:resourceClassIri` (the class of the created or changed resource). For example:
+`knora-api:eventBody` (the information necessary to make the same request). For example:
 
 ```jsonld
 {
