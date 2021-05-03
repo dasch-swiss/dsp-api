@@ -1631,6 +1631,70 @@ class OntologyV2R2RSpec extends R2RSpec {
       }
     }
 
+    "change the GUI order of the cardinality on anything:hasNothingness in the class anything:Nothing" in {
+      val params =
+        s"""{
+           |  "@id" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}",
+           |  "@type" : "owl:Ontology",
+           |  "knora-api:lastModificationDate" : {
+           |    "@type" : "xsd:dateTimeStamp",
+           |    "@value" : "$anythingLastModDate"
+           |  },
+           |  "@graph" : [ {
+           |    "@id" : "anything:Nothing",
+           |    "@type" : "owl:Class",
+           |    "rdfs:subClassOf" : {
+           |      "@type": "owl:Restriction",
+           |      "owl:maxCardinality": 1,
+           |      "owl:onProperty": {
+           |        "@id" : "anything:hasNothingness"
+           |      },
+					 |      "salsah-gui:guiOrder": 2
+           |    }
+           |  } ],
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+           |    "owl" : "http://www.w3.org/2002/07/owl#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}#"
+           |  }
+           |}""".stripMargin
+
+      clientTestDataCollector.addFile(
+        TestDataFileContent(
+          filePath = TestDataFilePath(
+            directoryPath = clientTestDataPath,
+            filename = "change-gui-order-request",
+            fileExtension = "json"
+          ),
+          text = params
+        )
+      )
+
+      // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
+      val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
+
+      Put("/v2/ontologies/guiorder", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
+        BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        assert(status == StatusCodes.OK, response.toString)
+        val responseJsonDoc = responseToJsonLDDocument(response)
+
+        // Convert the response to an InputOntologyV2 and compare the relevant part of it to the request.
+        val responseAsInput: InputOntologyV2 =
+          InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+        responseAsInput.classes.head._2.directCardinalities should ===(
+          paramsAsInput.classes.head._2.directCardinalities)
+
+        // Check that the ontology's last modification date was updated.
+        val newAnythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+        anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
     "create a property anything:hasEmptiness with knora-api:subjectType anything:Nothing" in {
       val params =
         s"""{
