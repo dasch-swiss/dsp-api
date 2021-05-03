@@ -33,7 +33,13 @@ trait EventStore {
 }
 
 /**
-  * Live implementation talking to running Event Store DB server
+  * Live implementation talking to a running Event Store DB server
+  *
+  * to run event store locally inside Docker:
+  *   $ docker run --name esdb-node -it -p 2113:2113 -p 1113:1113 eventstore/eventstore:latest --insecure --run-projections=All --enable-atom-pub-over-http=true
+  *
+  * go to the following address to see the streams: http://0.0.0.0:2113/web/index.html#/streams
+  *
   */
 object EventStoreLiveImpl extends EventStore {
 
