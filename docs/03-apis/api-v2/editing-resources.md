@@ -277,7 +277,7 @@ Here is an example:
   "knora-api:lastModificationDate" : {
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2017-11-20T15:55:17Z"
-  }
+  },
   "knora-api:newModificationDate" : {
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2018-12-21T16:56:18Z"

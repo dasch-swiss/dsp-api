@@ -711,7 +711,7 @@
   knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
   rdfs:label "A thing with a picture";
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|RV knora-admin:UnknownUser";
-  knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTime;
+  knora-base:creationDate "2011-03-02T15:05:10Z"^^xsd:dateTime;
   knora-base:hasStillImageFileValue <http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q> .
 
 <http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q> a knora-base:StillImageFileValue;
@@ -1716,7 +1716,8 @@
   anything:hasInteger <http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ/values/PVPAa37xR--K_wxQwlvSsg>;
   rdfs:label "deleted thing";
   knora-base:isDeleted true;
-  knora-base:deleteDate "2020-04-07T14:59:28.960124Z"^^xsd:dateTime .
+  knora-base:deleteDate "2020-04-07T14:59:28.960124Z"^^xsd:dateTime ;
+  knora-base:deleteComment "a comment for the deleted thing."^^xsd:string .
 
 <http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA/values/7BIm9QAiQqKixcgXDWf12Q> a knora-base:IntValue;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
