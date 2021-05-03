@@ -61,6 +61,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       updateClass(featureFactoryConfig) ~
       addCardinalities(featureFactoryConfig) ~
       replaceCardinalities(featureFactoryConfig) ~
+      changeGuiOrder(featureFactoryConfig) ~
       getClasses(featureFactoryConfig) ~
       deleteClass(featureFactoryConfig) ~
       deleteOntologyComment(featureFactoryConfig) ~
@@ -414,6 +415,47 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
               requestMessage: ChangeCardinalitiesRequestV2 <- ChangeCardinalitiesRequestV2.fromJsonLD(
+                jsonLDDocument = requestDoc,
+                apiRequestID = UUID.randomUUID,
+                requestingUser = requestingUser,
+                responderManager = responderManager,
+                storeManager = storeManager,
+                featureFactoryConfig = featureFactoryConfig,
+                settings = settings,
+                log = log
+              )
+            } yield requestMessage
+
+            RouteUtilV2.runRdfRouteWithFuture(
+              requestMessageF = requestMessageFuture,
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig,
+              settings = settings,
+              responderManager = responderManager,
+              log = log,
+              targetSchema = ApiV2Complex,
+              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+            )
+          }
+        }
+      }
+    }
+
+  private def changeGuiOrder(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(OntologiesBasePath / "guiorder") {
+      put {
+        // Change a class's cardinalities.
+        entity(as[String]) { jsonRequest => requestContext =>
+          {
+            val requestMessageFuture: Future[ChangeGuiOrderRequestV2] = for {
+              requestingUser <- getUserADM(
+                requestContext = requestContext,
+                featureFactoryConfig = featureFactoryConfig
+              )
+
+              requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+              requestMessage: ChangeGuiOrderRequestV2 <- ChangeGuiOrderRequestV2.fromJsonLD(
                 jsonLDDocument = requestDoc,
                 apiRequestID = UUID.randomUUID,
                 requestingUser = requestingUser,

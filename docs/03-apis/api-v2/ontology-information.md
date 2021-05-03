@@ -1066,7 +1066,7 @@ HTTP POST to http://host/v2/ontologies/classes
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "CLASS_IRI" : {
+    {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
       "rdfs:label" : {
@@ -1119,7 +1119,7 @@ HTTP POST to http://host/v2/ontologies/classes
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "CLASS_IRI" : {
+    {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
       "rdfs:label" : {
@@ -1185,7 +1185,7 @@ HTTP PUT to http://host/v2/ontologies/classes
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "CLASS_IRI" : {
+    {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
       "rdfs:label" : {
@@ -1224,7 +1224,7 @@ HTTP PUT to http://host/v2/ontologies/classes
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "CLASS_IRI" : {
+    {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
       "rdfs:comment" : {
@@ -1262,7 +1262,7 @@ HTTP POST to http://host/v2/ontologies/properties
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "PROPERTY_IRI" : {
+    {
       "@id" : "PROPERTY_IRI",
       "@type" : "owl:ObjectProperty",
       "knora-api:subjectType" : {
@@ -1351,7 +1351,7 @@ HTTP PUT to http://host/v2/ontologies/properties
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "PROPERTY_IRI" : {
+    {
       "@id" : "PROPERTY_IRI",
       "@type" : "owl:ObjectProperty",
       "rdfs:label" : {
@@ -1389,7 +1389,7 @@ HTTP PUT to http://host/v2/ontologies/properties
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "PROPERTY_IRI" : {
+    {
       "@id" : "PROPERTY_IRI",
       "@type" : "owl:ObjectProperty",
       "rdfs:comment" : {
@@ -1428,7 +1428,7 @@ HTTP POST to http://host/v2/ontologies/cardinalities
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "CLASS_IRI" : {
+    {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
       "rdfs:subClassOf" : {
@@ -1487,7 +1487,7 @@ HTTP PUT to http://host/v2/ontologies/cardinalities
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    "CLASS_IRI" : {
+    {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
       "rdfs:subClassOf" : {
@@ -1520,6 +1520,54 @@ on the corresponding link value property is automatically added (see
 
 A successful response will be a JSON-LD document providing the new class
 definition (but not any of the other entities in the ontology).
+
+### Changing the GUI Order of Cardinalities
+
+To change the GUI order of one or more cardinalities in a class:
+
+```
+HTTP PUT to http://host/v2/ontologies/guiorder
+```
+
+This can be done even if the class is used in data.
+
+The request body includes the cardinalities whose GUI order should be changed,
+using the predicate `salsah-gui:guiOrder`, whose object is an integer:
+
+```jsonld
+{
+  "@id" : "ONTOLOGY_IRI",
+  "@type" : "owl:Ontology",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
+  "@graph" : [ {
+    "@id" : "CLASS_IRI",
+    "@type" : "owl:Class",
+    "rdfs:subClassOf" : {
+      "@type": "owl:Restriction",
+      "OWL_CARDINALITY_PREDICATE": "OWL_CARDINALITY_VALUE",
+      "owl:onProperty": {
+        "@id" : "PROPERTY_IRI"
+      },
+      "salsah-gui:guiOrder": "GUI_ORDER_VALUE"
+    }
+  } ],
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+    "owl" : "http://www.w3.org/2002/07/owl#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+  }
+}
+```
+
+Only the cardinalities whose GUI order is to be changed need to be included
+in the request. The `OWL_CARDINALITY_PREDICATE` and `OWL_CARDINALITY_VALUE`
+are ignored; only the `GUI_ORDER_VALUE` is changed.
 
 ### Deleting a Property
 
