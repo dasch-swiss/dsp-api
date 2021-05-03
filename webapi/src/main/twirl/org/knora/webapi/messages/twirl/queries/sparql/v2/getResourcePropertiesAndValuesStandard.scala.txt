@@ -82,7 +82,8 @@ CONSTRUCT {
         ?resource knora-base:isDeleted false .
     } else {
         ?resource knora-base:isDeleted ?isDeleted ;
-                knora-base:deleteDate ?deletionDate .
+                 knora-base:deleteDate ?deletionDate ;
+                 knora-base:deleteComment ?deleteComment .
     }
 
     @* include this inferred information in the results, needed to identify value properties *@
@@ -128,6 +129,9 @@ CONSTRUCT {
             ?resource knora-base:isDeleted ?isDeleted ;
                     knora-base:deleteDate ?deletionDate .
         }
+       OPTIONAL {
+            ?resource knora-base:deleteComment ?deleteComment .
+       }
     }
 
     @* Is this a version history request? *@

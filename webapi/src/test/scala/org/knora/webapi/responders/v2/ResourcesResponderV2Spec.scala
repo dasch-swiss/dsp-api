@@ -2613,6 +2613,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val deleteResourceEvent: Option[ResourceAndValueHistoryV2] =
         events.find(event => event.eventType == ResourceAndValueEventsUtil.DELETE_RESOURCE_EVENT)
       assert(deleteResourceEvent.isDefined)
+      val deletionInfo = deleteResourceEvent.get.eventBody.asInstanceOf[ResourceEventBody].deletionInfo.get
+      deletionInfo.maybeDeleteComment should be(Some("a comment for the deleted thing."))
     }
 
     "return seq of full history events for each resource of a project" in {
