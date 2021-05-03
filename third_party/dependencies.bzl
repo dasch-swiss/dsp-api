@@ -92,7 +92,6 @@ def dependencies():
             "net.sf.saxon:Saxon-HE:9.9.0-2",
 
             "org.scala-lang.modules:scala-xml_2.13:1.1.1",
-            "com.jsuereth:scala-arm_2.12:2.0",
             "org.scala-lang.modules:scala-java8-compat_2.13:0.9.1",
 
             # provides akka jackson (json) support

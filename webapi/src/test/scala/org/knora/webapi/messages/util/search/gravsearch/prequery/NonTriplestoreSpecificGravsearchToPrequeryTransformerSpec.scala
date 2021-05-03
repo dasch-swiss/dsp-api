@@ -2180,8 +2180,6 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
    |} """.stripMargin
 
   val transformedQueryToReorderWithCycle: SelectQuery = SelectQuery(
-    fromClause = None,
-    variables = Vector(QueryVariable(variableName = "thing")),
     offset = 0,
     groupBy = Vector(QueryVariable(variableName = "thing")),
     orderBy = Vector(
@@ -2192,105 +2190,6 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
     whereClause = WhereClause(
       patterns = Vector(
         StatementPattern(
-          subj = QueryVariable(variableName = "thing2"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = XsdLiteral(
-            value = "false",
-            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = Some(
-            IriRef(
-              iri = "http://www.knora.org/explicit".toSmartIri,
-              propertyPathOperator = None
-            ))
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "thing2"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = QueryVariable(variableName = "thing"),
-          namedGraph = None
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "thing2"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj =
-            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue"),
-          namedGraph = None
-        ),
-        StatementPattern(
-          subj =
-            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue"),
-          pred = IriRef(
-            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#LinkValue".toSmartIri,
-            propertyPathOperator = None
-          ),
-          namedGraph = Some(
-            IriRef(
-              iri = "http://www.knora.org/explicit".toSmartIri,
-              propertyPathOperator = None
-            ))
-        ),
-        StatementPattern(
-          subj =
-            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = XsdLiteral(
-            value = "false",
-            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = Some(
-            IriRef(
-              iri = "http://www.knora.org/explicit".toSmartIri,
-              propertyPathOperator = None
-            ))
-        ),
-        StatementPattern(
-          subj =
-            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue"),
-          pred = IriRef(
-            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#object".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = QueryVariable(variableName = "thing"),
-          namedGraph = Some(
-            IriRef(
-              iri = "http://www.knora.org/explicit".toSmartIri,
-              propertyPathOperator = None
-            ))
-        ),
-        StatementPattern(
-          subj = QueryVariable(variableName = "thing"),
-          pred = IriRef(
-            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
-            propertyPathOperator = None
-          ),
-          obj = XsdLiteral(
-            value = "false",
-            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
-          ),
-          namedGraph = Some(
-            IriRef(
-              iri = "http://www.knora.org/explicit".toSmartIri,
-              propertyPathOperator = None
-            ))
-        ),
-        StatementPattern(
           subj = QueryVariable(variableName = "thing1"),
           pred = IriRef(
             iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
@@ -2374,6 +2273,38 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
             ))
         ),
         StatementPattern(
+          subj = QueryVariable(variableName = "thing2"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "false",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          ),
+          namedGraph = Some(
+            IriRef(
+              iri = "http://www.knora.org/explicit".toSmartIri,
+              propertyPathOperator = None
+            ))
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "false",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          ),
+          namedGraph = Some(
+            IriRef(
+              iri = "http://www.knora.org/explicit".toSmartIri,
+              propertyPathOperator = None
+            ))
+        ),
+        StatementPattern(
           subj = QueryVariable(variableName = "thing"),
           pred = IriRef(
             iri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
@@ -2434,6 +2365,73 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
             propertyPathOperator = None
           ),
           obj = QueryVariable(variableName = "thing1"),
+          namedGraph = Some(
+            IriRef(
+              iri = "http://www.knora.org/explicit".toSmartIri,
+              propertyPathOperator = None
+            ))
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing2"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = QueryVariable(variableName = "thing"),
+          namedGraph = None
+        ),
+        StatementPattern(
+          subj = QueryVariable(variableName = "thing2"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj =
+            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue"),
+          namedGraph = None
+        ),
+        StatementPattern(
+          subj =
+            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue"),
+          pred = IriRef(
+            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#LinkValue".toSmartIri,
+            propertyPathOperator = None
+          ),
+          namedGraph = Some(
+            IriRef(
+              iri = "http://www.knora.org/explicit".toSmartIri,
+              propertyPathOperator = None
+            ))
+        ),
+        StatementPattern(
+          subj =
+            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue"),
+          pred = IriRef(
+            iri = "http://www.knora.org/ontology/knora-base#isDeleted".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = XsdLiteral(
+            value = "false",
+            datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
+          ),
+          namedGraph = Some(
+            IriRef(
+              iri = "http://www.knora.org/explicit".toSmartIri,
+              propertyPathOperator = None
+            ))
+        ),
+        StatementPattern(
+          subj =
+            QueryVariable(variableName = "thing2__httpwwwknoraorgontology0001anythinghasOtherThing__thing__LinkValue"),
+          pred = IriRef(
+            iri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#object".toSmartIri,
+            propertyPathOperator = None
+          ),
+          obj = QueryVariable(variableName = "thing"),
           namedGraph = Some(
             IriRef(
               iri = "http://www.knora.org/explicit".toSmartIri,
@@ -2445,7 +2443,9 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
       querySchema = None
     ),
     limit = Some(25),
-    useDistinct = true
+    useDistinct = true,
+    fromClause = None,
+    variables = Vector(QueryVariable(variableName = "thing"))
   )
 
   val queryToReorderWithMinus: String =
