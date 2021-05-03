@@ -107,7 +107,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             triplestore = settings.triplestoreType,
             resourceIris = Seq(getStandoffRequestV2.resourceIri),
             preview = false,
-            withDeletedValues = false,
+            withDeleted = false,
             maybePropertyIri = None,
             maybeVersionDate = None,
             queryAllNonStandoff = false,

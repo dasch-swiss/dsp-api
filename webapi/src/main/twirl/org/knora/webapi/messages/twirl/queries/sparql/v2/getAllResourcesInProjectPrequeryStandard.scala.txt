@@ -38,9 +38,5 @@ WHERE {
     ?resourceType rdfs:subClassOf* knora-base:Resource .
     ?resource rdf:type ?resourceType .
     ?resource knora-base:creationDate ?creationDate.
-
-    FILTER NOT EXISTS {
-        ?resource knora-base:isDeleted true .
-    }
 }
 ORDER BY DESC(?creationDate)

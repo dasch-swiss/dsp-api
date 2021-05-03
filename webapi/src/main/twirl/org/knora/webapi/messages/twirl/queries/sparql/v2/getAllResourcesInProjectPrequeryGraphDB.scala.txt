@@ -35,8 +35,7 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 SELECT DISTINCT ?resource
 FROM <http://www.ontotext.com/explicit>
 WHERE {
-    ?resource knora-base:attachedToProject <@projectIri> ;
-        knora-base:isDeleted false .
+    ?resource knora-base:attachedToProject <@projectIri> .
     ?resourceType rdfs:subClassOf* knora-base:Resource .
     ?resource rdf:type ?resourceType .
     ?resource knora-base:creationDate ?creationDate.

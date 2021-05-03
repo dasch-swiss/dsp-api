@@ -23,11 +23,13 @@
 @**
  * Gets the the version history of the values of a resource, using GraphDB.
  *
- * @param resourceIri    the IRI of the resource.
- * @param maybeStartDate the start of the time period to return, inclusive.
- * @param maybeEndDate   the end of the time period to return, exclusive.
+ * @param resourceIri           the IRI of the resource.
+ * @param withDeletedResource   indicates if the version history of a deleted resource should be returned or not.
+ * @param maybeStartDate        the start of the time period to return, inclusive.
+ * @param maybeEndDate          the end of the time period to return, exclusive.
  *@
 @(resourceIri: IRI,
+  withDeletedResource: Boolean = false,
   maybeStartDate: Option[Instant] = None,
   maybeEndDate: Option[Instant] = None)
 
@@ -36,8 +38,10 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 
 SELECT DISTINCT ?versionDate ?author WHERE {
-    <@resourceIri> knora-base:isDeleted false ;
-        knora-base:hasValue ?currentValue .
+    <@resourceIri> knora-base:hasValue ?currentValue .
+    @if(!withDeletedResource) {
+      <@resourceIri> knora-base:isDeleted false .
+    }
 
     ?currentValue knora-base:previousValue* ?valueObject .
 
@@ -48,7 +52,12 @@ SELECT DISTINCT ?versionDate ?author WHERE {
         ?valueObject knora-base:deleteDate ?versionDate .
         ?valueObject knora-base:deletedBy ?author .
     }
-
+    @if(withDeletedResource) {
+        UNION {
+            <@resourceIri> knora-base:deleteDate ?versionDate .
+            <@resourceIri> knora-base:attachedToUser ?author .
+        }
+    }
     @maybeStartDate match {
         case Some(startDate) => {
             FILTER(?versionDate >= "@startDate"^^xsd:dateTime)

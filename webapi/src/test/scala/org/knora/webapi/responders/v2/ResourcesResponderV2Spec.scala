@@ -2401,6 +2401,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val resourceIri = "http://rdfh.ch/0001/a-thing-picture"
       responderManager ! ResourceVersionHistoryGetRequestV2(
         resourceIri = resourceIri,
+        withDeletedResource = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
@@ -2430,6 +2431,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! ResourceVersionHistoryGetRequestV2(
         resourceIri = resourceIri,
+        withDeletedResource = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
@@ -2467,6 +2469,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! ResourceVersionHistoryGetRequestV2(
         resourceIri = resourceIri,
+        withDeletedResource = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
@@ -2515,6 +2518,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! ResourceVersionHistoryGetRequestV2(
         resourceIri = resourceIri,
+        withDeletedResource = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
@@ -2564,6 +2568,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       expectMsgType[SuccessResponseV2](timeout)
       responderManager ! ResourceVersionHistoryGetRequestV2(
         resourceIri = resourceIri,
+        withDeletedResource = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
@@ -2584,6 +2589,30 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
               .asInstanceOf[ValueEventBody]
               .valueIri == valueToDelete)
       assert(deleteValueEvent.isDefined)
+    }
+
+    "return full history of a deleted resource" in {
+      val resourceIri = "http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA"
+      responderManager ! ResourceVersionHistoryGetRequestV2(
+        resourceIri = resourceIri,
+        withDeletedResource = true,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile
+      )
+      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
+
+      responderManager ! ResourceFullHistoryGetRequestV2(
+        resourceIri = resourceIri,
+        resourceVersionHistory = response.history,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile
+      )
+
+      val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      events.size should be(2)
+      val deleteResourceEvent: Option[ResourceAndValueHistoryV2] =
+        events.find(event => event.eventType == ResourceAndValueEventsUtil.DELETE_RESOURCE_EVENT)
+      assert(deleteResourceEvent.isDefined)
     }
 
     "return seq of full history events for each resource of a project" in {

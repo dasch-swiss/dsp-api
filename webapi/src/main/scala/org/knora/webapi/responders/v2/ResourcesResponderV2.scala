@@ -95,7 +95,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                propertyIri,
                                valueUuid,
                                versionDate,
-                               withDeletedValues,
+                               withDeleted,
                                targetSchema,
                                schemaOptions,
                                featureFactoryConfig,
@@ -104,13 +104,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                      propertyIri,
                      valueUuid,
                      versionDate,
-                     withDeletedValues,
+                     withDeleted,
                      targetSchema,
                      schemaOptions,
                      featureFactoryConfig,
                      requestingUser)
-    case ResourcesPreviewGetRequestV2(resIris, targetSchema, featureFactoryConfig, requestingUser) =>
-      getResourcePreviewV2(resIris, targetSchema, featureFactoryConfig, requestingUser)
+    case ResourcesPreviewGetRequestV2(resIris,
+                                      withDeletedResource,
+                                      targetSchema,
+                                      featureFactoryConfig,
+                                      requestingUser) =>
+      getResourcePreviewV2(resIris, withDeletedResource, targetSchema, featureFactoryConfig, requestingUser)
     case ResourceTEIGetRequestV2(resIri,
                                  textProperty,
                                  mappingIri,
@@ -1334,7 +1338,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     *
     * @param resourceIris         the Iris of the requested resources.
     * @param preview              `true` if a preview of the resource is requested.
-    *  @param withDeletedValues    if defined, indicates if the deleted values should be returned or not.
+    * @param withDeleted          if defined, indicates if the deleted resources and values should be returned or not.
     * @param propertyIri          if defined, requests only the values of the specified explicit property.
     * @param valueUuid            if defined, requests only the value with the specified UUID.
     * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
@@ -1346,7 +1350,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   private def getResourcesFromTriplestore(
       resourceIris: Seq[IRI],
       preview: Boolean,
-      withDeletedValues: Boolean = false,
+      withDeleted: Boolean = false,
       propertyIri: Option[SmartIri] = None,
       valueUuid: Option[UUID] = None,
       versionDate: Option[Instant] = None,
@@ -1371,7 +1375,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             triplestore = settings.triplestoreType,
             resourceIris = resourceIrisDistinct,
             preview = preview,
-            withDeletedValues = withDeletedValues,
+            withDeleted = withDeleted,
             maybePropertyIri = propertyIri,
             maybeValueUuid = valueUuid,
             maybeVersionDate = versionDate,
@@ -1406,7 +1410,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @param propertyIri          if defined, requests only the values of the specified explicit property.
     * @param valueUuid            if defined, requests only the value with the specified UUID.
     * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
-    * @param withDeletedValues    if defined, indicates if the deleted values should be returned or not.
+    * @param withDeleted          if defined, indicates if the deleted resource and values should be returned or not.
     * @param targetSchema         the target API schema.
     * @param schemaOptions        the schema options submitted with the request.
     * @param featureFactoryConfig the feature factory configuration.
@@ -1417,7 +1421,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                              propertyIri: Option[SmartIri] = None,
                              valueUuid: Option[UUID] = None,
                              versionDate: Option[Instant] = None,
-                             withDeletedValues: Boolean = false,
+                             withDeleted: Boolean = false,
                              targetSchema: ApiV2Schema,
                              schemaOptions: Set[SchemaOption],
                              featureFactoryConfig: FeatureFactoryConfig,
@@ -1435,7 +1439,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
         resourceIris = resourceIris,
         preview = false,
-        withDeletedValues = withDeletedValues,
+        withDeleted = withDeleted,
         propertyIri = propertyIri,
         valueUuid = valueUuid,
         versionDate = versionDate,
@@ -1493,11 +1497,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * Get the preview of a resource.
     *
     * @param resourceIris         the resource to query for.
+    * @param withDeleted          indicates if the deleted resource should be returned or not.
     * @param featureFactoryConfig the feature factory configuration.
     * @param requestingUser       the the user making the request.
     * @return a [[ReadResourcesSequenceV2]].
     */
   private def getResourcePreviewV2(resourceIris: Seq[IRI],
+                                   withDeleted: Boolean = false,
                                    targetSchema: ApiV2Schema,
                                    featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
@@ -1509,6 +1515,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
         resourceIris = resourceIris,
         preview = true,
+        withDeleted = withDeleted,
         queryStandoff = false, // This has no effect, because we are not querying values.
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
@@ -2195,6 +2202,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // its creation date.
       resourcePreviewResponse: ReadResourcesSequenceV2 <- getResourcePreviewV2(
         resourceIris = Seq(resourceHistoryRequest.resourceIri),
+        withDeleted = resourceHistoryRequest.withDeletedResource,
         targetSchema = ApiV2Complex,
         featureFactoryConfig = resourceHistoryRequest.featureFactoryConfig,
         requestingUser = resourceHistoryRequest.requestingUser
@@ -2207,6 +2215,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       historyRequestSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .getResourceValueVersionHistory(
           triplestore = settings.triplestoreType,
+          withDeletedResource = resourceHistoryRequest.withDeletedResource,
           resourceIri = resourceHistoryRequest.resourceIri,
           maybeStartDate = resourceHistoryRequest.startDate,
           maybeEndDate = resourceHistoryRequest.endDate
@@ -2286,9 +2295,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         resourceIri =>
           for {
             resourceHistory: ResourceVersionHistoryResponseV2 <- getResourceHistoryV2(
-              ResourceVersionHistoryGetRequestV2(resourceIri = resourceIri,
-                                                 featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
-                                                 requestingUser = projectResourcesGetRequest.requestingUser))
+              ResourceVersionHistoryGetRequestV2(
+                resourceIri = resourceIri,
+                withDeletedResource = true,
+                featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
+                requestingUser = projectResourcesGetRequest.requestingUser
+              ))
             resourceFullHist: Seq[ResourceAndValueHistoryV2] <- getResourceHistoryEvents(
               ResourceFullHistoryGetRequestV2(
                 resourceIri = resourceIri,
@@ -2331,17 +2343,24 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Create an event for the resource at creation time
       (creationTimeHist, resourceAtCreation) = fullReps.head
       resourceCreateEvent: ResourceAndValueHistoryV2 = getResourceAtCreationDate(resourceAtCreation, creationTimeHist)
-      histEvents: Seq[ResourceAndValueHistoryV2] = Seq(resourceCreateEvent)
+      resourceCreationEvent: Seq[ResourceAndValueHistoryV2] = Seq(resourceCreateEvent)
 
-      // Add history events of values
-      resourceAtValueChanges = fullReps.tail
+      // If there is a version history for deletion of the event, create a delete resource event for it.
+      (deletionRep, resourceAtValueChanges) = fullReps.tail.partition {
+        case (resHist, resource) =>
+          resource
+            .asInstanceOf[ReadResourceV2]
+            .deletionInfo
+            .exists(deletionInfo => deletionInfo.deleteDate == resHist.versionDate)
+      }
+      resourceDeleteEvent = getResourceAtDeletionDates(deletionRep)
 
       // For each value version, form an event
       valuesEvents: Seq[ResourceAndValueHistoryV2] = resourceAtValueChanges.flatMap {
         case (versionHist, readResource) => getValueAtGivenVersionDate(readResource, versionHist, fullReps)
       }
 
-    } yield histEvents ++ valuesEvents
+    } yield resourceCreationEvent ++ resourceDeleteEvent ++ valuesEvents
   }
 
   /**
@@ -2358,14 +2377,15 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                      featureFactoryConfig: FeatureFactoryConfig,
                                      requestingUser: UserADM): Future[(ResourceHistoryEntry, ReadResourceV2)] =
     for {
-      resourceFullRepAtCreationTime: ReadResourcesSequenceV2 <- (responderManager ? ResourcesGetRequestV2(
+      resourceFullRepAtCreationTime: ReadResourcesSequenceV2 <- getResourcesV2(
         resourceIris = Seq(resourceIri),
         versionDate = Some(versionHist.versionDate),
-        withDeletedValues = true,
+        withDeleted = true,
         targetSchema = ApiV2Complex,
+        schemaOptions = Set.empty[SchemaOption],
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
-      )).mapTo[ReadResourcesSequenceV2]
+      )
       resourceAtCreationTime: ReadResourceV2 = resourceFullRepAtCreationTime.resources.head
     } yield versionHist -> resourceAtCreationTime
 
@@ -2382,12 +2402,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     val requestBody: ResourceEventBody = ResourceEventBody(
       resourceIri = resourceAtTimeOfCreation.resourceIri,
       resourceClassIri = resourceAtTimeOfCreation.resourceClassIri,
-      label = resourceAtTimeOfCreation.label,
+      label = Some(resourceAtTimeOfCreation.label),
       values =
         resourceAtTimeOfCreation.values.mapValues(readValues => readValues.map(readValue => readValue.valueContent)),
       projectADM = resourceAtTimeOfCreation.projectADM,
-      permissions = resourceAtTimeOfCreation.permissions,
-      creationDate = resourceAtTimeOfCreation.creationDate
+      permissions = Some(resourceAtTimeOfCreation.permissions),
+      creationDate = Some(resourceAtTimeOfCreation.creationDate)
     )
 
     ResourceAndValueHistoryV2(
@@ -2396,6 +2416,33 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       author = versionInfoAtCreation.author,
       eventBody = requestBody
     )
+  }
+
+  /**
+    * Returns resourceDeletion events as Seq[[ResourceAndValueHistoryV2]] with request body of the form [[ResourceEventBody]].
+    *
+    * @param resourceDeletionInfo A sequence of resource deletion info containing version history of deletion and
+    *                             the full representation of resource at time of deletion.
+    * @return a seq of deleteResource events.
+    */
+  private def getResourceAtDeletionDates(
+      resourceDeletionInfo: Seq[(ResourceHistoryEntry, ReadResourceV2)]): Seq[ResourceAndValueHistoryV2] = {
+    resourceDeletionInfo.map {
+      case (delHist, fullRepresentation) =>
+        val requestBody: ResourceEventBody = ResourceEventBody(
+          resourceIri = fullRepresentation.resourceIri,
+          resourceClassIri = fullRepresentation.resourceClassIri,
+          projectADM = fullRepresentation.projectADM,
+          lastModificationDate = fullRepresentation.lastModificationDate,
+          deletionInfo = fullRepresentation.deletionInfo
+        )
+        ResourceAndValueHistoryV2(
+          eventType = ResourceAndValueEventsUtil.DELETE_RESOURCE_EVENT,
+          versionDate = delHist.versionDate,
+          author = delHist.author,
+          eventBody = requestBody
+        )
+    }
   }
 
   /**

@@ -66,6 +66,7 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
   *
   * @param resourceIris         the IRIs of the resources to be queried.
   * @param propertyIri          if defined, requests only the values of the specified explicit property.
+  * @param withDeleted          if defined, returns a deleted resource or a deleted value.
   * @param valueUuid            if defined, requests only the value with the specified UUID.
   * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
   * @param targetSchema         the target API schema.
@@ -77,7 +78,7 @@ case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
                                  propertyIri: Option[SmartIri] = None,
                                  valueUuid: Option[UUID] = None,
                                  versionDate: Option[Instant] = None,
-                                 withDeletedValues: Boolean = false,
+                                 withDeleted: Boolean = false,
                                  targetSchema: ApiV2Schema,
                                  schemaOptions: Set[SchemaOption] = Set.empty,
                                  featureFactoryConfig: FeatureFactoryConfig,
@@ -88,11 +89,13 @@ case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
   * Requests a preview of one or more resources. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param resourceIris         the IRIs of the resources to obtain a preview for.
+  * @param withDeletedResource  indicates if a preview of deleted resource should be returned.
   * @param targetSchema         the schema of the response.
   * @param featureFactoryConfig the feature factory configuration.
   * @param requestingUser       the user making the request.
   */
 case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI],
+                                        withDeletedResource: Boolean = false,
                                         targetSchema: ApiV2Schema,
                                         featureFactoryConfig: FeatureFactoryConfig,
                                         requestingUser: UserADM)
@@ -102,12 +105,14 @@ case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI],
   * Requests the version history of the values of a resource.
   *
   * @param resourceIri          the IRI of the resource.
+  * @param withDeletedResource  indicates if the version history of deleted resources should be returned or not.
   * @param startDate            the start of the time period to return, inclusive.
   * @param endDate              the end of the time period to return, exclusive.
   * @param featureFactoryConfig the feature factory configuration.
   * @param requestingUser       the user making the request.
   */
 case class ResourceVersionHistoryGetRequestV2(resourceIri: IRI,
+                                              withDeletedResource: Boolean = false,
                                               startDate: Option[Instant] = None,
                                               endDate: Option[Instant] = None,
                                               featureFactoryConfig: FeatureFactoryConfig,
@@ -1327,10 +1332,12 @@ abstract class ResourceOrValueEventBody
   */
 case class ResourceEventBody(resourceIri: IRI,
                              resourceClassIri: SmartIri,
-                             label: String,
-                             values: Map[SmartIri, Seq[ValueContentV2]],
-                             permissions: String,
-                             creationDate: Instant,
+                             label: Option[String] = None,
+                             values: Map[SmartIri, Seq[ValueContentV2]] = Map.empty[SmartIri, Seq[ValueContentV2]],
+                             permissions: Option[String] = None,
+                             lastModificationDate: Option[Instant] = None,
+                             creationDate: Option[Instant] = None,
+                             deletionInfo: Option[DeletionInfo] = None,
                              projectADM: ProjectADM)
     extends ResourceOrValueEventBody {
 
@@ -1355,18 +1362,38 @@ case class ResourceEventBody(resourceIri: IRI,
         propIri.toString -> JsonLDArray(valueContentsAsJsonLD)
     }
 
+    val resourceLabel: Option[(IRI, JsonLDString)] = label.map { resourceLabel =>
+      OntologyConstants.Rdfs.Label -> JsonLDString(resourceLabel)
+    }
+
+    val permissionAsJsonLD: Option[(IRI, JsonLDString)] = permissions.map { resourcePermission =>
+      OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(resourcePermission)
+    }
+
+    val creationDateAsJsonLD: Option[(IRI, JsonLDValue)] = creationDate.map { resourceCreationDate =>
+      OntologyConstants.KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+        value = resourceCreationDate.toString,
+        datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+      )
+    }
+    val lastModificationDateAsJsonLD: Option[(IRI, JsonLDValue)] = lastModificationDate.map { lasModDate =>
+      OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+        value = lasModDate.toString,
+        datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+      )
+    }
+
+    val deletionInfoAsJsonLD: Map[IRI, JsonLDValue] = deletionInfo match {
+      case Some(definedDeletionInfo) => definedDeletionInfo.toJsonLDFields(ApiV2Complex)
+      case None                      => Map.empty[IRI, JsonLDValue]
+    }
     JsonLDObject(
       Map(
         OntologyConstants.KnoraApiV2Complex.ResourceIri -> JsonLDString(resourceIri),
         OntologyConstants.KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString),
-        OntologyConstants.Rdfs.Label -> JsonLDString(label),
-        OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(permissions),
-        OntologyConstants.KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
-          value = creationDate.toString,
-          datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
-        ),
         OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id)
-      ) ++ propertiesAndValuesAsJsonLD
+      ) ++ resourceLabel ++ creationDateAsJsonLD ++ propertiesAndValuesAsJsonLD ++ lastModificationDateAsJsonLD
+        ++ deletionInfoAsJsonLD ++ permissionAsJsonLD
     )
   }
 }
