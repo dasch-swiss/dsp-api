@@ -65,7 +65,7 @@ class EventStoreManager(es: EventStore) extends Actor with ActorLogging with Laz
       sender ! Status.Failure(UnexpectedMessageException(s"EventStoreManager received an unexpected message: $other"))
   }
 
-  private def saveResourceEvent(event: ResourceEvent): Future[WriteResult] =
+  private def saveResourceEvent(event: ResourceEvent): Future[Boolean] =
     tracedFuture("event-store-save-resource-event") {
       es.saveResourceEvent(event)
     }

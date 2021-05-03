@@ -27,3 +27,10 @@ sealed trait ResourceEvent {
 }
 
 case class ResourceCreated(iri: IRI, event: String) extends ResourceEvent
+
+/*
+  object ResourceCreated {
+    implicit val decoder: JsonDecoder[ResourceCreated] = DeriveJsonDecoder.gen[ResourceCreated]
+    implicit val encoder: JsonEncoder[ResourceCreated] = DeriveJsonEncoder.gen[ResourceCreated]
+  }
+ */

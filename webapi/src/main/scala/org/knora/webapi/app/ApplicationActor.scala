@@ -61,7 +61,7 @@ import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import org.knora.webapi.store.StoreManager
-import org.knora.webapi.store.eventstore.EventStoreImpl
+import org.knora.webapi.store.eventstore.EventStoreInMemImpl
 import org.knora.webapi.util.cache.CacheUtil
 import redis.clients.jedis.exceptions.JedisConnectionException
 
@@ -81,7 +81,7 @@ trait LiveManagers extends Managers {
     * The actor that forwards messages to actors that deal with persistent storage.
     */
   lazy val storeManager: ActorRef = context.actorOf(
-    Props(new StoreManager(appActor = self, es = EventStoreImpl) with LiveActorMaker)
+    Props(new StoreManager(appActor = self, es = EventStoreInMemImpl) with LiveActorMaker)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = StoreManagerActorName
   )

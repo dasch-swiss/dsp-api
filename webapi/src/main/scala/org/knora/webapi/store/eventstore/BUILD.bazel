@@ -8,11 +8,11 @@ scala_library(
         "EventStore.scala",
         "EventStoreManager.scala",
         "EventStoreMessage.scala",
+        "ResourceEvent.scala",
     ],
     unused_dependency_checker_mode = "warn",
     deps = [
         ":resource_event",
-        ":resource_event_macros",
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
         "//webapi/src/main/scala/org/knora/webapi/instrumentation",
@@ -34,7 +34,7 @@ scala_library(
     ],
 )
 
-scala_library(
+scala_macro_library(
     name = "resource_event",
     srcs = [
         "ResourceEvent.scala",
@@ -42,18 +42,8 @@ scala_library(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
-    ],
-)
-
-scala_macro_library(
-    name = "resource_event_macros",
-    srcs = [
-        "ResourceEventMacros.scala",
-    ],
-    unused_dependency_checker_mode = "warn",
-    deps = [
-        ":resource_event",
         "@maven//:dev_zio_zio_2_12",
         "@maven//:dev_zio_zio_json_2_12",
+        "@io_bazel_rules_scala_scala_reflect", # needed for scala macros
     ],
 )

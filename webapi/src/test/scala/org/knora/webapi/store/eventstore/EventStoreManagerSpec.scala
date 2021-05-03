@@ -47,17 +47,20 @@ object EventStoreManagerSpec {
 class EventStoreManagerSpec extends CoreSpec(EventStoreManagerSpec.config) {
   "The EventStoreManager" should {
 
+    val resourceIri = "IRI"
+    val eventContent = "event content"
+
     "successfully store an event" in {
-      val resourceIri = "IRI"
-      val event = ResourceCreated("IRI", "event content")
+      val event = ResourceCreated(resourceIri, eventContent)
       storeManager ! EventStoreSaveResourceEventRequest(event)
-      val received = expectMsgType[WriteResult](5.seconds)
+      val received = expectMsgType[Boolean](5.seconds)
+      received should be(true)
     }
 
     "successfully retrieve resource events by IRI" in {
-      val resourceIri = "IRI"
       storeManager ! EventStoreGetResourceEventsRequest(resourceIri)
       val received = expectMsgType[List[ResourceEvent]](5.seconds)
+      received should be(List(ResourceCreated(resourceIri, eventContent)))
     }
   }
 }
