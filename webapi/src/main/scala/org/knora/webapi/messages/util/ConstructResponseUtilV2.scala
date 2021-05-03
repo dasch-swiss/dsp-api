@@ -1419,20 +1419,24 @@ object ConstructResponseUtilV2 {
       timeout: Timeout,
       executionContext: ExecutionContext): Future[ReadResourceV2] = {
     def getDeletionInfo(rdfData: RdfData): Option[DeletionInfo] = {
-      val isDeleted: Boolean = rdfData.requireBooleanObject(OntologyConstants.KnoraBase.IsDeleted.toSmartIri)
+      val mayHaveDeletedStatements: Option[Boolean] =
+        rdfData.maybeBooleanObject(OntologyConstants.KnoraBase.IsDeleted.toSmartIri)
+      mayHaveDeletedStatements match {
+        case Some(isDeleted: Boolean) =>
+          if (isDeleted) {
+            val deleteDate = rdfData.requireDateTimeObject(OntologyConstants.KnoraBase.DeleteDate.toSmartIri)
+            val maybeDeleteComment = rdfData.maybeStringObject(OntologyConstants.KnoraBase.DeleteComment.toSmartIri)
 
-      if (isDeleted) {
-        val deleteDate = rdfData.requireDateTimeObject(OntologyConstants.KnoraBase.DeleteDate.toSmartIri)
-        val maybeDeleteComment = rdfData.maybeStringObject(OntologyConstants.KnoraBase.DeleteComment.toSmartIri)
-
-        Some(
-          DeletionInfo(
-            deleteDate = deleteDate,
-            maybeDeleteComment = maybeDeleteComment
-          )
-        )
-      } else {
-        None
+            Some(
+              DeletionInfo(
+                deleteDate = deleteDate,
+                maybeDeleteComment = maybeDeleteComment
+              )
+            )
+          } else {
+            None
+          }
+        case _ => None
       }
     }
 

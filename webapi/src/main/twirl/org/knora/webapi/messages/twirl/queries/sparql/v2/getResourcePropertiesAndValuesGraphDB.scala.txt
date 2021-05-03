@@ -30,6 +30,7 @@
  *
  * @param resourceIris               the IRIs of the requested resources.
  * @param preview                    indicates if the request should only return preview information.
+ * @param withDeleted                indicates if the deleted resources and values should be returned or not.
  * @param maybePropertyIri           if defined, only returns values of the specified explicit property.
  *                                   Cannot be used in conjunction with preview.
  * @param maybeValueUuid             if defined, requests only the value with the specified UUID.
@@ -47,6 +48,7 @@
  *@
 @(resourceIris: Seq[IRI],
   preview: Boolean,
+  withDeleted: Boolean,
   maybePropertyIri: Option[SmartIri],
   maybeValueUuid: Option[UUID],
   maybeVersionDate: Option[Instant],
@@ -63,7 +65,6 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 CONSTRUCT {
     @* include this inferred information in the results, needed to identify resources *@
     ?resource a knora-base:Resource ;
-        knora-base:isDeleted false ;
         knora-base:isMainResource true ;
         knora-base:attachedToProject ?resourceProject ;
         rdfs:label ?label ;
@@ -73,6 +74,14 @@ CONSTRUCT {
         knora-base:creationDate ?creationDate ;
         knora-base:lastModificationDate ?lastModificationDate .
 
+    @*If deleted resources are wanted return deletion info, otherwise just indicated that resource is not deleted. *@
+    @if(!withDeleted) {
+        ?resource knora-base:isDeleted false .
+    } else {
+        ?resource knora-base:isDeleted ?isDeleted ;
+                knora-base:deleteDate ?deletionDate ;
+                knora-base:deleteComment ?deleteComment .
+    }
     @* include this inferred information in the results, needed to identify value properties *@
     ?resource knora-base:hasValue ?valueObject ;
         ?resourceValueProperty ?valueObject .
@@ -100,12 +109,24 @@ CONSTRUCT {
     VALUES ?resource { @for(resIri <- resourceIris) { <@resIri> } }
 
     ?resource rdf:type knora-base:Resource ;
-        knora-base:isDeleted false ;
         knora-base:attachedToProject ?resourceProject ;
         knora-base:attachedToUser ?resourceCreator ;
         knora-base:hasPermissions ?resourcePermissions ;
         knora-base:creationDate ?creationDate ;
         rdfs:label ?label .
+
+    @* If deleted resource is not wanted, ignore deleted resources. *@
+    @if(!withDeleted) {
+        ?resource knora-base:isDeleted false .
+    } else {
+       OPTIONAL {
+            ?resource knora-base:isDeleted ?isDeleted ;
+                    knora-base:deleteDate ?deletionDate .
+       }
+       OPTIONAL {
+            ?resource knora-base:deleteComment ?deleteComment .
+       }
+    }
 
     @* Is this a version history request? *@
     @maybeVersionDate match {
@@ -149,10 +170,12 @@ CONSTRUCT {
                         }
                     }
 
-                    @* If the value was deleted on or before the target date, ignore all its versions. *@
-                    FILTER NOT EXISTS {
-                        ?currentValue knora-base:deleteDate ?currentValueDeleteDate .
-                        FILTER(?currentValueDeleteDate <= "@versionDate"^^xsd:dateTime)
+                   @* If deleted values are not required and the value was deleted on or before the target date, ignore all its versions. *@
+                   @if(!withDeleted) {
+                        FILTER NOT EXISTS {
+                            ?currentValue knora-base:deleteDate ?currentValueDeleteDate .
+                            FILTER(?currentValueDeleteDate <= "@versionDate"^^xsd:dateTime)
+                        }
                     }
 
                     @* Get the current version's UUID, because we're going to return it with the requested version. *@

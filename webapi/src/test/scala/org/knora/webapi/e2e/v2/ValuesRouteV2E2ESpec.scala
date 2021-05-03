@@ -3437,7 +3437,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
-      println(responseToString(response))
+
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
       val valueIri: IRI =
