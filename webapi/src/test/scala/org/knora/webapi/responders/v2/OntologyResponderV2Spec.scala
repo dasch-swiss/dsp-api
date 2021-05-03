@@ -2296,7 +2296,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "create a class anything:CardinalityThing cardinalities on anything:hasInterestingThing and anything:hasInterestingThingValue" in {
+    "create a class anything:CardinalityThing with cardinalities on anything:hasInterestingThing and anything:hasInterestingThingValue" in {
       val classIri = AnythingOntologyIri.makeEntityIri("CardinalityThing")
 
       val classInfoContent = ClassInfoContentV2(
@@ -3895,6 +3895,68 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
 
+    }
+
+    "change the GUI order of the cardinalities of the class anything:Nothing" in {
+      val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
+
+      val classInfoContent = ClassInfoContentV2(
+        classIri = classIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          )
+        ),
+        directCardinalities = Map(
+          AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(cardinality =
+                                                                                         Cardinality.MayHaveOne,
+                                                                                       guiOrder = Some(1)),
+          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(cardinality =
+                                                                                        Cardinality.MayHaveOne,
+                                                                                      guiOrder = Some(2)),
+          AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(
+            cardinality = Cardinality.MayHaveOne,
+            guiOrder = Some(3))
+        ),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! ChangeCardinalitiesRequestV2(
+        classInfoContent = classInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      val expectedCardinalities = Map(
+        AnythingOntologyIri.makeEntityIri("hasOtherNothing") -> KnoraCardinalityInfo(cardinality =
+                                                                                       Cardinality.MayHaveOne,
+                                                                                     guiOrder = Some(1)),
+        AnythingOntologyIri.makeEntityIri("hasOtherNothingValue") -> KnoraCardinalityInfo(cardinality =
+                                                                                            Cardinality.MayHaveOne,
+                                                                                          guiOrder = Some(1)),
+        AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(
+          cardinality = Cardinality.MayHaveOne,
+          guiOrder = Some(2)),
+        AnythingOntologyIri.makeEntityIri("hasEmptiness") -> KnoraCardinalityInfo(cardinality = Cardinality.MayHaveOne,
+                                                                                  guiOrder = Some(3))
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val externalOntology = msg.toOntologySchema(ApiV2Complex)
+          assert(externalOntology.classes.size == 1)
+          val readClassInfo = externalOntology.classes(classIri)
+          readClassInfo.entityInfoContent.directCardinalities should ===(expectedCardinalities)
+
+          val metadata = externalOntology.ontologyMetadata
+          val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+            throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
     }
 
     "change the cardinalities of the class anything:Nothing, removing anything:hasOtherNothing and anything:hasNothingness and leaving anything:hasEmptiness" in {
