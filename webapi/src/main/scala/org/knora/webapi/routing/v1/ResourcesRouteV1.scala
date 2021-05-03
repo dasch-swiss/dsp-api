@@ -59,7 +59,7 @@ import org.knora.webapi.messages.v1.responder.resourcemessages._
 import org.knora.webapi.messages.v1.responder.valuemessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
-import org.knora.webapi.util.FileUtil
+import org.knora.webapi.util.{ActorUtil, FileUtil}
 import org.w3c.dom.ls.{LSInput, LSResourceResolver}
 import org.xml.sax.SAXException
 
@@ -340,19 +340,14 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         )
 
         // make the whole Map a Future
-        valuesToBeCreated: Iterable[(IRI, Seq[CreateValueV1WithComment])] <- Future.traverse(
-          valuesToBeCreatedWithFuture) {
-          case (propIri: IRI, valuesFuture: Future[Seq[CreateValueV1WithComment]]) =>
-            for {
-              values <- valuesFuture
-            } yield propIri -> values
-        }
+        valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] <- ActorUtil.sequenceFutureSeqsInMap(
+          valuesToBeCreatedWithFuture)
       } yield
         ResourceCreateRequestV1(
           resourceTypeIri = resourceTypeIri,
           label = label,
           projectIri = projectIri,
-          values = valuesToBeCreated.toMap,
+          values = valuesToBeCreated,
           file = file,
           featureFactoryConfig = featureFactoryConfig,
           userProfile = userADM,
@@ -372,12 +367,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       // make the whole Map a Future
 
       for {
-        valuesToBeCreated: Iterable[(IRI, Seq[CreateValueV1WithComment])] <- Future.traverse(values) {
-          case (propIri: IRI, valuesFuture: Future[Seq[CreateValueV1WithComment]]) =>
-            for {
-              values <- valuesFuture
-            } yield propIri -> values
-        }
+        valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] <- ActorUtil.sequenceFutureSeqsInMap(values)
 
         convertedFile <- resourceRequest.file match {
           case Some(filename) =>
@@ -405,7 +395,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
           label = stringFormatter.toSparqlEncodedString(
             resourceRequest.label,
             throw BadRequestException(s"The resource label is invalid: '${resourceRequest.label}'")),
-          values = valuesToBeCreated.toMap,
+          values = valuesToBeCreated,
           file = convertedFile,
           creationDate = resourceRequest.creationDate
         )
@@ -944,6 +934,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
             creationDate = creationDate
           )
         })
+        .toSeq
     }
 
     /**
@@ -963,7 +954,7 @@ class ResourcesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
         val language = node.attribute("lang").map(s => s.head.toString)
         knoraType.toString match {
           case "richtext_value" =>
-            val maybeMappingID: Option[Seq[Node]] = node.attributes.get("mapping_id")
+            val maybeMappingID: Option[Seq[Node]] = node.attributes.get("mapping_id").map(_.toSeq)
 
             maybeMappingID match {
               case Some(mappingID) =>

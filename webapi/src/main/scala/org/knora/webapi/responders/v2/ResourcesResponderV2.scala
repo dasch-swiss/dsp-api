@@ -705,8 +705,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Check that the resource class has a suitable cardinality for each submitted value.
       resourceClassInfo <- Future(entityInfo.classInfoMap(internalCreateResource.resourceClassIri))
 
-      knoraPropertyCardinalities: Map[SmartIri, Cardinality.KnoraCardinalityInfo] = resourceClassInfo.allCardinalities
+      knoraPropertyCardinalities: Map[SmartIri, Cardinality.KnoraCardinalityInfo] = resourceClassInfo.allCardinalities.view
         .filterKeys(resourceClassInfo.knoraResourceProperties)
+        .toMap
 
       _ = internalCreateResource.values.foreach {
         case (propertyIri: SmartIri, valuesForProperty: Seq[CreateValueInNewResourceV2]) =>
@@ -865,7 +866,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         resourceIri -> resourceToCreate.resourceClassIri
       }
       .toMap
+      .view
       .filterKeys(newTargets)
+      .toMap
 
     for {
       // Get information about the existing resources that are targets of links.

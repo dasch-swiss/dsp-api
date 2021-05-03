@@ -34,7 +34,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.control.Exception._
 
 /*

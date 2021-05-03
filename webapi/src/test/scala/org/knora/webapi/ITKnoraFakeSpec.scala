@@ -85,13 +85,13 @@ class ITKnoraFakeSpec(_system: ActorSystem)
   protected val baseInternalSipiUrl: String = settings.internalSipiBaseUrl
   protected val baseExternalSipiUrl: String = settings.externalSipiBaseUrl
 
-  override def beforeAll: Unit = {
+  override def beforeAll(): Unit = {
     /* Set the startup flags and start the Knora Server */
     log.debug(s"Starting Knora Service")
     startService()
   }
 
-  override def afterAll: Unit = {
+  override def afterAll(): Unit = {
     /* Stop the server when everything else has finished */
     log.debug(s"Stopping Knora Service")
     stopService()

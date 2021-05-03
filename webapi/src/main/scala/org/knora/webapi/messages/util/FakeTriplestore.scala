@@ -25,7 +25,7 @@ import akka.event.LoggingAdapter
 import org.apache.commons.io.FileUtils
 import org.knora.webapi.util.FileUtil
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * A fake triplestore for use in performance testing. This feature is activated in `application.conf`.

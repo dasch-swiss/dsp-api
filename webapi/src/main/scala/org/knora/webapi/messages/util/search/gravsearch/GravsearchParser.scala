@@ -29,7 +29,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * Parses a Gravsearch query. The syntax that is accepted is that of a SPARQL CONSTRUCT query, with some restrictions:
@@ -159,7 +159,7 @@ object GravsearchParser {
         whereClause = WhereClause(patterns = getWherePatterns,
                                   positiveEntities = positiveEntities.toSet,
                                   querySchema = Some(querySchema)),
-        orderBy = orderBy,
+        orderBy = orderBy.toSeq,
         offset = offset,
         querySchema = Some(querySchema)
       )
@@ -169,7 +169,7 @@ object GravsearchParser {
       * Returns the WHERE patterns found in the query.
       */
     private def getWherePatterns: Seq[QueryPattern] = {
-      wherePatterns
+      wherePatterns.toSeq
     }
 
     private def unsupported(node: algebra.QueryModelNode) {
@@ -678,10 +678,13 @@ object GravsearchParser {
         case functionCall: algebra.FunctionCall =>
           val functionIri = IriRef(functionCall.getURI.toSmartIri)
 
-          val args: Seq[Entity] = functionCall.getArgs.asScala.map(arg => makeFilterExpression(arg)).map {
-            case entity: Entity => entity
-            case other          => throw GravsearchException(s"Unsupported argument in function: $other")
-          }
+          val args: Seq[Entity] = functionCall.getArgs.asScala
+            .map(arg => makeFilterExpression(arg))
+            .map {
+              case entity: Entity => entity
+              case other          => throw GravsearchException(s"Unsupported argument in function: $other")
+            }
+            .toSeq
 
           FunctionCallExpression(
             functionIri = functionIri,

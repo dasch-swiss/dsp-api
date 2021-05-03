@@ -196,7 +196,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                 propertyPathOperator = None
               ))
           )
-        ),
+        ).toSeq,
         positiveEntities = Set(),
         querySchema = None
       ),
@@ -339,7 +339,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                 datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
               )
             ))
-        ),
+        ).toSeq,
         positiveEntities = Set(),
         querySchema = None
       ),
@@ -491,7 +491,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                   ))
               )
             ))
-        ),
+        ).toSeq,
         positiveEntities = Set(),
         querySchema = None
       ),
@@ -654,7 +654,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                 )
               ))
             ))
-        ),
+        ).toSeq,
         positiveEntities = Set(),
         querySchema = None
       ),
@@ -801,7 +801,7 @@ class NonTriplestoreSpecificGravsearchToPrequeryTransformerSpec extends CoreSpec
                   ))
               )
             ))
-        ),
+        ).toSeq,
         positiveEntities = Set(),
         querySchema = None
       ),

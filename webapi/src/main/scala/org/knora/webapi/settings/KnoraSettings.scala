@@ -29,7 +29,7 @@ import com.typesafe.config.{Config, ConfigObject, ConfigValue}
 import org.knora.webapi.exceptions.{FeatureToggleException, FileWriteException}
 import org.knora.webapi.util.cache.CacheUtil.KnoraCacheConfig
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
