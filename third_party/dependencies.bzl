@@ -61,7 +61,7 @@ def dependencies():
             "commons-validator:commons-validator:1.6",
 
             # authentication
-            "org.bouncycastle:bcprov-jdk15on:1.59",
+            "org.bouncycastle:bcprov-jdk15on:1.64",
             "org.springframework.security:spring-security-core:5.1.5.RELEASE",
             "com.pauldijou:jwt-spray-json_2.13:5.0.0",
 
