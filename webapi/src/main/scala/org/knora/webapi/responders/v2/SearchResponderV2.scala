@@ -759,7 +759,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
 
       // Do a SELECT prequery to get the IRIs of the requested page of resources.
       prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-        .getResourcesInProjectPrequery(
+        .getResourcesByClassInProjectPrequery(
           triplestore = settings.triplestoreType,
           projectIri = resourcesInProjectGetRequestV2.projectIri.toString,
           resourceClassIri = internalClassIri,
@@ -798,6 +798,7 @@ class SearchResponderV2(responderData: ResponderData) extends ResponderWithStand
                 triplestore = settings.triplestoreType,
                 resourceIris = mainResourceIris,
                 preview = false,
+                withDeleted = false,
                 queryAllNonStandoff = true,
                 maybePropertyIri = None,
                 maybeVersionDate = None,

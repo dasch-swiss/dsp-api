@@ -66,6 +66,7 @@ sealed trait ResourcesResponderRequestV2 extends KnoraRequestV2 {
   *
   * @param resourceIris         the IRIs of the resources to be queried.
   * @param propertyIri          if defined, requests only the values of the specified explicit property.
+  * @param withDeleted          if defined, returns a deleted resource or a deleted value.
   * @param valueUuid            if defined, requests only the value with the specified UUID.
   * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
   * @param targetSchema         the target API schema.
@@ -77,6 +78,7 @@ case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
                                  propertyIri: Option[SmartIri] = None,
                                  valueUuid: Option[UUID] = None,
                                  versionDate: Option[Instant] = None,
+                                 withDeleted: Boolean = false,
                                  targetSchema: ApiV2Schema,
                                  schemaOptions: Set[SchemaOption] = Set.empty,
                                  featureFactoryConfig: FeatureFactoryConfig,
@@ -87,11 +89,13 @@ case class ResourcesGetRequestV2(resourceIris: Seq[IRI],
   * Requests a preview of one or more resources. A successful response will be a [[ReadResourcesSequenceV2]].
   *
   * @param resourceIris         the IRIs of the resources to obtain a preview for.
+  * @param withDeletedResource  indicates if a preview of deleted resource should be returned.
   * @param targetSchema         the schema of the response.
   * @param featureFactoryConfig the feature factory configuration.
   * @param requestingUser       the user making the request.
   */
 case class ResourcesPreviewGetRequestV2(resourceIris: Seq[IRI],
+                                        withDeletedResource: Boolean = false,
                                         targetSchema: ApiV2Schema,
                                         featureFactoryConfig: FeatureFactoryConfig,
                                         requestingUser: UserADM)
@@ -126,17 +130,51 @@ case class ResourceIIIFManifestGetResponseV2(manifest: JsonLDDocument) extends K
   * Requests the version history of the values of a resource.
   *
   * @param resourceIri          the IRI of the resource.
+  * @param withDeletedResource  indicates if the version history of deleted resources should be returned or not.
   * @param startDate            the start of the time period to return, inclusive.
   * @param endDate              the end of the time period to return, exclusive.
   * @param featureFactoryConfig the feature factory configuration.
   * @param requestingUser       the user making the request.
   */
 case class ResourceVersionHistoryGetRequestV2(resourceIri: IRI,
-                                              startDate: Option[Instant],
-                                              endDate: Option[Instant],
+                                              withDeletedResource: Boolean = false,
+                                              startDate: Option[Instant] = None,
+                                              endDate: Option[Instant] = None,
                                               featureFactoryConfig: FeatureFactoryConfig,
                                               requestingUser: UserADM)
     extends ResourcesResponderRequestV2
+
+/**
+  * Requests the full version history of a resource and its values as events.
+  *
+  * @param resourceIri            the IRI of the resource.
+  * @param resourceVersionHistory the version history of the resource and its values.
+  * @param featureFactoryConfig   the feature factory configuration.
+  * @param requestingUser         the user making the request.
+  */
+case class ResourceFullHistoryGetRequestV2(resourceIri: IRI,
+                                           resourceVersionHistory: Seq[ResourceHistoryEntry],
+                                           featureFactoryConfig: FeatureFactoryConfig,
+                                           requestingUser: UserADM)
+    extends ResourcesResponderRequestV2
+
+/**
+  * Requests the version history of all resources of a project.
+  *
+  * @param projectIri          the IRI of the project.
+  * @param featureFactoryConfig the feature factory configuration.
+  * @param requestingUser       the user making the request.
+  */
+case class ProjectResourcesWithHistoryGetRequestV2(projectIri: IRI,
+                                                   featureFactoryConfig: FeatureFactoryConfig,
+                                                   requestingUser: UserADM)
+    extends ResourcesResponderRequestV2 {
+  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+  stringFormatter.validateAndEscapeIri(projectIri, throw BadRequestException(s"Invalid project IRI: $projectIri"))
+  if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
+    throw BadRequestException("Given IRI is not a project IRI.")
+  }
+}
 
 /**
   * Represents an item in the version history of a resource.
@@ -1288,5 +1326,250 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
       edges = edges.map(_.toOntologySchema(targetSchema)),
       ontologySchema = targetSchema
     )
+  }
+}
+
+/**
+  * Represents the version history of a resource or a values as events.
+  *
+  * @param eventType    the type of the operation that is one of [[ResourceAndValueEventsUtil]]
+  * @param versionDate  the version date of the event.
+  * @param author       the user which had performed the operation.
+  * @param eventBody    the request body in the form of [[ResourceOrValueEventBody]] needed for the operation indicated
+  *                     by eventType.
+  */
+case class ResourceAndValueHistoryV2(eventType: String,
+                                     versionDate: Instant,
+                                     author: IRI,
+                                     eventBody: ResourceOrValueEventBody)
+
+abstract class ResourceOrValueEventBody
+
+/**
+  * Represents a resource event (createResource) body with all the information required for the request body of this operation.
+  * @param resourceIri  the IRI of the resource.
+  * @param resourceClassIri the class of the resource.
+  * @param label         the label of the resource.
+  * @param values        the values of the resource at creation time.
+  * @param permissions   the permissions assigned to the new resource.
+  * @param creationDate  the creation date of the resource.
+  * @param projectADM    the project which the resource belongs to.
+  */
+case class ResourceEventBody(resourceIri: IRI,
+                             resourceClassIri: SmartIri,
+                             label: Option[String] = None,
+                             values: Map[SmartIri, Seq[ValueContentV2]] = Map.empty[SmartIri, Seq[ValueContentV2]],
+                             permissions: Option[String] = None,
+                             lastModificationDate: Option[Instant] = None,
+                             creationDate: Option[Instant] = None,
+                             deletionInfo: Option[DeletionInfo] = None,
+                             projectADM: ProjectADM)
+    extends ResourceOrValueEventBody {
+
+  def toJsonLD(targetSchema: ApiV2Schema,
+               settings: KnoraSettingsImpl,
+               schemaOptions: Set[SchemaOption]): JsonLDObject = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val propertiesAndValuesAsJsonLD: Map[IRI, JsonLDArray] = values.map {
+      case (propIri: SmartIri, valueContents: Seq[ValueContentV2]) =>
+        val valueContentsAsJsonLD: Seq[JsonLDValue] = valueContents.map { content =>
+          content
+            .toOntologySchema(targetSchema)
+            .toJsonLDValue(
+              targetSchema = targetSchema,
+              projectADM = projectADM,
+              settings = settings,
+              schemaOptions = schemaOptions
+            )
+        }
+
+        propIri.toString -> JsonLDArray(valueContentsAsJsonLD)
+    }
+
+    val resourceLabel: Option[(IRI, JsonLDString)] = label.map { resourceLabel =>
+      OntologyConstants.Rdfs.Label -> JsonLDString(resourceLabel)
+    }
+
+    val permissionAsJsonLD: Option[(IRI, JsonLDString)] = permissions.map { resourcePermission =>
+      OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(resourcePermission)
+    }
+
+    val creationDateAsJsonLD: Option[(IRI, JsonLDValue)] = creationDate.map { resourceCreationDate =>
+      OntologyConstants.KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+        value = resourceCreationDate.toString,
+        datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+      )
+    }
+    val lastModificationDateAsJsonLD: Option[(IRI, JsonLDValue)] = lastModificationDate.map { lasModDate =>
+      OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+        value = lasModDate.toString,
+        datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+      )
+    }
+
+    val deletionInfoAsJsonLD: Map[IRI, JsonLDValue] = deletionInfo match {
+      case Some(definedDeletionInfo) => definedDeletionInfo.toJsonLDFields(ApiV2Complex)
+      case None                      => Map.empty[IRI, JsonLDValue]
+    }
+    JsonLDObject(
+      Map(
+        OntologyConstants.KnoraApiV2Complex.ResourceIri -> JsonLDString(resourceIri),
+        OntologyConstants.KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString),
+        OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id)
+      ) ++ resourceLabel ++ creationDateAsJsonLD ++ propertiesAndValuesAsJsonLD ++ lastModificationDateAsJsonLD
+        ++ deletionInfoAsJsonLD ++ permissionAsJsonLD
+    )
+  }
+}
+
+/**
+  * Represents a value event (create/update content/update permission/delete) body with all the information required for
+  * the request body of the operation.
+  * @param resourceIri  the IRI of the resource.
+  * @param resourceClassIri the class of the resource.
+  * @param projectADM          the project which the resource belongs to.
+  * @param propertyIri         the IRI of the property.
+  * @param valueIri            the IRI of the value.
+  * @param valueTypeIri        the type of the value.
+  * @param valueContent        the content of the value.
+  * @param valueUUID           the UUID of the value.
+  * @param valueCreationDate   the creation date of the value.
+  * @param previousValueIri    in the case of update value/ delete value operation, this indicates the previous value IRI.
+  * @param permissions         the permissions assigned to the value.
+  * @param valueComment        the comment given for the value operation.
+  * @param deletionInfo        in case of delete value operation, it contains the date of deletion and the given comment.
+  */
+case class ValueEventBody(resourceIri: IRI,
+                          resourceClassIri: SmartIri,
+                          projectADM: ProjectADM,
+                          propertyIri: SmartIri,
+                          valueIri: IRI,
+                          valueTypeIri: SmartIri,
+                          valueContent: Option[ValueContentV2] = None,
+                          valueUUID: Option[UUID] = None,
+                          valueCreationDate: Option[Instant] = None,
+                          previousValueIri: Option[IRI] = None,
+                          permissions: Option[String] = None,
+                          valueComment: Option[String] = None,
+                          deletionInfo: Option[DeletionInfo] = None)
+    extends ResourceOrValueEventBody {
+
+  def toJsonLD(targetSchema: ApiV2Schema,
+               settings: KnoraSettingsImpl,
+               schemaOptions: Set[SchemaOption]): JsonLDObject = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val contentAsJsonLD: Option[(String, JsonLDValue)] = valueContent.map { content =>
+      val contentJsonLD = content
+        .toOntologySchema(targetSchema)
+        .toJsonLDValue(
+          targetSchema = targetSchema,
+          projectADM = projectADM,
+          settings = settings,
+          schemaOptions = schemaOptions
+        )
+      propertyIri.toString -> contentJsonLD
+    }
+
+    val valueUUIDAsJsonLD: Option[(IRI, JsonLDValue)] = valueUUID.map { valueHasUUID =>
+      OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueHasUUID))
+    }
+
+    val valueCreationDateAsJsonLD: Option[(IRI, JsonLDValue)] = valueCreationDate.map { valueHasCreationDate =>
+      OntologyConstants.KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+        value = valueHasCreationDate.toString,
+        datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+      )
+    }
+    val valuePermissionsAsJSONLD: Option[(IRI, JsonLDValue)] = permissions.map { hasPermissions =>
+      OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(hasPermissions)
+    }
+
+    val deletionInfoAsJsonLD: Map[IRI, JsonLDValue] = deletionInfo match {
+      case Some(definedDeletionInfo) => definedDeletionInfo.toJsonLDFields(ApiV2Complex)
+      case None                      => Map.empty[IRI, JsonLDValue]
+    }
+    val valueHasCommentAsJsonLD: Option[(IRI, JsonLDValue)] = valueComment.map { definedComment =>
+      OntologyConstants.KnoraApiV2Complex.ValueHasComment -> JsonLDString(definedComment)
+    }
+
+    val previousValueAsJsonLD: Option[(IRI, JsonLDValue)] = previousValueIri.map { previousIri =>
+      OntologyConstants.KnoraBase.PreviousValue -> JsonLDString(previousIri.toString)
+    }
+    JsonLDObject(
+      Map(
+        JsonLDKeywords.ID -> JsonLDString(valueIri),
+        JsonLDKeywords.TYPE -> JsonLDString(valueTypeIri.toString),
+        OntologyConstants.KnoraApiV2Complex.ResourceIri -> JsonLDString(resourceIri),
+        OntologyConstants.KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString),
+        OntologyConstants.Rdf.Property -> JsonLDString(propertyIri.toString),
+      ) ++ previousValueAsJsonLD ++ contentAsJsonLD ++ valueUUIDAsJsonLD ++ valueCreationDateAsJsonLD ++ valuePermissionsAsJSONLD
+        ++ deletionInfoAsJsonLD ++ valueHasCommentAsJsonLD
+    )
+  }
+}
+
+/**
+  * Represents the history of the project resources and values.
+  */
+case class ResourceAndValueVersionHistoryResponseV2(projectHistory: Seq[ResourceAndValueHistoryV2])
+    extends KnoraJsonLDResponseV2 {
+
+  /**
+    * Converts the response to a data structure that can be used to generate JSON-LD.
+    *
+    * @param targetSchema the Knora API schema to be used in the JSON-LD document.
+    * @return a [[JsonLDDocument]] representing the response.
+    */
+  override def toJsonLDDocument(targetSchema: ApiV2Schema,
+                                settings: KnoraSettingsImpl,
+                                schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    if (targetSchema != ApiV2Complex) {
+      throw AssertionException("Version history can be returned only in the complex schema")
+    }
+
+    // Convert the history entries to an array of JSON-LD objects.
+
+    val projectHistoryAsJsonLD: Seq[JsonLDObject] = projectHistory.map { historyEntry: ResourceAndValueHistoryV2 =>
+      // convert event body to JsonLD object
+      val eventBodyAsJsonLD: JsonLDObject = historyEntry.eventBody match {
+        case valueEventBody: ValueEventBody       => valueEventBody.toJsonLD(targetSchema, settings, schemaOptions)
+        case resourceEventBody: ResourceEventBody => resourceEventBody.toJsonLD(targetSchema, settings, schemaOptions)
+        case _                                    => throw NotFoundException(s"Event body is missing or has wrong type.")
+      }
+
+      JsonLDObject(
+        Map(
+          OntologyConstants.KnoraApiV2Complex.EventType -> JsonLDString(historyEntry.eventType),
+          OntologyConstants.KnoraApiV2Complex.VersionDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+            value = historyEntry.versionDate.toString,
+            datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+          ),
+          OntologyConstants.KnoraApiV2Complex.Author -> JsonLDUtil.iriToJsonLDObject(historyEntry.author),
+          OntologyConstants.KnoraApiV2Complex.EventBody -> eventBodyAsJsonLD
+        )
+      )
+    }
+
+    // Make the JSON-LD context.
+
+    val context = JsonLDUtil.makeContext(
+      fixedPrefixes = Map(
+        "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
+        "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+        "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion,
+        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion,
+        OntologyConstants.KnoraBase.KnoraBaseOntologyLabel -> OntologyConstants.KnoraBase.KnoraBasePrefixExpansion
+      )
+    )
+
+    // Make the JSON-LD document.
+
+    val body = JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(projectHistoryAsJsonLD)))
+
+    JsonLDDocument(body = body, context = context)
   }
 }

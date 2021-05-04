@@ -34,7 +34,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{
   DefaultObjectAccessPermissionsStringResponseADM,
   ResourceCreateOperation
 }
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.sipimessages.{SipiGetTextFileRequest, SipiGetTextFileResponse}
 import org.knora.webapi.messages.store.triplestoremessages._
@@ -104,6 +104,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                propertyIri,
                                valueUuid,
                                versionDate,
+                               withDeleted,
                                targetSchema,
                                schemaOptions,
                                featureFactoryConfig,
@@ -112,14 +113,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                      propertyIri,
                      valueUuid,
                      versionDate,
+                     withDeleted,
                      targetSchema,
                      schemaOptions,
                      featureFactoryConfig,
                      requestingUser)
-
-    case ResourcesPreviewGetRequestV2(resIris, targetSchema, featureFactoryConfig, requestingUser) =>
-      getResourcePreviewV2(resIris, targetSchema, featureFactoryConfig, requestingUser)
-
+    case ResourcesPreviewGetRequestV2(resIris,
+                                      withDeletedResource,
+                                      targetSchema,
+                                      featureFactoryConfig,
+                                      requestingUser) =>
+      getResourcePreviewV2(resIris, withDeletedResource, targetSchema, featureFactoryConfig, requestingUser)
     case ResourceTEIGetRequestV2(resIri,
                                  textProperty,
                                  mappingIri,
@@ -145,11 +149,17 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     case graphDataGetRequest: GraphDataGetRequestV2 => getGraphDataResponseV2(graphDataGetRequest)
 
-    case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 => getResourceHistoryV2(resourceHistoryRequest)
+    case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 =>
+      getResourceHistoryV2(resourceHistoryRequest)
 
     case resourceIIIFManifestRequest: ResourceIIIFManifestGetRequestV2 => getIIIFManifestV2(resourceIIIFManifestRequest)
 
-    case other => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case projectResourcesWithHistoryRequestV2: ProjectResourcesWithHistoryGetRequestV2 =>
+      getProjectResourcesWithHistoryV2(projectResourcesWithHistoryRequestV2)
+    case resourceFullHistRequest: ResourceFullHistoryGetRequestV2 => getResourceHistoryEvents(resourceFullHistRequest)
+
+    case other =>
+      handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
   /**
@@ -1348,6 +1358,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     *
     * @param resourceIris         the Iris of the requested resources.
     * @param preview              `true` if a preview of the resource is requested.
+    * @param withDeleted          if defined, indicates if the deleted resources and values should be returned or not.
     * @param propertyIri          if defined, requests only the values of the specified explicit property.
     * @param valueUuid            if defined, requests only the value with the specified UUID.
     * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
@@ -1359,9 +1370,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   private def getResourcesFromTriplestore(
       resourceIris: Seq[IRI],
       preview: Boolean,
-      propertyIri: Option[SmartIri],
-      valueUuid: Option[UUID],
-      versionDate: Option[Instant],
+      withDeleted: Boolean = false,
+      propertyIri: Option[SmartIri] = None,
+      valueUuid: Option[UUID] = None,
+      versionDate: Option[Instant] = None,
       queryStandoff: Boolean,
       featureFactoryConfig: FeatureFactoryConfig,
       requestingUser: UserADM): Future[ConstructResponseUtilV2.MainResourcesAndValueRdfData] = {
@@ -1383,6 +1395,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             triplestore = settings.triplestoreType,
             resourceIris = resourceIrisDistinct,
             preview = preview,
+            withDeleted = withDeleted,
             maybePropertyIri = propertyIri,
             maybeValueUuid = valueUuid,
             maybeVersionDate = versionDate,
@@ -1417,6 +1430,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @param propertyIri          if defined, requests only the values of the specified explicit property.
     * @param valueUuid            if defined, requests only the value with the specified UUID.
     * @param versionDate          if defined, requests the state of the resources at the specified time in the past.
+    * @param withDeleted          if defined, indicates if the deleted resource and values should be returned or not.
     * @param targetSchema         the target API schema.
     * @param schemaOptions        the schema options submitted with the request.
     * @param featureFactoryConfig the feature factory configuration.
@@ -1427,6 +1441,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                              propertyIri: Option[SmartIri] = None,
                              valueUuid: Option[UUID] = None,
                              versionDate: Option[Instant] = None,
+                             withDeleted: Boolean = false,
                              targetSchema: ApiV2Schema,
                              schemaOptions: Set[SchemaOption],
                              featureFactoryConfig: FeatureFactoryConfig,
@@ -1444,6 +1459,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
         resourceIris = resourceIris,
         preview = false,
+        withDeleted = withDeleted,
         propertyIri = propertyIri,
         valueUuid = valueUuid,
         versionDate = versionDate,
@@ -1501,11 +1517,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * Get the preview of a resource.
     *
     * @param resourceIris         the resource to query for.
+    * @param withDeleted          indicates if the deleted resource should be returned or not.
     * @param featureFactoryConfig the feature factory configuration.
     * @param requestingUser       the the user making the request.
     * @return a [[ReadResourcesSequenceV2]].
     */
   private def getResourcePreviewV2(resourceIris: Seq[IRI],
+                                   withDeleted: Boolean = false,
                                    targetSchema: ApiV2Schema,
                                    featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM): Future[ReadResourcesSequenceV2] = {
@@ -1517,9 +1535,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
         resourceIris = resourceIris,
         preview = true,
-        propertyIri = None,
-        valueUuid = None,
-        versionDate = None,
+        withDeleted = withDeleted,
         queryStandoff = false, // This has no effect, because we are not querying values.
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
@@ -2206,6 +2222,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // its creation date.
       resourcePreviewResponse: ReadResourcesSequenceV2 <- getResourcePreviewV2(
         resourceIris = Seq(resourceHistoryRequest.resourceIri),
+        withDeleted = resourceHistoryRequest.withDeletedResource,
         targetSchema = ApiV2Complex,
         featureFactoryConfig = resourceHistoryRequest.featureFactoryConfig,
         requestingUser = resourceHistoryRequest.requestingUser
@@ -2218,6 +2235,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       historyRequestSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
         .getResourceValueVersionHistory(
           triplestore = settings.triplestoreType,
+          withDeletedResource = resourceHistoryRequest.withDeletedResource,
           resourceIri = resourceHistoryRequest.resourceIri,
           maybeStartDate = resourceHistoryRequest.startDate,
           maybeEndDate = resourceHistoryRequest.endDate
@@ -2400,5 +2418,352 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           keepStructure = true
         )
       )
+  }
+
+  /**
+    * Returns the resources of a project with version history ordered by date.
+    *
+    * @param projectResourcesGetRequest the resources with version history request.
+    * @return the all resources of project with ordered version history.
+    */
+  def getProjectResourcesWithHistoryV2(projectResourcesGetRequest: ProjectResourcesWithHistoryGetRequestV2)
+    : Future[ResourceAndValueVersionHistoryResponseV2] =
+    for {
+      // Get the project; checks if a project with given IRI exists.
+      projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
+        identifier = ProjectIdentifierADM(maybeIri = Some(projectResourcesGetRequest.projectIri)),
+        featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
+        requestingUser = projectResourcesGetRequest.requestingUser
+      )).mapTo[ProjectGetResponseADM]
+
+      // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
+      prequery = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+        .getAllResourcesInProjectPrequery(
+          triplestore = settings.triplestoreType,
+          projectIri = projectInfoResponse.project.id
+        )
+        .toString
+
+      sparqlSelectResponse <- (storeManager ? SparqlSelectRequest(prequery)).mapTo[SparqlSelectResult]
+      mainResourceIris: Seq[IRI] = sparqlSelectResponse.results.bindings.map(_.rowMap("resource"))
+      // For each resource IRI return history events
+      historyOfResourcesAsSeqOfFutures: Seq[Future[Seq[ResourceAndValueHistoryV2]]] = mainResourceIris.map {
+        resourceIri =>
+          for {
+            resourceHistory: ResourceVersionHistoryResponseV2 <- getResourceHistoryV2(
+              ResourceVersionHistoryGetRequestV2(
+                resourceIri = resourceIri,
+                withDeletedResource = true,
+                featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
+                requestingUser = projectResourcesGetRequest.requestingUser
+              ))
+            resourceFullHist: Seq[ResourceAndValueHistoryV2] <- getResourceHistoryEvents(
+              ResourceFullHistoryGetRequestV2(
+                resourceIri = resourceIri,
+                resourceVersionHistory = resourceHistory.history,
+                featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
+                requestingUser = projectResourcesGetRequest.requestingUser
+              ))
+          } yield resourceFullHist
+      }
+
+      projectHistory: Seq[Seq[ResourceAndValueHistoryV2]] <- Future.sequence(historyOfResourcesAsSeqOfFutures)
+      sortedProjectHistory: Seq[ResourceAndValueHistoryV2] = projectHistory.flatten.sortBy(_.versionDate)
+
+    } yield ResourceAndValueVersionHistoryResponseV2(projectHistory = sortedProjectHistory)
+
+  /**
+    * Returns the full history of a resource as events.
+    *
+    * @param resourceFullHistRequest the version history of a resource.
+    * @return the full history of resource as sequence of [[ResourceAndValueHistoryV2]].
+    */
+  def getResourceHistoryEvents(
+      resourceFullHistRequest: ResourceFullHistoryGetRequestV2): Future[Seq[ResourceAndValueHistoryV2]] = {
+
+    val resourceHist = resourceFullHistRequest.resourceVersionHistory.reverse
+    // Collect the full representations of the resource for each version date
+    val histories: Seq[Future[(ResourceHistoryEntry, ReadResourceV2)]] = resourceHist.map { hist =>
+      for {
+        fullRepresentations <- getResourceAtGivenTime(
+          resourceIri = resourceFullHistRequest.resourceIri,
+          versionHist = hist,
+          featureFactoryConfig = resourceFullHistRequest.featureFactoryConfig,
+          requestingUser = resourceFullHistRequest.requestingUser
+        )
+      } yield fullRepresentations
+    }
+    for {
+      fullReps: Seq[(ResourceHistoryEntry, ReadResourceV2)] <- Future.sequence(histories)
+
+      // Create an event for the resource at creation time
+      (creationTimeHist, resourceAtCreation) = fullReps.head
+      resourceCreateEvent: ResourceAndValueHistoryV2 = getResourceAtCreationDate(resourceAtCreation, creationTimeHist)
+      resourceCreationEvent: Seq[ResourceAndValueHistoryV2] = Seq(resourceCreateEvent)
+
+      // If there is a version history for deletion of the event, create a delete resource event for it.
+      (deletionRep, resourceAtValueChanges) = fullReps.tail.partition {
+        case (resHist, resource) =>
+          resource
+            .asInstanceOf[ReadResourceV2]
+            .deletionInfo
+            .exists(deletionInfo => deletionInfo.deleteDate == resHist.versionDate)
+      }
+      resourceDeleteEvent = getResourceAtDeletionDates(deletionRep)
+
+      // For each value version, form an event
+      valuesEvents: Seq[ResourceAndValueHistoryV2] = resourceAtValueChanges.flatMap {
+        case (versionHist, readResource) => getValueAtGivenVersionDate(readResource, versionHist, fullReps)
+      }
+
+    } yield resourceCreationEvent ++ resourceDeleteEvent ++ valuesEvents
+  }
+
+  /**
+    * Returns the full representation of a resource at a given date.
+    *
+    * @param resourceIri                the IRI of the resource.
+    * @param versionHist                the history info of the version; i.e. versionDate and author.
+    * @param featureFactoryConfig       the feature factory configuration.
+    * @param requestingUser             the user making the request.
+    * @return the full representation of the resource at the given version date.
+    */
+  private def getResourceAtGivenTime(resourceIri: IRI,
+                                     versionHist: ResourceHistoryEntry,
+                                     featureFactoryConfig: FeatureFactoryConfig,
+                                     requestingUser: UserADM): Future[(ResourceHistoryEntry, ReadResourceV2)] =
+    for {
+      resourceFullRepAtCreationTime: ReadResourcesSequenceV2 <- getResourcesV2(
+        resourceIris = Seq(resourceIri),
+        versionDate = Some(versionHist.versionDate),
+        withDeleted = true,
+        targetSchema = ApiV2Complex,
+        schemaOptions = Set.empty[SchemaOption],
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser
+      )
+      resourceAtCreationTime: ReadResourceV2 = resourceFullRepAtCreationTime.resources.head
+    } yield versionHist -> resourceAtCreationTime
+
+  /**
+    * Returns a createResource event as [[ResourceAndValueHistoryV2]] with request body of the form [[ResourceEventBody]].
+    *
+    * @param resourceAtTimeOfCreation the full representation of the resource at creation date.
+    * @param versionInfoAtCreation the history info of the version; i.e. versionDate and author.
+    * @return a createResource event.
+    */
+  private def getResourceAtCreationDate(resourceAtTimeOfCreation: ReadResourceV2,
+                                        versionInfoAtCreation: ResourceHistoryEntry): ResourceAndValueHistoryV2 = {
+
+    val requestBody: ResourceEventBody = ResourceEventBody(
+      resourceIri = resourceAtTimeOfCreation.resourceIri,
+      resourceClassIri = resourceAtTimeOfCreation.resourceClassIri,
+      label = Some(resourceAtTimeOfCreation.label),
+      values =
+        resourceAtTimeOfCreation.values.mapValues(readValues => readValues.map(readValue => readValue.valueContent)),
+      projectADM = resourceAtTimeOfCreation.projectADM,
+      permissions = Some(resourceAtTimeOfCreation.permissions),
+      creationDate = Some(resourceAtTimeOfCreation.creationDate)
+    )
+
+    ResourceAndValueHistoryV2(
+      eventType = ResourceAndValueEventsUtil.CREATE_RESOURCE_EVENT,
+      versionDate = versionInfoAtCreation.versionDate,
+      author = versionInfoAtCreation.author,
+      eventBody = requestBody
+    )
+  }
+
+  /**
+    * Returns resourceDeletion events as Seq[[ResourceAndValueHistoryV2]] with request body of the form [[ResourceEventBody]].
+    *
+    * @param resourceDeletionInfo A sequence of resource deletion info containing version history of deletion and
+    *                             the full representation of resource at time of deletion.
+    * @return a seq of deleteResource events.
+    */
+  private def getResourceAtDeletionDates(
+      resourceDeletionInfo: Seq[(ResourceHistoryEntry, ReadResourceV2)]): Seq[ResourceAndValueHistoryV2] = {
+    resourceDeletionInfo.map {
+      case (delHist, fullRepresentation) =>
+        val requestBody: ResourceEventBody = ResourceEventBody(
+          resourceIri = fullRepresentation.resourceIri,
+          resourceClassIri = fullRepresentation.resourceClassIri,
+          projectADM = fullRepresentation.projectADM,
+          lastModificationDate = fullRepresentation.lastModificationDate,
+          deletionInfo = fullRepresentation.deletionInfo
+        )
+        ResourceAndValueHistoryV2(
+          eventType = ResourceAndValueEventsUtil.DELETE_RESOURCE_EVENT,
+          versionDate = delHist.versionDate,
+          author = delHist.author,
+          eventBody = requestBody
+        )
+    }
+  }
+
+  /**
+    * Returns a value event as [[ResourceAndValueHistoryV2]] with body of the form [[ValueEventBody]].
+    *
+    * @param resourceAtGivenTime the full representation of the resource at the given time.
+    * @param versionHist the history info of the version; i.e. versionDate and author.
+    * @param allResourceVersions all full representations of resource for each version date in its history.
+    * @return a create/update/delete value event.
+    */
+  private def getValueAtGivenVersionDate(
+      resourceAtGivenTime: ReadResourceV2,
+      versionHist: ResourceHistoryEntry,
+      allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)]): Seq[ResourceAndValueHistoryV2] = {
+    val resourceIri = resourceAtGivenTime.resourceIri
+
+    /** returns the values of the resource which have the given version date. */
+    def findValuesWithGivenVersionDate(values: Map[SmartIri, Seq[ReadValueV2]]): Map[SmartIri, ReadValueV2] = {
+      val valuesWithVersionDate: Map[SmartIri, ReadValueV2] = values.foldLeft(Map.empty[SmartIri, ReadValueV2]) {
+        case (acc, (propIri, readValue)) =>
+          val valuesWithGivenVersion: Seq[ReadValueV2] =
+            readValue.filter(readValue =>
+              readValue.valueCreationDate == versionHist.versionDate || readValue.deletionInfo.exists(deleteInfo =>
+                deleteInfo.deleteDate == versionHist.versionDate))
+          if (valuesWithGivenVersion.nonEmpty) {
+            acc + (propIri -> valuesWithGivenVersion.head)
+          } else { acc }
+      }
+
+      valuesWithVersionDate
+
+    }
+
+    val valuesWithAskedVersionDate: Map[SmartIri, ReadValueV2] = findValuesWithGivenVersionDate(
+      resourceAtGivenTime.values)
+    val valueEvents: Seq[ResourceAndValueHistoryV2] = valuesWithAskedVersionDate.map {
+      case (propIri, readValue) =>
+        val event =
+          //Is the given date a deletion date?
+          if (readValue.deletionInfo.exists(deletionInfo => deletionInfo.deleteDate == versionHist.versionDate)) {
+            // Yes. Return a deleteValue event
+            val deleteValueRequestBody = ValueEventBody(
+              resourceIri = resourceIri,
+              resourceClassIri = resourceAtGivenTime.resourceClassIri,
+              projectADM = resourceAtGivenTime.projectADM,
+              propertyIri = propIri,
+              valueIri = readValue.valueIri,
+              valueTypeIri = readValue.valueContent.valueType,
+              deletionInfo = readValue.deletionInfo,
+              previousValueIri = readValue.previousValueIri
+            )
+            ResourceAndValueHistoryV2(
+              eventType = ResourceAndValueEventsUtil.DELETE_VALUE_EVENT,
+              versionDate = versionHist.versionDate,
+              author = versionHist.author,
+              eventBody = deleteValueRequestBody
+            )
+          } else {
+            // No. Is the given date a creation date, i.e. value does not have a previous version?
+            if (readValue.previousValueIri.isEmpty) {
+              // Yes. return a createValue event with its request body
+              val createValueRequestBody = ValueEventBody(
+                resourceIri = resourceIri,
+                resourceClassIri = resourceAtGivenTime.resourceClassIri,
+                projectADM = resourceAtGivenTime.projectADM,
+                propertyIri = propIri,
+                valueIri = readValue.valueIri,
+                valueTypeIri = readValue.valueContent.valueType,
+                valueContent = Some(readValue.valueContent),
+                valueUUID = Some(readValue.valueHasUUID),
+                valueCreationDate = Some(readValue.valueCreationDate),
+                permissions = Some(readValue.permissions),
+                valueComment = readValue.valueContent.comment
+              )
+              ResourceAndValueHistoryV2(
+                eventType = ResourceAndValueEventsUtil.CREATE_VALUE_EVENT,
+                versionDate = versionHist.versionDate,
+                author = versionHist.author,
+                eventBody = createValueRequestBody
+              )
+            } else {
+              // No. return updateValue event
+              val (updateEventType: String, updateEventRequestBody: ValueEventBody) =
+                getUpdateEventType(propIri, readValue, allResourceVersions, resourceAtGivenTime)
+              ResourceAndValueHistoryV2(
+                eventType = updateEventType,
+                versionDate = versionHist.versionDate,
+                author = versionHist.author,
+                eventBody = updateEventRequestBody
+              )
+            }
+          }
+        event
+    }.toSeq
+
+    valueEvents
+  }
+
+  /**
+    * Since update value operation can be used to update value content or value permissions, using the previous versions
+    * of the value, it determines the type of the update and returns eventType: updateValuePermission/updateValueContent
+    * together with the request body necessary to do the update.
+    *
+    * @param propertyIri the IRI of the property.
+    * @param currentVersionOfValue the current value version.
+    * @param allResourceVersions all versions of resource.
+    * @param resourceAtGivenTime the full representation of the resource at time of value update.
+    * @return (eventType, update event request body)
+    */
+  private def getUpdateEventType(propertyIri: SmartIri,
+                                 currentVersionOfValue: ReadValueV2,
+                                 allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)],
+                                 resourceAtGivenTime: ReadResourceV2): (String, ValueEventBody) = {
+    val previousValueIri: IRI = currentVersionOfValue.previousValueIri.getOrElse(
+      throw BadRequestException("No previous value IRI found for the value, Please report this as a bug."))
+
+    //find the version of resource which has a value with previousValueIri
+    val (previousVersionDate, previousVersionOfResource): (ResourceHistoryEntry, ReadResourceV2) = allResourceVersions
+      .find(resourceWithHist =>
+        resourceWithHist._2.values.exists(item =>
+          item._1 == propertyIri && item._2.exists(value => value.valueIri == previousValueIri)))
+      .getOrElse(throw NotFoundException(s"Could not find the previous value of ${currentVersionOfValue.valueIri}"))
+
+    // check that the version date of the previousValue is before the version date of the current value.
+    if (previousVersionDate.versionDate.isAfter(currentVersionOfValue.valueCreationDate)) {
+      throw ForbiddenException(
+        s"Previous version of the value ${currentVersionOfValue.valueIri} that has previousValueIRI ${previousValueIri} " +
+          s"has a date after the current value.")
+    }
+
+    // get the previous value
+    val previousValue: ReadValueV2 =
+      previousVersionOfResource.values(propertyIri).find(value => value.valueIri == previousValueIri).get
+
+    // Is the content of previous version of value the same as content of the current version?
+    val event = if (previousValue.valueContent == currentVersionOfValue.valueContent) {
+      //Yes. Permission must have been updated; return a permission update event.
+      val updateValuePermissionsRequestBody = ValueEventBody(
+        resourceIri = resourceAtGivenTime.resourceIri,
+        resourceClassIri = resourceAtGivenTime.resourceClassIri,
+        projectADM = resourceAtGivenTime.projectADM,
+        propertyIri = propertyIri,
+        valueIri = currentVersionOfValue.valueIri,
+        valueTypeIri = currentVersionOfValue.valueContent.valueType,
+        permissions = Some(currentVersionOfValue.permissions),
+        valueComment = currentVersionOfValue.valueContent.comment
+      )
+      (ResourceAndValueEventsUtil.UPDATE_VALUE_PERMISSION_EVENT, updateValuePermissionsRequestBody)
+    } else {
+      // No. Content must have been updated; return a content update event.
+      val updateValueContentRequestBody = ValueEventBody(
+        resourceIri = resourceAtGivenTime.resourceIri,
+        resourceClassIri = resourceAtGivenTime.resourceClassIri,
+        projectADM = resourceAtGivenTime.projectADM,
+        propertyIri = propertyIri,
+        valueIri = currentVersionOfValue.valueIri,
+        valueTypeIri = currentVersionOfValue.valueContent.valueType,
+        valueContent = Some(currentVersionOfValue.valueContent),
+        valueUUID = Some(currentVersionOfValue.valueHasUUID),
+        valueCreationDate = Some(currentVersionOfValue.valueCreationDate),
+        valueComment = currentVersionOfValue.valueContent.comment,
+        previousValueIri = currentVersionOfValue.previousValueIri
+      )
+      (ResourceAndValueEventsUtil.UPDATE_VALUE_CONTENT_EVENT, updateValueContentRequestBody)
+    }
+    event
   }
 }
