@@ -8,7 +8,7 @@ scala_library(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_13",
         "@maven//:net_sf_ehcache_ehcache",
         "@maven//:org_slf4j_slf4j_api",
     ],

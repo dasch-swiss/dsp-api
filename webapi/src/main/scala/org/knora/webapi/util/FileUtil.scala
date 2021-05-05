@@ -27,9 +27,9 @@ import java.util.zip.{ZipEntry, ZipOutputStream}
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.exceptions.{FileWriteException, NotFoundException}
 import org.knora.webapi.settings.KnoraSettingsImpl
-import resource._
 
 import scala.io.{BufferedSource, Codec, Source}
+import scala.util.{Failure, Success, Try}
 
 /**
   * Functions for reading and writing files.
@@ -112,22 +112,25 @@ object FileUtil {
     * @return a byte array containing the Zip file data.
     */
   def createZipFileBytes(contents: Map[String, Array[Byte]]): Array[Byte] = {
-    val managedBytes: ExtractableManagedResource[Array[Byte]] = managed(new ByteArrayOutputStream()).map {
-      byteArrayOutputStream =>
-        for (zipOutputStream <- managed(new ZipOutputStream(byteArrayOutputStream))) {
-          contents.foreach {
-            case (filename: String, content: Array[Byte]) =>
-              val entry: ZipEntry = new ZipEntry(filename)
-              zipOutputStream.putNextEntry(entry)
-              zipOutputStream.write(content)
-              zipOutputStream.closeEntry()
-          }
-        }
+    val byteArrayOutputStream = new ByteArrayOutputStream()
+    val zipOutputStream = new ZipOutputStream(byteArrayOutputStream)
 
-        byteArrayOutputStream.toByteArray
+    val bytesTry = Try {
+      contents.foreach {
+        case (filename: String, content: Array[Byte]) =>
+          val entry: ZipEntry = new ZipEntry(filename)
+          zipOutputStream.putNextEntry(entry)
+          zipOutputStream.write(content)
+          zipOutputStream.closeEntry()
+      }
     }
 
-    managedBytes.tried.get
+    zipOutputStream.close()
+
+    bytesTry match {
+      case Success(_)  => byteArrayOutputStream.toByteArray
+      case Failure(ex) => throw ex
+    }
   }
 
   /**

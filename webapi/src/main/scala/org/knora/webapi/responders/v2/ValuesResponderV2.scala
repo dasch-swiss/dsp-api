@@ -787,7 +787,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
       // Replace each Vector[IRI] with its size. That's the number of text values containing
       // standoff links to that IRI.
-      val initialReferenceCounts: Map[IRI, Int] = allStandoffLinkTargetsGrouped.mapValues(_.size)
+      val initialReferenceCounts: Map[IRI, Int] = allStandoffLinkTargetsGrouped.view.mapValues(_.size).toMap
 
       // For each standoff link target IRI, construct a SparqlTemplateLinkUpdate to create a hasStandoffLinkTo property
       // and one LinkValue with its initial reference count.

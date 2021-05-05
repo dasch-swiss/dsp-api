@@ -27,7 +27,7 @@ import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable.ArrayBuffer
 
 sealed trait JenaNode extends RdfNode {
@@ -450,7 +450,7 @@ class JenaRepository(private val dataset: jena.query.Dataset) extends RdfReposit
 
     // Convert the query result to a SparqlSelectResponse.
 
-    val header = SparqlSelectResultHeader(resultSet.getResultVars.asScala)
+    val header = SparqlSelectResultHeader(resultSet.getResultVars.asScala.toSeq)
     val rowBuffer = ArrayBuffer.empty[VariableResultsRow]
 
     while (resultSet.hasNext) {
@@ -481,7 +481,7 @@ class JenaRepository(private val dataset: jena.query.Dataset) extends RdfReposit
 
     SparqlSelectResult(
       head = header,
-      results = SparqlSelectResultBody(bindings = rowBuffer)
+      results = SparqlSelectResultBody(bindings = rowBuffer.toSeq)
     )
   }
 

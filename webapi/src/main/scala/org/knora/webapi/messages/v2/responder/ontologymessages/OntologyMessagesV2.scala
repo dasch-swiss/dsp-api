@@ -2930,7 +2930,7 @@ object ClassInfoContentV2 {
 
       case TestResponseParsingModeV2 =>
         // In test response mode, we ignore predicates that wouldn't be allowed as client input.
-        JsonLDObject(jsonLDClassDef.value.filterKeys(AllowedJsonLDClassPredicatesInClientInput))
+        JsonLDObject(jsonLDClassDef.value.view.filterKeys(AllowedJsonLDClassPredicatesInClientInput).toMap)
 
       case KnoraOutputParsingModeV2 =>
         // In Knora output parsing mode, we accept all predicates.
@@ -3239,7 +3239,7 @@ object PropertyInfoContentV2 {
 
       case TestResponseParsingModeV2 =>
         // In test response mode, we ignore predicates that wouldn't be allowed as client input.
-        JsonLDObject(jsonLDPropertyDef.value.filterKeys(AllowedJsonLDPropertyPredicatesInClientInput))
+        JsonLDObject(jsonLDPropertyDef.value.view.filterKeys(AllowedJsonLDPropertyPredicatesInClientInput).toMap)
 
       case KnoraOutputParsingModeV2 =>
         // In Knora output parsing mode, we accept all predicates.

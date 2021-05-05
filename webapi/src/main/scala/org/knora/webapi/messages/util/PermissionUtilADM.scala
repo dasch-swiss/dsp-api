@@ -481,7 +481,7 @@ object PermissionUtilADM extends LazyLogging {
                                permissionType: PermissionType): Set[PermissionADM] = {
     maybePermissionListStr match {
       case Some(permissionListStr) => {
-        val cleanedPermissionListStr = permissionListStr replaceAll ("[<>]", "")
+        val cleanedPermissionListStr = permissionListStr.replaceAll("[<>]", "")
         val permissions: Seq[String] =
           cleanedPermissionListStr.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
         logger.debug(s"PermissionUtil.parsePermissionsWithType - split permissions: $permissions")

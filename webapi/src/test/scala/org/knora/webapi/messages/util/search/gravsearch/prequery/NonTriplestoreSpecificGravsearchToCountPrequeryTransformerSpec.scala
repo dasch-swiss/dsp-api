@@ -189,7 +189,7 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
                 )
               ))
             ))
-        ),
+        ).toSeq,
         positiveEntities = Set(),
         querySchema = None
       ),

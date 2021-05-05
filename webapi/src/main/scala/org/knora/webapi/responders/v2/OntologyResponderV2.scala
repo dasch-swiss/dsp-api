@@ -967,7 +967,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         checkSubjectClassConstraintsViaCardinalities(
           internalClassDef = classDef,
           allBaseClassIris = allBaseClasses.toSet,
-          allClassCardinalityKnoraPropertyDefs = allPropertyDefs.filterKeys(allOwlCardinalitiesForClass.keySet),
+          allClassCardinalityKnoraPropertyDefs =
+            allPropertyDefs.view.filterKeys(allOwlCardinalitiesForClass.keySet).toMap,
           errorSchema = InternalSchema,
           errorFun = { msg: String =>
             throw InconsistentRepositoryDataException(msg)
@@ -1417,12 +1418,14 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
       // See if any of the requested entities are hard-coded for knora-api.
 
-      hardCodedExternalClassesAvailable: Map[SmartIri, ReadClassInfoV2] = KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd
-        .filterKeys(classIris) ++
-        KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.filterKeys(classIris)
+      hardCodedExternalClassesAvailable: Map[SmartIri, ReadClassInfoV2] = KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd.view
+        .filterKeys(classIris)
+        .toMap ++
+        KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.view.filterKeys(classIris).toMap
 
-      hardCodedExternalPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd
-        .filterKeys(propertyIris) ++
+      hardCodedExternalPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] = KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd.view
+        .filterKeys(propertyIris)
+        .toMap ++
         KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.filterKeys(propertyIris)
 
       // Convert the remaining external entity IRIs to internal ones.
@@ -1439,19 +1442,21 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
       // Get the entities that are available in the ontology cache.
 
-      classOntologiesForCache: Iterable[ReadOntologyV2] = cacheData.ontologies
+      classOntologiesForCache: Iterable[ReadOntologyV2] = cacheData.ontologies.view
         .filterKeys(classIrisForCache.map(_.getOntologyFromEntity))
+        .toMap
         .values
-      propertyOntologiesForCache: Iterable[ReadOntologyV2] = cacheData.ontologies
+      propertyOntologiesForCache: Iterable[ReadOntologyV2] = cacheData.ontologies.view
         .filterKeys(propertyIrisForCache.map(_.getOntologyFromEntity))
+        .toMap
         .values
 
       classesAvailableFromCache: Map[SmartIri, ReadClassInfoV2] = classOntologiesForCache.flatMap { ontology =>
-        ontology.classes.filterKeys(classIrisForCache)
+        ontology.classes.view.filterKeys(classIrisForCache).toMap
       }.toMap
 
       propertiesAvailableFromCache: Map[SmartIri, ReadPropertyInfoV2] = propertyOntologiesForCache.flatMap { ontology =>
-        ontology.properties.filterKeys(propertyIrisForCache)
+        ontology.properties.view.filterKeys(propertyIrisForCache).toMap
       }.toMap
 
       allClassesAvailable: Map[SmartIri, ReadClassInfoV2] = classesAvailableFromCache ++ hardCodedExternalClassesAvailable

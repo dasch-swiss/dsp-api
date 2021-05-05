@@ -55,7 +55,7 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FileUtil
 import spray.json._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
