@@ -2288,6 +2288,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   def getIIIFManifestV2(request: ResourceIIIFManifestGetRequestV2): Future[ResourceIIIFManifestGetResponseV2] = {
+    // The implementation here is experimental. If we had a way of streaming the canvas URLs to the IIIF viewer,
+    // it would be better to write the Gravsearch query differently, so that ?representation was the main resource.
+    // Then the Gravsearch query could return pages of results.
+    //
+    // The manifest generated here also needs to be tested with a IIIF viewer. It's not clear what some of the IRIs
+    // in the manifest should be.
+
     for {
       // Make a Gravsearch query from a template.
       gravsearchQuery: String <- Future(
@@ -2322,7 +2329,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           body = JsonLDObject(
             Map(
               JsonLDKeywords.CONTEXT -> JsonLDString("http://iiif.io/api/presentation/3/context.json"),
-              "id" -> JsonLDString(s"${request.resourceIri}/manifest"),
+              "id" -> JsonLDString(s"${request.resourceIri}/manifest"), // Is this IRI OK?
               "type" -> JsonLDString("Manifest"),
               "label" -> JsonLDObject(
                 Map(
@@ -2358,7 +2365,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
                   JsonLDObject(
                     Map(
-                      "id" -> JsonLDString(s"${representation.resourceIri}/canvas"),
+                      "id" -> JsonLDString(s"${representation.resourceIri}/canvas"), // Is this IRI OK?
                       "type" -> JsonLDString("Canvas"),
                       "label" -> JsonLDObject(
                         Map(
@@ -2375,7 +2382,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                         Seq(
                           JsonLDObject(
                             Map(
-                              "id" -> JsonLDString(s"${imageValue.valueIri}/image"),
+                              "id" -> JsonLDString(s"${imageValue.valueIri}/image"), // Is this IRI OK?
                               "type" -> JsonLDString("AnnotationPage"),
                               "items" -> JsonLDArray(
                                 Seq(
