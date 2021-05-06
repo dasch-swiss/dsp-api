@@ -102,7 +102,7 @@ case class IntermediateTypeInspectionResult(
     */
   def untypedEntities: Set[TypeableEntity] = {
     entities.collect {
-      case (entity, entityTypes) if entityTypes.isEmpty => entity
+      case (entity: TypeableEntity, entityTypes: Set[GravsearchEntityTypeInfo]) if entityTypes.isEmpty => entity
     }.toSet
   }
 
@@ -155,14 +155,16 @@ object IntermediateTypeInspectionResult {
 
     // Find the IRIs that represent resource metadata properties, and get their object types.
     val resourceMetadataPropertyTypesUsed: Map[TypeableIri, PropertyTypeInfo] =
-      OntologyConstants.ResourceMetadataPropertyAxioms.filterKeys(irisUsed).map {
-        case (propertyIri, objectTypeIri) => {
-          val isValue = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(objectTypeIri)
-          TypeableIri(propertyIri.toSmartIri) -> PropertyTypeInfo(objectTypeIri = objectTypeIri.toSmartIri,
-                                                                  objectIsResourceType = !isValue,
-                                                                  objectIsValueType = isValue)
+      OntologyConstants.ResourceMetadataPropertyAxioms.view
+        .filterKeys(irisUsed)
+        .toMap
+        .map {
+          case (propertyIri: IRI, objectTypeIri: IRI) =>
+            val isValue: Boolean = GravsearchTypeInspectionUtil.GravsearchValueTypeIris.contains(objectTypeIri)
+            TypeableIri(propertyIri.toSmartIri) -> PropertyTypeInfo(objectTypeIri = objectTypeIri.toSmartIri,
+                                                                    objectIsResourceType = !isValue,
+                                                                    objectIsValueType = isValue)
         }
-      }
 
     // Add those types to the IntermediateTypeInspectionResult.
     resourceMetadataPropertyTypesUsed.foldLeft(emptyResult) {

@@ -8,7 +8,7 @@ scala_library(
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi/settings",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_stream_2_12",
+        "@maven//:com_typesafe_akka_akka_actor_2_13",
+        "@maven//:com_typesafe_akka_akka_stream_2_13",
     ],
 )

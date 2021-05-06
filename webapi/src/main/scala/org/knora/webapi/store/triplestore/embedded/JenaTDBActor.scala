@@ -48,7 +48,7 @@ import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
 /**
@@ -112,7 +112,7 @@ class JenaTDBActor extends Actor with ActorLogging {
       dropAllTriplestoreContent()
 
       // insert data
-      insertDataIntoTriplestore(rdfDataObjectList)
+      insertDataIntoTriplestore(rdfDataObjectList.toSeq)
     }
     this.initialized = true
   }
@@ -205,7 +205,7 @@ class JenaTDBActor extends Actor with ActorLogging {
 
       Future.successful(
         SparqlSelectResult(
-          SparqlSelectResultHeader(resultVars.asScala),
+          SparqlSelectResultHeader(resultVars.asScala.toSeq),
           SparqlSelectResultBody(variableResultsRows)
         )
       )

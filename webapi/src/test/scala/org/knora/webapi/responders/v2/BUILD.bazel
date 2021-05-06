@@ -63,7 +63,7 @@ scala_test(
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
-        "@maven//:com_typesafe_play_twirl_api_2_12",
+        "@maven//:com_typesafe_play_twirl_api_2_13",
         "@maven//:org_xmlunit_xmlunit_core",
     ] + BASE_TEST_DEPENDENCIES,
 )
@@ -123,7 +123,7 @@ scala_test(
         "//webapi:main_library",
         "//webapi:test_library",
         # Templates
-        "@maven//:com_typesafe_play_twirl_api_2_12",
+        "@maven//:com_typesafe_play_twirl_api_2_13",
     ] + BASE_TEST_DEPENDENCIES,
 )
 

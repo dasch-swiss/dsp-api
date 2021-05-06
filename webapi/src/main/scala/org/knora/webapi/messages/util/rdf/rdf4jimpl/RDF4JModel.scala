@@ -27,7 +27,7 @@ import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.util.JavaUtil._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.collection.mutable.ArrayBuffer
 
 sealed trait RDF4JNode extends RdfNode {
@@ -398,7 +398,7 @@ class RDF4JRepository(model: rdf4j.model.Model) extends RdfRepository {
 
     // Convert the query result to a SparqlSelectResponse.
 
-    val header = SparqlSelectResultHeader(tupleQueryResult.getBindingNames.asScala)
+    val header = SparqlSelectResultHeader(tupleQueryResult.getBindingNames.asScala.toSeq)
     val rowBuffer = ArrayBuffer.empty[VariableResultsRow]
 
     while (tupleQueryResult.hasNext) {
@@ -418,7 +418,7 @@ class RDF4JRepository(model: rdf4j.model.Model) extends RdfRepository {
 
     SparqlSelectResult(
       head = header,
-      results = SparqlSelectResultBody(bindings = rowBuffer)
+      results = SparqlSelectResultBody(bindings = rowBuffer.toSeq)
     )
   }
 

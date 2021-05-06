@@ -20,7 +20,7 @@
 package org.knora.webapi.instrumentation
 
 import com.typesafe.scalalogging.Logger
-import kamon.instrumentation.futures.scala.ScalaFutureInstrumentation.traced
+import kamon.instrumentation.futures.scala.ScalaFutureInstrumentation.trace
 import org.slf4j.LoggerFactory
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -60,7 +60,7 @@ trait InstrumentationSupport {
       * have at least something.
       */
     val start = System.currentTimeMillis()
-    traced(name)(future.andThen {
+    trace(name)(future.andThen {
       case Success(_) =>
         metricsLogger.info(s"$name: {} ms", System.currentTimeMillis() - start)
     })

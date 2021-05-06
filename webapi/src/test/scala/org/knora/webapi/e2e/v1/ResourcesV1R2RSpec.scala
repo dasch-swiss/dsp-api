@@ -50,12 +50,11 @@ import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
 import org.scalatest.Assertion
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
-import resource._
 import spray.json._
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
-import scala.util.Random
+import scala.util.{Random, Try}
 import scala.xml.{Node, NodeSeq, XML}
 
 /**
@@ -1652,18 +1651,17 @@ class ResourcesV1R2RSpec extends R2RSpec {
         val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
         val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
         val zippedFilenames = collection.mutable.Set.empty[String]
+        val zipInputStream = new ZipInputStream(new ByteArrayInputStream(responseBytes))
+        var zipEntry: ZipEntry = null
 
-        for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
-          var zipEntry: ZipEntry = null
-
-          while ({
-            zipEntry = zipInputStream.getNextEntry
-            zipEntry != null
-          }) {
-            zippedFilenames.add(zipEntry.getName)
-          }
+        while ({
+          zipEntry = zipInputStream.getNextEntry
+          zipEntry != null
+        }) {
+          zippedFilenames.add(zipEntry.getName)
         }
 
+        zipInputStream.close()
         assert(zippedFilenames == Set("p0801-beol.xsd", "p0801-biblio.xsd", "knoraXmlImport.xsd"))
       }
     }
@@ -1677,17 +1675,17 @@ class ResourcesV1R2RSpec extends R2RSpec {
         val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
         val zippedFilenames = collection.mutable.Set.empty[String]
 
-        for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
-          var zipEntry: ZipEntry = null
+        val zipInputStream = new ZipInputStream(new ByteArrayInputStream(responseBytes))
+        var zipEntry: ZipEntry = null
 
-          while ({
-            zipEntry = zipInputStream.getNextEntry
-            zipEntry != null
-          }) {
-            zippedFilenames.add(zipEntry.getName)
-          }
+        while ({
+          zipEntry = zipInputStream.getNextEntry
+          zipEntry != null
+        }) {
+          zippedFilenames.add(zipEntry.getName)
         }
 
+        zipInputStream.close()
         assert(zippedFilenames == Set("p0001-something.xsd", "knoraXmlImport.xsd", "p0001-anything.xsd"))
       }
     }
@@ -1700,18 +1698,17 @@ class ResourcesV1R2RSpec extends R2RSpec {
         val responseBodyFuture: Future[Array[Byte]] = response.entity.toStrict(5.seconds).map(_.data.toArray)
         val responseBytes: Array[Byte] = Await.result(responseBodyFuture, 5.seconds)
         val zippedFilenames = collection.mutable.Set.empty[String]
+        val zipInputStream = new ZipInputStream(new ByteArrayInputStream(responseBytes))
+        var zipEntry: ZipEntry = null
 
-        for (zipInputStream <- managed(new ZipInputStream(new ByteArrayInputStream(responseBytes)))) {
-          var zipEntry: ZipEntry = null
-
-          while ({
-            zipEntry = zipInputStream.getNextEntry
-            zipEntry != null
-          }) {
-            zippedFilenames.add(zipEntry.getName)
-          }
+        while ({
+          zipEntry = zipInputStream.getNextEntry
+          zipEntry != null
+        }) {
+          zippedFilenames.add(zipEntry.getName)
         }
 
+        zipInputStream.close()
         assert(zippedFilenames == Set("p0001-empty-thing.xsd", "knoraXmlImport.xsd", "p0001-anything.xsd"))
       }
     }

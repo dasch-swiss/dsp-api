@@ -21,8 +21,6 @@ package org.knora.webapi.messages.util
 
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 
-import scala.collection.{GenTraversableOnce, Iterator, MapLike}
-
 /**
   * A [[Map]] that facilitates error-handling, by wrapping an ordinary [[Map]] and overriding the `default`
   * method to provide custom behaviour (by default, throwing an [[InconsistentRepositoryDataException]]) if a required
@@ -41,8 +39,7 @@ class ErrorHandlingMap[A, B](toWrap: Map[A, B],
                              private val errorFun: String => B = { errorMessage: String =>
                                throw InconsistentRepositoryDataException(errorMessage)
                              })
-    extends Map[A, B]
-    with MapLike[A, B, ErrorHandlingMap[A, B]] {
+    extends Map[A, B] {
 
   // As an optimization, if the Map we're supposed to wrap is another ErrorHandlingMap, wrap its underlying wrapped Map instead.
   private val wrapped: Map[A, B] = toWrap match {
@@ -70,20 +67,8 @@ class ErrorHandlingMap[A, B](toWrap: Map[A, B],
     wrapped.size
   }
 
-  override def +[B1 >: B](kv: (A, B1)): ErrorHandlingMap[A, B1] = {
-    new ErrorHandlingMap(wrapped + kv, errorTemplateFun, errorFun)
-  }
-
-  override def -(key: A): ErrorHandlingMap[A, B] = {
-    new ErrorHandlingMap(wrapped - key, errorTemplateFun, errorFun)
-  }
-
-  override def ++[V1 >: B](xs: GenTraversableOnce[(A, V1)]): ErrorHandlingMap[A, V1] = {
+  override def ++[V1 >: B](xs: IterableOnce[(A, V1)]): ErrorHandlingMap[A, V1] = {
     new ErrorHandlingMap(wrapped ++ xs, errorTemplateFun, errorFun)
-  }
-
-  override def --(xs: GenTraversableOnce[A]): ErrorHandlingMap[A, B] = {
-    new ErrorHandlingMap(wrapped -- xs, errorTemplateFun, errorFun)
   }
 
   /**
@@ -92,4 +77,9 @@ class ErrorHandlingMap[A, B](toWrap: Map[A, B],
     * @param key the given key value for which a binding is missing.
     */
   override def default(key: A): B = errorFun(errorTemplateFun(key))
+
+  override def removed(key: A): Map[A, B] = new ErrorHandlingMap(wrapped - key, errorTemplateFun, errorFun)
+
+  override def updated[V1 >: B](key: A, value: V1): Map[A, V1] =
+    new ErrorHandlingMap(wrapped + (key -> value), errorTemplateFun, errorFun)
 }

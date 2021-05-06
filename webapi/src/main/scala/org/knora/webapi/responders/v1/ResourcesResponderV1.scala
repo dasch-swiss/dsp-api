@@ -63,6 +63,7 @@ import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.util.ActorUtil
 import org.knora.webapi.util.ApacheLuceneSupport.MatchStringWhileTyping
 
 import scala.collection.immutable
@@ -1571,19 +1572,19 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             (resourceClassIri, propertyPermissionsFuture)
         }
 
-      defaultPropertyAccessPermissions: immutable.Iterable[(IRI, Map[IRI, String])] <- Future.traverse(
-        defaultPropertyAccessPermissionsFutures) {
-        case (resourceClassIri: IRI, propertyPermissionsFuture: Future[Map[IRI, String]]) =>
-          for {
-            propertyPermissions <- propertyPermissionsFuture
-          } yield
+      defaultPropertyAccessPermissionsMapContents: Map[IRI, Map[IRI, String]] <- ActorUtil.sequenceFuturesInMap(
+        defaultPropertyAccessPermissionsFutures)
+
+      defaultPropertyAccessPermissionsMapToWrap: Map[IRI, Map[IRI, String]] = defaultPropertyAccessPermissionsMapContents
+        .map {
+          case (resourceClassIri: IRI, propertyPermissions: Map[IRI, String]) =>
             resourceClassIri -> new ErrorHandlingMap(propertyPermissions, { key: IRI =>
               s"No default access permissions found for property $key in resource class $resourceClassIri"
             })
-      }
+        }
 
       defaultPropertyAccessPermissionsMap: Map[IRI, Map[IRI, String]] = new ErrorHandlingMap(
-        defaultPropertyAccessPermissions.toMap, { key: IRI =>
+        defaultPropertyAccessPermissionsMapToWrap.toMap, { key: IRI =>
           s"No default property access permissions found for resource class $key"
         })
 
