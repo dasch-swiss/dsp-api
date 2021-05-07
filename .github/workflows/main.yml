@@ -453,7 +453,8 @@ jobs:
         uses: mhausenblas/mkdocs-deploy-gh-pages@master
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          CUSTOM_DOMAIN: docs.knora.org
+          CUSTOM_DOMAIN: docs-api.dasch.swiss
+          REQUIREMENTS: docs/requirements.txt
       - name: Disk Free After
         run: |
           df -h
