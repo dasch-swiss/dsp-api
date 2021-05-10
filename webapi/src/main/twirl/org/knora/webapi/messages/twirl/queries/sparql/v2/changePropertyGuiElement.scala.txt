@@ -75,12 +75,16 @@ DELETE {
             case Some(newGuiElement) => {
                 ?property salsah-gui:guiElement <@newGuiElement> .
             }
+
+            case None => {}
         }
 
         @maybeNewGuiAttribute match {
             case Some(newGuiAttribute) => {
-                ?property salsah-gui:guiAttribute <@newGuiAttribute> .
+                ?property salsah-gui:guiAttribute "@newGuiAttribute" .
             }
+
+            case None => {}
         }
 
         @maybeLinkValuePropertyIri match {
@@ -89,12 +93,16 @@ DELETE {
                     case Some(newGuiElement) => {
                         <@linkValuePropertyIri> salsah-gui:guiElement <@newGuiElement> .
                     }
+
+                    case None => {}
                 }
 
                 @maybeNewGuiAttribute match {
                     case Some(newGuiAttribute) => {
-                        <@linkValuePropertyIri> salsah-gui:guiAttribute <@newGuiAttribute> .
+                        <@linkValuePropertyIri> salsah-gui:guiAttribute "@newGuiAttribute" .
                     }
+
+                    case None => {}
                 }
             }
 

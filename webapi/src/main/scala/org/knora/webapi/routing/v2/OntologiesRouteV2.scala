@@ -66,7 +66,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       deleteClass(featureFactoryConfig) ~
       deleteOntologyComment(featureFactoryConfig) ~
       createProperty(featureFactoryConfig) ~
-      updateProperty(featureFactoryConfig) ~
+      updatePropertyLabelsOrComments(featureFactoryConfig) ~
+      updatePropertyGuiElement(featureFactoryConfig) ~
       getProperties(featureFactoryConfig) ~
       deleteProperty(featureFactoryConfig) ~
       createOntology(featureFactoryConfig) ~
@@ -692,7 +693,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
 
-  private def updateProperty(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def updatePropertyLabelsOrComments(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(OntologiesBasePath / "properties") {
       put {
         // Change the labels or comments of a property.
@@ -707,6 +708,48 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
               requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
 
               requestMessage: ChangePropertyLabelsOrCommentsRequestV2 <- ChangePropertyLabelsOrCommentsRequestV2
+                .fromJsonLD(
+                  jsonLDDocument = requestDoc,
+                  apiRequestID = UUID.randomUUID,
+                  requestingUser = requestingUser,
+                  responderManager = responderManager,
+                  storeManager = storeManager,
+                  featureFactoryConfig = featureFactoryConfig,
+                  settings = settings,
+                  log = log
+                )
+            } yield requestMessage
+
+            RouteUtilV2.runRdfRouteWithFuture(
+              requestMessageF = requestMessageFuture,
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig,
+              settings = settings,
+              responderManager = responderManager,
+              log = log,
+              targetSchema = ApiV2Complex,
+              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+            )
+          }
+        }
+      }
+    }
+
+  private def updatePropertyGuiElement(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(OntologiesBasePath / "properties" / "guiattribute") {
+      put {
+        // Change the salsah-gui:guiElement and/or salsah-gui:guiAttribute of a property.
+        entity(as[String]) { jsonRequest => requestContext =>
+          {
+            val requestMessageFuture: Future[ChangePropertyGuiElementRequest] = for {
+              requestingUser <- getUserADM(
+                requestContext = requestContext,
+                featureFactoryConfig = featureFactoryConfig
+              )
+
+              requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+              requestMessage: ChangePropertyGuiElementRequest <- ChangePropertyGuiElementRequest
                 .fromJsonLD(
                   jsonLDDocument = requestDoc,
                   apiRequestID = UUID.randomUUID,

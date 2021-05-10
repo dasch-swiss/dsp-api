@@ -150,6 +150,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     case createPropertyRequest: CreatePropertyRequestV2 => createProperty(createPropertyRequest)
     case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 =>
       changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest)
+    case changePropertyGuiElementRequest: ChangePropertyGuiElementRequest =>
+      changePropertyGuiElement(changePropertyGuiElementRequest)
     case deletePropertyRequest: DeletePropertyRequestV2 => deleteProperty(deletePropertyRequest)
     case deleteOntologyRequest: DeleteOntologyRequestV2 => deleteOntology(deleteOntologyRequest)
     case other                                          => handleUnexpectedMessage(other, log, this.getClass.getName)

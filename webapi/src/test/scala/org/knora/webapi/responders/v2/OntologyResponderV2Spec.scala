@@ -225,8 +225,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "delete the comment from 'foo'" in {
-      val newLabel = "a label changed again"
-
       responderManager ! DeleteOntologyCommentRequestV2(
         ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
         lastModificationDate = fooLastModDate,
@@ -3245,6 +3243,80 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           assert(externalOntology.properties.size == 1)
           val property = externalOntology.properties(propertyIri)
           property.entityInfoContent should ===(propertyInfoContent)
+
+          val metadata = externalOntology.ontologyMetadata
+          val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+            throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
+    "change the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
+      val propertyIri = AnythingOntologyIri.makeEntityIri("hasNothingness")
+
+      responderManager ! ChangePropertyGuiElementRequest(
+        propertyIri = propertyIri,
+        newGuiElement = Some("http://api.knora.org/ontology/salsah-gui/v2#SimpleText".toSmartIri),
+        newGuiAttribute = Some("size=80"),
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val externalOntology = msg.toOntologySchema(ApiV2Complex)
+          assert(externalOntology.properties.size == 1)
+          val property = externalOntology.properties(propertyIri)
+
+          property.entityInfoContent.predicates(
+            OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri) should ===(
+            PredicateInfoV2(
+              predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+              objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#SimpleText".toSmartIri))
+            ))
+
+          property.entityInfoContent.predicates(
+            OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri) should ===(
+            PredicateInfoV2(
+              predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri,
+              objects = Seq(StringLiteralV2("size=80"))
+            ))
+
+          val metadata = externalOntology.ontologyMetadata
+          val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+            throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
+    "delete the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
+      val propertyIri = AnythingOntologyIri.makeEntityIri("hasNothingness")
+
+      responderManager ! ChangePropertyGuiElementRequest(
+        propertyIri = propertyIri,
+        newGuiElement = None,
+        newGuiAttribute = None,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val externalOntology = msg.toOntologySchema(ApiV2Complex)
+          assert(externalOntology.properties.size == 1)
+          val property = externalOntology.properties(propertyIri)
+
+          property.entityInfoContent.predicates
+            .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri) should ===(None)
+
+          property.entityInfoContent.predicates
+            .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri) should ===(None)
 
           val metadata = externalOntology.ontologyMetadata
           val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
