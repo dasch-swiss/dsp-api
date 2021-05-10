@@ -753,7 +753,7 @@ sealed trait ChangeLabelsOrCommentsRequest {
   *
   * @param propertyIri          the IRI of the property to be changed.
   * @param newGuiElement        the new GUI element to be used with the property, or `None` if no GUI element should be specified.
-  * @param newGuiAttribute      the new GUI attribute to be used with the property, or `None` if no GUI element should be specified.
+  * @param newGuiAttributes     the new GUI attributes to be used with the property, or `None` if no GUI element should be specified.
   * @param lastModificationDate the ontology's last modification date.
   * @param apiRequestID         the ID of the API request.
   * @param featureFactoryConfig the feature factory configuration.
@@ -761,7 +761,7 @@ sealed trait ChangeLabelsOrCommentsRequest {
   */
 case class ChangePropertyGuiElementRequest(propertyIri: SmartIri,
                                            newGuiElement: Option[SmartIri],
-                                           newGuiAttribute: Option[String],
+                                           newGuiAttributes: Set[String],
                                            lastModificationDate: Instant,
                                            apiRequestID: UUID,
                                            featureFactoryConfig: FeatureFactoryConfig,
@@ -818,27 +818,31 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
     val lastModificationDate = propertyUpdateInfo.lastModificationDate
 
     val newGuiElement: Option[SmartIri] =
-      propertyInfoContent.predicates.get(OntologyConstants.SalsahGui.GuiElementProp.toSmartIri).map {
-        predicateInfoV2: PredicateInfoV2 =>
+      propertyInfoContent.predicates
+        .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
+        .map { predicateInfoV2: PredicateInfoV2 =>
           predicateInfoV2.objects.head match {
-            case iriLiteralV2: IriLiteralV2 => iriLiteralV2.value.toSmartIri
-            case other                      => throw BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other")
+            case iriLiteralV2: SmartIriLiteralV2 => iriLiteralV2.value
+            case other =>
+              throw BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other")
           }
-      }
+        }
 
-    val newGuiAttribute: Option[String] =
-      propertyInfoContent.predicates.get(OntologyConstants.SalsahGui.GuiAttribute.toSmartIri).map {
-        predicateInfoV2: PredicateInfoV2 =>
-          predicateInfoV2.objects.head match {
+    val newGuiAttributes: Set[String] =
+      propertyInfoContent.predicates
+        .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
+        .map { predicateInfoV2: PredicateInfoV2 =>
+          predicateInfoV2.objects.map {
             case stringLiteralV2: StringLiteralV2 => stringLiteralV2.value
             case other                            => throw BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other")
-          }
-      }
+          }.toSet
+        }
+        .getOrElse(Set.empty[String])
 
     ChangePropertyGuiElementRequest(
       propertyIri = propertyInfoContent.propertyIri,
       newGuiElement = newGuiElement,
-      newGuiAttribute = newGuiAttribute,
+      newGuiAttributes = newGuiAttributes,
       lastModificationDate = lastModificationDate,
       apiRequestID = apiRequestID,
       featureFactoryConfig = featureFactoryConfig,

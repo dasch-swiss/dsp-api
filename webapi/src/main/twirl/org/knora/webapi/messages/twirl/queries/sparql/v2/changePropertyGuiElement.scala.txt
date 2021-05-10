@@ -30,8 +30,8 @@
  * @param ontologyIri the IRI of the ontology to be modified.
  * @param propertyIri the IRI of the property to be modified.
  * @param maybeLinkValuePropertyIri the IRI of the corresponding link value property, if any, to be updated.
- * @param maybeNewGuiElement the property's new salsah-gui:guiElement, or None if it should be deleted.
- * @param maybeNewGuiAttribute the property's new salsah-gui:guiAttribute, or None if it should be deleted.
+ * @param maybeNewGuiElement the property's new salsah-gui:guiElement, or None if it should just be deleted.
+ * @param newGuiAttributes the property's new salsah-gui:guiAttribute values, or an empty set if they should just be deleted.
  * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
  * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
  *@
@@ -41,7 +41,7 @@
   propertyIri: SmartIri,
   maybeLinkValuePropertyIri: Option[SmartIri],
   maybeNewGuiElement: Option[SmartIri],
-  maybeNewGuiAttribute: Option[String],
+  newGuiAttributes: Set[String],
   lastModificationDate: Instant,
   currentTime: Instant)
 
@@ -62,48 +62,6 @@ DELETE {
             case Some(linkValuePropertyIri) => {
                 <@linkValuePropertyIri> salsah-gui:guiElement ?oldLinkValuePropertyGuiElement .
                 <@linkValuePropertyIri> salsah-gui:guiAttribute ?oldLinkValuePropertyGuiAttribute .
-            }
-
-            case None => {}
-        }
-    }
-} INSERT {
-    GRAPH ?ontologyNamedGraph {
-        ?ontology knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
-
-        @maybeNewGuiElement match {
-            case Some(newGuiElement) => {
-                ?property salsah-gui:guiElement <@newGuiElement> .
-            }
-
-            case None => {}
-        }
-
-        @maybeNewGuiAttribute match {
-            case Some(newGuiAttribute) => {
-                ?property salsah-gui:guiAttribute "@newGuiAttribute" .
-            }
-
-            case None => {}
-        }
-
-        @maybeLinkValuePropertyIri match {
-            case Some(linkValuePropertyIri) => {
-                @maybeNewGuiElement match {
-                    case Some(newGuiElement) => {
-                        <@linkValuePropertyIri> salsah-gui:guiElement <@newGuiElement> .
-                    }
-
-                    case None => {}
-                }
-
-                @maybeNewGuiAttribute match {
-                    case Some(newGuiAttribute) => {
-                        <@linkValuePropertyIri> salsah-gui:guiAttribute "@newGuiAttribute" .
-                    }
-
-                    case None => {}
-                }
             }
 
             case None => {}
@@ -140,6 +98,41 @@ WHERE {
 
                 OPTIONAL {
                     <@linkValuePropertyIri> salsah-gui:guiAttribute ?oldLinkValuePropertyGuiAttribute .
+                }
+            }
+
+            case None => {}
+        }
+    }
+} ;
+INSERT DATA {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
+
+        @maybeNewGuiElement match {
+            case Some(newGuiElement) => {
+                <@propertyIri> salsah-gui:guiElement <@newGuiElement> .
+            }
+
+            case None => {}
+        }
+
+        @for(newGuiAttribute <- newGuiAttributes) {
+            <@propertyIri> salsah-gui:guiAttribute "@newGuiAttribute" .
+        }
+
+        @maybeLinkValuePropertyIri match {
+            case Some(linkValuePropertyIri) => {
+                @maybeNewGuiElement match {
+                    case Some(newGuiElement) => {
+                        <@linkValuePropertyIri> salsah-gui:guiElement <@newGuiElement> .
+                    }
+
+                    case None => {}
+                }
+
+                @for(newGuiAttribute <- newGuiAttributes) {
+                    <@linkValuePropertyIri> salsah-gui:guiAttribute "@newGuiAttribute" .
                 }
             }
 

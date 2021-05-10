@@ -736,7 +736,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
     }
 
   private def updatePropertyGuiElement(featureFactoryConfig: FeatureFactoryConfig): Route =
-    path(OntologiesBasePath / "properties" / "guiattribute") {
+    path(OntologiesBasePath / "properties" / "guielement") {
       put {
         // Change the salsah-gui:guiElement and/or salsah-gui:guiAttribute of a property.
         entity(as[String]) { jsonRequest => requestContext =>

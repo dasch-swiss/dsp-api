@@ -3258,7 +3258,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       responderManager ! ChangePropertyGuiElementRequest(
         propertyIri = propertyIri,
         newGuiElement = Some("http://api.knora.org/ontology/salsah-gui/v2#SimpleText".toSmartIri),
-        newGuiAttribute = Some("size=80"),
+        newGuiAttributes = Set("size=80"),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -3299,7 +3299,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       responderManager ! ChangePropertyGuiElementRequest(
         propertyIri = propertyIri,
         newGuiElement = None,
-        newGuiAttribute = None,
+        newGuiAttributes = Set.empty,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
         featureFactoryConfig = defaultFeatureFactoryConfig,

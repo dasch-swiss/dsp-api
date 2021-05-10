@@ -4029,7 +4029,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             propertyIri = internalPropertyIri,
             maybeLinkValuePropertyIri = maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
             maybeNewGuiElement = changePropertyGuiElementRequest.newGuiElement,
-            maybeNewGuiAttribute = changePropertyGuiElementRequest.newGuiAttribute,
+            newGuiAttributes = changePropertyGuiElementRequest.newGuiAttributes,
             lastModificationDate = changePropertyGuiElementRequest.lastModificationDate,
             currentTime = currentTime
           )
@@ -4061,13 +4061,15 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             )
           }
 
-        maybeUnescapedNewGuiAttributePredicate: Option[(SmartIri, PredicateInfoV2)] = changePropertyGuiElementRequest.newGuiAttribute
-          .map { guiAttribute: String =>
+        maybeUnescapedNewGuiAttributePredicate: Option[(SmartIri, PredicateInfoV2)] = if (changePropertyGuiElementRequest.newGuiAttributes.nonEmpty) {
+          Some(
             OntologyConstants.SalsahGui.GuiAttribute.toSmartIri -> PredicateInfoV2(
               predicateIri = OntologyConstants.SalsahGui.GuiAttribute.toSmartIri,
-              objects = Seq(StringLiteralV2(guiAttribute))
-            ).unescape
-          }
+              objects = changePropertyGuiElementRequest.newGuiAttributes.map(StringLiteralV2(_)).toSeq
+            ))
+        } else {
+          None
+        }
 
         unescapedNewPropertyDef: PropertyInfoContentV2 = currentReadPropertyInfo.entityInfoContent.copy(
           predicates = currentReadPropertyInfo.entityInfoContent.predicates -
