@@ -53,10 +53,9 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
 
 DELETE {
-    GRAPH ?ontologyNamedGraph {
-        ?ontology knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
-        ?property salsah-gui:guiElement ?oldGuiElement .
-        ?property salsah-gui:guiAttribute ?oldGuiAttribute .
+    GRAPH <@ontologyNamedGraphIri> {
+        <@propertyIri> salsah-gui:guiElement ?oldGuiElement .
+        <@propertyIri> salsah-gui:guiAttribute ?oldGuiAttribute .
 
         @maybeLinkValuePropertyIri match {
             case Some(linkValuePropertyIri) => {
@@ -73,21 +72,16 @@ DELETE {
     USING <http://www.ontotext.com/explicit>
 }
 WHERE {
-    BIND(IRI("@ontologyNamedGraphIri") AS ?ontologyNamedGraph)
-
-    GRAPH ?ontologyNamedGraph {
-        BIND(IRI("@ontologyIri") AS ?ontology)
-        BIND(IRI("@propertyIri") AS ?property)
-
-        ?ontology rdf:type owl:Ontology ;
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> rdf:type owl:Ontology ;
             knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
 
         OPTIONAL {
-            ?property salsah-gui:guiElement ?oldGuiElement .
+            <@propertyIri> salsah-gui:guiElement ?oldGuiElement .
         }
 
         OPTIONAL {
-            ?property salsah-gui:guiAttribute ?oldGuiAttribute .
+            <@propertyIri> salsah-gui:guiAttribute ?oldGuiAttribute .
         }
 
         @maybeLinkValuePropertyIri match {
@@ -104,11 +98,9 @@ WHERE {
             case None => {}
         }
     }
-} ;
-INSERT DATA {
+};
+INSERT {
     GRAPH <@ontologyNamedGraphIri> {
-        <@ontologyIri> knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
-
         @maybeNewGuiElement match {
             case Some(newGuiElement) => {
                 <@propertyIri> salsah-gui:guiElement <@newGuiElement> .
@@ -138,5 +130,35 @@ INSERT DATA {
 
             case None => {}
         }
+    }
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> rdf:type owl:Ontology ;
+            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
+    }
+};
+DELETE {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
+    }
+}
+INSERT {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
+    }
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> rdf:type owl:Ontology ;
+            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
     }
 }
