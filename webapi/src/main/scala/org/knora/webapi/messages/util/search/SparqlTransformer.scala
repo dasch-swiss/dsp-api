@@ -295,45 +295,6 @@ object SparqlTransformer {
   }
 
   /**
-    * Optimises a query by moving statement patterns containing resource IRIs to the beginning of a block.
-    *
-    * @param patterns the query patterns to be optimised.
-    * @return the optimised query patterns.
-    */
-  def moveResourceIrisToBeginning(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-    val (patternsWithResourceIris: Seq[QueryPattern], otherPatterns: Seq[QueryPattern]) = patterns.partition {
-      case statementPattern: StatementPattern =>
-        val subjIsResourceIri = statementPattern.subj match {
-          case iriRef: IriRef if iriRef.iri.isKnoraResourceIri => true
-          case _                                               => false
-        }
-
-        // Don't move statements whose predicate is rdf:subject or rdf:object: their subject
-        // is a link value that needs to be defined first.
-        val statementIsInLinkValue = statementPattern.pred match {
-          case iriRef: IriRef =>
-            iriRef.iri.toString match {
-              case OntologyConstants.Rdf.Subject | OntologyConstants.Rdf.Object => true
-              case _                                                            => false
-            }
-
-          case _ => false
-        }
-
-        val objIsResourceIri = statementPattern.obj match {
-          case iriRef: IriRef if iriRef.iri.isKnoraResourceIri => true
-          case _                                               => false
-        }
-
-        !statementIsInLinkValue && (subjIsResourceIri || objIsResourceIri)
-
-      case _ => false
-    }
-
-    patternsWithResourceIris ++ otherPatterns
-  }
-
-  /**
     * Transforms a statement in a WHERE clause for a triplestore that does not provide inference.
     *
     * @param statementPattern  the statement pattern.
