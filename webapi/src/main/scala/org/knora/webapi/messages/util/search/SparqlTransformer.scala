@@ -48,7 +48,7 @@ object SparqlTransformer {
     override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
     override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-      moveBindToBeginning(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns)))
+      moveBindToBeginning(moveLuceneToBeginning(patterns))
     }
 
     override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] = {
@@ -88,7 +88,7 @@ object SparqlTransformer {
     override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
     override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-      moveBindToBeginning(optimiseIsDeletedWithFilter(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))))
+      moveBindToBeginning(optimiseIsDeletedWithFilter(moveLuceneToBeginning(patterns)))
     }
 
     override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -118,7 +118,7 @@ object SparqlTransformer {
     override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
     override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-      moveBindToBeginning(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns)))
+      moveBindToBeginning(moveLuceneToBeginning(patterns))
     }
 
     override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
@@ -145,7 +145,7 @@ object SparqlTransformer {
     override def transformFilter(filterPattern: FilterPattern): Seq[QueryPattern] = Seq(filterPattern)
 
     override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
-      moveBindToBeginning(optimiseIsDeletedWithFilter(moveResourceIrisToBeginning(moveLuceneToBeginning(patterns))))
+      moveBindToBeginning(optimiseIsDeletedWithFilter(moveLuceneToBeginning(patterns)))
     }
 
     override def transformLuceneQueryPattern(luceneQueryPattern: LuceneQueryPattern): Seq[QueryPattern] =
