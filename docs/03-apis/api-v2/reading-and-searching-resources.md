@@ -534,6 +534,18 @@ called [Gravsearch: Virtual Graph Search](query-language.md)).
 
 To convert standoff markup to TEI/XML, see [TEI/XML](tei-xml.md).
 
+### IIIF Manifests
+
+This is an experimental feature and may change.
+
+To generate a IIIF manifest for a resource, containing
+the still image representations that have `knora-api:isPartOf` (or a subproperty)
+pointing to that resource:
+
+```
+HTTP GET to http://host/v2/resources//iiifmanifest/RESOURCE_IRI
+```
+
 ### Reading Resources by Class from a Project
 
 To facilitate the development of tabular user interfaces for data entry, it is

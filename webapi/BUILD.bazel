@@ -184,6 +184,5 @@ scala_library(
         "@maven//:junit_junit",
         "@maven//:org_apache_commons_commons_pool2",
         "@maven//:redis_clients_jedis",
-        "@maven//:org_bouncycastle_bcprov_jdk15on",
     ],
 )

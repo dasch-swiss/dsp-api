@@ -43,7 +43,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util._
 import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
-import spray.json.JsonParser
+import spray.json.{JsValue, JsonParser}
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration._
@@ -449,7 +449,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       )
     }
 
-    "perform a full resource request for a Thing resource with a link to a ThingPicture resource test1" in {
+    "perform a full resource request for a Thing resource with a link to a ThingPicture resource" in {
       val request =
         Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode("http://rdfh.ch/0001/a-thing-with-picture", "UTF-8")}")
       val response: HttpResponse = singleAwaitingRequest(request)
@@ -1995,13 +1995,26 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
       // Check that it has multiple property knora-api:hasStandoffLinkToValue.
       val resourceJsonLDDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(resourceComplexGetResponseAsString)
-      val numberOfStandofHasLinkValue = resourceJsonLDDoc.body.value
-        .get(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue)
-        .get
+      val numberOfStandofHasLinkValue = resourceJsonLDDoc.body
+        .value(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue)
         .asInstanceOf[JsonLDArray]
         .value
         .size
       assert(numberOfStandofHasLinkValue == 2)
+    }
+
+    "return a IIIF manifest for the pages of a book" in {
+      val resourceIri = "http://rdfh.ch/0001/thing-with-pages"
+      val request = Get(s"$baseApiUrl/v2/resources/iiifmanifest/${URLEncoder.encode(resourceIri, "UTF-8")}")
+      val response: HttpResponse = singleAwaitingRequest(request)
+      val responseStr: String = responseToString(response)
+      assert(response.status == StatusCodes.OK, responseStr)
+      val responseJson: JsValue = JsonParser(responseStr)
+
+      val expectedJson: JsValue = JsonParser(
+        readOrWriteTextFile(responseStr, Paths.get("test_data/resourcesR2RV2/IIIFManifest.jsonld"), writeTestDataFiles))
+
+      assert(responseJson == expectedJson)
     }
   }
 }
