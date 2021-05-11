@@ -2297,7 +2297,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     for {
       // Make a Gravsearch query from a template.
-      gravsearchQuery: String <- Future(
+      gravsearchQueryForIncomingLinks: String <- Future(
         org.knora.webapi.messages.twirl.queries.gravsearch.txt
           .getIncomingImageLinks(
             resourceIri = request.resourceIri
@@ -2306,7 +2306,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
       // Run the query.
 
-      parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQuery))
+      parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQueryForIncomingLinks))
       searchResponse <- (responderManager ? GravsearchRequestV2(
         constructQuery = parsedGravsearchQuery,
         targetSchema = ApiV2Complex,
