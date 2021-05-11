@@ -293,11 +293,21 @@ db_staging_dump.trig:
 	@echo $@
 	@curl -X GET -H "Accept: application/trig" -u "admin:${DB_STAGING_PASSWORD}" "https://db.staging.dasch.swiss/dsp-repo" > "db_staging_dump.trig"
 
+db_prod_dump.trig:
+	@echo $@
+	@curl -X GET -H "Accept: application/trig" -u "admin:${DB_PROD_PASSWORD}" "https://db.dasch.swiss/dsp-repo" > "db_prod_dump.trig"
+
 .PHONY: init-db-test-from-staging
 init-db-test-from-staging: db_staging_dump.trig init-db-test-empty ## init local database with data from staging
 	@echo $@
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
 	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_staging_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
+
+.PHONY: init-db-test-from-prod
+init-db-test-from-prod: db_prod_dump.trig init-db-test-empty ## init local database with data from staging
+	@echo $@
+	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_prod_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
 .PHONY: metadata
 metadata: metadata-standard metadata-minimal metadata-maximal ## add three example metadata sets
