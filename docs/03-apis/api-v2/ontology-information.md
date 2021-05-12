@@ -1410,6 +1410,43 @@ HTTP PUT to http://host/v2/ontologies/properties
 Values for `rdfs:comment` must be submitted in at least one language,
 either as an object or as an array of objects.
 
+### Changing the GUI Element and GUI Attributes of a Property
+
+This operation is permitted even if the property is used in data.
+
+```
+HTTP PUT to http://host/v2/ontologies/properties/guielement
+```
+
+```jsonld
+{
+  "@id" : "ONTOLOGY_IRI",
+  "@type" : "owl:Ontology",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
+  "@graph" : [ {
+    "@id" : "PROPERTY_IRI",
+    "@type" : "owl:ObjectProperty",
+    "salsah-gui:guiElement" : {
+      "@id" : "salsah-gui:Textarea"
+    },
+    "salsah-gui:guiAttribute" : [ "cols=80", "rows=24" ]
+  } ],
+  "@context" : {
+    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
+    "owl" : "http://www.w3.org/2002/07/owl#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+  }
+```
+
+To remove the values of `salsah-gui:guiElement` and `salsah-gui:guiAttribute` from
+the property definition, submit the request without those predicates.
+
 ### Adding Cardinalities to a Class
 
 This operation is not permitted if the class is used in data, or if it
