@@ -2793,14 +2793,24 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               .mkString(", ")}")
         }
 
-        // Check that the class isn't used in data, and that it has no subclasses.
+        // Is there any property with minCardinality>0 or Cardinality=1?
+        hasCardinality: Option[(SmartIri, KnoraCardinalityInfo)] = addCardinalitiesRequest.classInfoContent.directCardinalities
+          .find {
+            case (_, constraint: KnoraCardinalityInfo) =>
+              constraint.cardinality == Cardinality.MustHaveSome || constraint.cardinality == Cardinality.MustHaveOne
+          }
 
-        _ <- isEntityUsed(
-          entityIri = internalClassIri,
-          errorFun = throw BadRequestException(
-            s"Cardinalities cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data or has a subclass"),
-          ignoreKnoraConstraints = true // It's OK if a property refers to the class via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
-        )
+        _ <- hasCardinality match {
+          // If there is, check that the class isn't used in data, and that it has no subclasses.
+          case Some((propIri: SmartIri, cardinality: KnoraCardinalityInfo)) =>
+            isEntityUsed(
+              entityIri = internalClassIri,
+              errorFun = throw BadRequestException(
+                s"Cardinality ${cardinality.toString} for $propIri cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data or has a subclass"),
+              ignoreKnoraConstraints = true // It's OK if a property refers to the class via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
+            )
+          case None => Future.successful(())
+        }
 
         // Make an updated class definition.
 

@@ -3404,7 +3404,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(Cardinality.MustHaveOne)
         ),
         ontologySchema = ApiV2Complex
       )
@@ -3715,7 +3715,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MustHaveSome)
         ),
         ontologySchema = ApiV2Complex
       )
