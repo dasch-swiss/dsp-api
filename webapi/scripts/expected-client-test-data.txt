@@ -184,6 +184,7 @@ test-data/v2/ontologies/change-class-comment-request.json
 test-data/v2/ontologies/change-class-label-request.json
 test-data/v2/ontologies/change-gui-order-request.json
 test-data/v2/ontologies/change-property-comment-request.json
+test-data/v2/ontologies/change-property-guielement-request.json
 test-data/v2/ontologies/change-property-label-request.json
 test-data/v2/ontologies/create-class-with-cardinalities-request.json
 test-data/v2/ontologies/create-class-without-cardinalities-request.json
@@ -213,6 +214,7 @@ test-data/v2/ontologies/knora-api-ontology.json
 test-data/v2/ontologies/minimal-ontology.json
 test-data/v2/ontologies/remove-class-cardinalities-request.json
 test-data/v2/ontologies/remove-property-cardinality-request.json
+test-data/v2/ontologies/remove-property-guielement-request.json
 test-data/v2/ontologies/replace-class-cardinalities-request.json
 test-data/v2/ontologies/update-ontology-metadata-request.json
 test-data/v2/resources/
