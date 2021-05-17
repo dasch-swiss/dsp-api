@@ -1450,7 +1450,7 @@ the property definition, submit the request without those predicates.
 ### Adding Cardinalities to a Class
 
 If the class is used in data or if it
-has a subclass, it is not allowed to add cardinalities `owl:minCardinality` greater than 1 or `owl:cardinality 1` to the class.
+has a subclass, it is not allowed to add cardinalities `owl:minCardinality` greater than 0 or `owl:cardinality 1` to the class.
 
 ```
 HTTP POST to http://host/v2/ontologies/cardinalities
