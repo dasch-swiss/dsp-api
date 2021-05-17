@@ -1,83 +1,84 @@
+
 {
-  "@id" : "http://rdfh.ch/0803/9935159f67",
-  "@type" : "incunabula:book",
-  "incunabula:pubdate" : {
-    "@id" : "http://rdfh.ch/0803/9935159f67/values/f2877cc89901",
-    "@type" : "knora-api:DateValue",
-    "knora-api:arkUrl" : {
-      "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u/0000000000f2877cc8990wv"
+    "knora-api:arkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u",
+        "@type": "xsd:anyURI"
     },
-    "knora-api:attachedToUser" : {
-      "@id" : "http://rdfh.ch/users/91e19f1e01"
+    "rdfs:label": "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)",
+    "knora-api:versionArkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u.20160302T150514Z",
+        "@type": "xsd:anyURI"
     },
-    "knora-api:dateValueHasCalendar" : "JULIAN",
-    "knora-api:dateValueHasEndEra" : "CE",
-    "knora-api:dateValueHasEndYear" : 1504,
-    "knora-api:dateValueHasStartEra" : "CE",
-    "knora-api:dateValueHasStartYear" : 1504,
-    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-    "knora-api:userHasPermission" : "V",
-    "knora-api:valueAsString" : "JULIAN:1504 CE",
-    "knora-api:valueCreationDate" : {
-      "@type" : "xsd:dateTimeStamp",
-      "@value" : "2016-03-02T15:05:14Z"
+    "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/0803"
     },
-    "knora-api:valueHasUUID" : "0000000000f2877cc8990w",
-    "knora-api:versionArkUrl" : {
-      "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u/0000000000f2877cc8990wv.20160302T150514Z"
+    "knora-api:userHasPermission": "RV",
+    "knora-api:creationDate": {
+        "@value": "2016-03-02T15:05:14Z",
+        "@type": "xsd:dateTimeStamp"
+    },
+    "incunabula:title": {
+        "knora-api:valueAsString": "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)",
+        "knora-api:arkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u/0000000000e6e02fe3980wF",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:versionArkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u/0000000000e6e02fe3980wF.20160302T150514Z",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:userHasPermission": "V",
+        "knora-api:valueCreationDate": {
+            "@value": "2016-03-02T15:05:14Z",
+            "@type": "xsd:dateTimeStamp"
+        },
+        "knora-api:attachedToUser": {
+            "@id": "http://rdfh.ch/users/91e19f1e01"
+        },
+        "knora-api:valueHasUUID": "0000000000e6e02fe3980w",
+        "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+        "@type": "knora-api:TextValue",
+        "@id": "http://rdfh.ch/0803/9935159f67/values/e6e02fe39801"
+    },
+    "knora-api:attachedToUser": {
+        "@id": "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    "@type": "incunabula:book",
+    "incunabula:pubdate": {
+        "knora-api:arkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u/0000000000f2877cc8990wv",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:versionArkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u/0000000000f2877cc8990wv.20160302T150514Z",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:dateValueHasEndYear": 1504,
+        "knora-api:userHasPermission": "V",
+        "knora-api:valueCreationDate": {
+            "@value": "2016-03-02T15:05:14Z",
+            "@type": "xsd:dateTimeStamp"
+        },
+        "knora-api:dateValueHasEndEra": "CE",
+        "knora-api:attachedToUser": {
+            "@id": "http://rdfh.ch/users/91e19f1e01"
+        },
+        "knora-api:valueHasUUID": "0000000000f2877cc8990w",
+        "knora-api:dateValueHasCalendar": "JULIAN",
+        "@type": "knora-api:DateValue",
+        "@id": "http://rdfh.ch/0803/9935159f67/values/f2877cc89901",
+        "knora-api:valueAsString": "JULIAN:1504 CE",
+        "knora-api:dateValueHasStartEra": "CE",
+        "knora-api:dateValueHasStartYear": 1504,
+        "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
+    },
+    "@id": "http://rdfh.ch/0803/9935159f67",
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "incunabula": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
     }
-  },
-  "incunabula:title" : {
-    "@id" : "http://rdfh.ch/0803/9935159f67/values/e6e02fe39801",
-    "@type" : "knora-api:TextValue",
-    "knora-api:arkUrl" : {
-      "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u/0000000000e6e02fe3980wF"
-    },
-    "knora-api:attachedToUser" : {
-      "@id" : "http://rdfh.ch/users/91e19f1e01"
-    },
-    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-    "knora-api:userHasPermission" : "V",
-    "knora-api:valueAsString" : "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)",
-    "knora-api:valueCreationDate" : {
-      "@type" : "xsd:dateTimeStamp",
-      "@value" : "2016-03-02T15:05:14Z"
-    },
-    "knora-api:valueHasUUID" : "0000000000e6e02fe3980w",
-    "knora-api:versionArkUrl" : {
-      "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u/0000000000e6e02fe3980wF.20160302T150514Z"
-    }
-  },
-  "knora-api:arkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u"
-  },
-  "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/0803"
-  },
-  "knora-api:attachedToUser" : {
-    "@id" : "http://rdfh.ch/users/91e19f1e01"
-  },
-  "knora-api:creationDate" : {
-    "@type" : "xsd:dateTimeStamp",
-    "@value" : "2016-03-02T15:05:14Z"
-  },
-  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-  "knora-api:userHasPermission" : "RV",
-  "knora-api:versionArkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u.20160302T150514Z"
-  },
-  "rdfs:label" : "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)",
-  "@context" : {
-    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-  }
 }

@@ -28,5 +28,6 @@ scala_library(
         "@maven//:org_scala_lang_modules_scala_xml_2_13",
         "@maven//:org_slf4j_slf4j_api",
         "@maven//:org_springframework_security_spring_security_core",
+        "@maven//:javax_json_javax_json_api",
     ],
 )

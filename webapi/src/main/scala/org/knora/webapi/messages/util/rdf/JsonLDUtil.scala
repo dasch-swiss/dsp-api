@@ -947,14 +947,17 @@ case class JsonLDArray(value: Seq[JsonLDValue]) extends JsonLDValue {
 /**
   * Represents a JSON-LD document.
   *
-  * @param body    the body of the JSON-LD document.
-  * @param context the context of the JSON-LD document.
-  * @param isFlat  `true` if this JSON-LD document has been constructed as a flat document, i.e.
-  *                without inlining entities that have IRIs.
+  * @param body          the body of the JSON-LD document.
+  * @param context       the context of the JSON-LD document.
+  * @param isFlat        `true` if this JSON-LD document has been constructed as a flat document, i.e.
+  *                      without inlining entities that have IRIs.
+  * @param keepStructure if `true`, the document will not be compacted when formatted, and only
+  *                      the body will be used.
   */
 case class JsonLDDocument(body: JsonLDObject,
                           context: JsonLDObject = JsonLDObject(Map.empty[String, JsonLDValue]),
-                          isFlat: Boolean = false) {
+                          isFlat: Boolean = false,
+                          keepStructure: Boolean = false) {
 
   /**
     * A convenience function that calls `body.requireString`.
@@ -1158,10 +1161,15 @@ case class JsonLDDocument(body: JsonLDObject,
     * @return the formatted document.
     */
   private def formatWithJsonWriterFactory(jsonWriterFactory: JsonWriterFactory, flatten: Boolean): String = {
-    val compactedJavaxJsonObject: JsonObject = makeCompactedJavaxJsonObject(flatten)
+    val javaxJsonObject: JsonObject = if (keepStructure) {
+      body.toJavaxJsonValue
+    } else {
+      makeCompactedJavaxJsonObject(flatten)
+    }
+
     val stringWriter = new StringWriter()
     val jsonWriter = jsonWriterFactory.createWriter(stringWriter)
-    jsonWriter.write(compactedJavaxJsonObject)
+    jsonWriter.write(javaxJsonObject)
     jsonWriter.close()
     stringWriter.toString
   }
