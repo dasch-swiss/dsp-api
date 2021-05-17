@@ -222,6 +222,8 @@ object ActorUtil {
   private def runTasksRec[T](previousResult: Option[TaskResult[T]], nextTask: Task[T])(
       implicit timeout: Timeout,
       executionContext: ExecutionContext): Future[TaskResult[T]] = {
+    // This function doesn't need to be tail recursive: https://stackoverflow.com/a/16986416
+
     for {
       taskResult: TaskResult[T] <- nextTask.runTask(previousResult)
 

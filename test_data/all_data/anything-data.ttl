@@ -1830,6 +1830,88 @@
   knora-base:valueHasString "header.xsl";
   knora-base:valueHasUUID "geQNPU4USB61YhNHHarQ5A" .
 
+<http://rdfh.ch/0001/thing-with-pages> a anything:Thing;
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
+  knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+  knora-base:creationDate "2021-05-11T10:00:00Z"^^xsd:dateTime;
+  rdfs:label "thing with pages";
+  knora-base:isDeleted false .
+
+<http://rdfh.ch/0001/thing-page-1> a anything:ThingPicture;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
+  rdfs:label "page 1";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
+  knora-base:creationDate "2021-05-11T10:00:00Z"^^xsd:dateTime;
+  knora-base:hasStillImageFileValue <http://rdfh.ch/0001/thing-page-1/values/1> ;
+  knora-base:isPartOf <http://rdfh.ch/0001/thing-with-pages> ;
+  knora-base:isPartOfValue <http://rdfh.ch/0001/thing-page-1/values/2> .
+
+<http://rdfh.ch/0001/thing-page-1/values/1> a knora-base:StillImageFileValue;
+  knora-base:valueHasUUID "goZ7JFRNSeqF-dNxsqAS7Q"^^xsd:string;
+  knora-base:valueHasString "test.tiff";
+  knora-base:originalFilename "test.tiff";
+  knora-base:originalMimeType "image/tiff";
+  knora-base:internalFilename "page1.jp2";
+  knora-base:internalMimeType "image/jp2";
+  knora-base:valueCreationDate "2021-05-11T10:00:00Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+  knora-base:dimX 512;
+  knora-base:dimY 256;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0001/thing-page-1/values/2> a knora-base:LinkValue;
+  knora-base:valueHasUUID "goZ7JFRNSeqF-dNxsqAS7Q"^^xsd:string;
+  rdf:subject <http://rdfh.ch/0001/thing-page-1>;
+  rdf:predicate knora-base:isPartOf;
+  rdf:object <http://rdfh.ch/0001/thing-with-pages>;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueCreationDate "2021-05-11T10:00:00Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+  knora-base:valueHasString "http://rdfh.ch/0001/thing-with-pages";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0001/thing-page-2> a anything:ThingPicture;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
+  rdfs:label "page 2";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
+  knora-base:creationDate "2021-05-11T10:00:00Z"^^xsd:dateTime;
+  knora-base:hasStillImageFileValue <http://rdfh.ch/0001/thing-page-2/values/1> ;
+  knora-base:isPartOf <http://rdfh.ch/0001/thing-with-pages> ;
+  knora-base:isPartOfValue <http://rdfh.ch/0001/thing-page-2/values/2> .
+
+<http://rdfh.ch/0001/thing-page-2/values/1> a knora-base:StillImageFileValue;
+  knora-base:valueHasUUID "goZ7JFRNSeqF-dNxsqAS7Q"^^xsd:string;
+  knora-base:valueHasString "test.tiff";
+  knora-base:originalFilename "test.tiff";
+  knora-base:originalMimeType "image/tiff";
+  knora-base:internalFilename "page2.jp2";
+  knora-base:internalMimeType "image/jp2";
+  knora-base:valueCreationDate "2021-05-11T10:00:00Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+  knora-base:dimX 512;
+  knora-base:dimY 256;
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser" .
+
+<http://rdfh.ch/0001/thing-page-2/values/2> a knora-base:LinkValue;
+  knora-base:valueHasUUID "goZ7JFRNSeqF-dNxsqAS7Q"^^xsd:string;
+  rdf:subject <http://rdfh.ch/0001/thing-page-2>;
+  rdf:predicate knora-base:isPartOf;
+  rdf:object <http://rdfh.ch/0001/thing-with-pages>;
+  knora-base:valueHasRefCount 1;
+  knora-base:valueCreationDate "2021-05-11T10:00:00Z"^^xsd:dateTime;
+  knora-base:isDeleted false;
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+  knora-base:valueHasString "http://rdfh.ch/0001/thing-with-pages";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser" .
+
 <http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/a-childNodeUsed> a knora-base:ListValue;
   knora-base:valueHasUUID "hxENf5B-TSyor_Bu8OJpcD"^^xsd:string;
   knora-base:isDeleted false;
