@@ -749,6 +749,109 @@ sealed trait ChangeLabelsOrCommentsRequest {
 }
 
 /**
+  * Requests that the `salsah-gui:guiElement` and `salsah-gui:guiAttribute` of a property are changed.
+  *
+  * @param propertyIri          the IRI of the property to be changed.
+  * @param newGuiElement        the new GUI element to be used with the property, or `None` if no GUI element should be specified.
+  * @param newGuiAttributes     the new GUI attributes to be used with the property, or `None` if no GUI element should be specified.
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param featureFactoryConfig the feature factory configuration.
+  * @param requestingUser       the user making the request.
+  */
+case class ChangePropertyGuiElementRequest(propertyIri: SmartIri,
+                                           newGuiElement: Option[SmartIri],
+                                           newGuiAttributes: Set[String],
+                                           lastModificationDate: Instant,
+                                           apiRequestID: UUID,
+                                           featureFactoryConfig: FeatureFactoryConfig,
+                                           requestingUser: UserADM)
+    extends OntologiesResponderRequestV2
+
+/**
+  * Constructs instances of [[ChangePropertyGuiElementRequest]] based on JSON-LD input.
+  */
+object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[ChangePropertyGuiElementRequest] {
+
+  /**
+    * Converts a JSON-LD request to a [[ChangePropertyGuiElementRequest]].
+    *
+    * @param jsonLDDocument       the JSON-LD input.
+    * @param apiRequestID         the UUID of the API request.
+    * @param requestingUser       the user making the request.
+    * @param responderManager     a reference to the responder manager.
+    * @param storeManager         a reference to the store manager.
+    * @param featureFactoryConfig the feature factory configuration.
+    * @param settings             the application settings.
+    * @param log                  a logging adapter.
+    * @return a [[ChangePropertyLabelsOrCommentsRequestV2]] representing the input.
+    */
+  override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                          apiRequestID: UUID,
+                          requestingUser: UserADM,
+                          responderManager: ActorRef,
+                          storeManager: ActorRef,
+                          featureFactoryConfig: FeatureFactoryConfig,
+                          settings: KnoraSettingsImpl,
+                          log: LoggingAdapter)(
+      implicit timeout: Timeout,
+      executionContext: ExecutionContext): Future[ChangePropertyGuiElementRequest] = {
+    Future {
+      fromJsonLDSync(
+        jsonLDDocument = jsonLDDocument,
+        apiRequestID = apiRequestID,
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser
+      )
+    }
+  }
+
+  private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
+                             apiRequestID: UUID,
+                             featureFactoryConfig: FeatureFactoryConfig,
+                             requestingUser: UserADM): ChangePropertyGuiElementRequest = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val propertyUpdateInfo = OntologyUpdateHelper.getPropertyDef(inputOntologiesV2)
+    val propertyInfoContent = propertyUpdateInfo.propertyInfoContent
+    val lastModificationDate = propertyUpdateInfo.lastModificationDate
+
+    val newGuiElement: Option[SmartIri] =
+      propertyInfoContent.predicates
+        .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
+        .map { predicateInfoV2: PredicateInfoV2 =>
+          predicateInfoV2.objects.head match {
+            case iriLiteralV2: SmartIriLiteralV2 => iriLiteralV2.value
+            case other =>
+              throw BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other")
+          }
+        }
+
+    val newGuiAttributes: Set[String] =
+      propertyInfoContent.predicates
+        .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri)
+        .map { predicateInfoV2: PredicateInfoV2 =>
+          predicateInfoV2.objects.map {
+            case stringLiteralV2: StringLiteralV2 => stringLiteralV2.value
+            case other                            => throw BadRequestException(s"Unexpected object for salsah-gui:guiAttribute: $other")
+          }.toSet
+        }
+        .getOrElse(Set.empty[String])
+
+    ChangePropertyGuiElementRequest(
+      propertyIri = propertyInfoContent.propertyIri,
+      newGuiElement = newGuiElement,
+      newGuiAttributes = newGuiAttributes,
+      lastModificationDate = lastModificationDate,
+      apiRequestID = apiRequestID,
+      featureFactoryConfig = featureFactoryConfig,
+      requestingUser = requestingUser
+    )
+  }
+}
+
+/**
   * Requests that a property's labels or comments are changed. A successful response will be a [[ReadOntologyV2]].
   *
   * @param propertyIri          the IRI of the property.

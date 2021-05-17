@@ -150,6 +150,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     case createPropertyRequest: CreatePropertyRequestV2 => createProperty(createPropertyRequest)
     case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 =>
       changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest)
+    case changePropertyGuiElementRequest: ChangePropertyGuiElementRequest =>
+      changePropertyGuiElement(changePropertyGuiElementRequest)
     case deletePropertyRequest: DeletePropertyRequestV2 => deleteProperty(deletePropertyRequest)
     case deleteOntologyRequest: DeleteOntologyRequestV2 => deleteOntology(deleteOntologyRequest)
     case other                                          => handleUnexpectedMessage(other, log, this.getClass.getName)
@@ -3968,6 +3970,208 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
       taskResult <- IriLocker.runWithIriLock(
         apiRequestID = createPropertyRequest.apiRequestID,
+        iri = ONTOLOGY_CACHE_LOCK_IRI,
+        task = () =>
+          makeTaskFuture(
+            internalPropertyIri = internalPropertyIri,
+            internalOntologyIri = internalOntologyIri
+        )
+      )
+    } yield taskResult
+  }
+
+  /**
+    * Changes the values of `salsah-gui:guiElement` and `salsah-gui:guiAttribute` in a property definition.
+    *
+    * @param changePropertyGuiElementRequest the request to change the property's GUI element and GUI attribute.
+    * @return a [[ReadOntologyV2]] containing the modified property definition.
+    */
+  private def changePropertyGuiElement(
+      changePropertyGuiElementRequest: ChangePropertyGuiElementRequest): Future[ReadOntologyV2] = {
+    def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
+      for {
+        cacheData <- getCacheData
+
+        ontology = cacheData.ontologies(internalOntologyIri)
+
+        currentReadPropertyInfo: ReadPropertyInfoV2 = ontology.properties.getOrElse(
+          internalPropertyIri,
+          throw NotFoundException(s"Property ${changePropertyGuiElementRequest.propertyIri} not found"))
+
+        // Check that the ontology exists and has not been updated by another user since the client last read it.
+        _ <- checkOntologyLastModificationDateBeforeUpdate(
+          internalOntologyIri = internalOntologyIri,
+          expectedLastModificationDate = changePropertyGuiElementRequest.lastModificationDate,
+          featureFactoryConfig = changePropertyGuiElementRequest.featureFactoryConfig
+        )
+
+        // If this is a link property, also change the GUI element and attribute of the corresponding link value property.
+
+        maybeCurrentLinkValueReadPropertyInfo: Option[ReadPropertyInfoV2] = if (currentReadPropertyInfo.isLinkProp) {
+          val linkValuePropertyIri = internalPropertyIri.fromLinkPropToLinkValueProp
+          Some(
+            ontology.properties.getOrElse(
+              linkValuePropertyIri,
+              throw InconsistentRepositoryDataException(s"Link value property $linkValuePropertyIri not found")))
+        } else {
+          None
+        }
+
+        // Do the update.
+
+        currentTime: Instant = Instant.now
+
+        updateSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .changePropertyGuiElement(
+            triplestore = settings.triplestoreType,
+            ontologyNamedGraphIri = internalOntologyIri,
+            ontologyIri = internalOntologyIri,
+            propertyIri = internalPropertyIri,
+            maybeLinkValuePropertyIri = maybeCurrentLinkValueReadPropertyInfo.map(_.entityInfoContent.propertyIri),
+            maybeNewGuiElement = changePropertyGuiElementRequest.newGuiElement,
+            newGuiAttributes = changePropertyGuiElementRequest.newGuiAttributes,
+            lastModificationDate = changePropertyGuiElementRequest.lastModificationDate,
+            currentTime = currentTime
+          )
+          .toString()
+
+        _ <- (storeManager ? SparqlUpdateRequest(updateSparql)).mapTo[SparqlUpdateResponse]
+
+        // Check that the ontology's last modification date was updated.
+
+        _ <- checkOntologyLastModificationDateAfterUpdate(
+          internalOntologyIri = internalOntologyIri,
+          expectedLastModificationDate = currentTime,
+          featureFactoryConfig = changePropertyGuiElementRequest.featureFactoryConfig
+        )
+
+        // Check that the data that was saved corresponds to the data that was submitted. To make this comparison,
+        // we have to undo the SPARQL-escaping of the input.
+
+        loadedPropertyDef <- loadPropertyDefinition(
+          propertyIri = internalPropertyIri,
+          featureFactoryConfig = changePropertyGuiElementRequest.featureFactoryConfig
+        )
+
+        maybeNewGuiElementPredicate: Option[(SmartIri, PredicateInfoV2)] = changePropertyGuiElementRequest.newGuiElement
+          .map { guiElement: SmartIri =>
+            OntologyConstants.SalsahGui.GuiElementProp.toSmartIri -> PredicateInfoV2(
+              predicateIri = OntologyConstants.SalsahGui.GuiElementProp.toSmartIri,
+              objects = Seq(SmartIriLiteralV2(guiElement))
+            )
+          }
+
+        maybeUnescapedNewGuiAttributePredicate: Option[(SmartIri, PredicateInfoV2)] = if (changePropertyGuiElementRequest.newGuiAttributes.nonEmpty) {
+          Some(
+            OntologyConstants.SalsahGui.GuiAttribute.toSmartIri -> PredicateInfoV2(
+              predicateIri = OntologyConstants.SalsahGui.GuiAttribute.toSmartIri,
+              objects = changePropertyGuiElementRequest.newGuiAttributes.map(StringLiteralV2(_)).toSeq
+            ))
+        } else {
+          None
+        }
+
+        unescapedNewPropertyDef: PropertyInfoContentV2 = currentReadPropertyInfo.entityInfoContent.copy(
+          predicates = currentReadPropertyInfo.entityInfoContent.predicates -
+            OntologyConstants.SalsahGui.GuiElementProp.toSmartIri -
+            OntologyConstants.SalsahGui.GuiAttribute.toSmartIri ++
+            maybeNewGuiElementPredicate ++
+            maybeUnescapedNewGuiAttributePredicate
+        )
+
+        _ = if (loadedPropertyDef != unescapedNewPropertyDef) {
+          throw InconsistentRepositoryDataException(
+            s"Attempted to save property definition $unescapedNewPropertyDef, but $loadedPropertyDef was saved")
+        }
+
+        maybeLoadedLinkValuePropertyDefFuture: Option[Future[PropertyInfoContentV2]] = maybeCurrentLinkValueReadPropertyInfo
+          .map { linkValueReadPropertyInfo =>
+            loadPropertyDefinition(
+              propertyIri = linkValueReadPropertyInfo.entityInfoContent.propertyIri,
+              featureFactoryConfig = changePropertyGuiElementRequest.featureFactoryConfig
+            )
+          }
+
+        maybeLoadedLinkValuePropertyDef: Option[PropertyInfoContentV2] <- ActorUtil.optionFuture2FutureOption(
+          maybeLoadedLinkValuePropertyDefFuture)
+
+        maybeUnescapedNewLinkValuePropertyDef: Option[PropertyInfoContentV2] = maybeLoadedLinkValuePropertyDef.map {
+          loadedLinkValuePropertyDef =>
+            val unescapedNewLinkPropertyDef = maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.copy(
+              predicates = maybeCurrentLinkValueReadPropertyInfo.get.entityInfoContent.predicates -
+                OntologyConstants.SalsahGui.GuiElementProp.toSmartIri -
+                OntologyConstants.SalsahGui.GuiAttribute.toSmartIri ++
+                maybeNewGuiElementPredicate ++
+                maybeUnescapedNewGuiAttributePredicate
+            )
+
+            if (loadedLinkValuePropertyDef != unescapedNewLinkPropertyDef) {
+              throw InconsistentRepositoryDataException(
+                s"Attempted to save link value property definition $unescapedNewLinkPropertyDef, but $loadedLinkValuePropertyDef was saved")
+            }
+
+            unescapedNewLinkPropertyDef
+        }
+
+        // Update the ontology cache, using the unescaped definition(s).
+
+        newReadPropertyInfo = ReadPropertyInfoV2(
+          entityInfoContent = unescapedNewPropertyDef,
+          isEditable = true,
+          isResourceProp = true,
+          isLinkProp = currentReadPropertyInfo.isLinkProp
+        )
+
+        maybeLinkValuePropertyCacheEntry: Option[(SmartIri, ReadPropertyInfoV2)] = maybeUnescapedNewLinkValuePropertyDef
+          .map { unescapedNewLinkPropertyDef =>
+            unescapedNewLinkPropertyDef.propertyIri -> ReadPropertyInfoV2(
+              entityInfoContent = unescapedNewLinkPropertyDef,
+              isResourceProp = true,
+              isLinkValueProp = true
+            )
+          }
+
+        updatedOntologyMetadata = ontology.ontologyMetadata.copy(
+          lastModificationDate = Some(currentTime)
+        )
+
+        updatedOntology = ontology.copy(
+          ontologyMetadata = updatedOntologyMetadata,
+          properties = ontology.properties ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> newReadPropertyInfo)
+        )
+
+        _ = storeCacheData(
+          cacheData.copy(
+            ontologies = cacheData.ontologies + (internalOntologyIri -> updatedOntology)
+          ))
+
+        // Read the data back from the cache.
+
+        response <- getPropertyDefinitionsFromOntologyV2(
+          propertyIris = Set(internalPropertyIri),
+          allLanguages = true,
+          requestingUser = changePropertyGuiElementRequest.requestingUser)
+      } yield response
+    }
+
+    for {
+      requestingUser <- FastFuture.successful(changePropertyGuiElementRequest.requestingUser)
+
+      externalPropertyIri = changePropertyGuiElementRequest.propertyIri
+      externalOntologyIri = externalPropertyIri.getOntologyFromEntity
+
+      _ <- checkOntologyAndEntityIrisForUpdate(
+        externalOntologyIri = externalOntologyIri,
+        externalEntityIri = externalPropertyIri,
+        requestingUser = requestingUser
+      )
+
+      internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
+      internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+
+      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
+      taskResult <- IriLocker.runWithIriLock(
+        apiRequestID = changePropertyGuiElementRequest.apiRequestID,
         iri = ONTOLOGY_CACHE_LOCK_IRI,
         task = () =>
           makeTaskFuture(

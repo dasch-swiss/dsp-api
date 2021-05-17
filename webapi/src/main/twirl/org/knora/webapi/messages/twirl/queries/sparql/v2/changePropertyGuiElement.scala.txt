@@ -1,0 +1,164 @@
+@*
+ * Copyright © 2015-2021 the contributors (see Contributors.md).
+ *
+ * This file is part of Knora.
+ *
+ * Knora is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published
+ * by the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Knora is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *@
+
+@import org.knora.webapi.exceptions.SparqlGenerationException
+@import org.knora.webapi.messages.SmartIri
+@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+@import java.time.Instant
+
+@*
+ * Changes the salsah-gui:guiElement and salsah-gui:guiAttribute of a property.
+ *
+ * @param triplestore the name of the triplestore being used.
+ * @param ontologyNamedGraphIri the IRI of the named graph where the ontology is stored.
+ * @param ontologyIri the IRI of the ontology to be modified.
+ * @param propertyIri the IRI of the property to be modified.
+ * @param maybeLinkValuePropertyIri the IRI of the corresponding link value property, if any, to be updated.
+ * @param maybeNewGuiElement the property's new salsah-gui:guiElement, or None if it should just be deleted.
+ * @param newGuiAttributes the property's new salsah-gui:guiAttribute values, or an empty set if they should just be deleted.
+ * @param lastModificationDate the xsd:dateTimeStamp that was attached to the ontology when it was last modified.
+ * @param currentTime an xsd:dateTimeStamp that will be attached to the ontology.
+ *@
+@(triplestore: String,
+  ontologyNamedGraphIri: SmartIri,
+  ontologyIri: SmartIri,
+  propertyIri: SmartIri,
+  maybeLinkValuePropertyIri: Option[SmartIri],
+  maybeNewGuiElement: Option[SmartIri],
+  newGuiAttributes: Set[String],
+  lastModificationDate: Instant,
+  currentTime: Instant)
+
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+PREFIX salsah-gui: <http://www.knora.org/ontology/salsah-gui#>
+
+DELETE {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@propertyIri> salsah-gui:guiElement ?oldGuiElement .
+        <@propertyIri> salsah-gui:guiAttribute ?oldGuiAttribute .
+
+        @maybeLinkValuePropertyIri match {
+            case Some(linkValuePropertyIri) => {
+                <@linkValuePropertyIri> salsah-gui:guiElement ?oldLinkValuePropertyGuiElement .
+                <@linkValuePropertyIri> salsah-gui:guiAttribute ?oldLinkValuePropertyGuiAttribute .
+            }
+
+            case None => {}
+        }
+    }
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> rdf:type owl:Ontology ;
+            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
+
+        OPTIONAL {
+            <@propertyIri> salsah-gui:guiElement ?oldGuiElement .
+        }
+
+        OPTIONAL {
+            <@propertyIri> salsah-gui:guiAttribute ?oldGuiAttribute .
+        }
+
+        @maybeLinkValuePropertyIri match {
+            case Some(linkValuePropertyIri) => {
+                OPTIONAL {
+                    <@linkValuePropertyIri> salsah-gui:guiElement ?oldLinkValuePropertyGuiElement .
+                }
+
+                OPTIONAL {
+                    <@linkValuePropertyIri> salsah-gui:guiAttribute ?oldLinkValuePropertyGuiAttribute .
+                }
+            }
+
+            case None => {}
+        }
+    }
+};
+INSERT {
+    GRAPH <@ontologyNamedGraphIri> {
+        @maybeNewGuiElement match {
+            case Some(newGuiElement) => {
+                <@propertyIri> salsah-gui:guiElement <@newGuiElement> .
+            }
+
+            case None => {}
+        }
+
+        @for(newGuiAttribute <- newGuiAttributes) {
+            <@propertyIri> salsah-gui:guiAttribute "@newGuiAttribute" .
+        }
+
+        @maybeLinkValuePropertyIri match {
+            case Some(linkValuePropertyIri) => {
+                @maybeNewGuiElement match {
+                    case Some(newGuiElement) => {
+                        <@linkValuePropertyIri> salsah-gui:guiElement <@newGuiElement> .
+                    }
+
+                    case None => {}
+                }
+
+                @for(newGuiAttribute <- newGuiAttributes) {
+                    <@linkValuePropertyIri> salsah-gui:guiAttribute "@newGuiAttribute" .
+                }
+            }
+
+            case None => {}
+        }
+    }
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> rdf:type owl:Ontology ;
+            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
+    }
+};
+DELETE {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
+    }
+}
+INSERT {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> knora-base:lastModificationDate "@currentTime"^^xsd:dateTime .
+    }
+}
+@* Ensure that inference is not used in the WHERE clause of this update. *@
+@if(triplestore.startsWith("graphdb")) {
+    USING <http://www.ontotext.com/explicit>
+}
+WHERE {
+    GRAPH <@ontologyNamedGraphIri> {
+        <@ontologyIri> rdf:type owl:Ontology ;
+            knora-base:lastModificationDate "@lastModificationDate"^^xsd:dateTime .
+    }
+}
