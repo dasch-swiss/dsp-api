@@ -3807,6 +3807,44 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
+    "add a maxCardinality=1 for property anything:hasName to class anything:BlueThing even though the class is used in data" in {
+      val classIri = AnythingOntologyIri.makeEntityIri("BlueThing")
+
+      val classInfoContent = ClassInfoContentV2(
+        classIri = classIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          )
+        ),
+        directCardinalities = Map(
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+        ),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! AddCardinalitiesToClassRequestV2(
+        classInfoContent = classInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val externalOntology = msg.toOntologySchema(ApiV2Complex)
+          assert(externalOntology.classes.size == 1)
+
+          val metadata = externalOntology.ontologyMetadata
+          val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+            throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
     "create a property anything:hasEmptiness with knora-api:subjectType anything:Nothing" in {
       val propertyIri = AnythingOntologyIri.makeEntityIri("hasEmptiness")
 
