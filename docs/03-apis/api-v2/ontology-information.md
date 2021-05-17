@@ -1412,8 +1412,8 @@ either as an object or as an array of objects.
 
 ### Adding Cardinalities to a Class
 
-This operation is not permitted if the class is used in data, or if it
-has a subclass.
+If the class is used in data or if it
+has a subclass, it is not allowed to add cardinalities `owl:minCardinality` greater than 1 or `owl:cardinality 1` to the class.
 
 ```
 HTTP POST to http://host/v2/ontologies/cardinalities
@@ -1427,7 +1427,7 @@ HTTP POST to http://host/v2/ontologies/cardinalities
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [ 
     {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
@@ -1439,7 +1439,7 @@ HTTP POST to http://host/v2/ontologies/cardinalities
         }
       }
     }
-  } ],
+  ],
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
