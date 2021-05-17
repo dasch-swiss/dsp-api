@@ -62,7 +62,8 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     * Returns the route.
     */
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
-    createResource(featureFactoryConfig) ~
+    getIIIFManifest(featureFactoryConfig) ~
+      createResource(featureFactoryConfig) ~
       updateResourceMetadata(featureFactoryConfig) ~
       getResourcesInProject(featureFactoryConfig) ~
       getResourceHistory(featureFactoryConfig) ~
@@ -73,6 +74,38 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       getResourcesGraph(featureFactoryConfig) ~
       deleteResource(featureFactoryConfig) ~
       eraseResource(featureFactoryConfig)
+
+  private def getIIIFManifest(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(ResourcesBasePath / "iiifmanifest" / Segment) { resourceIriStr: IRI =>
+      get { requestContext =>
+        val resourceIri: IRI =
+          stringFormatter.validateAndEscapeIri(resourceIriStr,
+                                               throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
+
+        val requestMessageFuture: Future[ResourceIIIFManifestGetRequestV2] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          ResourceIIIFManifestGetRequestV2(
+            resourceIri = resourceIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
+
+        RouteUtilV2.runRdfRouteWithFuture(
+          requestMessageF = requestMessageFuture,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log,
+          targetSchema = ApiV2Complex,
+          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+        )
+      }
+    }
 
   private def createResource(featureFactoryConfig: FeatureFactoryConfig): Route = path(ResourcesBasePath) {
     post {
@@ -85,6 +118,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
               requestContext = requestContext,
               featureFactoryConfig = featureFactoryConfig
             )
+
             requestMessage: CreateResourceRequestV2 <- CreateResourceRequestV2.fromJsonLD(
               requestDoc,
               apiRequestID = UUID.randomUUID,
@@ -123,6 +157,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
               requestContext = requestContext,
               featureFactoryConfig = featureFactoryConfig
             )
+
             requestMessage: UpdateResourceMetadataRequestV2 <- UpdateResourceMetadataRequestV2.fromJsonLD(
               requestDoc,
               apiRequestID = UUID.randomUUID,
@@ -400,7 +435,6 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
     resIri: String =>
       get { requestContext =>
         {
-
           val resourceIri: IRI =
             stringFormatter.validateAndEscapeIri(resIri, throw BadRequestException(s"Invalid resource IRI: <$resIri>"))
 
@@ -553,6 +587,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
               requestContext = requestContext,
               featureFactoryConfig = featureFactoryConfig
             )
+
             requestMessage: DeleteOrEraseResourceRequestV2 <- DeleteOrEraseResourceRequestV2.fromJsonLD(
               requestDoc,
               apiRequestID = UUID.randomUUID,

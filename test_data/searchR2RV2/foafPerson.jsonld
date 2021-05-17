@@ -1,78 +1,79 @@
+
 {
-  "@id" : "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw",
-  "@type" : "beol:person",
-  "beol:hasFamilyName" : {
-    "@id" : "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/5K24YxlwQ9OXcYjB0jRR4Q",
-    "@type" : "knora-api:TextValue",
-    "knora-api:arkUrl" : {
-      "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi/5K24YxlwQ9OXcYjB0jRR4Qy"
+    "knora-api:arkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi",
+        "@type": "xsd:anyURI"
     },
-    "knora-api:attachedToUser" : {
-      "@id" : "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
+    "rdfs:label": "Testperson2",
+    "knora-api:versionArkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi.20180604T085622513Z",
+        "@type": "xsd:anyURI"
     },
-    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-    "knora-api:userHasPermission" : "V",
-    "knora-api:valueAsString" : "Meier",
-    "knora-api:valueCreationDate" : {
-      "@type" : "xsd:dateTimeStamp",
-      "@value" : "2018-06-04T08:56:22.513Z"
+    "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
     },
-    "knora-api:valueHasUUID" : "5K24YxlwQ9OXcYjB0jRR4Q",
-    "knora-api:versionArkUrl" : {
-      "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi/5K24YxlwQ9OXcYjB0jRR4Qy.20180604T085622513Z"
+    "knora-api:creationDate": {
+        "@value": "2018-06-04T08:56:22.513Z",
+        "@type": "xsd:dateTimeStamp"
+    },
+    "knora-api:attachedToUser": {
+        "@id": "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
+    },
+    "@type": "beol:person",
+    "@id": "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw",
+    "knora-api:userHasPermission": "V",
+    "beol:hasFamilyName": {
+        "knora-api:valueAsString": "Meier",
+        "knora-api:arkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi/5K24YxlwQ9OXcYjB0jRR4Qy",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:versionArkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi/5K24YxlwQ9OXcYjB0jRR4Qy.20180604T085622513Z",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:userHasPermission": "V",
+        "knora-api:valueCreationDate": {
+            "@value": "2018-06-04T08:56:22.513Z",
+            "@type": "xsd:dateTimeStamp"
+        },
+        "knora-api:attachedToUser": {
+            "@id": "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
+        },
+        "knora-api:valueHasUUID": "5K24YxlwQ9OXcYjB0jRR4Q",
+        "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        "@type": "knora-api:TextValue",
+        "@id": "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/5K24YxlwQ9OXcYjB0jRR4Q"
+    },
+    "beol:hasGivenName": {
+        "knora-api:valueAsString": "Fritz",
+        "knora-api:arkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi/Emsl7AdiTdS8uwSTo18YRw8",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:versionArkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi/Emsl7AdiTdS8uwSTo18YRw8.20180604T085622513Z",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:userHasPermission": "V",
+        "knora-api:valueCreationDate": {
+            "@value": "2018-06-04T08:56:22.513Z",
+            "@type": "xsd:dateTimeStamp"
+        },
+        "knora-api:attachedToUser": {
+            "@id": "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
+        },
+        "knora-api:valueHasUUID": "Emsl7AdiTdS8uwSTo18YRw",
+        "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        "@type": "knora-api:TextValue",
+        "@id": "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/Emsl7AdiTdS8uwSTo18YRw"
+    },
+    "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "beol": "http://0.0.0.0:3333/ontology/0801/beol/v2#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
     }
-  },
-  "beol:hasGivenName" : {
-    "@id" : "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/Emsl7AdiTdS8uwSTo18YRw",
-    "@type" : "knora-api:TextValue",
-    "knora-api:arkUrl" : {
-      "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi/Emsl7AdiTdS8uwSTo18YRw8"
-    },
-    "knora-api:attachedToUser" : {
-      "@id" : "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
-    },
-    "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-    "knora-api:userHasPermission" : "V",
-    "knora-api:valueAsString" : "Fritz",
-    "knora-api:valueCreationDate" : {
-      "@type" : "xsd:dateTimeStamp",
-      "@value" : "2018-06-04T08:56:22.513Z"
-    },
-    "knora-api:valueHasUUID" : "Emsl7AdiTdS8uwSTo18YRw",
-    "knora-api:versionArkUrl" : {
-      "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi/Emsl7AdiTdS8uwSTo18YRw8.20180604T085622513Z"
-    }
-  },
-  "knora-api:arkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi"
-  },
-  "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
-  },
-  "knora-api:attachedToUser" : {
-    "@id" : "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
-  },
-  "knora-api:creationDate" : {
-    "@type" : "xsd:dateTimeStamp",
-    "@value" : "2018-06-04T08:56:22.513Z"
-  },
-  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-  "knora-api:userHasPermission" : "V",
-  "knora-api:versionArkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0801/VvYVIy=FSbOJBsh2d9ZFJwi.20180604T085622513Z"
-  },
-  "rdfs:label" : "Testperson2",
-  "@context" : {
-    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "beol" : "http://0.0.0.0:3333/ontology/0801/beol/v2#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-  }
 }
