@@ -3464,7 +3464,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "not add a cardinality to the class anything:Nothing, because it has a subclass" in {
+    "not add a cardinality=1 to the class anything:Nothing, because it has a subclass" in {
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
       val classInfoContent = ClassInfoContentV2(
@@ -3775,7 +3775,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "not add a minCardinality=1 or cardinality=1 for property anything:hasName to class anything:BlueThing, because the class is used in data" in {
+    "not add a minCardinality=1 for property anything:hasName to class anything:BlueThing, because the class is used in data" in {
       val classIri = AnythingOntologyIri.makeEntityIri("BlueThing")
 
       val classInfoContent = ClassInfoContentV2(
