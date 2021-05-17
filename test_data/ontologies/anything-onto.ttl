@@ -634,7 +634,7 @@
          rdf:type owl:Restriction ;
          owl:onProperty :hasBlueThingValue ;
          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
-         salsah-gui:guiOrder "16"^^xsd:nonNegativeInteger
+         salsah-gui:guiOrder "63"^^xsd:nonNegativeInteger
       ] ;
 
       rdfs:comment """Diese Resource-Klasse beschreibt ein blaues Ding"""@de ;
