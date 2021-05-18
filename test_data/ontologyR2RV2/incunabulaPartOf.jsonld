@@ -10,10 +10,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:page"
-            },
-            "rdfs:comment": "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches.",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:LinkValue"
@@ -21,7 +17,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Searchbox"
             },
-            "@id": "incunabula:partOfValue"
+            "@id": "incunabula:partOfValue",
+            "knora-api:subjectType": {
+                "@id": "incunabula:page"
+            },
+            "rdfs:comment": "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."
         }
     ],
     "knora-api:attachedToProject": {

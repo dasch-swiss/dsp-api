@@ -3464,7 +3464,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "not add a cardinality to the class anything:Nothing, because it has a subclass" in {
+    "not add a cardinality=1 to the class anything:Nothing, because it has a subclass" in {
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
       val classInfoContent = ClassInfoContentV2(
@@ -3476,7 +3476,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(Cardinality.MustHaveOne)
         ),
         ontologySchema = ApiV2Complex
       )
@@ -3775,7 +3775,39 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "not add a cardinality for property anything:hasName to class anything:BlueThing, because the class is used in data" in {
+    "not add a minCardinality>0 for property anything:hasName to class anything:BlueThing, because the class is used in data" in {
+      val classIri = AnythingOntologyIri.makeEntityIri("BlueThing")
+
+      val classInfoContent = ClassInfoContentV2(
+        classIri = classIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          )
+        ),
+        directCardinalities = Map(
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MustHaveSome)
+        ),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! AddCardinalitiesToClassRequestV2(
+        classInfoContent = classInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: akka.actor.Status.Failure =>
+          if (printErrorMessages) println(msg.cause.getMessage)
+          msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      }
+    }
+
+    "add a maxCardinality=1 for property anything:hasName to class anything:BlueThing even though the class is used in data" in {
       val classIri = AnythingOntologyIri.makeEntityIri("BlueThing")
 
       val classInfoContent = ClassInfoContentV2(
@@ -3801,9 +3833,15 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure =>
-          if (printErrorMessages) println(msg.cause.getMessage)
-          msg.cause.isInstanceOf[BadRequestException] should ===(true)
+        case msg: ReadOntologyV2 =>
+          val externalOntology = msg.toOntologySchema(ApiV2Complex)
+          assert(externalOntology.classes.size == 1)
+
+          val metadata = externalOntology.ontologyMetadata
+          val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+            throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
       }
     }
 

@@ -436,10 +436,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:book"
-            },
-            "rdfs:comment": "Unstrukturierte Bemerkungen zu einem Objekt",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": [
                 "rows=7",
@@ -452,7 +448,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Textarea"
             },
-            "@id": "incunabula:book_comment"
+            "@id": "incunabula:book_comment",
+            "knora-api:subjectType": {
+                "@id": "incunabula:book"
+            },
+            "rdfs:comment": "Unstrukturierte Bemerkungen zu einem Objekt"
         },
         {
             "rdfs:label": "Citation/reference",
@@ -461,10 +461,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Resource"
-            },
-            "rdfs:comment": "Stellt einen Verweis dar.",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": [
                 "cols=60",
@@ -477,7 +473,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Textarea"
             },
-            "@id": "incunabula:citation"
+            "@id": "incunabula:citation",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "rdfs:comment": "Stellt einen Verweis dar."
         },
         {
             "rdfs:label": "Description",
@@ -491,10 +491,6 @@
             ],
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Resource"
-            },
-            "rdfs:comment": "Description",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:TextValue"
@@ -502,7 +498,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Richtext"
             },
-            "@id": "incunabula:description"
+            "@id": "incunabula:description",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "rdfs:comment": "Description"
         },
         {
             "rdfs:label": "Creator",
@@ -516,10 +516,6 @@
             ],
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:book"
-            },
-            "rdfs:comment": "Erzeuger/Autor",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": [
                 "maxlength=255",
@@ -531,7 +527,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:SimpleText"
             },
-            "@id": "incunabula:hasAuthor"
+            "@id": "incunabula:hasAuthor",
+            "knora-api:subjectType": {
+                "@id": "incunabula:book"
+            },
+            "rdfs:comment": "Erzeuger/Autor"
         },
         {
             "rdfs:label": "Randleistentyp links",
@@ -540,11 +540,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:page"
-            },
-            "knora-api:isLinkProperty": true,
-            "rdfs:comment": "Verweis auf einen Randleistentyp",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": "numprops=1",
             "knora-api:objectType": {
@@ -553,7 +548,12 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Searchbox"
             },
-            "@id": "incunabula:hasLeftSideband"
+            "@id": "incunabula:hasLeftSideband",
+            "knora-api:subjectType": {
+                "@id": "incunabula:page"
+            },
+            "knora-api:isLinkProperty": true,
+            "rdfs:comment": "Verweis auf einen Randleistentyp"
         },
         {
             "knora-api:isLinkValueProperty": true,
@@ -563,10 +563,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:page"
-            },
-            "rdfs:comment": "Verweis auf einen Randleistentyp",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:LinkValue"
@@ -574,7 +570,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Searchbox"
             },
-            "@id": "incunabula:hasLeftSidebandValue"
+            "@id": "incunabula:hasLeftSidebandValue",
+            "knora-api:subjectType": {
+                "@id": "incunabula:page"
+            },
+            "rdfs:comment": "Verweis auf einen Randleistentyp"
         },
         {
             "rdfs:label": "Randleistentyp rechts",
@@ -583,11 +583,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:page"
-            },
-            "knora-api:isLinkProperty": true,
-            "rdfs:comment": "Verweis auf einen Randleistentyp",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": "numprops=1",
             "knora-api:objectType": {
@@ -596,7 +591,12 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Searchbox"
             },
-            "@id": "incunabula:hasRightSideband"
+            "@id": "incunabula:hasRightSideband",
+            "knora-api:subjectType": {
+                "@id": "incunabula:page"
+            },
+            "knora-api:isLinkProperty": true,
+            "rdfs:comment": "Verweis auf einen Randleistentyp"
         },
         {
             "knora-api:isLinkValueProperty": true,
@@ -606,10 +606,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:page"
-            },
-            "rdfs:comment": "Verweis auf einen Randleistentyp",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:LinkValue"
@@ -617,7 +613,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Searchbox"
             },
-            "@id": "incunabula:hasRightSidebandValue"
+            "@id": "incunabula:hasRightSidebandValue",
+            "knora-api:subjectType": {
+                "@id": "incunabula:page"
+            },
+            "rdfs:comment": "Verweis auf einen Randleistentyp"
         },
         {
             "rdfs:label": "Location",
@@ -626,10 +626,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:book"
-            },
-            "rdfs:comment": "Der Ort wo sich das physische Original befindet",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": [
                 "cols=60",
@@ -642,7 +638,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Textarea"
             },
-            "@id": "incunabula:location"
+            "@id": "incunabula:location",
+            "knora-api:subjectType": {
+                "@id": "incunabula:book"
+            },
+            "rdfs:comment": "Der Ort wo sich das physische Original befindet"
         },
         {
             "knora-api:isResourceClass": true,
@@ -832,10 +832,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:misc"
-            },
-            "knora-api:isLinkProperty": true,
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "incunabula:book"
@@ -843,7 +839,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Searchbox"
             },
-            "@id": "incunabula:miscHasBook"
+            "@id": "incunabula:miscHasBook",
+            "knora-api:subjectType": {
+                "@id": "incunabula:misc"
+            },
+            "knora-api:isLinkProperty": true
         },
         {
             "knora-api:isLinkValueProperty": true,
@@ -910,10 +910,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:book"
-            },
-            "rdfs:comment": "A note concerning the object",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": [
                 "cols=60",
@@ -926,7 +922,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Textarea"
             },
-            "@id": "incunabula:note"
+            "@id": "incunabula:note",
+            "knora-api:subjectType": {
+                "@id": "incunabula:book"
+            },
+            "rdfs:comment": "A note concerning the object"
         },
         {
             "rdfs:label": "Original filename",
@@ -935,10 +935,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:page"
-            },
-            "rdfs:comment": "Der originale Dateiname",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": [
                 "maxlength=128",
@@ -950,7 +946,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:SimpleText"
             },
-            "@id": "incunabula:origname"
+            "@id": "incunabula:origname",
+            "knora-api:subjectType": {
+                "@id": "incunabula:page"
+            },
+            "rdfs:comment": "Der originale Dateiname"
         },
         {
             "knora-api:isResourceClass": true,
@@ -1221,10 +1221,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:page"
-            },
-            "rdfs:comment": "Unstrukturierte Bemerkungen zu einem Objekt",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": [
                 "rows=7",
@@ -1237,7 +1233,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Textarea"
             },
-            "@id": "incunabula:page_comment"
+            "@id": "incunabula:page_comment",
+            "knora-api:subjectType": {
+                "@id": "incunabula:page"
+            },
+            "rdfs:comment": "Unstrukturierte Bemerkungen zu einem Objekt"
         },
         {
             "rdfs:label": "Page identifier",
@@ -1246,10 +1246,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:page"
-            },
-            "rdfs:comment": "A distinct identification of a book page",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": [
                 "maxlength=8",
@@ -1261,7 +1257,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:SimpleText"
             },
-            "@id": "incunabula:pagenum"
+            "@id": "incunabula:pagenum",
+            "knora-api:subjectType": {
+                "@id": "incunabula:page"
+            },
+            "rdfs:comment": "A distinct identification of a book page"
         },
         {
             "rdfs:label": "is a part of",
@@ -1270,11 +1270,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:page"
-            },
-            "knora-api:isLinkProperty": true,
-            "rdfs:comment": "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches.",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "incunabula:book"
@@ -1282,7 +1277,12 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Searchbox"
             },
-            "@id": "incunabula:partOf"
+            "@id": "incunabula:partOf",
+            "knora-api:subjectType": {
+                "@id": "incunabula:page"
+            },
+            "knora-api:isLinkProperty": true,
+            "rdfs:comment": "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."
         },
         {
             "knora-api:isLinkValueProperty": true,
@@ -1292,10 +1292,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:page"
-            },
-            "rdfs:comment": "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches.",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:LinkValue"
@@ -1303,7 +1299,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Searchbox"
             },
-            "@id": "incunabula:partOfValue"
+            "@id": "incunabula:partOfValue",
+            "knora-api:subjectType": {
+                "@id": "incunabula:page"
+            },
+            "rdfs:comment": "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."
         },
         {
             "rdfs:label": "Physical description",
@@ -1312,10 +1312,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:book"
-            },
-            "rdfs:comment": "Generelle physische Beschreibung des Objektes wie Material, Grösse etc.",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": [
                 "cols=60",
@@ -1328,7 +1324,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Textarea"
             },
-            "@id": "incunabula:physical_desc"
+            "@id": "incunabula:physical_desc",
+            "knora-api:subjectType": {
+                "@id": "incunabula:book"
+            },
+            "rdfs:comment": "Generelle physische Beschreibung des Objektes wie Material, Grösse etc."
         },
         {
             "rdfs:label": "Datum der Herausgabe",
@@ -1342,10 +1342,6 @@
             ],
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:book"
-            },
-            "rdfs:comment": "Datum der Herausgabe",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:DateValue"
@@ -1353,7 +1349,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Date"
             },
-            "@id": "incunabula:pubdate"
+            "@id": "incunabula:pubdate",
+            "knora-api:subjectType": {
+                "@id": "incunabula:book"
+            },
+            "rdfs:comment": "Datum der Herausgabe"
         },
         {
             "rdfs:label": "Publisher",
@@ -1367,10 +1367,6 @@
             ],
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:book"
-            },
-            "rdfs:comment": "Publishing is the process of production and dissemination of literature or information – the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": [
                 "maxlength=255",
@@ -1382,7 +1378,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:SimpleText"
             },
-            "@id": "incunabula:publisher"
+            "@id": "incunabula:publisher",
+            "knora-api:subjectType": {
+                "@id": "incunabula:book"
+            },
+            "rdfs:comment": "Publishing is the process of production and dissemination of literature or information – the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)"
         },
         {
             "rdfs:label": "Publication location",
@@ -1391,10 +1391,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:book"
-            },
-            "rdfs:comment": "Ort der Herausgabe",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": [
                 "maxlength=100",
@@ -1406,7 +1402,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:SimpleText"
             },
-            "@id": "incunabula:publoc"
+            "@id": "incunabula:publoc",
+            "knora-api:subjectType": {
+                "@id": "incunabula:book"
+            },
+            "rdfs:comment": "Ort der Herausgabe"
         },
         {
             "rdfs:label": "Title",
@@ -1443,10 +1443,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:page"
-            },
-            "rdfs:comment": "This property stands for the position within a set of rdered items (resoucres)",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": [
                 "max=-1",
@@ -1458,7 +1454,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Spinbox"
             },
-            "@id": "incunabula:seqnum"
+            "@id": "incunabula:seqnum",
+            "knora-api:subjectType": {
+                "@id": "incunabula:page"
+            },
+            "rdfs:comment": "This property stands for the position within a set of rdered items (resoucres)"
         },
         {
             "rdfs:label": "Kommentar (Richtext)",
@@ -1467,10 +1467,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:Sideband"
-            },
-            "rdfs:comment": "Unstrukturierte Bemerkungen zu einem Objekt",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:TextValue"
@@ -1478,7 +1474,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Richtext"
             },
-            "@id": "incunabula:sideband_comment"
+            "@id": "incunabula:sideband_comment",
+            "knora-api:subjectType": {
+                "@id": "incunabula:Sideband"
+            },
+            "rdfs:comment": "Unstrukturierte Bemerkungen zu einem Objekt"
         },
         {
             "rdfs:label": "Title",
@@ -1492,10 +1492,6 @@
             ],
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:book"
-            },
-            "rdfs:comment": "Titel",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": [
                 "maxlength=255",
@@ -1507,7 +1503,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:SimpleText"
             },
-            "@id": "incunabula:title"
+            "@id": "incunabula:title",
+            "knora-api:subjectType": {
+                "@id": "incunabula:book"
+            },
+            "rdfs:comment": "Titel"
         },
         {
             "rdfs:label": "Transkription",
@@ -1516,10 +1516,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:page"
-            },
-            "rdfs:comment": "Transkription",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:TextValue"
@@ -1527,7 +1523,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Richtext"
             },
-            "@id": "incunabula:transcription"
+            "@id": "incunabula:transcription",
+            "knora-api:subjectType": {
+                "@id": "incunabula:page"
+            },
+            "rdfs:comment": "Transkription"
         },
         {
             "rdfs:label": "URI",
@@ -1536,10 +1536,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:book"
-            },
-            "rdfs:comment": "Uniform Resource Identifier",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": [
                 "maxlength=200",
@@ -1551,7 +1547,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:SimpleText"
             },
-            "@id": "incunabula:url"
+            "@id": "incunabula:url",
+            "knora-api:subjectType": {
+                "@id": "incunabula:book"
+            },
+            "rdfs:comment": "Uniform Resource Identifier"
         }
     ],
     "knora-api:attachedToProject": {

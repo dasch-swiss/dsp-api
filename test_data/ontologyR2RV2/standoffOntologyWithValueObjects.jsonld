@@ -2755,26 +2755,26 @@
             "@id": "standoff:StandoffVisualTag"
         },
         {
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "standoff:standoffHyperlinkTagHasTarget",
             "knora-api:subjectType": {
                 "@id": "standoff:StandoffHyperlinkTag"
             },
-            "rdfs:comment": "describes the target settings of a hyperlink",
+            "rdfs:comment": "describes the target settings of a hyperlink"
+        },
+        {
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "standoff:standoffHyperlinkTagHasTarget"
-        },
-        {
+            "@id": "standoff:standoffRootTagHasDocumentType",
             "knora-api:subjectType": {
                 "@id": "standoff:StandoffRootTag"
             },
-            "rdfs:comment": "describes the document type",
-            "@type": "owl:DatatypeProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:string"
-            },
-            "@id": "standoff:standoffRootTagHasDocumentType"
+            "rdfs:comment": "describes the document type"
         }
     ],
     "knora-api:attachedToProject": {

@@ -15,6 +15,7 @@
         },
         {
             "@id": "salsah-gui:Colorpicker",
+            "salsah-gui:guiAttributeDefinition": "ncolors:integer",
             "rdf:type": [
                 {
                     "@id": "salsah-gui:Guielement"
@@ -22,8 +23,7 @@
                 {
                     "@id": "owl:NamedIndividual"
                 }
-            ],
-            "salsah-gui:guiAttributeDefinition": "ncolors:integer"
+            ]
         },
         {
             "@id": "salsah-gui:Date",
@@ -86,6 +86,7 @@
         },
         {
             "@id": "salsah-gui:List",
+            "salsah-gui:guiAttributeDefinition": "hlist(required):iri",
             "rdf:type": [
                 {
                     "@id": "salsah-gui:Guielement"
@@ -93,11 +94,11 @@
                 {
                     "@id": "owl:NamedIndividual"
                 }
-            ],
-            "salsah-gui:guiAttributeDefinition": "hlist(required):iri"
+            ]
         },
         {
             "@id": "salsah-gui:Pulldown",
+            "salsah-gui:guiAttributeDefinition": "hlist(required):iri",
             "rdf:type": [
                 {
                     "@id": "salsah-gui:Guielement"
@@ -105,11 +106,11 @@
                 {
                     "@id": "owl:NamedIndividual"
                 }
-            ],
-            "salsah-gui:guiAttributeDefinition": "hlist(required):iri"
+            ]
         },
         {
             "@id": "salsah-gui:Radio",
+            "salsah-gui:guiAttributeDefinition": "hlist(required):iri",
             "rdf:type": [
                 {
                     "@id": "salsah-gui:Guielement"
@@ -117,8 +118,7 @@
                 {
                     "@id": "owl:NamedIndividual"
                 }
-            ],
-            "salsah-gui:guiAttributeDefinition": "hlist(required):iri"
+            ]
         },
         {
             "@id": "salsah-gui:Richtext",
@@ -133,6 +133,7 @@
         },
         {
             "@id": "salsah-gui:Searchbox",
+            "salsah-gui:guiAttributeDefinition": "numprops:integer",
             "rdf:type": [
                 {
                     "@id": "salsah-gui:Guielement"
@@ -140,11 +141,14 @@
                 {
                     "@id": "owl:NamedIndividual"
                 }
-            ],
-            "salsah-gui:guiAttributeDefinition": "numprops:integer"
+            ]
         },
         {
             "@id": "salsah-gui:SimpleText",
+            "salsah-gui:guiAttributeDefinition": [
+                "maxlength:integer",
+                "size:integer"
+            ],
             "rdf:type": [
                 {
                     "@id": "salsah-gui:Guielement"
@@ -152,14 +156,14 @@
                 {
                     "@id": "owl:NamedIndividual"
                 }
-            ],
-            "salsah-gui:guiAttributeDefinition": [
-                "maxlength:integer",
-                "size:integer"
             ]
         },
         {
             "@id": "salsah-gui:Slider",
+            "salsah-gui:guiAttributeDefinition": [
+                "max(required):decimal",
+                "min(required):decimal"
+            ],
             "rdf:type": [
                 {
                     "@id": "salsah-gui:Guielement"
@@ -167,14 +171,14 @@
                 {
                     "@id": "owl:NamedIndividual"
                 }
-            ],
-            "salsah-gui:guiAttributeDefinition": [
-                "max(required):decimal",
-                "min(required):decimal"
             ]
         },
         {
             "@id": "salsah-gui:Spinbox",
+            "salsah-gui:guiAttributeDefinition": [
+                "max:decimal",
+                "min:decimal"
+            ],
             "rdf:type": [
                 {
                     "@id": "salsah-gui:Guielement"
@@ -182,27 +186,23 @@
                 {
                     "@id": "owl:NamedIndividual"
                 }
-            ],
-            "salsah-gui:guiAttributeDefinition": [
-                "max:decimal",
-                "min:decimal"
             ]
         },
         {
             "@id": "salsah-gui:Textarea",
-            "rdf:type": [
-                {
-                    "@id": "salsah-gui:Guielement"
-                },
-                {
-                    "@id": "owl:NamedIndividual"
-                }
-            ],
             "salsah-gui:guiAttributeDefinition": [
                 "cols:integer",
                 "rows:integer",
                 "width:percent",
                 "wrap:string(soft|hard)"
+            ],
+            "rdf:type": [
+                {
+                    "@id": "salsah-gui:Guielement"
+                },
+                {
+                    "@id": "owl:NamedIndividual"
+                }
             ]
         },
         {
