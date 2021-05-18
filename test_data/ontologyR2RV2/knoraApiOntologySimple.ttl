@@ -1,524 +1,616 @@
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<http://api.knora.org/ontology/knora-api/simple/v2> a owl:Ontology;
-  rdfs:label "The knora-api ontology in the simple schema" .
+knora-api:hasMovingImageFile
+        a                      owl:DatatypeProperty ;
+        rdfs:comment           "Connects a Representation to a movie file" ;
+        rdfs:label             "has movie file" ;
+        rdfs:subPropertyOf     knora-api:hasFile ;
+        knora-api:objectType   knora-api:File ;
+        knora-api:subjectType  knora-api:MovingImageRepresentation .
 
-knora-api:Annotation a owl:Class;
-  rdfs:comment "A generic class for representing annotations";
-  rdfs:label "Annotation";
-  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:minCardinality 1;
-      owl:onProperty knora-api:hasComment
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:minCardinality 1;
-      owl:onProperty knora-api:isAnnotationOf
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ] .
+knora-api:TextRepresentation
+        a                owl:Class ;
+        rdfs:comment     "A resource containing a text file" ;
+        rdfs:label       "Representation (Text)" ;
+        rdfs:subClassOf  knora-api:Representation ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   rdfs:label
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasIncomingLink
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasStandoffLinkTo
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:arkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:hasTextFile
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:versionArkUrl
+                         ] .
 
-knora-api:Resource a owl:Class;
-  rdfs:comment "Represents something in the world, or an abstract thing";
-  rdfs:label "Resource";
-  rdfs:subClassOf [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ] .
+knora-api:hasStandoffLinkTo
+        a                      owl:ObjectProperty ;
+        rdfs:comment           "Represents a link in standoff markup from one resource to another." ;
+        rdfs:label             "has Standoff Link to" ;
+        rdfs:subPropertyOf     knora-api:hasLinkTo ;
+        knora-api:objectType   knora-api:Resource ;
+        knora-api:subjectType  knora-api:Resource .
 
-knora-api:arkUrl a owl:DatatypeProperty;
-  knora-api:objectType xsd:anyURI;
-  rdfs:comment "Provides the ARK URL of a resource.";
-  rdfs:label "ARK URL" .
+knora-api:hasRepresentation
+        a                      owl:ObjectProperty ;
+        rdfs:comment           "References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc." ;
+        rdfs:label             "has Representation" ;
+        rdfs:subPropertyOf     knora-api:hasLinkTo ;
+        knora-api:objectType   knora-api:Representation ;
+        knora-api:subjectType  knora-api:Resource .
 
-knora-api:hasComment a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType knora-api:Resource;
-  rdfs:comment "Represents a comment on a resource as a knora-base:TextValue";
-  rdfs:label "Comment";
-  rdfs:subPropertyOf knora-api:hasValue .
+knora-api:StillImageRepresentation
+        a                owl:Class ;
+        rdfs:comment     "A resource that can contain a two-dimensional still image file" ;
+        rdfs:label       "Representation (Image)" ;
+        rdfs:subClassOf  knora-api:Representation ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   rdfs:label
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasStandoffLinkTo
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasIncomingLink
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:arkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:hasStillImageFile
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:versionArkUrl
+                         ] .
 
-knora-api:hasIncomingLink a owl:ObjectProperty;
-  knora-api:objectType knora-api:Resource;
-  knora-api:subjectType knora-api:Resource;
-  rdfs:comment "Indicates that this resource referred to by another resource";
-  rdfs:label "has incoming link";
-  rdfs:subPropertyOf knora-api:hasLinkTo .
+knora-api:ListNode  a   rdfs:Datatype ;
+        rdfs:comment    "Represents a list node." ;
+        rdfs:label      "List Node" ;
+        owl:onDatatype  xsd:string .
 
-knora-api:hasStandoffLinkTo a owl:ObjectProperty;
-  knora-api:objectType knora-api:Resource;
-  knora-api:subjectType knora-api:Resource;
-  rdfs:comment "Represents a link in standoff markup from one resource to another.";
-  rdfs:label "has Standoff Link to";
-  rdfs:subPropertyOf knora-api:hasLinkTo .
+knora-api:error  a            owl:DatatypeProperty ;
+        rdfs:comment          "Provides a message indicating that an operation was unsuccessful" ;
+        rdfs:label            "error" ;
+        knora-api:objectType  xsd:string .
 
-knora-api:isAnnotationOf a owl:ObjectProperty;
-  knora-api:objectType knora-api:Resource;
-  knora-api:subjectType knora-api:Annotation;
-  rdfs:label "is Annotation of";
-  rdfs:subPropertyOf knora-api:hasLinkTo .
+knora-api:DDDRepresentation
+        a                owl:Class ;
+        rdfs:comment     "Represents a file containg 3D data" ;
+        rdfs:label       "Representation (3D)" ;
+        rdfs:subClassOf  knora-api:Representation ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:versionArkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:hasDDDFile
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasIncomingLink
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:arkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasStandoffLinkTo
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   rdfs:label
+                         ] .
 
-knora-api:versionArkUrl a owl:DatatypeProperty;
-  knora-api:objectType xsd:anyURI;
-  rdfs:comment "Provides the ARK URL of a particular version of a resource.";
-  rdfs:label "version ARK URL" .
+knora-api:AudioRepresentation
+        a                owl:Class ;
+        rdfs:comment     "Represents a file containing audio data" ;
+        rdfs:label       "Representation (Audio)" ;
+        rdfs:subClassOf  knora-api:Representation ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasIncomingLink
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   rdfs:label
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:hasAudioFile
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:arkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:versionArkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasStandoffLinkTo
+                         ] .
 
-rdfs:label a owl:DatatypeProperty .
+knora-api:seqnum  a           owl:DatatypeProperty ;
+        rdfs:comment          "Indicates the position of a resource within a sequence" ;
+        rdfs:label            "Sequence number" ;
+        rdfs:subPropertyOf    knora-api:hasValue ;
+        knora-api:objectType  xsd:integer .
 
-knora-api:AudioRepresentation a owl:Class;
-  rdfs:comment "Represents a file containing audio data";
-  rdfs:label "Representation (Audio)";
-  rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:hasAudioFile
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ] .
+knora-api:hasGeometry
+        a                      owl:DatatypeProperty ;
+        rdfs:comment           "Represents a geometrical shape." ;
+        rdfs:label             "Geometry" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   knora-api:Geom ;
+        knora-api:subjectType  knora-api:Region .
 
-knora-api:Representation a owl:Class;
-  rdfs:comment "A resource that can store a file";
-  rdfs:label "Representation";
-  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:hasFile
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ] .
+<http://api.knora.org/ontology/knora-api/simple/v2>
+        a           owl:Ontology ;
+        rdfs:label  "The knora-api ontology in the simple schema" .
 
-knora-api:hasAudioFile a owl:DatatypeProperty;
-  knora-api:objectType knora-api:File;
-  knora-api:subjectType knora-api:AudioRepresentation;
-  rdfs:comment "Connects a Representation to an audio file";
-  rdfs:label "has audio file";
-  rdfs:subPropertyOf knora-api:hasFile .
+knora-api:objectType  a  rdf:Property ;
+        rdfs:comment  "Specifies the required type of the objects of a property" ;
+        rdfs:label    "Object type" .
 
-knora-api:Color a rdfs:Datatype;
-  rdfs:comment "Represents a color.";
-  rdfs:label "Color literal";
-  owl:onDatatype xsd:string;
-  owl:withRestrictions [
-      xsd:pattern "#([0-9a-fA-F]{3}){1,2}"
-    ] .
+knora-api:Representation
+        a                owl:Class ;
+        rdfs:comment     "A resource that can store a file" ;
+        rdfs:label       "Representation" ;
+        rdfs:subClassOf  knora-api:Resource ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasStandoffLinkTo
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   rdfs:label
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:versionArkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:hasFile
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:arkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasIncomingLink
+                         ] .
 
-knora-api:DDDRepresentation a owl:Class;
-  rdfs:comment "Represents a file containg 3D data";
-  rdfs:label "Representation (3D)";
-  rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:hasDDDFile
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ] .
+knora-api:Geom  a       rdfs:Datatype ;
+        rdfs:comment    "Represents a geometry specification in JSON." ;
+        rdfs:label      "Geometry specification" ;
+        owl:onDatatype  xsd:string .
 
-knora-api:hasDDDFile a owl:DatatypeProperty;
-  knora-api:objectType knora-api:File;
-  knora-api:subjectType knora-api:DDDRepresentation;
-  rdfs:comment "Connects a Representation to a 3D-file";
-  rdfs:label "has 3D-file";
-  rdfs:subPropertyOf knora-api:hasFile .
+knora-api:Region  a             owl:Class ;
+        rdfs:comment            "Represents a geometric region of a resource. The geometry is represented currently as JSON string." ;
+        rdfs:label              "Region" ;
+        rdfs:subClassOf         knora-api:Resource ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  1 ;
+                                  owl:onProperty      knora-api:hasGeometry
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  1 ;
+                                  owl:onProperty      knora-api:hasComment
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      knora-api:hasIncomingLink
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   knora-api:versionArkUrl
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   rdfs:label
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   knora-api:arkUrl
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   knora-api:hasColor
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      knora-api:hasStandoffLinkTo
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   knora-api:isRegionOf
+                                ] ;
+        knora-api:resourceIcon  "region.gif" .
 
-knora-api:Date a rdfs:Datatype;
-  rdfs:comment "Represents a date as a period with different possible precisions.";
-  rdfs:label "Date literal";
-  owl:onDatatype xsd:string;
-  owl:withRestrictions [
-      xsd:pattern "(GREGORIAN|JULIAN|ISLAMIC):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?"
-    ] .
+knora-api:Geoname  a          rdfs:Datatype ;
+        rdfs:comment          "Represents a Geoname code." ;
+        rdfs:label            "Geoname code" ;
+        owl:onDatatype        xsd:string ;
+        owl:withRestrictions  [ xsd:pattern  "\\d{1,8}" ] .
 
-knora-api:DocumentRepresentation a owl:Class;
-  rdfs:label "Representation (Document)";
-  rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:hasDocumentFile
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ] .
+knora-api:hasDDDFile  a        owl:DatatypeProperty ;
+        rdfs:comment           "Connects a Representation to a 3D-file" ;
+        rdfs:label             "has 3D-file" ;
+        rdfs:subPropertyOf     knora-api:hasFile ;
+        knora-api:objectType   knora-api:File ;
+        knora-api:subjectType  knora-api:DDDRepresentation .
 
-knora-api:hasDocumentFile a owl:DatatypeProperty;
-  knora-api:objectType knora-api:File;
-  knora-api:subjectType knora-api:DocumentRepresentation;
-  rdfs:comment "Connects a Representation to a document";
-  rdfs:label "has document";
-  rdfs:subPropertyOf knora-api:hasFile .
+knora-api:hasComment  a        owl:DatatypeProperty ;
+        rdfs:comment           "Represents a comment on a resource as a knora-base:TextValue" ;
+        rdfs:label             "Comment" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  knora-api:Resource .
 
-knora-api:File a rdfs:Datatype;
-  rdfs:comment "Represents a file URI.";
-  rdfs:label "File URI";
-  owl:onDatatype xsd:anyURI .
+knora-api:mayHaveMoreResults
+        a                     owl:DatatypeProperty ;
+        rdfs:comment          "Indicates whether more results may be available for a search query" ;
+        rdfs:label            "May have more results" ;
+        knora-api:objectType  xsd:boolean .
 
-knora-api:Geom a rdfs:Datatype;
-  rdfs:comment "Represents a geometry specification in JSON.";
-  rdfs:label "Geometry specification";
-  owl:onDatatype xsd:string .
+knora-api:isAnnotationOf
+        a                      owl:ObjectProperty ;
+        rdfs:label             "is Annotation of" ;
+        rdfs:subPropertyOf     knora-api:hasLinkTo ;
+        knora-api:objectType   knora-api:Resource ;
+        knora-api:subjectType  knora-api:Annotation .
 
-knora-api:Geoname a rdfs:Datatype;
-  rdfs:comment "Represents a Geoname code.";
-  rdfs:label "Geoname code";
-  owl:onDatatype xsd:string;
-  owl:withRestrictions [
-      xsd:pattern "\\d{1,8}"
-    ] .
+knora-api:result  a           owl:DatatypeProperty ;
+        rdfs:comment          "Provides a message indicating that an operation was successful" ;
+        rdfs:label            "result" ;
+        knora-api:objectType  xsd:string .
 
-knora-api:Interval a rdfs:Datatype;
-  rdfs:comment "Represents an interval.";
-  rdfs:label "Interval literal";
-  owl:onDatatype xsd:string;
-  owl:withRestrictions [
-      xsd:pattern "\\d+(\\.\\d+)?,\\d+(\\.\\d+)?"
-    ] .
+knora-api:subjectType
+        a             rdf:Property ;
+        rdfs:comment  "Specifies the required type of the subjects of a property" ;
+        rdfs:label    "Subject type" .
 
-knora-api:LinkObj a owl:Class;
-  knora-api:resourceIcon "link.gif";
-  rdfs:comment "Represents a generic link object";
-  rdfs:label "Link Object";
-  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasComment
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 1;
-      owl:onProperty knora-api:hasLinkTo
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ] .
+knora-api:Color  a            rdfs:Datatype ;
+        rdfs:comment          "Represents a color." ;
+        rdfs:label            "Color literal" ;
+        owl:onDatatype        xsd:string ;
+        owl:withRestrictions  [ xsd:pattern  "#([0-9a-fA-F]{3}){1,2}" ] .
 
-knora-api:hasLinkTo a owl:ObjectProperty;
-  knora-api:objectType knora-api:Resource;
-  knora-api:subjectType knora-api:Resource;
-  rdfs:comment "Represents a direct connection between two resources";
-  rdfs:label "has Link to";
-  rdfs:subPropertyOf knora-api:resourceProperty .
+knora-api:isMainResource
+        a                      owl:DatatypeProperty ;
+        rdfs:comment           "Indicates if the given resource is the main resource of a request or a resource referred to by a link property." ;
+        knora-api:objectType   xsd:boolean ;
+        knora-api:subjectType  knora-api:Resource .
 
-knora-api:ListNode a rdfs:Datatype;
-  rdfs:comment "Represents a list node.";
-  rdfs:label "List Node";
-  owl:onDatatype xsd:string .
+rdfs:label  a   owl:DatatypeProperty .
 
-knora-api:MovingImageRepresentation a owl:Class;
-  rdfs:comment "A resource containing moving image data";
-  rdfs:label "Representation (Movie)";
-  rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:hasMovingImageFile
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ] .
+knora-api:hasColor  a          owl:DatatypeProperty ;
+        rdfs:comment           "Specifies the color of a region." ;
+        rdfs:label             "Color" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   knora-api:Color ;
+        knora-api:subjectType  knora-api:Region .
 
-knora-api:hasMovingImageFile a owl:DatatypeProperty;
-  knora-api:objectType knora-api:File;
-  knora-api:subjectType knora-api:MovingImageRepresentation;
-  rdfs:comment "Connects a Representation to a movie file";
-  rdfs:label "has movie file";
-  rdfs:subPropertyOf knora-api:hasFile .
+knora-api:DocumentRepresentation
+        a                owl:Class ;
+        rdfs:label       "Representation (Document)" ;
+        rdfs:subClassOf  knora-api:Representation ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   rdfs:label
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:versionArkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasStandoffLinkTo
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasIncomingLink
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:hasDocumentFile
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:arkUrl
+                         ] .
 
-knora-api:Region a owl:Class;
-  knora-api:resourceIcon "region.gif";
-  rdfs:comment "Represents a geometric region of a resource. The geometry is represented currently as JSON string.";
-  rdfs:label "Region";
-  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:hasColor
-    ], [ a owl:Restriction;
-      owl:minCardinality 1;
-      owl:onProperty knora-api:hasComment
-    ], [ a owl:Restriction;
-      owl:minCardinality 1;
-      owl:onProperty knora-api:hasGeometry
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:isRegionOf
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ] .
+knora-api:LinkObj  a            owl:Class ;
+        rdfs:comment            "Represents a generic link object" ;
+        rdfs:label              "Link Object" ;
+        rdfs:subClassOf         knora-api:Resource ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   knora-api:versionArkUrl
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   rdfs:label
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      knora-api:hasIncomingLink
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   knora-api:arkUrl
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      knora-api:hasComment
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      knora-api:hasStandoffLinkTo
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  1 ;
+                                  owl:onProperty      knora-api:hasLinkTo
+                                ] ;
+        knora-api:resourceIcon  "link.gif" .
 
-knora-api:hasColor a owl:DatatypeProperty;
-  knora-api:objectType knora-api:Color;
-  knora-api:subjectType knora-api:Region;
-  rdfs:comment "Specifies the color of a region.";
-  rdfs:label "Color";
-  rdfs:subPropertyOf knora-api:hasValue .
+knora-api:XSLTransformation
+        a                owl:Class ;
+        rdfs:comment     "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff.  The transformation's result is ecptected to be HTML." ;
+        rdfs:label       "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff. The transformation's result is ecptected to be HTML." ;
+        rdfs:subClassOf  knora-api:TextRepresentation ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   rdfs:label
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:hasTextFile
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasIncomingLink
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:arkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasStandoffLinkTo
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:versionArkUrl
+                         ] .
 
-knora-api:hasGeometry a owl:DatatypeProperty;
-  knora-api:objectType knora-api:Geom;
-  knora-api:subjectType knora-api:Region;
-  rdfs:comment "Represents a geometrical shape.";
-  rdfs:label "Geometry";
-  rdfs:subPropertyOf knora-api:hasValue .
+knora-api:Date  a             rdfs:Datatype ;
+        rdfs:comment          "Represents a date as a period with different possible precisions." ;
+        rdfs:label            "Date literal" ;
+        owl:onDatatype        xsd:string ;
+        owl:withRestrictions  [ xsd:pattern  "(GREGORIAN|JULIAN|ISLAMIC):\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?(:\\d{1,4}(-\\d{1,2}(-\\d{1,2})?)?( BC| AD| BCE| CE)?)?" ] .
 
-knora-api:isRegionOf a owl:ObjectProperty;
-  knora-api:objectType knora-api:Representation;
-  knora-api:subjectType knora-api:Region;
-  rdfs:comment "Region of interest within a digital object (e.g. an image)";
-  rdfs:label "is region of";
-  rdfs:subPropertyOf knora-api:hasLinkTo .
+knora-api:Interval  a         rdfs:Datatype ;
+        rdfs:comment          "Represents an interval." ;
+        rdfs:label            "Interval literal" ;
+        owl:onDatatype        xsd:string ;
+        owl:withRestrictions  [ xsd:pattern  "\\d+(\\.\\d+)?,\\d+(\\.\\d+)?" ] .
 
-knora-api:hasFile a owl:DatatypeProperty;
-  knora-api:objectType knora-api:File;
-  knora-api:subjectType knora-api:Representation;
-  rdfs:comment "Connects a Representation to a file";
-  rdfs:label "has file";
-  rdfs:subPropertyOf knora-api:hasValue .
+knora-api:hasAudioFile
+        a                      owl:DatatypeProperty ;
+        rdfs:comment           "Connects a Representation to an audio file" ;
+        rdfs:label             "has audio file" ;
+        rdfs:subPropertyOf     knora-api:hasFile ;
+        knora-api:objectType   knora-api:File ;
+        knora-api:subjectType  knora-api:AudioRepresentation .
 
-knora-api:StillImageRepresentation a owl:Class;
-  rdfs:comment "A resource that can contain a two-dimensional still image file";
-  rdfs:label "Representation (Image)";
-  rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:hasStillImageFile
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ] .
+knora-api:hasLinkTo  a         owl:ObjectProperty ;
+        rdfs:comment           "Represents a direct connection between two resources" ;
+        rdfs:label             "has Link to" ;
+        rdfs:subPropertyOf     knora-api:resourceProperty ;
+        knora-api:objectType   knora-api:Resource ;
+        knora-api:subjectType  knora-api:Resource .
 
-knora-api:hasStillImageFile a owl:DatatypeProperty;
-  knora-api:objectType knora-api:File;
-  knora-api:subjectType knora-api:StillImageRepresentation;
-  rdfs:comment "Connects a Representation to an image file";
-  rdfs:label "has image file";
-  rdfs:subPropertyOf knora-api:hasFile .
+knora-api:hasValue  a          owl:DatatypeProperty ;
+        rdfs:comment           "The base property of properties that point from Knora resources to Knora values." ;
+        rdfs:label             "has value" ;
+        rdfs:subPropertyOf     knora-api:resourceProperty ;
+        knora-api:subjectType  knora-api:Resource .
 
-knora-api:TextRepresentation a owl:Class;
-  rdfs:comment "A resource containing a text file";
-  rdfs:label "Representation (Text)";
-  rdfs:subClassOf knora-api:Representation, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:hasTextFile
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ] .
+knora-api:hasDocumentFile
+        a                      owl:DatatypeProperty ;
+        rdfs:comment           "Connects a Representation to a document" ;
+        rdfs:label             "has document" ;
+        rdfs:subPropertyOf     knora-api:hasFile ;
+        knora-api:objectType   knora-api:File ;
+        knora-api:subjectType  knora-api:DocumentRepresentation .
 
-knora-api:hasTextFile a owl:DatatypeProperty;
-  knora-api:objectType knora-api:File;
-  knora-api:subjectType knora-api:TextRepresentation;
-  rdfs:comment "Connects a Representation to a text file";
-  rdfs:label "has text file";
-  rdfs:subPropertyOf knora-api:hasFile .
+knora-api:Resource  a    owl:Class ;
+        rdfs:comment     "Represents something in the world, or an abstract thing" ;
+        rdfs:label       "Resource" ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   rdfs:label
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:versionArkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasStandoffLinkTo
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasIncomingLink
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:arkUrl
+                         ] .
 
-knora-api:XSLTransformation a owl:Class;
-  rdfs:comment "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff.  The transformation's result is ecptected to be HTML.";
-  rdfs:label "a TextRepresentation representing an XSL transformation that can be applied to an XML created from standoff. The transformation's result is ecptected to be HTML.";
-  rdfs:subClassOf knora-api:TextRepresentation, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:hasTextFile
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ] .
+knora-api:hasTextFile
+        a                      owl:DatatypeProperty ;
+        rdfs:comment           "Connects a Representation to a text file" ;
+        rdfs:label             "has text file" ;
+        rdfs:subPropertyOf     knora-api:hasFile ;
+        knora-api:objectType   knora-api:File ;
+        knora-api:subjectType  knora-api:TextRepresentation .
 
-knora-api:error a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  rdfs:comment "Provides a message indicating that an operation was unsuccessful";
-  rdfs:label "error" .
+knora-api:isRegionOf  a        owl:ObjectProperty ;
+        rdfs:comment           "Region of interest within a digital object (e.g. an image)" ;
+        rdfs:label             "is region of" ;
+        rdfs:subPropertyOf     knora-api:hasLinkTo ;
+        knora-api:objectType   knora-api:Representation ;
+        knora-api:subjectType  knora-api:Region .
 
-knora-api:hasValue a owl:DatatypeProperty;
-  knora-api:subjectType knora-api:Resource;
-  rdfs:comment "The base property of properties that point from Knora resources to Knora values.";
-  rdfs:label "has value";
-  rdfs:subPropertyOf knora-api:resourceProperty .
+knora-api:Annotation  a  owl:Class ;
+        rdfs:comment     "A generic class for representing annotations" ;
+        rdfs:label       "Annotation" ;
+        rdfs:subClassOf  knora-api:Resource ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  1 ;
+                           owl:onProperty      knora-api:isAnnotationOf
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:arkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:versionArkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasStandoffLinkTo
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasIncomingLink
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  1 ;
+                           owl:onProperty      knora-api:hasComment
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   rdfs:label
+                         ] .
 
-knora-api:resourceProperty a rdf:Property;
-  knora-api:subjectType knora-api:Resource;
-  rdfs:comment "The base property of properties that point from Knora resources to Knora resources or values. These properties are required to have cardinalities in the resource classes in which they are used.";
-  rdfs:label "Resource property";
-  rdfs:subPropertyOf knora-api:resourceProperty .
+knora-api:versionArkUrl
+        a                     owl:DatatypeProperty ;
+        rdfs:comment          "Provides the ARK URL of a particular version of a resource." ;
+        rdfs:label            "version ARK URL" ;
+        knora-api:objectType  xsd:anyURI .
 
-knora-api:hasRepresentation a owl:ObjectProperty;
-  knora-api:objectType knora-api:Representation;
-  knora-api:subjectType knora-api:Resource;
-  rdfs:comment "References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc.";
-  rdfs:label "has Representation";
-  rdfs:subPropertyOf knora-api:hasLinkTo .
+knora-api:resourceProperty
+        a                      rdf:Property ;
+        rdfs:comment           "The base property of properties that point from Knora resources to Knora resources or values. These properties are required to have cardinalities in the resource classes in which they are used." ;
+        rdfs:label             "Resource property" ;
+        rdfs:subPropertyOf     knora-api:resourceProperty ;
+        knora-api:subjectType  knora-api:Resource .
 
-knora-api:isMainResource a owl:DatatypeProperty;
-  knora-api:objectType xsd:boolean;
-  knora-api:subjectType knora-api:Resource;
-  rdfs:comment "Indicates if the given resource is the main resource of a request or a resource referred to by a link property." .
+knora-api:hasIncomingLink
+        a                      owl:ObjectProperty ;
+        rdfs:comment           "Indicates that this resource referred to by another resource" ;
+        rdfs:label             "has incoming link" ;
+        rdfs:subPropertyOf     knora-api:hasLinkTo ;
+        knora-api:objectType   knora-api:Resource ;
+        knora-api:subjectType  knora-api:Resource .
 
-knora-api:isPartOf a owl:ObjectProperty;
-  knora-api:objectType knora-api:Resource;
-  knora-api:subjectType knora-api:Resource;
-  rdfs:comment "Indicates that this resource is part of another resource";
-  rdfs:label "is part of";
-  rdfs:subPropertyOf knora-api:hasLinkTo .
+knora-api:MovingImageRepresentation
+        a                owl:Class ;
+        rdfs:comment     "A resource containing moving image data" ;
+        rdfs:label       "Representation (Movie)" ;
+        rdfs:subClassOf  knora-api:Representation ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   rdfs:label
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:hasMovingImageFile
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:versionArkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasIncomingLink
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:arkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasStandoffLinkTo
+                         ] .
 
-knora-api:mayHaveMoreResults a owl:DatatypeProperty;
-  knora-api:objectType xsd:boolean;
-  rdfs:comment "Indicates whether more results may be available for a search query";
-  rdfs:label "May have more results" .
+knora-api:arkUrl  a           owl:DatatypeProperty ;
+        rdfs:comment          "Provides the ARK URL of a resource." ;
+        rdfs:label            "ARK URL" ;
+        knora-api:objectType  xsd:anyURI .
 
-knora-api:objectType a rdf:Property;
-  rdfs:comment "Specifies the required type of the objects of a property";
-  rdfs:label "Object type" .
+knora-api:hasStillImageFile
+        a                      owl:DatatypeProperty ;
+        rdfs:comment           "Connects a Representation to an image file" ;
+        rdfs:label             "has image file" ;
+        rdfs:subPropertyOf     knora-api:hasFile ;
+        knora-api:objectType   knora-api:File ;
+        knora-api:subjectType  knora-api:StillImageRepresentation .
 
-knora-api:resourceIcon a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType owl:Class .
+knora-api:isPartOf  a          owl:ObjectProperty ;
+        rdfs:comment           "Indicates that this resource is part of another resource" ;
+        rdfs:label             "is part of" ;
+        rdfs:subPropertyOf     knora-api:hasLinkTo ;
+        knora-api:objectType   knora-api:Resource ;
+        knora-api:subjectType  knora-api:Resource .
 
-knora-api:result a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  rdfs:comment "Provides a message indicating that an operation was successful";
-  rdfs:label "result" .
+knora-api:File  a       rdfs:Datatype ;
+        rdfs:comment    "Represents a file URI." ;
+        rdfs:label      "File URI" ;
+        owl:onDatatype  xsd:anyURI .
 
-knora-api:seqnum a owl:DatatypeProperty;
-  knora-api:objectType xsd:integer;
-  rdfs:comment "Indicates the position of a resource within a sequence";
-  rdfs:label "Sequence number";
-  rdfs:subPropertyOf knora-api:hasValue .
+knora-api:hasFile  a           owl:DatatypeProperty ;
+        rdfs:comment           "Connects a Representation to a file" ;
+        rdfs:label             "has file" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   knora-api:File ;
+        knora-api:subjectType  knora-api:Representation .
 
-knora-api:subjectType a rdf:Property;
-  rdfs:comment "Specifies the required type of the subjects of a property";
-  rdfs:label "Subject type" .
+knora-api:resourceIcon
+        a                      owl:DatatypeProperty ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  owl:Class .

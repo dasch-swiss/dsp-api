@@ -6244,15 +6244,15 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:AudioFileValue"
-            },
-            "rdfs:comment": "The duration of an audio file value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:decimal"
             },
-            "@id": "knora-api:audioFileValueHasDuration"
+            "@id": "knora-api:audioFileValueHasDuration",
+            "knora-api:subjectType": {
+                "@id": "knora-api:AudioFileValue"
+            },
+            "rdfs:comment": "The duration of an audio file value."
         },
         {
             "rdfs:label": "author",
@@ -6268,203 +6268,203 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:BooleanBase"
-            },
-            "rdfs:comment": "Represents the literal boolean value of a BooleanValue.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:boolean"
             },
-            "@id": "knora-api:booleanValueAsBoolean"
+            "@id": "knora-api:booleanValueAsBoolean",
+            "knora-api:subjectType": {
+                "@id": "knora-api:BooleanBase"
+            },
+            "rdfs:comment": "Represents the literal boolean value of a BooleanValue."
         },
         {
             "rdfs:label": "can be instantiated",
-            "knora-api:subjectType": {
-                "@id": "owl:Class"
-            },
-            "rdfs:comment": "Indicates whether a resource class can be instantiated via the Knora API.",
             "@type": "owl:AnnotationProperty",
             "knora-api:objectType": {
                 "@id": "xsd:boolean"
             },
-            "@id": "knora-api:canBeInstantiated"
+            "@id": "knora-api:canBeInstantiated",
+            "knora-api:subjectType": {
+                "@id": "owl:Class"
+            },
+            "rdfs:comment": "Indicates whether a resource class can be instantiated via the Knora API."
         },
         {
             "rdfs:label": "Color value as color",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:ColorBase"
-            },
-            "rdfs:comment": "Represents the literal RGB value of a ColorValue.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:colorValueAsColor"
+            "@id": "knora-api:colorValueAsColor",
+            "knora-api:subjectType": {
+                "@id": "knora-api:ColorBase"
+            },
+            "rdfs:comment": "Represents the literal RGB value of a ColorValue."
         },
         {
-            "knora-api:subjectType": {
-                "@id": "knora-api:Resource"
-            },
-            "rdfs:comment": "Indicates when a resource was created",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:dateTimeStamp"
             },
-            "@id": "knora-api:creationDate"
+            "@id": "knora-api:creationDate",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "rdfs:comment": "Indicates when a resource was created"
         },
         {
             "rdfs:label": "Date value has calendar",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:DateBase"
-            },
-            "rdfs:comment": "Represents the calendar of a date value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:dateValueHasCalendar"
+            "@id": "knora-api:dateValueHasCalendar",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DateBase"
+            },
+            "rdfs:comment": "Represents the calendar of a date value."
         },
         {
             "rdfs:label": "Date value has end day",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:DateBase"
-            },
-            "rdfs:comment": "Represents the end day of a date value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:dateValueHasEndDay"
+            "@id": "knora-api:dateValueHasEndDay",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DateBase"
+            },
+            "rdfs:comment": "Represents the end day of a date value."
         },
         {
             "rdfs:label": "Date value has end era",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:DateBase"
-            },
-            "rdfs:comment": "Represents the end era of a date value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:dateValueHasEndEra"
+            "@id": "knora-api:dateValueHasEndEra",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DateBase"
+            },
+            "rdfs:comment": "Represents the end era of a date value."
         },
         {
             "rdfs:label": "Date value has end month",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:DateBase"
-            },
-            "rdfs:comment": "Represents the end month of a date value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:dateValueHasEndMonth"
+            "@id": "knora-api:dateValueHasEndMonth",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DateBase"
+            },
+            "rdfs:comment": "Represents the end month of a date value."
         },
         {
             "rdfs:label": "Date value has end year",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:DateBase"
-            },
-            "rdfs:comment": "Represents the end year of a date value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:dateValueHasEndYear"
+            "@id": "knora-api:dateValueHasEndYear",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DateBase"
+            },
+            "rdfs:comment": "Represents the end year of a date value."
         },
         {
             "rdfs:label": "Date value has start day",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:DateBase"
-            },
-            "rdfs:comment": "Represents the start day of a date value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:dateValueHasStartDay"
+            "@id": "knora-api:dateValueHasStartDay",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DateBase"
+            },
+            "rdfs:comment": "Represents the start day of a date value."
         },
         {
             "rdfs:label": "Date value has start era",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:DateBase"
-            },
-            "rdfs:comment": "Represents the start era of a date value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:dateValueHasStartEra"
+            "@id": "knora-api:dateValueHasStartEra",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DateBase"
+            },
+            "rdfs:comment": "Represents the start era of a date value."
         },
         {
             "rdfs:label": "Date value has start month",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:DateBase"
-            },
-            "rdfs:comment": "Represents the start month of a date value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:dateValueHasStartMonth"
+            "@id": "knora-api:dateValueHasStartMonth",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DateBase"
+            },
+            "rdfs:comment": "Represents the start month of a date value."
         },
         {
             "rdfs:label": "Date value has start year",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:DateBase"
-            },
-            "rdfs:comment": "Represents the start year of a date value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:dateValueHasStartYear"
+            "@id": "knora-api:dateValueHasStartYear",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DateBase"
+            },
+            "rdfs:comment": "Represents the start year of a date value."
         },
         {
             "rdfs:label": "Decimal value as decimal",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:DecimalBase"
-            },
-            "rdfs:comment": "Represents the literal decimal value of a DecimalValue.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:decimal"
             },
-            "@id": "knora-api:decimalValueAsDecimal"
+            "@id": "knora-api:decimalValueAsDecimal",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DecimalBase"
+            },
+            "rdfs:comment": "Represents the literal decimal value of a DecimalValue."
         },
         {
             "@id": "knora-api:deleteComment",
@@ -6495,45 +6495,45 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:DocumentFileValue"
-            },
-            "rdfs:comment": "The horizontal dimension of a document file value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:documentFileValueHasDimX"
+            "@id": "knora-api:documentFileValueHasDimX",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DocumentFileValue"
+            },
+            "rdfs:comment": "The horizontal dimension of a document file value."
         },
         {
             "rdfs:label": "Document file value has Y dimension",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:DocumentFileValue"
-            },
-            "rdfs:comment": "The vertical dimension of a document file value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:documentFileValueHasDimY"
+            "@id": "knora-api:documentFileValueHasDimY",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DocumentFileValue"
+            },
+            "rdfs:comment": "The vertical dimension of a document file value."
         },
         {
             "rdfs:label": "Document file value has page count",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:DocumentFileValue"
-            },
-            "rdfs:comment": "The page count of a document file value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:documentFileValueHasPageCount"
+            "@id": "knora-api:documentFileValueHasPageCount",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DocumentFileValue"
+            },
+            "rdfs:comment": "The page count of a document file value."
         },
         {
             "rdfs:label": "error",
@@ -6549,60 +6549,60 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:FileValue"
-            },
-            "rdfs:comment": "The URL at which the file can be accessed.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:anyURI"
             },
-            "@id": "knora-api:fileValueAsUrl"
+            "@id": "knora-api:fileValueAsUrl",
+            "knora-api:subjectType": {
+                "@id": "knora-api:FileValue"
+            },
+            "rdfs:comment": "The URL at which the file can be accessed."
         },
         {
             "rdfs:label": "File value has filename",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:FileValue"
-            },
-            "rdfs:comment": "The name of the file that a file value represents.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:fileValueHasFilename"
+            "@id": "knora-api:fileValueHasFilename",
+            "knora-api:subjectType": {
+                "@id": "knora-api:FileValue"
+            },
+            "rdfs:comment": "The name of the file that a file value represents."
         },
         {
             "rdfs:label": "Geometry value as JSON",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:GeomValue"
-            },
-            "rdfs:comment": "Represents a 2D geometry value as JSON.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:geometryValueAsGeometry"
+            "@id": "knora-api:geometryValueAsGeometry",
+            "knora-api:subjectType": {
+                "@id": "knora-api:GeomValue"
+            },
+            "rdfs:comment": "Represents a 2D geometry value as JSON."
         },
         {
             "rdfs:label": "Geoname value as Geoname code",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:GeonameValue"
-            },
-            "rdfs:comment": "Represents the literal Geoname code of a GeonameValue.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:geonameValueAsGeonameCode"
+            "@id": "knora-api:geonameValueAsGeonameCode",
+            "knora-api:subjectType": {
+                "@id": "knora-api:GeonameValue"
+            },
+            "rdfs:comment": "Represents the literal Geoname code of a GeonameValue."
         },
         {
             "rdfs:label": "has audio file",
@@ -6611,10 +6611,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:AudioRepresentation"
-            },
-            "rdfs:comment": "Connects a Representation to an audio file",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:AudioFileValue"
@@ -6622,7 +6618,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Fileupload"
             },
-            "@id": "knora-api:hasAudioFileValue"
+            "@id": "knora-api:hasAudioFileValue",
+            "knora-api:subjectType": {
+                "@id": "knora-api:AudioRepresentation"
+            },
+            "rdfs:comment": "Connects a Representation to an audio file"
         },
         {
             "rdfs:label": "Color",
@@ -6631,10 +6631,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Region"
-            },
-            "rdfs:comment": "Specifies the color of a region.",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": "ncolors=8",
             "knora-api:objectType": {
@@ -6643,7 +6639,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Colorpicker"
             },
-            "@id": "knora-api:hasColor"
+            "@id": "knora-api:hasColor",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Region"
+            },
+            "rdfs:comment": "Specifies the color of a region."
         },
         {
             "rdfs:label": "Comment",
@@ -6652,10 +6652,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Resource"
-            },
-            "rdfs:comment": "Represents a comment on a resource as a knora-base:TextValue",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:TextValue"
@@ -6663,7 +6659,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Richtext"
             },
-            "@id": "knora-api:hasComment"
+            "@id": "knora-api:hasComment",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "rdfs:comment": "Represents a comment on a resource as a knora-base:TextValue"
         },
         {
             "rdfs:label": "has 3D-file",
@@ -6672,10 +6672,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:DDDRepresentation"
-            },
-            "rdfs:comment": "Connects a Representation to a 3D-file",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:DDDFileValue"
@@ -6683,7 +6679,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Fileupload"
             },
-            "@id": "knora-api:hasDDDFileValue"
+            "@id": "knora-api:hasDDDFileValue",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DDDRepresentation"
+            },
+            "rdfs:comment": "Connects a Representation to a 3D-file"
         },
         {
             "rdfs:label": "has document",
@@ -6692,10 +6692,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:DocumentRepresentation"
-            },
-            "rdfs:comment": "Connects a Representation to a document",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:DocumentFileValue"
@@ -6703,7 +6699,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Fileupload"
             },
-            "@id": "knora-api:hasDocumentFileValue"
+            "@id": "knora-api:hasDocumentFileValue",
+            "knora-api:subjectType": {
+                "@id": "knora-api:DocumentRepresentation"
+            },
+            "rdfs:comment": "Connects a Representation to a document"
         },
         {
             "rdfs:label": "has file",
@@ -6711,10 +6711,6 @@
                 "@id": "knora-api:hasValue"
             },
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Representation"
-            },
-            "rdfs:comment": "Connects a Representation to a file",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:FileValue"
@@ -6722,7 +6718,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Fileupload"
             },
-            "@id": "knora-api:hasFileValue"
+            "@id": "knora-api:hasFileValue",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Representation"
+            },
+            "rdfs:comment": "Connects a Representation to a file"
         },
         {
             "rdfs:label": "Geometry",
@@ -6731,10 +6731,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Region"
-            },
-            "rdfs:comment": "Represents a geometrical shape.",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:GeomValue"
@@ -6742,7 +6738,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Geometry"
             },
-            "@id": "knora-api:hasGeometry"
+            "@id": "knora-api:hasGeometry",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Region"
+            },
+            "rdfs:comment": "Represents a geometrical shape."
         },
         {
             "knora-api:isLinkValueProperty": true,
@@ -6751,15 +6751,15 @@
                 "@id": "knora-api:hasLinkToValue"
             },
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Resource"
-            },
-            "rdfs:comment": "Indicates that this resource referred to by another resource",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:LinkValue"
             },
-            "@id": "knora-api:hasIncomingLinkValue"
+            "@id": "knora-api:hasIncomingLinkValue",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "rdfs:comment": "Indicates that this resource referred to by another resource"
         },
         {
             "rdfs:label": "has Link to",
@@ -6768,16 +6768,16 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Resource"
-            },
-            "knora-api:isLinkProperty": true,
-            "rdfs:comment": "Represents a direct connection between two resources",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:Resource"
             },
-            "@id": "knora-api:hasLinkTo"
+            "@id": "knora-api:hasLinkTo",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "knora-api:isLinkProperty": true,
+            "rdfs:comment": "Represents a direct connection between two resources"
         },
         {
             "knora-api:isLinkValueProperty": true,
@@ -6787,15 +6787,15 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Resource"
-            },
-            "rdfs:comment": "Points to a LinkValue reification describing a link between two resources",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:LinkValue"
             },
-            "@id": "knora-api:hasLinkToValue"
+            "@id": "knora-api:hasLinkToValue",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "rdfs:comment": "Points to a LinkValue reification describing a link between two resources"
         },
         {
             "rdfs:label": "has movie file",
@@ -6804,10 +6804,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:MovingImageRepresentation"
-            },
-            "rdfs:comment": "Connects a Representation to a movie file",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:MovingImageFileValue"
@@ -6815,7 +6811,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Fileupload"
             },
-            "@id": "knora-api:hasMovingImageFileValue"
+            "@id": "knora-api:hasMovingImageFileValue",
+            "knora-api:subjectType": {
+                "@id": "knora-api:MovingImageRepresentation"
+            },
+            "rdfs:comment": "Connects a Representation to a movie file"
         },
         {
             "@id": "knora-api:hasPermissions",
@@ -6831,16 +6831,16 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Resource"
-            },
-            "knora-api:isLinkProperty": true,
-            "rdfs:comment": "References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc.",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:Representation"
             },
-            "@id": "knora-api:hasRepresentation"
+            "@id": "knora-api:hasRepresentation",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "knora-api:isLinkProperty": true,
+            "rdfs:comment": "References an instance of a Representation. A Representation contains the metadata of a digital object (= file) which represents some physical entity such as an image, a sound, an encoded text etc."
         },
         {
             "knora-api:isLinkValueProperty": true,
@@ -6864,16 +6864,16 @@
                 "@id": "knora-api:hasLinkTo"
             },
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Resource"
-            },
-            "knora-api:isLinkProperty": true,
-            "rdfs:comment": "Represents a link in standoff markup from one resource to another.",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:Resource"
             },
-            "@id": "knora-api:hasStandoffLinkTo"
+            "@id": "knora-api:hasStandoffLinkTo",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "knora-api:isLinkProperty": true,
+            "rdfs:comment": "Represents a link in standoff markup from one resource to another."
         },
         {
             "knora-api:isLinkValueProperty": true,
@@ -6882,15 +6882,15 @@
                 "@id": "knora-api:hasLinkToValue"
             },
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Resource"
-            },
-            "rdfs:comment": "Represents a link in standoff markup from one resource to another.",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:LinkValue"
             },
-            "@id": "knora-api:hasStandoffLinkToValue"
+            "@id": "knora-api:hasStandoffLinkToValue",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "rdfs:comment": "Represents a link in standoff markup from one resource to another."
         },
         {
             "rdfs:label": "has image file",
@@ -6899,10 +6899,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:StillImageRepresentation"
-            },
-            "rdfs:comment": "Connects a Representation to an image file",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:StillImageFileValue"
@@ -6910,7 +6906,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Fileupload"
             },
-            "@id": "knora-api:hasStillImageFileValue"
+            "@id": "knora-api:hasStillImageFileValue",
+            "knora-api:subjectType": {
+                "@id": "knora-api:StillImageRepresentation"
+            },
+            "rdfs:comment": "Connects a Representation to an image file"
         },
         {
             "rdfs:label": "has text file",
@@ -6919,10 +6919,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:TextRepresentation"
-            },
-            "rdfs:comment": "Connects a Representation to a text file",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:TextFileValue"
@@ -6930,7 +6926,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Fileupload"
             },
-            "@id": "knora-api:hasTextFileValue"
+            "@id": "knora-api:hasTextFileValue",
+            "knora-api:subjectType": {
+                "@id": "knora-api:TextRepresentation"
+            },
+            "rdfs:comment": "Connects a Representation to a text file"
         },
         {
             "rdfs:subPropertyOf": {
@@ -6951,45 +6951,45 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:IntBase"
-            },
-            "rdfs:comment": "Represents the literal integer value of an IntValue.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:intValueAsInt"
+            "@id": "knora-api:intValueAsInt",
+            "knora-api:subjectType": {
+                "@id": "knora-api:IntBase"
+            },
+            "rdfs:comment": "Represents the literal integer value of an IntValue."
         },
         {
             "rdfs:label": "interval value has end",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:IntervalBase"
-            },
-            "rdfs:comment": "Represents the end position of an interval.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:decimal"
             },
-            "@id": "knora-api:intervalValueHasEnd"
+            "@id": "knora-api:intervalValueHasEnd",
+            "knora-api:subjectType": {
+                "@id": "knora-api:IntervalBase"
+            },
+            "rdfs:comment": "Represents the end position of an interval."
         },
         {
             "rdfs:label": "interval value has start",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:IntervalBase"
-            },
-            "rdfs:comment": "Represents the start position of an interval.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:decimal"
             },
-            "@id": "knora-api:intervalValueHasStart"
+            "@id": "knora-api:intervalValueHasStart",
+            "knora-api:subjectType": {
+                "@id": "knora-api:IntervalBase"
+            },
+            "rdfs:comment": "Represents the start position of an interval."
         },
         {
             "rdfs:label": "is Annotation of",
@@ -6998,15 +6998,15 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Annotation"
-            },
-            "knora-api:isLinkProperty": true,
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:Resource"
             },
-            "@id": "knora-api:isAnnotationOf"
+            "@id": "knora-api:isAnnotationOf",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Annotation"
+            },
+            "knora-api:isLinkProperty": true
         },
         {
             "knora-api:isLinkValueProperty": true,
@@ -7043,62 +7043,62 @@
         },
         {
             "rdfs:label": "is editable",
+            "@type": "owl:AnnotationProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:boolean"
+            },
+            "@id": "knora-api:isEditable",
             "knora-api:subjectType": {
                 "@id": "rdf:Property"
             },
-            "rdfs:comment": "Indicates whether a property's values can be updated via the Knora API.",
-            "@type": "owl:AnnotationProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:boolean"
-            },
-            "@id": "knora-api:isEditable"
+            "rdfs:comment": "Indicates whether a property's values can be updated via the Knora API."
         },
         {
             "rdfs:label": "is inherited",
+            "@type": "owl:AnnotationProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:boolean"
+            },
+            "@id": "knora-api:isInherited",
             "knora-api:subjectType": {
                 "@id": "owl:Restriction"
             },
-            "rdfs:comment": "Indicates whether a cardinality has been inherited from a base class",
-            "@type": "owl:AnnotationProperty",
-            "knora-api:objectType": {
-                "@id": "xsd:boolean"
-            },
-            "@id": "knora-api:isInherited"
+            "rdfs:comment": "Indicates whether a cardinality has been inherited from a base class"
         },
         {
             "rdfs:label": "is link property",
-            "knora-api:subjectType": {
-                "@id": "owl:ObjectProperty"
-            },
-            "rdfs:comment": "Indicates whether a property points to a resource",
             "@type": "owl:AnnotationProperty",
             "knora-api:objectType": {
                 "@id": "xsd:boolean"
             },
-            "@id": "knora-api:isLinkProperty"
+            "@id": "knora-api:isLinkProperty",
+            "knora-api:subjectType": {
+                "@id": "owl:ObjectProperty"
+            },
+            "rdfs:comment": "Indicates whether a property points to a resource"
         },
         {
             "rdfs:label": "is link value property",
-            "knora-api:subjectType": {
-                "@id": "owl:ObjectProperty"
-            },
-            "rdfs:comment": "Indicates whether a property points to a link value (reification)",
             "@type": "owl:AnnotationProperty",
             "knora-api:objectType": {
                 "@id": "xsd:boolean"
             },
-            "@id": "knora-api:isLinkValueProperty"
+            "@id": "knora-api:isLinkValueProperty",
+            "knora-api:subjectType": {
+                "@id": "owl:ObjectProperty"
+            },
+            "rdfs:comment": "Indicates whether a property points to a link value (reification)"
         },
         {
-            "knora-api:subjectType": {
-                "@id": "knora-api:Resource"
-            },
-            "rdfs:comment": "Indicates if the given resource is the main resource of a request or a resource referred to by a link property.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:boolean"
             },
-            "@id": "knora-api:isMainResource"
+            "@id": "knora-api:isMainResource",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "rdfs:comment": "Indicates if the given resource is the main resource of a request or a resource referred to by a link property."
         },
         {
             "rdfs:label": "is part of",
@@ -7106,16 +7106,16 @@
                 "@id": "knora-api:hasLinkTo"
             },
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Resource"
-            },
-            "knora-api:isLinkProperty": true,
-            "rdfs:comment": "Indicates that this resource is part of another resource",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:Resource"
             },
-            "@id": "knora-api:isPartOf"
+            "@id": "knora-api:isPartOf",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "knora-api:isLinkProperty": true,
+            "rdfs:comment": "Indicates that this resource is part of another resource"
         },
         {
             "knora-api:isLinkValueProperty": true,
@@ -7139,16 +7139,16 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Region"
-            },
-            "knora-api:isLinkProperty": true,
-            "rdfs:comment": "Region of interest within a digital object (e.g. an image)",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:Representation"
             },
-            "@id": "knora-api:isRegionOf"
+            "@id": "knora-api:isRegionOf",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Region"
+            },
+            "knora-api:isLinkProperty": true,
+            "rdfs:comment": "Region of interest within a digital object (e.g. an image)"
         },
         {
             "knora-api:isLinkValueProperty": true,
@@ -7158,27 +7158,27 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Region"
-            },
-            "rdfs:comment": "Region of interest within a digital object (e.g. an image)",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:LinkValue"
             },
-            "@id": "knora-api:isRegionOfValue"
+            "@id": "knora-api:isRegionOfValue",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Region"
+            },
+            "rdfs:comment": "Region of interest within a digital object (e.g. an image)"
         },
         {
             "rdfs:label": "is resource class",
-            "knora-api:subjectType": {
-                "@id": "owl:Class"
-            },
-            "rdfs:comment": "Indicates whether class is a subclass of Resource.",
             "@type": "owl:AnnotationProperty",
             "knora-api:objectType": {
                 "@id": "xsd:boolean"
             },
-            "@id": "knora-api:isResourceClass"
+            "@id": "knora-api:isResourceClass",
+            "knora-api:subjectType": {
+                "@id": "owl:Class"
+            },
+            "rdfs:comment": "Indicates whether class is a subclass of Resource."
         },
         {
             "rdfs:label": "is shared",
@@ -7191,27 +7191,27 @@
         },
         {
             "rdfs:label": "is standoff class",
-            "knora-api:subjectType": {
-                "@id": "owl:Class"
-            },
-            "rdfs:comment": "Indicates whether class is a subclass of StandoffTag.",
             "@type": "owl:AnnotationProperty",
             "knora-api:objectType": {
                 "@id": "xsd:boolean"
             },
-            "@id": "knora-api:isStandoffClass"
+            "@id": "knora-api:isStandoffClass",
+            "knora-api:subjectType": {
+                "@id": "owl:Class"
+            },
+            "rdfs:comment": "Indicates whether class is a subclass of StandoffTag."
         },
         {
             "rdfs:label": "is value class",
-            "knora-api:subjectType": {
-                "@id": "owl:Class"
-            },
-            "rdfs:comment": "Indicates whether class is a subclass of Value.",
             "@type": "owl:AnnotationProperty",
             "knora-api:objectType": {
                 "@id": "xsd:boolean"
             },
-            "@id": "knora-api:isValueClass"
+            "@id": "knora-api:isValueClass",
+            "knora-api:subjectType": {
+                "@id": "owl:Class"
+            },
+            "rdfs:comment": "Indicates whether class is a subclass of Value."
         },
         {
             "@id": "knora-api:lastModificationDate",
@@ -7225,75 +7225,75 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:LinkValue"
-            },
-            "rdfs:comment": "Represents the source resource of a link value.",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:Resource"
             },
-            "@id": "knora-api:linkValueHasSource"
+            "@id": "knora-api:linkValueHasSource",
+            "knora-api:subjectType": {
+                "@id": "knora-api:LinkValue"
+            },
+            "rdfs:comment": "Represents the source resource of a link value."
         },
         {
             "rdfs:label": "Link value has source IRI",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:LinkValue"
-            },
-            "rdfs:comment": "Represents the IRI of the source resource of a link value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:anyURI"
             },
-            "@id": "knora-api:linkValueHasSourceIri"
+            "@id": "knora-api:linkValueHasSourceIri",
+            "knora-api:subjectType": {
+                "@id": "knora-api:LinkValue"
+            },
+            "rdfs:comment": "Represents the IRI of the source resource of a link value."
         },
         {
             "rdfs:label": "Link value has target",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:LinkValue"
-            },
-            "rdfs:comment": "Represents the target resource of a link value.",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:Resource"
             },
-            "@id": "knora-api:linkValueHasTarget"
+            "@id": "knora-api:linkValueHasTarget",
+            "knora-api:subjectType": {
+                "@id": "knora-api:LinkValue"
+            },
+            "rdfs:comment": "Represents the target resource of a link value."
         },
         {
             "rdfs:label": "Link value has target IRI",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:LinkValue"
-            },
-            "rdfs:comment": "Represents the IRI of the target resource of a link value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:anyURI"
             },
-            "@id": "knora-api:linkValueHasTargetIri"
+            "@id": "knora-api:linkValueHasTargetIri",
+            "knora-api:subjectType": {
+                "@id": "knora-api:LinkValue"
+            },
+            "rdfs:comment": "Represents the IRI of the target resource of a link value."
         },
         {
             "rdfs:label": "Hierarchical list value as list node",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:ListValue"
-            },
-            "rdfs:comment": "Represents a reference to a hierarchical list node.",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:ListNode"
             },
-            "@id": "knora-api:listValueAsListNode"
+            "@id": "knora-api:listValueAsListNode",
+            "knora-api:subjectType": {
+                "@id": "knora-api:ListValue"
+            },
+            "rdfs:comment": "Represents a reference to a hierarchical list node."
         },
         {
             "rdfs:label": "Name of a mapping (will be part of the mapping's Iri)",
@@ -7318,60 +7318,60 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:MovingImageFileValue"
-            },
-            "rdfs:comment": "The horizontal dimension of a moving image file value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:movingImageFileValueHasDimX"
+            "@id": "knora-api:movingImageFileValueHasDimX",
+            "knora-api:subjectType": {
+                "@id": "knora-api:MovingImageFileValue"
+            },
+            "rdfs:comment": "The horizontal dimension of a moving image file value."
         },
         {
             "rdfs:label": "Moving image file value has Y dimension",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:MovingImageFileValue"
-            },
-            "rdfs:comment": "The vertical dimension of a moving image file value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:movingImageFileValueHasDimY"
+            "@id": "knora-api:movingImageFileValueHasDimY",
+            "knora-api:subjectType": {
+                "@id": "knora-api:MovingImageFileValue"
+            },
+            "rdfs:comment": "The vertical dimension of a moving image file value."
         },
         {
             "rdfs:label": "Moving image file value has duration",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:MovingImageFileValue"
-            },
-            "rdfs:comment": "The duration of a moving image file value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:decimal"
             },
-            "@id": "knora-api:movingImageFileValueHasDuration"
+            "@id": "knora-api:movingImageFileValueHasDuration",
+            "knora-api:subjectType": {
+                "@id": "knora-api:MovingImageFileValue"
+            },
+            "rdfs:comment": "The duration of a moving image file value."
         },
         {
             "rdfs:label": "Moving image file value has frames per second",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:MovingImageFileValue"
-            },
-            "rdfs:comment": "The number of frames per second in a moving image file value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:movingImageFileValueHasFps"
+            "@id": "knora-api:movingImageFileValueHasFps",
+            "knora-api:subjectType": {
+                "@id": "knora-api:MovingImageFileValue"
+            },
+            "rdfs:comment": "The number of frames per second in a moving image file value."
         },
         {
             "rdfs:label": "new modification date",
@@ -7418,12 +7418,12 @@
         },
         {
             "knora-api:isResourceProperty": true,
+            "@type": "owl:ObjectProperty",
+            "@id": "knora-api:resourceProperty",
             "knora-api:subjectType": {
                 "@id": "knora-api:Resource"
             },
-            "rdfs:comment": "The base property of properties that point from Knora resources to Knora resources or values. These properties are required to have cardinalities in the resource classes in which they are used.",
-            "@type": "owl:ObjectProperty",
-            "@id": "knora-api:resourceProperty"
+            "rdfs:comment": "The base property of properties that point from Knora resources to Knora resources or values. These properties are required to have cardinalities in the resource classes in which they are used."
         },
         {
             "rdfs:label": "result",
@@ -7479,15 +7479,15 @@
         },
         {
             "rdfs:label": "standoff tag has end parent index",
-            "knora-api:subjectType": {
-                "@id": "knora-api:StandoffTag"
-            },
-            "rdfs:comment": "The next knora-api:standoffTagHasStartIndex of the end parent tag of a standoff tag.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:standoffTagHasEndParentIndex"
+            "@id": "knora-api:standoffTagHasEndParentIndex",
+            "knora-api:subjectType": {
+                "@id": "knora-api:StandoffTag"
+            },
+            "rdfs:comment": "The next knora-api:standoffTagHasStartIndex of the end parent tag of a standoff tag."
         },
         {
             "@id": "knora-api:standoffTagHasInternalReference",
@@ -7567,15 +7567,15 @@
         },
         {
             "rdfs:label": "standoff tag has start parent index",
-            "knora-api:subjectType": {
-                "@id": "knora-api:StandoffTag"
-            },
-            "rdfs:comment": "The next knora-api:standoffTagHasStartIndex of the start parent tag of a standoff tag.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:standoffTagHasStartParentIndex"
+            "@id": "knora-api:standoffTagHasStartParentIndex",
+            "knora-api:subjectType": {
+                "@id": "knora-api:StandoffTag"
+            },
+            "rdfs:comment": "The next knora-api:standoffTagHasStartIndex of the start parent tag of a standoff tag."
         },
         {
             "@id": "knora-api:standoffTagHasUUID",
@@ -7592,45 +7592,45 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:StillImageFileValue"
-            },
-            "rdfs:comment": "The horizontal dimension of a still image file value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:stillImageFileValueHasDimX"
+            "@id": "knora-api:stillImageFileValueHasDimX",
+            "knora-api:subjectType": {
+                "@id": "knora-api:StillImageFileValue"
+            },
+            "rdfs:comment": "The horizontal dimension of a still image file value."
         },
         {
             "rdfs:label": "Still image file value has Y dimension",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:StillImageFileValue"
-            },
-            "rdfs:comment": "The vertical dimension of a still image file value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:stillImageFileValueHasDimY"
+            "@id": "knora-api:stillImageFileValueHasDimY",
+            "knora-api:subjectType": {
+                "@id": "knora-api:StillImageFileValue"
+            },
+            "rdfs:comment": "The vertical dimension of a still image file value."
         },
         {
             "rdfs:label": "Still image file value has IIIF base URL",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:StillImageFileValue"
-            },
-            "rdfs:comment": "The IIIF base URL of a still image file value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:anyURI"
             },
-            "@id": "knora-api:stillImageFileValueHasIIIFBaseUrl"
+            "@id": "knora-api:stillImageFileValueHasIIIFBaseUrl",
+            "knora-api:subjectType": {
+                "@id": "knora-api:StillImageFileValue"
+            },
+            "rdfs:comment": "The IIIF base URL of a still image file value."
         },
         {
             "@id": "knora-api:subjectType",
@@ -7643,105 +7643,105 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "rdfs:comment": "A text value represented in HTML.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:textValueAsHtml"
+            "@id": "knora-api:textValueAsHtml",
+            "knora-api:subjectType": {
+                "@id": "knora-api:TextValue"
+            },
+            "rdfs:comment": "A text value represented in HTML."
         },
         {
             "rdfs:label": "Text value as XML",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "rdfs:comment": "A Text value represented in XML.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:textValueAsXml"
+            "@id": "knora-api:textValueAsXml",
+            "knora-api:subjectType": {
+                "@id": "knora-api:TextValue"
+            },
+            "rdfs:comment": "A Text value represented in XML."
         },
         {
             "rdfs:label": "text value has language",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "rdfs:comment": "Language code attached to a text value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:textValueHasLanguage"
+            "@id": "knora-api:textValueHasLanguage",
+            "knora-api:subjectType": {
+                "@id": "knora-api:TextValue"
+            },
+            "rdfs:comment": "Language code attached to a text value."
         },
         {
             "rdfs:label": "Text value has mapping",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "rdfs:comment": "Indicates the mapping that is used to convert a text value's markup from from XML to standoff.",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:XMLToStandoffMapping"
             },
-            "@id": "knora-api:textValueHasMapping"
+            "@id": "knora-api:textValueHasMapping",
+            "knora-api:subjectType": {
+                "@id": "knora-api:TextValue"
+            },
+            "rdfs:comment": "Indicates the mapping that is used to convert a text value's markup from from XML to standoff."
         },
         {
             "rdfs:label": "text value has markup",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "rdfs:comment": "True if a text value has markup.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:boolean"
             },
-            "@id": "knora-api:textValueHasMarkup"
+            "@id": "knora-api:textValueHasMarkup",
+            "knora-api:subjectType": {
+                "@id": "knora-api:TextValue"
+            },
+            "rdfs:comment": "True if a text value has markup."
         },
         {
             "rdfs:label": "text value has max standoff start index",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "rdfs:comment": "The maximum knora-api:standoffTagHasStartIndex in a text value.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:integer"
             },
-            "@id": "knora-api:textValueHasMaxStandoffStartIndex"
+            "@id": "knora-api:textValueHasMaxStandoffStartIndex",
+            "knora-api:subjectType": {
+                "@id": "knora-api:TextValue"
+            },
+            "rdfs:comment": "The maximum knora-api:standoffTagHasStartIndex in a text value."
         },
         {
             "rdfs:label": "text value has standoff",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:TextValue"
-            },
-            "rdfs:comment": "Standoff markup attached to a text value.",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:StandoffTag"
             },
-            "@id": "knora-api:textValueHasStandoff"
+            "@id": "knora-api:textValueHasStandoff",
+            "knora-api:subjectType": {
+                "@id": "knora-api:TextValue"
+            },
+            "rdfs:comment": "Standoff markup attached to a text value."
         },
         {
             "rdfs:subPropertyOf": {
@@ -7761,15 +7761,15 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:UriBase"
-            },
-            "rdfs:comment": "Represents the literal URI value of a UriValue.",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:anyURI"
             },
-            "@id": "knora-api:uriValueAsUri"
+            "@id": "knora-api:uriValueAsUri",
+            "knora-api:subjectType": {
+                "@id": "knora-api:UriBase"
+            },
+            "rdfs:comment": "Represents the literal URI value of a UriValue."
         },
         {
             "rdfs:label": "user has permission",
@@ -7781,15 +7781,15 @@
             "@id": "knora-api:userHasPermission"
         },
         {
-            "knora-api:subjectType": {
-                "@id": "knora-api:Value"
-            },
-            "rdfs:comment": "A plain string representation of a value",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:valueAsString"
+            "@id": "knora-api:valueAsString",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Value"
+            },
+            "rdfs:comment": "A plain string representation of a value"
         },
         {
             "rdfs:subPropertyOf": {
@@ -7815,29 +7815,29 @@
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:Value"
-            },
-            "rdfs:comment": "A comment on a value",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:valueHasComment"
+            "@id": "knora-api:valueHasComment",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Value"
+            },
+            "rdfs:comment": "A comment on a value"
         },
         {
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"
             },
-            "knora-api:subjectType": {
-                "@id": "knora-api:Value"
-            },
-            "rdfs:comment": "The UUID of a value",
             "@type": "owl:DatatypeProperty",
             "knora-api:objectType": {
                 "@id": "xsd:string"
             },
-            "@id": "knora-api:valueHasUUID"
+            "@id": "knora-api:valueHasUUID",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Value"
+            },
+            "rdfs:comment": "The UUID of a value"
         },
         {
             "rdfs:label": "version ARK URL",

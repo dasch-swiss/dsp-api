@@ -14,10 +14,6 @@
             ],
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "incunabula:book"
-            },
-            "rdfs:comment": "Datum der Herausgabe",
             "@type": "owl:ObjectProperty",
             "knora-api:objectType": {
                 "@id": "knora-api:DateValue"
@@ -25,7 +21,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Date"
             },
-            "@id": "incunabula:pubdate"
+            "@id": "incunabula:pubdate",
+            "knora-api:subjectType": {
+                "@id": "incunabula:book"
+            },
+            "rdfs:comment": "Datum der Herausgabe"
         }
     ],
     "knora-api:attachedToProject": {
