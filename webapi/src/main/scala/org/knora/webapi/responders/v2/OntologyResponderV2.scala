@@ -2675,7 +2675,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         .contains(baseClassIri) && subClass.entityInfoContent.classIri != baseClassIri
     }
 
-    // Iterate over the subclasses.
+    // Iterate over the subclasses, updating cardinalities.
     val cacheDataWithUpdatedSubClasses = directSubClasses.foldLeft(cacheData) {
       case (cacheDataAcc: OntologyCacheData, directSubClass: ReadClassInfoV2) =>
         val directSubClassIri = directSubClass.entityInfoContent.classIri
