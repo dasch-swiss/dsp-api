@@ -2584,7 +2584,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       linkValuePropIri -> internalClassDef.directCardinalities(linkPropIri)
     }.toMap
 
-    val classDefWithAddedLinkValueProps = internalClassDef.copy(
+    val classDefWithAddedLinkValueProps: ClassInfoContentV2 = internalClassDef.copy(
       directCardinalities = internalClassDef.directCardinalities ++ linkValuePropCardinalitiesToAdd
     )
 
@@ -2598,20 +2598,21 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     // Check that the cardinalities directly defined on the class are compatible with any inheritable
     // cardinalities, and let directly-defined cardinalities override cardinalities in base classes.
 
-    val thisClassKnoraCardinalities = classDefWithAddedLinkValueProps.directCardinalities.map {
-      case (propertyIri, knoraCardinality) =>
-        propertyIri -> Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)
-    }
+    val thisClassOwlCardinalities: Map[SmartIri, OwlCardinalityInfo] =
+      classDefWithAddedLinkValueProps.directCardinalities.map {
+        case (propertyIri: SmartIri, knoraCardinality: KnoraCardinalityInfo) =>
+          propertyIri -> Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)
+      }
 
-    val inheritableKnoraCardinalities = cardinalitiesAvailableToInherit.map {
-      case (propertyIri, knoraCardinality) =>
+    val inheritableOwlCardinalities: Map[SmartIri, OwlCardinalityInfo] = cardinalitiesAvailableToInherit.map {
+      case (propertyIri: SmartIri, knoraCardinality: KnoraCardinalityInfo) =>
         propertyIri -> Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)
     }
 
     val cardinalitiesForClassWithInheritance: Map[SmartIri, KnoraCardinalityInfo] = overrideCardinalities(
       classIri = internalClassDef.classIri,
-      thisClassCardinalities = thisClassKnoraCardinalities,
-      inheritableCardinalities = inheritableKnoraCardinalities,
+      thisClassCardinalities = thisClassOwlCardinalities,
+      inheritableCardinalities = inheritableOwlCardinalities,
       allSubPropertyOfRelations = cacheData.subPropertyOfRelations,
       errorSchema = ApiV2Complex, { msg: String =>
         throw BadRequestException(msg)
@@ -2674,6 +2675,45 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     )
 
     (classDefWithAddedLinkValueProps, cardinalitiesForClassWithInheritance)
+  }
+
+  private def updateSubClasses(internalClassDef: ClassInfoContentV2, cacheData: OntologyCacheData): Unit = {
+    val subClassIris: Set[SmartIri] = ???
+
+    for (subClassIri: SmartIri <- subClassIris) {
+      val subClass: ReadClassInfoV2 = ???
+      val baseClassIrisOfSubClass: Seq[SmartIri] = ???
+
+      val cardinalitiesAvailableToInherit: Map[SmartIri, KnoraCardinalityInfo] = ???
+
+      val thisClassOwlCardinalities: Map[SmartIri, OwlCardinalityInfo] =
+        internalClassDef.directCardinalities.map {
+          case (propertyIri: SmartIri, knoraCardinality: KnoraCardinalityInfo) =>
+            propertyIri -> Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)
+        }
+
+      val inheritableOwlCardinalities: Map[SmartIri, OwlCardinalityInfo] = cardinalitiesAvailableToInherit.map {
+        case (propertyIri: SmartIri, knoraCardinality: KnoraCardinalityInfo) =>
+          propertyIri -> Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)
+      }
+
+      val newInheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = overrideCardinalities(
+        classIri = internalClassDef.classIri,
+        thisClassCardinalities = thisClassOwlCardinalities,
+        inheritableCardinalities = inheritableOwlCardinalities,
+        allSubPropertyOfRelations = cacheData.subPropertyOfRelations,
+        errorSchema = ApiV2Complex, { msg: String =>
+          throw BadRequestException(msg)
+        }
+      ).map {
+        case (propertyIri, owlCardinalityInfo) =>
+          propertyIri -> Cardinality.owlCardinality2KnoraCardinality(propertyIri = propertyIri.toString,
+                                                                     owlCardinality = owlCardinalityInfo)
+      }
+
+      // Update the cache.
+
+    }
   }
 
   /**
@@ -5186,15 +5226,14 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     }
 
     // A map of base class properties to the directly defined properties that can override them.
-    val reverseOverrides: Map[SmartIri, Set[SmartIri]] = overrides
-      .map {
+    val reverseOverrides: Map[SmartIri, Set[SmartIri]] = overrides.toVector
+      .flatMap {
         // Unpack the sets to make an association list.
         case (thisClassProp: SmartIri, baseClassProps: Set[SmartIri]) =>
-          baseClassProps.map { baseClassProp =>
+          baseClassProps.map { baseClassProp: SmartIri =>
             thisClassProp -> baseClassProp
           }
       }
-      .flatten
       .map {
         // Reverse the direction of the association list.
         case (thisClassProp: SmartIri, baseClassProp: SmartIri) =>
