@@ -2702,7 +2702,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         thisClassCardinalities = thisClassOwlCardinalities,
         inheritableCardinalities = inheritableOwlCardinalities,
         allSubPropertyOfRelations = cacheData.subPropertyOfRelations,
-        errorSchema = ApiV2Complex, { msg: String =>
+        errorSchema = ApiV2Complex,
+        errorFun = { msg: String =>
           throw BadRequestException(msg)
         }
       ).map {
