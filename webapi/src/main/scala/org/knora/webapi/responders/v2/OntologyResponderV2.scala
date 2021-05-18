@@ -2686,8 +2686,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
       val cardinalitiesAvailableToInherit: Map[SmartIri, KnoraCardinalityInfo] = ???
 
-      val thisClassOwlCardinalities: Map[SmartIri, OwlCardinalityInfo] =
-        internalClassDef.directCardinalities.map {
+      val subClassOwlCardinalities: Map[SmartIri, OwlCardinalityInfo] =
+        subClass.entityInfoContent.directCardinalities.map {
           case (propertyIri: SmartIri, knoraCardinality: KnoraCardinalityInfo) =>
             propertyIri -> Cardinality.knoraCardinality2OwlCardinality(knoraCardinality)
         }
@@ -2699,7 +2699,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
       val newInheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = overrideCardinalities(
         classIri = internalClassDef.classIri,
-        thisClassCardinalities = thisClassOwlCardinalities,
+        thisClassCardinalities = subClassOwlCardinalities,
         inheritableCardinalities = inheritableOwlCardinalities,
         allSubPropertyOfRelations = cacheData.subPropertyOfRelations,
         errorSchema = ApiV2Complex,
