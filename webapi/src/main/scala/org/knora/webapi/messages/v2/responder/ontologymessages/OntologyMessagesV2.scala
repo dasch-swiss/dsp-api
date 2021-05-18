@@ -1943,7 +1943,14 @@ object Cardinality extends Enumeration {
     * @param guiOrder    the SALSAH GUI order.
     */
   case class KnoraCardinalityInfo(cardinality: Value, guiOrder: Option[Int] = None) {
-    override def toString: String = cardinality.toString
+    override def toString: String = guiOrder match {
+      case Some(definedGuiOrder) => s"$cardinality (guiOrder $definedGuiOrder)"
+      case None                  => cardinality.toString
+    }
+
+    def equalsWithoutGuiOrder(that: KnoraCardinalityInfo): Boolean = {
+      that.cardinality == cardinality
+    }
   }
 
   type Cardinality = Value
