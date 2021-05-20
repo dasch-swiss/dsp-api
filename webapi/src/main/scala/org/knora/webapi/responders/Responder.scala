@@ -17,7 +17,15 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders
+package org.knora.webapi
+package responders
+
+import exceptions.{DuplicateValueException, UnexpectedMessageException}
+import messages.store.triplestoremessages.SparqlSelectRequest
+import messages.util.ResponderData
+import messages.util.rdf.SparqlSelectResult
+import messages.{SmartIri, StringFormatter}
+import settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
@@ -25,13 +33,6 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.{LazyLogging, Logger}
-import org.knora.webapi._
-import org.knora.webapi.exceptions.{DuplicateValueException, UnexpectedMessageException}
-import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
-import org.knora.webapi.messages.util.ResponderData
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.{SmartIri, StringFormatter}
-import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
@@ -111,15 +112,14 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     * Checks whether an entity is used in the triplestore.
     *
     * @param entityIri                 the IRI of the entity.
-    * @param errorFun                  a function that throws an exception. It will be called if the entity is used.
     * @param ignoreKnoraConstraints    if `true`, ignores the use of the entity in Knora subject or object constraints.
     * @param ignoreRdfSubjectAndObject if `true`, ignores the use of the entity in `rdf:subject` and `rdf:object`.
+    *
+    * @return `true` if the entity is used.
     */
   protected def isEntityUsed(entityIri: SmartIri,
-                             errorFun: => Nothing,
                              ignoreKnoraConstraints: Boolean = false,
-                             ignoreRdfSubjectAndObject: Boolean = false): Future[Unit] = {
-
+                             ignoreRdfSubjectAndObject: Boolean = false): Future[Boolean] = {
     for {
       isEntityUsedSparql <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v2.txt
@@ -134,7 +134,26 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
       isEntityUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql))
         .mapTo[SparqlSelectResult]
 
-      _ = if (isEntityUsedResponse.results.bindings.nonEmpty) {
+    } yield isEntityUsedResponse.results.bindings.nonEmpty
+  }
+
+  /**
+    * Throws an exception if an entity is used in the triplestore.
+    *
+    * @param entityIri                 the IRI of the entity.
+    * @param errorFun                  a function that throws an exception. It will be called if the entity is used.
+    * @param ignoreKnoraConstraints    if `true`, ignores the use of the entity in Knora subject or object constraints.
+    * @param ignoreRdfSubjectAndObject if `true`, ignores the use of the entity in `rdf:subject` and `rdf:object`.
+    */
+  protected def throwIfEntityIsUsed(entityIri: SmartIri,
+                                    errorFun: => Nothing,
+                                    ignoreKnoraConstraints: Boolean = false,
+                                    ignoreRdfSubjectAndObject: Boolean = false): Future[Unit] = {
+
+    for {
+      entityIsUsed: Boolean <- isEntityUsed(entityIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
+
+      _ = if (entityIsUsed) {
         errorFun
       }
     } yield ()

@@ -17,36 +17,32 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v2
+package org.knora.webapi
+package responders.v2
 
-import java.time.Instant
+import exceptions._
+import feature.FeatureFactoryConfig
+import messages.IriConversions._
+import messages.StringFormatter.{SalsahGuiAttribute, SalsahGuiAttributeDefinition}
+import messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
+import messages.admin.responder.usersmessages.UserADM
+import messages.store.triplestoremessages._
+import messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
+import messages.util.{ErrorHandlingMap, KnoraSystemInstances, OntologyUtil, ResponderData}
+import messages.v2.responder.{CanDoResponseV2, SuccessResponseV2}
+import messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import messages.v2.responder.ontologymessages._
+import messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import messages.{OntologyConstants, SmartIri}
+import responders.Responder.handleUnexpectedMessage
+import responders.{IriLocker, Responder}
+import util._
+import util.cache.CacheUtil
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
-import org.knora.webapi.exceptions._
-import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.StringFormatter.{SalsahGuiAttribute, SalsahGuiAttributeDefinition}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectGetRequestADM,
-  ProjectGetResponseADM,
-  ProjectIdentifierADM
-}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
-import org.knora.webapi.messages.util.{ErrorHandlingMap, KnoraSystemInstances, MessageUtil, OntologyUtil, ResponderData}
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.util._
-import org.knora.webapi.util.cache.CacheUtil
 
+import java.time.Instant
 import scala.collection.immutable
 import scala.concurrent.Future
 
@@ -146,6 +142,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     case changeCardinalitiesRequest: ChangeCardinalitiesRequestV2 =>
       changeClassCardinalities(changeCardinalitiesRequest)
     case changeGuiOrderRequest: ChangeGuiOrderRequestV2 => changeGuiOrder(changeGuiOrderRequest)
+    case canDeleteClassRequest: CanDeleteClassRequestV2 => canDeleteClass(canDeleteClassRequest)
     case deleteClassRequest: DeleteClassRequestV2       => deleteClass(deleteClassRequest)
     case createPropertyRequest: CreatePropertyRequestV2 => createProperty(createPropertyRequest)
     case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 =>
@@ -2852,7 +2849,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         _ <- hasCardinality match {
           // If there is, check that the class isn't used in data, and that it has no subclasses.
           case Some((propIri: SmartIri, cardinality: KnoraCardinalityInfo)) =>
-            isEntityUsed(
+            throwIfEntityIsUsed(
               entityIri = internalClassIri,
               errorFun = throw BadRequestException(
                 s"Cardinality ${cardinality.toString} for $propIri cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data or has a subclass"),
@@ -3220,7 +3217,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the class isn't used in data, and that it has no subclasses.
 
-        _ <- isEntityUsed(
+        _ <- throwIfEntityIsUsed(
           entityIri = internalClassIri,
           errorFun = throw BadRequestException(
             s"The cardinalities of class ${changeCardinalitiesRequest.classInfoContent.classIri} cannot be changed, because it is used in data or has a subclass"),
@@ -3372,6 +3369,28 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   }
 
   /**
+    * Checks whether a class can be deleted.
+    *
+    * @param canDeleteClassRequestV2 the request message.
+    * @return a [[CanDoResponseV2]].
+    */
+  private def canDeleteClass(canDeleteClassRequestV2: CanDeleteClassRequestV2): Future[CanDoResponseV2] = {
+    val internalClassIri: SmartIri = canDeleteClassRequestV2.classIri.toOntologySchema(InternalSchema)
+    val internalOntologyIri: SmartIri = internalClassIri.getOntologyFromEntity
+
+    for {
+      cacheData <- getCacheData
+      ontology = cacheData.ontologies(internalOntologyIri)
+
+      _ = if (!ontology.classes.contains(internalClassIri)) {
+        throw BadRequestException(s"Class ${canDeleteClassRequestV2.classIri} does not exist")
+      }
+
+      entityIsUsed <- isEntityUsed(entityIri = internalClassIri)
+    } yield CanDoResponseV2(!entityIsUsed)
+  }
+
+  /**
     * Deletes a class.
     *
     * @param deleteClassRequest the request to delete the class.
@@ -3399,7 +3418,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the class isn't used in data or ontologies.
 
-        _ <- isEntityUsed(
+        _ <- throwIfEntityIsUsed(
           entityIri = internalClassIri,
           errorFun = throw BadRequestException(
             s"Class ${deleteClassRequest.classIri} cannot be deleted, because it is used in data or ontologies")
@@ -3520,7 +3539,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the property isn't used in data or ontologies.
 
-        _ <- isEntityUsed(
+        _ <- throwIfEntityIsUsed(
           entityIri = internalPropertyIri,
           errorFun = throw BadRequestException(
             s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because it is used in data or ontologies")
@@ -3528,7 +3547,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         _ <- maybeInternalLinkValuePropertyIri match {
           case Some(internalLinkValuePropertyIri) =>
-            isEntityUsed(
+            throwIfEntityIsUsed(
               entityIri = internalLinkValuePropertyIri,
               errorFun = throw BadRequestException(
                 s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because the corresponding link value property, ${internalLinkValuePropertyIri

@@ -649,7 +649,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
         resourceSmartIri = eraseResourceV2.resourceIri.toSmartIri
 
-        _ <- isEntityUsed(
+        _ <- throwIfEntityIsUsed(
           entityIri = resourceSmartIri,
           errorFun = throw BadRequestException(
             s"Resource ${eraseResourceV2.resourceIri} cannot be erased, because it is referred to by another resource"),

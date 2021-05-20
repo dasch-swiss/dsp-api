@@ -17,21 +17,21 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.routing.v2
+package org.knora.webapi
+package routing.v2
 
-import java.util.UUID
+import exceptions.BadRequestException
+import feature.FeatureFactoryConfig
+import messages.IriConversions._
+import messages.util.rdf.{JsonLDDocument, JsonLDUtil}
+import messages.v2.responder.ontologymessages._
+import messages.{OntologyConstants, SmartIri}
+import routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
-import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 
+import java.util.UUID
 import scala.concurrent.Future
 
 object OntologiesRouteV2 {
@@ -63,6 +63,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       replaceCardinalities(featureFactoryConfig) ~
       changeGuiOrder(featureFactoryConfig) ~
       getClasses(featureFactoryConfig) ~
+      canDeleteClass(featureFactoryConfig) ~
       deleteClass(featureFactoryConfig) ~
       deleteOntologyComment(featureFactoryConfig) ~
       createProperty(featureFactoryConfig) ~
@@ -548,6 +549,41 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
           )
         }
+      }
+    }
+
+  private def canDeleteClass(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(OntologiesBasePath / "candeleteclass" / Segment) { classIriStr: IRI =>
+      get { requestContext =>
+        val classIri = classIriStr.toSmartIri
+        stringFormatter.checkExternalOntologyName(classIri)
+
+        if (!classIri.getOntologySchema.contains(ApiV2Complex)) {
+          throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
+        }
+
+        val requestMessageFuture: Future[CanDeleteClassRequestV2] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          CanDeleteClassRequestV2(
+            classIri = classIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
+
+        RouteUtilV2.runRdfRouteWithFuture(
+          requestMessageF = requestMessageFuture,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log,
+          targetSchema = ApiV2Complex,
+          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+        )
       }
     }
 
