@@ -154,6 +154,18 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
 }
 
 /**
+  * Checks whether an ontology can be deleted. A successful response will be a [[CanDoResponseV2]].
+  *
+  * @param ontologyIri the ontology IRI.
+  * @param featureFactoryConfig the feature factory configuration.
+  * @param requestingUser the user making the request.
+  */
+case class CanDeleteOntologyRequestV2(ontologyIri: SmartIri,
+                                      featureFactoryConfig: FeatureFactoryConfig,
+                                      requestingUser: UserADM)
+    extends OntologiesResponderRequestV2
+
+/**
   * Requests that an ontology is deleted. All the entities in the ontology must be unused in data.
   *
   * @param ontologyIri          the IRI of the ontology to delete.
@@ -631,6 +643,18 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
 }
 
 /**
+  * Checks whether the cardinalities of a class can be replaced. A successful response will be a [[CanDoResponseV2]].
+  *
+  * @param classIri the class IRI.
+  * @param featureFactoryConfig the feature factory configuration.
+  * @param requestingUser the user making the request.
+  */
+case class CanChangeCardinalitiesRequestV2(classIri: SmartIri,
+                                           featureFactoryConfig: FeatureFactoryConfig,
+                                           requestingUser: UserADM)
+    extends OntologiesResponderRequestV2
+
+/**
   * Requests the replacement of a class's cardinalities with new ones. A successful response will be a [[ReadOntologyV2]].
   *
   * @param classInfoContent     a [[ClassInfoContentV2]] containing the new cardinalities.
@@ -742,6 +766,18 @@ case class DeletePropertyRequestV2(propertyIri: SmartIri,
                                    apiRequestID: UUID,
                                    featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM)
+    extends OntologiesResponderRequestV2
+
+/**
+  * Asks whether a property can be deleted. A successful response will be a [[CanDoResponseV2]].
+  *
+  * @param propertyIri          the IRI of the property to be deleted.
+  * @param featureFactoryConfig the feature factory configuration.
+  * @param requestingUser       the user making the request.
+  */
+case class CanDeletePropertyRequestV2(propertyIri: SmartIri,
+                                      featureFactoryConfig: FeatureFactoryConfig,
+                                      requestingUser: UserADM)
     extends OntologiesResponderRequestV2
 
 /**

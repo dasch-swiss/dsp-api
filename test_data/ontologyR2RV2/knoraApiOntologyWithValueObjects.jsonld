@@ -6291,6 +6291,15 @@
             "rdfs:comment": "Indicates whether a resource class can be instantiated via the Knora API."
         },
         {
+            "rdfs:label": "can do",
+            "rdfs:comment": "Indicates whether an operation can be performed",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:boolean"
+            },
+            "@id": "knora-api:canDo"
+        },
+        {
             "rdfs:label": "Color value as color",
             "rdfs:subPropertyOf": {
                 "@id": "knora-api:valueHas"

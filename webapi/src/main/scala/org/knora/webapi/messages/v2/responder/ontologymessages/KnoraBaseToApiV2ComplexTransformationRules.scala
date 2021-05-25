@@ -86,6 +86,26 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     objectType = Some(OntologyConstants.Xsd.String)
   )
 
+  private val CanDo: ReadPropertyInfoV2 = makeProperty(
+    propertyIri = OntologyConstants.KnoraApiV2Complex.CanDo,
+    propertyType = OntologyConstants.Owl.DatatypeProperty,
+    predicates = Seq(
+      makePredicate(
+        predicateIri = OntologyConstants.Rdfs.Label,
+        objectsWithLang = Map(
+          LanguageCodes.EN -> "can do"
+        )
+      ),
+      makePredicate(
+        predicateIri = OntologyConstants.Rdfs.Comment,
+        objectsWithLang = Map(
+          LanguageCodes.EN -> "Indicates whether an operation can be performed"
+        )
+      )
+    ),
+    objectType = Some(OntologyConstants.Xsd.Boolean)
+  )
+
   private val MayHaveMoreResults: ReadPropertyInfoV2 = makeProperty(
     propertyIri = OntologyConstants.KnoraApiV2Complex.MayHaveMoreResults,
     propertyType = OntologyConstants.Owl.DatatypeProperty,
@@ -1785,6 +1805,7 @@ object KnoraBaseToApiV2ComplexTransformationRules extends OntologyTransformation
     Result,
     MayHaveMoreResults,
     Error,
+    CanDo,
     UserHasPermission,
     VersionDate,
     ArkUrl,

@@ -57,7 +57,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
   // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
   // If false, the responses from the server are compared to the contents fo the expected response files.
-  private val writeTestDataFiles = false
+  private val writeTestDataFiles = true
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/ontologies/example-box.ttl",
@@ -669,6 +669,30 @@ class OntologyV2R2RSpec extends R2RSpec {
       }
     }
 
+    "determine that an ontology can be deleted" in {
+      val fooIriEncoded = URLEncoder.encode(fooIri.get, "UTF-8")
+
+      Get(s"/v2/ontologies/candeleteontology/$fooIriEncoded") ~> addCredentials(
+        BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        val responseStr = responseAs[String]
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "can-do-response",
+              fileExtension = "json"
+            ),
+            text = responseStr
+          )
+        )
+
+        assert(status == StatusCodes.OK, responseStr)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+        assert(responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+      }
+    }
+
     "delete the 'foo' ontology" in {
       val fooIriEncoded = URLEncoder.encode(fooIri.get, "UTF-8")
       val lastModificationDate = URLEncoder.encode(fooLastModDate.toString, "UTF-8")
@@ -1084,9 +1108,6 @@ class OntologyV2R2RSpec extends R2RSpec {
           text = params
         )
       )
-
-      // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
-      val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
 
       Put("/v2/ontologies/properties/guielement", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
@@ -1634,6 +1655,18 @@ class OntologyV2R2RSpec extends R2RSpec {
       }
     }
 
+    "determine that a property can be deleted" in {
+      val propertySegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothing", "UTF-8")
+
+      Get(s"/v2/ontologies/candeleteproperty/$propertySegment") ~> addCredentials(
+        BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+        assert(responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+      }
+    }
+
     "delete the property anything:hasOtherNothing" in {
       val propertySegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothing", "UTF-8")
       val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
@@ -1895,6 +1928,18 @@ class OntologyV2R2RSpec extends R2RSpec {
       }
     }
 
+    "determine that a class's cardinalities can be changed" in {
+      val classSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing", "UTF-8")
+
+      Get(s"/v2/ontologies/canreplacecardinalities/$classSegment") ~> addCredentials(
+        BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+        assert(responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+      }
+    }
+
     "change the cardinalities of the class anything:Nothing, replacing anything:hasNothingness with anything:hasEmptiness" in {
       val params =
         s"""{
@@ -2057,6 +2102,18 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
+    "determine that a class can be deleted" in {
+      val classSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing", "UTF-8")
+
+      Get(s"/v2/ontologies/candeleteclass/$classSegment") ~> addCredentials(
+        BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, responseStr)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+        assert(responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
       }
     }
 
@@ -2497,6 +2554,53 @@ class OntologyV2R2RSpec extends R2RSpec {
           InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
         anythingLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
       }
+    }
+  }
+
+  "determine that a class's cardinalities cannot be changed" in {
+    val classSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing", "UTF-8")
+
+    Get(s"/v2/ontologies/canreplacecardinalities/$classSegment") ~> addCredentials(
+      BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      val responseStr = responseAs[String]
+      assert(status == StatusCodes.OK, responseStr)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+      assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+    }
+  }
+
+  "determine that a class cannot be deleted" in {
+    val thingIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing", "UTF-8")
+
+    Get(s"/v2/ontologies/candeleteclass/$thingIri") ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      val responseStr = responseAs[String]
+      assert(status == StatusCodes.OK, responseStr)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+      assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+    }
+  }
+
+  "determine that a property cannot be deleted" in {
+    val propertyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger", "UTF-8")
+
+    Get(s"/v2/ontologies/candeleteproperty/$propertyIri") ~> addCredentials(
+      BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      val responseStr = responseAs[String]
+      assert(status == StatusCodes.OK, responseStr)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+      assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+    }
+  }
+
+  "determine that an ontology cannot be deleted" in {
+    val ontologyIri = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2", "UTF-8")
+
+    Get(s"/v2/ontologies/candeleteontology/$ontologyIri") ~> addCredentials(
+      BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      val responseStr = responseAs[String]
+      assert(status == StatusCodes.OK, responseStr)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+      assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
     }
   }
 }

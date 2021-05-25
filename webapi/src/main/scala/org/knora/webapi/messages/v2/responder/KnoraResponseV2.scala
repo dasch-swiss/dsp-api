@@ -185,7 +185,7 @@ case class CanDoResponseV2(canDo: Boolean) extends KnoraJsonLDResponseV2 {
 
     JsonLDDocument(
       body = JsonLDObject(
-        Map(OntologyConstants.KnoraApiV2Simple.CanDo -> JsonLDBoolean(canDo))
+        Map(OntologyConstants.KnoraApiV2Complex.CanDo -> JsonLDBoolean(canDo))
       ),
       context = JsonLDObject(
         Map(
