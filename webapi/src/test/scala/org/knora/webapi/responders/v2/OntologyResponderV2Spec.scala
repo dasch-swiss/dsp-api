@@ -72,7 +72,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
   private val ExampleSharedOntologyIri = "http://api.knora.org/ontology/shared/example-box/v2".toSmartIri
   private val IncunabulaOntologyIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2".toSmartIri
   private val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
-  private var anythingLastModDate: Instant = Instant.now
+  private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
 
   private val printErrorMessages = false
 
@@ -225,8 +225,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "delete the comment from 'foo'" in {
-      val newLabel = "a label changed again"
-
       responderManager ! DeleteOntologyCommentRequestV2(
         ontologyIri = fooIri.get.toSmartIri.toOntologySchema(ApiV2Complex),
         lastModificationDate = fooLastModDate,
@@ -3254,6 +3252,80 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
+    "change the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
+      val propertyIri = AnythingOntologyIri.makeEntityIri("hasNothingness")
+
+      responderManager ! ChangePropertyGuiElementRequest(
+        propertyIri = propertyIri,
+        newGuiElement = Some("http://api.knora.org/ontology/salsah-gui/v2#SimpleText".toSmartIri),
+        newGuiAttributes = Set("size=80"),
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val externalOntology = msg.toOntologySchema(ApiV2Complex)
+          assert(externalOntology.properties.size == 1)
+          val property = externalOntology.properties(propertyIri)
+
+          property.entityInfoContent.predicates(
+            OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri) should ===(
+            PredicateInfoV2(
+              predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+              objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#SimpleText".toSmartIri))
+            ))
+
+          property.entityInfoContent.predicates(
+            OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri) should ===(
+            PredicateInfoV2(
+              predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri,
+              objects = Seq(StringLiteralV2("size=80"))
+            ))
+
+          val metadata = externalOntology.ontologyMetadata
+          val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+            throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
+    "delete the salsah-gui:guiElement and salsah-gui:guiAttribute of anything:hasNothingness" in {
+      val propertyIri = AnythingOntologyIri.makeEntityIri("hasNothingness")
+
+      responderManager ! ChangePropertyGuiElementRequest(
+        propertyIri = propertyIri,
+        newGuiElement = None,
+        newGuiAttributes = Set.empty,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val externalOntology = msg.toOntologySchema(ApiV2Complex)
+          assert(externalOntology.properties.size == 1)
+          val property = externalOntology.properties(propertyIri)
+
+          property.entityInfoContent.predicates
+            .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri) should ===(None)
+
+          property.entityInfoContent.predicates
+            .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri) should ===(None)
+
+          val metadata = externalOntology.ontologyMetadata
+          val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+            throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
     "not create a property called anything:Thing, because that IRI is already used for a class" in {
       val propertyIri = AnythingOntologyIri.makeEntityIri("Thing")
 
@@ -3392,7 +3464,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "not add a cardinality to the class anything:Nothing, because it has a subclass" in {
+    "not add a cardinality=1 to the class anything:Nothing, because it has a subclass" in {
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
       val classInfoContent = ClassInfoContentV2(
@@ -3404,7 +3476,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           )
         ),
         directCardinalities = Map(
-          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(Cardinality.MayHaveOne)
+          AnythingOntologyIri.makeEntityIri("hasNothingness") -> KnoraCardinalityInfo(Cardinality.MustHaveOne)
         ),
         ontologySchema = ApiV2Complex
       )
@@ -3703,7 +3775,39 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "not add a cardinality for property anything:hasName to class anything:BlueThing, because the class is used in data" in {
+    "not add a minCardinality>0 for property anything:hasName to class anything:BlueThing, because the class is used in data" in {
+      val classIri = AnythingOntologyIri.makeEntityIri("BlueThing")
+
+      val classInfoContent = ClassInfoContentV2(
+        classIri = classIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          )
+        ),
+        directCardinalities = Map(
+          AnythingOntologyIri.makeEntityIri("hasName") -> KnoraCardinalityInfo(Cardinality.MustHaveSome)
+        ),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! AddCardinalitiesToClassRequestV2(
+        classInfoContent = classInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: akka.actor.Status.Failure =>
+          if (printErrorMessages) println(msg.cause.getMessage)
+          msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      }
+    }
+
+    "add a maxCardinality=1 for property anything:hasName to class anything:BlueThing even though the class is used in data" in {
       val classIri = AnythingOntologyIri.makeEntityIri("BlueThing")
 
       val classInfoContent = ClassInfoContentV2(
@@ -3729,9 +3833,15 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure =>
-          if (printErrorMessages) println(msg.cause.getMessage)
-          msg.cause.isInstanceOf[BadRequestException] should ===(true)
+        case msg: ReadOntologyV2 =>
+          val externalOntology = msg.toOntologySchema(ApiV2Complex)
+          assert(externalOntology.classes.size == 1)
+
+          val metadata = externalOntology.ontologyMetadata
+          val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+            throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
       }
     }
 
@@ -3922,7 +4032,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         ontologySchema = ApiV2Complex
       )
 
-      responderManager ! ChangeCardinalitiesRequestV2(
+      responderManager ! ChangeGuiOrderRequestV2(
         classInfoContent = classInfoContent,
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -5124,6 +5234,64 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             msg.results.bindings.map(_.rowMap("cardinalityProp")).sorted == Seq(
               "http://www.knora.org/ontology/0001/anything#testIntProp",
               "http://www.knora.org/ontology/0001/anything#testTextProp"))
+      }
+    }
+
+    "change the GUI order of a cardinality in a base class, and update its subclass in the ontology cache" in {
+      val classIri = AnythingOntologyIri.makeEntityIri("Thing")
+
+      val newCardinality = KnoraCardinalityInfo(cardinality = Cardinality.MayHaveMany, guiOrder = Some(100))
+
+      val classInfoContent = ClassInfoContentV2(
+        classIri = classIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          )
+        ),
+        directCardinalities = Map(
+          AnythingOntologyIri.makeEntityIri("hasText") -> newCardinality
+        ),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! ChangeGuiOrderRequestV2(
+        classInfoContent = classInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val externalOntology = msg.toOntologySchema(ApiV2Complex)
+          assert(externalOntology.classes.size == 1)
+          val readClassInfo = externalOntology.classes(classIri)
+          assert(
+            readClassInfo.entityInfoContent
+              .directCardinalities(AnythingOntologyIri.makeEntityIri("hasText")) == newCardinality)
+
+          val metadata = externalOntology.ontologyMetadata
+          val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+            throw AssertionException(s"${metadata.ontologyIri} has no last modification date"))
+          assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+          anythingLastModDate = newAnythingLastModDate
+      }
+
+      responderManager ! ClassesGetRequestV2(
+        classIris = Set(AnythingOntologyIri.makeEntityIri("ThingWithSeqnum")),
+        allLanguages = false,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: ReadOntologyV2 =>
+          val externalOntology = msg.toOntologySchema(ApiV2Complex)
+          assert(externalOntology.classes.size == 1)
+          val readClassInfo = externalOntology.classes(AnythingOntologyIri.makeEntityIri("ThingWithSeqnum"))
+          assert(readClassInfo.inheritedCardinalities(AnythingOntologyIri.makeEntityIri("hasText")) == newCardinality)
       }
     }
 

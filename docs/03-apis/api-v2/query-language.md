@@ -267,7 +267,8 @@ main resource, which must be represented by a variable.
 It is possible to do a Gravsearch query in which the IRI of the main resource
 is already known, e.g. to request specific information about that resource and
 perhaps about linked resources. In this case, the IRI of the main resource must
-be assigned to a variable using `BIND`.
+be assigned to a variable using `BIND`. Note that `BIND` statements slow the query down,
+therefore we recommend that you do not use them unless you have to.
 
 Properties can be represented by an IRI or a query variable. If a
 property is represented by a query variable, it can be restricted to

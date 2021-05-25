@@ -47,7 +47,16 @@ import org.knora.webapi.messages.util.PermissionUtilADM.{
   PermissionComparisonResult
 }
 import org.knora.webapi.messages.util._
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
+import org.knora.webapi.messages.util.rdf.{
+  JsonLDArray,
+  JsonLDDocument,
+  JsonLDInt,
+  JsonLDKeywords,
+  JsonLDObject,
+  JsonLDString,
+  SparqlSelectResult,
+  VariableResultsRow
+}
 import org.knora.webapi.messages.util.search.ConstructQuery
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
@@ -129,17 +138,28 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                          headerXSLTIri,
                          featureFactoryConfig,
                          requestingUser)
+
     case createResourceRequestV2: CreateResourceRequestV2 => createResourceV2(createResourceRequestV2)
+
     case updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2 =>
       updateResourceMetadataV2(updateResourceMetadataRequestV2)
+
     case deleteOrEraseResourceRequestV2: DeleteOrEraseResourceRequestV2 =>
       deleteOrEraseResourceV2(deleteOrEraseResourceRequestV2)
-    case graphDataGetRequest: GraphDataGetRequestV2                 => getGraphDataResponseV2(graphDataGetRequest)
-    case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 => getResourceHistoryV2(resourceHistoryRequest)
+
+    case graphDataGetRequest: GraphDataGetRequestV2 => getGraphDataResponseV2(graphDataGetRequest)
+
+    case resourceHistoryRequest: ResourceVersionHistoryGetRequestV2 =>
+      getResourceHistoryV2(resourceHistoryRequest)
+
+    case resourceIIIFManifestRequest: ResourceIIIFManifestGetRequestV2 => getIIIFManifestV2(resourceIIIFManifestRequest)
+
     case projectResourcesWithHistoryRequestV2: ProjectResourcesWithHistoryGetRequestV2 =>
       getProjectResourcesWithHistoryV2(projectResourcesWithHistoryRequestV2)
     case resourceFullHistRequest: ResourceFullHistoryGetRequestV2 => getResourceHistoryEvents(resourceFullHistRequest)
-    case other                                                    => handleUnexpectedMessage(other, log, this.getClass.getName)
+
+    case other =>
+      handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
   /**
@@ -714,8 +734,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       // Check that the resource class has a suitable cardinality for each submitted value.
       resourceClassInfo <- Future(entityInfo.classInfoMap(internalCreateResource.resourceClassIri))
 
-      knoraPropertyCardinalities: Map[SmartIri, Cardinality.KnoraCardinalityInfo] = resourceClassInfo.allCardinalities
+      knoraPropertyCardinalities: Map[SmartIri, Cardinality.KnoraCardinalityInfo] = resourceClassInfo.allCardinalities.view
         .filterKeys(resourceClassInfo.knoraResourceProperties)
+        .toMap
 
       _ = internalCreateResource.values.foreach {
         case (propertyIri: SmartIri, valuesForProperty: Seq[CreateValueInNewResourceV2]) =>
@@ -874,7 +895,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         resourceIri -> resourceToCreate.resourceClassIri
       }
       .toMap
+      .view
       .filterKeys(newTargets)
+      .toMap
 
     for {
       // Get information about the existing resources that are targets of links.
@@ -2264,6 +2287,149 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       )
   }
 
+  def getIIIFManifestV2(request: ResourceIIIFManifestGetRequestV2): Future[ResourceIIIFManifestGetResponseV2] = {
+    // The implementation here is experimental. If we had a way of streaming the canvas URLs to the IIIF viewer,
+    // it would be better to write the Gravsearch query differently, so that ?representation was the main resource.
+    // Then the Gravsearch query could return pages of results.
+    //
+    // The manifest generated here also needs to be tested with a IIIF viewer. It's not clear what some of the IRIs
+    // in the manifest should be.
+
+    for {
+      // Make a Gravsearch query from a template.
+      gravsearchQueryForIncomingLinks: String <- Future(
+        org.knora.webapi.messages.twirl.queries.gravsearch.txt
+          .getIncomingImageLinks(
+            resourceIri = request.resourceIri
+          )
+          .toString())
+
+      // Run the query.
+
+      parsedGravsearchQuery <- FastFuture.successful(GravsearchParser.parseQuery(gravsearchQueryForIncomingLinks))
+      searchResponse <- (responderManager ? GravsearchRequestV2(
+        constructQuery = parsedGravsearchQuery,
+        targetSchema = ApiV2Complex,
+        schemaOptions = SchemaOptions.ForStandoffSeparateFromTextValues,
+        featureFactoryConfig = request.featureFactoryConfig,
+        requestingUser = request.requestingUser
+      )).mapTo[ReadResourcesSequenceV2]
+
+      resource: ReadResourceV2 = searchResponse.toResource(request.resourceIri)
+
+      incomingLinks: Seq[ReadValueV2] = resource.values
+        .getOrElse(OntologyConstants.KnoraBase.HasIncomingLinkValue.toSmartIri, Seq.empty)
+
+      representations: Seq[ReadResourceV2] = incomingLinks.collect {
+        case readLinkValueV2: ReadLinkValueV2 => readLinkValueV2.valueContent.nestedResource
+      }.flatten
+    } yield
+      ResourceIIIFManifestGetResponseV2(
+        JsonLDDocument(
+          body = JsonLDObject(
+            Map(
+              JsonLDKeywords.CONTEXT -> JsonLDString("http://iiif.io/api/presentation/3/context.json"),
+              "id" -> JsonLDString(s"${request.resourceIri}/manifest"), // Is this IRI OK?
+              "type" -> JsonLDString("Manifest"),
+              "label" -> JsonLDObject(
+                Map(
+                  "en" -> JsonLDArray(
+                    Seq(
+                      JsonLDString(resource.label)
+                    )
+                  )
+                )
+              ),
+              "behavior" -> JsonLDArray(
+                Seq(
+                  JsonLDString("paged")
+                )
+              ),
+              "items" -> JsonLDArray(
+                representations.map { representation: ReadResourceV2 =>
+                  val imageValue: ReadValueV2 = representation.values
+                    .getOrElse(
+                      OntologyConstants.KnoraBase.HasStillImageFileValue.toSmartIri,
+                      throw InconsistentRepositoryDataException(
+                        s"Representation ${representation.resourceIri} has no still image file value")
+                    )
+                    .head
+
+                  val imageValueContent: StillImageFileValueContentV2 = imageValue.valueContent match {
+                    case stillImageFileValueContentV2: StillImageFileValueContentV2 => stillImageFileValueContentV2
+                    case _                                                          => throw AssertionException("Expected a StillImageFileValueContentV2")
+                  }
+
+                  val fileUrl: String =
+                    imageValueContent.makeFileUrl(projectADM = representation.projectADM, settings = settings)
+
+                  JsonLDObject(
+                    Map(
+                      "id" -> JsonLDString(s"${representation.resourceIri}/canvas"), // Is this IRI OK?
+                      "type" -> JsonLDString("Canvas"),
+                      "label" -> JsonLDObject(
+                        Map(
+                          "en" -> JsonLDArray(
+                            Seq(
+                              JsonLDString(representation.label)
+                            )
+                          )
+                        )
+                      ),
+                      "height" -> JsonLDInt(imageValueContent.dimY),
+                      "width" -> JsonLDInt(imageValueContent.dimX),
+                      "items" -> JsonLDArray(
+                        Seq(
+                          JsonLDObject(
+                            Map(
+                              "id" -> JsonLDString(s"${imageValue.valueIri}/image"), // Is this IRI OK?
+                              "type" -> JsonLDString("AnnotationPage"),
+                              "items" -> JsonLDArray(
+                                Seq(
+                                  JsonLDObject(
+                                    Map(
+                                      "id" -> JsonLDString(imageValue.valueIri),
+                                      "type" -> JsonLDString("Annotation"),
+                                      "motivation" -> JsonLDString("painting"),
+                                      "body" -> JsonLDObject(
+                                        Map(
+                                          "id" -> JsonLDString(fileUrl),
+                                          "type" -> JsonLDString("Image"),
+                                          "format" -> JsonLDString("image/jpeg"),
+                                          "height" -> JsonLDInt(imageValueContent.dimY),
+                                          "width" -> JsonLDInt(imageValueContent.dimX),
+                                          "service" -> JsonLDArray(
+                                            Seq(
+                                              JsonLDObject(
+                                                Map(
+                                                  "id" -> JsonLDString(settings.externalSipiIIIFGetUrl),
+                                                  "type" -> JsonLDString("ImageService3"),
+                                                  "profile" -> JsonLDString("level1")
+                                                )
+                                              )
+                                            )
+                                          )
+                                        )
+                                      )
+                                    )
+                                  )
+                                )
+                              )
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                }
+              )
+            )
+          ),
+          keepStructure = true
+        )
+      )
+  }
+
   /**
     * Returns the resources of a project with version history ordered by date.
     *
@@ -2403,8 +2569,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       resourceIri = resourceAtTimeOfCreation.resourceIri,
       resourceClassIri = resourceAtTimeOfCreation.resourceClassIri,
       label = Some(resourceAtTimeOfCreation.label),
-      values =
-        resourceAtTimeOfCreation.values.mapValues(readValues => readValues.map(readValue => readValue.valueContent)),
+      values = resourceAtTimeOfCreation.values.view
+        .mapValues(readValues => readValues.map(readValue => readValue.valueContent))
+        .toMap,
       projectADM = resourceAtTimeOfCreation.projectADM,
       permissions = Some(resourceAtTimeOfCreation.permissions),
       creationDate = Some(resourceAtTimeOfCreation.creationDate)

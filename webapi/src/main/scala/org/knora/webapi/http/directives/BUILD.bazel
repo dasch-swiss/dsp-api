@@ -10,9 +10,9 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/http/handler",
         "//webapi/src/main/scala/org/knora/webapi/settings",
-        "@maven//:ch_megard_akka_http_cors_2_12",
-        "@maven//:com_typesafe_akka_akka_actor_2_12",
-        "@maven//:com_typesafe_akka_akka_http_2_12",
-        "@maven//:com_typesafe_scala_logging_scala_logging_2_12",
+        "@maven//:ch_megard_akka_http_cors_2_13",
+        "@maven//:com_typesafe_akka_akka_actor_2_13",
+        "@maven//:com_typesafe_akka_akka_http_2_13",
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_13",
     ],
 )

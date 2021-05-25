@@ -58,7 +58,6 @@ import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util._
 
 import scala.annotation.tailrec
-import scala.collection.breakOut
 import scala.concurrent.Future
 
 /**
@@ -397,7 +396,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
         // Finally, replace each Iterable[IRI] with its size. That's the number of text values containing
         // standoff references to that IRI.
-        targetIris: Map[IRI, Int] = allResourceReferencesGrouped.mapValues(_.size)
+        targetIris: Map[IRI, Int] = allResourceReferencesGrouped.view.mapValues(_.size).toMap
 
         // If we're creating values as part of a bulk import, some standoff links could point to resources
         // that already exist in the triplestore, and others could point to resources that are being created
@@ -1424,7 +1423,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       versionMap: Map[IRI, Map[String, String]] = rows.map { row =>
         val valueIri = row.rowMap("value")
         valueIri -> row.rowMap
-      }(breakOut)
+      }.toMap
 
       // Order the result rows from most recent to oldest.
       versionRowsVector = versionMap2Vector(versionMap,

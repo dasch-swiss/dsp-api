@@ -9,10 +9,6 @@
             },
             "knora-api:isEditable": true,
             "knora-api:isResourceProperty": true,
-            "knora-api:subjectType": {
-                "@id": "knora-api:Region"
-            },
-            "rdfs:comment": "Specifies the color of a region.",
             "@type": "owl:ObjectProperty",
             "salsah-gui:guiAttribute": "ncolors=8",
             "knora-api:objectType": {
@@ -21,7 +17,11 @@
             "salsah-gui:guiElement": {
                 "@id": "salsah-gui:Colorpicker"
             },
-            "@id": "knora-api:hasColor"
+            "@id": "knora-api:hasColor",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Region"
+            },
+            "rdfs:comment": "Specifies the color of a region."
         }
     ],
     "knora-api:attachedToProject": {

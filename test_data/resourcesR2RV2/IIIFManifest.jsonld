@@ -1,0 +1,91 @@
+{
+    "id": "http://rdfh.ch/0001/thing-with-pages/manifest",
+    "@context": "http://iiif.io/api/presentation/3/context.json",
+    "label": {
+        "en": [
+            "thing with pages"
+        ]
+    },
+    "items": [
+        {
+            "height": 256,
+            "id": "http://rdfh.ch/0001/thing-page-1/canvas",
+            "type": "Canvas",
+            "width": 512,
+            "label": {
+                "en": [
+                    "page 1"
+                ]
+            },
+            "items": [
+                {
+                    "id": "http://rdfh.ch/0001/thing-page-1/values/1/image",
+                    "type": "AnnotationPage",
+                    "items": [
+                        {
+                            "id": "http://rdfh.ch/0001/thing-page-1/values/1",
+                            "type": "Annotation",
+                            "motivation": "painting",
+                            "body": {
+                                "format": "image/jpeg",
+                                "height": 256,
+                                "service": [
+                                    {
+                                        "id": "http://0.0.0.0:1024",
+                                        "type": "ImageService3",
+                                        "profile": "level1"
+                                    }
+                                ],
+                                "id": "http://0.0.0.0:1024/0001/page1.jp2/full/512,256/0/default.jpg",
+                                "type": "Image",
+                                "width": 512
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "height": 256,
+            "id": "http://rdfh.ch/0001/thing-page-2/canvas",
+            "type": "Canvas",
+            "width": 512,
+            "label": {
+                "en": [
+                    "page 2"
+                ]
+            },
+            "items": [
+                {
+                    "id": "http://rdfh.ch/0001/thing-page-2/values/1/image",
+                    "type": "AnnotationPage",
+                    "items": [
+                        {
+                            "id": "http://rdfh.ch/0001/thing-page-2/values/1",
+                            "type": "Annotation",
+                            "motivation": "painting",
+                            "body": {
+                                "format": "image/jpeg",
+                                "height": 256,
+                                "service": [
+                                    {
+                                        "id": "http://0.0.0.0:1024",
+                                        "type": "ImageService3",
+                                        "profile": "level1"
+                                    }
+                                ],
+                                "id": "http://0.0.0.0:1024/0001/page2.jp2/full/512,256/0/default.jpg",
+                                "type": "Image",
+                                "width": 512
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "behavior": [
+        "paged"
+    ],
+    "type": "Manifest"
+}

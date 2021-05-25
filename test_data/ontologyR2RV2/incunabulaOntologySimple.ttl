@@ -1,352 +1,414 @@
-@prefix incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#> .
+@prefix rdf:   <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix owl:   <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#> .
 
-<http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2> a owl:Ontology;
-  rdfs:label "The incunabula ontology" .
+incunabula:miscHasBook
+        a                      owl:ObjectProperty ;
+        rdfs:label             "Verbindung mit einem Buch" ;
+        rdfs:subPropertyOf     knora-api:hasLinkTo ;
+        knora-api:objectType   incunabula:book ;
+        knora-api:subjectType  incunabula:misc .
 
-incunabula:Sideband a owl:Class;
-  rdfs:comment "Randleistentyp";
-  rdfs:label "Randleiste";
-  rdfs:subClassOf knora-api:StillImageRepresentation, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:hasStillImageFile
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty incunabula:sbTitle
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:description
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty incunabula:sideband_comment
-    ] .
+incunabula:publoc  a           owl:DatatypeProperty ;
+        rdfs:comment           "Ort der Herausgabe" ;
+        rdfs:label             "Publication location" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:book .
 
-incunabula:sbTitle a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:Sideband;
-  rdfs:label "Title";
-  rdfs:subPropertyOf knora-api:hasValue, <http://purl.org/dc/terms/title> .
+incunabula:book  a              owl:Class ;
+        rdfs:comment            "Diese Resource-Klasse beschreibt ein Buch" ;
+        rdfs:label              "Book" ;
+        rdfs:subClassOf         knora-api:Resource ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      incunabula:book_comment
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:publoc
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  1 ;
+                                  owl:onProperty      incunabula:title
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      incunabula:note
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:description
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   knora-api:arkUrl
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      incunabula:hasAuthor
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:location
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      knora-api:hasStandoffLinkTo
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      incunabula:publisher
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      knora-api:hasIncomingLink
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:url
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   rdfs:label
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:physical_desc
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:pubdate
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      incunabula:citation
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   knora-api:versionArkUrl
+                                ] ;
+        knora-api:resourceIcon  "book.gif" .
 
-incunabula:description a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType knora-api:Resource;
-  rdfs:comment "Description";
-  rdfs:label "Description";
-  rdfs:subPropertyOf knora-api:hasValue, <http://purl.org/dc/terms/description> .
+incunabula:url  a              owl:DatatypeProperty ;
+        rdfs:comment           "Uniform Resource Identifier" ;
+        rdfs:label             "URI" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:book .
 
-incunabula:sideband_comment a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:Sideband;
-  rdfs:comment "Unstrukturierte Bemerkungen zu einem Objekt";
-  rdfs:label "Kommentar (Richtext)";
-  rdfs:subPropertyOf knora-api:hasComment .
+incunabula:Sideband  a   owl:Class ;
+        rdfs:comment     "Randleistentyp" ;
+        rdfs:label       "Randleiste" ;
+        rdfs:subClassOf  knora-api:StillImageRepresentation ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   incunabula:sbTitle
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasIncomingLink
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      incunabula:sideband_comment
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   rdfs:label
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:hasStillImageFile
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:maxCardinality  1 ;
+                           owl:onProperty      incunabula:description
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:arkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasStandoffLinkTo
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:versionArkUrl
+                         ] .
 
-incunabula:book a owl:Class;
-  knora-api:resourceIcon "book.gif";
-  rdfs:comment "Diese Resource-Klasse beschreibt ein Buch";
-  rdfs:label "Book";
-  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ], [ a owl:Restriction;
-      owl:minCardinality 1;
-      owl:onProperty incunabula:title
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:description
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty incunabula:hasAuthor
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty incunabula:publisher
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:publoc
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty incunabula:citation
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:pubdate
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:location
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:url
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:physical_desc
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty incunabula:note
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty incunabula:book_comment
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ] .
+incunabula:pagenum  a          owl:DatatypeProperty ;
+        rdfs:comment           "A distinct identification of a book page" ;
+        rdfs:label             "Page identifier" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:page .
 
-incunabula:title a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:book;
-  rdfs:comment "Titel";
-  rdfs:label "Title";
-  rdfs:subPropertyOf knora-api:hasValue, <http://purl.org/dc/terms/title> .
+incunabula:partOf  a           owl:ObjectProperty ;
+        rdfs:comment           "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches." ;
+        rdfs:label             "is a part of" ;
+        rdfs:subPropertyOf     knora-api:isPartOf ;
+        knora-api:objectType   incunabula:book ;
+        knora-api:subjectType  incunabula:page .
 
-incunabula:hasAuthor a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:book;
-  rdfs:comment "Erzeuger/Autor";
-  rdfs:label "Creator";
-  rdfs:subPropertyOf knora-api:hasValue, <http://purl.org/dc/terms/creator> .
+incunabula:location  a         owl:DatatypeProperty ;
+        rdfs:comment           "Der Ort wo sich das physische Original befindet" ;
+        rdfs:label             "Location" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:book .
 
-incunabula:publisher a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:book;
-  rdfs:comment "Publishing is the process of production and dissemination of literature or information – the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)";
-  rdfs:label "Publisher";
-  rdfs:subPropertyOf knora-api:hasValue, <http://purl.org/dc/terms/publisher> .
+<http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2>
+        a           owl:Ontology ;
+        rdfs:label  "The incunabula ontology" .
 
-incunabula:publoc a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:book;
-  rdfs:comment "Ort der Herausgabe";
-  rdfs:label "Publication location";
-  rdfs:subPropertyOf knora-api:hasValue .
+incunabula:miscHasGeometry
+        a                      owl:DatatypeProperty ;
+        rdfs:label             "Geometrie" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   knora-api:Geom ;
+        knora-api:subjectType  incunabula:misc .
 
-incunabula:citation a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType knora-api:Resource;
-  rdfs:comment "Stellt einen Verweis dar.";
-  rdfs:label "Citation/reference";
-  rdfs:subPropertyOf knora-api:hasValue .
+incunabula:hasAuthor  a        owl:DatatypeProperty ;
+        rdfs:comment           "Erzeuger/Autor" ;
+        rdfs:label             "Creator" ;
+        rdfs:subPropertyOf     <http://purl.org/dc/terms/creator> , knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:book .
 
-incunabula:pubdate a owl:DatatypeProperty;
-  knora-api:objectType knora-api:Date;
-  knora-api:subjectType incunabula:book;
-  rdfs:comment "Datum der Herausgabe";
-  rdfs:label "Datum der Herausgabe";
-  rdfs:subPropertyOf knora-api:hasValue, <http://purl.org/dc/terms/date> .
+incunabula:sbTitle  a          owl:DatatypeProperty ;
+        rdfs:label             "Title" ;
+        rdfs:subPropertyOf     <http://purl.org/dc/terms/title> , knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:Sideband .
 
-incunabula:location a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:book;
-  rdfs:comment "Der Ort wo sich das physische Original befindet";
-  rdfs:label "Location";
-  rdfs:subPropertyOf knora-api:hasValue .
+incunabula:seqnum  a           owl:DatatypeProperty ;
+        rdfs:comment           "This property stands for the position within a set of rdered items (resoucres)" ;
+        rdfs:label             "Sequence number" ;
+        rdfs:subPropertyOf     knora-api:seqnum ;
+        knora-api:objectType   xsd:integer ;
+        knora-api:subjectType  incunabula:page .
 
-incunabula:url a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:book;
-  rdfs:comment "Uniform Resource Identifier";
-  rdfs:label "URI";
-  rdfs:subPropertyOf knora-api:hasValue .
+incunabula:miscHasColor
+        a                      owl:DatatypeProperty ;
+        rdfs:label             "Farbe" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   knora-api:Color ;
+        knora-api:subjectType  incunabula:misc .
 
-incunabula:physical_desc a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:book;
-  rdfs:comment "Generelle physische Beschreibung des Objektes wie Material, Grösse etc.";
-  rdfs:label "Physical description";
-  rdfs:subPropertyOf knora-api:hasValue .
+incunabula:page_comment
+        a                      owl:DatatypeProperty ;
+        rdfs:comment           "Unstrukturierte Bemerkungen zu einem Objekt" ;
+        rdfs:label             "Comment" ;
+        rdfs:subPropertyOf     knora-api:hasComment ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:page .
 
-incunabula:note a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:book;
-  rdfs:comment "A note concerning the object";
-  rdfs:label "Note";
-  rdfs:subPropertyOf knora-api:hasValue .
+incunabula:hasLeftSideband
+        a                      owl:ObjectProperty ;
+        rdfs:comment           "Verweis auf einen Randleistentyp" ;
+        rdfs:label             "Randleistentyp links" ;
+        rdfs:subPropertyOf     knora-api:hasLinkTo ;
+        knora-api:objectType   incunabula:Sideband ;
+        knora-api:subjectType  incunabula:page .
 
-incunabula:book_comment a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:book;
-  rdfs:comment "Unstrukturierte Bemerkungen zu einem Objekt";
-  rdfs:label "Comment";
-  rdfs:subPropertyOf knora-api:hasComment .
+incunabula:hasRightSideband
+        a                      owl:ObjectProperty ;
+        rdfs:comment           "Verweis auf einen Randleistentyp" ;
+        rdfs:label             "Randleistentyp rechts" ;
+        rdfs:subPropertyOf     knora-api:hasLinkTo ;
+        knora-api:objectType   incunabula:Sideband ;
+        knora-api:subjectType  incunabula:page .
 
-incunabula:hasLeftSideband a owl:ObjectProperty;
-  knora-api:objectType incunabula:Sideband;
-  knora-api:subjectType incunabula:page;
-  rdfs:comment "Verweis auf einen Randleistentyp";
-  rdfs:label "Randleistentyp links";
-  rdfs:subPropertyOf knora-api:hasLinkTo .
+incunabula:book_comment
+        a                      owl:DatatypeProperty ;
+        rdfs:comment           "Unstrukturierte Bemerkungen zu einem Objekt" ;
+        rdfs:label             "Comment" ;
+        rdfs:subPropertyOf     knora-api:hasComment ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:book .
 
-incunabula:page a owl:Class;
-  knora-api:resourceIcon "page.gif";
-  rdfs:comment "A page is a part of a book";
-  rdfs:label "Page";
-  rdfs:subClassOf knora-api:StillImageRepresentation, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:hasStillImageFile
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:pagenum
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:description
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty incunabula:partOf
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:seqnum
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty incunabula:citation
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty incunabula:page_comment
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty incunabula:origname
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:hasLeftSideband
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:hasRightSideband
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty incunabula:transcription
-    ] .
+incunabula:description
+        a                      owl:DatatypeProperty ;
+        rdfs:comment           "Description" ;
+        rdfs:label             "Description" ;
+        rdfs:subPropertyOf     <http://purl.org/dc/terms/description> , knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  knora-api:Resource .
 
-incunabula:hasRightSideband a owl:ObjectProperty;
-  knora-api:objectType incunabula:Sideband;
-  knora-api:subjectType incunabula:page;
-  rdfs:comment "Verweis auf einen Randleistentyp";
-  rdfs:label "Randleistentyp rechts";
-  rdfs:subPropertyOf knora-api:hasLinkTo .
+incunabula:sideband_comment
+        a                      owl:DatatypeProperty ;
+        rdfs:comment           "Unstrukturierte Bemerkungen zu einem Objekt" ;
+        rdfs:label             "Kommentar (Richtext)" ;
+        rdfs:subPropertyOf     knora-api:hasComment ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:Sideband .
 
-incunabula:misc a owl:Class;
-  rdfs:comment "A fake resource class that only has optional properties";
-  rdfs:label "Sonstiges";
-  rdfs:subClassOf knora-api:Resource, [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:arkUrl
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasIncomingLink
-    ], [ a owl:Restriction;
-      owl:minCardinality 0;
-      owl:onProperty knora-api:hasStandoffLinkTo
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty knora-api:versionArkUrl
-    ], [ a owl:Restriction;
-      owl:cardinality 1;
-      owl:onProperty rdfs:label
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:miscHasColor
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:miscHasGeometry
-    ], [ a owl:Restriction;
-      owl:maxCardinality 1;
-      owl:onProperty incunabula:miscHasBook
-    ] .
+incunabula:transcription
+        a                      owl:DatatypeProperty ;
+        rdfs:comment           "Transkription" ;
+        rdfs:label             "Transkription" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:page .
 
-incunabula:miscHasColor a owl:DatatypeProperty;
-  knora-api:objectType knora-api:Color;
-  knora-api:subjectType incunabula:misc;
-  rdfs:label "Farbe";
-  rdfs:subPropertyOf knora-api:hasValue .
+incunabula:physical_desc
+        a                      owl:DatatypeProperty ;
+        rdfs:comment           "Generelle physische Beschreibung des Objektes wie Material, Grösse etc." ;
+        rdfs:label             "Physical description" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:book .
 
-incunabula:miscHasGeometry a owl:DatatypeProperty;
-  knora-api:objectType knora-api:Geom;
-  knora-api:subjectType incunabula:misc;
-  rdfs:label "Geometrie";
-  rdfs:subPropertyOf knora-api:hasValue .
+incunabula:origname  a         owl:DatatypeProperty ;
+        rdfs:comment           "Der originale Dateiname" ;
+        rdfs:label             "Original filename" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:page .
 
-incunabula:miscHasBook a owl:ObjectProperty;
-  knora-api:objectType incunabula:book;
-  knora-api:subjectType incunabula:misc;
-  rdfs:label "Verbindung mit einem Buch";
-  rdfs:subPropertyOf knora-api:hasLinkTo .
+incunabula:note  a             owl:DatatypeProperty ;
+        rdfs:comment           "A note concerning the object" ;
+        rdfs:label             "Note" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:book .
 
-incunabula:origname a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:page;
-  rdfs:comment "Der originale Dateiname";
-  rdfs:label "Original filename";
-  rdfs:subPropertyOf knora-api:hasValue .
+incunabula:citation  a         owl:DatatypeProperty ;
+        rdfs:comment           "Stellt einen Verweis dar." ;
+        rdfs:label             "Citation/reference" ;
+        rdfs:subPropertyOf     knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  knora-api:Resource .
 
-incunabula:pagenum a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:page;
-  rdfs:comment "A distinct identification of a book page";
-  rdfs:label "Page identifier";
-  rdfs:subPropertyOf knora-api:hasValue .
+incunabula:title  a            owl:DatatypeProperty ;
+        rdfs:comment           "Titel" ;
+        rdfs:label             "Title" ;
+        rdfs:subPropertyOf     <http://purl.org/dc/terms/title> , knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:book .
 
-incunabula:partOf a owl:ObjectProperty;
-  knora-api:objectType incunabula:book;
-  knora-api:subjectType incunabula:page;
-  rdfs:comment "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches.";
-  rdfs:label "is a part of";
-  rdfs:subPropertyOf knora-api:isPartOf .
+incunabula:misc  a       owl:Class ;
+        rdfs:comment     "A fake resource class that only has optional properties" ;
+        rdfs:label       "Sonstiges" ;
+        rdfs:subClassOf  knora-api:Resource ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:maxCardinality  1 ;
+                           owl:onProperty      incunabula:miscHasBook
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasStandoffLinkTo
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:arkUrl
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:maxCardinality  1 ;
+                           owl:onProperty      incunabula:miscHasColor
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:minCardinality  0 ;
+                           owl:onProperty      knora-api:hasIncomingLink
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   rdfs:label
+                         ] ;
+        rdfs:subClassOf  [ a                   owl:Restriction ;
+                           owl:maxCardinality  1 ;
+                           owl:onProperty      incunabula:miscHasGeometry
+                         ] ;
+        rdfs:subClassOf  [ a                owl:Restriction ;
+                           owl:cardinality  1 ;
+                           owl:onProperty   knora-api:versionArkUrl
+                         ] .
 
-incunabula:seqnum a owl:DatatypeProperty;
-  knora-api:objectType xsd:integer;
-  knora-api:subjectType incunabula:page;
-  rdfs:comment "This property stands for the position within a set of rdered items (resoucres)";
-  rdfs:label "Sequence number";
-  rdfs:subPropertyOf knora-api:seqnum .
+incunabula:page  a              owl:Class ;
+        rdfs:comment            "A page is a part of a book" ;
+        rdfs:label              "Page" ;
+        rdfs:subClassOf         knora-api:StillImageRepresentation ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:hasRightSideband
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:seqnum
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   rdfs:label
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   incunabula:origname
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      knora-api:hasIncomingLink
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:description
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:pagenum
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   knora-api:versionArkUrl
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:maxCardinality  1 ;
+                                  owl:onProperty      incunabula:hasLeftSideband
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      incunabula:transcription
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   knora-api:hasStillImageFile
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   knora-api:arkUrl
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      incunabula:citation
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      knora-api:hasStandoffLinkTo
+                                ] ;
+        rdfs:subClassOf         [ a                   owl:Restriction ;
+                                  owl:minCardinality  0 ;
+                                  owl:onProperty      incunabula:page_comment
+                                ] ;
+        rdfs:subClassOf         [ a                owl:Restriction ;
+                                  owl:cardinality  1 ;
+                                  owl:onProperty   incunabula:partOf
+                                ] ;
+        knora-api:resourceIcon  "page.gif" .
 
-incunabula:page_comment a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:page;
-  rdfs:comment "Unstrukturierte Bemerkungen zu einem Objekt";
-  rdfs:label "Comment";
-  rdfs:subPropertyOf knora-api:hasComment .
+incunabula:publisher  a        owl:DatatypeProperty ;
+        rdfs:comment           "Publishing is the process of production and dissemination of literature or information – the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)" ;
+        rdfs:label             "Publisher" ;
+        rdfs:subPropertyOf     <http://purl.org/dc/terms/publisher> , knora-api:hasValue ;
+        knora-api:objectType   xsd:string ;
+        knora-api:subjectType  incunabula:book .
 
-incunabula:transcription a owl:DatatypeProperty;
-  knora-api:objectType xsd:string;
-  knora-api:subjectType incunabula:page;
-  rdfs:comment "Transkription";
-  rdfs:label "Transkription";
-  rdfs:subPropertyOf knora-api:hasValue .
+incunabula:pubdate  a          owl:DatatypeProperty ;
+        rdfs:comment           "Datum der Herausgabe" ;
+        rdfs:label             "Datum der Herausgabe" ;
+        rdfs:subPropertyOf     <http://purl.org/dc/terms/date> , knora-api:hasValue ;
+        knora-api:objectType   knora-api:Date ;
+        knora-api:subjectType  incunabula:book .

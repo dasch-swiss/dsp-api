@@ -444,7 +444,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     val saxParser = saxParserFactory.newSAXParser()
 
     val nodes: Elem = try {
-      XML.withSAXParser(saxParser).loadString(xmlStrWithSeparator.toString)
+      XML.withSAXParser(saxParser).loadString(xmlStrWithSeparator)
     } catch {
       case e: Exception => throw StandoffInternalException(s"XML processing error: ${e.getMessage}", e, log)
     }
@@ -457,7 +457,8 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     if (finishedConversionState.clixStartMilestones.nonEmpty) {
       val missingEndTags = finishedConversionState.clixStartMilestones
         .map {
-          case (startTagID, startTag) => s"<${startTag.tagName} $XmlClixStartIdAttrName=${'"'}$startTagID${'"'}>"
+          case (startTagID: String, startTag: ClixMilestoneTag) =>
+            s"<${startTag.tagName} $XmlClixStartIdAttrName=${'"'}$startTagID${'"'}>"
         }
         .mkString(", ")
 
@@ -571,7 +572,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
     * @return the differences between the two texts.
     */
   def makeStandoffDiffs(baseText: String, derivedText: String): Seq[StandoffDiff] = {
-    import scala.collection.JavaConverters._
+    import scala.jdk.CollectionConverters._
 
     case class DiffConversionState(standoffDiffs: Vector[StandoffDiff] = Vector.empty[StandoffDiff],
                                    basePos: Int = 0,
@@ -579,7 +580,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
 
     val diffList = diffMatchPatch.diff_main(baseText, derivedText)
     diffMatchPatch.diff_cleanupSemantic(diffList)
-    val diffs: Seq[Diff] = diffList.asScala
+    val diffs: Seq[Diff] = diffList.asScala.toSeq
 
     val conversionResult = diffs.foldLeft(DiffConversionState()) {
       case (conversionState, diff) =>
@@ -874,7 +875,7 @@ class XMLToStandoffUtil(xmlNamespaces: Map[String, IRI] = Map.empty[IRI, String]
           currentPos = acc.currentPos + textData.length
         )
 
-      case (acc, other) =>
+      case (_, other) =>
         throw new Exception(s"Got unexpected XML node class ${other.getClass.getName}")
     }
   }

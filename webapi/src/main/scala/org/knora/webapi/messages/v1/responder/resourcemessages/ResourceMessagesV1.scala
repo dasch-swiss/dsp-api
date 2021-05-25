@@ -39,8 +39,6 @@ import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import org.knora.webapi.messages.v2.responder.UpdateResultInProject
 import spray.json._
 
-import scala.collection.breakOut
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
 
@@ -808,7 +806,7 @@ object SalsahGuiConversions {
   /**
     * A [[Map]] of Knora IRIs to SALSAH GUI element names.
     */
-  private val iris2SalsahGuiElements = Map(
+  private val iris2SalsahGuiElements: Map[IRI, IRI] = Map(
     OntologyConstants.SalsahGui.SimpleText -> "text",
     OntologyConstants.SalsahGui.Textarea -> "textarea",
     OntologyConstants.SalsahGui.Pulldown -> "pulldown",
@@ -1022,7 +1020,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
           list2JsonOption("value_rights", propertyV1.value_rights, () => propertyV1.value_rights.toJson) ++
           list2JsonOption("locations", propertyV1.locations, () => propertyV1.locations.toJson)
         (propertyV1.pid, JsObject(fields))
-      }(breakOut)
+      }.toMap
 
       JsObject(properties)
     }
@@ -1059,7 +1057,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
           // Don't generate JSON for these lists if they're empty.
           list2JsonOption("values", propertyGetV1.values, () => propertyGetV1.values.toJson)
         (propertyGetV1.pid, JsObject(fields))
-      }(breakOut)
+      }.toMap
 
       JsObject(properties)
     }
@@ -1145,7 +1143,7 @@ object ResourceV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
           // Don't generate JSON for these lists if they're empty.
           list2JsonOption("values", propertyGetV1.values, () => propertyGetV1.values.toJson)
         (propertyGetV1.pid, JsObject(fields))
-      }(breakOut)
+      }.toMap
 
       JsObject(
         properties ++ Map("res_id" -> propsGetForRegionV1.res_id.toJson,

@@ -39,7 +39,6 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
 
 import scala.annotation.tailrec
-import scala.collection.breakOut
 import scala.concurrent.Future
 
 /**
@@ -784,7 +783,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       // A Map of node IRIs to query result rows.
       nodeMap: Map[IRI, Map[String, String]] = nodePathResponse.results.bindings.map { row =>
         row.rowMap("node") -> row.rowMap
-      }(breakOut)
+      }.toMap
 
       // A Map of child node IRIs to parent node IRIs.
       parentMap: Map[IRI, IRI] = nodePathResponse.results.bindings.foldLeft(Map.empty[IRI, IRI]) {
