@@ -17,21 +17,21 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.routing.v2
+package org.knora.webapi
+package routing.v2
 
-import java.util.UUID
+import exceptions.BadRequestException
+import feature.FeatureFactoryConfig
+import messages.IriConversions._
+import messages.util.rdf.{JsonLDDocument, JsonLDUtil}
+import messages.v2.responder.ontologymessages._
+import messages.{OntologyConstants, SmartIri}
+import routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
-import org.knora.webapi._
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
-import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
-import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 
+import java.util.UUID
 import scala.concurrent.Future
 
 object OntologiesRouteV2 {
@@ -60,17 +60,21 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       createClass(featureFactoryConfig) ~
       updateClass(featureFactoryConfig) ~
       addCardinalities(featureFactoryConfig) ~
+      canReplaceCardinalities(featureFactoryConfig) ~
       replaceCardinalities(featureFactoryConfig) ~
       changeGuiOrder(featureFactoryConfig) ~
       getClasses(featureFactoryConfig) ~
+      canDeleteClass(featureFactoryConfig) ~
       deleteClass(featureFactoryConfig) ~
       deleteOntologyComment(featureFactoryConfig) ~
       createProperty(featureFactoryConfig) ~
       updatePropertyLabelsOrComments(featureFactoryConfig) ~
       updatePropertyGuiElement(featureFactoryConfig) ~
       getProperties(featureFactoryConfig) ~
+      canDeleteProperty(featureFactoryConfig) ~
       deleteProperty(featureFactoryConfig) ~
       createOntology(featureFactoryConfig) ~
+      canDeleteOntology(featureFactoryConfig) ~
       deleteOntology(featureFactoryConfig)
 
   private def dereferenceOntologyIri(featureFactoryConfig: FeatureFactoryConfig): Route = path("ontology" / Segments) {
@@ -401,6 +405,41 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
 
+  private def canReplaceCardinalities(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(OntologiesBasePath / "canreplacecardinalities" / Segment) { classIriStr: IRI =>
+      get { requestContext =>
+        val classIri = classIriStr.toSmartIri
+        stringFormatter.checkExternalOntologyName(classIri)
+
+        if (!classIri.getOntologySchema.contains(ApiV2Complex)) {
+          throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
+        }
+
+        val requestMessageFuture: Future[CanChangeCardinalitiesRequestV2] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          CanChangeCardinalitiesRequestV2(
+            classIri = classIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
+
+        RouteUtilV2.runRdfRouteWithFuture(
+          requestMessageF = requestMessageFuture,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log,
+          targetSchema = ApiV2Complex,
+          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+        )
+      }
+    }
+
   private def replaceCardinalities(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(OntologiesBasePath / "cardinalities") {
       put {
@@ -548,6 +587,41 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
             schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
           )
         }
+      }
+    }
+
+  private def canDeleteClass(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(OntologiesBasePath / "candeleteclass" / Segment) { classIriStr: IRI =>
+      get { requestContext =>
+        val classIri = classIriStr.toSmartIri
+        stringFormatter.checkExternalOntologyName(classIri)
+
+        if (!classIri.getOntologySchema.contains(ApiV2Complex)) {
+          throw BadRequestException(s"Invalid class IRI for request: $classIriStr")
+        }
+
+        val requestMessageFuture: Future[CanDeleteClassRequestV2] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          CanDeleteClassRequestV2(
+            classIri = classIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
+
+        RouteUtilV2.runRdfRouteWithFuture(
+          requestMessageF = requestMessageFuture,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log,
+          targetSchema = ApiV2Complex,
+          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+        )
       }
     }
 
@@ -845,6 +919,41 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
 
+  private def canDeleteProperty(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(OntologiesBasePath / "candeleteproperty" / Segment) { propertyIriStr: IRI =>
+      get { requestContext =>
+        val propertyIri = propertyIriStr.toSmartIri
+        stringFormatter.checkExternalOntologyName(propertyIri)
+
+        if (!propertyIri.getOntologySchema.contains(ApiV2Complex)) {
+          throw BadRequestException(s"Invalid class IRI for request: $propertyIriStr")
+        }
+
+        val requestMessageFuture: Future[CanDeletePropertyRequestV2] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          CanDeletePropertyRequestV2(
+            propertyIri = propertyIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
+
+        RouteUtilV2.runRdfRouteWithFuture(
+          requestMessageF = requestMessageFuture,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log,
+          targetSchema = ApiV2Complex,
+          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+        )
+      }
+    }
+
   private def deleteProperty(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(OntologiesBasePath / "properties" / Segments) { externalPropertyIris: List[IRI] =>
       delete { requestContext =>
@@ -936,6 +1045,41 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
   }
+
+  private def canDeleteOntology(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(OntologiesBasePath / "candeleteontology" / Segment) { ontologyIriStr: IRI =>
+      get { requestContext =>
+        val ontologyIri = ontologyIriStr.toSmartIri
+        stringFormatter.checkExternalOntologyName(ontologyIri)
+
+        if (!ontologyIri.getOntologySchema.contains(ApiV2Complex)) {
+          throw BadRequestException(s"Invalid ontology IRI for request: $ontologyIriStr")
+        }
+
+        val requestMessageFuture: Future[CanDeleteOntologyRequestV2] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield
+          CanDeleteOntologyRequestV2(
+            ontologyIri = ontologyIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
+
+        RouteUtilV2.runRdfRouteWithFuture(
+          requestMessageF = requestMessageFuture,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log,
+          targetSchema = ApiV2Complex,
+          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+        )
+      }
+    }
 
   private def deleteOntology(featureFactoryConfig: FeatureFactoryConfig): Route = path(OntologiesBasePath / Segment) {
     ontologyIriStr =>

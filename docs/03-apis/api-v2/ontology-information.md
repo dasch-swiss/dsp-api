@@ -967,7 +967,7 @@ and the request must have this additional boolean property:
 "knora-api:isShared" : true
 ```
 
-See [Shared Ontologies](knora-iris.md#shared-ontologies) for details about
+See [Shared Ontologies](../../02-knora-ontologies/introduction.md#shared-ontologies) for details about
 shared ontologies.
 
 A successful response will be a JSON-LD document providing only the
@@ -1050,6 +1050,23 @@ URL-encoded.
 
 A successful response will be a JSON-LD document containing a
 confirmation message.
+
+To check whether a property can be deleted:
+
+```
+HTTP GET to http://host/v2/ontologies/candeleteontology/ONTOLOGY_IRI
+```
+
+The response will look like this:
+
+```jsonld
+{
+    "knora-api:canDo": false,
+    "@context": {
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+    }
+}
+```
 
 ### Creating a Class Without Cardinalities
 
@@ -1558,6 +1575,23 @@ on the corresponding link value property is automatically added (see
 A successful response will be a JSON-LD document providing the new class
 definition (but not any of the other entities in the ontology).
 
+To check whether a class's cardinalities can be replaced:
+
+```
+HTTP GET to http://host/v2/ontologies/canreplacecardinalities/CLASS_IRI
+```
+
+The response will look like this:
+
+```jsonld
+{
+    "knora-api:canDo": false,
+    "@context": {
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+    }
+}
+```
+
 ### Changing the GUI Order of Cardinalities
 
 To change the GUI order of one or more cardinalities in a class:
@@ -1625,6 +1659,23 @@ will automatically be deleted.
 A successful response will be a JSON-LD document providing only the
 ontology's metadata.
 
+To check whether a property can be deleted:
+
+```
+HTTP GET to http://host/v2/ontologies/candeleteproperty/PROPERTY_IRI
+```
+
+The response will look like this:
+
+```jsonld
+{
+    "knora-api:canDo": false,
+    "@context": {
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+    }
+}
+```
+
 ### Deleting a Class
 
 A class can be deleted only if no other ontology entity refers to it,
@@ -1639,3 +1690,20 @@ URL-encoded.
 
 A successful response will be a JSON-LD document providing only the
 ontology's metadata.
+
+To check whether a class can be deleted:
+
+```
+HTTP GET to http://host/v2/ontologies/candeleteclass/CLASS_IRI
+```
+
+The response will look like this:
+
+```jsonld
+{
+    "knora-api:canDo": false,
+    "@context": {
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+    }
+}
+```

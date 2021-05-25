@@ -17,15 +17,15 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v2.responder
+package org.knora.webapi
+package messages.v2.responder
 
-import org.knora.webapi._
-import org.knora.webapi.exceptions.AssertionException
-import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.OntologyConstants
-import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.settings.KnoraSettingsImpl
+import exceptions.{AssertionException, BadRequestException}
+import feature.FeatureFactoryConfig
+import messages.OntologyConstants
+import messages.admin.responder.projectsmessages.ProjectADM
+import messages.util.rdf._
+import settings.KnoraSettingsImpl
 
 /**
   * A trait for Knora API V2 response messages.
@@ -165,6 +165,32 @@ case class SuccessResponseV2(message: String) extends KnoraJsonLDResponseV2 {
       ),
       context = JsonLDObject(
         Map(OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(ontologyPrefixExpansion))
+      )
+    )
+  }
+}
+
+/**
+  * Indicates whether an operation can be performed.
+  *
+  * @param canDo `true` if the operation can be performed.
+  */
+case class CanDoResponseV2(canDo: Boolean) extends KnoraJsonLDResponseV2 {
+  def toJsonLDDocument(targetSchema: ApiV2Schema,
+                       settings: KnoraSettingsImpl,
+                       schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+    if (targetSchema != ApiV2Complex) {
+      throw BadRequestException(s"Response is available only in the complex schema")
+    }
+
+    JsonLDDocument(
+      body = JsonLDObject(
+        Map(OntologyConstants.KnoraApiV2Complex.CanDo -> JsonLDBoolean(canDo))
+      ),
+      context = JsonLDObject(
+        Map(
+          OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> JsonLDString(
+            OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion))
       )
     )
   }

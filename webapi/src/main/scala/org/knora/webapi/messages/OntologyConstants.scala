@@ -17,10 +17,10 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages
+package org.knora.webapi
+package messages
 
-import org.knora.webapi._
-import org.knora.webapi.exceptions.InconsistentRepositoryDataException
+import exceptions.InconsistentRepositoryDataException
 
 /**
   * Contains string constants for IRIs from ontologies used by the application.
@@ -734,6 +734,7 @@ object OntologyConstants {
 
     val Result: IRI = KnoraApiV2PrefixExpansion + "result"
     val Error: IRI = KnoraApiV2PrefixExpansion + "error"
+    val CanDo: IRI = KnoraApiV2PrefixExpansion + "canDo"
     val MayHaveMoreResults: IRI = KnoraApiV2PrefixExpansion + "mayHaveMoreResults"
     val EventType: IRI = KnoraApiV2PrefixExpansion + "eventType"
     val EventBody: IRI = KnoraApiV2PrefixExpansion + "eventBody"

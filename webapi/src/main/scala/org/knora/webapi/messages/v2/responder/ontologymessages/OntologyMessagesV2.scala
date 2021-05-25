@@ -17,33 +17,33 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.messages.v2.responder.ontologymessages
+package org.knora.webapi
+package messages.v2.responder.ontologymessages
 
-import java.time.Instant
-import java.util.UUID
-
-import akka.actor.ActorRef
-import akka.event.LoggingAdapter
-import akka.util.Timeout
-import org.apache.commons.lang3.builder.HashCodeBuilder
-import org.knora.webapi._
-import org.knora.webapi.exceptions.{
+import exceptions.{
   AssertionException,
   BadRequestException,
   DataConversionException,
   InconsistentRepositoryDataException
 }
-import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.rdf._
-import org.knora.webapi.messages.v2.responder._
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.settings.KnoraSettingsImpl
+import feature.FeatureFactoryConfig
+import messages.IriConversions._
+import messages.admin.responder.usersmessages.UserADM
+import messages.store.triplestoremessages._
+import messages.util.rdf._
+import messages.v2.responder._
+import messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
+import messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import messages.{OntologyConstants, SmartIri, StringFormatter}
+import settings.KnoraSettingsImpl
 
+import akka.actor.ActorRef
+import akka.event.LoggingAdapter
+import akka.util.Timeout
+import org.apache.commons.lang3.builder.HashCodeBuilder
+
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
@@ -152,6 +152,18 @@ object CreateOntologyRequestV2 extends KnoraJsonLDRequestReaderV2[CreateOntology
     )
   }
 }
+
+/**
+  * Checks whether an ontology can be deleted. A successful response will be a [[CanDoResponseV2]].
+  *
+  * @param ontologyIri the ontology IRI.
+  * @param featureFactoryConfig the feature factory configuration.
+  * @param requestingUser the user making the request.
+  */
+case class CanDeleteOntologyRequestV2(ontologyIri: SmartIri,
+                                      featureFactoryConfig: FeatureFactoryConfig,
+                                      requestingUser: UserADM)
+    extends OntologiesResponderRequestV2
 
 /**
   * Requests that an ontology is deleted. All the entities in the ontology must be unused in data.
@@ -631,6 +643,18 @@ object AddCardinalitiesToClassRequestV2 extends KnoraJsonLDRequestReaderV2[AddCa
 }
 
 /**
+  * Checks whether the cardinalities of a class can be replaced. A successful response will be a [[CanDoResponseV2]].
+  *
+  * @param classIri the class IRI.
+  * @param featureFactoryConfig the feature factory configuration.
+  * @param requestingUser the user making the request.
+  */
+case class CanChangeCardinalitiesRequestV2(classIri: SmartIri,
+                                           featureFactoryConfig: FeatureFactoryConfig,
+                                           requestingUser: UserADM)
+    extends OntologiesResponderRequestV2
+
+/**
   * Requests the replacement of a class's cardinalities with new ones. A successful response will be a [[ReadOntologyV2]].
   *
   * @param classInfoContent     a [[ClassInfoContentV2]] containing the new cardinalities.
@@ -718,6 +742,18 @@ case class DeleteClassRequestV2(classIri: SmartIri,
     extends OntologiesResponderRequestV2
 
 /**
+  * Asks whether a class can be deleted. A successful response will be a [[CanDoResponseV2]].
+  *
+  * @param classIri             the IRI of the class to be deleted.
+  * @param featureFactoryConfig the feature factory configuration.
+  * @param requestingUser       the user making the request.
+  */
+case class CanDeleteClassRequestV2(classIri: SmartIri,
+                                   featureFactoryConfig: FeatureFactoryConfig,
+                                   requestingUser: UserADM)
+    extends OntologiesResponderRequestV2
+
+/**
   * Requests the deletion of a property. A successful response will be a [[ReadOntologyMetadataV2]].
   *
   * @param propertyIri          the IRI of the property to be deleted.
@@ -730,6 +766,18 @@ case class DeletePropertyRequestV2(propertyIri: SmartIri,
                                    apiRequestID: UUID,
                                    featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM)
+    extends OntologiesResponderRequestV2
+
+/**
+  * Asks whether a property can be deleted. A successful response will be a [[CanDoResponseV2]].
+  *
+  * @param propertyIri          the IRI of the property to be deleted.
+  * @param featureFactoryConfig the feature factory configuration.
+  * @param requestingUser       the user making the request.
+  */
+case class CanDeletePropertyRequestV2(propertyIri: SmartIri,
+                                      featureFactoryConfig: FeatureFactoryConfig,
+                                      requestingUser: UserADM)
     extends OntologiesResponderRequestV2
 
 /**
@@ -1784,7 +1832,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2])
     )
   }
 
-  private def generateJsonLD(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl): JsonLDDocument = {
+  private def generateJsonLD(targetSchema: ApiV2Schema): JsonLDDocument = {
     val knoraApiOntologyPrefixExpansion = targetSchema match {
       case ApiV2Simple  => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
       case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
@@ -1812,7 +1860,7 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2])
   def toJsonLDDocument(targetSchema: ApiV2Schema,
                        settings: KnoraSettingsImpl,
                        schemaOptions: Set[SchemaOption]): JsonLDDocument = {
-    toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
+    toOntologySchema(targetSchema).generateJsonLD(targetSchema)
   }
 }
 
@@ -3218,8 +3266,7 @@ case class PropertyInfoContentV2(propertyIri: SmartIri,
               // Yes. Is there a corresponding type in the API v2 simple ontology?
               if (OntologyConstants
                     .CorrespondingIris((InternalSchema, ApiV2Simple))
-                    .get(objectTypeObj.toString)
-                    .nonEmpty) {
+                    .contains(objectTypeObj.toString)) {
                 // Yes. The corresponding type must be a datatype, so make this a datatype property.
                 (predicates - rdfTypeIri) +
                   (rdfTypeIri -> PredicateInfoV2(

@@ -17,36 +17,32 @@
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.responders.v2
+package org.knora.webapi
+package responders.v2
 
-import java.time.Instant
+import exceptions._
+import feature.FeatureFactoryConfig
+import messages.IriConversions._
+import messages.StringFormatter.{SalsahGuiAttribute, SalsahGuiAttributeDefinition}
+import messages.admin.responder.projectsmessages.{ProjectGetRequestADM, ProjectGetResponseADM, ProjectIdentifierADM}
+import messages.admin.responder.usersmessages.UserADM
+import messages.store.triplestoremessages._
+import messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
+import messages.util.{ErrorHandlingMap, KnoraSystemInstances, OntologyUtil, ResponderData}
+import messages.v2.responder.{CanDoResponseV2, SuccessResponseV2}
+import messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import messages.v2.responder.ontologymessages._
+import messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import messages.{OntologyConstants, SmartIri}
+import responders.Responder.handleUnexpectedMessage
+import responders.{IriLocker, Responder}
+import util._
+import util.cache.CacheUtil
 
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
-import org.knora.webapi._
-import org.knora.webapi.exceptions._
-import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.StringFormatter.{SalsahGuiAttribute, SalsahGuiAttributeDefinition}
-import org.knora.webapi.messages.admin.responder.projectsmessages.{
-  ProjectGetRequestADM,
-  ProjectGetResponseADM,
-  ProjectIdentifierADM
-}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
-import org.knora.webapi.messages.util.{ErrorHandlingMap, KnoraSystemInstances, MessageUtil, OntologyUtil, ResponderData}
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
-import org.knora.webapi.messages.v2.responder.ontologymessages._
-import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
-import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.util._
-import org.knora.webapi.util.cache.CacheUtil
 
+import java.time.Instant
 import scala.collection.immutable
 import scala.concurrent.Future
 
@@ -143,18 +139,23 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       changeClassLabelsOrComments(changeClassLabelsOrCommentsRequest)
     case addCardinalitiesToClassRequest: AddCardinalitiesToClassRequestV2 =>
       addCardinalitiesToClass(addCardinalitiesToClassRequest)
+    case canChangeCardinalitiesRequest: CanChangeCardinalitiesRequestV2 =>
+      canChangeClassCardinalities(canChangeCardinalitiesRequest)
     case changeCardinalitiesRequest: ChangeCardinalitiesRequestV2 =>
       changeClassCardinalities(changeCardinalitiesRequest)
     case changeGuiOrderRequest: ChangeGuiOrderRequestV2 => changeGuiOrder(changeGuiOrderRequest)
+    case canDeleteClassRequest: CanDeleteClassRequestV2 => canDeleteClass(canDeleteClassRequest)
     case deleteClassRequest: DeleteClassRequestV2       => deleteClass(deleteClassRequest)
     case createPropertyRequest: CreatePropertyRequestV2 => createProperty(createPropertyRequest)
     case changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2 =>
       changePropertyLabelsOrComments(changePropertyLabelsOrCommentsRequest)
     case changePropertyGuiElementRequest: ChangePropertyGuiElementRequest =>
       changePropertyGuiElement(changePropertyGuiElementRequest)
-    case deletePropertyRequest: DeletePropertyRequestV2 => deleteProperty(deletePropertyRequest)
-    case deleteOntologyRequest: DeleteOntologyRequestV2 => deleteOntology(deleteOntologyRequest)
-    case other                                          => handleUnexpectedMessage(other, log, this.getClass.getName)
+    case canDeletePropertyRequest: CanDeletePropertyRequestV2 => canDeleteProperty(canDeletePropertyRequest)
+    case deletePropertyRequest: DeletePropertyRequestV2       => deleteProperty(deletePropertyRequest)
+    case canDeleteOntologyRequest: CanDeleteOntologyRequestV2 => canDeleteOntology(canDeleteOntologyRequest)
+    case deleteOntologyRequest: DeleteOntologyRequestV2       => deleteOntology(deleteOntologyRequest)
+    case other                                                => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
   /**
@@ -2852,7 +2853,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         _ <- hasCardinality match {
           // If there is, check that the class isn't used in data, and that it has no subclasses.
           case Some((propIri: SmartIri, cardinality: KnoraCardinalityInfo)) =>
-            isEntityUsed(
+            throwIfEntityIsUsed(
               entityIri = internalClassIri,
               errorFun = throw BadRequestException(
                 s"Cardinality ${cardinality.toString} for $propIri cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data or has a subclass"),
@@ -3179,6 +3180,38 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   }
 
   /**
+    * Checks whether a class's cardinalities can be replaced.
+    *
+    * @param canChangeCardinalitiesRequest the request message.
+    * @return a [[CanDoResponseV2]] indicating whether a class's cardinalities can be replaced.
+    */
+  private def canChangeClassCardinalities(
+      canChangeCardinalitiesRequest: CanChangeCardinalitiesRequestV2): Future[CanDoResponseV2] = {
+    val internalClassIri: SmartIri = canChangeCardinalitiesRequest.classIri.toOntologySchema(InternalSchema)
+    val internalOntologyIri: SmartIri = internalClassIri.getOntologyFromEntity
+
+    for {
+      cacheData <- getCacheData
+
+      ontology = cacheData.ontologies.getOrElse(
+        internalOntologyIri,
+        throw BadRequestException(
+          s"Ontology ${canChangeCardinalitiesRequest.classIri.getOntologyFromEntity} does not exist"))
+
+      _ = if (!ontology.classes.contains(internalClassIri)) {
+        throw BadRequestException(s"Class ${canChangeCardinalitiesRequest.classIri} does not exist")
+      }
+
+      userCanUpdateOntology <- canUserUpdateOntology(internalOntologyIri, canChangeCardinalitiesRequest.requestingUser)
+
+      classIsUsed <- isEntityUsed(
+        entityIri = internalClassIri,
+        ignoreKnoraConstraints = true // It's OK if a property refers to the class via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
+      )
+    } yield CanDoResponseV2(userCanUpdateOntology && !classIsUsed)
+  }
+
+  /**
     * Replaces a class's cardinalities with new ones.
     *
     * @param changeCardinalitiesRequest the request to add the cardinalities.
@@ -3220,7 +3253,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the class isn't used in data, and that it has no subclasses.
 
-        _ <- isEntityUsed(
+        _ <- throwIfEntityIsUsed(
           entityIri = internalClassIri,
           errorFun = throw BadRequestException(
             s"The cardinalities of class ${changeCardinalitiesRequest.classInfoContent.classIri} cannot be changed, because it is used in data or has a subclass"),
@@ -3372,6 +3405,32 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   }
 
   /**
+    * Checks whether a class can be deleted.
+    *
+    * @param canDeleteClassRequest the request message.
+    * @return a [[CanDoResponseV2]].
+    */
+  private def canDeleteClass(canDeleteClassRequest: CanDeleteClassRequestV2): Future[CanDoResponseV2] = {
+    val internalClassIri: SmartIri = canDeleteClassRequest.classIri.toOntologySchema(InternalSchema)
+    val internalOntologyIri: SmartIri = internalClassIri.getOntologyFromEntity
+
+    for {
+      cacheData <- getCacheData
+
+      ontology = cacheData.ontologies.getOrElse(
+        internalOntologyIri,
+        throw BadRequestException(s"Ontology ${canDeleteClassRequest.classIri.getOntologyFromEntity} does not exist"))
+
+      _ = if (!ontology.classes.contains(internalClassIri)) {
+        throw BadRequestException(s"Class ${canDeleteClassRequest.classIri} does not exist")
+      }
+
+      userCanUpdateOntology <- canUserUpdateOntology(internalOntologyIri, canDeleteClassRequest.requestingUser)
+      classIsUsed <- isEntityUsed(entityIri = internalClassIri)
+    } yield CanDoResponseV2(userCanUpdateOntology && !classIsUsed)
+  }
+
+  /**
     * Deletes a class.
     *
     * @param deleteClassRequest the request to delete the class.
@@ -3399,7 +3458,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the class isn't used in data or ontologies.
 
-        _ <- isEntityUsed(
+        _ <- throwIfEntityIsUsed(
           entityIri = internalClassIri,
           errorFun = throw BadRequestException(
             s"Class ${deleteClassRequest.classIri} cannot be deleted, because it is used in data or ontologies")
@@ -3483,6 +3542,38 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   }
 
   /**
+    * Checks whether a property can be deleted.
+    *
+    * @param canDeletePropertyRequest the request message.
+    * @return a [[CanDoResponseV2]] indicating whether the property can be deleted.
+    */
+  private def canDeleteProperty(canDeletePropertyRequest: CanDeletePropertyRequestV2): Future[CanDoResponseV2] = {
+    val internalPropertyIri = canDeletePropertyRequest.propertyIri.toOntologySchema(InternalSchema)
+    val internalOntologyIri = internalPropertyIri.getOntologyFromEntity
+
+    for {
+      cacheData <- getCacheData
+
+      ontology = cacheData.ontologies.getOrElse(
+        internalOntologyIri,
+        throw BadRequestException(
+          s"Ontology ${canDeletePropertyRequest.propertyIri.getOntologyFromEntity} does not exist"))
+
+      propertyDef: ReadPropertyInfoV2 = ontology.properties.getOrElse(
+        internalPropertyIri,
+        throw BadRequestException(s"Property ${canDeletePropertyRequest.propertyIri} does not exist"))
+
+      _ = if (propertyDef.isLinkValueProp) {
+        throw BadRequestException(
+          s"A link value property cannot be deleted directly; check the corresponding link property instead")
+      }
+
+      userCanUpdateOntology <- canUserUpdateOntology(internalOntologyIri, canDeletePropertyRequest.requestingUser)
+      propertyIsUsed <- isEntityUsed(internalPropertyIri)
+    } yield CanDoResponseV2(userCanUpdateOntology && !propertyIsUsed)
+  }
+
+  /**
     * Deletes a property. If the property is a link property, the corresponding link value property is also deleted.
     *
     * @param deletePropertyRequest the request to delete the property.
@@ -3520,7 +3611,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Check that the property isn't used in data or ontologies.
 
-        _ <- isEntityUsed(
+        _ <- throwIfEntityIsUsed(
           entityIri = internalPropertyIri,
           errorFun = throw BadRequestException(
             s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because it is used in data or ontologies")
@@ -3528,7 +3619,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         _ <- maybeInternalLinkValuePropertyIri match {
           case Some(internalLinkValuePropertyIri) =>
-            isEntityUsed(
+            throwIfEntityIsUsed(
               entityIri = internalLinkValuePropertyIri,
               errorFun = throw BadRequestException(
                 s"Property ${deletePropertyRequest.propertyIri} cannot be deleted, because the corresponding link value property, ${internalLinkValuePropertyIri
@@ -3615,7 +3706,56 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     } yield taskResult
   }
 
-  def deleteOntology(deleteOntologyRequest: DeleteOntologyRequestV2): Future[SuccessResponseV2] = {
+  /**
+    * Checks whether an ontology can be deleted.
+    *
+    * @param canDeleteOntologyRequest the request message.
+    * @return a [[CanDoResponseV2]] indicating whether an ontology can be deleted.
+    */
+  private def canDeleteOntology(canDeleteOntologyRequest: CanDeleteOntologyRequestV2): Future[CanDoResponseV2] = {
+    val internalOntologyIri: SmartIri = canDeleteOntologyRequest.ontologyIri.toOntologySchema(InternalSchema)
+
+    for {
+      cacheData <- getCacheData
+
+      ontology = cacheData.ontologies.getOrElse(
+        internalOntologyIri,
+        throw BadRequestException(
+          s"Ontology ${canDeleteOntologyRequest.ontologyIri.getOntologyFromEntity} does not exist"))
+
+      userCanUpdateOntology <- canUserUpdateOntology(internalOntologyIri, canDeleteOntologyRequest.requestingUser)
+      subjectsUsingOntology <- getSubjectsUsingOntology(ontology)
+    } yield CanDoResponseV2(userCanUpdateOntology && subjectsUsingOntology.isEmpty)
+  }
+
+  /**
+    * Gets the set of subjects that refer to an ontology or its entities.
+    *
+    * @param ontology the ontology.
+    * @return the set of subjects that refer to the ontology or its entities.
+    */
+  private def getSubjectsUsingOntology(ontology: ReadOntologyV2): Future[Set[IRI]] = {
+    for {
+      isOntologyUsedSparql <- Future(
+        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .isOntologyUsed(
+            triplestore = settings.triplestoreType,
+            ontologyNamedGraphIri = ontology.ontologyMetadata.ontologyIri,
+            classIris = ontology.classes.keySet,
+            propertyIris = ontology.properties.keySet
+          )
+          .toString())
+
+      isOntologyUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isOntologyUsedSparql))
+        .mapTo[SparqlSelectResult]
+
+      subjects = isOntologyUsedResponse.results.bindings.map { row =>
+        row.rowMap("s")
+      }.toSet
+    } yield subjects
+  }
+
+  private def deleteOntology(deleteOntologyRequest: DeleteOntologyRequestV2): Future[SuccessResponseV2] = {
     def makeTaskFuture(internalOntologyIri: SmartIri): Future[SuccessResponseV2] = {
       for {
         cacheData <- getCacheData
@@ -3636,30 +3776,13 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Check that none of the entities in the ontology are used in data or in other ontologies.
 
         ontology = cacheData.ontologies(internalOntologyIri)
+        subjectsUsingOntology: Set[IRI] <- getSubjectsUsingOntology(ontology)
 
-        isOntologyUsedSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-          .isOntologyUsed(
-            triplestore = settings.triplestoreType,
-            ontologyNamedGraphIri = internalOntologyIri,
-            classIris = ontology.classes.keySet,
-            propertyIris = ontology.properties.keySet
-          )
-          .toString()
-
-        isOntologyUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isOntologyUsedSparql))
-          .mapTo[SparqlSelectResult]
-
-        _ = if (isOntologyUsedResponse.results.bindings.nonEmpty) {
-          val subjects: Seq[String] = isOntologyUsedResponse.results.bindings
-            .map { row =>
-              row.rowMap("s")
-            }
-            .map(s => "<" + s + ">")
-            .toVector
-            .sorted
+        _ = if (subjectsUsingOntology.nonEmpty) {
+          val sortedSubjects: Seq[IRI] = subjectsUsingOntology.map(s => "<" + s + ">").toVector.sorted
 
           throw BadRequestException(
-            s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} cannot be deleted, because of subjects that refer to it: ${subjects
+            s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} cannot be deleted, because of subjects that refer to it: ${sortedSubjects
               .mkString(", ")}")
         }
 
@@ -5103,7 +5226,29 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   }
 
   /**
-    * Checks whether the user has permission to update an ontology.
+    * Checks whether the requesting user has permission to update an ontology.
+    *
+    * @param internalOntologyIri the internal IRI of the ontology.
+    * @param requestingUser      the user making the request.
+    * @return `true` if the user has permission to update the ontology
+    */
+  private def canUserUpdateOntology(internalOntologyIri: SmartIri, requestingUser: UserADM): Future[Boolean] = {
+    for {
+      cacheData <- getCacheData
+
+      projectIri = cacheData.ontologies
+        .getOrElse(
+          internalOntologyIri,
+          throw NotFoundException(s"Ontology ${internalOntologyIri.toOntologySchema(ApiV2Complex)} not found")
+        )
+        .ontologyMetadata
+        .projectIri
+        .get
+    } yield requestingUser.permissions.isProjectAdmin(projectIri.toString) || !requestingUser.permissions.isSystemAdmin
+  }
+
+  /**
+    * Throws an exception if the requesting user does not have permission to update an ontology.
     *
     * @param internalOntologyIri the internal IRI of the ontology.
     * @param requestingUser      the user making the request.
