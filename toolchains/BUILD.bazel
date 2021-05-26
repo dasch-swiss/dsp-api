@@ -14,6 +14,7 @@ scala_toolchain(
         "-unchecked",
         "-deprecation",
         "-Yresolve-term-conflict:package",
+        "-Ymacro-annotations",
         # "-language:experimental.macros",
         # "-Xplugin:paradise_2.12.13.jar",
         # "-Xshow-phases",

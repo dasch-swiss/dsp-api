@@ -28,11 +28,10 @@ def dependencies():
             "com.typesafe:config:1.3.3",
 
             # ZIO and friends
-            "dev.zio:zio_2.12:1.0.3",
-            "dev.zio:zio-json_2.12:0.1.4",
-            "dev.zio:zio-test_2.12:1.0.3",
-            "dev.zio:zio-test-junit_2.12:1.0.3",
-            # "org.scalamacros:paradise_2.12.13:2.1.1",
+            "dev.zio:zio_2.13:1.0.3",
+            "dev.zio:zio-json_2.13:0.1.4",
+            "dev.zio:zio-test_2.13:1.0.3",
+            "dev.zio:zio-test-junit_2.13:1.0.3",
 
             # EventStoreDB
             "com.eventstore:db-client-java:1.0.0",

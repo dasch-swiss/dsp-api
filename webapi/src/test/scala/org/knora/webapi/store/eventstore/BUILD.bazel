@@ -39,9 +39,9 @@ scala_junit_test(
         "@maven//:com_eventstore_db_client_java",
         "@maven//:com_fasterxml_jackson_core_jackson_annotations",
         "@maven//:io_perfmark_perfmark_api",
-        "@maven//:dev_zio_zio_2_12",
-        "@maven//:dev_zio_zio_test_2_12",
-        "@maven//:dev_zio_zio_test_junit_2_12",
+        "@maven//:dev_zio_zio_2_13",
+        "@maven//:dev_zio_zio_test_2_13",
+        "@maven//:dev_zio_zio_test_junit_2_13",
         "@maven//:junit_junit",
     ]
 )
