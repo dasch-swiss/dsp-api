@@ -41,7 +41,7 @@ scala_test(
 
 scala_test(
     name = "KnoraSipiIntegrationV1ITSpec",
-    size = "medium", # On Github CI it takes more than 60s!
+    size = "medium",  # On Github CI it takes more than 60s!
     srcs = [
         "KnoraSipiIntegrationV1ITSpec.scala",
     ],

@@ -4,11 +4,11 @@ load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar")
 
 filegroup(
     name = "scripts",
-    srcs = glob(["*.lua"])
+    srcs = glob(["*.lua"]),
 )
 
 pkg_tar(
     name = "sipi-scripts",
+    srcs = [":scripts"],
     package_dir = "/sipi/scripts",
-    srcs = [":scripts"]
 )

@@ -7,22 +7,22 @@ container_image(
     name = "image",
     base = "@sipi//image",
     env = {},
-    tars = [
-        "//sipi/scripts:sipi-scripts",
-    ],
     labels = {
         "MAINTAINER": "400790+subotic@users.noreply.github.com",
     },
     ports = ["1024/tcp"],
+    tars = [
+        "//sipi/scripts:sipi-scripts",
+    ],
 )
 
 container_push(
-   name = "push",
-   image = ":image",
-   format = "Docker",
-   registry = "index.docker.io",
-   repository = "daschswiss/knora-sipi",
-   tag = "{BUILD_SCM_TAG}"
+    name = "push",
+    format = "Docker",
+    image = ":image",
+    registry = "index.docker.io",
+    repository = "daschswiss/knora-sipi",
+    tag = "{BUILD_SCM_TAG}",
 )
 
 # use in targets needing an up-to-date docker image locally

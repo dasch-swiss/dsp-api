@@ -1,7 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
 # bring our version constants in
-load("//third_party:versions.bzl", "SCALA_VERSION", "AKKA_VERSION", "AKKA_HTTP_VERSION", "SIPI_VERSION", "FUSEKI_VERSION")
+load("//third_party:versions.bzl", "AKKA_HTTP_VERSION", "AKKA_VERSION", "FUSEKI_VERSION", "SCALA_VERSION", "SIPI_VERSION")
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
 load("@ecosia_rules_stamp//:defs.bzl", "stamp")
 
@@ -22,13 +22,14 @@ stamp(
 # The generated intermediate file is missing the BUILD_TAG, which is
 # added by the 'version_info_with_build_tag' genrule
 load("//webapi/src/main/scala/org/knora/webapi/http/version/versioninfo:gen_version_info.bzl", "gen_version_info")
+
 gen_version_info(
     name = "version_info_without_build_tag",
-    scala_version = SCALA_VERSION,
-    akka_version = AKKA_VERSION,
     akka_http_version = AKKA_HTTP_VERSION,
-    sipi_version = SIPI_VERSION,
+    akka_version = AKKA_VERSION,
     fuseki_version = FUSEKI_VERSION,
+    scala_version = SCALA_VERSION,
+    sipi_version = SIPI_VERSION,
 )
 
 # Adds the missing build tag and emits the final scala object
@@ -36,11 +37,11 @@ genrule(
     name = "version_info_with_build_tag",
     srcs = [
         ":build_scm_tag_stamp",
-        ":version_info_without_build_tag"
+        ":version_info_without_build_tag",
     ],
     outs = ["version_info.scala"],
-    tools = [":add_build_tag.sh"],
     cmd = '$(location add_build_tag.sh) $(location build_scm_tag_stamp) $(location version_info_without_build_tag) > "$@"',
+    tools = [":add_build_tag.sh"],
 )
 
 scala_library(

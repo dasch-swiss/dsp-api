@@ -9,16 +9,16 @@ scala_test(
     srcs = [
         "GenerateContributorsFileSpec.scala",
     ],
-    resources = [
-        "//webapi/src/main/resources",
-        "//webapi/scripts:fuseki_repository_config_ttl_template",
-        "//knora-ontologies",
-    ],
     data = [
         "//knora-ontologies",
         "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    resources = [
+        "//knora-ontologies",
+        "//webapi/scripts:fuseki_repository_config_ttl_template",
+        "//webapi/src/main/resources",
+    ],
     # unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi/contributors",

@@ -6,20 +6,20 @@ filegroup(
     name = "fuseki_repository_config_ttl_template",
     srcs = [
         "fuseki-repository-config.ttl.template",
-    ]
+    ],
 )
 
 filegroup(
     name = "graphdb-se",
     srcs = [
-        "graphdb-empty-repository.sh",
         "graphdb-dump-repository.sh",
-        "graphdb-upload-repository.sh"
-    ]
+        "graphdb-empty-repository.sh",
+        "graphdb-upload-repository.sh",
+    ],
 )
 
 pkg_tar(
     name = "tar",
+    srcs = [":graphdb-se"],
     package_dir = "graphdb-se",
-    srcs = [":graphdb-se"]
 )

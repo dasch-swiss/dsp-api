@@ -3,7 +3,7 @@
 # docs for rules_jvm_external: https://github.com/bazelbuild/rules_jvm_external
 load("@rules_jvm_external//:defs.bzl", "maven_install")
 load("@rules_jvm_external//:specs.bzl", "maven")
-load("//third_party:versions.bzl", "AKKA_VERSION", "AKKA_HTTP_VERSION", "JENA_VERSION")
+load("//third_party:versions.bzl", "AKKA_HTTP_VERSION", "AKKA_VERSION", "JENA_VERSION")
 
 def dependencies():
     #
@@ -37,8 +37,8 @@ def dependencies():
                 artifact = "jena-text",
                 version = JENA_VERSION,
                 exclusions = [
-                    "org.slf4j:slf4j-log4j12"
-                ]
+                    "org.slf4j:slf4j-log4j12",
+                ],
             ),
 
             # Logging
@@ -76,7 +76,7 @@ def dependencies():
             # "javax.transaction" % "transaction-api" % "1.1-rev-1",
             "org.apache.commons:commons-text:1.6",
             "commons-io:commons-io:2.6",
-            "commons-beanutils:commons-beanutils:1.9.3", # not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
+            "commons-beanutils:commons-beanutils:1.9.3",  # not used by us, but need newest version to prevent this problem: http://stackoverflow.com/questions/14402745/duplicate-classes-in-commons-collections-and-commons-beanutils
             "org.jodd:jodd:3.2.6",
             "joda-time:joda-time:2.9.1",
             "org.joda:joda-convert:1.8",
@@ -90,14 +90,12 @@ def dependencies():
             "org.rogach:scallop_2.13:3.5.1",
             "com.google.gwt:gwt-servlet:2.8.0",
             "net.sf.saxon:Saxon-HE:9.9.0-2",
-
             "org.scala-lang.modules:scala-xml_2.13:1.1.1",
             "org.scala-lang.modules:scala-java8-compat_2.13:0.9.1",
 
             # provides akka jackson (json) support
             "de.heikoseeberger:akka-http-circe_2.13:1.36.0",
             "com.fasterxml.jackson.module:jackson-module-scala_2.13:2.12.3",
-
             "com.apicatalog:titanium-json-ld:0.8.5",
             "javax.json:javax.json-api:1.1.4",
             "org.glassfish:jakarta.json:1.1.6",
@@ -107,9 +105,7 @@ def dependencies():
 
             # Java EE modules which are deprecated in Java SE 9, 10 and will be removed in Java SE 11
             "javax.xml.bind:jaxb-api:2.2.12",
-
             "com.ibm.icu:icu4j:62.1",
-
             "org.apache.httpcomponents:httpclient:4.5.6",
 
             # Twirl templates
@@ -202,5 +198,5 @@ BASE_TEST_DEPENDENCIES_WITH_JSON_LD = BASE_TEST_DEPENDENCIES + [
     "@maven//:io_spray_spray_json_2_13",
     "@maven//:com_apicatalog_titanium_json_ld",
     "@maven//:javax_json_javax_json_api",
-    "@maven//:org_glassfish_jakarta_json"
+    "@maven//:org_glassfish_jakarta_json",
 ]

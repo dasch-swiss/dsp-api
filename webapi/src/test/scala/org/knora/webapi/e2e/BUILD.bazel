@@ -6,9 +6,9 @@ load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TES
 filegroup(
     name = "srcs",
     srcs = [
-        "//webapi/src/test/scala/org/knora/webapi/e2e/v2:srcs",
+        "ClientTestDataCollector.scala",
         "InstanceChecker.scala",
-        "ClientTestDataCollector.scala"
+        "//webapi/src/test/scala/org/knora/webapi/e2e/v2:srcs",
     ],
 )
 
