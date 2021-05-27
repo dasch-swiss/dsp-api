@@ -52,9 +52,9 @@ end
 
 -- Check that the temp folder is created
 local tmpFolder = config.imgroot .. '/tmp/'
-local exists
-success, exists = server.fs.exists(tmpFolder)
-if not exists then
+local missing
+success, missing = server.fs.exists(tmpFolder)
+if missing then
     local error_msg
     success, error_msg = server.fs.mkdir(tmpFolder, 511)
     if not success then
