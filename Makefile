@@ -45,6 +45,10 @@ build: ## build all targets (excluding docs)
 check-for-outdated-deps: ## check for outdated maven dependencies
 	@bazel run @maven//:outdated
 
+.PHONY: buildifier
+buildifier: ## format Bazel WORKSPACE and BUILD.bazel files
+	@bazel run :buildifier
+
 #################################
 # Docker targets
 #################################

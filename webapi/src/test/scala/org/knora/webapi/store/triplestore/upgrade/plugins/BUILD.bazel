@@ -8,7 +8,7 @@ scala_test(
     size = "small",
     srcs = [
         "UpgradePluginPR1307Spec.scala",
-        "UpgradePluginSpec.scala"
+        "UpgradePluginSpec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -28,7 +28,7 @@ scala_test(
     size = "small",
     srcs = [
         "UpgradePluginPR1322Spec.scala",
-        "UpgradePluginSpec.scala"
+        "UpgradePluginSpec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -48,7 +48,7 @@ scala_test(
     size = "small",
     srcs = [
         "UpgradePluginPR1367Spec.scala",
-        "UpgradePluginSpec.scala"
+        "UpgradePluginSpec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -68,7 +68,7 @@ scala_test(
     size = "small",
     srcs = [
         "UpgradePluginPR1372Spec.scala",
-        "UpgradePluginSpec.scala"
+        "UpgradePluginSpec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -88,7 +88,7 @@ scala_test(
     size = "small",
     srcs = [
         "UpgradePluginPR1615Spec.scala",
-        "UpgradePluginSpec.scala"
+        "UpgradePluginSpec.scala",
     ],
     data = [
         "//knora-ontologies",
@@ -108,7 +108,7 @@ scala_test(
     size = "small",
     srcs = [
         "UpgradePluginPR1746Spec.scala",
-        "UpgradePluginSpec.scala"
+        "UpgradePluginSpec.scala",
     ],
     data = [
         "//knora-ontologies",
