@@ -3,7 +3,6 @@ package(default_visibility = ["//visibility:public"])
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
 
-
 scala_test(
     name = "CacheUtilSpec",
     size = "small",

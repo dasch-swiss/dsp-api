@@ -15,12 +15,12 @@ container_image(
 
 # push to dockerhub
 container_push(
-   name = "push",
-   image = ":image",
-   format = "Docker",
-   registry = "index.docker.io",
-   repository = "daschswiss/knora-jena-fuseki",
-   tag = "{BUILD_SCM_TAG}"
+    name = "push",
+    format = "Docker",
+    image = ":image",
+    registry = "index.docker.io",
+    repository = "daschswiss/knora-jena-fuseki",
+    tag = "{BUILD_SCM_TAG}",
 )
 
 # use in targets needing an up-to-date docker image locally

@@ -19,8 +19,8 @@ scala_test(
         "@maven//:ch_qos_logback_logback_classic",
         "@maven//:ch_qos_logback_logback_core",
         "@maven//:com_typesafe_akka_akka_slf4j_2_13",
-        "@maven//:org_slf4j_log4j_over_slf4j",
         "@maven//:org_bouncycastle_bcprov_jdk15on",
+        "@maven//:org_slf4j_log4j_over_slf4j",
     ],
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",

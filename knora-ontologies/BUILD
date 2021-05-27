@@ -15,6 +15,6 @@ filegroup(
 
 pkg_tar(
     name = "tar",
+    srcs = [":knora-ontologies"],
     package_dir = "knora-ontologies",
-    srcs = [":knora-ontologies"]
 )

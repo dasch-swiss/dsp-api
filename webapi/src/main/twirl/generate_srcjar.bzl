@@ -1,4 +1,5 @@
 """ generate a srcjar from provided *.scala source files """
+
 def _generate_srcjar_impl(ctx):
     print("inside rule: ", ctx.label)
     print("srcs: ", ctx.files.srcs)

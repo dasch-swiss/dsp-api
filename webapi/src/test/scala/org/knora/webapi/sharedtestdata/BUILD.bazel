@@ -5,10 +5,10 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 filegroup(
     name = "srcs",
     srcs = [
-        "SharedTestDataADM.scala",
-        "SharedOntologyTestDataADM.scala",
         "SharedListsTestDataADM.scala",
+        "SharedOntologyTestDataADM.scala",
         "SharedPermissionsTestData.scala",
+        "SharedTestDataADM.scala",
         "SharedTestDataV1.scala",
     ],
 )

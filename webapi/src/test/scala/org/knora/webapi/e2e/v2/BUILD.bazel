@@ -174,7 +174,7 @@ scala_test(
     name = "ValuesRouteV2E2ESpec",
     size = "medium",
     srcs = [
-        "ValuesRouteV2E2ESpec.scala"
+        "ValuesRouteV2E2ESpec.scala",
     ],
     data = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//knora-ontologies",

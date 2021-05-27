@@ -6,10 +6,10 @@ load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TES
 filegroup(
     name = "srcs",
     srcs = [
-        "RdfModelSpec.scala",
-        "RdfFormatUtilSpec.scala",
         "JsonLDUtilSpec.scala",
         "KnoraResponseV2Spec.scala",
+        "RdfFormatUtilSpec.scala",
+        "RdfModelSpec.scala",
         "ShaclValidatorSpec.scala",
     ],
 )

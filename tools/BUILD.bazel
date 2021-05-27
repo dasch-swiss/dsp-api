@@ -3,13 +3,13 @@ package(default_visibility = ["//visibility:public"])
 filegroup(
     name = "all",
     srcs = [
-        "//tools/buildstamp:all"
+        "//tools/buildstamp:all",
     ],
 )
 
 filegroup(
     name = "srcs",
     srcs = [
-       "//tools/buildstamp:srcs"
+        "//tools/buildstamp:srcs",
     ],
 )
