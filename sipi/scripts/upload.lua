@@ -54,10 +54,6 @@ end
 local tmpFolder = config.imgroot .. '/tmp/'
 local exists
 success, exists = server.fs.exists(tmpFolder)
-if not success then
-    send_error(500, "server.fs.exists() failed: " .. exists)
-    return
-end
 if not exists then
     local error_msg
     success, error_msg = server.fs.mkdir(tmpFolder, 511)
