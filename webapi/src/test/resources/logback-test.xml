@@ -51,6 +51,8 @@
     <logger name="kamon.metric" level="ERROR"/>
     <logger name="org.apache.http" level="INFO"/>
     <logger name="org.apache.http.wire" level="INFO"/>
+    <logger name="org.testcontainers" level="INFO"/>
+    <logger name="com.github.dockerjava" level="WARN"/>
 
     <!-- App -->
     <logger name="org.knora.webapi.app.ApplicationActor" level="INFO"/>

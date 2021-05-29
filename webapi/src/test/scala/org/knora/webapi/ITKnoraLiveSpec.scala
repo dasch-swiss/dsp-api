@@ -244,9 +244,8 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     val sipiRequest = Post(s"$baseInternalSipiUrl/upload?token=$loginToken", sipiFormData)
 
     val sipiUploadResponseJson: JsObject = getResponseJson(sipiRequest)
-    // println(sipiUploadResponseJson.prettyPrint)
+
     val sipiUploadResponse: SipiUploadResponse = sipiUploadResponseJson.convertTo[SipiUploadResponse]
-    // println(s"sipiUploadResponse: $sipiUploadResponse")
 
     // Request the temporary file from Sipi.
     for (responseEntry <- sipiUploadResponse.uploadedFiles) {

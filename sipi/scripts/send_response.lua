@@ -49,20 +49,15 @@ function send_error(status, msg)
         msg_str = "Unknown error. Please report this as a possible bug in a Sipi route."
     end
 
-    local result
-
-    -- If this is an internal server error, log the message, and return a generic message to the client.
+    -- If this is an internal server error, log the message.
     if http_status // 100 == 5 then
         server.log(msg_str, server.loglevel.LOG_ERR)
-
-        result = {
-            message = "Internal server error"
-        }
-    else
-        result = {
-            message = msg_str
-        }
     end
+
+    local result
+    result = {
+        message = msg_str
+    }
     
     success, error_msg = server.sendHeader("Content-Type", "application/json")
     if not success then
