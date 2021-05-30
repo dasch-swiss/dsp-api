@@ -38,7 +38,8 @@ end
 
 
 -- Buffer the response (helps with error handling).
-local success, error_msg = server.setBuffer()
+local success, error_msg
+success, error_msg = server.setBuffer()
 if not success then
     send_error(500, "server.setBuffer() failed: " .. error_msg)
     return
@@ -54,12 +55,14 @@ end
 local tmpFolder = config.imgroot .. '/tmp/'
 local exists
 success, exists = server.fs.exists(tmpFolder)
-if not success then
+if not success then -- tests server.fs.exists
+    -- fs.exist was not run successful. This does not mean, that the tmp folder is not there.
     send_error(500, "server.fs.exists() failed: " .. exists)
     return
 end
-if not exists then
-    local error_msg
+if not exists then -- checks the response of server.fs.exists
+    -- tmp folder does not exist
+    server.log("temp folder missing: " .. tmpFolder, server.loglevel.LOG_ERR)
     success, error_msg = server.fs.mkdir(tmpFolder, 511)
     if not success then
         send_error(500, "server.fs.mkdir() failed: " .. error_msg)
