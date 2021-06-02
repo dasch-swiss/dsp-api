@@ -25,7 +25,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.testcontainers.containers.{BindMode, GenericContainer}
 import org.testcontainers.utility.DockerImageName
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 /**
   * Provides all containers necessary for running tests.
@@ -69,7 +69,6 @@ object TestContainers {
   RedisContainer.withExposedPorts(6379)
   RedisContainer.start()
 
-  import scala.collection.JavaConverters._
   private val portMap = Map(
     "app.triplestore.fuseki.port" -> FusekiContainer.getFirstMappedPort,
     "app.sipi.internal-host" -> sipiIp,

@@ -45,8 +45,8 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-  private val getUserByIdentifier = PrivateMethod[Future[UserADM]]('getUserByIdentifier)
-  private val authenticateCredentialsV2 = PrivateMethod[Future[Boolean]]('authenticateCredentialsV2)
+  private val getUserByIdentifier = PrivateMethod[Future[UserADM]](Symbol("getUserByIdentifier"))
+  private val authenticateCredentialsV2 = PrivateMethod[Future[Boolean]](Symbol("authenticateCredentialsV2"))
 
   "During Authentication" when {
     "called, the 'getUserADMByEmail' method " should {

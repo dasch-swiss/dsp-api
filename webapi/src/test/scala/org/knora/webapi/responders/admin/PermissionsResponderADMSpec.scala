@@ -63,9 +63,9 @@ class PermissionsResponderADMSpec
 
   /* define private method access */
   private val userAdministrativePermissionsGetADM =
-    PrivateMethod[Future[Map[IRI, Set[PermissionADM]]]]('userAdministrativePermissionsGetADM)
+    PrivateMethod[Future[Map[IRI, Set[PermissionADM]]]](Symbol("userAdministrativePermissionsGetADM"))
   private val defaultObjectAccessPermissionsForGroupsGetADM =
-    PrivateMethod[Future[Set[PermissionADM]]]('defaultObjectAccessPermissionsForGroupsGetADM)
+    PrivateMethod[Future[Set[PermissionADM]]](Symbol("defaultObjectAccessPermissionsForGroupsGetADM"))
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/responders.admin.PermissionsResponderV1Spec/additional_permissions-data.ttl",
