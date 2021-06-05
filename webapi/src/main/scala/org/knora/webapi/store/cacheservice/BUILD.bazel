@@ -9,10 +9,9 @@ scala_library(
         "CacheService.scala",
         "CacheServiceExceptions.scala",
         "CacheServiceManager.scala",
-
     ],
-    unused_dependency_checker_mode = "warn",
     scalacopts = ["-deprecation"],
+    unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/core",

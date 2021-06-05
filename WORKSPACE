@@ -289,8 +289,6 @@ http_archive(
     url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
 )
 
-
-
 #####################################
 # rules_pkg - basic packaging rules #
 #####################################

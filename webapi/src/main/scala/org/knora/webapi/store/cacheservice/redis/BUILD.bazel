@@ -7,8 +7,8 @@ scala_library(
     srcs = [
         "CacheServiceRedisImpl.scala",
     ],
-    unused_dependency_checker_mode = "warn",
     scalacopts = ["-deprecation"],
+    unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/core",
