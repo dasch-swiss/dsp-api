@@ -1051,7 +1051,7 @@ URL-encoded.
 A successful response will be a JSON-LD document containing a
 confirmation message.
 
-To check whether a property can be deleted:
+To check whether an ontology can be deleted:
 
 ```
 HTTP GET to http://host/v2/ontologies/candeleteontology/ONTOLOGY_IRI
