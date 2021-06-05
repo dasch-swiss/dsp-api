@@ -3,9 +3,16 @@ package(default_visibility = ["//visibility:public"])
 load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
 
 scala_library(
-    name = "store",
-    srcs = glob(["**/*.scala"]),
+    name = "cacheservice",
+    srcs = [
+        "CacheSerialization.scala",
+        "CacheService.scala",
+        "CacheServiceExceptions.scala",
+        "CacheServiceManager.scala",
+
+    ],
     unused_dependency_checker_mode = "warn",
+    scalacopts = ["-deprecation"],
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/core",
@@ -15,7 +22,6 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/messages",
         "//webapi/src/main/scala/org/knora/webapi/routing",
         "//webapi/src/main/scala/org/knora/webapi/settings",
-        "//webapi/src/main/scala/org/knora/webapi/store/cacheservice",
         "//webapi/src/main/scala/org/knora/webapi/util",
         "@maven//:com_twitter_chill_2_13",
         "@maven//:com_typesafe_akka_akka_actor_2_13",

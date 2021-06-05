@@ -61,6 +61,7 @@ import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import org.knora.webapi.store.StoreManager
+import org.knora.webapi.store.cacheservice.redis.CacheServiceRedisImpl
 import org.knora.webapi.util.cache.CacheUtil
 import redis.clients.jedis.exceptions.JedisConnectionException
 
@@ -69,6 +70,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 trait Managers {
+  implicit val system: ActorSystem
   val responderManager: ActorRef
   val storeManager: ActorRef
 }
@@ -80,7 +82,7 @@ trait LiveManagers extends Managers {
     * The actor that forwards messages to actors that deal with persistent storage.
     */
   lazy val storeManager: ActorRef = context.actorOf(
-    Props(new StoreManager(self) with LiveActorMaker)
+    Props(new StoreManager(appActor = self, cs = new CacheServiceRedisImpl(KnoraSettings(system))) with LiveActorMaker)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = StoreManagerActorName
   )

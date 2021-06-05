@@ -383,11 +383,11 @@ object InvalidApiJsonException {
 }
 
 /**
-  * Indicates that the during caching with Redis something went wrong.
+  * Indicates that the during caching with the [[org.knora.webapi.store.cacheservice.CacheService]] something went wrong.
   *
   * @param message a description of the error.
   */
-abstract class RedisException(message: String) extends InternalServerException(message)
+abstract class CacheServiceException(message: String) extends InternalServerException(message)
 
 /**
   * Indicates that an application lock could not be acquired.
