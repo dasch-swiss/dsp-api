@@ -440,10 +440,11 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
 
+  // Replaces all cardinalities with what was sent. Deleting means send empty
+  // replace request.
   private def replaceCardinalities(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(OntologiesBasePath / "cardinalities") {
       put {
-        // Change a class's cardinalities.
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[ChangeCardinalitiesRequestV2] = for {

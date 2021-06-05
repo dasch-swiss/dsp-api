@@ -3252,6 +3252,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           .entityInfoContent
 
         // Check that the class isn't used in data, and that it has no subclasses.
+        // TODO: If class is used in data, check additionally if the property(ies) being removed is(are) truly used and if not, then allow.
 
         _ <- throwIfEntityIsUsed(
           entityIri = internalClassIri,
@@ -3266,7 +3267,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           directCardinalities = internalClassDef.directCardinalities
         )
 
-        // Check that the new cardinalities are valid, and add any inherited cardinalities.
+        // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
 
         allBaseClassIrisWithoutInternal: Seq[SmartIri] = newInternalClassDef.subClassOf.toSeq.flatMap { baseClassIri =>
           cacheData.subClassOfRelations.getOrElse(baseClassIri, Seq.empty[SmartIri])
