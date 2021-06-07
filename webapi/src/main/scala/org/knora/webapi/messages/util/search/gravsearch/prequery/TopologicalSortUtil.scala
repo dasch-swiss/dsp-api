@@ -39,27 +39,37 @@ object TopologicalSortUtil {
   def findAllTopologicalOrderPermutations[T](graph: Graph[T, DiHyperEdge]): Set[Vector[Graph[T, DiHyperEdge]#NodeT]] = {
     type NodeT = Graph[T, DiHyperEdge]#NodeT
 
-    def findPermutations(listOfLists: List[Vector[NodeT]]): List[Vector[NodeT]] = {
-      def makePermutations(next: Vector[NodeT], acc: List[Vector[NodeT]]): List[Vector[NodeT]] = {
-        next.permutations.toList.flatMap(i => acc.map(j => j ++ i))
-      }
+    def findLayeredPermutations(layeredOrder: graph.LayeredTopologicalOrder[NodeT]): List[Vector[NodeT]] = {
+      val lastLayerNodes: Vector[NodeT] = layeredOrder.last._2.toVector
+      val allLowerLayers: Iterable[(Int, Iterable[NodeT])] = layeredOrder.dropRight(1)
 
-      @scala.annotation.tailrec
-      def makePermutationsRec(next: Vector[NodeT],
-                              rest: List[Vector[NodeT]],
-                              acc: List[Vector[NodeT]]): List[Vector[NodeT]] = {
-        if (rest.isEmpty) {
-          makePermutations(next, acc)
-        } else {
-          makePermutationsRec(rest.head, rest.tail, makePermutations(next, acc))
-        }
-      }
+      // find all permutations of last layer nodes
+      val allPermutationsOfLastLayer: List[Vector[NodeT]] = lastLayerNodes.permutations.toList
 
-      listOfLists match {
-        case Nil                => Nil
-        case one :: Nil         => one.permutations.toList
-        case one :: two :: tail => makePermutationsRec(two, tail, one.permutations.toList)
+      // for nodes of each permutation of last layer, find origin of incoming edges
+      val allPermutations: List[Vector[NodeT]] = allPermutationsOfLastLayer.map {
+        lastLayerPermutation: Vector[NodeT] =>
+          val layerPerms: Vector[NodeT] = allLowerLayers.iterator.foldRight(lastLayerPermutation) { (layer, acc) =>
+            val layerNodes: Vector[NodeT] = layer._2.toVector
+
+            val origins: Set[NodeT] = acc.foldRight(Set.empty[NodeT]) { (node, originsAcc) =>
+              val foundOriginNodeOption: Option[NodeT] = layerNodes.find(n => graph.edges.contains(DiHyperEdge(n, node)))
+              // Is there any edge which has its origin in this layer and target in already visited layers?
+              foundOriginNodeOption match {
+                // Yes. Add the origin node to the topological order
+                case Some(n) => Set(n) ++ originsAcc
+                // No. do nothing.
+                case None => originsAcc
+              }
+            }
+            // Find all nodes of this layer which are not origin of an edge
+            val notOriginNodes = layerNodes.diff(origins.toVector)
+            // Prepend the non-origin nodes and origin nodes to the nodes found in previous layers.
+            notOriginNodes ++ origins ++ acc
+          }
+          layerPerms
       }
+      allPermutations
     }
 
     // Accumulates topological orders.
@@ -67,14 +77,7 @@ object TopologicalSortUtil {
       // Is there any topological order?
       case Right(topOrder) =>
         // Yes. Find all valid permutations.
-        val nodesOfLayers: List[Vector[NodeT]] =
-          topOrder.toLayered.iterator.foldRight(List.empty[Vector[NodeT]]) { (layer, acc) =>
-            val layerNodes: Vector[NodeT] = layer._2.toVector
-            layerNodes +: acc
-          }
-
-        findPermutations(nodesOfLayers).toSet
-
+        findLayeredPermutations(topOrder.toLayered).toSet
       case Left(_) =>
         // No, The graph has a cycle, so don't try to sort it.
         Set.empty[Vector[NodeT]]
