@@ -44,7 +44,7 @@ object TopologicalSortUtil {
       * permutations of the topological order regarding the leaf nodes.
       *
       * First, for each permutation of leaf nodes, find the correct order of parent nodes w.r.t incoming edges.
-      * For example, consider a graph that has 3 layers; i.e. layer 0 contains root nodes, and layer 2 contains leaf nodes.
+      * For example, consider a graph that its topological order has 3 layers; i.e. layer 0 contains root nodes, and layer 2 contains leaf nodes.
       * Permutations of leaf nodes consist the possible topological orders. Iterate over these set of ordered nodes to
       * add nodes of lower layers to each set by considering the edges. That means for nodes of each layer, e.g. layer 1,
       * find the outgoing edges to layer 2. If there is an edge for node n in layer 1 to node m in layer 2, then add this
