@@ -130,7 +130,8 @@ nav:
       - Overview: 08-lucene/index.md
       - Lucene Query Parser Syntax: 08-lucene/lucene-query-parser-syntax.md
   - Frequently Asked Questions: faq/index.md
-  - Release Notes: 00-release-notes/index.md
+  - Release Notes:
+      - Changelog: 00-release-notes/index.md
 
 plugins:
     - include-markdown
