@@ -19,14 +19,17 @@
 
 package org.knora.webapi
 
+import app.Managers
+import core.LiveActorMaker
+import messages.util.ResponderData
+import responders.MockableResponderManager
+import settings._
+import store.MockableStoreManager
+import store.cacheservice.redis.CacheServiceRedisImpl
+import store.cacheservice.settings.CacheServiceSettings
+import store.iiif.MockSipiConnector
+
 import akka.actor.{Actor, ActorRef, Props}
-import org.knora.webapi.app.Managers
-import org.knora.webapi.core.LiveActorMaker
-import org.knora.webapi.responders.MockableResponderManager
-import org.knora.webapi.settings._
-import org.knora.webapi.store.MockableStoreManager
-import org.knora.webapi.store.cacheservice.redis.CacheServiceRedisImpl
-import org.knora.webapi.store.iiif.MockSipiConnector
 
 /**
   * Mixin trait for running the application with mocked Sipi
@@ -42,10 +45,21 @@ trait ManagersWithMockedSipi extends Managers {
     Props(
       new MockableStoreManager(mockStoreConnectors = mockStoreConnectors,
                                appActor = self,
-                               cs = new CacheServiceRedisImpl(KnoraSettings(context.system))) with LiveActorMaker),
+                               cs = new CacheServiceRedisImpl(new CacheServiceSettings(context.system.settings.config)))
+      with LiveActorMaker),
     name = StoreManagerActorName
   )
+
   lazy val responderManager: ActorRef = context.actorOf(
-    Props(new MockableResponderManager(mockRespondersOrStoreConnectors = mockResponders, appActor = self)),
-    name = RESPONDER_MANAGER_ACTOR_NAME)
+    Props(
+      new MockableResponderManager(
+        mockRespondersOrStoreConnectors = mockResponders,
+        appActor = self,
+        responderData = ResponderData(system,
+                                      self,
+                                      knoraSettings = KnoraSettings(system),
+                                      cacheServiceSettings = new CacheServiceSettings(system.settings.config))
+      )),
+    name = RESPONDER_MANAGER_ACTOR_NAME
+  )
 }

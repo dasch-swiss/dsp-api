@@ -6,6 +6,7 @@ scala_library(
     name = "messages",
     srcs = glob(["**/*.scala"]) + ["//webapi/src/main/twirl:twirl_sources"],
     unused_dependency_checker_mode = "warn",
+    scalacopts = ["-deprecation"],
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/annotation",
@@ -14,6 +15,7 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/settings",
         "//webapi/src/main/scala/org/knora/webapi/util",
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
+        "//webapi/src/main/scala/org/knora/webapi/store/cacheservice/settings",
         "@maven//:com_apicatalog_titanium_json_ld",
         "@maven//:com_google_gwt_gwt_servlet",
         "@maven//:com_ibm_icu_icu4j",

@@ -33,6 +33,7 @@ import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
 import com.typesafe.scalalogging.{LazyLogging, Logger}
+import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
@@ -75,7 +76,12 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
   /**
     * The application settings.
     */
-  protected val settings: KnoraSettingsImpl = KnoraSettings(system)
+  protected val settings: KnoraSettingsImpl = responderData.knoraSettings
+
+  /**
+    * The Cache Service settings.
+    */
+  protected val cacheServiceSettings: CacheServiceSettings = responderData.cacheServiceSettings
 
   /**
     * The main application actor.

@@ -6,6 +6,7 @@ scala_library(
     name = "responders",
     srcs = glob(["**/*.scala"]),
     unused_dependency_checker_mode = "warn",
+    scalacopts = ["-deprecation"],
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/annotation",
@@ -17,6 +18,7 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/settings",
         "//webapi/src/main/scala/org/knora/webapi/util",
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
+        "//webapi/src/main/scala/org/knora/webapi/store/cacheservice/settings",
         "@maven//:com_typesafe_akka_akka_actor_2_13",
         "@maven//:com_typesafe_akka_akka_http_2_13",
         "@maven//:com_typesafe_akka_akka_http_core_2_13",

@@ -1,0 +1,41 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
+load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
+
+scala_test(
+    name = "CacheServiceInMemImplSpec",
+    size = "small",  # 60s
+    srcs = [
+        "CacheServiceInMemImplSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    unused_dependency_checker_mode = "warn",
+    scalacopts = ["-deprecation"],
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/core",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/store/cacheservice",
+        "//webapi/src/main/scala/org/knora/webapi/store/cacheservice/inmem",
+        "//webapi:test_library",
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_13",
+        "@maven//:org_slf4j_slf4j_api",
+        "@maven//:com_typesafe_akka_akka_actor_2_13",
+        "@maven//:com_typesafe_akka_akka_stream_2_13",
+        "@maven//:com_typesafe_akka_akka_testkit_2_13",
+        "@maven//:com_typesafe_config",
+        "@maven//:org_scalatest_scalatest_2_13",
+        "@maven//:org_scalatest_scalatest_core_2_13",
+        "@maven//:org_scalatest_scalatest_wordspec_2_13",
+        "@maven//:org_scalatest_scalatest_matchers_core_2_13",
+        "@maven//:org_scalatest_scalatest_shouldmatchers_2_13",
+        "@maven//:org_scalatest_scalatest_compatible",
+        "@maven//:org_scalactic_scalactic_2_13",
+    ]
+)

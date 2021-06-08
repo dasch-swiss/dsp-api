@@ -30,7 +30,7 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.scalalogging.LazyLogging
 import kamon.Kamon
-import org.knora.webapi.core.LiveActorMaker
+import org.knora.webapi.core.{Core, LiveActorMaker}
 import org.knora.webapi.exceptions.{
   InconsistentRepositoryDataException,
   SipiException,
@@ -50,7 +50,7 @@ import org.knora.webapi.messages.store.cacheservicemessages.{
 }
 import org.knora.webapi.messages.store.sipimessages.{IIIFServiceGetStatus, IIIFServiceStatusNOK, IIIFServiceStatusOK}
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.KnoraSystemInstances
+import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.KnoraRequestV1
 import org.knora.webapi.messages.v2.responder.ontologymessages.LoadOntologiesRequestV2
 import org.knora.webapi.messages.v2.responder.{KnoraRequestV2, SuccessResponseV2}
@@ -62,6 +62,7 @@ import org.knora.webapi.routing.v2._
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import org.knora.webapi.store.StoreManager
 import org.knora.webapi.store.cacheservice.redis.CacheServiceRedisImpl
+import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import org.knora.webapi.util.cache.CacheUtil
 import redis.clients.jedis.exceptions.JedisConnectionException
 
@@ -82,7 +83,10 @@ trait LiveManagers extends Managers {
     * The actor that forwards messages to actors that deal with persistent storage.
     */
   lazy val storeManager: ActorRef = context.actorOf(
-    Props(new StoreManager(appActor = self, cs = new CacheServiceRedisImpl(KnoraSettings(system))) with LiveActorMaker)
+    Props(
+      new StoreManager(appActor = self,
+                       cs = new CacheServiceRedisImpl(new CacheServiceSettings(system.settings.config)))
+      with LiveActorMaker)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = StoreManagerActorName
   )
@@ -91,7 +95,14 @@ trait LiveManagers extends Managers {
     * The actor that forwards messages to responder actors to handle API requests.
     */
   lazy val responderManager: ActorRef = context.actorOf(
-    Props(new ResponderManager(self) with LiveActorMaker)
+    Props(
+      new ResponderManager(
+        appActor = self,
+        responderData = ResponderData(system = context.system,
+                                      appActor = self,
+                                      knoraSettings = KnoraSettings(system),
+                                      cacheServiceSettings = new CacheServiceSettings(system.settings.config))
+      ) with LiveActorMaker)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = RESPONDER_MANAGER_ACTOR_NAME
   )
@@ -116,6 +127,11 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
     * The application's configuration.
     */
   implicit val knoraSettings: KnoraSettingsImpl = KnoraSettings(system)
+
+  /**
+    * The Cache Service's configuration.
+    */
+  implicit val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(system.settings.config)
 
   /**
     * The default feature factory configuration, which is used during startup.
@@ -171,7 +187,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
   private var printConfigState = false
   private var ignoreRepository = true
   private var withIIIFService = true
-  private val withCacheService = knoraSettings.cacheServiceEnabled
+  private val withCacheService = cacheServiceSettings.cacheServiceEnabled
 
   /**
     * Startup of the ApplicationActor is a two step process:

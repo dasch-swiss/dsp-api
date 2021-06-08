@@ -35,13 +35,13 @@ import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceStatusOK,
   CacheServiceStatusResponse
 }
-import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import org.knora.webapi.store.cacheservice.{CacheSerialization, CacheService, EmptyKey, EmptyValue}
 import redis.clients.jedis.{Jedis, JedisPool, JedisPoolConfig}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-class CacheServiceRedisImpl(s: KnoraSettingsImpl) extends CacheService with LazyLogging {
+class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with LazyLogging {
 
   /**
     * The Redis Client Pool
