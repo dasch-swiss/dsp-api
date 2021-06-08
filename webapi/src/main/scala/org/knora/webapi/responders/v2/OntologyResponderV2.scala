@@ -5244,7 +5244,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         .ontologyMetadata
         .projectIri
         .get
-    } yield requestingUser.permissions.isProjectAdmin(projectIri.toString) || !requestingUser.permissions.isSystemAdmin
+    } yield requestingUser.permissions.isProjectAdmin(projectIri.toString) || requestingUser.permissions.isSystemAdmin
   }
 
   /**
