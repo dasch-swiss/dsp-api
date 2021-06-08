@@ -64,7 +64,7 @@ object TopologicalSortUtil {
             }
             // Find all nodes of this layer which are not origin of an edge
             val notOriginNodes = layerNodes.diff(origins.toVector)
-            // Prepend the non-origin nodes and origin nodes to the nodes found in previous layers.
+            // Prepend the non-origin nodes and origin nodes to those found in previous layers.
             notOriginNodes ++ origins ++ acc
           }
           layerPerms
