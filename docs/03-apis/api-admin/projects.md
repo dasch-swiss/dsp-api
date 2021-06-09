@@ -59,15 +59,15 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
   - Required permission: SystemAdmin
   - Required information: shortname (unique; used for named graphs),
-    status, selfjoin
-  - Optional information: longname, description, keywords, logo
+    shortcode (unique, 4 characters), status, keywords (a collection of keywords), selfjoin
+  - Optional information: longname, description (a collection of descriptions), logo
   - Returns information about the newly created project
   - Remark: There are two distinct use cases / payload combination:
   
     (1) change ontology and data graph: ontologygraph, datagraph,
     
-    (2) basic project information: shortname, longname, description,
-    keywords, logo, institution, status, selfjoin
+    (2) basic project information: shortname, shortcode, longname, 
+    description, keywords, logo, status, selfjoin
     
   - TypeScript Docs: projectFormats - CreateProjectApiRequestV1
   - POST: `/admin/projects/`
@@ -76,9 +76,10 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 ```json
     {
       "shortname": "newproject",
+      "shortcode": "0000",
       "longname": "project longname",
-      "description": "project description",
-      "keywords": "keywords",
+      "description": ["project description"],
+      "keywords": ["keywords"],
       "logo": "/fu/bar/baz.jpg",
       "status": true,
       "selfjoin": false
