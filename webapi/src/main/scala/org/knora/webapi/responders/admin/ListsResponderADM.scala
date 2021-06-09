@@ -911,7 +911,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       // check the custom IRI; if not given, create an unused IRI
       customListIri: Option[SmartIri] = createNodeRequest.id.map(iri => iri.toSmartIri)
       maybeShortcode: String = project.shortcode
-      newListNodeIri: IRI <- checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
+      newListNodeIri: IRI <- checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri)
 
       // Create the new list node
       createNewListSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt

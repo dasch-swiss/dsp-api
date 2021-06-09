@@ -2552,19 +2552,6 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
   }
 
   /**
-    * Given the project shortcode, checks if it is in a valid format, and converts it to upper case.
-    *
-    * @param shortcode the project's shortcode.
-    * @return the shortcode in upper case.
-    */
-  def validateProjectShortcodeOption(shortcode: String): Option[String] = {
-    ProjectIDRegex.findFirstIn(shortcode.toUpperCase) match {
-      case Some(value) => Some(value)
-      case None        => None
-    }
-  }
-
-  /**
     * Check that a string represents a valid project shortcode.
     *
     * @param shortcode the optional string to be checked.
@@ -3120,13 +3107,11 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
 
   /**
     * Creates a new group IRI based on a UUID.
-    *
-    * @param shortcode the required project shortcode.
     * @return a new group IRI.
     */
-  def makeRandomGroupIri(shortcode: String): String = {
+  def makeRandomGroupIri: String = {
     val knoraGroupUuid = makeRandomBase64EncodedUuid
-    s"http://$IriDomain/groups/$shortcode/$knoraGroupUuid"
+    s"http://$IriDomain/groups/$knoraGroupUuid"
   }
 
   /**
@@ -3142,12 +3127,11 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
   /**
     * Creates a new list IRI based on a UUID.
     *
-    * @param shortcode the required project shortcode.
     * @return a new list IRI.
     */
-  def makeRandomListIri(shortcode: String): String = {
+  def makeRandomListIri: String = {
     val knoraListUuid = makeRandomBase64EncodedUuid
-    s"http://$IriDomain/lists/$shortcode/$knoraListUuid"
+    s"http://$IriDomain/lists/$knoraListUuid"
   }
 
   /**
@@ -3188,12 +3172,11 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
   /**
     * Creates a new permission IRI based on a UUID.
     *
-    * @param shortcode the required project shortcode.
     * @return the IRI of the permission object.
     */
-  def makeRandomPermissionIri(shortcode: String): IRI = {
+  def makeRandomPermissionIri: IRI = {
     val knoraPermissionUuid = makeRandomBase64EncodedUuid
-    s"http://$IriDomain/permissions/$shortcode/$knoraPermissionUuid"
+    s"http://$IriDomain/permissions/$knoraPermissionUuid"
   }
 
   /**
