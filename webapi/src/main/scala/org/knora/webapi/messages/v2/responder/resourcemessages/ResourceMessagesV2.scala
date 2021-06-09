@@ -1347,13 +1347,15 @@ abstract class ResourceOrValueEventBody
 
 /**
   * Represents a resource event (createResource) body with all the information required for the request body of this operation.
-  * @param resourceIri  the IRI of the resource.
-  * @param resourceClassIri the class of the resource.
-  * @param label         the label of the resource.
-  * @param values        the values of the resource at creation time.
-  * @param permissions   the permissions assigned to the new resource.
-  * @param creationDate  the creation date of the resource.
-  * @param projectADM    the project which the resource belongs to.
+  * @param resourceIri          the IRI of the resource.
+  * @param resourceClassIri     the class of the resource.
+  * @param label                the label of the resource.
+  * @param values               the values of the resource at creation time.
+  * @param permissions          the permissions assigned to the new resource.
+  * @param lastModificationDate the last modification date of the resource.
+  * @param creationDate         the creation date of the resource.
+  * @param deletionInfo         the deletion info of the resource.
+  * @param projectADM           the project which the resource belongs to.
   */
 case class ResourceEventBody(resourceIri: IRI,
                              resourceClassIri: SmartIri,
