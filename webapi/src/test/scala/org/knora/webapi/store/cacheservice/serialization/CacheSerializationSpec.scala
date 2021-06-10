@@ -18,10 +18,10 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.store.cacheservice
+package org.knora.webapi.store.cacheservice.serialization
 
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi._
+import org.knora.webapi.CoreSpec
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -34,7 +34,7 @@ object CacheSerializationSpec {
 }
 
 /**
-  * This spec is used to test [[org.knora.webapi.store.cacheservice.CacheSerialization]].
+  * This spec is used to test [[CacheSerialization]].
   */
 class CacheSerializationSpec extends CoreSpec(CacheSerializationSpec.config) {
 

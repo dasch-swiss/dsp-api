@@ -41,5 +41,5 @@ object RedisTestContainer {
 
   // all tests need to be configured with these ports.
   val PortConfig: Config =
-    ConfigFactory.parseMap(portMap, "Ports from ContainerizedSpec").withFallback(ConfigFactory.load())
+    ConfigFactory.parseMap(portMap, "Ports from RedisTestContainer").withFallback(ConfigFactory.load())
 }

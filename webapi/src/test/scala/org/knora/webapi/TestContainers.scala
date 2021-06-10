@@ -77,5 +77,5 @@ object TestContainers {
   ).asJava
 
   // all tests need to be configured with these ports.
-  val PortConfig: Config = ConfigFactory.parseMap(portMap, "Ports from ContainerizedSpec")
+  val PortConfig: Config = ConfigFactory.parseMap(portMap, "Ports from TestContainers")
 }

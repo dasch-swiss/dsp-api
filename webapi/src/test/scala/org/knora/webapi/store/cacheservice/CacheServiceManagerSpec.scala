@@ -41,7 +41,7 @@ object CacheServiceManagerSpec {
 }
 
 /**
-  * This spec is used to test [[org.knora.webapi.store.cacheservice.CacheSerialization]].
+  * This spec is used to test [[org.knora.webapi.store.cacheservice.serialization.CacheSerialization]].
   */
 class CacheServiceManagerSpec extends CoreSpec(CacheServiceManagerSpec.config) {
 

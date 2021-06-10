@@ -48,43 +48,43 @@ class CacheServiceRedisImplSpec extends UnitSpec(RedisTestContainer.PortConfig) 
   "The CacheServiceRedisImpl" should {
 
     "successfully store a user" in {
-      val res = redisCache.putUserADM(user)
-      res should equal(true)
+      val resFuture = redisCache.putUserADM(user)
+      resFuture map {res => res should equal(true)}
     }
 
     "successfully retrieve a user by IRI" in {
-      val res = redisCache.getUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
-      res should equal(true)
+      val resFuture = redisCache.getUserADM(UserIdentifierADM(maybeIri = Some(user.id)))
+      resFuture map {res => res should equal(Some(user))}
     }
 
     "successfully retrieve a user by USERNAME" in {
-      val res = redisCache.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
-      res should equal(true)
+      val resFuture = redisCache.getUserADM(UserIdentifierADM(maybeUsername = Some(user.username)))
+      resFuture map {res => res should equal(Some(user))}
     }
 
     "successfully retrieve a user by EMAIL" in {
-      val res = redisCache.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
-      res should equal(true)
+      val resFuture = redisCache.getUserADM(UserIdentifierADM(maybeEmail = Some(user.email)))
+      resFuture map {res => res should equal(Some(user))}
     }
 
     "successfully store a project" in {
-      val res = redisCache.putProjectADM(project)
-      res should equal(true)
+      val resFuture = redisCache.putProjectADM(project)
+      resFuture map { res => res should equal(true)}
     }
 
     "successfully retrieve a project by IRI" in {
-      val res = redisCache.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
-      res should equal(true)
+      val resFuture = redisCache.getProjectADM(ProjectIdentifierADM(maybeIri = Some(project.id)))
+      resFuture map { res => res should equal(Some(project))}
     }
 
     "successfully retrieve a project by SHORTNAME" in {
-      val res = redisCache.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
-      res should equal(true)
+      val resFuture = redisCache.getProjectADM(ProjectIdentifierADM(maybeShortname = Some(project.shortname)))
+      resFuture map { res => res should equal(Some(project))}
     }
 
     "successfully retrieve a project by SHORTCODE" in {
-      val res = redisCache.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
-      res should equal(true)
+      val resFuture = redisCache.getProjectADM(ProjectIdentifierADM(maybeShortcode = Some(project.shortcode)))
+      resFuture map { res => res should equal(Some(project))}
     }
   }
 }

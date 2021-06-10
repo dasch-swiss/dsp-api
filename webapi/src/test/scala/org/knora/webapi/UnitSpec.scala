@@ -19,9 +19,10 @@
 
 package org.knora.webapi
 
+import messages.StringFormatter
+
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
-import org.knora.webapi.settings.{KnoraSettings, KnoraSettingsImpl}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -54,4 +55,7 @@ abstract class UnitSpec(_config: Config) extends AnyWordSpecLike with Matchers w
 
   def this() =
     this(UnitSpec.defaultConfig)
+
+  // needs to be initialized early on
+  StringFormatter.initForTest()
 }

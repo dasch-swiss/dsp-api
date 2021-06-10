@@ -15,6 +15,7 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/instrumentation",
         "//webapi/src/main/scala/org/knora/webapi/messages",
         "//webapi/src/main/scala/org/knora/webapi/store/cacheservice",
+        "//webapi/src/main/scala/org/knora/webapi/store/cacheservice/serialization",
         "//webapi/src/main/scala/org/knora/webapi/store/cacheservice/settings",
         "@maven//:com_typesafe_akka_akka_actor_2_13",
         "@maven//:com_typesafe_akka_akka_http_core_2_13",
