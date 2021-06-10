@@ -21,7 +21,7 @@
 package org.knora.webapi.store.cacheservice.serialization
 
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.UnitSpec
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -36,7 +36,9 @@ object CacheSerializationSpec {
 /**
   * This spec is used to test [[CacheSerialization]].
   */
-class CacheSerializationSpec extends CoreSpec(CacheSerializationSpec.config) {
+class CacheSerializationSpec extends UnitSpec(CacheSerializationSpec.config) {
+
+  implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
 
   "serialize and deserialize" should {
 
