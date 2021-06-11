@@ -30,6 +30,7 @@ scala_library(
         "//webapi/scripts:fuseki_repository_config_ttl_template",
         "//webapi/src/main/resources",
     ],
+    scalacopts = ["-deprecation"],
     unused_dependency_checker_mode = "warn",
     runtime_deps = [
         "@maven//:ch_qos_logback_logback_classic",
@@ -37,7 +38,6 @@ scala_library(
         "@maven//:com_typesafe_akka_akka_slf4j_2_13",
         "@maven//:org_slf4j_log4j_over_slf4j",
     ],
-    scalacopts=["-deprecation"],
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/core",

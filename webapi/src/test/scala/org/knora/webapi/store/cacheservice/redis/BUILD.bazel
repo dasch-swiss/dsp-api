@@ -9,15 +9,15 @@ scala_test(
     srcs = [
         "CacheServiceRedisImplSpec.scala",
     ],
-    resources = [
-        "//webapi/src/main/resources",
-        "//webapi/src/test/resources",
-    ],
     data = [
         "//knora-ontologies",
         "//test_data",
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    resources = [
+        "//webapi/src/main/resources",
+        "//webapi/src/test/resources",
+    ],
     scalacopts = ["-deprecation"],
     unused_dependency_checker_mode = "warn",
     deps = [
