@@ -64,8 +64,8 @@ object CoreSpec {
     val s = (Thread.currentThread.getStackTrace map (_.getClassName) drop 1)
       .dropWhile(_ matches "(java.lang.Thread|.*CoreSpec.?$)")
     val reduced = s.lastIndexWhere(_ == clazz.getName) match {
-      case -1 ⇒ s
-      case z ⇒ s drop (z + 1)
+      case -1 => s
+      case z => s drop (z + 1)
     }
     reduced.head.replaceFirst(""".*\.""", "").replaceAll("[^a-zA-Z_0-9]", "_")
   }
@@ -133,7 +133,7 @@ abstract class CoreSpec(_system: ActorSystem)
     parent = new KnoraSettingsFeatureFactoryConfig(settings)
   )
 
-  final override def beforeAll() {
+  final override def beforeAll(): () = {
     // set allow reload over http
     appActor ! SetAllowReloadOverHTTPState(true)
 
@@ -148,7 +148,7 @@ abstract class CoreSpec(_system: ActorSystem)
     // memusage()
   }
 
-  final override def afterAll() {
+  final override def afterAll(): () = {
     appActor ! AppStop()
     // memusage()
   }

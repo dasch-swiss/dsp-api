@@ -31,23 +31,14 @@ import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.typesafe.scalalogging.LazyLogging
 import kamon.Kamon
 import org.knora.webapi.core.{Core, LiveActorMaker}
-import org.knora.webapi.exceptions.{
-  InconsistentRepositoryDataException,
-  SipiException,
-  UnexpectedMessageException,
-  UnsupportedValueException
-}
+import org.knora.webapi.exceptions.{InconsistentRepositoryDataException, SipiException, UnexpectedMessageException, UnsupportedValueException}
 import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
 import org.knora.webapi.http.directives.DSPApiDirectives
 import org.knora.webapi.http.version.ServerVersion
 import org.knora.webapi.messages.admin.responder.KnoraRequestADM
 import org.knora.webapi.messages.app.appmessages._
 import org.knora.webapi.messages.store.StoreRequest
-import org.knora.webapi.messages.store.cacheservicemessages.{
-  CacheServiceGetStatus,
-  CacheServiceStatusNOK,
-  CacheServiceStatusOK
-}
+import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceGetStatus, CacheServiceStatusNOK, CacheServiceStatusOK}
 import org.knora.webapi.messages.store.sipimessages.{IIIFServiceGetStatus, IIIFServiceStatusNOK, IIIFServiceStatusOK}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
@@ -61,6 +52,7 @@ import org.knora.webapi.routing.v1._
 import org.knora.webapi.routing.v2._
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl, _}
 import org.knora.webapi.store.StoreManager
+import org.knora.webapi.store.cacheservice.inmem.CacheServiceInMemImpl
 import org.knora.webapi.store.cacheservice.redis.CacheServiceRedisImpl
 import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import org.knora.webapi.util.cache.CacheUtil
@@ -84,8 +76,7 @@ trait LiveManagers extends Managers {
     */
   lazy val storeManager: ActorRef = context.actorOf(
     Props(
-      new StoreManager(appActor = self,
-                       cs = new CacheServiceRedisImpl(new CacheServiceSettings(system.settings.config)))
+      new StoreManager(appActor = self, cs = CacheServiceInMemImpl)
       with LiveActorMaker)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = StoreManagerActorName

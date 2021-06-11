@@ -19,17 +19,16 @@
 
 package org.knora.webapi
 
-import app.Managers
-import core.LiveActorMaker
-import messages.util.ResponderData
-import responders.MockableResponderManager
-import settings._
-import store.MockableStoreManager
-import store.cacheservice.redis.CacheServiceRedisImpl
-import store.cacheservice.settings.CacheServiceSettings
-import store.iiif.MockSipiConnector
-
 import akka.actor.{Actor, ActorRef, Props}
+import org.knora.webapi.app.Managers
+import org.knora.webapi.core.LiveActorMaker
+import org.knora.webapi.messages.util.ResponderData
+import org.knora.webapi.responders.MockableResponderManager
+import org.knora.webapi.settings._
+import org.knora.webapi.store.MockableStoreManager
+import org.knora.webapi.store.cacheservice.inmem.CacheServiceInMemImpl
+import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
+import org.knora.webapi.store.iiif.MockSipiConnector
 
 /**
   * Mixin trait for running the application with mocked Sipi
@@ -43,10 +42,9 @@ trait ManagersWithMockedSipi extends Managers {
 
   lazy val storeManager: ActorRef = context.actorOf(
     Props(
-      new MockableStoreManager(mockStoreConnectors = mockStoreConnectors,
-                               appActor = self,
-                               cs = new CacheServiceRedisImpl(new CacheServiceSettings(context.system.settings.config)))
-      with LiveActorMaker),
+      new MockableStoreManager(mockStoreConnectors = mockStoreConnectors, appActor = self, cs = CacheServiceInMemImpl)
+      with LiveActorMaker
+    ),
     name = StoreManagerActorName
   )
 
