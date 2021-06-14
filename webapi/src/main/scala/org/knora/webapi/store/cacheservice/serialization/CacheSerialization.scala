@@ -18,13 +18,11 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi
-package store.cacheservice.serialization
-
-import exceptions.CacheServiceException
-import instrumentation.InstrumentationSupport
+package org.knora.webapi.store.cacheservice.serialization
 
 import com.twitter.chill.MeatLocker
+import org.knora.webapi.exceptions.CacheServiceException
+import org.knora.webapi.instrumentation.InstrumentationSupport
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 import scala.concurrent.{ExecutionContext, Future}
