@@ -1346,7 +1346,7 @@ case class ResourceAndValueHistoryV2(eventType: String,
 abstract class ResourceOrValueEventBody
 
 /**
-  * Represents a resource event (createResource) body with all the information required for the request body of this operation.
+  * Represents a resource event (create or delete) body with all the information required for the request body of this operation.
   * @param resourceIri          the IRI of the resource.
   * @param resourceClassIri     the class of the resource.
   * @param label                the label of the resource.
@@ -1421,6 +1421,42 @@ case class ResourceEventBody(resourceIri: IRI,
         OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id)
       ) ++ resourceLabel ++ creationDateAsJsonLD ++ propertiesAndValuesAsJsonLD ++ lastModificationDateAsJsonLD
         ++ deletionInfoAsJsonLD ++ permissionAsJsonLD
+    )
+  }
+}
+
+/**
+  * Represents an update resource Metadata event body with all the information required for the request body of this operation.
+  * The version history of metadata changes are not kept, however every time metadata of a resource has changed, its lastModificationDate
+  * is updated accordingly. An event is thus necessary to update the last modification date of the resource.
+  * @param resourceIri          the IRI of the resource.
+  * @param resourceClassIri     the class of the resource.
+  * @param lastModificationDate the last modification date of the resource.
+  * @param newModificationDate  the new modification date of the resource.
+
+  */
+case class ResourceMetadataEventBody(resourceIri: IRI,
+                                     resourceClassIri: SmartIri,
+                                     lastModificationDate: Instant,
+                                     newModificationDate: Instant)
+    extends ResourceOrValueEventBody {
+
+  def toJsonLD: JsonLDObject = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    JsonLDObject(
+      Map(
+        OntologyConstants.KnoraApiV2Complex.ResourceIri -> JsonLDString(resourceIri),
+        OntologyConstants.KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString),
+        OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+          value = lastModificationDate.toString,
+          datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+        ),
+        OntologyConstants.KnoraApiV2Complex.NewModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+          value = newModificationDate.toString,
+          datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+        )
+      )
     )
   }
 }
@@ -1538,9 +1574,12 @@ case class ResourceAndValueVersionHistoryResponseV2(projectHistory: Seq[Resource
     val projectHistoryAsJsonLD: Seq[JsonLDObject] = projectHistory.map { historyEntry: ResourceAndValueHistoryV2 =>
       // convert event body to JsonLD object
       val eventBodyAsJsonLD: JsonLDObject = historyEntry.eventBody match {
-        case valueEventBody: ValueEventBody       => valueEventBody.toJsonLD(targetSchema, settings, schemaOptions)
-        case resourceEventBody: ResourceEventBody => resourceEventBody.toJsonLD(targetSchema, settings, schemaOptions)
-        case _                                    => throw NotFoundException(s"Event body is missing or has wrong type.")
+        case valueEventBody: ValueEventBody => valueEventBody.toJsonLD(targetSchema, settings, schemaOptions)
+        case resourceEventBody: ResourceEventBody =>
+          resourceEventBody.toJsonLD(targetSchema, settings, schemaOptions)
+        case resourceMetadataEventBody: ResourceMetadataEventBody =>
+          resourceMetadataEventBody.toJsonLD
+        case _ => throw NotFoundException(s"Event body is missing or has wrong type.")
       }
 
       JsonLDObject(
