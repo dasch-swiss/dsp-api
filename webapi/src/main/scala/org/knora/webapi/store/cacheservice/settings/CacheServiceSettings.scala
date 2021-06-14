@@ -18,8 +18,7 @@
  *  <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi
-package store.cacheservice.settings
+package org.knora.webapi.store.cacheservice.settings
 
 import com.typesafe.config.Config
 
