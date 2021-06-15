@@ -85,11 +85,11 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
     * Retrieves the user stored under the identifier (either iri, username,
     * or email).
     *
-    * @param identifier the project identifier.
+    * @param identifier the user identifier.
     */
   def getUserADM(identifier: UserIdentifierADM)(implicit ec: ExecutionContext): Future[Option[UserADM]] = {
     // The data is stored under the IRI key.
-    // Additionally, the SHORTNAME and SHORTCODE keys point to the IRI key
+    // Additionally, the USERNAME and EMAIL keys point to the IRI key
     val resultFuture: Future[Option[UserADM]] = identifier.hasType match {
       case UserIdentifierType.IRI =>
         for {

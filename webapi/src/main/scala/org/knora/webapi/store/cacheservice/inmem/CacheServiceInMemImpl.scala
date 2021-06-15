@@ -63,11 +63,11 @@ object CacheServiceInMemImpl extends CacheService with LazyLogging {
     * Retrieves the user stored under the identifier (either iri, username,
     * or email).
     *
-    * @param identifier the project identifier.
+    * @param identifier the user identifier.
     */
   def getUserADM(identifier: UserIdentifierADM)(implicit ec: ExecutionContext): Future[Option[UserADM]] = {
     // The data is stored under the IRI key.
-    // Additionally, the SHORTNAME and SHORTCODE keys point to the IRI key
+    // Additionally, the USERNAME and EMAIL keys point to the IRI key
     val resultFuture: Future[Option[UserADM]] = identifier.hasType match {
       case UserIdentifierType.IRI => FastFuture.successful(cache.get(identifier.toIri).map(_.asInstanceOf[UserADM]))
       case UserIdentifierType.USERNAME => {
@@ -136,10 +136,10 @@ object CacheServiceInMemImpl extends CacheService with LazyLogging {
   def writeStringValue(key: String, value: String)(implicit ec: ExecutionContext): Future[Boolean] = {
 
     if (key.isEmpty)
-      throw EmptyKey("The key under which the value should be written is empty. Aborting writing to redis.")
+      throw EmptyKey("The key under which the value should be written is empty. Aborting writing to in-memory cache.")
 
     if (value.isEmpty)
-      throw EmptyValue("The string value is empty. Aborting writing to redis.")
+      throw EmptyValue("The string value is empty. Aborting writing to in-memory cache.")
 
     cache(key) = value
     FastFuture.successful(true)
@@ -175,7 +175,7 @@ object CacheServiceInMemImpl extends CacheService with LazyLogging {
   }
 
   /**
-    * Flushes (removes) all stored content from the Redis store.
+    * Flushes (removes) all stored content from the in-memory cache.
     */
   def flushDB(requestingUser: UserADM)(implicit ec: ExecutionContext): Future[CacheServiceFlushDBACK] = {
     cache = scala.collection.mutable.Map[Any, Any]()
@@ -183,7 +183,7 @@ object CacheServiceInMemImpl extends CacheService with LazyLogging {
   }
 
   /**
-    * Pings the Redis store to see if it is available.
+    * Pings the in-memory cache to see if it is available.
     */
   def ping()(implicit ec: ExecutionContext): Future[CacheServiceStatusResponse] = {
     FastFuture.successful(CacheServiceStatusOK)

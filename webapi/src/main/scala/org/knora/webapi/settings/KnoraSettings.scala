@@ -270,9 +270,6 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
 
   val bcryptPasswordStrength: Int = config.getInt("app.bcrypt-password-strength")
 
-  // Cache Service
-  // moved, see org.knora.webapi.store.cacheservice.settings
-
   // Client test data service
 
   val collectClientTestData: Boolean = if (config.hasPath("app.client-test-data-service.collect-client-test-data")) {
