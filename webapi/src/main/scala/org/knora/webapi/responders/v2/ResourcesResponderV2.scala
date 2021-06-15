@@ -386,7 +386,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         }
 
         // Make sure that the resource hasn't been updated since the client got its last modification date.
-        _ = if (resource.lastModificationDate != updateResourceMetadataRequestV2.maybeLastModificationDate) {
+        _ = if (updateResourceMetadataRequestV2.maybeLastModificationDate.nonEmpty &&
+                resource.lastModificationDate != updateResourceMetadataRequestV2.maybeLastModificationDate) {
           throw EditConflictException(s"Resource <${resource.resourceIri}> has been modified since you last read it")
         }
 
@@ -2527,12 +2528,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       }
 
       // Get the update resource metadata event, if there is any.
-      lastVersionOfResource = fullReps.last._2
-      lastAuthorToChangeResource = fullReps.last._1.author
-      resourceMetadataUpdateEvent: Seq[ResourceAndValueHistoryV2] = getResourceMetadataUpdateEvent(
-        lastVersionOfResource,
-        valuesEvents,
-        lastAuthorToChangeResource)
+      resourceMetadataUpdateEvent: Seq[ResourceAndValueHistoryV2] = getResourceMetadataUpdateEvent(fullReps.last,
+                                                                                                   valuesEvents,
+                                                                                                   resourceDeleteEvent)
 
     } yield resourceCreationEvent ++ resourceDeleteEvent ++ valuesEvents ++ resourceMetadataUpdateEvent
   }
@@ -2791,21 +2789,30 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * [[ResourceMetadataEventBody]] with information necessary to make update metadata of resource request with a
     * given modification date.
     *
-    * @param readResource the full representation of the resource.
-    * @param author       the IRI of the user who last modified the resource.
+    * @param latestVersionOfResource the full representation of the resource.
+    * @param valueEvents             the events describing value operations.
+    * @param resourceDeleteEvents    the events describing resource deletion operations.
     * @return an updateResourceMetadata event.
     */
-  private def getResourceMetadataUpdateEvent(readResource: ReadResourceV2,
-                                             valueEvents: Seq[ResourceAndValueHistoryV2],
-                                             author: IRI): Seq[ResourceAndValueHistoryV2] = {
+  private def getResourceMetadataUpdateEvent(
+      latestVersionOfResource: (ResourceHistoryEntry, ReadResourceV2),
+      valueEvents: Seq[ResourceAndValueHistoryV2],
+      resourceDeleteEvents: Seq[ResourceAndValueHistoryV2]): Seq[ResourceAndValueHistoryV2] = {
+    val readResource: ReadResourceV2 = latestVersionOfResource._2
+    val author: IRI = latestVersionOfResource._1.author
     // Is lastModificationDate of resource None
     readResource.lastModificationDate match {
       // Yes. Do nothing.
       case None => Seq.empty[ResourceAndValueHistoryV2]
       // No. Either a value or the resource metadata must have been modified.
       case Some(modDate) =>
-        // Is there any value event?
-        val updateMetadataEvent = if (valueEvents.isEmpty) {
+        val deletionEventWithSameDate = resourceDeleteEvents.find(event => event.versionDate == modDate)
+        // Is the lastModificationDate of the resource the same as its deletion date?
+        val updateMetadataEvent = if (deletionEventWithSameDate.isDefined) {
+          // Yes. Do noting.
+          Seq.empty[ResourceAndValueHistoryV2]
+          // No. Is there any value event?
+        } else if (valueEvents.isEmpty) {
           // No. After creation of the resource its metadata must have been updated, use creation date as the lastModification date of the event.
           val requestBody = ResourceMetadataEventBody(
             resourceIri = readResource.resourceIri,

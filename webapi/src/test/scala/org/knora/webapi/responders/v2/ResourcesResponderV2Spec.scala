@@ -567,7 +567,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
   }
 
   // The default timeout for receiving reply messages from actors.
-  private val timeout = 10.seconds
+  private val timeout = 30.seconds
 
   "Load test data" in {
     responderManager ! GetMappingRequestV2(
@@ -2615,6 +2615,40 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       assert(deleteResourceEvent.isDefined)
       val deletionInfo = deleteResourceEvent.get.eventBody.asInstanceOf[ResourceEventBody].deletionInfo.get
       deletionInfo.maybeDeleteComment should be(Some("a comment for the deleted thing."))
+    }
+
+    "update resource's metadata to test update resource metadata event" in {
+      val resourceIri = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+      responderManager ! UpdateResourceMetadataRequestV2(
+        resourceIri = resourceIri,
+        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+        maybeLabel = Some("a new label"),
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgType[SuccessResponseV2](timeout)
+
+      responderManager ! ResourceVersionHistoryGetRequestV2(
+        resourceIri = resourceIri,
+        withDeletedResource = true,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile
+      )
+      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
+
+      responderManager ! ResourceFullHistoryGetRequestV2(
+        resourceIri = resourceIri,
+        resourceVersionHistory = response.history,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile
+      )
+      val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      events.size should be(2)
+      val updateMetadataEvent: Option[ResourceAndValueHistoryV2] =
+        events.find(event => event.eventType == ResourceAndValueEventsUtil.UPDATE_RESOURCE_METADATA_EVENT)
+      assert(updateMetadataEvent.isDefined)
     }
 
     "return seq of full history events for each resource of a project" in {
