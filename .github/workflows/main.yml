@@ -450,7 +450,7 @@ jobs:
           npm install --global @bazel/bazelisk
           sudo apt-get install graphviz
       - name: Deploy docs
-        uses: mhausenblas/mkdocs-deploy-gh-pages@master
+        uses: mhausenblas/mkdocs-deploy-gh-pages@1.16
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           CUSTOM_DOMAIN: docs-api.dasch.swiss
