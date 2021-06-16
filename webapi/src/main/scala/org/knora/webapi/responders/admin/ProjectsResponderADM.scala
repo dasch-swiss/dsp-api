@@ -980,9 +980,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       * @param projectIri the IRI of the new project.
       * @throws BadRequestException if a permission is not created.
       */
-    def createPermissionsForAdminsAndMembersOfNewProject(projectIri: IRI, projectShortCode: String): Future[Unit] =
+    def createPermissionsForAdminsAndMembersOfNewProject(projectIri: IRI, projectUUID: String): Future[Unit] =
       for {
-        baseIri: String <- Future.successful(s"http://$IriDomain/permissions/$projectShortCode/")
+        baseIri: String <- Future.successful(s"http://$IriDomain/permissions/$projectUUID/")
         // Give the admins of the new project rights for any operation in project level, and rights to create resources.
         apPermissionForProjectAdmin: AdministrativePermissionCreateResponseADM <- (responderManager ? AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
@@ -1068,8 +1068,19 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         }
 
         // check the custom IRI; if not given, create an unused IRI
-        customProjectIri: Option[SmartIri] = createProjectRequest.id.map(iri => iri.toSmartIri)
-        newProjectIRI: IRI <- checkOrCreateEntityIri(customProjectIri, stringFormatter.makeRandomProjectIri)
+        (customProjectIri: Option[SmartIri], projectUUID: String) = createProjectRequest.id match {
+          case None => (None, stringFormatter.makeRandomBase64EncodedUuid)
+          case Some(iri) =>
+            val customUUID = try {
+              UUID.fromString(iri.split("/").last)
+            } catch {
+              // If that doesn't work, try to parse it as a Knora ARK timestamp.
+              case _: Exception => throw BadRequestException(s"Project IRI should contain a valid UUID")
+            }
+            (Some(iri.toSmartIri), customUUID.toString)
+        }
+        newProjectIRI: IRI <- checkOrCreateEntityIri(customProjectIri,
+                                                     stringFormatter.makeRandomProjectIri(projectUUID))
 
         // Make a UUID for the new value
         newValueUUID: String = stringFormatter.makeRandomBase64EncodedUuid
@@ -1081,7 +1092,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             projectIri = newProjectIRI,
             projectClassIri = OntologyConstants.KnoraAdmin.KnoraProject,
             shortname = createProjectRequest.shortname,
-            shortcode = validatedShortcode,
+            shortcode = createProjectRequest.shortcode,
+            uuid = projectUUID,
             maybeLongname = createProjectRequest.longname,
             maybeDescriptions = if (createProjectRequest.description.nonEmpty) {
               Some(createProjectRequest.description)
@@ -1112,7 +1124,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             s"Project $newProjectIRI was not created. Please report this as a possible bug.")
         )
         // create permissions for admins and members of the new group
-        _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI, newProjectADM.shortcode)
+        _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI, newProjectADM.projectUUID)
 
       } yield ProjectOperationResponseADM(project = newProjectADM)
 

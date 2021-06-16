@@ -44,6 +44,7 @@
   projectClassIri: IRI,
   shortname: String,
   shortcode: String,
+  uuid: String,
   maybeLongname: Option[String],
   maybeDescriptions: Option[Seq[StringLiteralV2]],
   maybeKeywords: Option[Seq[String]],
@@ -66,6 +67,7 @@ INSERT {
 
             knora-admin:projectShortcode "@shortcode"^^xsd:string ;
 
+            knora-admin:projectUUID "@uuid"^^xsd:string ;
             @if(maybeLongname.nonEmpty) {
                 knora-admin:projectLongname """@maybeLongname.get"""^^xsd:string ;
             }

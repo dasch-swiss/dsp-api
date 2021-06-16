@@ -193,7 +193,7 @@ class ProjectsADME2ESpec
 
       "CREATE a new project with the provided custom Iri" in {
 
-        val customProjectIri: IRI = "http://rdfh.ch/projects/3333"
+        val customProjectIri: IRI = "http://rdfh.ch/projects/dgXxsFMlH4cs5WXfhhM4Cg"
 
         val createProjectWithCustomIRIRequest: String =
           s"""{
@@ -233,6 +233,7 @@ class ProjectsADME2ESpec
 
         //check the rest of project info
         result.shortcode should be("3333")
+        result.projectUUID should be("dgXxsFMlH4cs5WXfhhM4Cg")
         result.shortname should be("newprojectWithIri")
         result.longname should be(Some("new project with a custom IRI"))
         result.keywords should be(Seq("projectIRI"))
@@ -255,7 +256,7 @@ class ProjectsADME2ESpec
       "return 'BadRequest' if the supplied project IRI is not unique" in {
         val params =
           s"""{
-                       |    "id": "http://rdfh.ch/projects/3333",
+                       |    "id": "http://rdfh.ch/projects/dgXxsFMlH4cs5WXfhhM4Cg",
                        |    "shortname": "newprojectWithDuplicateIri",
                        |    "shortcode": "2222",
                        |    "longname": "new project with a duplicate custom invalid IRI",
@@ -273,7 +274,8 @@ class ProjectsADME2ESpec
 
         val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], 1.second)
         val invalidIri: Boolean =
-          errorMessage.contains(s"IRI: 'http://rdfh.ch/projects/3333' already exists, try another one.")
+          errorMessage.contains(
+            s"IRI: 'http://rdfh.ch/projects/dgXxsFMlH4cs5WXfhhM4Cg' already exists, try another one.")
         invalidIri should be(true)
       }
     }

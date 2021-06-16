@@ -3100,9 +3100,8 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     * Creates a new project IRI based on a random UUID.
     * @return a new project IRI.
     */
-  def makeRandomProjectIri: IRI = {
-    val knoraProjectUuid = makeRandomBase64EncodedUuid
-    s"http://$IriDomain/projects/$knoraProjectUuid"
+  def makeRandomProjectIri(projectUUID: String): IRI = {
+    s"http://$IriDomain/projects/$projectUUID"
   }
 
   /**
