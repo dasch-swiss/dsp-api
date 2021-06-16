@@ -16,6 +16,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
+    scalacopts = ["-deprecation"],
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
@@ -34,6 +35,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
+    scalacopts = ["-deprecation"],
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
@@ -53,6 +55,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
+    scalacopts = ["-deprecation"],
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
@@ -71,6 +74,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
+    scalacopts = ["-deprecation"],
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
@@ -90,6 +94,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
+    scalacopts = ["-deprecation"],
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
@@ -129,6 +134,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
+    scalacopts = ["-deprecation"],
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
@@ -147,6 +153,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
+    scalacopts = ["-deprecation"],
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
@@ -165,6 +172,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
+    scalacopts = ["-deprecation"],
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
@@ -185,6 +193,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
+    scalacopts = ["-deprecation"],
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",
@@ -203,6 +212,7 @@ scala_test(
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],
     # unused_dependency_checker_mode = "warn",
+    scalacopts = ["-deprecation"],
     deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
         "//webapi:main_library",
         "//webapi:test_library",

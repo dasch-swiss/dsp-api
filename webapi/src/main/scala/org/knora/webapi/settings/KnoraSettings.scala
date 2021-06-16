@@ -270,11 +270,6 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
 
   val bcryptPasswordStrength: Int = config.getInt("app.bcrypt-password-strength")
 
-  // Cache Service
-  val cacheServiceEnabled: Boolean = config.getBoolean("app.cache-service.enabled")
-  val cacheServiceRedisHost: String = config.getString("app.cache-service.redis.host")
-  val cacheServiceRedisPort: Int = config.getInt("app.cache-service.redis.port")
-
   // Client test data service
 
   val collectClientTestData: Boolean = if (config.hasPath("app.client-test-data-service.collect-client-test-data")) {
@@ -297,8 +292,8 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
 
   private def getFiniteDuration(path: String, underlying: Config): FiniteDuration =
     Duration(underlying.getString(path)) match {
-      case x: FiniteDuration ⇒ x
-      case _ ⇒ throw new ConfigurationException(s"Config setting '$path' must be a finite duration")
+      case x: FiniteDuration => x
+      case _                 => throw new ConfigurationException(s"Config setting '$path' must be a finite duration")
     }
 
   val prometheusEndpoint: Boolean = config.getBoolean("app.monitoring.prometheus-endpoint")

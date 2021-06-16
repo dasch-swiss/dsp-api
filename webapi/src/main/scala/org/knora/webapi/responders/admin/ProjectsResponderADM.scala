@@ -1152,7 +1152,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   private def getProjectFromCacheOrTriplestore(
       identifier: ProjectIdentifierADM,
       featureFactoryConfig: FeatureFactoryConfig): Future[Option[ProjectADM]] = {
-    if (settings.cacheServiceEnabled) {
+    if (cacheServiceSettings.cacheServiceEnabled) {
       // caching enabled
       getProjectFromCache(identifier)
         .flatMap {
@@ -1404,7 +1404,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     * Removes the project from cache.
     */
   private def invalidateCachedProjectADM(maybeProject: Option[ProjectADM]): Future[Boolean] = {
-    if (settings.cacheServiceEnabled) {
+    if (cacheServiceSettings.cacheServiceEnabled) {
       val keys: Set[String] =
         Seq(maybeProject.map(_.id), maybeProject.map(_.shortname), maybeProject.map(_.shortcode)).flatten.toSet
       // only send to Redis if keys are not empty

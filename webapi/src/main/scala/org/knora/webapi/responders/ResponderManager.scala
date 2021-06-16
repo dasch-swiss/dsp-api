@@ -60,7 +60,7 @@ import scala.concurrent.ExecutionContext
   *
   * @param appActor the main application actor.
   */
-class ResponderManager(appActor: ActorRef) extends Actor with ActorLogging {
+class ResponderManager(appActor: ActorRef, responderData: ResponderData) extends Actor with ActorLogging {
   this: ActorMaker =>
 
   /**
@@ -73,14 +73,6 @@ class ResponderManager(appActor: ActorRef) extends Actor with ActorLogging {
     */
   protected implicit val executionContext: ExecutionContext =
     system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-
-  /**
-    * The responder data.
-    */
-  private val responderData = ResponderData(
-    system = system,
-    appActor = appActor
-  )
 
   // A subclass can replace the standard responders with custom responders, e.g. for testing. To do this, it must
   // override one or more of the protected val members below representing responder classes. To construct a default

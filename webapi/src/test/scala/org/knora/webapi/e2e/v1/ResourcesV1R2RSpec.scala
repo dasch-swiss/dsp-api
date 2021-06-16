@@ -1715,7 +1715,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
     "create 10,000 anything:Thing resources with random contents" in {
       def maybeAppendValue(random: Random, xmlStringBuilder: StringBuilder, value: String): Unit = {
-        if (random.nextBoolean) {
+        if (random.nextBoolean()) {
           xmlStringBuilder.append(value)
         }
       }

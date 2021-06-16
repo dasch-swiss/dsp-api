@@ -1,26 +1,27 @@
 /*
  * Copyright © 2015-2021 the contributors (see Contributors.md).
  *
- *  This file is part of Knora.
+ *  This file is part of the DaSCH Service Platform.
  *
- *  Knora is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU Affero General Public License as published
- *  by the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
+ *  The DaSCH Service Platform  is free software: you can redistribute it
+ *  and/or modify it under the terms of the GNU Affero General Public
+ *  License as published by the Free Software Foundation, either version 3
+ *  of the License, or (at your option) any later version.
  *
- *  Knora is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  The DaSCH Service Platform is distributed in the hope that it will be
+ *  useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ *  of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU Affero General Public License for more details.
  *
  *  You should have received a copy of the GNU Affero General Public
- *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ *  License along with the DaSCH Service Platform.  If not, see
+ *  <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi.store.cacheservice
+package org.knora.webapi.store.cacheservice.serialization
 
 import com.typesafe.config.ConfigFactory
-import org.knora.webapi._
+import org.knora.webapi.UnitSpec
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -33,9 +34,11 @@ object CacheSerializationSpec {
 }
 
 /**
-  * This spec is used to test [[org.knora.webapi.store.cacheservice.CacheSerialization]].
+  * This spec is used to test [[CacheSerialization]].
   */
-class CacheSerializationSpec extends CoreSpec(CacheSerializationSpec.config) {
+class CacheSerializationSpec extends UnitSpec(CacheSerializationSpec.config) {
+
+  implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
 
   "serialize and deserialize" should {
 
