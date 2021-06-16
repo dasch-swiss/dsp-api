@@ -2516,8 +2516,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
       // Create an event for the resource at creation time
       (creationTimeHist, resourceAtCreation) = fullReps.head
-      resourceCreateEvent: ResourceAndValueHistoryV2 = getResourceAtCreationDate(resourceAtCreation, creationTimeHist)
-      resourceCreationEvent: Seq[ResourceAndValueHistoryV2] = Seq(resourceCreateEvent)
+      resourceCreationEvent: Seq[ResourceAndValueHistoryV2] = getResourceCreationEvent(resourceAtCreation,
+                                                                                       creationTimeHist)
 
       // If there is a version history for deletion of the event, create a delete resource event for it.
       (deletionRep, resourceAtValueChanges) = fullReps.tail.partition {
@@ -2527,11 +2527,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             .deletionInfo
             .exists(deletionInfo => deletionInfo.deleteDate == resHist.versionDate)
       }
-      resourceDeleteEvent = getResourceAtDeletionDates(deletionRep)
+      resourceDeleteEvent = getResourceDeletionEvents(deletionRep)
 
       // For each value version, form an event
       valuesEvents: Seq[ResourceAndValueHistoryV2] = resourceAtValueChanges.flatMap {
-        case (versionHist, readResource) => getValueAtGivenVersionDate(readResource, versionHist, fullReps)
+        case (versionHist, readResource) => getValueEvents(readResource, versionHist, fullReps)
       }
 
       // Get the update resource metadata event, if there is any.
@@ -2575,8 +2575,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @param versionInfoAtCreation the history info of the version; i.e. versionDate and author.
     * @return a createResource event.
     */
-  private def getResourceAtCreationDate(resourceAtTimeOfCreation: ReadResourceV2,
-                                        versionInfoAtCreation: ResourceHistoryEntry): ResourceAndValueHistoryV2 = {
+  private def getResourceCreationEvent(resourceAtTimeOfCreation: ReadResourceV2,
+                                       versionInfoAtCreation: ResourceHistoryEntry): Seq[ResourceAndValueHistoryV2] = {
 
     val requestBody: ResourceEventBody = ResourceEventBody(
       resourceIri = resourceAtTimeOfCreation.resourceIri,
@@ -2590,12 +2590,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       creationDate = Some(resourceAtTimeOfCreation.creationDate)
     )
 
-    ResourceAndValueHistoryV2(
-      eventType = ResourceAndValueEventsUtil.CREATE_RESOURCE_EVENT,
-      versionDate = versionInfoAtCreation.versionDate,
-      author = versionInfoAtCreation.author,
-      eventBody = requestBody
-    )
+    Seq(
+      ResourceAndValueHistoryV2(
+        eventType = ResourceAndValueEventsUtil.CREATE_RESOURCE_EVENT,
+        versionDate = versionInfoAtCreation.versionDate,
+        author = versionInfoAtCreation.author,
+        eventBody = requestBody
+      ))
   }
 
   /**
@@ -2605,7 +2606,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     *                             the full representation of resource at time of deletion.
     * @return a seq of deleteResource events.
     */
-  private def getResourceAtDeletionDates(
+  private def getResourceDeletionEvents(
       resourceDeletionInfo: Seq[(ResourceHistoryEntry, ReadResourceV2)]): Seq[ResourceAndValueHistoryV2] = {
     resourceDeletionInfo.map {
       case (delHist, fullRepresentation) =>
@@ -2633,7 +2634,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @param allResourceVersions all full representations of resource for each version date in its history.
     * @return a create/update/delete value event.
     */
-  private def getValueAtGivenVersionDate(
+  private def getValueEvents(
       resourceAtGivenTime: ReadResourceV2,
       versionHist: ResourceHistoryEntry,
       allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)]): Seq[ResourceAndValueHistoryV2] = {
