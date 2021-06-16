@@ -1626,7 +1626,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     */
   private def getUserFromCacheOrTriplestore(identifier: UserIdentifierADM,
                                             featureFactoryConfig: FeatureFactoryConfig): Future[Option[UserADM]] = {
-    if (settings.cacheServiceEnabled) {
+    if (cacheServiceSettings.cacheServiceEnabled) {
       // caching enabled
       getUserFromCache(identifier)
         .flatMap {
@@ -1981,7 +1981,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * Removes the user from cache.
     */
   private def invalidateCachedUserADM(maybeUser: Option[UserADM]): Future[Boolean] = {
-    if (settings.cacheServiceEnabled) {
+    if (cacheServiceSettings.cacheServiceEnabled) {
       val keys: Set[String] = Seq(maybeUser.map(_.id), maybeUser.map(_.email), maybeUser.map(_.username)).flatten.toSet
       // only send to Redis if keys are not empty
       if (keys.nonEmpty) {

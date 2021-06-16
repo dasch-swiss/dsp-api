@@ -64,18 +64,22 @@ object TestContainers {
   val sipiIp: String = SipiContainer.getHost
   val sipiPort: Int = SipiContainer.getFirstMappedPort
 
-  val RedisImageName: DockerImageName = DockerImageName.parse("redis:5")
-  val RedisContainer = new GenericContainer(RedisImageName)
-  RedisContainer.withExposedPorts(6379)
-  RedisContainer.start()
+
+  // The new default is the inmem cache implementation, so no need
+  // for a container
+  //
+  // val RedisImageName: DockerImageName = DockerImageName.parse("redis:5")
+  // val RedisContainer = new GenericContainer(RedisImageName)
+  // RedisContainer.withExposedPorts(6379)
+  // RedisContainer.start()
 
   private val portMap = Map(
     "app.triplestore.fuseki.port" -> FusekiContainer.getFirstMappedPort,
     "app.sipi.internal-host" -> sipiIp,
-    "app.sipi.internal-port" -> sipiPort,
-    "app.cache-service.redis.port" -> RedisContainer.getFirstMappedPort
+    "app.sipi.internal-port" -> sipiPort
+    // "app.cache-service.redis.port" -> RedisContainer.getFirstMappedPort
   ).asJava
 
   // all tests need to be configured with these ports.
-  val PortConfig: Config = ConfigFactory.parseMap(portMap, "Ports from ContainerizedSpec")
+  val PortConfig: Config = ConfigFactory.parseMap(portMap, "Ports from TestContainers")
 }

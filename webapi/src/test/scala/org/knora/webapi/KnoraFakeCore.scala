@@ -66,7 +66,7 @@ trait KnoraFakeCore {
     * Starts the Faked Knora API server.
     */
   def startService(): Unit = {
-    Http().bindAndHandle(Route.handlerFlow(apiRoutes), settings.internalKnoraApiHost, settings.internalKnoraApiPort)
+    Http().newServerAt(settings.internalKnoraApiHost, settings.internalKnoraApiPort).bindFlow(Route.toFlow(apiRoutes))
     println(
       s"Faked Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}.")
   }

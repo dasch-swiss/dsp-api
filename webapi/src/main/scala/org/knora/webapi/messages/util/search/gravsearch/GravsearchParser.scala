@@ -172,7 +172,7 @@ object GravsearchParser {
       wherePatterns.toSeq
     }
 
-    private def unsupported(node: algebra.QueryModelNode) {
+    private def unsupported(node: algebra.QueryModelNode): Unit = {
       throw GravsearchException(s"SPARQL feature not supported in Gravsearch query: $node")
     }
 

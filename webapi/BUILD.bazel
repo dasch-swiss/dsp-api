@@ -30,6 +30,7 @@ scala_library(
         "//webapi/scripts:fuseki_repository_config_ttl_template",
         "//webapi/src/main/resources",
     ],
+    scalacopts = ["-deprecation"],
     unused_dependency_checker_mode = "warn",
     runtime_deps = [
         "@maven//:ch_qos_logback_logback_classic",
@@ -140,6 +141,7 @@ scala_library(
         "//sipi/config",
         "//webapi/src/test/resources",
     ],
+    scalacopts = ["-deprecation"],
     unused_dependency_checker_mode = "warn",
     runtime_deps = [
         "@maven//:ch_qos_logback_logback_classic",
@@ -161,6 +163,9 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/routing",
         "//webapi/src/main/scala/org/knora/webapi/settings",
         "//webapi/src/main/scala/org/knora/webapi/store",
+        "//webapi/src/main/scala/org/knora/webapi/store/cacheservice",
+        "//webapi/src/main/scala/org/knora/webapi/store/cacheservice/inmem",
+        "//webapi/src/main/scala/org/knora/webapi/store/cacheservice/settings",
         "//webapi/src/main/scala/org/knora/webapi/util",
         # Logging
         "@maven//:com_typesafe_scala_logging_scala_logging_2_13",

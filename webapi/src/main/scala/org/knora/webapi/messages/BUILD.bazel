@@ -5,6 +5,7 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
 scala_library(
     name = "messages",
     srcs = glob(["**/*.scala"]) + ["//webapi/src/main/twirl:twirl_sources"],
+    scalacopts = ["-deprecation"],
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
@@ -12,6 +13,7 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
         "//webapi/src/main/scala/org/knora/webapi/feature",
         "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/store/cacheservice/settings",
         "//webapi/src/main/scala/org/knora/webapi/util",
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
         "@maven//:com_apicatalog_titanium_json_ld",
