@@ -2618,7 +2618,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "update resource's metadata to test update resource metadata event" in {
-      val resourceIri = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+      val resourceIri = "http://rdfh.ch/0001/thing_with_BCE_date2"
       responderManager ! UpdateResourceMetadataRequestV2(
         resourceIri = resourceIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,

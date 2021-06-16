@@ -385,6 +385,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             s"Resource <${resource.resourceIri}> is not a member of class <${updateResourceMetadataRequestV2.resourceClassIri}>")
         }
 
+        // If resource has already been modified, make sure that its lastModificationDate is given in the request body.
+        _ = if (resource.lastModificationDate.nonEmpty && updateResourceMetadataRequestV2.maybeLastModificationDate.isEmpty) {
+          throw EditConflictException(
+            s"Resource <${resource.resourceIri}> has been modified in the past. Its lastModificationDate " +
+              s"${resource.lastModificationDate.get} must be included in the request body.")
+        }
+
         // Make sure that the resource hasn't been updated since the client got its last modification date.
         _ = if (updateResourceMetadataRequestV2.maybeLastModificationDate.nonEmpty &&
                 resource.lastModificationDate != updateResourceMetadataRequestV2.maybeLastModificationDate) {
