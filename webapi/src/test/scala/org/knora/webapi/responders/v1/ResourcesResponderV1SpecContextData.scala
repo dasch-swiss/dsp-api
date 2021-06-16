@@ -67,7 +67,7 @@ object ResourcesResponderV1SpecContextData {
           restype_name = Some("http://www.knora.org/ontology/0803/incunabula#book"),
           restype_id = "http://www.knora.org/ontology/0803/incunabula#book",
           person_id = "http://rdfh.ch/users/91e19f1e01",
-          project_id = "http://rdfh.ch/projects/0803"
+          project_id = "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
         )),
       parent_res_id = Some("http://rdfh.ch/0803/c5058f3a"),
       resinfo = Some(
@@ -176,7 +176,7 @@ object ResourcesResponderV1SpecContextData {
           restype_name = Some("http://www.knora.org/ontology/0803/incunabula#page"),
           restype_id = "http://www.knora.org/ontology/0803/incunabula#page",
           person_id = "http://rdfh.ch/users/91e19f1e01",
-          project_id = "http://rdfh.ch/projects/0803"
+          project_id = "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
         )),
       canonical_res_id = "http://rdfh.ch/0803/8a0b1e75",
       context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_PARTOF,

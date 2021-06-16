@@ -14,7 +14,7 @@
 
 <http://www.knora.org/ontology/00FF/images> rdf:type owl:Ontology ;
     rdfs:label "The images demo ontology" ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/00FF> .
+    knora-base:attachedToProject <http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA> .
 
 ##########################################################
 #

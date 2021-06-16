@@ -48,7 +48,7 @@ included in the request body, for example:
 ```json
 {
     "forGroup":"http://rdfh.ch/groups/0001/thing-searcher", 
-    "forProject":"http://rdfh.ch/projects/0001", 
+    "forProject":"http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA", 
     "hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
 }
 ``` 
@@ -67,7 +67,7 @@ As a response, the created administrative permission and its IRI are returned as
 {
     "administrative_permission": {
         "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
-        "forProject": "http://rdfh.ch/projects/0001",
+        "forProject": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
         "hasPermissions": [
             {
                 "additionalInformation": null,
@@ -95,7 +95,7 @@ default object access permission for a group of a project the request body would
 ```json
 {
     "forGroup":"http://rdfh.ch/groups/0001/thing-searcher",
-    "forProject":"http://rdfh.ch/projects/0001",
+    "forProject":"http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
     "forProperty":null,
     "forResourceClass":null,
     "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
@@ -110,7 +110,7 @@ a resource class of a specific project:
 {
     "id": "http://rdfh.ch/permissions/00FF/DOAP-with-customIri",
     "forGroup":null,
-    "forProject":"http://rdfh.ch/projects/00FF",
+    "forProject":"http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA",
     "forProperty":null,
     "forResourceClass":"http://www.knora.org/ontology/00FF/images#bild",
     "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
@@ -123,7 +123,7 @@ The response contains the newly created permission and its IRI, as:
 {
     "default_object_access_permission": {
         "forGroup": null,
-        "forProject": "http://rdfh.ch/projects/00FF",
+        "forProject": "http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA",
         "forProperty": null,
         "forResourceClass": "http://www.knora.org/ontology/00FF/images#bild",
         "hasPermissions": [

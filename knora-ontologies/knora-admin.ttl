@@ -411,6 +411,17 @@
              knora-base:objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/knora-admin#projectUUID
+:projectUUID rdf:type owl:DatatypeProperty ;
+
+             rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
+
+             rdfs:comment "The unique UUID of a Knora project."@en ;
+
+             knora-base:subjectClassConstraint :knoraProject ;
+
+             knora-base:objectDatatypeConstraint xsd:string .
+
 
 ###  http://www.knora.org/ontology/knora-admin#projectShortcode
 
@@ -601,6 +612,10 @@
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectShortcode ;
                                 owl:cardinality "1"^^xsd:nonNegativeInteger
+                              ] ,
+                              [ rdf:type owl:Restriction ;
+                                  owl:onProperty :projectUUID ;
+                                  owl:maxCardinality "1"^^xsd:nonNegativeInteger
                               ] ,
                               [ rdf:type owl:Restriction ;
                                 owl:onProperty :projectLongname ;

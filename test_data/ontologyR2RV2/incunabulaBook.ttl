@@ -9,7 +9,7 @@
 <http://0.0.0.0:3333/ontology/0803/incunabula/v2>
         a                            owl:Ontology ;
         rdfs:label                   "The incunabula ontology" ;
-        knora-api:attachedToProject  <http://rdfh.ch/projects/0803> .
+        knora-api:attachedToProject  <http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g> .
 
 incunabula:book  a                   owl:Class ;
         rdfs:comment                 "Diese Resource-Klasse beschreibt ein Buch" ;

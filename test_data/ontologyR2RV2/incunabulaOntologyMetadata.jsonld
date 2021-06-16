@@ -3,7 +3,7 @@
     "@id": "http://0.0.0.0:3333/ontology/0803/incunabula/v2",
     "@type": "owl:Ontology",
     "knora-api:attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
     },
     "rdfs:label": "The incunabula ontology",
     "@context": {

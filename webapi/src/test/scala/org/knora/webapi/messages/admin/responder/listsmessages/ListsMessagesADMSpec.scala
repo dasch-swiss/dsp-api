@@ -50,7 +50,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val listInfo = ListRootNodeInfoADM(
         id = "http://rdfh.ch/lists/73d0ec0302",
-        projectIri = "http://rdfh.ch/projects/00FF",
+        projectIri = "http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA",
         labels = StringLiteralSequenceV2(
           Vector(StringLiteralV2("Title", Some("en")),
                  StringLiteralV2("Titel", Some("de")),

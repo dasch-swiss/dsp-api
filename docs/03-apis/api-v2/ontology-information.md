@@ -58,7 +58,7 @@ The response is in the complex API v2 schema. Sample response:
     "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
     "@type" : "owl:Ontology",
     "knora-api:attachedToProject" : {
-      "@id" : "http://rdfh.ch/projects/00FF"
+      "@id" : "http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA"
     },
     "rdfs:label" : "The images demo ontology"
   }, {
@@ -72,7 +72,7 @@ The response is in the complex API v2 schema. Sample response:
     "@id" : "http://0.0.0.0:3333/ontology/0804/dokubib/v2",
     "@type" : "owl:Ontology",
     "knora-api:attachedToProject" : {
-      "@id" : "http://rdfh.ch/projects/0804"
+      "@id" : "http://rdfh.ch/projects/uSId60bJZIbJ5QAsSay_Bw"
     },
     "rdfs:label" : "The dokubib ontology"
   }, {
@@ -93,7 +93,7 @@ The response is in the complex API v2 schema. Sample response:
     "@id": "http://knora.unil.ch/ontology/0001/anything/v2",
     "@type": "owl:Ontology",
     "knora-api:attachedToProject": {
-      "@id": "http://rdfh.ch/projects/0001"
+      "@id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
     },
     "knora-api:lastModificationDate": "2017-12-19T15:23:42.166Z",
     "rdfs:label": "The anything ontology"
@@ -116,14 +116,14 @@ HTTP GET to http://host/v2/ontologies/metadata/PROJECT_IRI[/PROJECT_IRI...]
 The project IRIs must be URL-encoded.
 
 Example response for the `anything` test project
-(project IRI `http://rdfh.ch/projects/0001`):
+(project IRI `http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA`):
 
 ```jsonld
 {
   "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
   "@type" : "owl:Ontology",
   "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/0001"
+    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
   },
   "knora-api:lastModificationDate": "2017-12-19T15:23:42.166Z",
   "rdfs:label" : "The anything ontology",
@@ -512,7 +512,7 @@ sample ontology in the complex schema, `http://0.0.0.0:3333/ontology/00FF/images
   "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
   "@type" : "owl:Ontology",
   "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/00FF"
+    "@id" : "http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA"
   },
   "rdfs:label" : "The images demo ontology",
   "@graph" : [ {

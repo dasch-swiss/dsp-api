@@ -6,17 +6,17 @@
 	xmlns:owl="http://www.w3.org/2002/07/owl#"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
 <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2">
-	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/0001"/>
+	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"/>
 	<knora-api:lastModificationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp">2017-12-19T15:23:42.166Z</knora-api:lastModificationDate>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The anything ontology</rdfs:label>
 </owl:Ontology>
 <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0001/minimal/v2">
-	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/0001"/>
+	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"/>
 	<knora-api:lastModificationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#dateTimeStamp">2019-09-10T08:57:46.633162Z</knora-api:lastModificationDate>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">A minimal ontology</rdfs:label>
 </owl:Ontology>
 <owl:Ontology rdf:about="http://0.0.0.0:3333/ontology/0001/something/v2">
-	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/0001"/>
+	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"/>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">The something ontology</rdfs:label>
 </owl:Ontology>
 

@@ -6,17 +6,17 @@ import AddMappingResponse = MappingFormats.AddMappingResponse;
 const mappingCreation: AddMappingRequest = {
     "http://api.knora.org/ontology/knora-api/v2#mappingHasName": "LetterMapping",
     "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-      "@id": "http://rdfh.ch/projects/0001"
+      "@id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
     },
     "http://www.w3.org/2000/01/rdf-schema#label": "letter mapping"
 };
 
 // see test_data/standoffR2RV2/mappingCreationResponse.jsonld
 const mappingCreationResponse: AddMappingResponse = {
-    "@id": "http://rdfh.ch/projects/0001/mappings/LetterMapping",
+    "@id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA/mappings/LetterMapping",
     "@type": "http://api.knora.org/ontology/knora-api/v2#XMLToStandoffMapping",
     "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-      "@id": "http://rdfh.ch/projects/0001"
+      "@id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
     },
     "http://www.w3.org/2000/01/rdf-schema#label": "letter mapping"
 };

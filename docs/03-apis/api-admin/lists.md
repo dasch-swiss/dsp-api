@@ -76,7 +76,7 @@ Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v
 ```json
   {
     "id": "http://rdfh.ch/lists/0001/a-list",
-    "projectIri": "http://rdfh.ch/projects/0001",
+    "projectIri": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
     "name": "a new list",
     "labels": [{ "value": "Neue Liste mit IRI", "language": "de"}],
     "comments": []
@@ -99,7 +99,7 @@ The response will contain the basic information of the list, `listinfo` and an e
                 }
             ],
             "name": "a new list",
-            "projectIri": "http://rdfh.ch/projects/0001"
+            "projectIri": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
         }
     }
 }
@@ -122,7 +122,7 @@ list and the IRI of the project it belongs to.
  
 ```json
  {   "listIri": "http://rdfh.ch/lists/0001/a-list",
-      "projectIri": "http://rdfh.ch/projects/0001",
+      "projectIri": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
       "name": "new name for the list",
       "labels": [{ "value": "a new label for the list", "language": "en"}],
       "comments": [{ "value": "a new comment for the list", "language": "en"}]
@@ -148,7 +148,7 @@ The response will contain the basic information of the list, `listinfo`, without
             }
         ],
         "name": "new name for the list",
-        "projectIri": "http://rdfh.ch/projects/0001"
+        "projectIri": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
     }
 }
 ```
@@ -233,7 +233,7 @@ There is no need to specify the project IRI because it is automatically extracte
 ```json
      {   
          "parentNodeIri": "http://rdfh.ch/lists/0001/a-list",
-         "projectIri": "http://rdfh.ch/projects/0001",
+         "projectIri": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
          "name": "a child",
          "labels": [{ "value": "New List Node", "language": "en"}],
          "comments": []
@@ -245,7 +245,7 @@ Additionally, each child node can have an optional custom IRI (of [Knora IRI](..
 ```json
 {    "id": "http://rdfh.ch/lists/0001/a-childNode",
      "parentNodeIri": "http://rdfh.ch/lists/0001/a-list",
-     "projectIri": "http://rdfh.ch/projects/0001",
+     "projectIri": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
      "name": "a child",
      "labels": [{ "value": "New List Node", "language": "en"}],
      "comments": []
@@ -276,7 +276,7 @@ number of existing children.
 
 ```json
 {   "parentNodeIri": "http://rdfh.ch/lists/0001/a-list",
-    "projectIri": "http://rdfh.ch/projects/0001",
+    "projectIri": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
     "name": "Inserted new child",
     "position": 0,
     "labels": [{ "value": "New List Node", "language": "en"}],
@@ -299,7 +299,7 @@ node and the IRI of the project it belongs to.
  
 ```json
   {   "listIri": "http://rdfh.ch/lists/0001/a-childNode",
-       "projectIri": "http://rdfh.ch/projects/0001",
+       "projectIri": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
        "name": "new node name",
        "labels": [{ "value": "new node label", "language": "en"}],
        "comments": [{ "value": "new node comment", "language": "en"}]

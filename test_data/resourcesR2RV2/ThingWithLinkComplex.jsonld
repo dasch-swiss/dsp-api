@@ -20,7 +20,7 @@
         "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/LOV=6aLYQFW15jwdyS51YwF"
       },
       "knora-api:attachedToProject" : {
-        "@id" : "http://rdfh.ch/projects/0001"
+        "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
       },
       "knora-api:attachedToUser" : {
         "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -53,7 +53,7 @@
     "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY"
   },
   "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/0001"
+    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
   },
   "knora-api:attachedToUser" : {
     "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"

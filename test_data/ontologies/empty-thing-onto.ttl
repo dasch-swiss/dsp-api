@@ -16,7 +16,7 @@
 @prefix : <http://www.knora.org/ontology/0001/empty-thing#> .
 <http://www.knora.org/ontology/0001/empty-thing> rdf:type owl:Ontology ;
     rdfs:label "The empty thing ontology" ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/0001> .
+    knora-base:attachedToProject <http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA> .
 
 :EmptyThing rdf:type owl:Class ;
 

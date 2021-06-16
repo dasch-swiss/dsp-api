@@ -476,7 +476,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A thing",
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "properties": {
                    |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml": ${xml1.toJson.compactPrint}, "mapping_id": "$mappingIri"}}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
@@ -537,7 +537,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                    |{
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "res_id": "${firstThingIri.get}",
                    |    "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                    |    "richtext_value": {
@@ -582,7 +582,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                    |{
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "richtext_value": {
                    |        "xml": ${xml.toJson.compactPrint},
                    |        "mapping_id": "$mappingIri"
@@ -649,7 +649,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "properties": {
                    |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id" :"$mappingIri"}}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
@@ -767,7 +767,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "properties": {
                    |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint}, "mapping_id": "$mappingIri"}}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
@@ -801,7 +801,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "properties": {
                    |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id": "$mappingIri"}}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
@@ -843,7 +843,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "properties": {
                    |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${firstXML.toJson.compactPrint},"mapping_id": "$mappingIri"}}, {"richtext_value":{"xml":${secondXML.toJson.compactPrint},"mapping_id": "$mappingIri"}}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
@@ -936,7 +936,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "properties": {
                    |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id":"$mappingIri"}}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
@@ -1001,7 +1001,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "properties": {
                    |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${xml3.toJson.compactPrint}, "mapping_id": "$mappingIri"}}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
@@ -1080,7 +1080,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "properties": {
                    |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml": ${xml4.toJson.compactPrint},"mapping_id": "$mappingIri"}}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInteger": [{"int_value":12345}],
@@ -1185,7 +1185,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A thing with a link value that has a comment",
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "properties": {
                    |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value": {"utf8str": "simple text"}}],
                    |        "http://www.knora.org/ontology/0001/anything#hasOtherThing": [{"link_value":"${sixthThingIri.get}", "comment":"$notTheMostBoringComment"}]
@@ -1237,7 +1237,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
       val newValueParams =
         s"""
                    |{
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "res_id": "${seventhThingIri.get}",
                    |    "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                    |    "richtext_value": {
@@ -1271,7 +1271,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A thing with a BCE date of the murder of Caesar",
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "properties": {
                    |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value": "JULIAN:44-03-15 BCE"}]
                    |    }
@@ -1531,7 +1531,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0001-anything:Thing>
                    |</knoraXmlImport:resources>""".stripMargin
 
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA", "UTF-8")
 
       Post(s"/v1/resources/xmlimport/$projectIri",
            HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
@@ -1556,7 +1556,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0001-anything:Thing>
                    |</knoraXmlImport:resources>""".stripMargin
 
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g", "UTF-8")
 
       Post(s"/v1/resources/xmlimport/$projectIri",
            HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
@@ -1607,7 +1607,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0000-example-box:Box>
                    |</knoraXmlImport:resources>""".stripMargin
 
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g", "UTF-8")
 
       Post(s"/v1/resources/xmlimport/$projectIri",
            HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
@@ -1632,7 +1632,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0001-anything:ThingWithSeqnum>
                    |</knoraXmlImport:resources>""".stripMargin
 
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA", "UTF-8")
 
       Post(s"/v1/resources/xmlimport/$projectIri",
            HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
@@ -1830,7 +1830,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                   |</knoraXmlImport:resources>
                 """.stripMargin)
 
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA", "UTF-8")
 
       Post(
         s"/v1/resources/xmlimport/$projectIri",
@@ -1849,7 +1849,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "Ein Ding auf deutsch",
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "properties": {
                    |      "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value": {"utf8str": "Ein deutscher Text", "language": "de"}}]
                    |    }
@@ -1943,7 +1943,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0001/anything#Thing",
                    |    "label": "A second thing",
-                   |    "project_id": "http://rdfh.ch/projects/0001",
+                   |    "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |    "properties": {
                    |        "http://www.knora.org/ontology/0001/anything#hasText": [{"richtext_value":{"xml":${xml.toJson.compactPrint},"mapping_id":"$mappingIri", "language": "en"}}]
                    |    }
@@ -1999,7 +1999,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0001-anything:Thing>
                    |</knoraXmlImport:resources>""".stripMargin
 
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA", "UTF-8")
 
       Post(s"/v1/resources/xmlimport/$projectIri",
            HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
@@ -2068,7 +2068,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0001-anything:Thing>
                    |</knoraXmlImport:resources>""".stripMargin
 
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA", "UTF-8")
 
       Post(s"/v1/resources/xmlimport/$projectIri",
            HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
@@ -2127,7 +2127,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0001-anything:Thing>
                    |</knoraXmlImport:resources>""".stripMargin
 
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA", "UTF-8")
 
       Post(s"/v1/resources/xmlimport/$projectIri",
            HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
@@ -2160,7 +2160,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |    </p0001-anything:Thing>
                    |</knoraXmlImport:resources>""".stripMargin
 
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA", "UTF-8")
 
       Post(s"/v1/resources/xmlimport/$projectIri",
            HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(
@@ -2197,7 +2197,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |</knoraXmlImport:resources>
                  """.stripMargin
 
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA", "UTF-8")
 
       Post(s"/v1/resources/xmlimport/$projectIri",
            HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), xmlImport)) ~> addCredentials(

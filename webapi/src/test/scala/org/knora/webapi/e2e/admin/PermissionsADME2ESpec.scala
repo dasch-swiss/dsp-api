@@ -197,7 +197,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val projectIri = result
           .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
           .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/0001")
+        assert(projectIri == "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA")
         val permissions = result
           .getOrElse("hasPermissions",
                      throw DeserializationException("The expected field 'hasPermissions' is missing."))
@@ -239,7 +239,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           s"""{
                |    "administrative_permission": {
                |        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
-               |        "forProject": "http://rdfh.ch/projects/0001",
+               |        "forProject": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                |        "hasPermissions": [
                |            {
                |                "additionalInformation": null,
@@ -339,7 +339,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val projectIri = result
           .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
           .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/0001")
+        assert(projectIri == "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA")
         val permissions = result
           .getOrElse("hasPermissions",
                      throw DeserializationException("The expected field 'hasPermissions' is missing."))
@@ -403,7 +403,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val projectIri = result
           .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
           .convertTo[String]
-        assert(projectIri == "http://rdfh.ch/projects/00FF")
+        assert(projectIri == "http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA")
         val permissions = result
           .getOrElse("hasPermissions",
                      throw DeserializationException("The expected field 'hasPermissions' is missing."))

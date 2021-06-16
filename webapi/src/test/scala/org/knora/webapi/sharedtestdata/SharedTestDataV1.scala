@@ -77,7 +77,7 @@ object SharedTestDataV1 {
   /** ***********************************/
   /** Images Demo Project Admin Data   **/
   /** ***********************************/
-  val IMAGES_PROJECT_IRI = "http://rdfh.ch/projects/00FF"
+  val IMAGES_PROJECT_IRI = "http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA"
 
   /* represents 'user01' as found in admin-data.ttl  */
   def imagesUser01 = UserProfileV1(
@@ -182,7 +182,7 @@ object SharedTestDataV1 {
   /** ***********************************/
   /** Incunabula Project Admin Data    **/
   /** ***********************************/
-  val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/0803"
+  val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
 
   /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
   def incunabulaProjectAdminUser = UserProfileV1(
@@ -287,7 +287,7 @@ object SharedTestDataV1 {
   /** **********************************/
   /** Anything Admin Data             **/
   /** **********************************/
-  val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/0001"
+  val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
 
   def anythingAdminUser = UserProfileV1(
     userData = UserDataV1(
@@ -386,7 +386,7 @@ object SharedTestDataV1 {
   /** **********************************/
   /** BEOL                            **/
   /** **********************************/
-  val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/0801"
+  val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
 
   def beolProjectInfo = ProjectInfoV1(
     id = BEOL_PROJECT_IRI,
@@ -441,7 +441,7 @@ object SharedTestDataV1 {
   /** **********************************/
   /** WEBERN                          **/
   /** **********************************/
-  val WEBERN_PROJECT_IRI = "http://rdfh.ch/projects/0806"
+  val WEBERN_PROJECT_IRI = "http://rdfh.ch/projects/r5rM3chy87PJU1NZPFx3WQ"
 
   def webernProjectInfo = ProjectInfoV1(
     id = WEBERN_PROJECT_IRI,

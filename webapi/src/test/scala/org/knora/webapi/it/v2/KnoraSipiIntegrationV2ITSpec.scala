@@ -381,7 +381,7 @@ class KnoraSipiIntegrationV2ITSpec
                    |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
                    |  },
                    |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                    |  },
                    |  "rdfs:label" : "test thing",
                    |  "@context" : {
@@ -555,7 +555,7 @@ class KnoraSipiIntegrationV2ITSpec
                    |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
                    |  },
                    |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                    |  },
                    |  "rdfs:label" : "test thing",
                    |  "@context" : {
@@ -688,7 +688,7 @@ class KnoraSipiIntegrationV2ITSpec
                    |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
                    |  },
                    |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                    |  },
                    |  "rdfs:label" : "text file",
                    |  "@context" : {
@@ -813,7 +813,7 @@ class KnoraSipiIntegrationV2ITSpec
                    |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
                    |  },
                    |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                    |  },
                    |  "rdfs:label" : "still image file",
                    |  "@context" : {
@@ -851,7 +851,7 @@ class KnoraSipiIntegrationV2ITSpec
                    |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
                    |  },
                    |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                    |  },
                    |  "rdfs:label" : "text file",
                    |  "@context" : {
@@ -975,7 +975,7 @@ class KnoraSipiIntegrationV2ITSpec
            |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
            |  },
            |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/0001"
+           |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
            |  },
            |  "rdfs:label" : "test thing",
            |  "@context" : {
@@ -1102,7 +1102,7 @@ class KnoraSipiIntegrationV2ITSpec
            |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
            |  },
            |  "knora-api:attachedToProject" : {
-           |    "@id" : "http://rdfh.ch/projects/0001"
+           |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
            |  },
            |  "rdfs:label" : "test audio representation",
            |  "@context" : {

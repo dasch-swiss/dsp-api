@@ -606,7 +606,7 @@ The project IRI must be URL-encoded. The response is a list of events describing
                     "@type": "xsd:dateTimeStamp"
                 },
                 "knora-api:attachedToProject": {
-                    "@id": "http://rdfh.ch/projects/0001"
+                    "@id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                 }
             },
             "knora-api:versionDate": {

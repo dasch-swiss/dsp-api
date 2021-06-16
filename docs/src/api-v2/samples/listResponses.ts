@@ -7,7 +7,7 @@ const treeList: List = {
   "@id": "http://rdfh.ch/lists/0001/treeList",
   "@type": "http://api.knora.org/ontology/knora-api/v2#ListNode",
   "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-    "@id": "http://rdfh.ch/projects/0001"
+    "@id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
   },
   "http://api.knora.org/ontology/knora-api/v2#hasSubListNode": [
     {

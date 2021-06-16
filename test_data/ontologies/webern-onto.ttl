@@ -12,7 +12,7 @@
 
 <http://www.knora.org/ontology/0806/webern> rdf:type owl:Ontology ;
     rdfs:label "The Anton Webern project ontology" ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/0806> .
+    knora-base:attachedToProject <http://rdfh.ch/projects/r5rM3chy87PJU1NZPFx3WQ> .
 
     ##########################################################
     #

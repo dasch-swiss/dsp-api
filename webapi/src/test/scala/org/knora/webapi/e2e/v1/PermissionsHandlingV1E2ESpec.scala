@@ -64,7 +64,7 @@ class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.
                   |{
                   |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
                   |    "label": "Testperson",
-                  |    "project_id": "http://rdfh.ch/projects/00FF",
+                  |    "project_id": "http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA",
                   |    "properties": {
                   |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
                   |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
@@ -87,7 +87,7 @@ class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.
                   |{
                   |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
                   |    "label": "Testperson",
-                  |    "project_id": "http://rdfh.ch/projects/00FF",
+                  |    "project_id": "http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA",
                   |    "properties": {
                   |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
                   |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
@@ -107,7 +107,7 @@ class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.
                   |{
                   |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
                   |    "label": "Testperson",
-                  |    "project_id": "http://rdfh.ch/projects/00FF",
+                  |    "project_id": "http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA",
                   |    "properties": {
                   |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
                   |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]

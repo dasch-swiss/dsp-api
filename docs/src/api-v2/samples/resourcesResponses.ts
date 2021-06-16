@@ -162,7 +162,7 @@ const Zeitgloecklein: ApiV2WithValueObjects.Resource = {
     "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
   },
   "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-    "@id": "http://rdfh.ch/projects/0803"
+    "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
   },
   "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
     "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -201,7 +201,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -243,7 +243,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8a0b1e75i"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -302,7 +302,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -344,7 +344,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/4f11adafd"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -403,7 +403,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -445,7 +445,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/14173cea9"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -504,7 +504,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -546,7 +546,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/d91ccb2401I"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -605,7 +605,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -647,7 +647,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/9e225a5f01V"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -706,7 +706,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -748,7 +748,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/6328e99901r"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -807,7 +807,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -849,7 +849,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/282e78d401E"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -908,7 +908,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -950,7 +950,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/ed33070f02X"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1009,7 +1009,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1051,7 +1051,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b239964902J"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1110,7 +1110,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1152,7 +1152,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/773f258402e"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1211,7 +1211,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1253,7 +1253,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/3c45b4be023"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1312,7 +1312,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1354,7 +1354,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/014b43f9025"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1413,7 +1413,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1455,7 +1455,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c650d23303f"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1514,7 +1514,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1556,7 +1556,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8b56616e03V"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1615,7 +1615,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1657,7 +1657,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/505cf0a803X"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1716,7 +1716,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1758,7 +1758,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/15627fe303y"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1817,7 +1817,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1859,7 +1859,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/da670e1e04u"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1918,7 +1918,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -1960,7 +1960,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/9f6d9d5804H"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2019,7 +2019,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2061,7 +2061,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/64732c9304M"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2120,7 +2120,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2162,7 +2162,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/2979bbcd04m"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2221,7 +2221,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2263,7 +2263,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/ee7e4a0805h"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2322,7 +2322,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2364,7 +2364,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b384d94205e"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2423,7 +2423,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2465,7 +2465,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/788a687d05M"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2524,7 +2524,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2566,7 +2566,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/3d90f7b705A"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2625,7 +2625,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-            "@id": "http://rdfh.ch/projects/0803"
+            "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
           },
           "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
             "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2667,7 +2667,7 @@ const pagesOfZeitgloecklein: ApiV2WithValueObjects.ResourcesSequence = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/029686f205y"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0803"
+        "@id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -2865,7 +2865,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-        "@id": "http://rdfh.ch/projects/0001"
+        "@id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
       },
       "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
         "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -2941,7 +2941,7 @@ const Thing: ApiV2WithValueObjects.Resource = {
     "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk"
   },
   "http://api.knora.org/ontology/knora-api/v2#attachedToProject": {
-    "@id": "http://rdfh.ch/projects/0001"
+    "@id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
   },
   "http://api.knora.org/ontology/knora-api/v2#attachedToUser": {
     "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"

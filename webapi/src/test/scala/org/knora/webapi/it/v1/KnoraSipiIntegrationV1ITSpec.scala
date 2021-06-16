@@ -233,7 +233,7 @@ class KnoraSipiIntegrationV1ITSpec
                    |    },
                    |    "file": "${uploadedFile.internalFilename}",
                    |    "label": "test page",
-                   |    "project_id": "http://rdfh.ch/projects/0803"
+                   |    "project_id": "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
                    |}
                 """.stripMargin
 
@@ -289,7 +289,7 @@ class KnoraSipiIntegrationV1ITSpec
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#Thing"),
           "label" -> JsString("Wild thing"),
-          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
+          "project_id" -> JsString("http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"),
           "properties" -> JsObject(
             Map(
               "http://www.knora.org/ontology/0001/anything#hasText" -> JsArray(
@@ -361,7 +361,7 @@ class KnoraSipiIntegrationV1ITSpec
                    |    </p0803-incunabula:page>
                    |</knoraXmlImport:resources>""".stripMargin
 
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g", "UTF-8")
 
       // Send the JSON in a POST request to the Knora API server.
       val knoraPostRequest: HttpRequest = Post(
@@ -412,7 +412,7 @@ class KnoraSipiIntegrationV1ITSpec
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
           "label" -> JsString("XSLT"),
-          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
+          "project_id" -> JsString("http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"),
           "properties" -> JsObject(),
           "file" -> JsString(uploadedFile.internalFilename)
         )
@@ -440,7 +440,7 @@ class KnoraSipiIntegrationV1ITSpec
       val paramsCreateLetterMappingFromXML =
         s"""
                    |{
-                   |  "project_id": "http://rdfh.ch/projects/0001",
+                   |  "project_id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                    |  "label": "mapping for letters with XSLT",
                    |  "mappingName": "LetterMappingXSLT"
                    |}
@@ -747,7 +747,7 @@ class KnoraSipiIntegrationV1ITSpec
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#ThingDocument"),
           "label" -> JsString("PDF file"),
-          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
+          "project_id" -> JsString("http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"),
           "properties" -> JsObject(),
           "file" -> JsString(uploadedPdfFile.internalFilename)
         )
@@ -839,7 +839,7 @@ class KnoraSipiIntegrationV1ITSpec
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#ThingDocument"),
           "label" -> JsString("Zip file"),
-          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
+          "project_id" -> JsString("http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"),
           "properties" -> JsObject(),
           "file" -> JsString(uploadedZipFile.internalFilename)
         )
@@ -929,7 +929,7 @@ class KnoraSipiIntegrationV1ITSpec
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#AudioRepresentation"),
           "label" -> JsString("Wav file"),
-          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
+          "project_id" -> JsString("http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"),
           "properties" -> JsObject(),
           "file" -> JsString(uploadedWavFile.internalFilename)
         )

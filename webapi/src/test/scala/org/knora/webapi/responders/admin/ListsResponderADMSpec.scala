@@ -302,9 +302,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
-        expectMsg(
-          Failure(DuplicateValueException(
-            "The name sommer is already used by a list inside the project http://rdfh.ch/projects/00FF.")))
+        expectMsg(Failure(DuplicateValueException(
+          "The name sommer is already used by a list inside the project http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA.")))
       }
 
       "add child to list - to the root node" in {

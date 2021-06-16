@@ -52,7 +52,7 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
     {
       "name": "NewGroup",
       "description": "NewGroupDescription",
-      "project": "http://rdfh.ch/projects/00FF",
+      "project": "http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA",
       "status": true,
       "selfjoin": false
     }
@@ -66,7 +66,7 @@ specified by the `id` in the request body as below:
       "id": "http://rdfh.ch/groups/00FF/group-with-custom-Iri",  
       "name": "GroupWithCustomIRI",
       "description": "A new group with a custom IRI",
-      "project": "http://rdfh.ch/projects/00FF",
+      "project": "http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA",
       "status": true,
       "selfjoin": false
     }

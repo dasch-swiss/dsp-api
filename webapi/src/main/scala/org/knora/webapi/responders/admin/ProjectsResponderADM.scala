@@ -1052,15 +1052,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     def projectCreateTask(createProjectRequest: CreateProjectApiRequestADM,
                           requestingUser: UserADM): Future[ProjectOperationResponseADM] =
       for {
-        // check if required properties are not empty
-        _ <- Future(
-          if (createProjectRequest.shortname.isEmpty) throw BadRequestException("'Shortname' cannot be empty"))
-
-        // Check if the requesting user is allowed to create project
-        _ = if (!requestingUser.permissions.isSystemAdmin) {
-          // not a system admin
-          throw ForbiddenException("A new project can only be created by a system admin.")
-        }
 
         // Check if the supplied shortname is unique
         shortnameExists <- projectByShortnameExists(createProjectRequest.shortname)
@@ -1069,15 +1060,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             s"Project with the shortname: '${createProjectRequest.shortname}' already exists")
         }
 
-        // check if the supplied shortcode is valid and unique
-        validatedShortcode: String = StringFormatter.getGeneralInstance.validateProjectShortcode(
-          createProjectRequest.shortcode,
-          errorFun =
-            throw BadRequestException(s"The supplied short code: '${createProjectRequest.shortcode}' is not valid.")
-        )
-
-        shortcodeExists <- projectByShortcodeExists(validatedShortcode)
-
+        // Check if the supplied shortcode is unique
+        shortcodeExists <- projectByShortcodeExists(createProjectRequest.shortcode)
         _ = if (shortcodeExists) {
           throw DuplicateValueException(
             s"Project with the shortcode: '${createProjectRequest.shortcode}' already exists")
@@ -1086,6 +1070,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         // check the custom IRI; if not given, create an unused IRI
         customProjectIri: Option[SmartIri] = createProjectRequest.id.map(iri => iri.toSmartIri)
         newProjectIRI: IRI <- checkOrCreateEntityIri(customProjectIri, stringFormatter.makeRandomProjectIri)
+
+        // Make a UUID for the new value
+        newValueUUID: String = stringFormatter.makeRandomBase64EncodedUuid
 
         createNewProjectSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .createNewProject(

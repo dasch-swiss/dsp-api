@@ -121,7 +121,7 @@ For example, here is a request to create a resource with various value types:
     }
   },
   "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/0001"
+    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
   },
   "rdfs:label" : "test thing",
   "@context" : {
@@ -147,7 +147,7 @@ resource's creator can be specfied by adding `knora-api:attachedToUser`. For exa
     "knora-api:booleanValueAsBoolean" : true
   },
   "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/0001"
+    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
   },
   "knora-api:attachedToUser" : {
     "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -205,7 +205,7 @@ For example:
    "@id" : "http://rdfh.ch/0001/a-custom-thing",
    "@type" : "anything:Thing",
    "knora-api:attachedToProject" : {
-     "@id" : "http://rdfh.ch/projects/0001"
+     "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
    },
    "anything:hasInteger" : {
        "@id" : "http://rdfh.ch/0001/a-custom-thing/values/int-value-IRI",

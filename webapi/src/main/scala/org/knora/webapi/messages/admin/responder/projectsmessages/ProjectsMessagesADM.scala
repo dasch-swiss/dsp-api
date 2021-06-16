@@ -26,7 +26,12 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi.IRI
 import org.knora.webapi.annotation.{ApiMayChange, ServerUnique}
-import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, OntologyConstraintException}
+import org.knora.webapi.exceptions.{
+  BadRequestException,
+  DataConversionException,
+  ForbiddenException,
+  OntologyConstraintException
+}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -66,8 +71,48 @@ case class CreateProjectApiRequestADM(id: Option[IRI] = None,
   def toJsValue: JsValue = createProjectApiRequestADMFormat.write(this)
 
   if (description.isEmpty) throw BadRequestException("Project description needs to be supplied.")
-
+  if (shortname.isEmpty) throw BadRequestException("'Shortname' cannot be empty")
+  if (shortcode.isEmpty) throw BadRequestException("'Shortcode' cannot be empty")
   stringFormatter.validateOptionalProjectIri(id, throw BadRequestException(s"Invalid project IRI"))
+
+  /**
+    * Escapes special characters within strings
+    *
+    */
+  def validateAndEscape: CreateProjectApiRequestADM = {
+
+    val escapedDescriptions = description.map { desc =>
+      val escapedDescription =
+        stringFormatter.toSparqlEncodedString(desc.value,
+                                              throw BadRequestException(s"Invalid description: ${desc.value}"))
+      StringLiteralV2(value = escapedDescription, language = desc.language)
+    }
+    val escapedLongName: Option[String] = longname match {
+      case None => None
+      case Some(value: String) =>
+        Some(
+          stringFormatter.toSparqlEncodedString(value, throw BadRequestException(s"Invalid project longname: $value")))
+    }
+
+    val escapedKeywords = keywords.map { keyword =>
+      stringFormatter.toSparqlEncodedString(keyword, throw BadRequestException(s"Invalid keyword: $keyword"))
+    }
+
+    // check if the supplied shortcode is valid and unique and make uppercase.
+    val validatedShortcode: String = stringFormatter.validateProjectShortcode(
+      shortcode,
+      errorFun = throw BadRequestException(s"The supplied short code: '$shortcode' is not valid.")
+    )
+
+    val escapedShortName: String =
+      stringFormatter.toSparqlEncodedString(shortname, throw BadRequestException(s"Invalid string: $shortname"))
+
+    copy(shortcode = validatedShortcode,
+         shortname = escapedShortName,
+         longname = escapedLongName,
+         description = escapedDescriptions,
+         keywords = escapedKeywords)
+  }
 }
 
 /**
@@ -257,7 +302,14 @@ case class ProjectCreateRequestADM(createRequest: CreateProjectApiRequestADM,
                                    featureFactoryConfig: FeatureFactoryConfig,
                                    requestingUser: UserADM,
                                    apiRequestID: UUID)
-    extends ProjectsResponderRequestADM
+    extends ProjectsResponderRequestADM {
+
+  // Check if the requesting user is allowed to create project
+  if (!requestingUser.permissions.isSystemAdmin) {
+    // not a system admin
+    throw ForbiddenException("A new project can only be created by a system admin.")
+  }
+}
 
 /**
   * Requests updating an existing project.
@@ -371,6 +423,7 @@ case class ProjectDataGetResponseADM(projectDataFile: Path)
   * @param id          The project's IRI.
   * @param shortname   The project's shortname. [[ServerUnique]].
   * @param shortcode   The project's shortcode. [[ServerUnique]].
+  * @param projectUUID The UUID of a project
   * @param longname    The project's long name.
   * @param description The project's description.
   * @param keywords    The project's keywords.
@@ -382,6 +435,7 @@ case class ProjectDataGetResponseADM(projectDataFile: Path)
 case class ProjectADM(id: IRI,
                       @ServerUnique shortname: String,
                       @ServerUnique shortcode: String,
+                      @ServerUnique projectUUID: UUID,
                       longname: Option[String],
                       description: Seq[StringLiteralV2],
                       keywords: Seq[String],
@@ -435,6 +489,7 @@ case class ProjectADM(id: IRI,
     that match {
       case otherProj: ProjectADM =>
         id == otherProj.id &&
+          projectUUID == otherProj.projectUUID &&
           shortname == otherProj.shortname &&
           shortcode == otherProj.shortcode &&
           longname == otherProj.longname &&
@@ -453,6 +508,7 @@ case class ProjectADM(id: IRI,
     // Ignore the order of sequences when generating hash codes for this class.
     new HashCodeBuilder(19, 39)
       .append(id)
+      .append(projectUUID)
       .append(shortname)
       .append(shortcode)
       .append(longname)

@@ -54,7 +54,7 @@ object ResourcesResponderV1SpecFullData {
           restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
           restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
           person_id = "http://rdfh.ch/users/91e19f1e01",
-          project_id = "http://rdfh.ch/projects/0803"
+          project_id = "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
         ),
         ext_res_id = ExternalResourceIDV1(
           pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
@@ -79,7 +79,7 @@ object ResourcesResponderV1SpecFullData {
           restype_name = Some("http://www.knora.org/ontology/knora-base#LinkObj"),
           restype_id = "http://www.knora.org/ontology/knora-base#LinkObj",
           person_id = "http://rdfh.ch/users/b83acc5f05",
-          project_id = "http://rdfh.ch/projects/0803"
+          project_id = "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
         ),
         ext_res_id = ExternalResourceIDV1(
           pid = "http://www.knora.org/ontology/knora-base#hasLinkTo",
@@ -417,7 +417,7 @@ object ResourcesResponderV1SpecFullData {
         restype_name = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         restype_id = "http://www.knora.org/ontology/0803/incunabula#book",
         person_id = "http://rdfh.ch/users/91e19f1e01",
-        project_id = "http://rdfh.ch/projects/0803"
+        project_id = "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       ))
   )
 
@@ -857,7 +857,7 @@ object ResourcesResponderV1SpecFullData {
         restype_name = Some("http://www.knora.org/ontology/0803/incunabula#page"),
         restype_id = "http://www.knora.org/ontology/0803/incunabula#page",
         person_id = "http://rdfh.ch/users/91e19f1e01",
-        project_id = "http://rdfh.ch/projects/0803"
+        project_id = "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
       ))
   )
 

@@ -2619,7 +2619,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return seq of full history events for each resource of a project" in {
       responderManager ! ProjectResourcesWithHistoryGetRequestV2(
-        projectIri = "http://rdfh.ch/projects/0001",
+        projectIri = "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingAdminUser
       )

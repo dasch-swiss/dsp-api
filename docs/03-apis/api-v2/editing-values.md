@@ -310,7 +310,7 @@ create a resource of class `anything:ThingPicture`, which is a subclass of
     "knora-api:fileValueHasFilename" : "3UIsXH9bP0j-BV0D4sN51Xz.jp2"
   },
   "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/0001"
+    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
   },
   "rdfs:label" : "test thing",
   "@context" : {

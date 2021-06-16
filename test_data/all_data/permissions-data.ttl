@@ -77,7 +77,7 @@
 
                       rdf:type knora-admin:AdministrativePermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/00FF> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA> ;
 
                       knora-admin:forGroup knora-admin:ProjectMember ;
 
@@ -89,7 +89,7 @@
 
                       rdf:type knora-admin:AdministrativePermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/00FF> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA> ;
 
                       knora-admin:forGroup knora-admin:ProjectAdmin ;
 
@@ -101,7 +101,7 @@
 
                       rdf:type knora-admin:AdministrativePermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/00FF> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA> ;
 
                       knora-admin:forGroup <http://rdfh.ch/groups/00FF/images-reviewer> ;
 
@@ -113,7 +113,7 @@
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/00FF> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA> ;
 
                       knora-admin:forGroup <http://rdfh.ch/groups/00FF/images-reviewer> ;
 
@@ -125,7 +125,7 @@
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/00FF> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA> ;
 
                       knora-admin:forGroup knora-admin:ProjectMember ;
 
@@ -137,7 +137,7 @@
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/00FF> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA> ;
 
                       knora-admin:forGroup knora-admin:KnownUser ;
 
@@ -156,7 +156,7 @@
 
                       rdf:type knora-admin:AdministrativePermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/0803> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g> ;
 
                       knora-admin:forGroup knora-admin:ProjectMember ;
 
@@ -168,7 +168,7 @@
 
                       rdf:type knora-admin:AdministrativePermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/0803> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g> ;
 
                       knora-admin:forGroup knora-admin:ProjectAdmin ;
 
@@ -180,7 +180,7 @@
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/0803> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g> ;
 
                       knora-admin:forGroup knora-admin:ProjectMember ;
 
@@ -192,7 +192,7 @@
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/0803> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g> ;
 
                       knora-admin:forResourceClass incunabula:book ;
 
@@ -204,7 +204,7 @@
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/0803> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g> ;
 
                       knora-admin:forResourceClass incunabula:page ;
 
@@ -215,7 +215,7 @@
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/0803> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g> ;
 
                       knora-admin:forProperty incunabula:partOfValue ;
 
@@ -227,7 +227,7 @@
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/0803> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g> ;
                       knora-admin:forResourceClass incunabula:page ;
                       knora-admin:forProperty incunabula:partOfValue ;
 
@@ -244,7 +244,7 @@
 
                       rdf:type knora-admin:AdministrativePermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/0001> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA> ;
 
                       knora-admin:forGroup knora-admin:ProjectMember ;
 
@@ -256,7 +256,7 @@
 
                       rdf:type knora-admin:AdministrativePermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/0001> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA> ;
 
                       knora-admin:forGroup knora-admin:ProjectAdmin ;
 
@@ -268,7 +268,7 @@
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/0001> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA> ;
 
                       knora-admin:forGroup knora-admin:ProjectMember ;
 
@@ -365,7 +365,7 @@
 
                       rdf:type knora-admin:AdministrativePermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/0806> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/r5rM3chy87PJU1NZPFx3WQ> ;
 
                       knora-admin:forGroup knora-admin:ProjectMember ;
 
@@ -377,7 +377,7 @@
 
                       rdf:type knora-admin:AdministrativePermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/0806> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/r5rM3chy87PJU1NZPFx3WQ> ;
 
                       knora-admin:forGroup knora-admin:ProjectAdmin ;
 
@@ -389,7 +389,7 @@
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
 
-                      knora-admin:forProject <http://rdfh.ch/projects/0806> ;
+                      knora-admin:forProject <http://rdfh.ch/projects/r5rM3chy87PJU1NZPFx3WQ> ;
 
                       knora-admin:forGroup knora-admin:ProjectMember ;
 

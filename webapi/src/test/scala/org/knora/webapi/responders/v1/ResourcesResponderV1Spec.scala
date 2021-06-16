@@ -171,7 +171,7 @@ object ResourcesResponderV1Spec {
       restype_name = Some("http://www.knora.org/ontology/0001/anything#Thing"),
       restype_id = "http://www.knora.org/ontology/0001/anything#Thing",
       person_id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-      project_id = "http://rdfh.ch/projects/0001"
+      project_id = "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
     ),
     ext_res_id = ExternalResourceIDV1(
       pid = "http://www.knora.org/ontology/0001/anything#hasOtherThing",
@@ -195,7 +195,7 @@ object ResourcesResponderV1Spec {
       restype_name = Some("http://www.knora.org/ontology/0001/anything#Thing"),
       restype_id = "http://www.knora.org/ontology/0001/anything#Thing",
       person_id = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-      project_id = "http://rdfh.ch/projects/0001"
+      project_id = "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
     ),
     ext_res_id = ExternalResourceIDV1(
       pid = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
@@ -1074,7 +1074,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       val resourceCreateRequest = ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#misc",
         label = "Test-Misc",
-        projectIri = "http://rdfh.ch/projects/0803",
+        projectIri = "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g",
         values = valuesToBeCreated,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
@@ -1114,7 +1114,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       val resourceCreateRequest = ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#book",
         label = "Test-Book",
-        projectIri = "http://rdfh.ch/projects/0803",
+        projectIri = "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g",
         values = valuesToBeCreated,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
@@ -1170,7 +1170,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       responderManager ! ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#book",
         label = "Book with reference to nonexistent resource",
-        projectIri = "http://rdfh.ch/projects/0803",
+        projectIri = "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g",
         values = valuesToBeCreated,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser,
@@ -1533,7 +1533,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       responderManager ! ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/knora-base#Resource",
         label = "Test Resource",
-        projectIri = "http://rdfh.ch/projects/0803",
+        projectIri = "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g",
         values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
         file = None,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -1550,7 +1550,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       responderManager ! ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0001/anything#Thing",
         label = "Test Resource",
-        projectIri = "http://rdfh.ch/projects/0803",
+        projectIri = "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g",
         values = Map.empty[IRI, Seq[CreateValueV1WithComment]],
         file = None,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -1607,7 +1607,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       responderManager ! ResourceCreateRequestV1(
         resourceTypeIri = "http://www.knora.org/ontology/0001/anything#BlueThing",
         label = "Test Thing",
-        projectIri = "http://rdfh.ch/projects/0001",
+        projectIri = "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
         values = valuesToBeCreated,
         file = None,
         featureFactoryConfig = defaultFeatureFactoryConfig,

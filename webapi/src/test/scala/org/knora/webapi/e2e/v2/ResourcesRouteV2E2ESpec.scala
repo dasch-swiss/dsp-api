@@ -612,7 +612,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "return entire resource and value history events for a given project" in {
-      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
+      val projectIri = URLEncoder.encode("http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA", "UTF-8")
       val projectHistoryRequest = Get(s"$baseApiUrl/v2/resources/projectHistory/$projectIri")
         .addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
       val projectHistoryResponse: HttpResponse = singleAwaitingRequest(projectHistoryRequest)
@@ -855,7 +855,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                   |    }
                   |  },
                   |  "knora-api:attachedToProject" : {
-                  |    "@id" : "http://rdfh.ch/projects/0001"
+                  |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                   |  },
                   |  "rdfs:label" : "test thing",
                   |  "@context" : {
@@ -940,7 +940,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         s"""{
                    |  "@type" : "anything:Thing",
                    |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                    |  },
                    |  "anything:hasBoolean" : {
                    |    "@type" : "knora-api:BooleanValue",
@@ -994,7 +994,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                |  "@id" : "$iri",
                |  "@type" : "anything:Thing",
                |  "knora-api:attachedToProject" : {
-               |    "@id" : "http://rdfh.ch/projects/0001"
+               |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                |  },
                |  "anything:hasBoolean" : {
                |    "@type" : "knora-api:BooleanValue",
@@ -1064,7 +1064,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                    |  "@id" : "http://rdfh.ch/0001/a-thing",
                    |  "@type" : "anything:Thing",
                    |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                    |  },
                    |  "anything:hasBoolean" : {
                    |    "@type" : "knora-api:BooleanValue",
@@ -1095,7 +1095,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       s"""{
                |  "@type" : "anything:Thing",
                |  "knora-api:attachedToProject" : {
-               |    "@id" : "http://rdfh.ch/projects/0001"
+               |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                |  },
                |  "anything:hasBoolean" : {
                |    "@id" : "$valueIRI",
@@ -1158,7 +1158,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         s"""{
                    |  "@type" : "anything:Thing",
                    |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                    |  },
                    |  "anything:hasBoolean" : {
                    |    "@type" : "knora-api:BooleanValue",
@@ -1217,7 +1217,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         s"""{
                    |  "@type" : "anything:Thing",
                    |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                    |  },
                    |  "anything:hasBoolean" : {
                    |    "@type" : "knora-api:BooleanValue",
@@ -1287,7 +1287,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                    |   "@id" : "$customResourceIRI",
                    |  "@type" : "anything:Thing",
                    |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                    |  },
                    |  "anything:hasBoolean" : {
                    |    "@id": "$customValueIRI",
@@ -1374,7 +1374,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         s"""{
                    |  "@type" : "anything:Thing",
                    |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                    |  },
                    |  "anything:hasBoolean" : {
                    |    "@type" : "knora-api:BooleanValue",
@@ -1423,7 +1423,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         s"""{
                    |  "@type" : "anything:Thing",
                    |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                    |  },
                    |  "anything:hasBoolean" : {
                    |    "@type" : "knora-api:BooleanValue",
@@ -1732,7 +1732,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                    |    }
                    |  },
                    |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
+                   |    "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                    |  },
                    |  "rdfs:label" : "test thing",
                    |  "@context" : {
@@ -1918,7 +1918,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                   |    }
                   |  },
                   |  "knora-api:attachedToProject": {
-                  |    "@id": "http://rdfh.ch/projects/0001"
+                  |    "@id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
                   |  },
                   |  "rdfs:label": "obj_inst1",
                   |  "@context": {
@@ -1967,7 +1967,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
           |            	}
           |            },
           |   "knora-api:attachedToProject": {
-          |                  "@id": "http://rdfh.ch/projects/0001"
+          |                  "@id": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
           |                  },
           |   "rdfs:label": "thing_with_mutiple_standoffLinks",
           |   "@context": {
