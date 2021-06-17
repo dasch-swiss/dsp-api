@@ -5,6 +5,7 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
 scala_library(
     name = "store",
     srcs = glob(["**/*.scala"]),
+    scalacopts = ["-deprecation"],
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
@@ -17,7 +18,6 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/settings",
         "//webapi/src/main/scala/org/knora/webapi/store/cacheservice",
         "//webapi/src/main/scala/org/knora/webapi/util",
-        "@maven//:com_twitter_chill_2_13",
         "@maven//:com_typesafe_akka_akka_actor_2_13",
         "@maven//:com_typesafe_akka_akka_http_2_13",
         "@maven//:com_typesafe_akka_akka_http_core_2_13",
@@ -31,7 +31,6 @@ scala_library(
         "@maven//:io_spray_spray_json_2_13",
         "@maven//:org_apache_commons_commons_csv",
         "@maven//:org_apache_commons_commons_lang3",
-        "@maven//:org_apache_commons_commons_pool2",
         "@maven//:org_apache_httpcomponents_httpclient",
         "@maven//:org_apache_httpcomponents_httpclient_cache",
         "@maven//:org_apache_httpcomponents_httpcore",
@@ -43,6 +42,5 @@ scala_library(
         "@maven//:org_apache_jena_jena_text",
         "@maven//:org_apache_lucene_lucene_core",
         "@maven//:org_slf4j_slf4j_api",
-        "@maven//:redis_clients_jedis",
     ],
 )
