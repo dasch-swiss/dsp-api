@@ -112,7 +112,7 @@ class DrawingsGodsV1ITSpec
                    |        "http://www.knora.org/ontology/0105/drawings-gods#hasCodeVerso":[{"richtext_value":{"utf8str":"dayyad"}}]
                    |    },
                    |    "file": "${uploadedFile.internalFilename}",
-                   |    "project_id":"http://rdfh.ch/projects/0105",
+                   |    "project_id":"http://rdfh.ch/projects/0lr66NJu701abct0ChnpIA",
                    |    "label":"dayyad"
                    |}
              """.stripMargin

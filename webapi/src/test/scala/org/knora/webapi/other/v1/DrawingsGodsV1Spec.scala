@@ -64,7 +64,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
     */
   "Using the DrawingsGods project data" should {
 
-    val drawingsGodsProjectIri = "http://rdfh.ch/projects/0105"
+    val drawingsGodsProjectIri = "http://rdfh.ch/projects/0lr66NJu701abct0ChnpIA"
     val drawingsGodsOntologyIri = "http://www.knora.org/ontology/0105/drawings-gods"
     val rootUserIri = "http://rdfh.ch/users/root"
     val rootUser = new MutableUserADM

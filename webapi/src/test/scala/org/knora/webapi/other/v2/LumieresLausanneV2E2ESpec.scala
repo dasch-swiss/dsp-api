@@ -61,7 +61,7 @@ class LumieresLausanneV2E2ESpec extends E2ESpec(LumieresLausanneV2E2ESpec.config
                    |    "@type": "onto:User",
                    |    "rdfs:label": "Test",
                    |    "knora-api:attachedToProject": {
-                   |        "@id": "http://rdfh.ch/projects/0113"
+                   |        "@id": "http://rdfh.ch/projects/vezijxSfAnMYkZGZ4xem4A"
                    |    },
                    |    "onto:isKnoraUser": {
                    |        "@type": "knora-api:UriValue",

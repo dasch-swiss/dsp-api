@@ -9,7 +9,7 @@
 
 <http://www.knora.org/ontology/0666/gravsearchtest1> a owl:Ontology ;
     rdfs:label "Test ontology" ;
-    knora-base:attachedToProject <http://rdfh.ch/projects/0666> .
+    knora-base:attachedToProject <http://rdfh.ch/projects/GWigci55WGF3pp3YWBlq9w> .
 
 gravsearchtest1:isInProjectValue rdf:type owl:ObjectProperty ;
   rdfs:subPropertyOf knora-base:hasLinkToValue ;
