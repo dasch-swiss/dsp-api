@@ -28,7 +28,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.{
   ReadOntologyV2
 }
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Contains methods used for deleting cardinalities from a class
@@ -45,10 +45,10 @@ object DeleteCardinalitiesFromClass {
       deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,
       internalClassIri: SmartIri,
       internalOntologyIri: SmartIri
-  ): Future[ReadOntologyV2] = {
+  )(implicit ec: ExecutionContext): Future[ReadOntologyV2] = {
     for {
-      cacheData <- getCacheData
-      internalClassDef: ClassInfoContentV2 = changeCardinalitiesRequest.classInfoContent.toOntologySchema(
+      cacheData <- Cache.getCacheData
+      internalClassDef: ClassInfoContentV2 = deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(
         InternalSchema)
 
     } yield ???

@@ -154,7 +154,7 @@ object CacheUtil {
     * @param cacheName the name of the cache.
     * @param key       the cache key as a [[String]]
     */
-  def remove(cacheName: String, key: String) {
+  def remove(cacheName: String, key: String): () = {
     val cacheManager = CacheManager.getInstance()
     val cacheOption = Option(cacheManager.getCache(cacheName))
 

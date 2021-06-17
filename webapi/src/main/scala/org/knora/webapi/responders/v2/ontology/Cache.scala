@@ -22,8 +22,13 @@ package org.knora.webapi.responders.v2.ontology
 
 import akka.actor.ActorRef
 import akka.http.scaladsl.util.FastFuture
-import org.knora.webapi.{InternalSchema, KnoraBaseVersion}
-import org.knora.webapi.exceptions.{ApplicationCacheException, ForbiddenException, InconsistentRepositoryDataException}
+import org.knora.webapi.{ApiV2Complex, InternalSchema, KnoraBaseVersion, OntologySchema}
+import org.knora.webapi.exceptions.{
+  ApplicationCacheException,
+  BadRequestException,
+  ForbiddenException,
+  InconsistentRepositoryDataException
+}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.util.cache.CacheUtil
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
@@ -469,6 +474,81 @@ object Cache {
   }
 
   /**
+    * Checks that a property's `knora-base:subjectClassConstraint` or `knora-base:objectClassConstraint` is compatible with (i.e. a subclass of)
+    * the ones in all its base properties.
+    *
+    * @param internalPropertyIri        the internal IRI of the property to be checked.
+    * @param constraintPredicateIri     the internal IRI of the constraint, i.e. `knora-base:subjectClassConstraint` or `knora-base:objectClassConstraint`.
+    * @param constraintValueToBeChecked the constraint value to be checked.
+    * @param allSuperPropertyIris       the IRIs of all the base properties of the property, including indirect base properties and the property itself.
+    * @param errorSchema                the ontology schema to be used for error messages.
+    * @param errorFun                   a function that throws an exception. It will be called with an error message argument if the property constraint is invalid.
+    */
+  def checkPropertyConstraint(cacheData: OntologyCacheData,
+                              internalPropertyIri: SmartIri,
+                              constraintPredicateIri: SmartIri,
+                              constraintValueToBeChecked: SmartIri,
+                              allSuperPropertyIris: Set[SmartIri],
+                              errorSchema: OntologySchema,
+                              errorFun: String => Nothing): Unit = {
+    // The property constraint value must be a Knora class, or one of a limited set of classes defined in OWL.
+    val superClassesOfConstraintValueToBeChecked: Set[SmartIri] =
+      if (OntologyConstants.Owl.ClassesThatCanBeKnoraClassConstraints.contains(constraintValueToBeChecked.toString)) {
+        Set(constraintValueToBeChecked)
+      } else {
+        cacheData.subClassOfRelations
+          .getOrElse(
+            constraintValueToBeChecked,
+            errorFun(
+              s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} cannot have a ${constraintPredicateIri
+                .toOntologySchema(errorSchema)} of " +
+                s"${constraintValueToBeChecked.toOntologySchema(errorSchema)}")
+          )
+          .toSet
+      }
+
+    // Get the definitions of all the Knora superproperties of the property.
+    val superPropertyInfos: Set[ReadPropertyInfoV2] = (allSuperPropertyIris - internalPropertyIri).collect {
+      case superPropertyIri if superPropertyIri.isKnoraDefinitionIri =>
+        cacheData
+          .ontologies(superPropertyIri.getOntologyFromEntity)
+          .properties
+          .getOrElse(
+            superPropertyIri,
+            errorFun(
+              s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} is a subproperty of $superPropertyIri, which is undefined")
+          )
+    }
+
+    // For each superproperty definition, get the value of the specified constraint in that definition, if any. Here we
+    // make a map of superproperty IRIs to superproperty constraint values.
+    val superPropertyConstraintValues: Map[SmartIri, SmartIri] = superPropertyInfos.flatMap { superPropertyInfo =>
+      superPropertyInfo.entityInfoContent.predicates
+        .get(constraintPredicateIri)
+        .map(_.requireIriObject(throw InconsistentRepositoryDataException(
+          s"Property ${superPropertyInfo.entityInfoContent.propertyIri} has an invalid object for $constraintPredicateIri")))
+        .map { superPropertyConstraintValue =>
+          superPropertyInfo.entityInfoContent.propertyIri -> superPropertyConstraintValue
+        }
+    }.toMap
+
+    // Check that the constraint value to be checked is a subclass of the constraint value in every superproperty.
+
+    superPropertyConstraintValues.foreach {
+      case (superPropertyIri, superPropertyConstraintValue) =>
+        if (!superClassesOfConstraintValueToBeChecked.contains(superPropertyConstraintValue)) {
+          errorFun(
+            s"Property ${internalPropertyIri.toOntologySchema(errorSchema)} cannot have a ${constraintPredicateIri
+              .toOntologySchema(errorSchema)} of " +
+              s"${constraintValueToBeChecked.toOntologySchema(errorSchema)}, because that is not a subclass of " +
+              s"${superPropertyConstraintValue.toOntologySchema(errorSchema)}, which is the ${constraintPredicateIri
+                .toOntologySchema(errorSchema)} of " +
+              s"a base property, ${superPropertyIri.toOntologySchema(errorSchema)}")
+        }
+    }
+  }
+
+  /**
     * Checks a reference between an ontology entity and another ontology entity to see if the target
     * is in a non-shared ontology in another project.
     *
@@ -504,9 +584,9 @@ object Cache {
     * @param propertyDef       the property definition.
     * @param errorFun          a function that throws an exception with the specified message if the property definition is invalid.
     */
-  private def checkOntologyReferencesInPropertyDef(ontologyCacheData: OntologyCacheData,
-                                                   propertyDef: PropertyInfoContentV2,
-                                                   errorFun: String => Nothing): Unit = {
+  def checkOntologyReferencesInPropertyDef(ontologyCacheData: OntologyCacheData,
+                                           propertyDef: PropertyInfoContentV2,
+                                           errorFun: String => Nothing): Unit = {
     // Ensure that the property isn't a subproperty of any property in a non-shared ontology in another project.
 
     for (subPropertyOf <- propertyDef.subPropertyOf) {
@@ -552,9 +632,9 @@ object Cache {
     * @param classDef          the class definition.
     * @param errorFun          a function that throws an exception with the specified message if the property definition is invalid.
     */
-  private def checkOntologyReferencesInClassDef(ontologyCacheData: OntologyCacheData,
-                                                classDef: ClassInfoContentV2,
-                                                errorFun: String => Nothing): Unit = {
+  def checkOntologyReferencesInClassDef(ontologyCacheData: OntologyCacheData,
+                                        classDef: ClassInfoContentV2,
+                                        errorFun: String => Nothing): Unit = {
     for (subClassOf <- classDef.subClassOf) {
       checkOntologyReferenceInEntity(
         ontologyCacheData = ontologyCacheData,
@@ -625,6 +705,78 @@ object Cache {
           throw ApplicationCacheException(
             s"The Knora API server has not loaded any ontologies, perhaps because of an invalid ontology")
       }
+    }
+  }
+
+  /**
+    * Given the IRI of a base class, updates inherited cardinalities in subclasses.
+    *
+    * @param baseClassIri the internal IRI of the base class.
+    * @param cacheData the ontology cache.
+    *
+    * @return the updated ontology cache.
+    */
+  def updateSubClasses(baseClassIri: SmartIri, cacheData: OntologyCacheData): OntologyCacheData = {
+    // Get the class definitions of all the subclasses of the base class.
+
+    val allSubClassIris: Set[SmartIri] = cacheData.superClassOfRelations(baseClassIri)
+
+    val allSubClasses: Set[ReadClassInfoV2] = allSubClassIris.map { subClassIri =>
+      cacheData.ontologies(subClassIri.getOntologyFromEntity).classes(subClassIri)
+    }
+
+    // Filter them to get only the direct subclasses.
+
+    val directSubClasses: Set[ReadClassInfoV2] = allSubClasses.filter { subClass =>
+      subClass.entityInfoContent.subClassOf
+        .contains(baseClassIri) && subClass.entityInfoContent.classIri != baseClassIri
+    }
+
+    // Iterate over the subclasses, updating cardinalities.
+    val cacheDataWithUpdatedSubClasses = directSubClasses.foldLeft(cacheData) {
+      case (cacheDataAcc: OntologyCacheData, directSubClass: ReadClassInfoV2) =>
+        val directSubClassIri = directSubClass.entityInfoContent.classIri
+
+        // Get the cardinalities that this subclass can inherit from its direct base classes.
+
+        val inheritableCardinalities: Map[SmartIri, KnoraCardinalityInfo] =
+          directSubClass.entityInfoContent.subClassOf.flatMap { baseClassIri =>
+            cacheData.ontologies(baseClassIri.getOntologyFromEntity).classes(baseClassIri).allCardinalities
+          }.toMap
+
+        // Override inherited cardinalities with directly defined cardinalities.
+        val newInheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = overrideCardinalities(
+          classIri = directSubClassIri,
+          thisClassCardinalities = directSubClass.entityInfoContent.directCardinalities,
+          inheritableCardinalities = inheritableCardinalities,
+          allSubPropertyOfRelations = cacheData.subPropertyOfRelations,
+          errorSchema = ApiV2Complex,
+          errorFun = { msg: String =>
+            throw BadRequestException(msg)
+          }
+        )
+
+        // Update the cache.
+
+        val ontologyIri = directSubClass.entityInfoContent.classIri.getOntologyFromEntity
+        val ontology: ReadOntologyV2 = cacheDataAcc.ontologies(ontologyIri)
+
+        val updatedOntology = ontology.copy(
+          classes = ontology.classes + (directSubClassIri -> directSubClass.copy(
+            inheritedCardinalities = newInheritedCardinalities
+          ))
+        )
+
+        cacheDataAcc.copy(
+          ontologies = cacheDataAcc.ontologies + (ontologyIri -> updatedOntology)
+        )
+    }
+
+    // Recurse to subclasses of subclasses.
+
+    directSubClasses.map(_.entityInfoContent.classIri).foldLeft(cacheDataWithUpdatedSubClasses) {
+      case (cacheDataAcc: OntologyCacheData, directSubClassIri: SmartIri) =>
+        updateSubClasses(baseClassIri = directSubClassIri, cacheDataAcc)
     }
   }
 
