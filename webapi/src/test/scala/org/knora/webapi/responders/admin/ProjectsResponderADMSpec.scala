@@ -237,10 +237,11 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
         newProjectIri.set(received.project.id)
 
+        val uuidString: String = stringFormatter.base64EncodeUuid(received.project.projectUUID)
         /* Check that ProjectAdmin group has got administrative and default object access permissions */
         // Check Administrative Permission of ProjectAdmin
         responderManager ! PermissionByIriGetRequestADM(
-          permissionIri = s"http://rdfh.ch/permissions/${shortCode.toUpperCase}/defaultApForAdmin",
+          permissionIri = s"http://rdfh.ch/permissions/$uuidString/defaultApForAdmin",
           requestingUser = rootUser
         )
 
@@ -254,7 +255,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
         // Check Default Object Access permission of ProjectAdmin
         responderManager ! PermissionByIriGetRequestADM(
-          permissionIri = s"http://rdfh.ch/permissions/${shortCode.toUpperCase}/defaultDoapForAdmin",
+          permissionIri = s"http://rdfh.ch/permissions/$uuidString/defaultDoapForAdmin",
           requestingUser = rootUser
         )
         val receivedDoapAdmin: DefaultObjectAccessPermissionGetResponseADM =
@@ -275,7 +276,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         /* Check that ProjectMember group has got administrative and default object access permissions */
         // Check Administrative Permission of ProjectMember
         responderManager ! PermissionByIriGetRequestADM(
-          permissionIri = s"http://rdfh.ch/permissions/${shortCode.toUpperCase}/defaultApForMember",
+          permissionIri = s"http://rdfh.ch/permissions/$uuidString/defaultApForMember",
           requestingUser = rootUser
         )
         val receivedApMember: AdministrativePermissionGetResponseADM =
@@ -288,7 +289,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
         // Check Default Object Access permission of ProjectMember
         responderManager ! PermissionByIriGetRequestADM(
-          permissionIri = s"http://rdfh.ch/permissions/${shortCode.toUpperCase}/defaultDoapForMember",
+          permissionIri = s"http://rdfh.ch/permissions/$uuidString/defaultDoapForMember",
           requestingUser = rootUser
         )
         val receivedDoapMember: DefaultObjectAccessPermissionGetResponseADM =
@@ -368,46 +369,6 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
           UUID.randomUUID()
         )
         expectMsg(Failure(DuplicateValueException(s"Project with the shortcode: '111C' already exists")))
-      }
-
-      "return 'BadRequestException' if project 'shortname' during creation is missing" in {
-
-        responderManager ! ProjectCreateRequestADM(
-          CreateProjectApiRequestADM(
-            shortname = "",
-            shortcode = "1114",
-            longname = Some("project longname"),
-            description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
-            keywords = Seq("keywords"),
-            logo = Some("/fu/bar/baz.jpg"),
-            status = true,
-            selfjoin = false
-          ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
-          SharedTestDataADM.rootUser,
-          UUID.randomUUID()
-        )
-        expectMsg(Failure(BadRequestException("'Shortname' cannot be empty")))
-      }
-
-      "return 'BadRequestException' if project 'shortcode' during creation is missing" in {
-
-        responderManager ! ProjectCreateRequestADM(
-          CreateProjectApiRequestADM(
-            shortname = "newproject4",
-            shortcode = "",
-            longname = Some("project longname"),
-            description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
-            keywords = Seq("keywords"),
-            logo = Some("/fu/bar/baz.jpg"),
-            status = true,
-            selfjoin = false
-          ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
-          SharedTestDataADM.rootUser,
-          UUID.randomUUID()
-        )
-        expectMsg(Failure(BadRequestException("The supplied short code: '' is not valid.")))
       }
 
       "UPDATE a project" in {

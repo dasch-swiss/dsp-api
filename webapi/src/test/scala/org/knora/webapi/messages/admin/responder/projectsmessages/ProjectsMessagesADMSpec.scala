@@ -74,6 +74,38 @@ class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
       )
       assert(caught.getMessage === "Invalid project IRI")
     }
+
+    "return 'BadRequestException' if project 'shortcode' during creation is missing" in {
+      val caught = intercept[BadRequestException](
+        CreateProjectApiRequestADM(
+          shortname = "newproject4",
+          shortcode = "",
+          longname = Some("project longname"),
+          description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+          keywords = Seq("keywords"),
+          logo = Some("/fu/bar/baz.jpg"),
+          status = true,
+          selfjoin = false
+        )
+      )
+      assert(caught.getMessage === "'Shortcode' cannot be empty")
+    }
+
+    "return 'BadRequestException' if project 'shortname' during creation is missing" in {
+      val caught = intercept[BadRequestException](
+        CreateProjectApiRequestADM(
+          shortname = "",
+          shortcode = "1114",
+          longname = Some("project longname"),
+          description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+          keywords = Seq("keywords"),
+          logo = Some("/fu/bar/baz.jpg"),
+          status = true,
+          selfjoin = false
+        )
+      )
+      assert(caught.getMessage === "'Shortname' cannot be empty")
+    }
   }
 
   "The ChangeProjectApiRequestADM case class" should {

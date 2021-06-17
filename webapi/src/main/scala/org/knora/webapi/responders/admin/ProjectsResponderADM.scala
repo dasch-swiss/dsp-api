@@ -96,7 +96,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     case ProjectRestrictedViewSettingsGetRequestADM(identifier, featureFactoryConfig, requestingUser) =>
       projectRestrictedViewSettingsGetRequestADM(identifier, featureFactoryConfig, requestingUser)
     case ProjectCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
-      projectCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID)
+      projectCreateRequestADM(createRequest.validateAndEscape, featureFactoryConfig, requestingUser, apiRequestID)
     case ProjectChangeRequestADM(projectIri,
                                  changeProjectRequest,
                                  featureFactoryConfig,
