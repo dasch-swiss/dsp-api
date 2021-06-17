@@ -20,9 +20,10 @@
 package org.knora.webapi.sharedtestdata
 
 import java.time.Instant
+import java.util.UUID
 
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.messages.admin.responder.groupsmessages.GroupADM
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -164,23 +165,25 @@ object SharedTestDataADM {
     )
 
   /* represents the full project info of the Knora System project */
-  def systemProject: ProjectADM = ProjectADM(
-    id = OntologyConstants.KnoraAdmin.SystemProject,
-    shortname = "SystemProject",
-    shortcode = "FFFF",
-    longname = Some("Knora System Project"),
-    description = Seq(StringLiteralV2(value = "Knora System Project", language = Some("en"))),
-    keywords = Seq.empty[String],
-    logo = None,
-    ontologies = Seq(
-      OntologyConstants.KnoraBase.KnoraBaseOntologyIri,
-      OntologyConstants.KnoraAdmin.KnoraAdminOntologyIri,
-      OntologyConstants.SalsahGui.SalsahGuiOntologyIri,
-      OntologyConstants.Standoff.StandoffOntologyIri
-    ),
-    status = true,
-    selfjoin = false
-  )
+  def systemProject: ProjectADM =
+    ProjectADM(
+      id = OntologyConstants.KnoraAdmin.SystemProject,
+      shortname = "SystemProject",
+      shortcode = "FFFF",
+      projectUUID = StringFormatter.getGeneralInstance.base64DecodeUuid("aboosmPQTBmEjQRsNiVs0w"),
+      longname = Some("Knora System Project"),
+      description = Seq(StringLiteralV2(value = "Knora System Project", language = Some("en"))),
+      keywords = Seq.empty[String],
+      logo = None,
+      ontologies = Seq(
+        OntologyConstants.KnoraBase.KnoraBaseOntologyIri,
+        OntologyConstants.KnoraAdmin.KnoraAdminOntologyIri,
+        OntologyConstants.SalsahGui.SalsahGuiOntologyIri,
+        OntologyConstants.Standoff.StandoffOntologyIri
+      ),
+      status = true,
+      selfjoin = false
+    )
 
   val DefaultSharedOntologiesProjectIri
     : IRI = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject // built-in project
@@ -190,6 +193,7 @@ object SharedTestDataADM {
     id = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject,
     shortname = "DefaultSharedOntologiesProject",
     shortcode = "0000",
+    projectUUID = StringFormatter.getGeneralInstance.base64DecodeUuid("SOIukqJ_qqwrLYY2AzMWog"),
     longname = Some("Default Knora Shared Ontologies Project"),
     description = Seq(StringLiteralV2(value = "Default Knora Shared Ontologies Project", language = Some("en"))),
     keywords = Seq.empty[String],
@@ -296,6 +300,7 @@ object SharedTestDataADM {
     id = IMAGES_PROJECT_IRI,
     shortname = "images",
     shortcode = "00FF",
+    projectUUID = StringFormatter.getGeneralInstance.base64DecodeUuid("wI8G0Ps-F1USDL-F06aRHA"),
     longname = Some("Image Collection Demo"),
     description = Seq(StringLiteralV2(value = "A demo project of a collection of images", language = Some("en"))),
     keywords = Seq("images", "collection").sorted,
@@ -428,6 +433,7 @@ object SharedTestDataADM {
     id = INCUNABULA_PROJECT_IRI,
     shortname = "incunabula",
     shortcode = "0803",
+    projectUUID = StringFormatter.getGeneralInstance.base64DecodeUuid("6NIOckxUlWnYChtXoH7A_g"),
     longname = Some("Bilderfolgen Basler Frühdrucke"),
     description = Seq(
       StringLiteralV2(
@@ -558,6 +564,7 @@ object SharedTestDataADM {
     id = ANYTHING_PROJECT_IRI,
     shortname = "anything",
     shortcode = "0001",
+    projectUUID = StringFormatter.getGeneralInstance.base64DecodeUuid("U7HxeFSUEQCHJxSLahw3AA"),
     longname = Some("Anything Project"),
     description = Seq(StringLiteralV2(value = "Anything Project", language = None)),
     keywords = Seq("things", "arbitrary test data").sorted,
@@ -586,6 +593,7 @@ object SharedTestDataADM {
     id = BEOL_PROJECT_IRI,
     shortname = "beol",
     shortcode = "0801",
+    projectUUID = StringFormatter.getGeneralInstance.base64DecodeUuid("yTerZGyxjZVqFMNNKXCDPF"),
     longname = Some("Bernoulli-Euler Online"),
     description = Seq(StringLiteralV2(value = "Bernoulli-Euler Online", language = None)),
     keywords = Seq.empty[String],
@@ -635,6 +643,7 @@ object SharedTestDataADM {
     id = DOKUBIB_PROJECT_IRI,
     shortname = "dokubib",
     shortcode = "0804",
+    projectUUID = StringFormatter.getGeneralInstance.base64DecodeUuid("uSId60bJZIbJ5QAsSay_Bw"),
     longname = Some("Dokubib"),
     description = Seq(StringLiteralV2(value = "Dokubib", language = None)),
     keywords = Seq.empty[String],

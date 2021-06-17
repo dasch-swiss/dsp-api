@@ -726,6 +726,7 @@
             rdfs:comment "A built-in project representing the Knora System."@en ;
             :projectShortname "SystemProject" ;
             :projectShortcode "FFFF" ;
+            :projectUUID "aboosmPQTBmEjQRsNiVs0w" ;
             :projectLongname "Knora System Project" ;
             :projectDescription "Knora System Project"@en ;
             :status "true"^^xsd:boolean ;
@@ -737,6 +738,7 @@
             rdfs:comment "The default project for shared ontologies."@en ;
             :projectShortname "DefaultSharedOntologiesProject" ;
             :projectShortcode "0000" ;
+            :projectUUID "SOIukqJ_qqwrLYY2AzMWog" ;
             :projectLongname "Knora Default Shared Ontologies Project" ;
             :projectDescription "Knora Shared Ontologies Project"@en ;
             :status "true"^^xsd:boolean ;
