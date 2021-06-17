@@ -179,61 +179,11 @@ load("@maven//:defs.bzl", "pinned_maven_install")
 pinned_maven_install()
 
 #####################################
-# Scala Annex (Twirl dependency)    #
-#####################################
-rules_scala_annex_version = "2503b72a166610c14170b117c51033b42a32e48b"  # 29.06.2020
-
-rules_scala_annex_sha256 = "52d677dc8205db25a49824aade45984e3ef1b79c3bf761efede35d921033c3a4"
-
-http_archive(
-    name = "rules_scala_annex",
-    sha256 = rules_scala_annex_sha256,
-    strip_prefix = "rules_scala-{}".format(rules_scala_annex_version),
-    url = "https://github.com/higherkindness/rules_scala/archive/{}.zip".format(rules_scala_annex_version),
-)
-
-load("@rules_scala_annex//rules/scala:workspace.bzl", "scala_register_toolchains", "scala_repositories")
-
-scala_repositories()
-
-load("@annex//:defs.bzl", annex_pinned_maven_install = "pinned_maven_install")
-
-annex_pinned_maven_install()
-
-scala_register_toolchains()
-
-load("@rules_scala_annex//rules/scalafmt:workspace.bzl", "scalafmt_default_config", "scalafmt_repositories")
-
-scalafmt_repositories()
-
-load("@annex_scalafmt//:defs.bzl", annex_scalafmt_pinned_maven_install = "pinned_maven_install")
-
-annex_scalafmt_pinned_maven_install()
-
-scalafmt_default_config()
-
-load("@rules_scala_annex//rules/scala_proto:workspace.bzl", "scala_proto_register_toolchains", "scala_proto_repositories")
-
-scala_proto_repositories()
-
-load("@annex_proto//:defs.bzl", annex_proto_pinned_maven_install = "pinned_maven_install")
-
-annex_proto_pinned_maven_install()
-
-scala_proto_register_toolchains()
-
-# Specify the scala compiler we wish to use; in this case, we'll use the default one specified in rules_scala_annex
-bind(
-    name = "default_scala",
-    actual = "@rules_scala_annex//src/main/scala:zinc_2_12_10",
-)
-
-#####################################
 # Twirl templates                   #
 #####################################
-rules_twirl_version = "35389750d178f17f7ddd85b9335f7b8b8d662f78"  # 29.04.2020
+rules_twirl_version = "9ac789845e3a481fe520af57bd47a4261edb684f"  # 29.04.2020
 
-rules_twirl_version_sha256 = "d072049d0917b87e1eb677a4255509a7133ca71fc21c8de4b4536ca030eb3d3a"
+rules_twirl_version_sha256 = "b1698a2a59b76dc9df233314c2a1ca8cee4a0477665cff5eafd36f92057b2044"
 
 http_archive(
     name = "io_bazel_rules_twirl",
@@ -258,10 +208,10 @@ twirl_pinned_maven_install()
 # See https://github.com/bazelbuild/rules_go for the up to date setup instructions.
 http_archive(
     name = "io_bazel_rules_go",
-    sha256 = "d1ffd055969c8f8d431e2d439813e42326961d0942bdf734d2c95dc30c369566",
+    sha256 = "69de5c704a05ff37862f7e0f5534d4f479418afc21806c887db544a316f3cb6b",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.24.5/rules_go-v0.24.5.tar.gz",
-        "https://github.com/bazelbuild/rules_go/releases/download/v0.24.5/rules_go-v0.24.5.tar.gz",
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.27.0/rules_go-v0.27.0.tar.gz",
+        "https://github.com/bazelbuild/rules_go/releases/download/v0.27.0/rules_go-v0.27.0.tar.gz",
     ],
 )
 
@@ -288,8 +238,6 @@ http_archive(
     strip_prefix = "buildtools-master",
     url = "https://github.com/bazelbuild/buildtools/archive/master.zip",
 )
-
-
 
 #####################################
 # rules_pkg - basic packaging rules #

@@ -188,7 +188,8 @@ Lukas Rosenthaler `<lukas.rosenthaler@unibas.ch>`
 
 ## Commit Message Schema
 
-When writing commit messages, we follow the [Conventional Commit messages](https://www.conventionalcommits.org/) rules. Get more information in our official [DSP Contribution Documentation](https://docs.dasch.swiss/developers/dsp/contribution/#git-commit-guidelines)
+When writing commit messages, we follow the [Conventional Commit messages](https://www.conventionalcommits.org/) rules.
+Get more information in our official [DSP Contribution Documentation](https://docs.dasch.swiss/developers/dsp/contribution/#git-commit-guidelines)
 
 ## Release Versioning Convention
 

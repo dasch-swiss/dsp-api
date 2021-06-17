@@ -675,11 +675,11 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       case (expectedProp: PropertyV1, receivedProp: PropertyV1) =>
         // sort property attributes
         val expectedPropWithSortedAttr = expectedProp.copy(
-          attributes = expectedProp.attributes.sorted
+          attributes = expectedProp.attributes.toSeq.sorted.unwrap
         )
 
         val receivedPropWithSortedAttr = receivedProp.copy(
-          attributes = receivedProp.attributes.sorted
+          attributes = receivedProp.attributes.toSeq.sorted.unwrap
         )
 
         assert(

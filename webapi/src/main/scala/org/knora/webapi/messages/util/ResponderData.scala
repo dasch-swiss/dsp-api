@@ -20,6 +20,8 @@
 package org.knora.webapi.messages.util
 
 import akka.actor.{ActorRef, ActorSystem}
+import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 
 /**
   * Data needed to be passed to each responder.
@@ -27,4 +29,7 @@ import akka.actor.{ActorRef, ActorSystem}
   * @param system   the actor system.
   * @param appActor the main application actor.
   */
-case class ResponderData(system: ActorSystem, appActor: ActorRef)
+case class ResponderData(system: ActorSystem,
+                         appActor: ActorRef,
+                         knoraSettings: KnoraSettingsImpl,
+                         cacheServiceSettings: CacheServiceSettings)

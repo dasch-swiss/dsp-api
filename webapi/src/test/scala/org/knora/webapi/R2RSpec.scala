@@ -108,7 +108,7 @@ class R2RSpec
 
   val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
-  override def beforeAll() {
+  override def beforeAll(): () = {
     // set allow reload over http
     appActor ! SetAllowReloadOverHTTPState(true)
 
@@ -121,7 +121,7 @@ class R2RSpec
     loadTestData(rdfDataObjects)
   }
 
-  override def afterAll() {
+  override def afterAll(): () = {
     /* Stop the server when everything else has finished */
     appActor ! AppStop()
   }

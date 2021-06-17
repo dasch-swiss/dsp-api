@@ -5,6 +5,7 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_library")
 scala_library(
     name = "responders",
     srcs = glob(["**/*.scala"]),
+    scalacopts = ["-deprecation"],
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
@@ -15,6 +16,7 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/instrumentation",
         "//webapi/src/main/scala/org/knora/webapi/messages",
         "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/store/cacheservice/settings",
         "//webapi/src/main/scala/org/knora/webapi/util",
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
         "@maven//:com_typesafe_akka_akka_actor_2_13",

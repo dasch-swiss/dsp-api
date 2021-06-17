@@ -5,6 +5,7 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_binary", "scala_library", 
 scala_library(
     name = "app",
     srcs = glob(["*.scala"]),
+    scalacopts = ["-deprecation"],
     unused_dependency_checker_mode = "warn",
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
@@ -19,6 +20,9 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/routing",
         "//webapi/src/main/scala/org/knora/webapi/settings",
         "//webapi/src/main/scala/org/knora/webapi/store",
+        "//webapi/src/main/scala/org/knora/webapi/store/cacheservice",
+        "//webapi/src/main/scala/org/knora/webapi/store/cacheservice/inmem",
+        "//webapi/src/main/scala/org/knora/webapi/store/cacheservice/settings",
         "//webapi/src/main/scala/org/knora/webapi/util/cache",
         "@maven//:ch_megard_akka_http_cors_2_13",
         "@maven//:com_github_swagger_akka_http_swagger_akka_http_2_13",

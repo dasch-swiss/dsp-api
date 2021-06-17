@@ -38,7 +38,7 @@ class TopologicalSortUtilSpec extends CoreSpec() {
 
   "TopologicalSortUtilSpec" should {
 
-    "return all topological orders of a graph" in {
+    "return all topological orders of a graph with one leaf" in {
       val graph: Graph[Int, DiHyperEdge] =
         Graph[Int, DiHyperEdge](DiHyperEdge[Int](2, 4), DiHyperEdge[Int](2, 7), DiHyperEdge[Int](4, 5))
 
@@ -47,8 +47,23 @@ class TopologicalSortUtilSpec extends CoreSpec() {
           .findAllTopologicalOrderPermutations(graph))
 
       val expectedOrders = Set(
-        Vector(2, 4, 7, 5),
         Vector(2, 7, 4, 5)
+      )
+
+      assert(allOrders == expectedOrders)
+    }
+
+    "return all topological orders of a graph with multiple leaves" in {
+      val graph: Graph[Int, DiHyperEdge] =
+        Graph[Int, DiHyperEdge](DiHyperEdge[Int](2, 4), DiHyperEdge[Int](2, 7), DiHyperEdge[Int](2, 8), DiHyperEdge[Int](4, 5), DiHyperEdge[Int](7, 3))
+
+      val allOrders: Set[Vector[Int]] = nodesToValues(
+        TopologicalSortUtil
+          .findAllTopologicalOrderPermutations(graph))
+
+      val expectedOrders = Set(
+        Vector(2, 8, 4, 7, 5, 3),
+        Vector(2, 8, 7, 4, 3, 5)
       )
 
       assert(allOrders == expectedOrders)

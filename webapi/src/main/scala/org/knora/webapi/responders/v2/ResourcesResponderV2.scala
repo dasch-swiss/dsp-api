@@ -385,8 +385,16 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             s"Resource <${resource.resourceIri}> is not a member of class <${updateResourceMetadataRequestV2.resourceClassIri}>")
         }
 
+        // If resource has already been modified, make sure that its lastModificationDate is given in the request body.
+        _ = if (resource.lastModificationDate.nonEmpty && updateResourceMetadataRequestV2.maybeLastModificationDate.isEmpty) {
+          throw EditConflictException(
+            s"Resource <${resource.resourceIri}> has been modified in the past. Its lastModificationDate " +
+              s"${resource.lastModificationDate.get} must be included in the request body.")
+        }
+
         // Make sure that the resource hasn't been updated since the client got its last modification date.
-        _ = if (resource.lastModificationDate != updateResourceMetadataRequestV2.maybeLastModificationDate) {
+        _ = if (updateResourceMetadataRequestV2.maybeLastModificationDate.nonEmpty &&
+                resource.lastModificationDate != updateResourceMetadataRequestV2.maybeLastModificationDate) {
           throw EditConflictException(s"Resource <${resource.resourceIri}> has been modified since you last read it")
         }
 
@@ -2491,7 +2499,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   def getResourceHistoryEvents(
       resourceFullHistRequest: ResourceFullHistoryGetRequestV2): Future[Seq[ResourceAndValueHistoryV2]] = {
 
-    val resourceHist = resourceFullHistRequest.resourceVersionHistory.reverse
+    val resourceHist: Seq[ResourceHistoryEntry] = resourceFullHistRequest.resourceVersionHistory.reverse
     // Collect the full representations of the resource for each version date
     val histories: Seq[Future[(ResourceHistoryEntry, ReadResourceV2)]] = resourceHist.map { hist =>
       for {
@@ -2508,8 +2516,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
       // Create an event for the resource at creation time
       (creationTimeHist, resourceAtCreation) = fullReps.head
-      resourceCreateEvent: ResourceAndValueHistoryV2 = getResourceAtCreationDate(resourceAtCreation, creationTimeHist)
-      resourceCreationEvent: Seq[ResourceAndValueHistoryV2] = Seq(resourceCreateEvent)
+      resourceCreationEvent: Seq[ResourceAndValueHistoryV2] = getResourceCreationEvent(resourceAtCreation,
+                                                                                       creationTimeHist)
 
       // If there is a version history for deletion of the event, create a delete resource event for it.
       (deletionRep, resourceAtValueChanges) = fullReps.tail.partition {
@@ -2519,14 +2527,19 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             .deletionInfo
             .exists(deletionInfo => deletionInfo.deleteDate == resHist.versionDate)
       }
-      resourceDeleteEvent = getResourceAtDeletionDates(deletionRep)
+      resourceDeleteEvent = getResourceDeletionEvents(deletionRep)
 
       // For each value version, form an event
       valuesEvents: Seq[ResourceAndValueHistoryV2] = resourceAtValueChanges.flatMap {
-        case (versionHist, readResource) => getValueAtGivenVersionDate(readResource, versionHist, fullReps)
+        case (versionHist, readResource) => getValueEvents(readResource, versionHist, fullReps)
       }
 
-    } yield resourceCreationEvent ++ resourceDeleteEvent ++ valuesEvents
+      // Get the update resource metadata event, if there is any.
+      resourceMetadataUpdateEvent: Seq[ResourceAndValueHistoryV2] = getResourceMetadataUpdateEvent(fullReps.last,
+                                                                                                   valuesEvents,
+                                                                                                   resourceDeleteEvent)
+
+    } yield resourceCreationEvent ++ resourceDeleteEvent ++ valuesEvents ++ resourceMetadataUpdateEvent
   }
 
   /**
@@ -2562,8 +2575,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @param versionInfoAtCreation the history info of the version; i.e. versionDate and author.
     * @return a createResource event.
     */
-  private def getResourceAtCreationDate(resourceAtTimeOfCreation: ReadResourceV2,
-                                        versionInfoAtCreation: ResourceHistoryEntry): ResourceAndValueHistoryV2 = {
+  private def getResourceCreationEvent(resourceAtTimeOfCreation: ReadResourceV2,
+                                       versionInfoAtCreation: ResourceHistoryEntry): Seq[ResourceAndValueHistoryV2] = {
 
     val requestBody: ResourceEventBody = ResourceEventBody(
       resourceIri = resourceAtTimeOfCreation.resourceIri,
@@ -2577,12 +2590,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       creationDate = Some(resourceAtTimeOfCreation.creationDate)
     )
 
-    ResourceAndValueHistoryV2(
-      eventType = ResourceAndValueEventsUtil.CREATE_RESOURCE_EVENT,
-      versionDate = versionInfoAtCreation.versionDate,
-      author = versionInfoAtCreation.author,
-      eventBody = requestBody
-    )
+    Seq(
+      ResourceAndValueHistoryV2(
+        eventType = ResourceAndValueEventsUtil.CREATE_RESOURCE_EVENT,
+        versionDate = versionInfoAtCreation.versionDate,
+        author = versionInfoAtCreation.author,
+        eventBody = requestBody
+      ))
   }
 
   /**
@@ -2592,7 +2606,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     *                             the full representation of resource at time of deletion.
     * @return a seq of deleteResource events.
     */
-  private def getResourceAtDeletionDates(
+  private def getResourceDeletionEvents(
       resourceDeletionInfo: Seq[(ResourceHistoryEntry, ReadResourceV2)]): Seq[ResourceAndValueHistoryV2] = {
     resourceDeletionInfo.map {
       case (delHist, fullRepresentation) =>
@@ -2620,7 +2634,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @param allResourceVersions all full representations of resource for each version date in its history.
     * @return a create/update/delete value event.
     */
-  private def getValueAtGivenVersionDate(
+  private def getValueEvents(
       resourceAtGivenTime: ReadResourceV2,
       versionHist: ResourceHistoryEntry,
       allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)]): Seq[ResourceAndValueHistoryV2] = {
@@ -2693,7 +2707,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             } else {
               // No. return updateValue event
               val (updateEventType: String, updateEventRequestBody: ValueEventBody) =
-                getUpdateEventType(propIri, readValue, allResourceVersions, resourceAtGivenTime)
+                getValueUpdateEventType(propIri, readValue, allResourceVersions, resourceAtGivenTime)
               ResourceAndValueHistoryV2(
                 eventType = updateEventType,
                 versionDate = versionHist.versionDate,
@@ -2719,10 +2733,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @param resourceAtGivenTime the full representation of the resource at time of value update.
     * @return (eventType, update event request body)
     */
-  private def getUpdateEventType(propertyIri: SmartIri,
-                                 currentVersionOfValue: ReadValueV2,
-                                 allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)],
-                                 resourceAtGivenTime: ReadResourceV2): (String, ValueEventBody) = {
+  private def getValueUpdateEventType(propertyIri: SmartIri,
+                                      currentVersionOfValue: ReadValueV2,
+                                      allResourceVersions: Seq[(ResourceHistoryEntry, ReadResourceV2)],
+                                      resourceAtGivenTime: ReadResourceV2): (String, ValueEventBody) = {
     val previousValueIri: IRI = currentVersionOfValue.previousValueIri.getOrElse(
       throw BadRequestException("No previous value IRI found for the value, Please report this as a bug."))
 
@@ -2776,5 +2790,89 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       (ResourceAndValueEventsUtil.UPDATE_VALUE_CONTENT_EVENT, updateValueContentRequestBody)
     }
     event
+  }
+
+  /**
+    * Returns an updateResourceMetadata event as [[ResourceAndValueHistoryV2]] with request body of the form
+    * [[ResourceMetadataEventBody]] with information necessary to make update metadata of resource request with a
+    * given modification date.
+    *
+    * @param latestVersionOfResource the full representation of the resource.
+    * @param valueEvents             the events describing value operations.
+    * @param resourceDeleteEvents    the events describing resource deletion operations.
+    * @return an updateResourceMetadata event.
+    */
+  private def getResourceMetadataUpdateEvent(
+      latestVersionOfResource: (ResourceHistoryEntry, ReadResourceV2),
+      valueEvents: Seq[ResourceAndValueHistoryV2],
+      resourceDeleteEvents: Seq[ResourceAndValueHistoryV2]): Seq[ResourceAndValueHistoryV2] = {
+    val readResource: ReadResourceV2 = latestVersionOfResource._2
+    val author: IRI = latestVersionOfResource._1.author
+    // Is lastModificationDate of resource None
+    readResource.lastModificationDate match {
+      // Yes. Do nothing.
+      case None => Seq.empty[ResourceAndValueHistoryV2]
+      // No. Either a value or the resource metadata must have been modified.
+      case Some(modDate) =>
+        val deletionEventWithSameDate = resourceDeleteEvents.find(event => event.versionDate == modDate)
+        // Is the lastModificationDate of the resource the same as its deletion date?
+        val updateMetadataEvent = if (deletionEventWithSameDate.isDefined) {
+          // Yes. Do noting.
+          Seq.empty[ResourceAndValueHistoryV2]
+          // No. Is there any value event?
+        } else if (valueEvents.isEmpty) {
+          // No. After creation of the resource its metadata must have been updated, use creation date as the lastModification date of the event.
+          val requestBody = ResourceMetadataEventBody(
+            resourceIri = readResource.resourceIri,
+            resourceClassIri = readResource.resourceClassIri,
+            lastModificationDate = readResource.creationDate,
+            newModificationDate = modDate
+          )
+          val event = ResourceAndValueHistoryV2(
+            eventType = ResourceAndValueEventsUtil.UPDATE_RESOURCE_METADATA_EVENT,
+            versionDate = modDate,
+            author = author,
+            eventBody = requestBody
+          )
+          Seq(event)
+        } else {
+          // Yes. Sort the value events by version date.
+          val sortedEvents = valueEvents.sortBy(_.versionDate)
+          // Is there any value event with version date equal to lastModificationDate of the resource?
+          val modDateExists = valueEvents.find(event => event.versionDate == modDate)
+          modDateExists match {
+            // Yes. The last modification date of the resource reflects the modification of a value. Return nothing.
+            case Some(_) => Seq.empty[ResourceAndValueHistoryV2]
+            // No. The last modification date of the resource reflects update of a resource's metadata. Return an updateMetadataEvent
+            case None =>
+              // Find the event with version date before resource's last modification date.
+              val eventsBeforeModDate = sortedEvents.filter(event => event.versionDate.isBefore(modDate))
+              // Is there any value with versionDate before this date?
+              val oldModDate = if (eventsBeforeModDate.nonEmpty) {
+                // Yes. assign the versionDate of the last value event as lastModificationDate for request.
+                eventsBeforeModDate.last.versionDate
+
+              } else {
+                // No. The metadata of the resource must have been updated after the value operations, use the version date
+                // of the last value event as the lastModificationDate
+                sortedEvents.last.versionDate
+              }
+              val requestBody = ResourceMetadataEventBody(
+                resourceIri = readResource.resourceIri,
+                resourceClassIri = readResource.resourceClassIri,
+                lastModificationDate = oldModDate,
+                newModificationDate = modDate
+              )
+              val event = ResourceAndValueHistoryV2(
+                eventType = ResourceAndValueEventsUtil.UPDATE_RESOURCE_METADATA_EVENT,
+                versionDate = modDate,
+                author = author,
+                eventBody = requestBody
+              )
+              Seq(event)
+          }
+        }
+        updateMetadataEvent
+    }
   }
 }
