@@ -658,7 +658,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
         }
 
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
-        newPermissionIri: IRI <- checkOrCreateEntityIri(customPermissionIri, stringFormatter.makeRandomPermissionIri)
+        newPermissionIri: IRI <- checkOrCreateEntityIri(customPermissionIri,
+                                                        stringFormatter.makeRandomPermissionIri(project.projectUUID))
 
         // Create the administrative permission.
         createAdministrativePermissionSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -1481,7 +1482,8 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           throw NotFoundException(s"Project '${createRequest.forProject}' not found. Aborting request."))
 
         customPermissionIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
-        newPermissionIri: IRI <- checkOrCreateEntityIri(customPermissionIri, stringFormatter.makeRandomPermissionIri)
+        newPermissionIri: IRI <- checkOrCreateEntityIri(customPermissionIri,
+                                                        stringFormatter.makeRandomPermissionIri(project.projectUUID))
         // verify group, if any given.
         // Is a group given that is not a built-in one?
         maybeGroupIri: Option[IRI] <- if (createRequest.forGroup.exists(

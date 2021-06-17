@@ -1079,11 +1079,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             }
             (Some(iri.toSmartIri), customUUID.toString)
         }
-        newProjectIRI: IRI <- checkOrCreateEntityIri(customProjectIri,
-                                                     stringFormatter.makeRandomProjectIri(projectUUID))
-
-        // Make a UUID for the new value
-        newValueUUID: String = stringFormatter.makeRandomBase64EncodedUuid
+        newProjectIRI: IRI <- checkOrCreateEntityIri(
+          customProjectIri,
+          stringFormatter.makeRandomProjectIri(stringFormatter.base64DecodeUuid(projectUUID)))
 
         createNewProjectSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .createNewProject(

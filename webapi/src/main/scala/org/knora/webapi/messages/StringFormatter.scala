@@ -2437,7 +2437,7 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     * @return the IRI of the project's data named graph.
     */
   def projectDataNamedGraphV2(project: ProjectADM): IRI = {
-    OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode + "/" + project.shortname
+    OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + base64EncodeUuid(project.projectUUID)
   }
 
   /**
@@ -2447,7 +2447,7 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     * @return the IRI of the project's metadata named graph.
     */
   def projectMetadataNamedGraphV2(project: ProjectADM): IRI = {
-    OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode + "/" + project.shortname + "/metadata"
+    OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + base64EncodeUuid(project.projectUUID) + "/metadata"
   }
 
   /**
@@ -3043,12 +3043,12 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
   /**
     * Creates a new resource IRI based on a UUID.
     *
-    * @param projectShortcode the project's shortcode.
+    * @param projectUUID the project's UUID.
     * @return a new resource IRI.
     */
-  def makeRandomResourceIri(projectShortcode: String): IRI = {
+  def makeRandomResourceIri(projectUUID: UUID): IRI = {
     val knoraResourceID = makeRandomBase64EncodedUuid
-    s"http://$IriDomain/$projectShortcode/$knoraResourceID"
+    s"http://$IriDomain/${base64EncodeUuid(projectUUID)}/$knoraResourceID"
   }
 
   /**
@@ -3098,19 +3098,21 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
 
   /**
     * Creates a new project IRI based on a random UUID.
+    * @param projectUUID the required project UUID.
     * @return a new project IRI.
     */
-  def makeRandomProjectIri(projectUUID: String): IRI = {
-    s"http://$IriDomain/projects/$projectUUID"
+  def makeRandomProjectIri(projectUUID: UUID): IRI = {
+    s"http://$IriDomain/projects/${base64EncodeUuid(projectUUID)}"
   }
 
   /**
     * Creates a new group IRI based on a UUID.
+    * @param projectUUID the required project UUID.
     * @return a new group IRI.
     */
-  def makeRandomGroupIri: String = {
+  def makeRandomGroupIri(projectUUID: UUID): String = {
     val knoraGroupUuid = makeRandomBase64EncodedUuid
-    s"http://$IriDomain/groups/$knoraGroupUuid"
+    s"http://$IriDomain/groups/${base64EncodeUuid(projectUUID)}/$knoraGroupUuid"
   }
 
   /**
@@ -3125,12 +3127,12 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
 
   /**
     * Creates a new list IRI based on a UUID.
-    *
+    * @param projectUUID the required project UUID.
     * @return a new list IRI.
     */
-  def makeRandomListIri: String = {
+  def makeRandomListIri(projectUUID: UUID): String = {
     val knoraListUuid = makeRandomBase64EncodedUuid
-    s"http://$IriDomain/lists/$knoraListUuid"
+    s"http://$IriDomain/lists/${base64EncodeUuid(projectUUID)}/$knoraListUuid"
   }
 
   /**
@@ -3170,12 +3172,12 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
 
   /**
     * Creates a new permission IRI based on a UUID.
-    *
+    * @param projectUUID the required project UUID.
     * @return the IRI of the permission object.
     */
-  def makeRandomPermissionIri: IRI = {
+  def makeRandomPermissionIri(projectUUID: UUID): IRI = {
     val knoraPermissionUuid = makeRandomBase64EncodedUuid
-    s"http://$IriDomain/permissions/$knoraPermissionUuid"
+    s"http://$IriDomain/permissions/${base64EncodeUuid(projectUUID)}/$knoraPermissionUuid"
   }
 
   /**

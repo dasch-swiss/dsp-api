@@ -1455,7 +1455,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       // Create random IRIs for resources, collect in Map[clientResourceID, IRI]
       clientResourceIDsToResourceIris: Map[String, IRI] = new ErrorHandlingMap(
         toWrap = resourcesToCreate
-          .map(resRequest => resRequest.clientResourceID -> stringFormatter.makeRandomResourceIri(projectADM.shortcode))
+          .map(resRequest =>
+            resRequest.clientResourceID -> stringFormatter.makeRandomResourceIri(projectADM.projectUUID))
           .toMap,
         errorTemplateFun = { key =>
           s"Resource $key is the target of a link, but was not provided in the request"
@@ -2243,7 +2244,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       }
 
       namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectResponse.project)
-      resourceIri: IRI = stringFormatter.makeRandomResourceIri(projectResponse.project.shortcode)
+      resourceIri: IRI = stringFormatter.makeRandomResourceIri(projectResponse.project.projectUUID)
 
       // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
       // create a new resource in the given project.

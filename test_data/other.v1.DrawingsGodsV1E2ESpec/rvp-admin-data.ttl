@@ -8,9 +8,10 @@
 
 
 ### parole-religieuse project
-<http://rdfh.ch/projects/0106> rdf:type knora-admin:knoraProject ;
+<http://rdfh.ch/projects/s6UVhZV3JqyDeOyDbnqcgw> rdf:type knora-admin:knoraProject ;
         knora-admin:projectShortname "parole-religieuse"^^xsd:string ;
         knora-admin:projectShortcode "0106"^^xsd:string ;
+        knora-admin:projectUUID "s6UVhZV3JqyDeOyDbnqcgw"^^xsd:string ;
         knora-admin:projectLongname "parole-religieuse"^^xsd:string ;
         knora-admin:projectDescription "parole-religieuse"@fr ;
         knora-admin:projectKeywords "gods, collection"^^xsd:string ;
@@ -26,7 +27,7 @@
         knora-admin:password "$e0801$FGl9FDIWw+D83OeNPGmD9u2VTqIkJopIQECgmb2DSWQLS0TeKSvYoWAkbEv6KxePPlCI3CP9MmVHuvnWv8/kag==$mlegCYdGXt+ghuo8i0rLjgOiNnGDW604Q5g/v7zwBPU="^^xsd:string ;
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
-        knora-admin:isInProject <http://rdfh.ch/projects/0106> ;
-        knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/0106> ;
+        knora-admin:isInProject <http://rdfh.ch/projects/s6UVhZV3JqyDeOyDbnqcgw> ;
+        knora-admin:isInProjectAdminGroup <http://rdfh.ch/projects/s6UVhZV3JqyDeOyDbnqcgw> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 

@@ -79,7 +79,7 @@ class DrawingsGodsV1E2ESpec extends E2ESpec(DrawingsGodsV1E2ESpec.config) with T
                    |{
                    |    "restype_id": "http://www.knora.org/ontology/0106/parole-religieuse#Thing",
                    |    "label": "A thing",
-                   |    "project_id": "http://rdfh.ch/projects/0106",
+                   |    "project_id": "http://rdfh.ch/projects/s6UVhZV3JqyDeOyDbnqcgw",
                    |    "properties": {}
                    |}
                 """.stripMargin

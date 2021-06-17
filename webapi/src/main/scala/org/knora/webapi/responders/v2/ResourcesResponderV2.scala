@@ -339,7 +339,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
       resourceIri: IRI <- checkOrCreateEntityIri(
         createResourceRequestV2.createResource.resourceIri,
-        stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode))
+        stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.projectUUID)
+      )
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
       taskResult <- IriLocker.runWithIriLock(
