@@ -727,6 +727,78 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
 }
 
 /**
+  * Requests the removal of a class's cardinalities. A successful response will be a [[ReadOntologyV2]].
+  *
+  * @param classInfoContent     a [[ClassInfoContentV2]] containing the new cardinalities.
+  * @param lastModificationDate the ontology's last modification date.
+  * @param apiRequestID         the ID of the API request.
+  * @param requestingUser       the user making the request.
+  */
+case class DeleteCardinalitiesFromClassRequestV2(classInfoContent: ClassInfoContentV2,
+                                                 lastModificationDate: Instant,
+                                                 apiRequestID: UUID,
+                                                 featureFactoryConfig: FeatureFactoryConfig,
+                                                 requestingUser: UserADM)
+    extends OntologiesResponderRequestV2
+
+/**
+  * Constructs instances of [[DeleteCardinalitiesFromClassRequestV2]] based on JSON-LD input.
+  */
+object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[DeleteCardinalitiesFromClassRequestV2] {
+
+  /**
+    * Converts JSON-LD input into a [[DeleteCardinalitiesFromClassRequestV2]].
+    *
+    * @param jsonLDDocument       the JSON-LD input.
+    * @param apiRequestID         the UUID of the API request.
+    * @param requestingUser       the user making the request.
+    * @param responderManager     a reference to the responder manager.
+    * @param storeManager         a reference to the store manager.
+    * @param featureFactoryConfig the feature factory configuration.
+    * @param settings             the application settings.
+    * @param log                  a logging adapter.
+    * @return a [[DeleteCardinalitiesFromClassRequestV2]] representing the input.
+    */
+  override def fromJsonLD(jsonLDDocument: JsonLDDocument,
+                          apiRequestID: UUID,
+                          requestingUser: UserADM,
+                          responderManager: ActorRef,
+                          storeManager: ActorRef,
+                          featureFactoryConfig: FeatureFactoryConfig,
+                          settings: KnoraSettingsImpl,
+                          log: LoggingAdapter)(
+      implicit timeout: Timeout,
+      executionContext: ExecutionContext): Future[DeleteCardinalitiesFromClassRequestV2] = {
+    Future {
+      fromJsonLDSync(
+        jsonLDDocument = jsonLDDocument,
+        apiRequestID = apiRequestID,
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser
+      )
+    }
+  }
+
+  private def fromJsonLDSync(jsonLDDocument: JsonLDDocument,
+                             apiRequestID: UUID,
+                             featureFactoryConfig: FeatureFactoryConfig,
+                             requestingUser: UserADM): DeleteCardinalitiesFromClassRequestV2 = {
+    val inputOntologiesV2 = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val classUpdateInfo = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+    val classInfoContent = classUpdateInfo.classInfoContent
+    val lastModificationDate = classUpdateInfo.lastModificationDate
+
+    DeleteCardinalitiesFromClassRequestV2(
+      classInfoContent = classInfoContent,
+      lastModificationDate = lastModificationDate,
+      apiRequestID = apiRequestID,
+      featureFactoryConfig = featureFactoryConfig,
+      requestingUser = requestingUser
+    )
+  }
+}
+
+/**
   * Requests the deletion of a class. A successful response will be a [[ReadOntologyMetadataV2]].
   *
   * @param classIri             the IRI of the class to be deleted.
