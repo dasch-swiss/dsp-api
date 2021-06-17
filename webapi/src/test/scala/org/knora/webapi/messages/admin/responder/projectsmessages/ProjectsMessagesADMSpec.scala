@@ -101,6 +101,7 @@ class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
           id = "id",
           shortcode = "1111",
           shortname = "shortname",
+          projectUUID = StringFormatter.getGeneralInstance.base64DecodeUuid("8Emv-DFJnOPljSFvZMVz8Q"),
           longname = None,
           description = Seq.empty[StringLiteralV2],
           keywords = Seq.empty[String],
