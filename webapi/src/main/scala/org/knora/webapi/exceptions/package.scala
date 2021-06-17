@@ -17,7 +17,7 @@
  *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.knora.webapi
+package org.knora.webapi.exceptions
 
 package object exceptions {
   def deserializationError(msg: String, cause: Throwable = null, fieldNames: List[String] = Nil) =

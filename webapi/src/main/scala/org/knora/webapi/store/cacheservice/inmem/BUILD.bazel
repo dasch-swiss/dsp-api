@@ -12,11 +12,8 @@ scala_library(
     deps = [
         "//webapi/src/main/scala/org/knora/webapi",
         "//webapi/src/main/scala/org/knora/webapi/exceptions",
-        "//webapi/src/main/scala/org/knora/webapi/instrumentation",
         "//webapi/src/main/scala/org/knora/webapi/messages",
-        "//webapi/src/main/scala/org/knora/webapi/settings",
         "//webapi/src/main/scala/org/knora/webapi/store/cacheservice",
-        "@maven//:com_typesafe_akka_akka_actor_2_13",
         "@maven//:com_typesafe_akka_akka_http_core_2_13",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_13",
         "@maven//:org_slf4j_slf4j_api",
