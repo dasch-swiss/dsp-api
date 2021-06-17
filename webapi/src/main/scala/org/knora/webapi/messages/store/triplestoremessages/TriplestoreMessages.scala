@@ -21,6 +21,7 @@ package org.knora.webapi.messages.store.triplestoremessages
 
 import java.nio.file.Path
 import java.time.Instant
+import java.util.UUID
 
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
@@ -816,5 +817,18 @@ trait TriplestoreJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   implicit val rdfDataObjectFormat: RootJsonFormat[RdfDataObject] = jsonFormat2(RdfDataObject)
   implicit val resetTriplestoreContentFormat: RootJsonFormat[ResetRepositoryContent] = jsonFormat2(
     ResetRepositoryContent)
+
+  // spray json cannot properly serialize UUIDs,
+  // see https://stackoverflow.com/questions/31406825/spray-json-implicit-uuid-conversion
+  // This solution is added here temporarily to solve the issue.
+  implicit object UUIDFormat extends JsonFormat[UUID] {
+    def write(uuid: UUID) = JsString(uuid.toString)
+    def read(value: JsValue): UUID = {
+      value match {
+        case JsString(uuid) => UUID.fromString(uuid)
+        case _              => throw new DeserializationException("Expected hexadecimal UUID string")
+      }
+    }
+  }
 
 }

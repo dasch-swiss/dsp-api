@@ -478,6 +478,7 @@ object OntologyConstants {
     val KnoraProject: IRI = KnoraAdminPrefixExpansion + "knoraProject"
     val ProjectShortname: IRI = KnoraAdminPrefixExpansion + "projectShortname"
     val ProjectShortcode: IRI = KnoraAdminPrefixExpansion + "projectShortcode"
+    val ProjectUUID: IRI = KnoraAdminPrefixExpansion + "projectUUID"
     val ProjectLongname: IRI = KnoraAdminPrefixExpansion + "projectLongname"
     val ProjectDescription: IRI = KnoraAdminPrefixExpansion + "projectDescription"
     val ProjectKeyword: IRI = KnoraAdminPrefixExpansion + "projectKeyword"

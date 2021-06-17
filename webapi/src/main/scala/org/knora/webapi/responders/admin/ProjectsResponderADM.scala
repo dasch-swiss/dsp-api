@@ -1124,7 +1124,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             s"Project $newProjectIRI was not created. Please report this as a possible bug.")
         )
         // create permissions for admins and members of the new group
-        _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI, newProjectADM.projectUUID)
+        projectUUIDasString: String = stringFormatter.base64EncodeUuid(newProjectADM.projectUUID)
+        _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI, projectUUIDasString)
 
       } yield ProjectOperationResponseADM(project = newProjectADM)
 
@@ -1253,6 +1254,13 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         .head
         .asInstanceOf[StringLiteralV2]
         .value,
+      projectUUID = stringFormatter.base64DecodeUuid(
+        propsMap
+          .getOrElse(OntologyConstants.KnoraAdmin.ProjectUUID.toSmartIri,
+                     throw InconsistentRepositoryDataException(s"Project: $projectIri has no UUID defined."))
+          .head
+          .asInstanceOf[StringLiteralV2]
+          .value),
       longname = propsMap
         .get(OntologyConstants.KnoraAdmin.ProjectLongname.toSmartIri)
         .map(_.head.asInstanceOf[StringLiteralV2].value),

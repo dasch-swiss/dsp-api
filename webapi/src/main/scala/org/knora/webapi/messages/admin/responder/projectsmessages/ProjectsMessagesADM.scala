@@ -22,7 +22,6 @@ package org.knora.webapi.messages.admin.responder.projectsmessages
 import java.nio.file.Path
 import java.util.UUID
 
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi.IRI
 import org.knora.webapi.annotation.{ApiMayChange, ServerUnique}
@@ -38,7 +37,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
-import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
+import spray.json.{JsValue, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -76,7 +75,7 @@ case class CreateProjectApiRequestADM(id: Option[IRI] = None,
   stringFormatter.validateOptionalProjectIri(id, throw BadRequestException(s"Invalid project IRI"))
 
   /**
-    * Escapes special characters within strings
+    * Escapes special characters within strings before storing in triplestore
     *
     */
   def validateAndEscape: CreateProjectApiRequestADM = {
@@ -423,7 +422,7 @@ case class ProjectDataGetResponseADM(projectDataFile: Path)
   * @param id          The project's IRI.
   * @param shortname   The project's shortname. [[ServerUnique]].
   * @param shortcode   The project's shortcode. [[ServerUnique]].
-  * @param projectUUID The UUID of a project
+  * @param projectUUID The UUID of a project. [[ServerUnique]].
   * @param longname    The project's long name.
   * @param description The project's description.
   * @param keywords    The project's keywords.
@@ -683,16 +682,16 @@ case class ProjectUpdatePayloadADM(shortname: Option[String] = None,
                                    selfjoin: Option[Boolean] = None)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// JSON formating
+// JSON formatting
 
 /**
   * A spray-json protocol for generating Knora API v1 JSON providing data about projects.
   */
-trait ProjectsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with TriplestoreJsonProtocol {
+trait ProjectsADMJsonProtocol extends TriplestoreJsonProtocol {
 
   import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 
-  implicit val projectADMFormat: JsonFormat[ProjectADM] = lazyFormat(jsonFormat10(ProjectADM))
+  implicit val projectADMFormat: RootJsonFormat[ProjectADM] = rootFormat(lazyFormat(jsonFormat11(ProjectADM)))
   implicit val projectsResponseADMFormat: RootJsonFormat[ProjectsGetResponseADM] = rootFormat(
     lazyFormat(jsonFormat(ProjectsGetResponseADM, "projects")))
   implicit val projectResponseADMFormat: RootJsonFormat[ProjectGetResponseADM] = rootFormat(
