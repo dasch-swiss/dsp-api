@@ -7,7 +7,7 @@ scala_library(
     srcs = [
         "Cache.scala",
         "DeleteCardinalitiesFromClass.scala",
-        "Ontology.scala",
+        "OntologyHelpers.scala",
     ],
     scalacopts = ["-deprecation"],
     unused_dependency_checker_mode = "warn",

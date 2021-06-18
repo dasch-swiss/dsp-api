@@ -31,7 +31,8 @@ import org.knora.webapi.exceptions.{
 }
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.util.cache.CacheUtil
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.StringFormatter.SalsahGuiAttributeDefinition
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.{
@@ -52,13 +53,17 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.{
   ReadOntologyV2,
   ReadPropertyInfoV2
 }
-import org.knora.webapi.responders.v2.ontology.Ontology.OntologyGraph
+import org.knora.webapi.responders.v2.ontology.OntologyHelpers.OntologyGraph
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 import scala.concurrent.{ExecutionContext, Future}
 import akka.pattern._
+import akka.util.Timeout
+import com.typesafe.scalalogging.{LazyLogging, Logger}
 
-object Cache {
+object Cache extends LazyLogging {
+
+  private val log: Logger = logger
 
   // The name of the ontology cache.
   private val OntologyCacheName = "ontologyCache"
@@ -104,7 +109,9 @@ object Cache {
   def loadOntologies(settings: KnoraSettingsImpl,
                      storeManager: ActorRef,
                      featureFactoryConfig: FeatureFactoryConfig,
-                     requestingUser: UserADM)(implicit ec: ExecutionContext): Future[SuccessResponseV2] = {
+                     requestingUser: UserADM)(implicit ec: ExecutionContext,
+                                              stringFormat: StringFormatter,
+                                              timeout: Timeout): Future[SuccessResponseV2] = {
     val loadOntologiesFuture: Future[SuccessResponseV2] = for {
       _ <- Future {
         if (!(requestingUser.id == KnoraSystemInstances.Users.SystemUser.id || requestingUser.permissions.isSystemAdmin)) {
@@ -119,7 +126,8 @@ object Cache {
           .toString())
       allOntologyMetadataResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(allOntologyMetadataSparql))
         .mapTo[SparqlSelectResult]
-      allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] = buildOntologyMetadata(allOntologyMetadataResponse)
+      allOntologyMetadata: Map[SmartIri, OntologyMetadataV2] = OntologyHelpers.buildOntologyMetadata(
+        allOntologyMetadataResponse)
 
       knoraBaseOntologyMetadata: OntologyMetadataV2 = allOntologyMetadata.getOrElse(
         OntologyConstants.KnoraBase.KnoraBaseOntologyIri.toSmartIri,
@@ -175,17 +183,17 @@ object Cache {
     * @param ontologyGraphs      a list of ontology graphs.
     */
   def makeOntologyCache(allOntologyMetadata: Map[SmartIri, OntologyMetadataV2],
-                        ontologyGraphs: Iterable[OntologyGraph]): Unit = {
+                        ontologyGraphs: Iterable[OntologyGraph])(implicit stringFormatter: StringFormatter): Unit = {
     // Get the IRIs of all the entities in each ontology.
 
     // A map of ontology IRIs to class IRIs in each ontology.
-    val classIrisPerOntology: Map[SmartIri, Set[SmartIri]] = getEntityIrisFromOntologyGraphs(
+    val classIrisPerOntology: Map[SmartIri, Set[SmartIri]] = OntologyHelpers.getEntityIrisFromOntologyGraphs(
       ontologyGraphs = ontologyGraphs,
       entityTypes = Set(OntologyConstants.Owl.Class)
     )
 
     // A map of ontology IRIs to property IRIs in each ontology.
-    val propertyIrisPerOntology: Map[SmartIri, Set[SmartIri]] = getEntityIrisFromOntologyGraphs(
+    val propertyIrisPerOntology: Map[SmartIri, Set[SmartIri]] = OntologyHelpers.getEntityIrisFromOntologyGraphs(
       ontologyGraphs = ontologyGraphs,
       entityTypes = Set(
         OntologyConstants.Owl.ObjectProperty,
@@ -196,7 +204,7 @@ object Cache {
     )
 
     // A map of ontology IRIs to named individual IRIs in each ontology.
-    val individualIrisPerOntology: Map[SmartIri, Set[SmartIri]] = getEntityIrisFromOntologyGraphs(
+    val individualIrisPerOntology: Map[SmartIri, Set[SmartIri]] = OntologyHelpers.getEntityIrisFromOntologyGraphs(
       ontologyGraphs = ontologyGraphs,
       entityTypes = Set(OntologyConstants.Owl.NamedIndividual)
     )
@@ -205,7 +213,7 @@ object Cache {
 
     // A map of class IRIs to class definitions.
     val allClassDefs: Map[SmartIri, ClassInfoContentV2] = ontologyGraphs.flatMap { ontologyGraph =>
-      constructResponseToClassDefinitions(
+      OntologyHelpers.constructResponseToClassDefinitions(
         classIris = classIrisPerOntology(ontologyGraph.ontologyIri),
         constructResponse = ontologyGraph.constructResponse
       )
@@ -213,7 +221,7 @@ object Cache {
 
     // A map of property IRIs to property definitions.
     val allPropertyDefs: Map[SmartIri, PropertyInfoContentV2] = ontologyGraphs.flatMap { ontologyGraph =>
-      constructResponseToPropertyDefinitions(
+      OntologyHelpers.constructResponseToPropertyDefinitions(
         propertyIris = propertyIrisPerOntology(ontologyGraph.ontologyIri),
         constructResponse = ontologyGraph.constructResponse
       )
@@ -221,15 +229,15 @@ object Cache {
 
     // A map of OWL named individual IRIs to named individuals.
     val allIndividuals: Map[SmartIri, IndividualInfoContentV2] = ontologyGraphs.flatMap { ontologyGraph =>
-      constructResponseToIndividuals(
+      OntologyHelpers.constructResponseToIndividuals(
         individualIris = individualIrisPerOntology(ontologyGraph.ontologyIri),
         constructResponse = ontologyGraph.constructResponse
       )
     }.toMap
 
     // A map of salsah-gui:Guielement individuals to their GUI attribute definitions.
-    val allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]] = makeGuiAttributeDefinitions(
-      allIndividuals)
+    val allGuiAttributeDefinitions: Map[SmartIri, Set[SalsahGuiAttributeDefinition]] =
+      OntologyHelpers.makeGuiAttributeDefinitions(allIndividuals)
 
     // Determine relations between entities.
 
@@ -256,7 +264,8 @@ object Cache {
 
     // A map in which each class IRI points to the full set of its subclasses. A class is also
     // a subclass of itself.
-    val allSuperClassOfRelations: Map[SmartIri, Set[SmartIri]] = calculateSuperClassOfRelations(allSubClassOfRelations)
+    val allSuperClassOfRelations: Map[SmartIri, Set[SmartIri]] =
+      OntologyHelpers.calculateSuperClassOfRelations(allSubClassOfRelations)
 
     // Make a map in which each property IRI points to the full set of its base properties. A property is also
     // a subproperty of itself.
@@ -294,18 +303,19 @@ object Cache {
     // Allow each class to inherit cardinalities from its base classes.
     val classCardinalitiesWithInheritance: Map[SmartIri, Map[SmartIri, KnoraCardinalityInfo]] = allClassIris.map {
       resourceClassIri =>
-        val resourceClassCardinalities: Map[SmartIri, KnoraCardinalityInfo] = inheritCardinalitiesInLoadedClass(
-          classIri = resourceClassIri,
-          directSubClassOfRelations = directSubClassOfRelations,
-          allSubPropertyOfRelations = allSubPropertyOfRelations,
-          directClassCardinalities = directClassCardinalities
-        )
+        val resourceClassCardinalities: Map[SmartIri, KnoraCardinalityInfo] =
+          OntologyHelpers.inheritCardinalitiesInLoadedClass(
+            classIri = resourceClassIri,
+            directSubClassOfRelations = directSubClassOfRelations,
+            allSubPropertyOfRelations = allSubPropertyOfRelations,
+            directClassCardinalities = directClassCardinalities
+          )
 
         resourceClassIri -> resourceClassCardinalities
     }.toMap
 
     // Construct a ReadClassInfoV2 for each class.
-    val readClassInfos: Map[SmartIri, ReadClassInfoV2] = makeReadClassInfos(
+    val readClassInfos: Map[SmartIri, ReadClassInfoV2] = OntologyHelpers.makeReadClassInfos(
       classDefs = allClassDefs,
       directClassCardinalities = directClassCardinalities,
       classCardinalitiesWithInheritance = classCardinalitiesWithInheritance,
@@ -320,7 +330,7 @@ object Cache {
     )
 
     // Construct a ReadPropertyInfoV2 for each property definition.
-    val readPropertyInfos: Map[SmartIri, ReadPropertyInfoV2] = makeReadPropertyInfos(
+    val readPropertyInfos: Map[SmartIri, ReadPropertyInfoV2] = OntologyHelpers.makeReadPropertyInfos(
       propertyDefs = allPropertyDefs,
       directSubPropertyOfRelations = directSubPropertyOfRelations,
       allSubPropertyOfRelations = allSubPropertyOfRelations,
@@ -333,7 +343,7 @@ object Cache {
     )
 
     // Construct a ReadIndividualV2 for each OWL named individual.
-    val readIndividualInfos = makeReadIndividualInfos(allIndividuals)
+    val readIndividualInfos = OntologyHelpers.makeReadIndividualInfos(allIndividuals)
 
     // A ReadOntologyV2 for each ontology to be cached.
     val readOntologies: Map[SmartIri, ReadOntologyV2] = allOntologyMetadata.map {
@@ -584,9 +594,10 @@ object Cache {
     * @param propertyDef       the property definition.
     * @param errorFun          a function that throws an exception with the specified message if the property definition is invalid.
     */
-  def checkOntologyReferencesInPropertyDef(ontologyCacheData: OntologyCacheData,
-                                           propertyDef: PropertyInfoContentV2,
-                                           errorFun: String => Nothing): Unit = {
+  def checkOntologyReferencesInPropertyDef(
+      ontologyCacheData: OntologyCacheData,
+      propertyDef: PropertyInfoContentV2,
+      errorFun: String => Nothing)(implicit stringFormatter: StringFormatter): Unit = {
     // Ensure that the property isn't a subproperty of any property in a non-shared ontology in another project.
 
     for (subPropertyOf <- propertyDef.subPropertyOf) {
@@ -659,7 +670,8 @@ object Cache {
     *
     * @param ontologyCacheData the ontology cache data.
     */
-  private def checkReferencesBetweenOntologies(ontologyCacheData: OntologyCacheData): Unit = {
+  private def checkReferencesBetweenOntologies(ontologyCacheData: OntologyCacheData)(
+      implicit stringFormatter: StringFormatter): Unit = {
     for (ontology <- ontologyCacheData.ontologies.values) {
       for (propertyInfo <- ontology.properties.values) {
         checkOntologyReferencesInPropertyDef(
@@ -745,7 +757,7 @@ object Cache {
           }.toMap
 
         // Override inherited cardinalities with directly defined cardinalities.
-        val newInheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = overrideCardinalities(
+        val newInheritedCardinalities: Map[SmartIri, KnoraCardinalityInfo] = OntologyHelpers.overrideCardinalities(
           classIri = directSubClassIri,
           thisClassCardinalities = directSubClass.entityInfoContent.directCardinalities,
           inheritableCardinalities = inheritableCardinalities,
