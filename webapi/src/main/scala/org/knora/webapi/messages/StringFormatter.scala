@@ -857,15 +857,15 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
 
   // A regex that matches a Knora resource IRI.
   private val ResourceIriRegex: Regex =
-    ("^http://" + IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")$").r
+    ("^http://" + IriDomain + "/(" + Base64UrlPattern + ")/(" + Base64UrlPattern + ")$").r
 
   // A regex that matches a Knora value IRI.
   private val ValueIriRegex: Regex =
-    ("^http://" + IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + ")$").r
+    ("^http://" + IriDomain + "/(" + Base64UrlPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + ")$").r
 
   // A regex that matches a Knora standoff IRI.
   private val StandoffIriRegex: Regex =
-    ("^http://" + IriDomain + "/(" + ProjectIDPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + """)/standoff/(\d+)$""").r
+    ("^http://" + IriDomain + "/(" + Base64UrlPattern + ")/(" + Base64UrlPattern + ")/values/(" + Base64UrlPattern + """)/standoff/(\d+)$""").r
 
   // A regex that parses a Knora ARK timestamp.
   private val ArkTimestampRegex: Regex =
@@ -956,26 +956,26 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
         if (DataIriStarts.exists(startStr => iri.startsWith(startStr))) {
           // This is a Knora data IRI. What sort of data IRI is it?
           iri match {
-            case ResourceIriRegex(projectCode: String, resourceID: String) =>
+            case ResourceIriRegex(projectUUID: String, resourceID: String) =>
               // It's a resource IRI.
               SmartIriInfo(
                 iriType = KnoraDataIri,
                 ontologySchema = None,
-                projectCode = Some(projectCode),
+                projectCode = Some(projectUUID),
                 resourceID = Some(resourceID)
               )
 
-            case ValueIriRegex(projectCode: String, resourceID: String, valueID: String) =>
+            case ValueIriRegex(projectUUID: String, resourceID: String, valueID: String) =>
               // It's a value IRI.
               SmartIriInfo(
                 iriType = KnoraDataIri,
                 ontologySchema = None,
-                projectCode = Some(projectCode),
+                projectCode = Some(projectUUID),
                 resourceID = Some(resourceID),
                 valueID = Some(valueID)
               )
 
-            case StandoffIriRegex(projectCode: String,
+            case StandoffIriRegex(projectUUID: String,
                                   resourceID: String,
                                   valueID: String,
                                   standoffStartIndex: String) =>
@@ -983,7 +983,7 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
               SmartIriInfo(
                 iriType = KnoraDataIri,
                 ontologySchema = None,
-                projectCode = Some(projectCode),
+                projectCode = Some(projectUUID),
                 resourceID = Some(resourceID),
                 valueID = Some(valueID),
                 standoffStartIndex = Some(standoffStartIndex.toInt)
