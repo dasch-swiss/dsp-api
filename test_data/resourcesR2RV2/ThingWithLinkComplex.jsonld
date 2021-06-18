@@ -1,8 +1,8 @@
 {
-  "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0C-0L1kORryKzJAJxxRyRQ",
   "@type" : "anything:Thing",
   "anything:isPartOfOtherThingValue" : {
-    "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ/values/xB88vMy-Tc2ZCVh9Km7rVw",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0C-0L1kORryKzJAJxxRyRQ/values/xB88vMy-Tc2ZCVh9Km7rVw",
     "@type" : "knora-api:LinkValue",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -13,7 +13,7 @@
     },
     "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:linkValueHasTarget" : {
-      "@id" : "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/LOV-6aLYQFW15jwdyS51Yw",
       "@type" : "anything:Thing",
       "knora-api:arkUrl" : {
         "@type" : "xsd:anyURI",

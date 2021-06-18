@@ -36,7 +36,7 @@
             "@value": "IIIF_BASE_URL/0001",
             "@type": "xsd:anyURI"
         },
-        "@id": "http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q"
+        "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q"
     },
     "knora-api:versionArkUrl": {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=picture0.20110302T150510Z",
@@ -55,7 +55,7 @@
     },
     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|RV knora-admin:UnknownUser",
     "@type": "anything:ThingPicture",
-    "@id": "http://rdfh.ch/0001/a-thing-picture",
+    "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-picture",
     "@context": {
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "knora-api": "http://api.knora.org/ontology/knora-api/v2#",

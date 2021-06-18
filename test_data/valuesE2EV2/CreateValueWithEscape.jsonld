@@ -1,5 +1,5 @@
 {
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
   "@type" : "anything:Thing",
   "anything:hasText" : {
     "@type" : "knora-api:TextValue",

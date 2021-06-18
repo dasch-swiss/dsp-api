@@ -40,7 +40,7 @@
                 "knora-api:valueHasUUID": "0000000000d6f61a91ab1w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/de6d83112e04/values/d6f61a91ab10"
+                "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/de6d83112e04/values/d6f61a91ab10"
             },
             "knora-api:attachedToUser": {
                 "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -69,13 +69,13 @@
                 "knora-api:valueHasUUID": "000000000099206ecaab1w",
                 "knora-api:dateValueHasCalendar": "JULIAN",
                 "@type": "knora-api:DateValue",
-                "@id": "http://rdfh.ch/0803/de6d83112e04/values/99206ecaab10",
+                "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/de6d83112e04/values/99206ecaab10",
                 "knora-api:valueAsString": "JULIAN:1475 CE:1499 CE",
                 "knora-api:dateValueHasStartEra": "CE",
                 "knora-api:dateValueHasStartYear": 1475,
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
             },
-            "@id": "http://rdfh.ch/0803/de6d83112e04"
+            "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/de6d83112e04"
         },
         {
             "knora-api:arkUrl": {
@@ -117,7 +117,7 @@
                     "knora-api:valueHasUUID": "0000000000463b6498b70Q",
                     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     "@type": "knora-api:TextValue",
-                    "@id": "http://rdfh.ch/0803/8be1b7cf7103/values/463b6498b70d"
+                    "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/8be1b7cf7103/values/463b6498b70d"
                 },
                 {
                     "knora-api:valueAsString": "Stultifera navis (...)",
@@ -140,7 +140,7 @@
                     "knora-api:valueHasUUID": "00000000000965b7d1b70Q",
                     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     "@type": "knora-api:TextValue",
-                    "@id": "http://rdfh.ch/0803/8be1b7cf7103/values/0965b7d1b70d"
+                    "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/8be1b7cf7103/values/0965b7d1b70d"
                 }
             ],
             "knora-api:attachedToUser": {
@@ -170,7 +170,7 @@
                 "knora-api:dateValueHasCalendar": "JULIAN",
                 "knora-api:dateValueHasStartMonth": 3,
                 "@type": "knora-api:DateValue",
-                "@id": "http://rdfh.ch/0803/8be1b7cf7103/values/150c04b7b80d",
+                "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/8be1b7cf7103/values/150c04b7b80d",
                 "knora-api:valueAsString": "JULIAN:1497-03-01 CE",
                 "knora-api:dateValueHasStartEra": "CE",
                 "knora-api:dateValueHasEndMonth": 3,
@@ -180,7 +180,7 @@
                 "knora-api:dateValueHasStartYear": 1497,
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
             },
-            "@id": "http://rdfh.ch/0803/8be1b7cf7103"
+            "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/8be1b7cf7103"
         }
     ],
     "@context": {

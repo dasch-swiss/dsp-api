@@ -3,7 +3,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<http://rdfh.ch/lists/00FF/4348fb82f2> a knora-api:ListNode;
-  knora-api:hasRootNode <http://rdfh.ch/lists/00FF/73d0ec0302>;
+<http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/4348fb82f2> a knora-api:ListNode;
+  knora-api:hasRootNode <http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/73d0ec0302>;
   knora-api:listNodePosition 8;
   rdfs:label "WALDWIRTSCHAFT" .

@@ -5,8 +5,8 @@
 	xmlns:owl="http://www.w3.org/2002/07/owl#"
 	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
-<knora-api:ListNode rdf:about="http://rdfh.ch/lists/00FF/4348fb82f2">
-	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/00FF/73d0ec0302"/>
+<knora-api:ListNode rdf:about="http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/4348fb82f2">
+	<knora-api:hasRootNode rdf:resource="http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/73d0ec0302"/>
 	<knora-api:listNodePosition rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">8</knora-api:listNodePosition>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">WALDWIRTSCHAFT</rdfs:label>
 </knora-api:ListNode>

@@ -45,16 +45,18 @@ object SharedTestDataV1 {
       status = Some(true),
       lang = "de"
     ),
-    groups = List("http://rdfh.ch/groups/00FF/images-reviewer"),
+    groups = List("http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer"),
     projects_info = Map(INCUNABULA_PROJECT_IRI -> incunabulaProjectInfo, IMAGES_PROJECT_IRI -> imagesProjectInfo),
     sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
         INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}",
                                        s"${OntologyConstants.KnoraAdmin.ProjectAdmin}"),
-        IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer",
-                                   s"${OntologyConstants.KnoraAdmin.ProjectMember}",
-                                   s"${OntologyConstants.KnoraAdmin.ProjectAdmin}")
+        IMAGES_PROJECT_IRI -> List(
+          "http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer",
+          s"${OntologyConstants.KnoraAdmin.ProjectMember}",
+          s"${OntologyConstants.KnoraAdmin.ProjectAdmin}"
+        )
       ),
       administrativePermissionsPerProject = Map(
         INCUNABULA_PROJECT_IRI -> Set(
@@ -147,12 +149,12 @@ object SharedTestDataV1 {
       status = Some(true),
       lang = "de"
     ),
-    groups = List("http://rdfh.ch/groups/00FF/images-reviewer"),
+    groups = List("http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer"),
     projects_info = Map(IMAGES_PROJECT_IRI -> imagesProjectInfo),
     sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
-        IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer",
+        IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer",
                                    s"${OntologyConstants.KnoraAdmin.ProjectMember}")
       ),
       administrativePermissionsPerProject = Map(

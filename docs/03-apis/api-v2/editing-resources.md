@@ -72,7 +72,7 @@ For example, here is a request to create a resource with various value types:
   },
   "anything:hasInteger" : [ {
     "@type" : "knora-api:IntValue",
-    "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher",
     "knora-api:intValueAsInt" : 5,
     "knora-api:valueHasComment" : "this is the number five"
   }, {
@@ -93,13 +93,13 @@ For example, here is a request to create a resource with various value types:
   "anything:hasListItem" : {
     "@type" : "knora-api:ListValue",
     "knora-api:listValueAsListNode" : {
-      "@id" : "http://rdfh.ch/lists/0001/treeList03"
+      "@id" : "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList03"
     }
   },
   "anything:hasOtherThingValue" : {
     "@type" : "knora-api:LinkValue",
     "knora-api:linkValueHasTargetIri" : {
-      "@id" : "http://rdfh.ch/0001/a-thing"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing"
     }
   },
   "anything:hasRichtext" : {
@@ -153,7 +153,7 @@ resource's creator can be specfied by adding `knora-api:attachedToUser`. For exa
     "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
   },
   "rdfs:label" : "test thing",
-  "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
+  "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher",
   "knora-api:creationDate" : {
     "@type" : "xsd:dateTimeStamp",
     "@value" : "2019-01-09T15:45:54.502951Z"
@@ -202,13 +202,13 @@ For example:
 
 ```jsonld
 {
-   "@id" : "http://rdfh.ch/0001/a-custom-thing",
+   "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-custom-thing",
    "@type" : "anything:Thing",
    "knora-api:attachedToProject" : {
      "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
    },
    "anything:hasInteger" : {
-       "@id" : "http://rdfh.ch/0001/a-custom-thing/values/int-value-IRI",
+       "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-custom-thing/values/int-value-IRI",
        "@type" : "knora-api:IntValue",
        "knora-api:intValueAsInt" : 10,
        "knora-api:valueHasUUID" : "IN4R19yYR0ygi3K2VEHpUQ",
@@ -270,7 +270,7 @@ Here is an example:
 
 ```jsonld
 {
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
   "@type" : "anything:Thing",
   "rdfs:label" : "this is the new label",
   "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:ProjectMember",
@@ -319,7 +319,7 @@ The request body is a JSON-LD object containing the following information about 
 
 ```jsonld
 {
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
   "@type" : "anything:Thing",
   "knora-api:lastModificationDate" : {
     "@type" : "xsd:dateTimeStamp",

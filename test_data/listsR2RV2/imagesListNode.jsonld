@@ -1,8 +1,8 @@
 {
-  "@id" : "http://rdfh.ch/lists/00FF/4348fb82f2",
+  "@id" : "http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/4348fb82f2",
   "@type" : "knora-api:ListNode",
   "knora-api:hasRootNode" : {
-    "@id" : "http://rdfh.ch/lists/00FF/73d0ec0302"
+    "@id" : "http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/73d0ec0302"
   },
   "knora-api:listNodePosition" : 8,
   "rdfs:label" : "WALDWIRTSCHAFT",

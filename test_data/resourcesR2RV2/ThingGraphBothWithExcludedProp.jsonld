@@ -1,76 +1,76 @@
 {
   "@graph" : [ {
-    "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0C-0L1kORryKzJAJxxRyRQ",
     "@type" : "anything:Thing",
     "rdfs:label" : "Sierra"
   }, {
-    "@id" : "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/A67ka6UQRHWf313tbhQBjw",
     "@type" : "anything:Thing",
     "rdfs:label" : "Victor"
   }, {
-    "@id" : "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/L5xU7Qe5QUu6Wz3cDaCxbA",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/iqW_PBiHRdyTFzik8tuSog"
     },
     "rdfs:label" : "Papa"
   }, {
-    "@id" : "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/Lz7WEqJETJqqsUZQYexBQg",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : [ {
-      "@id" : "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/sHCLAGg-R5qJ6oPZPV-zOQ"
     }, {
-      "@id" : "http://rdfh.ch/0001/start"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/start"
     } ],
     "rdfs:label" : "Foxtrot"
   }, {
-    "@id" : "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/MiBwAFcxQZGHNL-WfgFAPQ",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/nResNuvARcWYUdWyo0GWGw"
     },
     "rdfs:label" : "Whiskey"
   }, {
-    "@id" : "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/WLSHxQUgTOmG1T0lBU2r5w",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/A67ka6UQRHWf313tbhQBjw"
     },
     "rdfs:label" : "Tango"
   }, {
-    "@id" : "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/iqW_PBiHRdyTFzik8tuSog",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/start"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/start"
     },
     "rdfs:label" : "Quebec"
   }, {
-    "@id" : "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/nResNuvARcWYUdWyo0GWGw",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/tPfZeNMvRVujCQqbIbvO0A"
     },
     "rdfs:label" : "X-ray"
   }, {
-    "@id" : "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/sHCLAGg-R5qJ6oPZPV-zOQ",
     "@type" : "anything:Thing",
     "rdfs:label" : "Golf"
   }, {
-    "@id" : "http://rdfh.ch/0001/start",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/start",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : [ {
-      "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0C-0L1kORryKzJAJxxRyRQ"
     }, {
-      "@id" : "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/WLSHxQUgTOmG1T0lBU2r5w"
     }, {
-      "@id" : "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/tPfZeNMvRVujCQqbIbvO0A"
     } ],
     "rdfs:label" : "Romeo"
   }, {
-    "@id" : "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/tPfZeNMvRVujCQqbIbvO0A",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/Lz7WEqJETJqqsUZQYexBQg"
     },
     "rdfs:label" : "Echo"
   } ],

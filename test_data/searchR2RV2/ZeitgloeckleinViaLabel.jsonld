@@ -24,7 +24,7 @@
             },
             "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
             "@type": "incunabula:book",
-            "@id": "http://rdfh.ch/0803/c5058f3a"
+            "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a"
         },
         {
             "knora-api:arkUrl": {
@@ -49,7 +49,7 @@
             },
             "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
             "@type": "incunabula:book",
-            "@id": "http://rdfh.ch/0803/ff17e5ef9601"
+            "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/ff17e5ef9601"
         }
     ],
     "@context": {

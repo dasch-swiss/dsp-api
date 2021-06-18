@@ -46,8 +46,8 @@
                     },
                     "knora-api:valueHasUUID": "000000000000000000000w",
                     "knora-api:hasPermissions": "CR knora-admin:Creator",
-                    "@id": "http://rdfh.ch/0001/a-thing-with-text-values/values/1",
-                    "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Ich liebe die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a>, sie sind alles für mich.</text>",
+                    "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-values/values/1",
+                    "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Ich liebe die <a href=\"http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing\" class=\"salsah-link\">Dinge</a>, sie sind alles für mich.</text>",
                     "@type": "knora-api:TextValue"
                 },
                 {
@@ -72,13 +72,13 @@
                     },
                     "knora-api:valueHasUUID": "000000000000000000000w",
                     "knora-api:hasPermissions": "CR knora-admin:Creator",
-                    "@id": "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
-                    "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Na ja, die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a> sind OK.</text>",
+                    "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-values/values/2",
+                    "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Na ja, die <a href=\"http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing\" class=\"salsah-link\">Dinge</a> sind OK.</text>",
                     "@type": "knora-api:TextValue"
                 }
             ],
             "@type": "anything:Thing",
-            "@id": "http://rdfh.ch/0001/a-thing-with-text-values"
+            "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-values"
         },
         {
             "knora-api:arkUrl": {
@@ -124,12 +124,12 @@
                 },
                 "knora-api:valueHasUUID": "000000000000000000000w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator",
-                "@id": "http://rdfh.ch/0001/project-thing-1/values/2",
-                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>This is a <a href=\"http://rdfh.ch/0001/project-thing-2\" class=\"salsah-link\">standoff link</a>.</text>",
+                "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/project-thing-1/values/2",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>This is a <a href=\"http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/project-thing-2\" class=\"salsah-link\">standoff link</a>.</text>",
                 "@type": "knora-api:TextValue"
             },
             "@type": "anything:Thing",
-            "@id": "http://rdfh.ch/0001/project-thing-1"
+            "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/project-thing-1"
         }
     ],
     "@context": {

@@ -69,7 +69,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
   "The lists v2 endpoint" should {
 
     "perform a request for a list in JSON-LD" in {
-      Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/00FF/73d0ec0302", "UTF-8")}") ~> listsPath ~> check {
+      Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/73d0ec0302", "UTF-8")}") ~> listsPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val expectedAnswerJSONLD: JsValue =
           JsonParser(FileUtil.readTextFile(Paths.get("test_data/listsR2RV2/imagesList.jsonld")))
@@ -79,7 +79,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
     }
 
     "perform a request for the anything treelist list in JSON-LD" in {
-      Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "UTF-8")}") ~> listsPath ~> check {
+      Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList", "UTF-8")}") ~> listsPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val expectedAnswerJSONLD: JsValue =
@@ -101,7 +101,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
     }
 
     "perform a request for the anything othertreelist list in JSON-LD" in {
-      Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/0001/otherTreeList", "UTF-8")}") ~> listsPath ~> check {
+      Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/otherTreeList", "UTF-8")}") ~> listsPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val expectedAnswerJSONLD: JsValue =
@@ -123,7 +123,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
     }
 
     "perform a request for a list in Turtle" in {
-      Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/00FF/73d0ec0302", "UTF-8")}")
+      Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/73d0ec0302", "UTF-8")}")
         .addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> listsPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val expectedAnswerTurtle: RdfModel =
@@ -134,7 +134,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
     }
 
     "perform a request for a list in RDF/XML" in {
-      Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/00FF/73d0ec0302", "UTF-8")}")
+      Get(s"/v2/lists/${URLEncoder.encode("http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/73d0ec0302", "UTF-8")}")
         .addHeader(Accept(RdfMediaTypes.`application/rdf+xml`)) ~> listsPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val expectedAnswerRdfXml: RdfModel =
@@ -145,7 +145,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
     }
 
     "perform a request for a node in JSON-LD" in {
-      Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}") ~> listsPath ~> check {
+      Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/4348fb82f2", "UTF-8")}") ~> listsPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val expectedAnswerJSONLD: JsValue =
           JsonParser(FileUtil.readTextFile(Paths.get("test_data/listsR2RV2/imagesListNode.jsonld")))
@@ -155,7 +155,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
     }
 
     "perform a request for a treelist node in JSON-LD" in {
-      Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/0001/treeList01", "UTF-8")}") ~> listsPath ~> check {
+      Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList01", "UTF-8")}") ~> listsPath ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val expectedAnswerJSONLD: JsValue =
@@ -177,7 +177,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
     }
 
     "perform a request for a node in Turtle" in {
-      Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}")
+      Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/4348fb82f2", "UTF-8")}")
         .addHeader(Accept(RdfMediaTypes.`text/turtle`)) ~> listsPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val expectedAnswerTurtle: RdfModel =
@@ -188,7 +188,7 @@ class ListsRouteV2R2RSpec extends R2RSpec {
     }
 
     "perform a request for a node in RDF/XML" in {
-      Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/00FF/4348fb82f2", "UTF-8")}")
+      Get(s"/v2/node/${URLEncoder.encode("http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/4348fb82f2", "UTF-8")}")
         .addHeader(Accept(RdfMediaTypes.`application/rdf+xml`)) ~> listsPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val expectedAnswerRdfXml: RdfModel =

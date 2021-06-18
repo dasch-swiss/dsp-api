@@ -128,10 +128,10 @@ class ResourcesV1R2RSpec extends R2RSpec {
   private val thingWithCreationDate = new MutableTestIri
 
   // incunabula book with title "Eyn biechlin ..."
-  private val incunabulaBookBiechlin = "http://rdfh.ch/0803/9935159f67"
+  private val incunabulaBookBiechlin = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/9935159f67"
 
   // incunabula book with title Quadragesimale
-  private val incunabulaBookQuadra = "http://rdfh.ch/0803/861b5644b302"
+  private val incunabulaBookQuadra = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/861b5644b302"
 
   private val notTheMostBoringComment = "This is not the most boring comment I have seen."
 
@@ -329,16 +329,16 @@ class ResourcesV1R2RSpec extends R2RSpec {
             val regions: Vector[PropsGetForRegionV1] = regionsVector.map(_.convertTo[PropsGetForRegionV1])
 
             val region1 = regions.filter { region =>
-              region.res_id == "http://rdfh.ch/0803/021ec18f1735"
+              region.res_id == "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/021ec18f1735"
             }
 
             val region2 = regions.filter { region =>
-              region.res_id == "http://rdfh.ch/0803/b6b64a62b006"
+              region.res_id == "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/b6b64a62b006"
             }
 
-            assert(region1.length == 1, "No region found with Iri 'http://rdfh.ch/0803/021ec18f1735'")
+            assert(region1.length == 1, "No region found with Iri 'http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/021ec18f1735'")
 
-            assert(region2.length == 1, "No region found with Iri 'http://rdfh.ch/0803/b6b64a62b006'")
+            assert(region2.length == 1, "No region found with Iri 'http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/b6b64a62b006'")
 
           case None => throw AssertionException("No regions given, but 2 were expected")
           case _    => throw AssertionException("No valid regions given")
@@ -371,7 +371,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
       val expectedXML =
         """<?xml version="1.0" encoding="UTF-8"?>
-                  |<text><p>Derselbe Holzschnitt wird auf Seite <a href="http://rdfh.ch/0803/c9824353ae06" class="salsah-link">c7r</a> der lateinischen Ausgabe des Narrenschiffs verwendet.</p></text>
+                  |<text><p>Derselbe Holzschnitt wird auf Seite <a href="http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c9824353ae06" class="salsah-link">c7r</a> der lateinischen Ausgabe des Narrenschiffs verwendet.</p></text>
                 """.stripMargin
 
       Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F047db418ae06") ~> resourcesPathV1 ~> check {
@@ -401,12 +401,12 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
       val expectedXML1 =
         """<?xml version="1.0" encoding="UTF-8"?>
-                  |<text>Na ja, die <a href="http://rdfh.ch/0001/a-thing" class="salsah-link">Dinge</a> sind OK.</text>
+                  |<text>Na ja, die <a href="http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing" class="salsah-link">Dinge</a> sind OK.</text>
                 """.stripMargin
 
       val expectedXML2 =
         """<?xml version="1.0" encoding="UTF-8"?>
-                  |<text>Ich liebe die <a href="http://rdfh.ch/0001/a-thing" class="salsah-link">Dinge</a>, sie sind alles für mich.</text>
+                  |<text>Ich liebe die <a href="http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing" class="salsah-link">Dinge</a>, sie sind alles für mich.</text>
                 """.stripMargin
 
       Get("/v1/resources/http%3A%2F%2Frdfh.ch%2F0001%2Fa-thing-with-text-values") ~> addCredentials(
@@ -484,7 +484,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList10"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}],
                    |        "http://www.knora.org/ontology/0001/anything#hasTimeStamp": [{"time_value": "2019-08-28T15:13:10.968318Z"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasBoolean": [{"boolean_value":true}]
@@ -657,7 +657,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList10"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
                    |    }
                    |}
@@ -775,7 +775,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList10"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
                    |    }
                    |}
@@ -793,7 +793,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
 
       val xml =
         s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<text><u><strong>This</strong></u> <u>text</u> <a class="salsah-link" href="$incunabulaBookQuadra">links</a> to <a class="salsah-link" href="http://rdfh.ch/0803/9935159f">two</a> things</text>
+                   |<text><u><strong>This</strong></u> <u>text</u> <a class="salsah-link" href="$incunabulaBookQuadra">links</a> to <a class="salsah-link" href="http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/9935159f">two</a> things</text>
                  """.stripMargin
 
       val params =
@@ -809,7 +809,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList10"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
                    |    }
                    |}
@@ -851,7 +851,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList10"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
                    |    }
                    |}
@@ -944,7 +944,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList10"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
                    |    }
                    |}
@@ -1009,7 +1009,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList10"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
                    |    }
                    |}
@@ -1088,7 +1088,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        "http://www.knora.org/ontology/0001/anything#hasUri": [{"uri_value":"http://dhlab.unibas.ch"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasDate": [{"date_value":"JULIAN:1291-08-01:1291-08-01"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasColor": [{"color_value":"#4169E1"}],
-                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/0001/treeList10"}],
+                   |        "http://www.knora.org/ontology/0001/anything#hasListItem": [{"hlist_value":"http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList10"}],
                    |        "http://www.knora.org/ontology/0001/anything#hasInterval": [{"interval_value": [1000000000000000.0000000000000001, 1000000000000000.0000000000000002]}]
                    |    }
                    |}
@@ -1162,7 +1162,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |}
                  """.stripMargin
 
-      Put("/v1/resources/label/" + URLEncoder.encode("http://rdfh.ch/0803/c5058f3a", "UTF-8"),
+      Put("/v1/resources/label/" + URLEncoder.encode("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a", "UTF-8"),
           HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
         BasicHttpCredentials(incunabulaUserEmail, password)) ~> resourcesPathV1 ~> check {
         assert(status == StatusCodes.OK, response.toString)
@@ -1522,7 +1522,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
                    |        <p0001-anything:hasDecimal knoraType="decimal_value">5.6</p0001-anything:hasDecimal>
                    |        <p0001-anything:hasInteger knoraType="int_value">12345</p0001-anything:hasInteger>
                    |        <p0001-anything:hasInterval knoraType="interval_value">1000000000000000.0000000000000001,1000000000000000.0000000000000002</p0001-anything:hasInterval>
-                   |        <p0001-anything:hasListItem knoraType="hlist_value">http://rdfh.ch/lists/0001/treeList10</p0001-anything:hasListItem>
+                   |        <p0001-anything:hasListItem knoraType="hlist_value">http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList10</p0001-anything:hasListItem>
                    |        <p0001-anything:hasOtherThing>
                    |            <p0001-anything:Thing knoraType="link_value" linkType="iri" target="${sixthThingIri.get}"/>
                    |        </p0001-anything:hasOtherThing>
@@ -1793,7 +1793,7 @@ class ResourcesV1R2RSpec extends R2RSpec {
           xmlStringBuilder = xmlStringBuilder,
           value =
             """
-                          |<p0001-anything:hasListItem knoraType="hlist_value">http://rdfh.ch/lists/0001/treeList10</p0001-anything:hasListItem>
+                          |<p0001-anything:hasListItem knoraType="hlist_value">http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList10</p0001-anything:hasListItem>
                         """.stripMargin
         )
 

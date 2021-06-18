@@ -52,13 +52,13 @@ class UpgradePluginPR1372Spec extends UpgradePluginSpec {
       val expectedResultBody: SparqlSelectResultBody = expectedResult(
         Seq(
           Map(
-            "value" -> "http://rdfh.ch/0001/thing-with-history/values/1c"
+            "value" -> "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/1c"
           ),
           Map(
-            "value" -> "http://rdfh.ch/0001/thing-with-history/values/2c"
+            "value" -> "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/2c"
           ),
           Map(
-            "value" -> "http://rdfh.ch/0001/thing-with-history/values/3b"
+            "value" -> "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/3b"
           )
         )
       )

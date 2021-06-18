@@ -250,7 +250,7 @@ class PermissionsResponderADMSpec
       "create and return an administrative permission with a custom IRI" in {
         responderManager ! AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
-            id = Some("http://rdfh.ch/permissions/0001/AP-with-customIri"),
+            id = Some("http://rdfh.ch/permissions/U7HxeFSUEQCHJxSLahw3AA/AP-with-customIri"),
             forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
             forGroup = SharedTestDataADM.thingSearcherGroup.id,
             hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
@@ -261,7 +261,8 @@ class PermissionsResponderADMSpec
         )
         val received: AdministrativePermissionCreateResponseADM =
           expectMsgType[AdministrativePermissionCreateResponseADM]
-        assert(received.administrativePermission.iri == "http://rdfh.ch/permissions/0001/AP-with-customIri")
+        assert(
+          received.administrativePermission.iri == "http://rdfh.ch/permissions/U7HxeFSUEQCHJxSLahw3AA/AP-with-customIri")
         assert(received.administrativePermission.forProject == SharedTestDataADM.ANYTHING_PROJECT_IRI)
         assert(received.administrativePermission.forGroup == SharedTestDataADM.thingSearcherGroup.id)
       }
@@ -432,7 +433,7 @@ class PermissionsResponderADMSpec
       "create a DefaultObjectAccessPermission for project and group with custom IRI" in {
         responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            id = Some("http://rdfh.ch/permissions/0001/DOAP-with-customIri"),
+            id = Some("http://rdfh.ch/permissions/U7HxeFSUEQCHJxSLahw3AA/DOAP-with-customIri"),
             forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
             forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
             hasPermissions = Set(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser))
@@ -443,7 +444,8 @@ class PermissionsResponderADMSpec
         )
         val received: DefaultObjectAccessPermissionCreateResponseADM =
           expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
-        assert(received.defaultObjectAccessPermission.iri == "http://rdfh.ch/permissions/0001/DOAP-with-customIri")
+        assert(
+          received.defaultObjectAccessPermission.iri == "http://rdfh.ch/permissions/U7HxeFSUEQCHJxSLahw3AA/DOAP-with-customIri")
         assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.ANYTHING_PROJECT_IRI)
         assert(received.defaultObjectAccessPermission.forGroup.contains(OntologyConstants.KnoraAdmin.UnknownUser))
         assert(
@@ -790,8 +792,8 @@ class PermissionsResponderADMSpec
 
     "ask to update group of a permission" should {
       "update group of an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
-        val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
+        val permissionIri = "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/a2"
+        val newGroupIri = "http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer"
         responderManager ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
           changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
@@ -807,8 +809,8 @@ class PermissionsResponderADMSpec
       }
 
       "throw ForbiddenException for PermissionChangeGroupRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
-        val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
+        val permissionIri = "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/a2"
+        val newGroupIri = "http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer"
         responderManager ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
           changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
@@ -823,8 +825,8 @@ class PermissionsResponderADMSpec
       }
 
       "update group of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
-        val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
+        val permissionIri = "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/d1"
+        val newGroupIri = "http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer"
         responderManager ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
           changePermissionGroupRequest = ChangePermissionGroupApiRequestADM(
@@ -841,7 +843,7 @@ class PermissionsResponderADMSpec
       }
 
       "update group of a default object access permission, resource class must be deleted" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
+        val permissionIri = "http://rdfh.ch/permissions/6NIOckxUlWnYChtXoH7A_g/003-d2"
         val newGroupIri = "http://www.knora.org/ontology/knora-admin#ProjectMember"
         responderManager ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
@@ -860,7 +862,7 @@ class PermissionsResponderADMSpec
       }
 
       "update group of a default object access permission, property must be deleted" in {
-        val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
+        val permissionIri = "http://rdfh.ch/permissions/SOIukqJ_qqwrLYY2AzMWog/001-d3"
         val newGroupIri = "http://www.knora.org/ontology/knora-admin#ProjectMember"
         responderManager ! PermissionChangeGroupRequestADM(
           permissionIri = permissionIri,
@@ -881,7 +883,7 @@ class PermissionsResponderADMSpec
 
     "ask to update hasPermissions of a permission" should {
       "throw ForbiddenException for PermissionChangeHasPermissionsRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri = "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/a2"
         val hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
 
         responderManager ! PermissionChangeHasPermissionsRequestADM(
@@ -897,7 +899,7 @@ class PermissionsResponderADMSpec
             s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
       }
       "update hasPermissions of an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri = "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/a2"
         val hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
 
         responderManager ! PermissionChangeHasPermissionsRequestADM(
@@ -916,7 +918,7 @@ class PermissionsResponderADMSpec
       }
 
       "update hasPermissions of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri = "http://rdfh.ch/permissions/6NIOckxUlWnYChtXoH7A_g/003-d1"
         val hasPermissions = Set(
           PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
           PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember)
@@ -940,7 +942,7 @@ class PermissionsResponderADMSpec
     }
     "ask to update resource class of a permission" should {
       "throw ForbiddenException for PermissionChangeResourceClassRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
+        val permissionIri = "http://rdfh.ch/permissions/6NIOckxUlWnYChtXoH7A_g/003-d2"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
         responderManager ! PermissionChangeResourceClassRequestADM(
@@ -956,7 +958,7 @@ class PermissionsResponderADMSpec
             s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
       }
       "update resource class of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
+        val permissionIri = "http://rdfh.ch/permissions/6NIOckxUlWnYChtXoH7A_g/003-d2"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS
 
         responderManager ! PermissionChangeResourceClassRequestADM(
@@ -975,7 +977,7 @@ class PermissionsResponderADMSpec
       }
 
       "update resource class of a default object access permission, and delete group" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri = "http://rdfh.ch/permissions/6NIOckxUlWnYChtXoH7A_g/003-d1"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
 
         responderManager ! PermissionChangeResourceClassRequestADM(
@@ -995,7 +997,7 @@ class PermissionsResponderADMSpec
       }
 
       "not update resource class of an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-a2"
+        val permissionIri = "http://rdfh.ch/permissions/6NIOckxUlWnYChtXoH7A_g/003-a2"
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
 
         responderManager ! PermissionChangeResourceClassRequestADM(
@@ -1013,7 +1015,7 @@ class PermissionsResponderADMSpec
     }
     "ask to update property of a permission" should {
       "not update property of an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-a2"
+        val permissionIri = "http://rdfh.ch/permissions/6NIOckxUlWnYChtXoH7A_g/003-a2"
         val propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
 
         responderManager ! PermissionChangePropertyRequestADM(
@@ -1029,7 +1031,7 @@ class PermissionsResponderADMSpec
             s"Only a default object access permission defined for a property can be updated.")))
       }
       "throw ForbiddenException for PermissionChangePropertyRequestADM if requesting user is not system or project Admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
+        val permissionIri = "http://rdfh.ch/permissions/SOIukqJ_qqwrLYY2AzMWog/001-d3"
         val propertyIri = OntologyConstants.KnoraBase.TextFileValue
 
         responderManager ! PermissionChangePropertyRequestADM(
@@ -1045,7 +1047,7 @@ class PermissionsResponderADMSpec
             s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
       }
       "update property of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
+        val permissionIri = "http://rdfh.ch/permissions/SOIukqJ_qqwrLYY2AzMWog/001-d3"
         val propertyIri = OntologyConstants.KnoraBase.TextFileValue
 
         responderManager ! PermissionChangePropertyRequestADM(
@@ -1064,7 +1066,7 @@ class PermissionsResponderADMSpec
       }
 
       "update property of a default object access permission, delete group" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        val permissionIri = "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/d1"
         val propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
 
         responderManager ! PermissionChangePropertyRequestADM(
@@ -1086,7 +1088,7 @@ class PermissionsResponderADMSpec
 
     "ask to delete a permission" should {
       "throw BadRequestException if given IRI is not a permission IRI" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/d1kjhfkj"
+        val permissionIri = "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/d1kjhfkj"
         responderManager ! PermissionDeleteRequestADM(
           permissionIri = permissionIri,
           requestingUser = rootUser,
@@ -1096,7 +1098,7 @@ class PermissionsResponderADMSpec
       }
 
       "throw ForbiddenException if user requesting PermissionDeleteResponseADM is not a system or project admin" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        val permissionIri = "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/d1"
         responderManager ! PermissionDeleteRequestADM(
           permissionIri = permissionIri,
           requestingUser = SharedTestDataADM.imagesUser02,
@@ -1108,7 +1110,7 @@ class PermissionsResponderADMSpec
       }
 
       "erase a permission with given IRI" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        val permissionIri = "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/d1"
         responderManager ! PermissionDeleteRequestADM(
           permissionIri = permissionIri,
           requestingUser = rootUser,

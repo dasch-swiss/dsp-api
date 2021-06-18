@@ -98,22 +98,24 @@ class DeleteListItemsRouteADME2ESpec
       }
 
       "delete first of two child node and remaining child" in {
-        val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList0141", "utf-8")
+        val encodedNodeUrl =
+          java.net.URLEncoder.encode("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList0141", "utf-8")
         val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
           BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         val node = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
-        node.getNodeId should be("http://rdfh.ch/lists/0001/notUsedList014")
+        node.getNodeId should be("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList014")
         val children = node.getChildren
         children.size should be(1)
         // last child must be shifted one place to left
         val leftChild = children.head
-        leftChild.id should be("http://rdfh.ch/lists/0001/notUsedList0142")
+        leftChild.id should be("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList0142")
         leftChild.position should be(0)
       }
       "delete a middle node and shift its siblings" in {
-        val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList02", "utf-8")
+        val encodedNodeUrl =
+          java.net.URLEncoder.encode("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList02", "utf-8")
         val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
           BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
         val response: HttpResponse = singleAwaitingRequest(request)
@@ -123,7 +125,7 @@ class DeleteListItemsRouteADME2ESpec
         children.size should be(2)
         // last child must be shifted one place to left
         val lastChild = children.last
-        lastChild.id should be("http://rdfh.ch/lists/0001/notUsedList03")
+        lastChild.id should be("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList03")
         lastChild.position should be(1)
         lastChild.children.size should be(1)
         // first child must have its child
@@ -143,20 +145,22 @@ class DeleteListItemsRouteADME2ESpec
       }
 
       "delete the single child of a node" in {
-        val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList031", "utf-8")
+        val encodedNodeUrl =
+          java.net.URLEncoder.encode("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList031", "utf-8")
         val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
           BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         val node = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
-        node.getNodeId should be("http://rdfh.ch/lists/0001/notUsedList03")
+        node.getNodeId should be("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList03")
         val children = node.getChildren
         children.size should be(0)
       }
     }
 
     "delete a list entirely with all its children" in {
-      val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList", "utf-8")
+      val encodedNodeUrl =
+        java.net.URLEncoder.encode("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList", "utf-8")
       val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
         BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
       val response: HttpResponse = singleAwaitingRequest(request)

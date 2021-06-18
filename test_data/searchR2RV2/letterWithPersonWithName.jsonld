@@ -17,7 +17,7 @@
         "@id": "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
     },
     "@type": "beol:letter",
-    "@id": "http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA",
+    "@id": "http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/_B3lQa6tSymIq7_7SowBsA",
     "beol:creationDate": {
         "knora-api:dateValueHasStartDay": 4,
         "knora-api:arkUrl": {
@@ -40,7 +40,7 @@
         "knora-api:dateValueHasCalendar": "GREGORIAN",
         "knora-api:dateValueHasStartMonth": 6,
         "@type": "knora-api:DateValue",
-        "@id": "http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/L2gv0paYSymiENk1c0fAAQ",
+        "@id": "http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/_B3lQa6tSymIq7_7SowBsA/values/L2gv0paYSymiENk1c0fAAQ",
         "knora-api:valueAsString": "GREGORIAN:2018-06-04 CE",
         "knora-api:dateValueHasStartEra": "CE",
         "knora-api:dateValueHasEndMonth": 6,
@@ -94,7 +94,7 @@
             },
             "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
             "@type": "beol:person",
-            "@id": "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw",
+            "@id": "http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/VvYVIy-FSbOJBsh2d9ZFJw",
             "knora-api:userHasPermission": "V",
             "beol:hasFamilyName": {
                 "knora-api:valueAsString": "Meier",
@@ -117,12 +117,12 @@
                 "knora-api:valueHasUUID": "5K24YxlwQ9OXcYjB0jRR4Q",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
                 "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/5K24YxlwQ9OXcYjB0jRR4Q"
+                "@id": "http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/VvYVIy-FSbOJBsh2d9ZFJw/values/5K24YxlwQ9OXcYjB0jRR4Q"
             }
         },
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         "@type": "knora-api:LinkValue",
-        "@id": "http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA/values/Cvp07eTqQQSnYdcvqlWW_g"
+        "@id": "http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/_B3lQa6tSymIq7_7SowBsA/values/Cvp07eTqQQSnYdcvqlWW_g"
     },
     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "@context": {

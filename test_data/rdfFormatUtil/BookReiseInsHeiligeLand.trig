@@ -5,32 +5,32 @@
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 
 <http://example.org/data#> {
-    <http://rdfh.ch/0803/2a6221216701>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701>
             rdf:type                     incunabula:book ;
-            incunabula:book_comment      <http://rdfh.ch/0803/2a6221216701/values/56c287fc9505> ;
-            incunabula:citation          <http://rdfh.ch/0803/2a6221216701/values/019e416b9405> ;
-            incunabula:citation          <http://rdfh.ch/0803/2a6221216701/values/0d458e509505> ;
-            incunabula:citation          <http://rdfh.ch/0803/2a6221216701/values/3e74ee319405> ;
-            incunabula:citation          <http://rdfh.ch/0803/2a6221216701/values/4a1b3b179505> ;
-            incunabula:citation          <http://rdfh.ch/0803/2a6221216701/values/7b4a9bf89305> ;
-            incunabula:citation          <http://rdfh.ch/0803/2a6221216701/values/87f1e7dd9405> ;
-            incunabula:citation          <http://rdfh.ch/0803/2a6221216701/values/939834c39505> ;
-            incunabula:citation          <http://rdfh.ch/0803/2a6221216701/values/c4c794a49405> ;
-            incunabula:citation          <http://rdfh.ch/0803/2a6221216701/values/d06ee1899505> ;
-            incunabula:location          <http://rdfh.ch/0803/2a6221216701/values/262655679205> ;
-            incunabula:note              <http://rdfh.ch/0803/2a6221216701/values/32cda14c9305> ;
-            incunabula:note              <http://rdfh.ch/0803/2a6221216701/values/6fa34e139305> ;
-            incunabula:note              <http://rdfh.ch/0803/2a6221216701/values/ac79fbd99205> ;
-            incunabula:note              <http://rdfh.ch/0803/2a6221216701/values/b82048bf9305> ;
-            incunabula:note              <http://rdfh.ch/0803/2a6221216701/values/f5f6f4859305> ;
-            incunabula:physical_desc     <http://rdfh.ch/0803/2a6221216701/values/e94fa8a09205> ;
-            incunabula:pubdate           <http://rdfh.ch/0803/2a6221216701/values/63fc012e9205> ;
-            incunabula:publisher         <http://rdfh.ch/0803/2a6221216701/values/dda85bbb9105> ;
-            incunabula:publoc            <http://rdfh.ch/0803/2a6221216701/values/a0d2aef49105> ;
-            incunabula:title             <http://rdfh.ch/0803/2a6221216701/values/5755b5489105> ;
-            incunabula:title             <http://rdfh.ch/0803/2a6221216701/values/942b620f9105> ;
-            incunabula:title             <http://rdfh.ch/0803/2a6221216701/values/d1010fd69005> ;
-            incunabula:url               <http://rdfh.ch/0803/2a6221216701/values/f89173afca2704> ;
+            incunabula:book_comment      <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/56c287fc9505> ;
+            incunabula:citation          <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/019e416b9405> ;
+            incunabula:citation          <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/0d458e509505> ;
+            incunabula:citation          <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/3e74ee319405> ;
+            incunabula:citation          <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/4a1b3b179505> ;
+            incunabula:citation          <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/7b4a9bf89305> ;
+            incunabula:citation          <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/87f1e7dd9405> ;
+            incunabula:citation          <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/939834c39505> ;
+            incunabula:citation          <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/c4c794a49405> ;
+            incunabula:citation          <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/d06ee1899505> ;
+            incunabula:location          <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/262655679205> ;
+            incunabula:note              <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/32cda14c9305> ;
+            incunabula:note              <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/6fa34e139305> ;
+            incunabula:note              <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/ac79fbd99205> ;
+            incunabula:note              <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/b82048bf9305> ;
+            incunabula:note              <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/f5f6f4859305> ;
+            incunabula:physical_desc     <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/e94fa8a09205> ;
+            incunabula:pubdate           <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/63fc012e9205> ;
+            incunabula:publisher         <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/dda85bbb9105> ;
+            incunabula:publoc            <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/a0d2aef49105> ;
+            incunabula:title             <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/5755b5489105> ;
+            incunabula:title             <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/942b620f9105> ;
+            incunabula:title             <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/d1010fd69005> ;
+            incunabula:url               <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/f89173afca2704> ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W"^^xsd:anyURI ;
             knora-api:attachedToProject  <http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g> ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -39,7 +39,7 @@
             knora-api:userHasPermission  "RV" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W.20160302T150521Z"^^xsd:anyURI ;
             rdfs:label                   "Reise ins Heilige Land" .
-    <http://rdfh.ch/0803/2a6221216701/values/56c287fc9505>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/56c287fc9505>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/000000000056c287fc950w5"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -49,7 +49,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "000000000056c287fc950w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/000000000056c287fc950w5.20160302T150521Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/7b4a9bf89305>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/7b4a9bf89305>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/00000000007b4a9bf8930w2"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -59,7 +59,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "00000000007b4a9bf8930w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/00000000007b4a9bf8930w2.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/3e74ee319405>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/3e74ee319405>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/00000000003e74ee31940w2"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -69,7 +69,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "00000000003e74ee31940w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/00000000003e74ee31940w2.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/019e416b9405>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/019e416b9405>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000019e416b940wc"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -79,7 +79,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "0000000000019e416b940w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000019e416b940wc.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/c4c794a49405>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/c4c794a49405>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000c4c794a4940wm"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -89,7 +89,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "0000000000c4c794a4940w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000c4c794a4940wm.20160302T150521Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/87f1e7dd9405>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/87f1e7dd9405>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/000000000087f1e7dd940wJ"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -99,7 +99,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "000000000087f1e7dd940w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/000000000087f1e7dd940wJ.20160302T150521Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/4a1b3b179505>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/4a1b3b179505>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/00000000004a1b3b17950wa"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -109,7 +109,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "00000000004a1b3b17950w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/00000000004a1b3b17950wa.20160302T150521Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/0d458e509505>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/0d458e509505>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/00000000000d458e50950wm"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -119,7 +119,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "00000000000d458e50950w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/00000000000d458e50950wm.20160302T150521Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/d06ee1899505>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/d06ee1899505>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000d06ee189950wA"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -129,7 +129,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "0000000000d06ee189950w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000d06ee189950wA.20160302T150521Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/939834c39505>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/939834c39505>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000939834c3950w6"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -139,7 +139,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:21Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "0000000000939834c3950w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000939834c3950w6.20160302T150521Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/262655679205>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/262655679205>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/000000000026265567920wa"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -149,7 +149,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "000000000026265567920w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/000000000026265567920wa.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/ac79fbd99205>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/ac79fbd99205>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000ac79fbd9920wy"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -159,7 +159,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "0000000000ac79fbd9920w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000ac79fbd9920wy.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/6fa34e139305>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/6fa34e139305>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/00000000006fa34e13930wU"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -169,7 +169,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "00000000006fa34e13930w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/00000000006fa34e13930wU.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/32cda14c9305>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/32cda14c9305>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/000000000032cda14c930w4"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -179,7 +179,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "000000000032cda14c930w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/000000000032cda14c930w4.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/f5f6f4859305>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/f5f6f4859305>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000f5f6f485930w6"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -189,7 +189,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "0000000000f5f6f485930w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000f5f6f485930w6.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/b82048bf9305>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/b82048bf9305>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000b82048bf930wL"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -199,7 +199,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "0000000000b82048bf930w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000b82048bf930wL.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/e94fa8a09205>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/e94fa8a09205>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000e94fa8a0920wv"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -209,7 +209,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "0000000000e94fa8a0920w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000e94fa8a0920wv.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/63fc012e9205>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/63fc012e9205>
             rdf:type                        knora-api:DateValue ;
             knora-api:arkUrl                "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/000000000063fc012e920wK"^^xsd:anyURI ;
             knora-api:attachedToUser        <http://rdfh.ch/users/91e19f1e01> ;
@@ -224,7 +224,7 @@
             knora-api:valueCreationDate     "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID          "000000000063fc012e920w" ;
             knora-api:versionArkUrl         "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/000000000063fc012e920wK.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/dda85bbb9105>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/dda85bbb9105>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000dda85bbb910wo"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -234,7 +234,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "0000000000dda85bbb910w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000dda85bbb910wo.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/a0d2aef49105>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/a0d2aef49105>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000a0d2aef4910wL"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -244,7 +244,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "0000000000a0d2aef4910w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000a0d2aef4910wL.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/d1010fd69005>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/d1010fd69005>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000d1010fd6900w5"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -254,7 +254,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "0000000000d1010fd6900w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000d1010fd6900w5.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/942b620f9105>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/942b620f9105>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000942b620f910wy"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -264,7 +264,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "0000000000942b620f910w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/0000000000942b620f910wy.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/5755b5489105>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/5755b5489105>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/00000000005755b548910wq"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;
@@ -274,7 +274,7 @@
             knora-api:valueCreationDate  "2016-03-02T15:05:20Z"^^xsd:dateTimeStamp ;
             knora-api:valueHasUUID       "00000000005755b548910w" ;
             knora-api:versionArkUrl      "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/00000000005755b548910wq.20160302T150520Z"^^xsd:anyURI .
-    <http://rdfh.ch/0803/2a6221216701/values/f89173afca2704>
+    <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/f89173afca2704>
             rdf:type                     knora-api:TextValue ;
             knora-api:arkUrl             "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W/00000000f89173afca270w7"^^xsd:anyURI ;
             knora-api:attachedToUser     <http://rdfh.ch/users/91e19f1e01> ;

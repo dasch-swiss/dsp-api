@@ -42,7 +42,7 @@ object ListsMessagesADMSpec {
   */
 class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with ListADMJsonProtocol {
 
-  val exampleListIri = "http://rdfh.ch/lists/00FF/abcd"
+  val exampleListIri = "http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/abcd"
 
   "Conversion from case class to JSON and back" should {
 
@@ -71,12 +71,12 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     "work for a 'ListChildNodeInfoADM'" in {
 
       val listNodeInfo = ListChildNodeInfoADM(
-        id = "http://rdfh.ch/lists/00FF/526f26ed04",
+        id = "http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/526f26ed04",
         name = Some("sommer"),
         labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
         comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
         position = 0,
-        hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
+        hasRootNode = "http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/d19af9ab"
       )
 
       val json = listNodeInfo.toJson.compactPrint
@@ -91,13 +91,13 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     "work for a 'ListChildNodeADM'" in {
 
       val listNode: ListNodeADM = ListChildNodeADM(
-        id = "http://rdfh.ch/lists/00FF/526f26ed04",
+        id = "http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/526f26ed04",
         name = Some("sommer"),
         labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
         comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
         children = Seq.empty[ListChildNodeADM],
         position = 0,
-        hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab",
+        hasRootNode = "http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/d19af9ab",
       )
 
       val json = listNode.toJson.compactPrint
@@ -559,7 +559,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       val payload =
         s"""
            |{
-           |    "parentNodeIri": "http://rdfh.ch/lists/0001/notUsedList01",
+           |    "parentNodeIri": "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList01",
            |    "position": -2
            |}
                 """.stripMargin

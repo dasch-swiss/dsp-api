@@ -41,7 +41,7 @@
                     "knora-api:valueHasUUID": "00000000008ab7aa3cb80w",
                     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     "@type": "knora-api:TextValue",
-                    "@id": "http://rdfh.ch/0803/c3f913666f/values/8ab7aa3cb801"
+                    "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c3f913666f/values/8ab7aa3cb801"
                 },
                 {
                     "knora-api:valueAsString": "Defensorium inviolate perpetueque virginitatis castissime de genitricis Mariae",
@@ -64,7 +64,7 @@
                     "knora-api:valueHasUUID": "00000000004de1fd75b80w",
                     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     "@type": "knora-api:TextValue",
-                    "@id": "http://rdfh.ch/0803/c3f913666f/values/4de1fd75b801"
+                    "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c3f913666f/values/4de1fd75b801"
                 }
             ],
             "knora-api:attachedToUser": {
@@ -94,13 +94,13 @@
                 "knora-api:valueHasUUID": "000000000059884a5bb90w",
                 "knora-api:dateValueHasCalendar": "JULIAN",
                 "@type": "knora-api:DateValue",
-                "@id": "http://rdfh.ch/0803/c3f913666f/values/59884a5bb901",
+                "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c3f913666f/values/59884a5bb901",
                 "knora-api:valueAsString": "JULIAN:1487 CE:1490 CE",
                 "knora-api:dateValueHasStartEra": "CE",
                 "knora-api:dateValueHasStartYear": 1487,
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
             },
-            "@id": "http://rdfh.ch/0803/c3f913666f"
+            "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c3f913666f"
         },
         {
             "knora-api:arkUrl": {
@@ -141,7 +141,7 @@
                 "knora-api:valueHasUUID": "00000000004530b04dc70w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/1967a9933401/values/4530b04dc704"
+                "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/1967a9933401/values/4530b04dc704"
             },
             "knora-api:attachedToUser": {
                 "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -170,13 +170,13 @@
                 "knora-api:valueHasUUID": "00000000008eada9f9c70w",
                 "knora-api:dateValueHasCalendar": "GREGORIAN",
                 "@type": "knora-api:DateValue",
-                "@id": "http://rdfh.ch/0803/1967a9933401/values/8eada9f9c704",
+                "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/1967a9933401/values/8eada9f9c704",
                 "knora-api:valueAsString": "GREGORIAN:1489 CE",
                 "knora-api:dateValueHasStartEra": "CE",
                 "knora-api:dateValueHasStartYear": 1489,
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
             },
-            "@id": "http://rdfh.ch/0803/1967a9933401"
+            "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/1967a9933401"
         },
         {
             "knora-api:arkUrl": {
@@ -217,7 +217,7 @@
                 "knora-api:valueHasUUID": "0000000000be3d3542e60w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/41d01bd9fb/values/be3d3542e603"
+                "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/41d01bd9fb/values/be3d3542e603"
             },
             "knora-api:attachedToUser": {
                 "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -246,13 +246,13 @@
                 "knora-api:valueHasUUID": "000000000007bb2eeee60w",
                 "knora-api:dateValueHasCalendar": "JULIAN",
                 "@type": "knora-api:DateValue",
-                "@id": "http://rdfh.ch/0803/41d01bd9fb/values/07bb2eeee603",
+                "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/41d01bd9fb/values/07bb2eeee603",
                 "knora-api:valueAsString": "JULIAN:1489 CE",
                 "knora-api:dateValueHasStartEra": "CE",
                 "knora-api:dateValueHasStartYear": 1489,
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
             },
-            "@id": "http://rdfh.ch/0803/41d01bd9fb"
+            "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/41d01bd9fb"
         },
         {
             "knora-api:arkUrl": {
@@ -293,7 +293,7 @@
                 "knora-api:valueHasUUID": "00000000002083143ecd0w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/9311a421b501/values/2083143ecd06"
+                "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/9311a421b501/values/2083143ecd06"
             },
             "knora-api:attachedToUser": {
                 "@id": "http://rdfh.ch/users/91e19f1e01"
@@ -322,13 +322,13 @@
                 "knora-api:valueHasUUID": "0000000000ef53b45cce0w",
                 "knora-api:dateValueHasCalendar": "JULIAN",
                 "@type": "knora-api:DateValue",
-                "@id": "http://rdfh.ch/0803/9311a421b501/values/ef53b45cce06",
+                "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/9311a421b501/values/ef53b45cce06",
                 "knora-api:valueAsString": "JULIAN:1489 CE",
                 "knora-api:dateValueHasStartEra": "CE",
                 "knora-api:dateValueHasStartYear": 1489,
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
             },
-            "@id": "http://rdfh.ch/0803/9311a421b501"
+            "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/9311a421b501"
         },
         {
             "knora-api:arkUrl": {
@@ -370,7 +370,7 @@
                     "knora-api:valueHasUUID": "0000000000d9a52284500w",
                     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     "@type": "knora-api:TextValue",
-                    "@id": "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006"
+                    "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/ff17e5ef9601/values/d9a522845006"
                 },
                 {
                     "knora-api:valueAsString": "Horologium devotionis circa vitam Christi",
@@ -393,7 +393,7 @@
                     "knora-api:valueHasUUID": "00000000009ccf75bd500w",
                     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     "@type": "knora-api:TextValue",
-                    "@id": "http://rdfh.ch/0803/ff17e5ef9601/values/9ccf75bd5006"
+                    "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/ff17e5ef9601/values/9ccf75bd5006"
                 }
             ],
             "knora-api:attachedToUser": {
@@ -423,13 +423,13 @@
                 "knora-api:valueHasUUID": "0000000000a876c2a2510w",
                 "knora-api:dateValueHasCalendar": "JULIAN",
                 "@type": "knora-api:DateValue",
-                "@id": "http://rdfh.ch/0803/ff17e5ef9601/values/a876c2a25106",
+                "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/ff17e5ef9601/values/a876c2a25106",
                 "knora-api:valueAsString": "JULIAN:1490 CE",
                 "knora-api:dateValueHasStartEra": "CE",
                 "knora-api:dateValueHasStartYear": 1490,
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
             },
-            "@id": "http://rdfh.ch/0803/ff17e5ef9601"
+            "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/ff17e5ef9601"
         }
     ],
     "@context": {

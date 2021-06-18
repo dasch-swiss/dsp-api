@@ -1,5 +1,5 @@
 {
-  "@id" : "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-valuesLanguage",
   "@type" : "anything:Thing",
   "anything:hasText" : {
     "@language" : "fr",

@@ -39,7 +39,7 @@ HTTP GET to http://host/v2/tei/resourceIri?textProperty=textPropertyIri
 In addition to the resource's Iri, the Iri of the property containing the text with standoff has to be submitted. This will be converted to the TEI body. 
 Please note that the resource can only have one instance of this property and the text must have standoff markup.
 
-The Knora test data contain the resource `http://rdfh.ch/0001/thing_with_richtext_with_markup` with the text property `http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext` that can be converted to TEI as follows:
+The Knora test data contain the resource `http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing_with_richtext_with_markup` with the text property `http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext` that can be converted to TEI as follows:
 
 ```
 HTTP GET to http://host/v2/tei/http%3A%2F%2Frdfh.ch%2F0001%2Fthing_with_richtext_with_markup?textProperty=http%3A%2F%2F0.0.0.0%3A3333%2Fontology%2F0001%2Fanything%2Fv2%23hasRichtext
@@ -57,7 +57,7 @@ The answer to this request is a TEI XML document:
       </titleStmt>
       <publicationStmt>
         <p>
-             This is the TEI/XML representation of a resource identified by the Iri http://rdfh.ch/0001/thing_with_richtext_with_markup.
+             This is the TEI/XML representation of a resource identified by the Iri http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing_with_richtext_with_markup.
          </p>
       </publicationStmt>
       <sourceDesc>
@@ -203,13 +203,13 @@ The Gravsearch query's result may look like this (`RDF/XML`):
 	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
 	xmlns:knora-api="http://api.knora.org/ontology/knora-api/v2#"
 	xmlns:beol="http://0.0.0.0:3333/ontology/0801/beol/v2#">
-<beol:letter rdf:about="http://rdfh.ch/0801/MbZdHVcsR_Ky5pZoytaiBA">
-	<beol:creationDate rdf:resource="http://rdfh.ch/0801/MbZdHVcsR_Ky5pZoytaiBA/values/Ob_1YRO_QmaDxTRI64vGOQ"/>
-	<beol:hasAuthorValue rdf:resource="http://rdfh.ch/0801/MbZdHVcsR_Ky5pZoytaiBA/values/zt4a3XoESTq9To4mSN8Dug"/>
-	<beol:hasRecipientValue rdf:resource="http://rdfh.ch/0801/MbZdHVcsR_Ky5pZoytaiBA/values/pVerHO_FRXePZQT9kgEp_Q"/>
+<beol:letter rdf:about="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/MbZdHVcsR_Ky5pZoytaiBA">
+	<beol:creationDate rdf:resource="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/MbZdHVcsR_Ky5pZoytaiBA/values/Ob_1YRO_QmaDxTRI64vGOQ"/>
+	<beol:hasAuthorValue rdf:resource="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/MbZdHVcsR_Ky5pZoytaiBA/values/zt4a3XoESTq9To4mSN8Dug"/>
+	<beol:hasRecipientValue rdf:resource="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/MbZdHVcsR_Ky5pZoytaiBA/values/pVerHO_FRXePZQT9kgEp_Q"/>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Testletter</rdfs:label>
 </beol:letter>
-<knora-api:DateValue rdf:about="http://rdfh.ch/0801/MbZdHVcsR_Ky5pZoytaiBA/values/Ob_1YRO_QmaDxTRI64vGOQ">
+<knora-api:DateValue rdf:about="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/MbZdHVcsR_Ky5pZoytaiBA/values/Ob_1YRO_QmaDxTRI64vGOQ">
 	<knora-api:dateValueHasCalendar rdf:datatype="http://www.w3.org/2001/XMLSchema#string">GREGORIAN</knora-api:dateValueHasCalendar>
 	<knora-api:dateValueHasEndDay rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</knora-api:dateValueHasEndDay>
 	<knora-api:dateValueHasEndEra rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CE</knora-api:dateValueHasEndEra>
@@ -221,42 +221,42 @@ The Gravsearch query's result may look like this (`RDF/XML`):
 	<knora-api:dateValueHasStartYear rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">1703</knora-api:dateValueHasStartYear>
 	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">GREGORIAN:1703-06-10 CE</knora-api:valueAsString>
 </knora-api:DateValue>
-<knora-api:LinkValue rdf:about="http://rdfh.ch/0801/MbZdHVcsR_Ky5pZoytaiBA/values/zt4a3XoESTq9To4mSN8Dug">
+<knora-api:LinkValue rdf:about="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/MbZdHVcsR_Ky5pZoytaiBA/values/zt4a3XoESTq9To4mSN8Dug">
 	<knora-api:linkValueHasTarget>
-		<beol:person rdf:about="http://rdfh.ch/0801/_9LEnLM7TFuPRjTshOTJpQ">
-			<beol:hasFamilyName rdf:resource="http://rdfh.ch/0801/_9LEnLM7TFuPRjTshOTJpQ/values/NG42jDqSTz2U35N6sJ8cqg"/>
-			<beol:hasGivenName rdf:resource="http://rdfh.ch/0801/_9LEnLM7TFuPRjTshOTJpQ/values/W2lVG1mvQU2MauAvCGB13w"/>
-			<beol:hasIAFIdentifier rdf:resource="http://rdfh.ch/0801/_9LEnLM7TFuPRjTshOTJpQ/values/N2TVtntdToqJQpdZhYPc5g"/>
+		<beol:person rdf:about="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/_9LEnLM7TFuPRjTshOTJpQ">
+			<beol:hasFamilyName rdf:resource="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/_9LEnLM7TFuPRjTshOTJpQ/values/NG42jDqSTz2U35N6sJ8cqg"/>
+			<beol:hasGivenName rdf:resource="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/_9LEnLM7TFuPRjTshOTJpQ/values/W2lVG1mvQU2MauAvCGB13w"/>
+			<beol:hasIAFIdentifier rdf:resource="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/_9LEnLM7TFuPRjTshOTJpQ/values/N2TVtntdToqJQpdZhYPc5g"/>
 			<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Johann Jacob Scheuchzer</rdfs:label>
 		</beol:person>
 	</knora-api:linkValueHasTarget>
 </knora-api:LinkValue>
-<knora-api:TextValue rdf:about="http://rdfh.ch/0801/_9LEnLM7TFuPRjTshOTJpQ/values/NG42jDqSTz2U35N6sJ8cqg">
+<knora-api:TextValue rdf:about="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/_9LEnLM7TFuPRjTshOTJpQ/values/NG42jDqSTz2U35N6sJ8cqg">
 	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Scheuchzer</knora-api:valueAsString>
 </knora-api:TextValue>
-<knora-api:TextValue rdf:about="http://rdfh.ch/0801/_9LEnLM7TFuPRjTshOTJpQ/values/W2lVG1mvQU2MauAvCGB13w">
+<knora-api:TextValue rdf:about="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/_9LEnLM7TFuPRjTshOTJpQ/values/W2lVG1mvQU2MauAvCGB13w">
 	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Johann Jacob</knora-api:valueAsString>
 </knora-api:TextValue>
-<knora-api:TextValue rdf:about="http://rdfh.ch/0801/_9LEnLM7TFuPRjTshOTJpQ/values/N2TVtntdToqJQpdZhYPc5g">
+<knora-api:TextValue rdf:about="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/_9LEnLM7TFuPRjTshOTJpQ/values/N2TVtntdToqJQpdZhYPc5g">
 	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">(DE-588)118607308</knora-api:valueAsString>
 </knora-api:TextValue>
-<knora-api:LinkValue rdf:about="http://rdfh.ch/0801/MbZdHVcsR_Ky5pZoytaiBA/values/pVerHO_FRXePZQT9kgEp_Q">
+<knora-api:LinkValue rdf:about="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/MbZdHVcsR_Ky5pZoytaiBA/values/pVerHO_FRXePZQT9kgEp_Q">
 	<knora-api:linkValueHasTarget>
-		<beol:person rdf:about="http://rdfh.ch/0801/JaQwPsYEQJ6GQrAgKC0Gkw">
-			<beol:hasFamilyName rdf:resource="http://rdfh.ch/0801/JaQwPsYEQJ6GQrAgKC0Gkw/values/k1Exqf93SsWi7LWK9ozXkw"/>
-			<beol:hasGivenName rdf:resource="http://rdfh.ch/0801/JaQwPsYEQJ6GQrAgKC0Gkw/values/gkqK5Ij_R7mtO59xfSDGJA"/>
-			<beol:hasIAFIdentifier rdf:resource="http://rdfh.ch/0801/JaQwPsYEQJ6GQrAgKC0Gkw/values/C-Dl15S-SV63L1KCCPFfew"/>
+		<beol:person rdf:about="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/JaQwPsYEQJ6GQrAgKC0Gkw">
+			<beol:hasFamilyName rdf:resource="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/JaQwPsYEQJ6GQrAgKC0Gkw/values/k1Exqf93SsWi7LWK9ozXkw"/>
+			<beol:hasGivenName rdf:resource="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/JaQwPsYEQJ6GQrAgKC0Gkw/values/gkqK5Ij_R7mtO59xfSDGJA"/>
+			<beol:hasIAFIdentifier rdf:resource="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/JaQwPsYEQJ6GQrAgKC0Gkw/values/C-Dl15S-SV63L1KCCPFfew"/>
 			<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Jacob Hermann</rdfs:label>
 		</beol:person>
 	</knora-api:linkValueHasTarget>
 </knora-api:LinkValue>
-<knora-api:TextValue rdf:about="http://rdfh.ch/0801/JaQwPsYEQJ6GQrAgKC0Gkw/values/k1Exqf93SsWi7LWK9ozXkw">
+<knora-api:TextValue rdf:about="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/JaQwPsYEQJ6GQrAgKC0Gkw/values/k1Exqf93SsWi7LWK9ozXkw">
 	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hermann</knora-api:valueAsString>
 </knora-api:TextValue>
-<knora-api:TextValue rdf:about="http://rdfh.ch/0801/JaQwPsYEQJ6GQrAgKC0Gkw/values/gkqK5Ij_R7mtO59xfSDGJA">
+<knora-api:TextValue rdf:about="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/JaQwPsYEQJ6GQrAgKC0Gkw/values/gkqK5Ij_R7mtO59xfSDGJA">
 	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Jacob</knora-api:valueAsString>
 </knora-api:TextValue>
-<knora-api:TextValue rdf:about="http://rdfh.ch/0801/JaQwPsYEQJ6GQrAgKC0Gkw/values/C-Dl15S-SV63L1KCCPFfew">
+<knora-api:TextValue rdf:about="http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/JaQwPsYEQJ6GQrAgKC0Gkw/values/C-Dl15S-SV63L1KCCPFfew">
 	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">(DE-588)119112450</knora-api:valueAsString>
 </knora-api:TextValue>
 

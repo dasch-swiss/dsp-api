@@ -35,7 +35,7 @@ let login:sessionResponseFormats.loginResponse = {
             "password":null
         },
         "groups":[
-            "http://rdfh.ch/groups/00FF/images-reviewer"
+            "http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer"
         ],
         "projects_info":{
             "http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA":{
@@ -87,7 +87,7 @@ let login:sessionResponseFormats.loginResponse = {
                     "http://www.knora.org/ontology/knora-base#ProjectAdmin"
                 ],
                 "http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA":[
-                    "http://rdfh.ch/groups/00FF/images-reviewer",
+                    "http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer",
                     "http://www.knora.org/ontology/knora-base#ProjectMember",
                     "http://www.knora.org/ontology/knora-base#ProjectAdmin"
                 ],

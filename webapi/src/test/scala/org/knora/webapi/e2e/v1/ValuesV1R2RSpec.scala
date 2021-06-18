@@ -71,7 +71,7 @@ class ValuesV1R2RSpec extends R2RSpec {
       val params =
         """
                   |{
-                  |    "res_id": "http://rdfh.ch/0001/a-thing",
+                  |    "res_id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasInteger",
                   |    "int_value": 1234
                   |}
@@ -90,7 +90,7 @@ class ValuesV1R2RSpec extends R2RSpec {
       val params =
         """
                   |{
-                  |    "res_id": "http://rdfh.ch/0001/a-thing",
+                  |    "res_id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasInteger",
                   |    "int_value": 4321
                   |}
@@ -117,7 +117,7 @@ class ValuesV1R2RSpec extends R2RSpec {
       val params =
         """
                   |{
-                  |    "res_id": "http://rdfh.ch/0001/a-thing",
+                  |    "res_id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasTimeStamp",
                   |    "time_value": "2019-08-28T14:40:17.215927Z"
                   |}
@@ -136,7 +136,7 @@ class ValuesV1R2RSpec extends R2RSpec {
       val params =
         """
                   |{
-                  |    "res_id": "http://rdfh.ch/0001/a-thing",
+                  |    "res_id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasTimeStamp",
                   |    "time_value": "2019-08-28T14:45:37.756142Z"
                   |}
@@ -153,20 +153,24 @@ class ValuesV1R2RSpec extends R2RSpec {
     }
 
     "get a link value" in {
-      Get(s"/v1/links/${URLEncoder.encode("http://rdfh.ch/0001/contained-thing-1", "UTF-8")}/${URLEncoder.encode(
-        "http://www.knora.org/ontology/0001/anything#isPartOfOtherThing",
-        "UTF-8")}/${URLEncoder.encode("http://rdfh.ch/0001/containing-thing", "UTF-8")}") ~> addCredentials(
+      Get(s"/v1/links/${URLEncoder.encode("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/contained-thing-1", "UTF-8")}/${URLEncoder
+        .encode("http://www.knora.org/ontology/0001/anything#isPartOfOtherThing", "UTF-8")}/${URLEncoder
+        .encode("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/containing-thing", "UTF-8")}") ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
 
         val linkValue = AkkaHttpUtils.httpResponseToJson(response).fields("value").asJsObject.fields
 
         assert(
-          linkValue("subjectIri").asInstanceOf[JsString].value == "http://rdfh.ch/0001/contained-thing-1" &&
+          linkValue("subjectIri")
+            .asInstanceOf[JsString]
+            .value == "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/contained-thing-1" &&
             linkValue("predicateIri")
               .asInstanceOf[JsString]
               .value == "http://www.knora.org/ontology/0001/anything#isPartOfOtherThing" &&
-            linkValue("objectIri").asInstanceOf[JsString].value == "http://rdfh.ch/0001/containing-thing" &&
+            linkValue("objectIri")
+              .asInstanceOf[JsString]
+              .value == "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/containing-thing" &&
             linkValue("referenceCount").asInstanceOf[JsNumber].value.toInt == 1
         )
       }
@@ -176,7 +180,7 @@ class ValuesV1R2RSpec extends R2RSpec {
       val params =
         """
                   |{
-                  |    "res_id": "http://rdfh.ch/0001/a-thing",
+                  |    "res_id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   |    "richtext_value": {"utf8str":""}
                   |}
@@ -192,14 +196,14 @@ class ValuesV1R2RSpec extends R2RSpec {
       val xmlStr =
         """<?xml version="1.0" encoding="UTF-8"?>
                     |<text>
-                    |   This text links to another <a class="salsah-link" href="http://rdfh.ch/0001/another-thing">resource</a>.
+                    |   This text links to another <a class="salsah-link" href="http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/another-thing">resource</a>.
                     |</text>
                 """.stripMargin
 
       val params =
         s"""
                   |{
-                  |    "res_id": "http://rdfh.ch/0001/a-thing",
+                  |    "res_id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   |    "richtext_value": {"xml": ${xmlStr.toJson.compactPrint}, "mapping_id": "$mappingIri"}
                   |}
@@ -216,7 +220,7 @@ class ValuesV1R2RSpec extends R2RSpec {
             .asInstanceOf[JsObject]
             .fields("xml")
             .toString
-            .contains("http://rdfh.ch/0001/another-thing"),
+            .contains("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/another-thing"),
           "standoff link target is not contained in value creation response"
         )
 
@@ -229,14 +233,14 @@ class ValuesV1R2RSpec extends R2RSpec {
       val xmlStr =
         """<?xml version="1.0" encoding="UTF-8"?>
                   |<text>
-                  |   This new version of the text links to another <a class="salsah-link" href="http://rdfh.ch/0001/a-thing-with-text-values">resource</a>.
+                  |   This new version of the text links to another <a class="salsah-link" href="http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-values">resource</a>.
                   |</text>
                 """.stripMargin
 
       val params =
         s"""
                   |{
-                  |    "res_id": "http://rdfh.ch/0001/a-thing",
+                  |    "res_id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   |    "richtext_value": {"xml": ${xmlStr.toJson.compactPrint}, "mapping_id": "$mappingIri"}
                   |}
@@ -254,7 +258,7 @@ class ValuesV1R2RSpec extends R2RSpec {
             .asInstanceOf[JsObject]
             .fields("xml")
             .toString
-            .contains("http://rdfh.ch/0001/a-thing-with-text-values"),
+            .contains("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-values"),
           "standoff link target is not contained in value creation response"
         )
 
@@ -264,9 +268,9 @@ class ValuesV1R2RSpec extends R2RSpec {
     }
 
     "get the version history of a value" in {
-      Get(s"/v1/values/history/${URLEncoder.encode("http://rdfh.ch/0001/a-thing", "UTF-8")}/${URLEncoder.encode(
-        "http://www.knora.org/ontology/0001/anything#hasText",
-        "UTF-8")}/${URLEncoder.encode(textValueIri.get, "UTF-8")}") ~> addCredentials(
+      Get(
+        s"/v1/values/history/${URLEncoder.encode("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing", "UTF-8")}/${URLEncoder
+          .encode("http://www.knora.org/ontology/0001/anything#hasText", "UTF-8")}/${URLEncoder.encode(textValueIri.get, "UTF-8")}") ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
 
@@ -295,9 +299,9 @@ class ValuesV1R2RSpec extends R2RSpec {
       val params =
         """
                   |{
-                  |    "res_id": "http://rdfh.ch/0001/a-thing",
+                  |    "res_id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                  |    "link_value": "http://rdfh.ch/0001/another-thing"
+                  |    "link_value": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/another-thing"
                   |}
                 """.stripMargin
 
@@ -321,9 +325,9 @@ class ValuesV1R2RSpec extends R2RSpec {
       val params =
         s"""
                    |{
-                   |    "res_id": "http://rdfh.ch/0001/a-thing",
+                   |    "res_id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
                    |    "prop": "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-                   |    "link_value": "http://rdfh.ch/0001/another-thing",
+                   |    "link_value": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/another-thing",
                    |    "comment":"$boringComment"
                    |}
                 """.stripMargin
@@ -338,9 +342,9 @@ class ValuesV1R2RSpec extends R2RSpec {
     }
 
     "get a link value with a comment" in {
-      Get(s"/v1/links/${URLEncoder.encode("http://rdfh.ch/0001/a-thing", "UTF-8")}/${URLEncoder.encode(
-        "http://www.knora.org/ontology/0001/anything#hasOtherThing",
-        "UTF-8")}/${URLEncoder.encode("http://rdfh.ch/0001/another-thing", "UTF-8")}") ~> addCredentials(
+      Get(s"/v1/links/${URLEncoder.encode("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing", "UTF-8")}/${URLEncoder
+        .encode("http://www.knora.org/ontology/0001/anything#hasOtherThing", "UTF-8")}/${URLEncoder
+        .encode("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/another-thing", "UTF-8")}") ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, testPass)) ~> valuesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
 
@@ -349,11 +353,13 @@ class ValuesV1R2RSpec extends R2RSpec {
         val linkValue = responseObj("value").asJsObject.fields
 
         assert(
-          linkValue("subjectIri").asInstanceOf[JsString].value == "http://rdfh.ch/0001/a-thing" &&
+          linkValue("subjectIri").asInstanceOf[JsString].value == "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing" &&
             linkValue("predicateIri")
               .asInstanceOf[JsString]
               .value == "http://www.knora.org/ontology/0001/anything#hasOtherThing" &&
-            linkValue("objectIri").asInstanceOf[JsString].value == "http://rdfh.ch/0001/another-thing" &&
+            linkValue("objectIri")
+              .asInstanceOf[JsString]
+              .value == "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/another-thing" &&
             linkValue("referenceCount").asInstanceOf[JsNumber].value.toInt == 1 &&
             comment == boringComment
         )
@@ -363,7 +369,7 @@ class ValuesV1R2RSpec extends R2RSpec {
       val params =
         """
                   |{
-                  |    "res_id": "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",
+                  |    "res_id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-valuesLanguage",
                   |    "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   |    "richtext_value": {"utf8str":"Guten Tag", "language": "de"}
                   |}
@@ -385,7 +391,7 @@ class ValuesV1R2RSpec extends R2RSpec {
       val params =
         s"""
                    |{
-                   |    "res_id": "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",
+                   |    "res_id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-valuesLanguage",
                    |    "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                    |    "richtext_value": {"utf8str": "Salam", "language": "fa"}
                    |}

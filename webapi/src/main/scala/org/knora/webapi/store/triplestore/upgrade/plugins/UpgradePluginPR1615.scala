@@ -30,7 +30,8 @@ class UpgradePluginPR1615(featureFactoryConfig: FeatureFactoryConfig) extends Up
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
 
   // IRI objects representing the IRIs used in this transformation.
-  private val ForbiddenResourceIri: IriNode = nodeFactory.makeIriNode("http://rdfh.ch/0000/forbiddenResource")
+  private val ForbiddenResourceIri: IriNode =
+    nodeFactory.makeIriNode("http://rdfh.ch/SOIukqJ_qqwrLYY2AzMWog/forbiddenResource")
 
   override def transform(model: RdfModel): Unit = {
     // Remove the singleton instance of knora-base:ForbiddenResource.

@@ -102,13 +102,13 @@ class DrawingsGodsV1ITSpec
                    |{
                    |    "restype_id":"http://www.knora.org/ontology/0105/drawings-gods#Verso",
                    |    "properties":{
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasVersoTranslatorEn":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-TranslatorList-PYB"}],
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasCommentOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-LanguageList-Buriat"}],
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasDescriptionOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-LanguageList-Buriat"}],
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasDescriptionAuthor":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-DescriptionAuthorList-child"}],
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasInstructionRestitutionOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-LanguageList-Buriat"}],
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasVersoTranslatorFr":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-TranslatorList-PYB"}],
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasCommentAuthor":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-CommentAuthorList-child"}],
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasVersoTranslatorEn":[{"hlist_value":"http://rdfh.ch/lists/0lr66NJu701abct0ChnpIA/drawings-gods-2016-list-TranslatorList-PYB"}],
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasCommentOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0lr66NJu701abct0ChnpIA/drawings-gods-2016-list-LanguageList-Buriat"}],
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasDescriptionOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0lr66NJu701abct0ChnpIA/drawings-gods-2016-list-LanguageList-Buriat"}],
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasDescriptionAuthor":[{"hlist_value":"http://rdfh.ch/lists/0lr66NJu701abct0ChnpIA/drawings-gods-2016-list-DescriptionAuthorList-child"}],
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasInstructionRestitutionOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0lr66NJu701abct0ChnpIA/drawings-gods-2016-list-LanguageList-Buriat"}],
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasVersoTranslatorFr":[{"hlist_value":"http://rdfh.ch/lists/0lr66NJu701abct0ChnpIA/drawings-gods-2016-list-TranslatorList-PYB"}],
+                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasCommentAuthor":[{"hlist_value":"http://rdfh.ch/lists/0lr66NJu701abct0ChnpIA/drawings-gods-2016-list-CommentAuthorList-child"}],
                    |        "http://www.knora.org/ontology/0105/drawings-gods#hasCodeVerso":[{"richtext_value":{"utf8str":"dayyad"}}]
                    |    },
                    |    "file": "${uploadedFile.internalFilename}",

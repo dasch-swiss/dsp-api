@@ -112,7 +112,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "return basic list information (anything list)" in {
         responderManager ! ListNodeInfoGetRequestADM(
-          iri = "http://rdfh.ch/lists/0001/treeList",
+          iri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList",
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingUser1
         )
@@ -126,7 +126,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "return basic list information (anything other list)" in {
         responderManager ! ListNodeInfoGetRequestADM(
-          iri = "http://rdfh.ch/lists/0001/otherTreeList",
+          iri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/otherTreeList",
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingUser1
         )
@@ -140,7 +140,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "return basic node information (images list - sommer)" in {
         responderManager ! ListNodeInfoGetRequestADM(
-          iri = "http://rdfh.ch/lists/00FF/526f26ed04",
+          iri = "http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/526f26ed04",
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01
         )
@@ -154,7 +154,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "return a full list response" in {
         responderManager ! ListGetRequestADM(
-          iri = "http://rdfh.ch/lists/0001/treeList",
+          iri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList",
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingUser1
         )
@@ -464,12 +464,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
     "used to reposition nodes" should {
       "not reposition a node if new position is the same as old one" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList014"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = 3,
-            parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+            parentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList01"
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
@@ -479,12 +479,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "not reposition a node if new position is out of range" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList014"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = 30,
-            parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+            parentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList01"
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
@@ -494,12 +494,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "not reposition a node to another parent node if new position is out of range" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList014"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
             position = 30,
-            parentIri = "http://rdfh.ch/lists/0001/notUsedList"
+            parentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList"
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
@@ -509,8 +509,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "reposition node List014 from position 3 to 1 (shift to right)" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList014"
+        val parentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
@@ -532,18 +532,19 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         // node in position 4 must not have changed
         val staticNode = children.last
-        staticNode.id should be("http://rdfh.ch/lists/0001/notUsedList015")
+        staticNode.id should be("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList015")
         staticNode.position should be(4)
 
         // node in position 1 must have been shifted to position 2
         val isShifted =
-          children.exists(child => child.id == "http://rdfh.ch/lists/0001/notUsedList012" && child.position == 2)
+          children.exists(child =>
+            child.id == "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList012" && child.position == 2)
         isShifted should be(true)
       }
 
       "reposition node List011 from position 0 to end (shift to left)" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList011"
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList011"
+        val parentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
@@ -565,19 +566,20 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         // node that was in position 1 must be in 0 now
         val firstNode = children.head
-        firstNode.id should be("http://rdfh.ch/lists/0001/notUsedList014")
+        firstNode.id should be("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList014")
         firstNode.position should be(0)
 
         // last node must be one before last now
         val isShifted =
-          children.exists(child => child.id == "http://rdfh.ch/lists/0001/notUsedList015" && child.position == 3)
+          children.exists(child =>
+            child.id == "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList015" && child.position == 3)
         isShifted should be(true)
       }
 
       "reposition node List013 in position 2 of another parent" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList013"
-        val newParentIri = "http://rdfh.ch/lists/0001/notUsedList"
-        val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList013"
+        val newParentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList"
+        val oldParentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
@@ -602,7 +604,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         // last node of new parent must be shifted one place to right
         val isShifted = childrenOfNewParent.exists(child =>
-          child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3)
+          child.id == "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList03" && child.position == 3)
         isShifted should be(true)
 
         /* check old parent node */
@@ -620,14 +622,14 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         // nodes of old siblings must be shifted to the left.
         val lastNode = oldParentChildren.last
-        lastNode.id should be("http://rdfh.ch/lists/0001/notUsedList011")
+        lastNode.id should be("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList011")
         lastNode.position should be(3)
       }
 
       "reposition node List015 to the end of another parent's children" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList015"
-        val newParentIri = "http://rdfh.ch/lists/0001/notUsedList"
-        val oldParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList015"
+        val newParentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList"
+        val oldParentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
@@ -652,7 +654,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         // last node of new parent must have remained in its current position
         val isShifted = childrenOfNewParent.exists(child =>
-          child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3)
+          child.id == "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList03" && child.position == 3)
         isShifted should be(true)
 
         /* check old parent node */
@@ -670,8 +672,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "put List015 back in end of its original parent node" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList015"
-        val newParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList015"
+        val newParentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
@@ -695,8 +697,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "put List013 back in position 2 of its original parent node" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList013"
-        val newParentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList013"
+        val newParentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
@@ -720,8 +722,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "put List011 back in its original place" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList011"
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList011"
+        val parentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
@@ -740,8 +742,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "put List014 back in its original position" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList014"
+        val parentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
@@ -760,8 +762,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "reposition node in a position equal to length of new parents children" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList03"
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList03"
+        val parentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList01"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
@@ -780,8 +782,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "reposition List014 in position 0 of its sibling which does not have a child" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
-        val parentIri = "http://rdfh.ch/lists/0001/notUsedList015"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList014"
+        val parentIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList015"
         responderManager ! NodePositionChangeRequestADM(
           nodeIri = nodeIri,
           changeNodePositionRequest = ChangeNodePositionApiRequestADM(
@@ -802,7 +804,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
     "used to delete list items" should {
       "not delete a node that is in use" in {
-        val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
+        val nodeInUseIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList01"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = nodeInUseIri,
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -814,21 +816,21 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "not delete a node that has a child which is used (node itself not in use, but its child is)" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/treeList03"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList03"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = nodeIri,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID
         )
-        val usedChild = "http://rdfh.ch/lists/0001/treeList10"
+        val usedChild = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList10"
         expectMsg(
           Failure(BadRequestException(s"Node ${nodeIri} cannot be deleted, because its child ${usedChild} is in use.")))
 
       }
 
       "not delete a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode" in {
-        val nodeInUseInOntologyIri = "http://rdfh.ch/lists/0001/treeList"
+        val nodeInUseInOntologyIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = nodeInUseInOntologyIri,
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -841,7 +843,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "delete a middle child node that is not in use" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList012"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = nodeIri,
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -856,13 +858,14 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         remainingChildren.last.position should be(3)
 
         // node List015 should still have its child
-        val list015 = remainingChildren.filter(node => node.id == "http://rdfh.ch/lists/0001/notUsedList015").head
+        val list015 =
+          remainingChildren.filter(node => node.id == "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList015").head
         list015.position should be(2)
         list015.children.size should be(1)
       }
 
       "delete a child node that is not in use" in {
-        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
+        val nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList02"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = nodeIri,
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -874,12 +877,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val remainingChildren = parentNode.getChildren
         remainingChildren.size should be(1)
         val firstChild = remainingChildren.head
-        firstChild.id should be("http://rdfh.ch/lists/0001/notUsedList01")
+        firstChild.id should be("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList01")
         firstChild.position should be(0)
       }
 
       "delete a list (i.e. root node) that is not in use in ontology" in {
-        val listIri = "http://rdfh.ch/lists/0001/notUsedList"
+        val listIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/notUsedList"
         responderManager ! ListItemDeleteRequestADM(
           nodeIri = listIri,
           featureFactoryConfig = defaultFeatureFactoryConfig,

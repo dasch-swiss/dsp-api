@@ -147,7 +147,7 @@ object SharedTestDataADM {
         groupsPerProject = Map(
           INCUNABULA_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember,
                                          OntologyConstants.KnoraAdmin.ProjectAdmin),
-          IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer",
+          IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer",
                                      OntologyConstants.KnoraAdmin.ProjectMember,
                                      OntologyConstants.KnoraAdmin.ProjectAdmin)
         ),
@@ -281,7 +281,7 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer",
+          IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer",
                                      OntologyConstants.KnoraAdmin.ProjectMember)
         ),
         administrativePermissionsPerProject = Map(
@@ -332,7 +332,7 @@ object SharedTestDataADM {
 
   /* represents the full GroupInfoV1 of the images project reviewer group */
   def imagesReviewerGroup: GroupADM = GroupADM(
-    id = "http://rdfh.ch/groups/00FF/images-reviewer",
+    id = "http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer",
     name = "Image reviewer",
     description = "A group for image reviewers.",
     project = imagesProject,
@@ -468,16 +468,16 @@ object SharedTestDataADM {
   /** **********************************/
   val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
 
-  val customResourceIRI: IRI = "http://rdfh.ch/0001/a-thing-with-IRI"
-  val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/a-thing-with-value-IRI"
+  val customResourceIRI: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-IRI"
+  val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-value-IRI"
   val customValueIRI_withResourceIriAndValueIRIAndValueUUID: IRI =
-    "http://rdfh.ch/0001/a-thing-with-value-IRI/values/a-value-with-IRI-and-UUID"
+    "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-value-IRI/values/a-value-with-IRI-and-UUID"
   val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
-  val customValueIRI: IRI = "http://rdfh.ch/0001/a-thing-with-value-IRI/values/a-value-with-IRI"
+  val customValueIRI: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-value-IRI/values/a-value-with-IRI"
   val customResourceCreationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
   val customValueCreationDate: Instant = Instant.parse("2020-06-09T17:04:54.502951Z")
 
-  val customListIRI: IRI = "http://rdfh.ch/lists/0001/a-list-with-IRI"
+  val customListIRI: IRI = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/a-list-with-IRI"
 
   def anythingAdminUser: UserADM =
     UserADM(
@@ -524,7 +524,7 @@ object SharedTestDataADM {
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
           ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember,
-                                       "http://rdfh.ch/groups/0001/thing-searcher")
+                                       "http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher")
         ),
         administrativePermissionsPerProject = Map(
           ANYTHING_PROJECT_IRI -> Set(
@@ -576,7 +576,7 @@ object SharedTestDataADM {
 
   /* represents the full GroupInfoV1 of the Thing searcher group */
   def thingSearcherGroup: GroupADM = GroupADM(
-    id = "http://rdfh.ch/groups/0001/thing-searcher",
+    id = "http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher",
     name = "Thing searcher",
     description = "A group for thing searchers.",
     project = anythingProject,

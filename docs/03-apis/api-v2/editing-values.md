@@ -35,7 +35,7 @@ are not given. For example, to create an integer value:
 
 ```jsonld
 {
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
   "@type" : "anything:Thing",
   "anything:hasInteger" : {
     "@type" : "knora-api:IntValue",
@@ -52,7 +52,7 @@ Each value can have a comment, given in `knora-api:valueHasComment`. For example
 
 ```jsonld
 {
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
   "@type" : "anything:Thing",
   "anything:hasInteger" : {
     "@type" : "knora-api:IntValue",
@@ -70,12 +70,12 @@ Permissions for the new value can be given by adding `knora-api:hasPermissions`.
 
 ```jsonld
 {
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
   "@type" : "anything:Thing",
   "anything:hasInteger" : {
     "@type" : "knora-api:IntValue",
     "knora-api:intValueAsInt" : 4,
-    "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+    "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher"
   },
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -92,10 +92,10 @@ by a `/values/` and a custom ID string. For example:
 
 
 ```jsonld
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
   "@type" : "anything:Thing",
   "anything:hasInteger" : {
-    "@id" : "http://rdfh.ch/0001/a-thing/values/int-value-IRI",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing/values/int-value-IRI",
     "@type" : "knora-api:IntValue",
     "knora-api:intValueAsInt" : 21,
     "knora-api:valueHasUUID" : "IN4R19yYR0ygi3K2VEHpUQ",
@@ -138,12 +138,12 @@ we can create a link like this:
 
 ```jsonld
 {
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
   "@type" : "anything:Thing",
   "anything:hasOtherThingValue" : {
     "@type" : "knora-api:LinkValue",
     "knora-api:linkValueHasTargetIri" : {
-      "@id" : "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/tPfZeNMvRVujCQqbIbvO0A"
     }
   },
   "@context" : {
@@ -171,7 +171,7 @@ Use the predicate `knora-api:valueAsString` of `knora-api:TextValue`:
 
 ```jsonld
 {
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
   "@type" : "anything:Thing",
   "anything:hasText" : {
     "@type" : "knora-api:TextValue",
@@ -194,7 +194,7 @@ document like this:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <text>
-   This text links to another <a class="salsah-link" href="http://rdfh.ch/0001/another-thing">resource</a>.
+   This text links to another <a class="salsah-link" href="http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/another-thing">resource</a>.
 </text>
 ```
 
@@ -202,11 +202,11 @@ This document can then be embedded in a JSON-LD request, using the predicate `kn
 
 ```jsonld
 {
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
   "@type" : "anything:Thing",
   "anything:hasText" : {
     "@type" : "knora-api:TextValue",
-    "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>\n   This text links to another <a class=\"salsah-link\" href=\"http://rdfh.ch/0001/another-thing\">resource</a>.\n</text>",
+    "knora-api:textValueAsXml" : "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>\n   This text links to another <a class=\"salsah-link\" href=\"http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/another-thing\">resource</a>.\n</text>",
     "knora-api:textValueHasMapping" : {
       "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
     }
@@ -351,10 +351,10 @@ the `@id` of the current value version is given. For example, to update an integ
 
 ```jsonld
 {
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
   "@type" : "anything:Thing",
   "anything:hasInteger" : {
-    "@id" : "http://rdfh.ch/0001/a-thing/values/vp96riPIRnmQcbMhgpv_Rg",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing/values/vp96riPIRnmQcbMhgpv_Rg",
     "@type" : "knora-api:IntValue",
     "knora-api:intValueAsInt" : 5
   },
@@ -377,10 +377,10 @@ To update only the permissions on a value, submit it with the new permissions an
 
 ```jsonld
 {
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
   "@type" : "anything:Thing",
   "anything:hasInteger" : {
-    "@id" : "http://rdfh.ch/0001/a-thing/values/vp96riPIRnmQcbMhgpv_Rg",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing/values/vp96riPIRnmQcbMhgpv_Rg",
     "@type" : "knora-api:IntValue",
     "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:KnownUser"
   },
@@ -402,14 +402,14 @@ To update a value and give the new version a custom IRI, add
 
 ```jsonld
 {
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
   "@type" : "anything:Thing",
   "anything:hasInteger" : {
-    "@id" : "http://rdfh.ch/0001/a-thing/values/vp96riPIRnmQcbMhgpv_Rg",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing/values/vp96riPIRnmQcbMhgpv_Rg",
     "@type" : "knora-api:IntValue",
     "knora-api:intValueAsInt" : 21,
     "knora-api:newValueVersionIri" : {
-      "@id" : "http://rdfh.ch/0001/a-thing/values/int-value-IRI"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing/values/int-value-IRI"
     }
   },
   "@context" : {
@@ -452,10 +452,10 @@ the resource to the value, and the value's ID and type. For example:
 
 ```jsonld
 {
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
   "@type" : "anything:Thing",
   "anything:hasInteger" : {
-    "@id" : "http://rdfh.ch/0001/a-thing/values/vp96riPIRnmQcbMhgpv_Rg",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing/values/vp96riPIRnmQcbMhgpv_Rg",
     "@type" : "knora-api:IntValue",
     "knora-api:deleteComment" : "This value was created by mistake."
   },

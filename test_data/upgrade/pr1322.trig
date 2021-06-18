@@ -7,7 +7,7 @@
 @prefix anything: <http://www.knora.org/ontology/0001/anything#> .
 
 <http://www.knora.org/data/0001/anything> {
-    <http://rdfh.ch/0001/thing-with-history> a anything:Thing;
+    <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history> a anything:Thing;
       knora-base:isDeleted false;
       knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
       knora-base:attachedToProject <http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA>;
@@ -15,10 +15,10 @@
       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
       knora-base:creationDate "2019-02-08T15:05:10Z"^^xsd:dateTime;
       knora-base:lastModificationDate "2019-02-13T09:05:10Z"^^xsd:dateTime;
-      anything:hasInteger <http://rdfh.ch/0001/thing-with-history/values/1c>;
-      anything:hasText <http://rdfh.ch/0001/thing-with-history/values/2c>.
+      anything:hasInteger <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/1c>;
+      anything:hasText <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/2c>.
 
-    <http://rdfh.ch/0001/thing-with-history/values/1a> a knora-base:IntValue;
+    <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/1a> a knora-base:IntValue;
       knora-base:isDeleted false;
       knora-base:valueCreationDate "2019-02-11T09:05:10Z"^^xsd:dateTime;
       knora-base:valueHasInteger 1;
@@ -27,7 +27,7 @@
       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
       knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
-    <http://rdfh.ch/0001/thing-with-history/values/1b> a knora-base:IntValue;
+    <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/1b> a knora-base:IntValue;
       knora-base:isDeleted false;
       knora-base:valueCreationDate "2019-02-12T09:05:10Z"^^xsd:dateTime;
       knora-base:valueHasInteger 2;
@@ -35,9 +35,9 @@
       knora-base:valueHasString "2";
       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
       knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
-      knora-base:previousValue <http://rdfh.ch/0001/thing-with-history/values/1a> .
+      knora-base:previousValue <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/1a> .
 
-    <http://rdfh.ch/0001/thing-with-history/values/1c> a knora-base:IntValue;
+    <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/1c> a knora-base:IntValue;
       knora-base:isDeleted false;
       knora-base:valueCreationDate "2019-02-13T09:05:10Z"^^xsd:dateTime;
       knora-base:valueHasInteger 3;
@@ -45,9 +45,9 @@
       knora-base:valueHasString "3";
       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
       knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
-      knora-base:previousValue <http://rdfh.ch/0001/thing-with-history/values/1b> .
+      knora-base:previousValue <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/1b> .
 
-    <http://rdfh.ch/0001/thing-with-history/values/2a> a knora-base:TextValue;
+    <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/2a> a knora-base:TextValue;
       knora-base:isDeleted false;
       knora-base:valueCreationDate "2019-02-10T10:05:10Z"^^xsd:dateTime;
       knora-base:valueHasOrder 0;
@@ -55,21 +55,21 @@
       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
       knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
 
-    <http://rdfh.ch/0001/thing-with-history/values/2b> a knora-base:TextValue;
+    <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/2b> a knora-base:TextValue;
       knora-base:isDeleted false;
       knora-base:valueCreationDate "2019-02-11T10:05:10Z"^^xsd:dateTime;
       knora-base:valueHasOrder 0;
       knora-base:valueHasString "two";
       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
       knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
-      knora-base:previousValue <http://rdfh.ch/0001/thing-with-history/values/2a> .
+      knora-base:previousValue <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/2a> .
 
-    <http://rdfh.ch/0001/thing-with-history/values/2c> a knora-base:TextValue;
+    <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/2c> a knora-base:TextValue;
       knora-base:isDeleted false;
       knora-base:valueCreationDate "2019-02-12T10:05:10Z"^^xsd:dateTime;
       knora-base:valueHasOrder 0;
       knora-base:valueHasString "three";
       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
       knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
-      knora-base:previousValue <http://rdfh.ch/0001/thing-with-history/values/2b> .
+      knora-base:previousValue <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/2b> .
 }

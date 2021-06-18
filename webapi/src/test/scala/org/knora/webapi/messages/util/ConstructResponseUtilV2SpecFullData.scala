@@ -22,7 +22,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
       ReadResourceV2(
         versionDate = None,
         label = "visible thing with hidden int values",
-        resourceIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg",
+        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/F8L7zPp7TI-4MGJQlCO4Zg",
         permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -35,7 +35,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasInteger = 543212345,
               comment = Some("second hidden int value in visible resource")
             ),
-            valueIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g",
+            valueIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g",
             permissions = "M knora-admin:ProjectMember",
             valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
             attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
@@ -50,7 +50,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasInteger = 123454321,
               comment = Some("first hidden int value in visible resource")
             ),
-            valueIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw",
+            valueIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw",
             permissions = "M knora-admin:ProjectMember",
             valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
             attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
@@ -73,7 +73,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
       ReadResourceV2(
         versionDate = None,
         label = "visible thing with hidden int values",
-        resourceIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg",
+        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/F8L7zPp7TI-4MGJQlCO4Zg",
         permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -93,7 +93,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
       ReadResourceV2(
         versionDate = None,
         label = "thing with one hidden thing",
-        resourceIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw",
+        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0JhgKcqoRIeRRG6ownArSw",
         permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -103,14 +103,14 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
           "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri -> Vector(ReadLinkValueV2(
             valueContent = LinkValueContentV2(
               isIncomingLink = false,
-              referredResourceIri = "http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ",
+              referredResourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/XTxSMt0ySraVmwXD-bD2wQ",
               ontologySchema = InternalSchema,
               comment = Some("link value pointing to hidden resource"),
               referredResourceExists = true,
               nestedResource = Some(ReadResourceV2(
                 versionDate = None,
                 label = "hidden thing",
-                resourceIri = "http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ",
+                resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/XTxSMt0ySraVmwXD-bD2wQ",
                 permissions = "V knora-admin:Creator",
                 attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -123,7 +123,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               ))
             ),
             valueHasRefCount = 1,
-            valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/UgSp5mXTTSKdI02ZU1KIAA",
+            valueIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0JhgKcqoRIeRRG6ownArSw/values/UgSp5mXTTSKdI02ZU1KIAA",
             permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
             valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
             attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
@@ -138,7 +138,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasInteger = 123454321,
               comment = Some("visible int value in main resource")
             ),
-            valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
+            valueIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
             permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
             valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
             attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
@@ -161,7 +161,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
       ReadResourceV2(
         versionDate = None,
         label = "thing with one hidden thing",
-        resourceIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw",
+        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0JhgKcqoRIeRRG6ownArSw",
         permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -173,7 +173,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
             valueHasInteger = 123454321,
             comment = Some("visible int value in main resource")
           ),
-          valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
+          valueIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
           permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
           valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
           attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
@@ -186,7 +186,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         lastModificationDate = None,
         deletionInfo = None
       )),
-    hiddenResourceIris = Set("http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ"),
+    hiddenResourceIris = Set("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/XTxSMt0ySraVmwXD-bD2wQ"),
     mayHaveMoreResults = false
   )
 
@@ -195,7 +195,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
       ReadResourceV2(
         versionDate = None,
         label = "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
-        resourceIri = "http://rdfh.ch/0001/a-thing-with-text-values",
+        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-values",
         permissions = "CR knora-admin:Creator|V knora-admin:ProjectMember",
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -225,12 +225,11 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     uuid = stringFormatter.decodeUuid("80133696-26a1-4941-967b-6bf210d7d5e1"),
                     endPosition = 19,
                     startParentIndex = Some(0),
-                    attributes = Vector(
-                      StandoffTagIriAttributeV2(
-                        standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink".toSmartIri,
-                        value = "http://rdfh.ch/0001/a-thing",
-                        targetExists = true
-                      )),
+                    attributes = Vector(StandoffTagIriAttributeV2(
+                      standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink".toSmartIri,
+                      value = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
+                      targetExists = true
+                    )),
                     startIndex = 1,
                     endIndex = None,
                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
@@ -246,7 +245,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 xslt = None,
                 mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping")
               ),
-              valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/1",
+              valueIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-values/values/1",
               permissions = "CR knora-admin:Creator",
               valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
               valueHasMaxStandoffStartIndex = Some(1),
@@ -278,12 +277,11 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     uuid = stringFormatter.decodeUuid("59a36237-95a9-4acc-8361-7c8fac311063"),
                     endPosition = 16,
                     startParentIndex = Some(0),
-                    attributes = Vector(
-                      StandoffTagIriAttributeV2(
-                        standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink".toSmartIri,
-                        value = "http://rdfh.ch/0001/a-thing",
-                        targetExists = true
-                      )),
+                    attributes = Vector(StandoffTagIriAttributeV2(
+                      standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink".toSmartIri,
+                      value = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
+                      targetExists = true
+                    )),
                     startIndex = 1,
                     endIndex = None,
                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
@@ -299,7 +297,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 xslt = None,
                 mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
               ),
-              valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
+              valueIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-values/values/2",
               permissions = "CR knora-admin:Creator",
               valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
               valueHasMaxStandoffStartIndex = Some(1),
@@ -313,14 +311,14 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
           "http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue".toSmartIri -> Vector(ReadLinkValueV2(
             valueContent = LinkValueContentV2(
               isIncomingLink = false,
-              referredResourceIri = "http://rdfh.ch/0001/a-thing",
+              referredResourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
               ontologySchema = InternalSchema,
               comment = None,
               referredResourceExists = true,
               nestedResource = Some(ReadResourceV2(
                 versionDate = None,
                 label = "A thing",
-                resourceIri = "http://rdfh.ch/0001/a-thing",
+                resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
                 permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
                 attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
                 resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -333,7 +331,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               ))
             ),
             valueHasRefCount = 2,
-            valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/0",
+            valueIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-values/values/0",
             permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser",
             valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
             attachedToUser = "http://www.knora.org/ontology/knora-admin#SystemUser",
@@ -356,7 +354,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
       ReadResourceV2(
         versionDate = None,
         label = "a5v",
-        resourceIri = "http://rdfh.ch/0803/76570a749901",
+        resourceIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/76570a749901",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -368,14 +366,14 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = false,
-                referredResourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+                referredResourceIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/ff17e5ef9601",
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
                 nestedResource = Some(ReadResourceV2(
                   versionDate = None,
                   label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-                  resourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+                  resourceIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/ff17e5ef9601",
                   permissions =
                     "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
                   attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -390,7 +388,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                         maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
                         comment = None
                       ),
-                      valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
+                      valueIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/ff17e5ef9601/values/d9a522845006",
                       permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                       valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
                       valueHasMaxStandoffStartIndex = None,
@@ -406,7 +404,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 ))
               ),
               valueHasRefCount = 1,
-              valueIri = "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
+              valueIri =
+                "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
               permissions =
                 "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
@@ -423,7 +422,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 valueHasInteger = 10,
                 comment = None
               ),
-              valueIri = "http://rdfh.ch/0803/76570a749901/values/fae17f4f6106",
+              valueIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/76570a749901/values/fae17f4f6106",
               permissions =
                 "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
@@ -441,7 +440,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
       ReadResourceV2(
         versionDate = None,
         label = "a5v",
-        resourceIri = "http://rdfh.ch/0803/773f258402",
+        resourceIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/773f258402",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -453,14 +452,14 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = false,
-                referredResourceIri = "http://rdfh.ch/0803/c5058f3a",
+                referredResourceIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a",
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
                 nestedResource = Some(ReadResourceV2(
                   versionDate = None,
                   label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-                  resourceIri = "http://rdfh.ch/0803/c5058f3a",
+                  resourceIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a",
                   permissions =
                     "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
                   attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -475,7 +474,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                         maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
                         comment = None
                       ),
-                      valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
+                      valueIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a/values/c3295339",
                       permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                       valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                       valueHasMaxStandoffStartIndex = None,
@@ -491,7 +490,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 ))
               ),
               valueHasRefCount = 1,
-              valueIri = "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
+              valueIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
               permissions =
                 "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
@@ -508,7 +507,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 valueHasInteger = 10,
                 comment = None
               ),
-              valueIri = "http://rdfh.ch/0803/773f258402/values/53feeaf80a",
+              valueIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/773f258402/values/53feeaf80a",
               permissions =
                 "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
@@ -533,7 +532,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
       ReadResourceV2(
         versionDate = None,
         label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-        resourceIri = "http://rdfh.ch/0803/c5058f3a",
+        resourceIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -549,7 +548,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
                 comment = None
               ),
-              valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
+              valueIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a/values/c3295339",
               permissions =
                 "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
               valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
@@ -564,14 +563,14 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = true,
-                referredResourceIri = "http://rdfh.ch/0803/773f258402",
+                referredResourceIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/773f258402",
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
                 nestedResource = Some(ReadResourceV2(
                   versionDate = None,
                   label = "a5v",
-                  resourceIri = "http://rdfh.ch/0803/773f258402",
+                  resourceIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/773f258402",
                   permissions =
                     "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
                   attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -582,14 +581,15 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     "http://www.knora.org/ontology/0803/incunabula#partOfValue".toSmartIri -> Vector(ReadLinkValueV2(
                       valueContent = LinkValueContentV2(
                         isIncomingLink = false,
-                        referredResourceIri = "http://rdfh.ch/0803/c5058f3a",
+                        referredResourceIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a",
                         ontologySchema = InternalSchema,
                         comment = None,
                         referredResourceExists = true,
                         nestedResource = None
                       ),
                       valueHasRefCount = 1,
-                      valueIri = "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
+                      valueIri =
+                        "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
                       permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
                       valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                       attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -604,7 +604,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                         valueHasInteger = 10,
                         comment = None
                       ),
-                      valueIri = "http://rdfh.ch/0803/773f258402/values/53feeaf80a",
+                      valueIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/773f258402/values/53feeaf80a",
                       permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
                       valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
                       attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -620,7 +620,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 ))
               ),
               valueHasRefCount = 1,
-              valueIri = "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
+              valueIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
               permissions =
                 "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
@@ -638,7 +638,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
       ReadResourceV2(
         versionDate = None,
         label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-        resourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+        resourceIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/ff17e5ef9601",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -654,7 +654,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
                 comment = None
               ),
-              valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
+              valueIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/ff17e5ef9601/values/d9a522845006",
               permissions =
                 "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
               valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
@@ -669,14 +669,14 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
                 isIncomingLink = true,
-                referredResourceIri = "http://rdfh.ch/0803/76570a749901",
+                referredResourceIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/76570a749901",
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
                 nestedResource = Some(ReadResourceV2(
                   versionDate = None,
                   label = "a5v",
-                  resourceIri = "http://rdfh.ch/0803/76570a749901",
+                  resourceIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/76570a749901",
                   permissions =
                     "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
                   attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -687,14 +687,15 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                     "http://www.knora.org/ontology/0803/incunabula#partOfValue".toSmartIri -> Vector(ReadLinkValueV2(
                       valueContent = LinkValueContentV2(
                         isIncomingLink = false,
-                        referredResourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+                        referredResourceIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/ff17e5ef9601",
                         ontologySchema = InternalSchema,
                         comment = None,
                         referredResourceExists = true,
                         nestedResource = None
                       ),
                       valueHasRefCount = 1,
-                      valueIri = "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
+                      valueIri =
+                        "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
                       permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
                       valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
                       attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -709,7 +710,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                         valueHasInteger = 10,
                         comment = None
                       ),
-                      valueIri = "http://rdfh.ch/0803/76570a749901/values/fae17f4f6106",
+                      valueIri = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/76570a749901/values/fae17f4f6106",
                       permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
                       valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
                       attachedToUser = "http://rdfh.ch/users/91e19f1e01",
@@ -725,7 +726,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 ))
               ),
               valueHasRefCount = 1,
-              valueIri = "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
+              valueIri =
+                "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
               permissions =
                 "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
               valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),

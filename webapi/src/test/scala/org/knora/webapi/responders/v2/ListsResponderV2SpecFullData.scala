@@ -21,7 +21,7 @@ class ListsResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
   val treeNode = NodeGetResponseV2(
     node = listsmessages.ListChildNodeInfoADM(
       name = Some("Tree list node 11"),
-      id = "http://rdfh.ch/lists/0001/treeList11",
+      id = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList11",
       labels = StringLiteralSequenceV2(
         stringLiterals = Vector(
           StringLiteralV2(
@@ -29,7 +29,7 @@ class ListsResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
             language = Some("en")
           ))),
       position = 1,
-      hasRootNode = "http://rdfh.ch/lists/0001/treeList",
+      hasRootNode = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList",
       comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
     ),
     userLang = "de",

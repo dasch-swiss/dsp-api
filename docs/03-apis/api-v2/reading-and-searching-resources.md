@@ -84,7 +84,7 @@ If a text value in the resource contains markup, the text value will look someth
 
 ```jsonld
 {
-  "@id" : "http://rdfh.ch/0001/LK-wKXDNQJaRHOf0F0aJ2g/values/1Er1OpVwQR2u6peTwyNpJw",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/LK-wKXDNQJaRHOf0F0aJ2g/values/1Er1OpVwQR2u6peTwyNpJw",
   "@type" : "knora-api:TextValue",
   "knora-api:attachedToUser" : {
     "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -371,40 +371,40 @@ class, and label. Direct links are shown instead of link values. For example:
 ```jsonld
 {
   "@graph" : [ {
-    "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0C-0L1kORryKzJAJxxRyRQ",
     "@type" : "anything:Thing",
     "rdfs:label" : "Sierra"
   }, {
-    "@id" : "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/A67ka6UQRHWf313tbhQBjw",
     "@type" : "anything:Thing",
     "rdfs:label" : "Victor"
   }, {
-    "@id" : "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/Lz7WEqJETJqqsUZQYexBQg",
     "@type" : "anything:Thing",
     "rdfs:label" : "Foxtrot"
   }, {
-    "@id" : "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/WLSHxQUgTOmG1T0lBU2r5w",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/A67ka6UQRHWf313tbhQBjw"
     },
     "rdfs:label" : "Tango"
   }, {
-    "@id" : "http://rdfh.ch/0001/start",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/start",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : [ {
-      "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0C-0L1kORryKzJAJxxRyRQ"
     }, {
-      "@id" : "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/WLSHxQUgTOmG1T0lBU2r5w"
     }, {
-      "@id" : "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/tPfZeNMvRVujCQqbIbvO0A"
     } ],
     "rdfs:label" : "Romeo"
   }, {
-    "@id" : "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/tPfZeNMvRVujCQqbIbvO0A",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/Lz7WEqJETJqqsUZQYexBQg"
     },
     "rdfs:label" : "Echo"
   } ],
@@ -598,7 +598,7 @@ The project IRI must be URL-encoded. The response is a list of events describing
             },
             "knora-api:eventBody": {
                 "rdfs:label": "A thing with version history",
-                "knora-api:resourceIri": "http://rdfh.ch/0001/thing-with-history",
+                "knora-api:resourceIri": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history",
                 "knora-api:resourceClassIri": "http://www.knora.org/ontology/0001/anything#Thing",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
                 "knora-api:creationDate": {
@@ -620,7 +620,7 @@ The project IRI must be URL-encoded. The response is a list of events describing
                 "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
             },
             "knora-api:eventBody": {
-                "knora-api:resourceIri": "http://rdfh.ch/0001/thing-with-history",
+                "knora-api:resourceIri": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history",
             "knora-api:resourceClassIri": "http://www.knora.org/ontology/0001/anything#Thing",
                 "knora-api:valueCreationDate": {
                     "@value": "2019-02-10T10:30:10Z",
@@ -631,11 +631,11 @@ The project IRI must be URL-encoded. The response is a list of events describing
                 "@type": "knora-base:LinkValue",
                 "http://www.knora.org/ontology/0001/anything#hasOtherThingValue": {
                     "knora-api:linkValueHasTargetIri": {
-                        "@id": "http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ"
+                        "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/2qMtTWvVRXWMBcRNlduvCQ"
                     }
                 },
                 "rdf:Property": "http://www.knora.org/ontology/0001/anything#hasOtherThingValue",
-                "@id": "http://rdfh.ch/0001/thing-with-history/values/3a"
+                "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/3a"
             },
             "knora-api:versionDate": {
                 "@value": "2019-02-10T10:30:10Z",
@@ -648,7 +648,7 @@ The project IRI must be URL-encoded. The response is a list of events describing
                 "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
             },
             "knora-api:eventBody": {
-                "knora-api:resourceIri": "http://rdfh.ch/0001/thing-with-history",
+                "knora-api:resourceIri": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history",
                 "knora-api:resourceClassIri": "http://www.knora.org/ontology/0001/anything#Thing"
                 "http://www.knora.org/ontology/0001/anything#hasText": {
                     "knora-api:valueAsString": "two"
@@ -657,11 +657,11 @@ The project IRI must be URL-encoded. The response is a list of events describing
                     "@value": "2019-02-11T10:05:10Z",
                     "@type": "xsd:dateTimeStamp"
                 },
-                "knora-base:previousValue": "http://rdfh.ch/0001/thing-with-history/values/2a",
+                "knora-base:previousValue": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/2a",
                 "knora-api:valueHasUUID": "W5fm67e0QDWxRZumcXcs6g",
                 "@type": "knora-base:TextValue",
                 "rdf:Property": "http://www.knora.org/ontology/0001/anything#hasText",
-                "@id": "http://rdfh.ch/0001/thing-with-history/values/2b"
+                "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/2b"
             },
             "knora-api:versionDate": {
                 "@value": "2019-02-11T10:05:10Z",
@@ -674,9 +674,9 @@ The project IRI must be URL-encoded. The response is a list of events describing
                 "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
             },
             "knora-api:eventBody": {
-                "knora-api:resourceIri": "http://rdfh.ch/0001/thing-with-history",
+                "knora-api:resourceIri": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history",
                 "knora-api:resourceClassIri": "http://www.knora.org/ontology/0001/anything#Thing",
-                "knora-base:previousValue": "http://rdfh.ch/0001/thing-with-history/values/3a",
+                "knora-base:previousValue": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/3a",
                 "knora-api:deleteDate": {
                     "@type": "xsd:dateTimeStamp",
                     "@value": "2019-02-13T09:00:10Z"
@@ -684,7 +684,7 @@ The project IRI must be URL-encoded. The response is a list of events describing
                 "knora-api:isDeleted": true,
                 "@type": "knora-base:LinkValue",
                 "rdf:Property": "http://www.knora.org/ontology/0001/anything#hasOtherThingValue",
-                "@id": "http://rdfh.ch/0001/thing-with-history/values/3b"
+                "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/3b"
             },
             "knora-api:versionDate": {
                 "@value": "2019-02-13T09:00:10Z",

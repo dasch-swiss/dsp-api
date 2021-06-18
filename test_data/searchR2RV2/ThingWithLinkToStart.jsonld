@@ -43,11 +43,11 @@
                     },
                     "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
                     "@type": "anything:Thing",
-                    "@id": "http://rdfh.ch/0001/start"
+                    "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/start"
                 },
                 "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
                 "@type": "knora-api:LinkValue",
-                "@id": "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg/values/foxtrot-to-romeo"
+                "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/Lz7WEqJETJqqsUZQYexBQg/values/foxtrot-to-romeo"
             },
             "knora-api:arkUrl": {
                 "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/Lz7WEqJETJqqsUZQYexBQgy",
@@ -71,7 +71,7 @@
             },
             "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
             "@type": "anything:Thing",
-            "@id": "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+            "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/Lz7WEqJETJqqsUZQYexBQg"
         },
         {
             "anything:hasOtherThingValue": {
@@ -115,11 +115,11 @@
                     },
                     "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
                     "@type": "anything:Thing",
-                    "@id": "http://rdfh.ch/0001/start"
+                    "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/start"
                 },
                 "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
                 "@type": "knora-api:LinkValue",
-                "@id": "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog/values/6IRVBjuDSUuT3nWLaIj8vg"
+                "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/iqW_PBiHRdyTFzik8tuSog/values/6IRVBjuDSUuT3nWLaIj8vg"
             },
             "knora-api:arkUrl": {
                 "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/iqW_PBiHRdyTFzik8tuSogZ",
@@ -143,7 +143,7 @@
             },
             "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
             "@type": "anything:Thing",
-            "@id": "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+            "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/iqW_PBiHRdyTFzik8tuSog"
         }
     ],
     "@context": {

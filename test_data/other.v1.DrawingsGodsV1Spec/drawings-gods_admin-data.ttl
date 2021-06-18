@@ -19,28 +19,28 @@
         knora-admin:status "true"^^xsd:boolean ;
         knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
-<http://rdfh.ch/groups/0105/drawings-gods-meta-annotators> rdf:type knora-admin:UserGroup ;
+<http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-meta-annotators> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Meta-annotators"^^xsd:string ;
                                                knora-admin:groupDescription "A group of users allowed to annotate data. Does not upload images nor files. Does not access to personal data."^^xsd:string ;
                                                knora-admin:belongsToProject <http://rdfh.ch/projects/0lr66NJu701abct0ChnpIA> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
-<http://rdfh.ch/groups/0105/drawings-gods-add-drawings> rdf:type knora-admin:UserGroup ;
+<http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-add-drawings> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Drawings contributors"^^xsd:string ;
                                                knora-admin:groupDescription "A group of users allowed to upload images, files and annotate data. Does not access to personal data."^^xsd:string ;
                                                knora-admin:belongsToProject <http://rdfh.ch/projects/0lr66NJu701abct0ChnpIA> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
-<http://rdfh.ch/groups/0105/drawings-gods-snf-team> rdf:type knora-admin:UserGroup ;
+<http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-snf-team> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "SNF team"^^xsd:string ;
                                                knora-admin:groupDescription "A core group of members from the SNF project. Access to any data, including sensitive."^^xsd:string ;
                                                knora-admin:belongsToProject <http://rdfh.ch/projects/0lr66NJu701abct0ChnpIA> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
-<http://rdfh.ch/groups/0105/drawings-gods-admin> rdf:type knora-admin:UserGroup ;
+<http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-admin> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Administrators"^^xsd:string ;
                                                knora-admin:groupDescription "A custom admin group created to apply permission precedence rules. Replaces the built-in knora-admin:ProjectAdmin group, not used for this project."^^xsd:string ;
                                                knora-admin:belongsToProject <http://rdfh.ch/projects/0lr66NJu701abct0ChnpIA> ;
@@ -57,7 +57,7 @@
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
         knora-admin:isInProject <http://rdfh.ch/projects/0lr66NJu701abct0ChnpIA> ;
-        knora-admin:isInGroup <http://rdfh.ch/groups/0105/drawings-gods-snf-team> ;
+        knora-admin:isInGroup <http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-snf-team> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/drawings-gods-test-ddd2> a knora-admin:User ;
@@ -69,7 +69,7 @@
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
         knora-admin:isInProject <http://rdfh.ch/projects/0lr66NJu701abct0ChnpIA> ;
-        knora-admin:isInGroup <http://rdfh.ch/groups/0105/drawings-gods-admin> ;
+        knora-admin:isInGroup <http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-admin> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
@@ -82,7 +82,7 @@
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
         knora-admin:isInProject <http://rdfh.ch/projects/0lr66NJu701abct0ChnpIA> ;
-        knora-admin:isInGroup <http://rdfh.ch/groups/0105/drawings-gods-meta-annotators> ;
+        knora-admin:isInGroup <http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-meta-annotators> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/drawings-gods-user-adddrawings> a knora-admin:User ;
@@ -94,7 +94,7 @@
         knora-admin:preferredLanguage "fr"^^xsd:string ;
         knora-admin:status "true"^^xsd:boolean ;
         knora-admin:isInProject <http://rdfh.ch/projects/0lr66NJu701abct0ChnpIA> ;
-        knora-admin:isInGroup <http://rdfh.ch/groups/0105/drawings-gods-add-drawings> ;
+        knora-admin:isInGroup <http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-add-drawings> ;
         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 #
 #<http://rdfh.ch/users/drawings-gods-user-projectmember> a knora-admin:User ;

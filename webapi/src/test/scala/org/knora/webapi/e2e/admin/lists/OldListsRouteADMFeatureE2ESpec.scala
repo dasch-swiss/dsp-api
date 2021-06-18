@@ -269,7 +269,7 @@ class OldListsRouteADMFeatureE2ESpec
         response.status should be(StatusCodes.OK)
 
         val receivedNode: NodeADM = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[NodeADM]
-        receivedNode.nodeinfo.id should be("http://rdfh.ch/lists/0001/treeList03")
+        receivedNode.nodeinfo.id should be("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList03")
         receivedNode.nodeinfo.name should be(Some("Tree list node 03"))
         receivedNode.children.size should be(2)
 
@@ -361,7 +361,7 @@ class OldListsRouteADMFeatureE2ESpec
 
       "add a child with a custom IRI" in {
 
-        val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
+        val customChildNodeIRI = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/a-child-node-with-IRI"
 
         val createChildNodeWithCustomIriRequest =
           s"""
@@ -644,7 +644,7 @@ class OldListsRouteADMFeatureE2ESpec
 
         val updateListInfoWithRepeatedCommentAndLabelValuesRequest: String =
           s"""{
-                       |    "listIri": "http://rdfh.ch/lists/0001/treeList",
+                       |    "listIri": "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList",
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |  "labels": [
                        |    {"language": "en", "value": "Test List"},
@@ -669,7 +669,7 @@ class OldListsRouteADMFeatureE2ESpec
           )
         )
 
-        val encodedListUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "utf-8")
+        val encodedListUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList", "utf-8")
 
         val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
                           HttpEntity(ContentTypes.`application/json`,
@@ -1077,7 +1077,7 @@ class OldListsRouteADMFeatureE2ESpec
 
       "update node information of a node that has custom IRI with a new name" in {
         val newName = "modified third child"
-        val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
+        val customChildNodeIRI = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/a-child-node-with-IRI"
         val updateNodeName =
           s"""{
                        |    "listIri": "${customChildNodeIRI}",

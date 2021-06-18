@@ -34,10 +34,10 @@ For example:
 
 ```jsonld
 {
-  "@id" : "http://rdfh.ch/0803/2a6221216701",
+  "@id" : "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701",
   "@type" : "incunabula:book",
   "incunabula:book_comment" : {
-    "@id" : "http://rdfh.ch/0803/2a6221216701/values/56c287fc9505",
+    "@id" : "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701/values/56c287fc9505",
     "@type" : "knora-api:TextValue",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -144,7 +144,7 @@ http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[.TIMESTAMP]
 `PROJECT` is the project's [short-code](knora-iris.md#project-short-codes),
 and `RESOURCE_UUID` is the resource's [UUID](knora-iris.md#iris-for-data).
 
-For example, given the Knora resource IRI `http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`,
+For example, given the Knora resource IRI `http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0C-0L1kORryKzJAJxxRyRQ`,
 and using the DaSCH's ARK resolver hostname and NAAN, the corresponding
 ARK URL without a timestamp is:
 
@@ -177,7 +177,7 @@ http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID/VALUE_UUID[.TIMESTAMP]
 is the value's `knora-api:valueHasUUID`.
 
 For example, given a value with `knora-api:valueHasUUID "4OOf3qJUTnCDXlPNnygSzQ"` in the resource
-`http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`, and using the DaSCH's ARK resolver
+`http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0C-0L1kORryKzJAJxxRyRQ`, and using the DaSCH's ARK resolver
 hostname and NAAN, the corresponding ARK URL without a timestamp is:
 
 ```

@@ -1,8 +1,8 @@
 {
-  "@id" : "http://rdfh.ch/0001/thing_with_list_value",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing_with_list_value",
   "@type" : "anything:Thing",
   "anything:hasListItem" : {
-    "@id" : "http://rdfh.ch/0001/thing_with_list_value/values/list_value",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing_with_list_value/values/list_value",
     "@type" : "knora-api:ListValue",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -13,7 +13,7 @@
     },
     "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:listValueAsListNode" : {
-      "@id" : "http://rdfh.ch/lists/0001/treeList02"
+      "@id" : "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList02"
     },
     "knora-api:userHasPermission" : "V",
     "knora-api:valueCreationDate" : {

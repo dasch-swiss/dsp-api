@@ -89,7 +89,7 @@ hostname and NAAN, the ARK URL for the project itself is:
 http://ark.dasch.swiss/ark:/72163/1/0001
 ```
 
-Given the Knora resource IRI `http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`,
+Given the Knora resource IRI `http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0C-0L1kORryKzJAJxxRyRQ`,
 the corresponding ARK URL without a timestamp is:
 
 ```
@@ -103,7 +103,7 @@ http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20180528T155203
 ```
 
 Given a value with `knora-api:valueHasUUID "4OOf3qJUTnCDXlPNnygSzQ"` in the resource
-`http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`, and using the DaSCH's ARK resolver
+`http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0C-0L1kORryKzJAJxxRyRQ`, and using the DaSCH's ARK resolver
 hostname and NAAN, the corresponding ARK URL without a timestamp is:
 
 ```

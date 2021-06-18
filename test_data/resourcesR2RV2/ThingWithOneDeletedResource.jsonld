@@ -1,8 +1,8 @@
 {
-  "@id" : "http://rdfh.ch/0001/l8f8FVEiSCeq9A1p8gBR-A",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/l8f8FVEiSCeq9A1p8gBR-A",
   "@type" : "anything:Thing",
   "anything:hasInteger" : {
-    "@id" : "http://rdfh.ch/0001/l8f8FVEiSCeq9A1p8gBR-A/values/a-40v6WiT4GHa79Kqwojjw",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/l8f8FVEiSCeq9A1p8gBR-A/values/a-40v6WiT4GHa79Kqwojjw",
     "@type" : "knora-api:IntValue",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -26,7 +26,7 @@
     }
   },
   "anything:hasOtherThingValue" : {
-    "@id" : "http://rdfh.ch/0001/l8f8FVEiSCeq9A1p8gBR-A/values/Nlcc7XWXQtmEITsIRQ5z4w",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/l8f8FVEiSCeq9A1p8gBR-A/values/Nlcc7XWXQtmEITsIRQ5z4w",
     "@type" : "knora-api:LinkValue",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -37,7 +37,7 @@
     },
     "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "knora-api:linkValueHasTargetIri" : {
-      "@id" : "http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/PHbbrEsVR32q5D_ioKt6pA"
     },
     "knora-api:userHasPermission" : "V",
     "knora-api:valueCreationDate" : {

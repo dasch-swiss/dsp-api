@@ -61,7 +61,7 @@ class ListsResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return a list" in {
 
       responderManager ! ListGetRequestV2(
-        listIri = "http://rdfh.ch/lists/0001/treeList",
+        listIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList",
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = userProfile
       )
@@ -76,7 +76,7 @@ class ListsResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return a node" in {
 
       responderManager ! NodeGetRequestV2(
-        nodeIri = "http://rdfh.ch/lists/0001/treeList11",
+        nodeIri = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList11",
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = userProfile
       )

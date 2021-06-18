@@ -14,7 +14,7 @@
 
 
 ### Default Object Access Permissions on knora-base:LinkObj resource class
-<http://rdfh.ch/permissions/0000/001-d1>
+<http://rdfh.ch/permissions/SOIukqJ_qqwrLYY2AzMWog/001-d1>
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
 
@@ -27,7 +27,7 @@
 
 
 ### Default Object Access Permissions on knora-base:Region resource class
-<http://rdfh.ch/permissions/0000/001-d2>
+<http://rdfh.ch/permissions/SOIukqJ_qqwrLYY2AzMWog/001-d2>
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
 
@@ -40,7 +40,7 @@
 
 
 ### Default Object Access Permissions on knora-base:hasStillImageFileValue property
-<http://rdfh.ch/permissions/0000/001-d3>
+<http://rdfh.ch/permissions/SOIukqJ_qqwrLYY2AzMWog/001-d3>
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
 
@@ -51,7 +51,7 @@
                       knora-base:hasPermissions "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser|V knora-admin:UnknownUser"^^xsd:string .
 
 ### Default Object Access Permissions on knora-base:hasDocumentFileValue property
-<http://rdfh.ch/permissions/0000/001-d4>
+<http://rdfh.ch/permissions/SOIukqJ_qqwrLYY2AzMWog/001-d4>
 
                       rdf:type knora-admin:DefaultObjectAccessPermission ;
 

@@ -25,7 +25,7 @@ anything:hasOtherListItem
         knora-api:isResourceProperty  true ;
         knora-api:objectType          knora-api:ListValue ;
         knora-api:subjectType         anything:Thing ;
-        salsah-gui:guiAttribute       "hlist=<http://rdfh.ch/lists/0001/otherTreeList>" ;
+        salsah-gui:guiAttribute       "hlist=<http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/otherTreeList>" ;
         salsah-gui:guiElement         salsah-gui:List .
 
 anything:hasPictureTitle
@@ -1048,7 +1048,7 @@ anything:hasListItem  a               owl:ObjectProperty ;
         knora-api:isResourceProperty  true ;
         knora-api:objectType          knora-api:ListValue ;
         knora-api:subjectType         anything:Thing ;
-        salsah-gui:guiAttribute       "hlist=<http://rdfh.ch/lists/0001/treeList>" ;
+        salsah-gui:guiAttribute       "hlist=<http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList>" ;
         salsah-gui:guiElement         salsah-gui:List .
 
 anything:hasThingPictureValue

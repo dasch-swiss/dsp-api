@@ -20,7 +20,7 @@
         "@id": "http://rdfh.ch/users/PSGbemdjZi4kQ6GHJVkLGF"
     },
     "@type": "beol:person",
-    "@id": "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw",
+    "@id": "http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/VvYVIy-FSbOJBsh2d9ZFJw",
     "knora-api:userHasPermission": "V",
     "beol:hasFamilyName": {
         "knora-api:valueAsString": "Meier",
@@ -43,7 +43,7 @@
         "knora-api:valueHasUUID": "5K24YxlwQ9OXcYjB0jRR4Q",
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         "@type": "knora-api:TextValue",
-        "@id": "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/5K24YxlwQ9OXcYjB0jRR4Q"
+        "@id": "http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/VvYVIy-FSbOJBsh2d9ZFJw/values/5K24YxlwQ9OXcYjB0jRR4Q"
     },
     "beol:hasGivenName": {
         "knora-api:valueAsString": "Fritz",
@@ -66,7 +66,7 @@
         "knora-api:valueHasUUID": "Emsl7AdiTdS8uwSTo18YRw",
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         "@type": "knora-api:TextValue",
-        "@id": "http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw/values/Emsl7AdiTdS8uwSTo18YRw"
+        "@id": "http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/VvYVIy-FSbOJBsh2d9ZFJw/values/Emsl7AdiTdS8uwSTo18YRw"
     },
     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "@context": {

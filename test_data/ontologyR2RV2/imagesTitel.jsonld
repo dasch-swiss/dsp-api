@@ -13,7 +13,7 @@
                 "@id": "images:bild"
             },
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": "hlist=<http://rdfh.ch/lists/00FF/73d0ec0302>",
+            "salsah-gui:guiAttribute": "hlist=<http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/73d0ec0302>",
             "knora-api:objectType": {
                 "@id": "knora-api:ListValue"
             },

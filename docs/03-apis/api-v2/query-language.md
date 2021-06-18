@@ -703,7 +703,7 @@ CONSTRUCT {
     ?letter a beol:letter .
     ?letter beol:hasAuthor ?person1 .
     ?letter beol:hasRecipient ?person2 .
-    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
+    FILTER(?person1 != <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/F4n1xKa3TCiR4llJeElAGA>) .
 }
 OFFSET 0
 ```
@@ -738,7 +738,7 @@ In order to get all the components of a compound resource, the following
 Gravsearch query can be sent to the API.
 
 In this case, the compound resource is an `incunabula:book` identified
-by the IRI `http://rdfh.ch/0803/c5058f3a` and the components are of
+by the IRI `http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a` and the components are of
 type `incunabula:page` (test data for the Incunabula project). Since
 inference is assumed, we can use `knora-api:StillImageRepresentation`
 (`incunabula:page` is one of its subclasses). This makes the query more
@@ -758,7 +758,7 @@ CONSTRUCT {
    ?component knora-api:hasStillImageFileValue ?file . # return the StillImageFile in the response
 } WHERE {
    ?component a knora-api:StillImageRepresentation . # restriction of the type of component
-   ?component knora-api:isPartOf <http://rdfh.ch/0803/c5058f3a> . # component relates to a compound resource via this property
+   ?component knora-api:isPartOf <http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a> . # component relates to a compound resource via this property
    ?component knora-api:seqnum ?seqnum . # component must have a sequence number
    ?component knora-api:hasStillImageFileValue ?file . # component must have a StillImageFile
 }
@@ -766,7 +766,7 @@ ORDER BY ASC(?seqnum) # order by sequence number, ascending
 OFFSET 0 # get first page of results
 ```
 
-The `incunabula:book` with the IRI `http://rdfh.ch/0803/c5058f3a` has
+The `incunabula:book` with the IRI `http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a` has
 402 pages. (This result can be obtained by doing a count query; see
 [Submitting Gravsearch Queries](#submitting-gravsearch-queries).)
 However, with `OFFSET 0`, only the first page of results is returned.
@@ -875,7 +875,7 @@ CONSTRUCT {
 
   ?person1 beol:hasFamilyName ?familyName .
 } WHERE {
-  BIND(<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> AS ?letter)
+  BIND(<http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/_B3lQa6tSymIq7_7SowBsA> AS ?letter)
 
   ?letter a beol:letter ;
     beol:creationDate ?date ;
@@ -910,7 +910,7 @@ CONSTRUCT {
     ?thing anything:hasListItem ?listItem .
 } WHERE {
     ?thing anything:hasListItem ?listItem .
-    ?listItem knora-api:listValueAsListNode <http://rdfh.ch/lists/0001/treeList02> .
+    ?listItem knora-api:listValueAsListNode <http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList02> .
 }
 ```
 

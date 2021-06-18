@@ -71,7 +71,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           .getOrElse("iri", throw DeserializationException("The expected field 'iri' is missing."))
           .convertTo[String]
 
-        assert(iri == "http://rdfh.ch/permissions/00FF/a1")
+        assert(iri == "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/a1")
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(
@@ -193,7 +193,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val groupIri = result
           .getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing."))
           .convertTo[String]
-        assert(groupIri == "http://rdfh.ch/groups/0001/thing-searcher")
+        assert(groupIri == "http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher")
         val projectIri = result
           .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
           .convertTo[String]
@@ -218,7 +218,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
         val createAdministrativePermissionWithCustomIriRequest: String =
           s"""{
-               |    "id": "http://rdfh.ch/permissions/0001/AP-with-customIri",
+               |    "id": "http://rdfh.ch/permissions/U7HxeFSUEQCHJxSLahw3AA/AP-with-customIri",
                |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
                |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
@@ -238,7 +238,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val createAdministrativePermissionWithCustomIriResponse: String =
           s"""{
                |    "administrative_permission": {
-               |        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
+               |        "forGroup": "http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher",
                |        "forProject": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
                |        "hasPermissions": [
                |            {
@@ -247,7 +247,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
                |                "permissionCode": null
                |            }
                |        ],
-               |        "iri": "http://rdfh.ch/permissions/0001/AP-with-customIri"
+               |        "iri": "http://rdfh.ch/permissions/U7HxeFSUEQCHJxSLahw3AA/AP-with-customIri"
                |    }
                |}""".stripMargin
 
@@ -335,7 +335,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val groupIri = result
           .getOrElse("forGroup", throw DeserializationException("The expected field 'forGroup' is missing."))
           .convertTo[String]
-        assert(groupIri == "http://rdfh.ch/groups/0001/thing-searcher")
+        assert(groupIri == "http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher")
         val projectIri = result
           .getOrElse("forProject", throw DeserializationException("The expected field 'forProject' is missing."))
           .convertTo[String]
@@ -363,7 +363,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val createDefaultObjectAccessPermissionWithCustomIriRequest: String =
           s"""{
 
-                 |    "id": "http://rdfh.ch/permissions/00FF/DOAP-with-customIri",
+                 |    "id": "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/DOAP-with-customIri",
                  |    "forGroup":null,
                  |    "forProject":"${SharedTestDataADM.IMAGES_PROJECT_IRI}",
                  |    "forProperty":null,
@@ -394,7 +394,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val permissionIri = result
           .getOrElse("iri", throw DeserializationException("The expected field 'iri' is missing."))
           .convertTo[String]
-        assert(permissionIri == "http://rdfh.ch/permissions/00FF/DOAP-with-customIri")
+        assert(permissionIri == "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/DOAP-with-customIri")
         val forResourceClassIRI = result
           .getOrElse("forResourceClass",
                      throw DeserializationException("The expected field 'forResourceClass' is missing."))
@@ -426,9 +426,9 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
     "updating permissions" should {
       "change the group of an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri = "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/a2"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
-        val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
+        val newGroupIri = "http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer"
         val updatePermissionGroup =
           s"""{
              |    "forGroup": "$newGroupIri"
@@ -467,9 +467,9 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       }
 
       "change the group of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
+        val permissionIri = "http://rdfh.ch/permissions/6NIOckxUlWnYChtXoH7A_g/003-d2"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
-        val newGroupIri = "http://rdfh.ch/groups/00FF/images-reviewer"
+        val newGroupIri = "http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer"
         val updatePermissionGroup =
           s"""{
              |    "forGroup": "$newGroupIri"
@@ -509,7 +509,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       }
 
       "change the set of hasPermissions of an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri = "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/a2"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val updateHasPermissions =
           s"""{
@@ -551,7 +551,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       }
 
       "change the set of hasPermissions of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri = "http://rdfh.ch/permissions/6NIOckxUlWnYChtXoH7A_g/003-d1"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val updateHasPermissions =
           s"""{
@@ -598,7 +598,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       }
 
       "change the resource class of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/0803/003-d1"
+        val permissionIri = "http://rdfh.ch/permissions/6NIOckxUlWnYChtXoH7A_g/003-d1"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val resourceClassIri = SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS
         val updateResourceClass =
@@ -641,7 +641,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       }
 
       "change the property of a default object access permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/d1"
+        val permissionIri = "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/d1"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val propertyClassIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY
         val updateResourceClass =
@@ -685,7 +685,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
     "delete request" should {
       "erase a defaultObjectAccess permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/DOAP-with-customIri"
+        val permissionIri = "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/DOAP-with-customIri"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
@@ -705,7 +705,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         )
       }
       "erase an administrative permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
+        val permissionIri = "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/a2"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))

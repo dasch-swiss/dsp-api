@@ -14,7 +14,7 @@
         "@type": "xsd:anyURI"
     },
     "@type": "anything:Thing",
-    "@id": "http://rdfh.ch/0001/a-thing-with-text-values",
+    "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-values",
     "@context": {
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "knora-api": "http://api.knora.org/ontology/knora-api/simple/v2#",

@@ -110,7 +110,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         targetUser = ddd2.get,
         requestingUser = KnoraSystemInstances.Users.SystemUser)
       expectMsg(DefaultObjectAccessPermissionsStringResponseADM(
-        "CR http://rdfh.ch/groups/0105/drawings-gods-admin|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-admin:Creator|M http://rdfh.ch/groups/0105/drawings-gods-add-drawings,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators"))
+        "CR http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-admin|D http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-snf-team,knora-admin:Creator|M http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-add-drawings,http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-meta-annotators"))
     }
 
     "return correct drawings-gods:Person resource class permissions string for drawings-gods-test-ddd1 user" in {
@@ -121,7 +121,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
         targetUser = ddd1.get,
         requestingUser = KnoraSystemInstances.Users.SystemUser)
       expectMsg(DefaultObjectAccessPermissionsStringResponseADM(
-        "CR http://rdfh.ch/groups/0105/drawings-gods-admin|D http://rdfh.ch/groups/0105/drawings-gods-snf-team,knora-admin:Creator|M http://rdfh.ch/groups/0105/drawings-gods-add-drawings,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser"))
+        "CR http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-admin|D http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-snf-team,knora-admin:Creator|M http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-add-drawings,http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-meta-annotators|V knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser"))
     }
 
     "return correct drawings-gods:hasLastname property permissions string for drawings-gods-test-ddd1 user" in {
@@ -133,9 +133,8 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
                                                                                targetUser = ddd1.get,
                                                                                requestingUser =
                                                                                  KnoraSystemInstances.Users.SystemUser)
-      expectMsg(
-        DefaultObjectAccessPermissionsStringResponseADM(
-          "CR http://rdfh.ch/groups/0105/drawings-gods-admin|D http://rdfh.ch/groups/0105/drawings-gods-snf-team"))
+      expectMsg(DefaultObjectAccessPermissionsStringResponseADM(
+        "CR http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-admin|D http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-snf-team"))
     }
 
     "return correct drawings-gods:DrawingPublic / knora-base:hasStillImageFileValue combination permissions string for drawings-gods-test-ddd1 user" in {
@@ -148,7 +147,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
                                                                                requestingUser =
                                                                                  KnoraSystemInstances.Users.SystemUser)
       expectMsg(DefaultObjectAccessPermissionsStringResponseADM(
-        "CR http://rdfh.ch/groups/0105/drawings-gods-admin|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|M http://rdfh.ch/groups/0105/drawings-gods-add-drawings|V http://rdfh.ch/groups/0105/drawings-gods-meta-annotators,knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser"))
+        "CR http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-admin|D http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-snf-team|M http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-add-drawings|V http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-meta-annotators,knora-admin:KnownUser,knora-admin:ProjectMember,knora-admin:UnknownUser"))
     }
 
     "return correct drawings-gods:DrawingPrivate / knora-base:hasStillImageFileValue combination permissions string for drawings-gods-test-ddd1 user" in {
@@ -161,7 +160,7 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
                                                                                requestingUser =
                                                                                  KnoraSystemInstances.Users.SystemUser)
       expectMsg(DefaultObjectAccessPermissionsStringResponseADM(
-        "CR http://rdfh.ch/groups/0105/drawings-gods-admin|D http://rdfh.ch/groups/0105/drawings-gods-snf-team|M http://rdfh.ch/groups/0105/drawings-gods-add-drawings,http://rdfh.ch/groups/0105/drawings-gods-meta-annotators|V knora-admin:ProjectMember"))
+        "CR http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-admin|D http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-snf-team|M http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-add-drawings,http://rdfh.ch/groups/0lr66NJu701abct0ChnpIA/drawings-gods-meta-annotators|V knora-admin:ProjectMember"))
     }
 
     "allow drawings-gods-test-ddd1 user to create a resource, then query it and see its label and properties" in {
@@ -171,8 +170,8 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
           CreateValueV1WithComment(TextValueSimpleV1("PersonTest DDD1"))),
         s"$drawingsGodsOntologyIri#hasCodePerson" -> Vector(CreateValueV1WithComment(TextValueSimpleV1("Code"))),
         s"$drawingsGodsOntologyIri#hasPersonGender" -> Vector(
-          CreateValueV1WithComment(
-            HierarchicalListValueV1("http://rdfh.ch/lists/0105/drawings-gods-2016-list-FiguresHList-polysexual"))),
+          CreateValueV1WithComment(HierarchicalListValueV1(
+            "http://rdfh.ch/lists/0lr66NJu701abct0ChnpIA/drawings-gods-2016-list-FiguresHList-polysexual"))),
         s"$drawingsGodsOntologyIri#hasDrawingChildTotal" -> Vector(CreateValueV1WithComment(IntegerValueV1(99)))
       )
 
@@ -215,8 +214,8 @@ class DrawingsGodsV1Spec extends CoreSpec(DrawingsGodsV1Spec.config) with Triple
           CreateValueV1WithComment(TextValueSimpleV1("PersonTest DDD1"))),
         s"$drawingsGodsOntologyIri#hasCodePerson" -> Vector(CreateValueV1WithComment(TextValueSimpleV1("Code"))),
         s"$drawingsGodsOntologyIri#hasPersonGender" -> Vector(
-          CreateValueV1WithComment(
-            HierarchicalListValueV1("http://rdfh.ch/lists/0105/drawings-gods-2016-list-FiguresHList-polysexual"))),
+          CreateValueV1WithComment(HierarchicalListValueV1(
+            "http://rdfh.ch/lists/0lr66NJu701abct0ChnpIA/drawings-gods-2016-list-FiguresHList-polysexual"))),
         s"$drawingsGodsOntologyIri#hasDrawingChildTotal" -> Vector(CreateValueV1WithComment(IntegerValueV1(99)))
       )
 

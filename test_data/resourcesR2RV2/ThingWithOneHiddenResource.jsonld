@@ -1,8 +1,8 @@
 {
-  "@id" : "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0JhgKcqoRIeRRG6ownArSw",
   "@type" : "anything:Thing",
   "anything:hasInteger" : {
-    "@id" : "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
     "@type" : "knora-api:IntValue",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",

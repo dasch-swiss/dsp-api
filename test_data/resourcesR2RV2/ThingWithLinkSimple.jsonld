@@ -1,8 +1,8 @@
 {
-  "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0C-0L1kORryKzJAJxxRyRQ",
   "@type" : "anything:Thing",
   "anything:isPartOfOtherThing" : {
-    "@id" : "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/LOV-6aLYQFW15jwdyS51Yw"
   },
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

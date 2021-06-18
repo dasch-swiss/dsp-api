@@ -91,29 +91,36 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
   object AThing {
-    val iri: IRI = "http://rdfh.ch/0001/a-thing"
+    val iri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing"
     val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
   }
 
   object TestDing {
-    val iri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw"
+    val iri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw"
     val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
 
-    val intValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg"
-    val decimalValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg"
-    val dateValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/-rG4F5FTTu2iB5mTBPVn5Q"
-    val booleanValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/IN4R19yYR0ygi3K2VEHpUQ"
-    val uriValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/uBAmWuRhR-eo1u1eP7qqNg"
-    val intervalValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/RbDKPKHWTC-0lkRKae-E6A"
-    val timeValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/l6DhS5SCT9WhXSoYEZRTRw"
-    val colorValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/TAziKNP8QxuyhC4Qf9-b6w"
+    val intValueIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg"
+    val decimalValueIri: IRI =
+      "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg"
+    val dateValueIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/-rG4F5FTTu2iB5mTBPVn5Q"
+    val booleanValueIri: IRI =
+      "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/IN4R19yYR0ygi3K2VEHpUQ"
+    val uriValueIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/uBAmWuRhR-eo1u1eP7qqNg"
+    val intervalValueIri: IRI =
+      "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/RbDKPKHWTC-0lkRKae-E6A"
+    val timeValueIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/l6DhS5SCT9WhXSoYEZRTRw"
+    val colorValueIri: IRI =
+      "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/TAziKNP8QxuyhC4Qf9-b6w"
     val geomValueIri: IRI =
-      "http://rdfh.ch/0001/http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/we-ybmj-SRen-91n4RaDOQ"
-    val geonameValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/hty-ONF8SwKN2RKU7rLKDg"
-    val textValueWithStandoffIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/rvB4eQ5MTF-Qxq0YgkwaDg"
-    val textValueWithoutStandoffIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/SZyeLLmOTcCCuS3B0VksHQ"
-    val listValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/XAhEeE3kSVqM4JPGdLt4Ew"
-    val linkValueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/uvRVxzL1RD-t9VIQ1TpfUw"
+      "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/we-ybmj-SRen-91n4RaDOQ"
+    val geonameValueIri: IRI =
+      "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/hty-ONF8SwKN2RKU7rLKDg"
+    val textValueWithStandoffIri: IRI =
+      "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/rvB4eQ5MTF-Qxq0YgkwaDg"
+    val textValueWithoutStandoffIri: IRI =
+      "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/SZyeLLmOTcCCuS3B0VksHQ"
+    val listValueIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/XAhEeE3kSVqM4JPGdLt4Ew"
+    val linkValueIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/uvRVxzL1RD-t9VIQ1TpfUw"
 
     val intValueUuid = "dJ1ES8QTQNepFKF5-EAqdg"
     val decimalValueUuid = "bXMwnrHvQH2DMjOFrGmNzg"
@@ -132,7 +139,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   }
 
   object AThingPicture {
-    val iri: IRI = "http://rdfh.ch/0001/a-thing-picture"
+    val iri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-picture"
     val iriEncoded: String = URLEncoder.encode(iri, "UTF-8")
     val stillImageFileValueUuid: IRI = "goZ7JFRNSeqF-dNxsqAS7Q"
   }
@@ -270,7 +277,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private val textValue1AsXmlWithStandardMapping: String =
     """<?xml version="1.0" encoding="UTF-8"?>
           |<text>
-          |   This text links to another <a class="salsah-link" href="http://rdfh.ch/0001/another-thing">resource</a>.
+          |   This text links to another <a class="salsah-link" href="http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/another-thing">resource</a>.
           |   And this <strong id="link_id">strong value</strong> is linked by this <a class="internal-link" href="#link_id">link</a>
           |</text>""".stripMargin
 
@@ -433,7 +440,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private val textValue2AsXmlWithStandardMapping: String =
     """<?xml version="1.0" encoding="UTF-8"?>
           |<text>
-          |   This updated text links to another <a class="salsah-link" href="http://rdfh.ch/0001/another-thing">resource</a>.
+          |   This updated text links to another <a class="salsah-link" href="http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/another-thing">resource</a>.
           |</text>""".stripMargin
 
   private def updateTextValueWithCommentRequest(resourceIri: IRI,
@@ -720,7 +727,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     }
 
     "get a past version of a value, given its UUID and a timestamp" in {
-      val resourceIri = URLEncoder.encode("http://rdfh.ch/0001/thing-with-history", "UTF-8")
+      val resourceIri = URLEncoder.encode("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history", "UTF-8")
       val valueUuid = "pLlW4ODASumZfZFbJdpw1g"
       val timestamp = "20190212T090510Z"
 
@@ -733,7 +740,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val value: JsonLDObject = getValueFromResource(
         resource = responseJsonDoc,
         propertyIriInResult = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
-        expectedValueIri = "http://rdfh.ch/0001/thing-with-history/values/1b"
+        expectedValueIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/1b"
       )
 
       val intValueAsInt: Int = value.requireInt(OntologyConstants.KnoraApiV2Complex.IntValueAsInt)
@@ -814,7 +821,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "create an integer value with a custom value IRI" in {
       val resourceIri: IRI = AThing.iri
       val intValue: Int = 30
-      val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/int-with-valueIRI"
+      val customValueIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing/values/int-with-valueIRI"
 
       val jsonLDEntity =
         s"""{
@@ -861,7 +868,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                    |  "@id" : "${AThing.iri}",
                    |  "@type" : "anything:Thing",
                    |  "anything:hasInteger" : {
-                   |    "@id" : "http://rdfh.ch/0001/a-thing/values/int-with-valueIRI",
+                   |    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing/values/int-with-valueIRI",
                    |    "@type" : "knora-api:IntValue",
                    |    "knora-api:intValueAsInt" : 43
                    |  },
@@ -879,7 +886,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], 1.second)
       val invalidIri: Boolean = errorMessage.contains(
-        s"IRI: 'http://rdfh.ch/0001/a-thing/values/int-with-valueIRI' already exists, try another one.")
+        s"IRI: 'http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing/values/int-with-valueIRI' already exists, try another one.")
       invalidIri should be(true)
     }
 
@@ -982,7 +989,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "create an integer value with custom IRI, UUID, and creation date" in {
       val resourceIri: IRI = AThing.iri
       val intValue: Int = 10
-      val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/int-with-IRI"
+      val customValueIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing/values/int-with-IRI"
       val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
       val customCreationDate: Instant = Instant.parse("2020-06-04T12:58:54.502951Z")
 
@@ -1064,7 +1071,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI = AThing.iri
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue: Int = 1
-      val customPermissions: String = "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"
+      val customPermissions: String =
+        "CR knora-admin:Creator|V http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
       val jsonLDEntity =
@@ -2914,7 +2922,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "create a list value" in {
       val resourceIri: IRI = AThing.iri
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
-      val listNode = "http://rdfh.ch/lists/0001/treeList03"
+      val listNode = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList03"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
       val jsonLDEntity =
@@ -3217,8 +3225,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
     "create a link between two resources with a custom link value IRI, UUID, creationDate" in {
       val resourceIri: IRI = AThing.iri
-      val targetResourceIri: IRI = "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
-      val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/link-Value-With-IRI"
+      val targetResourceIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/CNhWoNGGT7iWOrIwxsEqvA"
+      val customValueIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing/values/link-Value-With-IRI"
       val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
       val customCreationDate: Instant = Instant.parse("2020-06-04T11:36:54.502951Z")
 
@@ -3425,7 +3433,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue: Int = 7
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-      val newValueVersionIri: IRI = s"http://rdfh.ch/0001/a-thing/values/updated-int-value"
+      val newValueVersionIri: IRI = s"http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing/values/updated-int-value"
 
       val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,
@@ -3461,7 +3469,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "not update an integer value with a custom new value version IRI that is the same as the current IRI" in {
       val resourceIri: IRI = AThing.iri
       val intValue: Int = 8
-      val newValueVersionIri: IRI = s"http://rdfh.ch/0001/a-thing/values/updated-int-value"
+      val newValueVersionIri: IRI = s"http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing/values/updated-int-value"
 
       val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,
@@ -3518,7 +3526,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "not update an integer value with a custom new value version IRI that refers to the wrong resource" in {
       val resourceIri: IRI = AThing.iri
       val intValue: Int = 8
-      val newValueVersionIri: IRI = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw/values/foo"
+      val newValueVersionIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/nResNuvARcWYUdWyo0GWGw/values/foo"
 
       val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,
@@ -3564,7 +3572,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI = AThing.iri
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue: Int = 3879
-      val customPermissions: String = "CR http://rdfh.ch/groups/0001/thing-searcher"
+      val customPermissions: String = "CR http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
       val jsonLDEntity =
@@ -3624,7 +3632,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "update an integer value, changing only the permissions" in {
       val resourceIri: IRI = AThing.iri
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
-      val customPermissions: String = "CR http://rdfh.ch/groups/0001/thing-searcher|V knora-admin:KnownUser"
+      val customPermissions: String =
+        "CR http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher|V knora-admin:KnownUser"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
       val jsonLDEntity =
@@ -4530,7 +4539,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "update a list value" in {
       val resourceIri: IRI = AThing.iri
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri
-      val listNode = "http://rdfh.ch/lists/0001/treeList02"
+      val listNode = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList02"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
       val jsonLDEntity =
@@ -4776,7 +4785,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI = AThing.iri
       val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
       val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
-      val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+      val linkTargetIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/5IEswyQFQp2bxXDrOyEfEA"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
       val jsonLDEntity = updateLinkValueRequest(
@@ -4832,7 +4841,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
     "not update a link without a comment without changing it" in {
       val resourceIri: IRI = AThing.iri
-      val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+      val linkTargetIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/5IEswyQFQp2bxXDrOyEfEA"
 
       val jsonLDEntity = updateLinkValueRequest(
         resourceIri = resourceIri,
@@ -4850,7 +4859,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI = AThing.iri
       val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
       val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
-      val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+      val linkTargetIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/5IEswyQFQp2bxXDrOyEfEA"
       val comment = "adding a comment"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
@@ -4897,7 +4906,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI = AThing.iri
       val linkPropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing".toSmartIri
       val linkValuePropertyIri: SmartIri = linkPropertyIri.fromLinkPropToLinkValueProp
-      val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+      val linkTargetIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/5IEswyQFQp2bxXDrOyEfEA"
       val comment = "changing only the comment"
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
 
@@ -4942,7 +4951,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
     "not update a link with a comment without changing it" in {
       val resourceIri: IRI = AThing.iri
-      val linkTargetIri: IRI = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+      val linkTargetIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/5IEswyQFQp2bxXDrOyEfEA"
       val comment = "changing only the comment"
 
       val jsonLDEntity = updateLinkValueRequest(
@@ -5102,8 +5111,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     }
 
     "delete an integer value without supplying a delete comment" in {
-      val resourceIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw"
-      val valueIri: IRI = "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg"
+      val resourceIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw"
+      val valueIri: IRI = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/dJ1ES8QTQNepFKF5-EAqdg"
 
       val jsonLDEntity = deleteIntValueRequest(
         resourceIri = resourceIri,

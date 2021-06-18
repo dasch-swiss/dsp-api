@@ -37,7 +37,7 @@ class UpgradePluginPR1367Spec extends UpgradePluginSpec {
 
       // Check that the decimal datatype was fixed.
 
-      val subj = nodeFactory.makeIriNode("http://rdfh.ch/0001/thing-with-history/values/1")
+      val subj = nodeFactory.makeIriNode("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history/values/1")
       val pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasDecimal)
 
       model

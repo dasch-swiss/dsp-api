@@ -1,44 +1,44 @@
 {
-  "@id" : "http://rdfh.ch/lists/0001/otherTreeList",
+  "@id" : "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/otherTreeList",
   "@type" : "knora-api:ListNode",
   "knora-api:attachedToProject" : {
     "@id" : "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA"
   },
   "knora-api:hasSubListNode" : [ {
-    "@id" : "http://rdfh.ch/lists/0001/otherTreeList01",
+    "@id" : "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/otherTreeList01",
     "@type" : "knora-api:ListNode",
     "knora-api:hasRootNode" : {
-      "@id" : "http://rdfh.ch/lists/0001/otherTreeList"
+      "@id" : "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/otherTreeList"
     },
     "knora-api:listNodePosition" : 0,
     "rdfs:label" : "Other Tree list node 01"
   }, {
-    "@id" : "http://rdfh.ch/lists/0001/otherTreeList02",
+    "@id" : "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/otherTreeList02",
     "@type" : "knora-api:ListNode",
     "knora-api:hasRootNode" : {
-      "@id" : "http://rdfh.ch/lists/0001/otherTreeList"
+      "@id" : "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/otherTreeList"
     },
     "knora-api:listNodePosition" : 1,
     "rdfs:label" : "Other Tree list node 02"
   }, {
-    "@id" : "http://rdfh.ch/lists/0001/otherTreeList03",
+    "@id" : "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/otherTreeList03",
     "@type" : "knora-api:ListNode",
     "knora-api:hasRootNode" : {
-      "@id" : "http://rdfh.ch/lists/0001/otherTreeList"
+      "@id" : "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/otherTreeList"
     },
     "knora-api:hasSubListNode" : [ {
-      "@id" : "http://rdfh.ch/lists/0001/otherTreeList10",
+      "@id" : "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/otherTreeList10",
       "@type" : "knora-api:ListNode",
       "knora-api:hasRootNode" : {
-        "@id" : "http://rdfh.ch/lists/0001/otherTreeList"
+        "@id" : "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/otherTreeList"
       },
       "knora-api:listNodePosition" : 0,
       "rdfs:label" : "Other Tree list node 10"
     }, {
-      "@id" : "http://rdfh.ch/lists/0001/otherTreeList11",
+      "@id" : "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/otherTreeList11",
       "@type" : "knora-api:ListNode",
       "knora-api:hasRootNode" : {
-        "@id" : "http://rdfh.ch/lists/0001/otherTreeList"
+        "@id" : "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/otherTreeList"
       },
       "knora-api:listNodePosition" : 1,
       "rdfs:label" : "Other Tree list node 11"

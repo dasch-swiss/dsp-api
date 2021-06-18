@@ -69,7 +69,7 @@ object ResourcesResponderV1SpecContextData {
           person_id = "http://rdfh.ch/users/91e19f1e01",
           project_id = "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
         )),
-      parent_res_id = Some("http://rdfh.ch/0803/c5058f3a"),
+      parent_res_id = Some("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a"),
       resinfo = Some(
         ResourceInfoV1(
           firstproperty = Some("a1r, Titelblatt"),
@@ -178,7 +178,7 @@ object ResourcesResponderV1SpecContextData {
           person_id = "http://rdfh.ch/users/91e19f1e01",
           project_id = "http://rdfh.ch/projects/6NIOckxUlWnYChtXoH7A_g"
         )),
-      canonical_res_id = "http://rdfh.ch/0803/8a0b1e75",
+      canonical_res_id = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/8a0b1e75",
       context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_PARTOF,
       region = None,
       firstprop = None,

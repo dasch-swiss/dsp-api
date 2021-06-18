@@ -63,7 +63,7 @@ object SearchResponderV1Spec {
       icontitle = Some("Ding"),
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
-      obj_id = "http://rdfh.ch/0001/a-thing-with-text-values"
+      obj_id = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-values"
     ))
 
   private val fulltextValueInThingResultsForUser1 = Vector(
@@ -87,7 +87,7 @@ object SearchResponderV1Spec {
       icontitle = Some("Ding"),
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
-      obj_id = "http://rdfh.ch/0001/a-thing-with-text-values"
+      obj_id = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-values"
     ))
 
   private val fulltextThingResultsForUser2 = Vector(
@@ -102,7 +102,7 @@ object SearchResponderV1Spec {
       icontitle = Some("Ding"),
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
-      obj_id = "http://rdfh.ch/0001/a-thing-with-text-values"
+      obj_id = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing-with-text-values"
     ))
 
   private val hasOtherThingResultsForUser1 = Vector(
@@ -126,7 +126,7 @@ object SearchResponderV1Spec {
       icontitle = Some("Ding"),
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
-      obj_id = "http://rdfh.ch/0001/project-thing-1"
+      obj_id = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/project-thing-1"
     ))
 
   private val hasStandoffLinkToResultsForUser1 = Vector(
@@ -150,7 +150,7 @@ object SearchResponderV1Spec {
       icontitle = Some("Ding"),
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
-      obj_id = "http://rdfh.ch/0001/project-thing-1"
+      obj_id = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/project-thing-1"
     ))
 
   private val hasStandoffLinkToResultsForUser2 = Vector(
@@ -174,7 +174,7 @@ object SearchResponderV1Spec {
       icontitle = Some("Ding"),
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
-      obj_id = "http://rdfh.ch/0001/project-thing-1"
+      obj_id = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/project-thing-1"
     ))
 
 }
@@ -229,7 +229,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         icontitle = Some("Buch"),
         iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
         preview_path = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
-        obj_id = "http://rdfh.ch/0803/c5058f3a"
+        obj_id = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a"
       ),
       SearchResultRowV1(
         rights = Some(6),
@@ -251,7 +251,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         icontitle = Some("Buch"),
         iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
         preview_path = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
-        obj_id = "http://rdfh.ch/0803/ff17e5ef9601"
+        obj_id = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/ff17e5ef9601"
       )
     )
   )
@@ -259,7 +259,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
   val bertholdResponse = SearchGetResponseV1(
     subjects = Vector(
       SearchResultRowV1(
-        obj_id = "http://rdfh.ch/0803/c5058f3a",
+        obj_id = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a",
         preview_path = Some("http://0.0.0.0:3335/project-icons/incunabula/book.gif"),
         iconsrc = Some("http://0.0.0.0:3335/project-icons/incunabula/book.gif"),
         icontitle = Some("Buch"),
@@ -273,7 +273,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         rights = Some(6)
       ),
       SearchResultRowV1(
-        obj_id = "http://rdfh.ch/0803/ff17e5ef9601",
+        obj_id = "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/ff17e5ef9601",
         preview_path = Some("http://0.0.0.0:3335/project-icons/incunabula/book.gif"),
         iconsrc = Some("http://0.0.0.0:3335/project-icons/incunabula/book.gif"),
         icontitle = Some("Buch"),
@@ -626,7 +626,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
       // http://0.0.0.0:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Frdfh.ch%2Fc5058f3a
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = incunabulaUser,
-        searchValue = Vector("http://rdfh.ch/0803/c5058f3a"),
+        searchValue = Vector("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a"),
         compareProps = Vector(SearchComparisonOperatorV1.EQ),
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#partOf"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
@@ -678,7 +678,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
       // http://0.0.0.0:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Frdfh.ch%2Fc5058f3a&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23seqnum&compop=EXISTS&searchval=
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = incunabulaUser,
-        searchValue = Vector("http://rdfh.ch/0803/c5058f3a", ""),
+        searchValue = Vector("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a", ""),
         compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#partOf",
                              "http://www.knora.org/ontology/0803/incunabula#seqnum"),
@@ -696,7 +696,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
     "return all the representations that are part of Zeitglöcklein des Lebens and have a seqnum (using base properties from knora-base)" in {
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = incunabulaUser,
-        searchValue = Vector("http://rdfh.ch/0803/c5058f3a", ""),
+        searchValue = Vector("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a", ""),
         compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
         propertyIri = Vector("http://www.knora.org/ontology/knora-base#isPartOf",
                              "http://www.knora.org/ontology/knora-base#seqnum"),
@@ -714,7 +714,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
     "return all the pages that are part of Zeitglöcklein des Lebens, have a seqnum less than or equal to 200, and have a page number that is not 'a1r, Titelblatt'" in {
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = incunabulaUser,
-        searchValue = Vector("http://rdfh.ch/0803/c5058f3a", "200", "a1r, Titelblatt"),
+        searchValue = Vector("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a", "200", "a1r, Titelblatt"),
         compareProps =
           Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.LT_EQ, SearchComparisonOperatorV1.NOT_EQ),
         propertyIri = Vector(
@@ -737,7 +737,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
       // http://0.0.0.0:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Frdfh.ch%2Flists%2F71a1543cce&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = incunabulaUser,
-        searchValue = Vector("http://rdfh.ch/lists/00FF/71a1543cce"), // list node SPORT
+        searchValue = Vector("http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/71a1543cce"), // list node SPORT
         compareProps = Vector(SearchComparisonOperatorV1.EQ),
         propertyIri = Vector(IMAGES_TITEL_PROPERTY),
         filterByRestype = Some(IMAGES_BILD_RESOURCE_CLASS),
@@ -755,7 +755,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
       // http://0.0.0.0:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Frdfh.ch%2Flists%2F38c73482e3&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = incunabulaUser,
-        searchValue = Vector("http://rdfh.ch/lists/00FF/38c73482e3"), // list node SPAZIEREN
+        searchValue = Vector("http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/38c73482e3"), // list node SPAZIEREN
         compareProps = Vector(SearchComparisonOperatorV1.EQ),
         propertyIri = Vector(IMAGES_TITEL_PROPERTY),
         filterByRestype = Some(IMAGES_BILD_RESOURCE_CLASS),
@@ -773,7 +773,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
       // http://0.0.0.0:3333/v1/search/?searchtype=extended&property_id%5B%5D=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23titel&compop%5B%5D=EQ&searchval%5B%5D=http%3A%2F%2Frdfh.ch%2Flists%2F3bc59463e2&show_nrows=25&start_at=0&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fimages%23bild
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = incunabulaUser,
-        searchValue = Vector("http://rdfh.ch/lists/00FF/3bc59463e2"), // list node ALPINISMUS
+        searchValue = Vector("http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/3bc59463e2"), // list node ALPINISMUS
         compareProps = Vector(SearchComparisonOperatorV1.EQ),
         propertyIri = Vector(IMAGES_TITEL_PROPERTY),
         filterByRestype = Some(IMAGES_BILD_RESOURCE_CLASS),
@@ -934,7 +934,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = anythingUser1,
-        searchValue = Vector("http://rdfh.ch/0001/project-thing-2"),
+        searchValue = Vector("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/project-thing-2"),
         compareProps = Vector(SearchComparisonOperatorV1.EQ),
         propertyIri = Vector("http://www.knora.org/ontology/0001/anything#hasOtherThing"),
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
@@ -948,7 +948,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = anythingUser1,
-        searchValue = Vector("http://rdfh.ch/0001/project-thing-2"),
+        searchValue = Vector("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/project-thing-2"),
         compareProps = Vector(SearchComparisonOperatorV1.EQ),
         propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
@@ -964,7 +964,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = anythingUser2,
-        searchValue = Vector("http://rdfh.ch/0001/project-thing-2"),
+        searchValue = Vector("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/project-thing-2"),
         compareProps = Vector(SearchComparisonOperatorV1.EQ),
         propertyIri = Vector("http://www.knora.org/ontology/0001/anything#hasOtherThing"),
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
@@ -978,7 +978,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = anythingUser2,
-        searchValue = Vector("http://rdfh.ch/0001/project-thing-2"),
+        searchValue = Vector("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/project-thing-2"),
         compareProps = Vector(SearchComparisonOperatorV1.EQ),
         propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),

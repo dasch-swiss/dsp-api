@@ -232,7 +232,7 @@
 
          salsah-gui:guiElement salsah-gui:Pulldown ;
 
-         salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/00FF/6cce4ce5>" .
+         salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/6cce4ce5>" .
 
 
 ### ###########################################
@@ -360,7 +360,7 @@
 
             salsah-gui:guiElement salsah-gui:Radio ;
 
-            salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/00FF/0702a01e01>" .
+            salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/0702a01e01>" .
 
 
 ### ###########################################
@@ -447,7 +447,7 @@
 
        salsah-gui:guiElement salsah-gui:List ;
 
-       salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/00FF/73d0ec0302>" .
+       salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/73d0ec0302>" .
 
 
 ### ###########################################
@@ -537,7 +537,7 @@
 
             salsah-gui:guiElement salsah-gui:Radio ;
 
-            salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/00FF/d19af9ab>" .
+            salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/d19af9ab>" .
 
 
 ### ###########################################

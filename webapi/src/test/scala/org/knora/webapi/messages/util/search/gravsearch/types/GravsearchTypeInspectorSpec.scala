@@ -157,17 +157,17 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |CONSTRUCT {
           |    ?letter knora-api:isMainResource true .
           |    ?letter beol:creationDate ?date .
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
           |} WHERE {
           |    ?letter a beol:letter .
           |    ?letter beol:creationDate ?date .
           |    beol:creationDate knora-api:objectType knora-api:Date .
           |    ?date a knora-api:Date .
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> a beol:person .
           |    ?linkingProp1 knora-api:objectType knora-api:Resource .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |    <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
           |    beol:hasFamilyName knora-api:objectType xsd:string .
           |    ?name a xsd:string .
           |
@@ -184,16 +184,16 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |CONSTRUCT {
           |    ?letter knora-api:isMainResource true .
           |    ?letter beol:creationDate ?date .
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
           |} WHERE {
           |    ?letter a beol:letter .
           |    ?letter beol:creationDate ?date .
           |    ?date a knora-api:Date .
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> a beol:person .
           |    ?linkingProp1 knora-api:objectType knora-api:Resource .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |    <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
           |    ?name a xsd:string .
           |
           |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
@@ -209,15 +209,15 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |CONSTRUCT {
           |    ?letter knora-api:isMainResource true .
           |    ?letter beol:creationDate ?date .
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
           |} WHERE {
           |    ?letter a beol:letter .
           |    ?letter beol:creationDate ?date .
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> a beol:person .
           |    ?linkingProp1 knora-api:objectType knora-api:Resource .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |    <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
           |
           |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
           |} ORDER BY ?date
@@ -232,14 +232,14 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |CONSTRUCT {
           |    ?letter knora-api:isMainResource true .
           |    ?letter beol:creationDate ?date .
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
           |} WHERE {
           |    ?letter a beol:letter .
           |    ?letter beol:creationDate ?date .
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+          |    <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
           |
           |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
           |} ORDER BY ?date
@@ -254,12 +254,12 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |CONSTRUCT {
           |    ?letter knora-api:isMainResource true .
           |    ?letter beol:creationDate ?date .
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
           |} WHERE {
           |    ?letter beol:creationDate ?date .
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-          |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> .
+          |    <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
           |
           |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
           |
@@ -276,10 +276,10 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |CONSTRUCT {
           |    ?letter knora-api:isMainResource true .
           |    ?letter beol:creationDate ?date .
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> .
           |} WHERE {
           |    ?letter beol:creationDate ?date .
-          |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+          |    ?letter ?linkingProp1 <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA> .
           |
           |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
           |
@@ -528,7 +528,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |    ?letter a beol:letter .
           |    ?letter beol:hasAuthor ?person1 .
           |    ?letter beol:hasRecipient ?person2 .
-          |    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
+          |    FILTER(?person1 != <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/F4n1xKa3TCiR4llJeElAGA>) .
           |}
           |OFFSET 0""".stripMargin
 
@@ -550,7 +550,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           isResourceType = true,
           isValueType = false
         ),
-        TypeableIri(iri = "http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA".toSmartIri) -> NonPropertyTypeInfo(
+        TypeableIri(iri = "http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/F4n1xKa3TCiR4llJeElAGA".toSmartIri) -> NonPropertyTypeInfo(
           typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
           isResourceType = true,
           isValueType = false
@@ -594,7 +594,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |    ?letter a beol:letter .
           |    ?letter beol:hasAuthor ?person1 .
           |    ?letter beol:hasRecipient ?person2 .
-          |    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
+          |    FILTER(?person1 != <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/F4n1xKa3TCiR4llJeElAGA>) .
           |}
           |OFFSET 0""".stripMargin
 
@@ -621,7 +621,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           objectIsResourceType = true,
           objectIsValueType = false
         ),
-        TypeableIri(iri = "http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA".toSmartIri) -> NonPropertyTypeInfo(
+        TypeableIri(iri = "http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/F4n1xKa3TCiR4llJeElAGA".toSmartIri) -> NonPropertyTypeInfo(
           typeIri = "http://0.0.0.0:3333/ontology/0801/beol/v2#person".toSmartIri,
           isResourceType = true,
           isValueType = false
@@ -658,7 +658,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           |} WHERE {
           |  ?person a beol:person .
           |  ?document beol:hasAuthor ?person .
-          |  FILTER(?document != <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g>)
+          |  FILTER(?document != <http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/XNn6wanrTHWShGTjoULm5g>)
           |}""".stripMargin
 
   val QueryWithFilterComparisonResult: GravsearchTypeInspectionResult =
@@ -679,7 +679,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
           objectIsResourceType = true,
           objectIsValueType = false
         ),
-        TypeableIri(iri = "http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g".toSmartIri) -> NonPropertyTypeInfo(
+        TypeableIri(iri = "http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/XNn6wanrTHWShGTjoULm5g".toSmartIri) -> NonPropertyTypeInfo(
           typeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri,
           isResourceType = true,
           isValueType = false
@@ -977,7 +977,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
       TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri) -> PropertyTypeInfo(
         objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
         objectIsValueType = true),
-      TypeableIri(iri = "http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA".toSmartIri) -> NonPropertyTypeInfo(
+      TypeableIri(iri = "http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA".toSmartIri) -> NonPropertyTypeInfo(
         typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
         isResourceType = true),
       TypeableVariable(variableName = "name") -> NonPropertyTypeInfo(
@@ -1008,7 +1008,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
       TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#hasFamilyName".toSmartIri) -> PropertyTypeInfo(
         objectTypeIri = "http://www.w3.org/2001/XMLSchema#string".toSmartIri,
         objectIsValueType = true),
-      TypeableIri(iri = "http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA".toSmartIri) -> NonPropertyTypeInfo(
+      TypeableIri(iri = "http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA".toSmartIri) -> NonPropertyTypeInfo(
         typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
         isResourceType = true),
       TypeableVariable(variableName = "name") -> NonPropertyTypeInfo(
@@ -1036,7 +1036,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
       TypeableIri(iri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#creationDate".toSmartIri) -> PropertyTypeInfo(
         objectTypeIri = "http://api.knora.org/ontology/knora-api/simple/v2#Date".toSmartIri,
         objectIsValueType = true),
-      TypeableIri(iri = "http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA".toSmartIri) -> NonPropertyTypeInfo(
+      TypeableIri(iri = "http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA".toSmartIri) -> NonPropertyTypeInfo(
         typeIri = "http://0.0.0.0:3333/ontology/0801/beol/simple/v2#person".toSmartIri,
         isResourceType = true),
       TypeableVariable(variableName = "letter") -> NonPropertyTypeInfo(
@@ -1573,7 +1573,7 @@ class GravsearchTypeInspectorSpec extends CoreSpec() with ImplicitSender {
       assert(result.entities == TypeInferenceResult1.entities)
       result.entitiesInferredFromProperties.keySet should contain(TypeableVariable("date"))
       result.entitiesInferredFromProperties.keySet should contain(
-        TypeableIri("http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA".toSmartIri))
+        TypeableIri("http://rdfh.ch/yTerZGyxjZVqFMNNKXCDPF/H7s3FmuWTkaCXa54eFANOA".toSmartIri))
       result.entitiesInferredFromProperties.keySet should not contain TypeableVariable("linkingProp1")
     }
 

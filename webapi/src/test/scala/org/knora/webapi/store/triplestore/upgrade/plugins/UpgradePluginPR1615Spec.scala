@@ -34,13 +34,13 @@ class UpgradePluginPR1615Spec extends UpgradePluginSpec {
       // Make an in-memory repository containing the transformed model.
       val repository: RdfRepository = model.asRepository
 
-      // Check that <http://rdfh.ch/0000/forbiddenResource> was removed.
+      // Check that <http://rdfh.ch/SOIukqJ_qqwrLYY2AzMWog/forbiddenResource> was removed.
 
       val query1: String =
         """SELECT ?p ?o
           |FROM <http://www.knora.org/data/0000/SystemProject>
           |WHERE {
-          |    <http://rdfh.ch/0000/forbiddenResource> ?p ?o .
+          |    <http://rdfh.ch/SOIukqJ_qqwrLYY2AzMWog/forbiddenResource> ?p ?o .
           |}
           |""".stripMargin
 
@@ -53,7 +53,7 @@ class UpgradePluginPR1615Spec extends UpgradePluginSpec {
         """SELECT ?p ?o
           |FROM <http://www.knora.org/data/0000/SystemProject>
           |WHERE {
-          |    <http://rdfh.ch/lists/FFFF/ynm01> ?p ?o .
+          |    <http://rdfh.ch/lists/aboosmPQTBmEjQRsNiVs0w/ynm01> ?p ?o .
           |}
           |""".stripMargin
 

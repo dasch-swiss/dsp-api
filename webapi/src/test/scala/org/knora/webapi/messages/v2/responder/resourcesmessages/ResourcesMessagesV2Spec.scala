@@ -25,7 +25,7 @@ class ResourcesMessagesV2Spec extends CoreSpec() {
     "fail if given IRI is not a project Iri" in {
       val caught = intercept[BadRequestException](
         ProjectResourcesWithHistoryGetRequestV2(
-          projectIri = "http://rdfh.ch/0001/thing-with-history", // resource IRI instead of project IRI
+          projectIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history", // resource IRI instead of project IRI
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01
         )

@@ -199,7 +199,7 @@ class UsersV1E2ESpec extends E2ESpec(UsersV1E2ESpec.config) with SessionJsonProt
         assert(response.status === StatusCodes.OK)
 
         val groups: Seq[IRI] = AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[List[IRI]]
-        groups should contain allElementsOf Seq("http://rdfh.ch/groups/00FF/images-reviewer")
+        groups should contain allElementsOf Seq("http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer")
 
         // testing getUserGroupMemberships method, which should return the same result
         groups should contain allElementsOf getUserGroupMemberships(multiUserIri, rootCreds)

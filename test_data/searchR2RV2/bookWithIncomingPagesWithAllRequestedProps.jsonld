@@ -39,10 +39,10 @@
                 "knora-api:valueHasUUID": "i9wEyLdlRMits1q1NtzQUQ",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
                 "knora-api:linkValueHasTargetIri": {
-                    "@id": "http://rdfh.ch/0803/8be1b7cf7103"
+                    "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/8be1b7cf7103"
                 },
                 "@type": "knora-api:LinkValue",
-                "@id": "http://rdfh.ch/0803/50e7460a7203/values/8bdc04c8-b765-44c8-adb3-5ab536dcd051"
+                "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/50e7460a7203/values/8bdc04c8-b765-44c8-adb3-5ab536dcd051"
             },
             "knora-api:creationDate": {
                 "@value": "2016-03-02T15:05:43Z",
@@ -69,14 +69,14 @@
                 "knora-api:valueHasUUID": "000000000044150900c10Q",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
                 "@type": "knora-api:IntValue",
-                "@id": "http://rdfh.ch/0803/50e7460a7203/values/44150900c10d"
+                "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/50e7460a7203/values/44150900c10d"
             },
             "knora-api:attachedToUser": {
                 "@id": "http://rdfh.ch/users/91e19f1e01"
             },
             "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
             "@type": "incunabula:page",
-            "@id": "http://rdfh.ch/0803/50e7460a7203",
+            "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/50e7460a7203",
             "rdfs:label": "vorderer Spiegel",
             "knora-api:hasStillImageFileValue": {
                 "knora-api:arkUrl": {
@@ -102,7 +102,7 @@
                     "@value": "IIIF_BASE_URL/0803",
                     "@type": "xsd:anyURI"
                 },
-                "@id": "http://rdfh.ch/0803/50e7460a7203/values/7ead1231b806",
+                "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/50e7460a7203/values/7ead1231b806",
                 "knora-api:fileValueAsUrl": {
                     "@value": "IIIF_BASE_URL/0803/incunabula_0000003856.jp2/full/1904,2700/0/default.jpg",
                     "@type": "xsd:anyURI"
@@ -131,7 +131,7 @@
         "knora-api:valueHasUUID": "i9wEyLdlRMits1q1NtzQUQ",
         "knora-api:hasPermissions": "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
         "@type": "knora-api:LinkValue",
-        "@id": "http://rdfh.ch/0803/50e7460a7203/values/8bdc04c8-b765-44c8-adb3-5ab536dcd051"
+        "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/50e7460a7203/values/8bdc04c8-b765-44c8-adb3-5ab536dcd051"
     },
     "knora-api:versionArkUrl": {
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T150543Z",
@@ -167,7 +167,7 @@
             "knora-api:valueHasUUID": "0000000000463b6498b70Q",
             "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
             "@type": "knora-api:TextValue",
-            "@id": "http://rdfh.ch/0803/8be1b7cf7103/values/463b6498b70d"
+            "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/8be1b7cf7103/values/463b6498b70d"
         },
         {
             "knora-api:valueAsString": "Stultifera navis (...)",
@@ -190,7 +190,7 @@
             "knora-api:valueHasUUID": "00000000000965b7d1b70Q",
             "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
             "@type": "knora-api:TextValue",
-            "@id": "http://rdfh.ch/0803/8be1b7cf7103/values/0965b7d1b70d"
+            "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/8be1b7cf7103/values/0965b7d1b70d"
         }
     ],
     "knora-api:attachedToUser": {
@@ -198,7 +198,7 @@
     },
     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "@type": "incunabula:book",
-    "@id": "http://rdfh.ch/0803/8be1b7cf7103",
+    "@id": "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/8be1b7cf7103",
     "@context": {
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "knora-api": "http://api.knora.org/ontology/knora-api/v2#",

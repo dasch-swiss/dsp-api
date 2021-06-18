@@ -1228,7 +1228,7 @@
 
               salsah-gui:guiElement salsah-gui:List ;
 
-              salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0801/subject_index>" .
+              salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/yTerZGyxjZVqFMNNKXCDPF/subject_index>" .
 
 
 ### ###########################################

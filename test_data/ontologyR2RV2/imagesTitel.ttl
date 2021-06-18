@@ -13,7 +13,7 @@ images:titel  a                       owl:ObjectProperty ;
         knora-api:isResourceProperty  true ;
         knora-api:objectType          knora-api:ListValue ;
         knora-api:subjectType         images:bild ;
-        salsah-gui:guiAttribute       "hlist=<http://rdfh.ch/lists/00FF/73d0ec0302>" ;
+        salsah-gui:guiAttribute       "hlist=<http://rdfh.ch/lists/wI8G0Ps-F1USDL-F06aRHA/73d0ec0302>" ;
         salsah-gui:guiElement         salsah-gui:List .
 
 <http://0.0.0.0:3333/ontology/00FF/images/v2>

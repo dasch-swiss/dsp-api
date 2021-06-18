@@ -47,7 +47,7 @@ included in the request body, for example:
 
 ```json
 {
-    "forGroup":"http://rdfh.ch/groups/0001/thing-searcher", 
+    "forGroup":"http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher", 
     "forProject":"http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA", 
     "hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
 }
@@ -58,7 +58,7 @@ the `@id` attribute which will then be assigned to the permission; otherwise the
 A custom permission IRI must be `http://rdfh.ch/permissions/PROJECT_SHORTCODE/` (where `PROJECT_SHORTCODE`
 is the shortcode of the project that the permission belongs to), plus a custom ID string. For example:
 ```
-"id": "http://rdfh.ch/permissions/0001/AP-with-customIri",
+"id": "http://rdfh.ch/permissions/U7HxeFSUEQCHJxSLahw3AA/AP-with-customIri",
 ```
 
 As a response, the created administrative permission and its IRI are returned as below:
@@ -66,7 +66,7 @@ As a response, the created administrative permission and its IRI are returned as
 ```json
 {
     "administrative_permission": {
-        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
+        "forGroup": "http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher",
         "forProject": "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
         "hasPermissions": [
             {
@@ -75,7 +75,7 @@ As a response, the created administrative permission and its IRI are returned as
                 "permissionCode": null
             }
         ],
-        "iri": "http://rdfh.ch/permissions/0001/mFlyBEiMQtGzwy_hK0M-Ow"
+        "iri": "http://rdfh.ch/permissions/U7HxeFSUEQCHJxSLahw3AA/mFlyBEiMQtGzwy_hK0M-Ow"
     }
 }
 ```
@@ -94,7 +94,7 @@ default object access permission for a group of a project the request body would
  
 ```json
 {
-    "forGroup":"http://rdfh.ch/groups/0001/thing-searcher",
+    "forGroup":"http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher",
     "forProject":"http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA",
     "forProperty":null,
     "forResourceClass":null,
@@ -108,7 +108,7 @@ a resource class of a specific project:
 
 ```json
 {
-    "id": "http://rdfh.ch/permissions/00FF/DOAP-with-customIri",
+    "id": "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/DOAP-with-customIri",
     "forGroup":null,
     "forProject":"http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA",
     "forProperty":null,
@@ -133,7 +133,7 @@ The response contains the newly created permission and its IRI, as:
                 "permissionCode": 7
             }
         ],
-        "iri": "http://rdfh.ch/permissions/00FF/DOAP-with-customIri"
+        "iri": "http://rdfh.ch/permissions/wI8G0Ps-F1USDL-F06aRHA/DOAP-with-customIri"
     }
 }
 ```

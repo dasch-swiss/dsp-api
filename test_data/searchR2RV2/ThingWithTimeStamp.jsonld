@@ -22,7 +22,7 @@
     },
     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
     "@type": "anything:Thing",
-    "@id": "http://rdfh.ch/0001/GIi77e3NS76UyJH3uL6DrQ",
+    "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/GIi77e3NS76UyJH3uL6DrQ",
     "anything:hasTimeStamp": {
         "knora-api:arkUrl": {
             "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/GIi77e3NS76UyJH3uL6DrQ4/9br5Xy7TTWi6I0uMBOCIfwB",
@@ -47,7 +47,7 @@
         "knora-api:valueHasUUID": "9br5Xy7TTWi6I0uMBOCIfw",
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
         "@type": "knora-api:TimeValue",
-        "@id": "http://rdfh.ch/0001/GIi77e3NS76UyJH3uL6DrQ/values/9br5Xy7TTWi6I0uMBOCIfw"
+        "@id": "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/GIi77e3NS76UyJH3uL6DrQ/values/9br5Xy7TTWi6I0uMBOCIfw"
     },
     "@context": {
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

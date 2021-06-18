@@ -58,7 +58,7 @@ class UpgradePluginPR1746Spec extends UpgradePluginSpec with LazyLogging {
       // Check that the empty valueHasString is replaced with FIXME.
       checkLiteral(
         model = model,
-        subj = nodeFactory.makeIriNode("http://rdfh.ch/0001/thing-with-empty-string/values/1"),
+        subj = nodeFactory.makeIriNode("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-empty-string/values/1"),
         pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasString),
         expectedObj = nodeFactory.makeStringLiteral("FIXME")
       )

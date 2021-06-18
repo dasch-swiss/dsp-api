@@ -4,7 +4,7 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<http://rdfh.ch/0803/2a6221216701> a incunabula:book;
+<http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701> a incunabula:book;
   incunabula:book_comment "Katalogaufnahme anhand ISTC und v.d.Haegen";
   incunabula:citation "Borm 1751", "C 3833", "FairMur(G) 283", "Goff M165", "IBP 3556",
     "Klebs 651.2", "Schr 4799", "Schramm XXI p. 9 & 26", "Van der Haegen I: 9,14";

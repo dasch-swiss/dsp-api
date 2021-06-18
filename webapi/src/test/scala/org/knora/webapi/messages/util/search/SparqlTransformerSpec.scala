@@ -92,7 +92,7 @@ class SparqlTransformerSpec extends CoreSpec() {
       val linkStatement = StatementPattern.makeExplicit(
         subj = QueryVariable("foo"),
         pred = IriRef("http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri),
-        obj = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri)
+        obj = IriRef("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing".toSmartIri)
       )
 
       val patterns: Seq[StatementPattern] = Seq(
@@ -131,7 +131,8 @@ class SparqlTransformerSpec extends CoreSpec() {
                                       pred = IriRef("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri),
                                       obj = QueryVariable("text"))
       val bindPattern =
-        BindPattern(variable = QueryVariable("foo"), expression = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri))
+        BindPattern(variable = QueryVariable("foo"),
+                    expression = IriRef("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing".toSmartIri))
 
       val patterns: Seq[QueryPattern] = Seq(
         typeStatement,

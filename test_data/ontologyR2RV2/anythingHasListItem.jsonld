@@ -17,7 +17,7 @@
                 "@id": "anything:Thing"
             },
             "@type": "owl:ObjectProperty",
-            "salsah-gui:guiAttribute": "hlist=<http://rdfh.ch/lists/0001/treeList>",
+            "salsah-gui:guiAttribute": "hlist=<http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList>",
             "knora-api:objectType": {
                 "@id": "knora-api:ListValue"
             },

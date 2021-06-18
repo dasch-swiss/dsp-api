@@ -197,12 +197,12 @@
 
                                          knora-admin:isInProject <http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA> ;
 
-                                         knora-admin:isInGroup <http://rdfh.ch/groups/00FF/images-reviewer> ;
+                                         knora-admin:isInGroup <http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer> ;
 
                                          knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
-<http://rdfh.ch/groups/00FF/images-reviewer> rdf:type knora-admin:UserGroup ;
+<http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer> rdf:type knora-admin:UserGroup ;
 
                                                knora-admin:groupName "Image reviewer"^^xsd:string ;
 
@@ -381,7 +381,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
                                                                          <http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA> ,
                                                                          <http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA> ;
 
-                                        knora-admin:isInGroup <http://rdfh.ch/groups/00FF/images-reviewer> .
+                                        knora-admin:isInGroup <http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/images-reviewer> .
 
 
 
@@ -410,7 +410,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-admin:preferredLanguage "de"^^xsd:string ;
   knora-admin:status "true"^^xsd:boolean ;
   knora-admin:isInProject <http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA> ;
-  knora-admin:isInGroup <http://rdfh.ch/groups/0001/thing-searcher> ;
+  knora-admin:isInGroup <http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher> ;
   knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 <http://rdfh.ch/users/AnythingAdminUser> a knora-admin:User ;
@@ -436,7 +436,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
   knora-admin:isInProject <http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA> ;
   knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
-<http://rdfh.ch/groups/0001/thing-searcher> rdf:type knora-admin:UserGroup ;
+<http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher> rdf:type knora-admin:UserGroup ;
   knora-admin:groupName "Thing searcher"^^xsd:string ;
   knora-admin:groupDescription "A group for thing searchers."^^xsd:string ;
   knora-admin:belongsToProject <http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA> ;

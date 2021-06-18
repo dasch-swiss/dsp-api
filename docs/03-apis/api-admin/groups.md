@@ -63,7 +63,7 @@ specified by the `id` in the request body as below:
 
 ```json
     { 
-      "id": "http://rdfh.ch/groups/00FF/group-with-custom-Iri",  
+      "id": "http://rdfh.ch/groups/wI8G0Ps-F1USDL-F06aRHA/group-with-custom-Iri",  
       "name": "GroupWithCustomIRI",
       "description": "A new group with a custom IRI",
       "project": "http://rdfh.ch/projects/wI8G0Ps-F1USDL-F06aRHA",

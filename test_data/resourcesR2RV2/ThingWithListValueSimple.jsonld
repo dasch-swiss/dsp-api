@@ -1,5 +1,5 @@
 {
-  "@id" : "http://rdfh.ch/0001/thing_with_list_value",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing_with_list_value",
   "@type" : "anything:Thing",
   "anything:hasListItem" : {
     "@type" : "knora-api:ListNode",

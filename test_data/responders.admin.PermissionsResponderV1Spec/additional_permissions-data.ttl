@@ -8,7 +8,7 @@
 
 
 ### Default Object Access Permissions on Resource and Property Combination
- <http://rdfh.ch/permissions/0001/additional-d01>
+ <http://rdfh.ch/permissions/U7HxeFSUEQCHJxSLahw3AA/additional-d01>
 
                        rdf:type knora-admin:DefaultObjectAccessPermission ;
 

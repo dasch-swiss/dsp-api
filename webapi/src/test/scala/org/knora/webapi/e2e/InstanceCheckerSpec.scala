@@ -156,10 +156,10 @@ object InstanceCheckerSpec {
 
   val complexThingWithExtraProperty: String =
     """{
-          |  "@id" : "http://rdfh.ch/0001/cUnhrC1DT821lwVWQSwEgg",
+          |  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/cUnhrC1DT821lwVWQSwEgg",
           |  "@type" : "anything:Thing",
           |  "anything:hasExtraProperty" : {
-          |    "@id" : "http://rdfh.ch/0001/cUnhrC1DT821lwVWQSwEgg/values/o-j0jdxMQvanmAdpAIOcFA",
+          |    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/cUnhrC1DT821lwVWQSwEgg/values/o-j0jdxMQvanmAdpAIOcFA",
           |    "@type" : "knora-api:BooleanValue",
           |    "knora-api:attachedToUser" : {
           |      "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -205,10 +205,10 @@ object InstanceCheckerSpec {
 
   val complexThingWithExtraPropertyObject: String =
     """{
-          |  "@id" : "http://rdfh.ch/0001/cUnhrC1DT821lwVWQSwEgg",
+          |  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/cUnhrC1DT821lwVWQSwEgg",
           |  "@type" : "anything:Thing",
           |  "anything:hasBoolean" : [ {
-          |    "@id" : "http://rdfh.ch/0001/cUnhrC1DT821lwVWQSwEgg/values/o-j0jdxMQvanmAdpAIOcFA",
+          |    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/cUnhrC1DT821lwVWQSwEgg/values/o-j0jdxMQvanmAdpAIOcFA",
           |    "@type" : "knora-api:BooleanValue",
           |    "knora-api:attachedToUser" : {
           |      "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -221,7 +221,7 @@ object InstanceCheckerSpec {
           |      "@value" : "2019-04-10T08:41:45.353992Z"
           |    }
           |  }, {
-          |    "@id" : "http://rdfh.ch/0001/cUnhrC1DT821lwVWQSwEgg/values/o-j0jdxMQvanmAdpAIOcFA",
+          |    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/cUnhrC1DT821lwVWQSwEgg/values/o-j0jdxMQvanmAdpAIOcFA",
           |    "@type" : "knora-api:BooleanValue",
           |    "knora-api:attachedToUser" : {
           |      "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -267,10 +267,10 @@ object InstanceCheckerSpec {
 
   val complexThingWithInvalidLiteralType: String =
     """{
-          |  "@id" : "http://rdfh.ch/0001/cUnhrC1DT821lwVWQSwEgg",
+          |  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/cUnhrC1DT821lwVWQSwEgg",
           |  "@type" : "anything:Thing",
           |  "anything:hasBoolean" : {
-          |    "@id" : "http://rdfh.ch/0001/cUnhrC1DT821lwVWQSwEgg/values/o-j0jdxMQvanmAdpAIOcFA",
+          |    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/cUnhrC1DT821lwVWQSwEgg/values/o-j0jdxMQvanmAdpAIOcFA",
           |    "@type" : "knora-api:BooleanValue",
           |    "knora-api:attachedToUser" : {
           |      "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -325,10 +325,10 @@ object InstanceCheckerSpec {
 
   val complexThingWithInvalidObjectType: String =
     """{
-          |  "@id" : "http://rdfh.ch/0001/cUnhrC1DT821lwVWQSwEgg",
+          |  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/cUnhrC1DT821lwVWQSwEgg",
           |  "@type" : "anything:Thing",
           |  "anything:hasBoolean" : {
-          |    "@id" : "http://rdfh.ch/0001/cUnhrC1DT821lwVWQSwEgg/values/lj35qx3vRUa6s1Q8s5Z5SA",
+          |    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/cUnhrC1DT821lwVWQSwEgg/values/lj35qx3vRUa6s1Q8s5Z5SA",
           |    "@type" : "knora-api:DateValue",
           |    "knora-api:attachedToUser" : {
           |      "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -379,10 +379,10 @@ object InstanceCheckerSpec {
 
   val complexThingWithInvalidUseOfObjectInsteadOfIri: String =
     """{
-          |  "@id" : "http://rdfh.ch/0001/cUnhrC1DT821lwVWQSwEgg",
+          |  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/cUnhrC1DT821lwVWQSwEgg",
           |  "@type" : "anything:Thing",
           |  "anything:hasRichtext" : {
-          |    "@id" : "http://rdfh.ch/0001/cUnhrC1DT821lwVWQSwEgg/values/VY4XodOeSaOdttZ6rEkFPg",
+          |    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/cUnhrC1DT821lwVWQSwEgg/values/VY4XodOeSaOdttZ6rEkFPg",
           |    "@type" : "knora-api:TextValue",
           |    "knora-api:attachedToUser" : {
           |      "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
@@ -446,7 +446,7 @@ object InstanceCheckerSpec {
   val simpleThingWithInvalidDatatype: String =
     """
           |{
-          |  "@id" : "http://rdfh.ch/0001/oGI65x9pQkK6JhsoqavTGA",
+          |  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/oGI65x9pQkK6JhsoqavTGA",
           |  "@type" : "anything:Thing",
           |  "anything:hasDecimal" : {
           |    "@type" : "knora-api:Date",
@@ -474,7 +474,7 @@ object InstanceCheckerSpec {
   val simpleThingWithMissingLabel: String =
     """
           |{
-          |  "@id" : "http://rdfh.ch/0001/oGI65x9pQkK6JhsoqavTGA",
+          |  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/oGI65x9pQkK6JhsoqavTGA",
           |  "@type" : "anything:Thing",
           |  "@context" : {
           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
@@ -494,7 +494,7 @@ object InstanceCheckerSpec {
           |    "groups": [
           |      {
           |        "description": "A group for thing searchers.",
-          |        "id": "http://rdfh.ch/groups/0001/thing-searcher",
+          |        "id": "http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher",
           |        "name": "Thing searcher",
           |        "project": {
           |          "description": [
@@ -534,7 +534,7 @@ object InstanceCheckerSpec {
           |      },
           |      "groupsPerProject": {
           |        "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA": [
-          |          "http://rdfh.ch/groups/0001/thing-searcher",
+          |          "http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher",
           |          "http://www.knora.org/ontology/knora-admin#ProjectMember"
           |        ]
           |      }
@@ -590,7 +590,7 @@ object InstanceCheckerSpec {
           |    },
           |    "groupsPerProject": {
           |      "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA": [
-          |        "http://rdfh.ch/groups/0001/thing-searcher",
+          |        "http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher",
           |        "http://www.knora.org/ontology/knora-admin#ProjectMember"
           |      ]
           |    }
@@ -622,7 +622,7 @@ object InstanceCheckerSpec {
           |    },
           |    "groupsPerProject": {
           |      "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA": [
-          |        "http://rdfh.ch/groups/0001/thing-searcher",
+          |        "http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher",
           |        "http://www.knora.org/ontology/knora-admin#ProjectMember"
           |      ]
           |    }
@@ -655,7 +655,7 @@ object InstanceCheckerSpec {
           |    },
           |    "groupsPerProject": {
           |      "http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA": [
-          |        "http://rdfh.ch/groups/0001/thing-searcher",
+          |        "http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher",
           |        "http://www.knora.org/ontology/knora-admin#ProjectMember"
           |      ]
           |    }

@@ -1,121 +1,121 @@
 {
   "@graph" : [ {
-    "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0C-0L1kORryKzJAJxxRyRQ",
     "@type" : "anything:Thing",
     "anything:isPartOfOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/LOV-6aLYQFW15jwdyS51Yw"
     },
     "rdfs:label" : "Sierra"
   }, {
-    "@id" : "http://rdfh.ch/0001/9eSuQ_J7T0aOqoImTkwPxA",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/9eSuQ_J7T0aOqoImTkwPxA",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/YgL4JhwfSQq-1davjrp8Ow"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/YgL4JhwfSQq-1davjrp8Ow"
     },
     "rdfs:label" : "excluded Bravo"
   }, {
-    "@id" : "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/A67ka6UQRHWf313tbhQBjw",
     "@type" : "anything:Thing",
     "rdfs:label" : "Victor"
   }, {
-    "@id" : "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/L5xU7Qe5QUu6Wz3cDaCxbA",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/iqW_PBiHRdyTFzik8tuSog"
     },
     "rdfs:label" : "Papa"
   }, {
-    "@id" : "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/LOV-6aLYQFW15jwdyS51Yw",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/MiBwAFcxQZGHNL-WfgFAPQ"
     },
     "rdfs:label" : "Uniform"
   }, {
-    "@id" : "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/Lz7WEqJETJqqsUZQYexBQg",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : [ {
-      "@id" : "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/sHCLAGg-R5qJ6oPZPV-zOQ"
     }, {
-      "@id" : "http://rdfh.ch/0001/start"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/start"
     } ],
     "rdfs:label" : "Foxtrot"
   }, {
-    "@id" : "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/MiBwAFcxQZGHNL-WfgFAPQ",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/nResNuvARcWYUdWyo0GWGw"
     },
     "rdfs:label" : "Whiskey"
   }, {
-    "@id" : "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/WLSHxQUgTOmG1T0lBU2r5w",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/A67ka6UQRHWf313tbhQBjw"
     },
     "anything:isPartOfOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/nVh9YJ1ZStSmCHb9hIdwWw"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/nVh9YJ1ZStSmCHb9hIdwWw"
     },
     "rdfs:label" : "Tango"
   }, {
-    "@id" : "http://rdfh.ch/0001/YgL4JhwfSQq-1davjrp8Ow",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/YgL4JhwfSQq-1davjrp8Ow",
     "@type" : "anything:Thing",
     "rdfs:label" : "November"
   }, {
-    "@id" : "http://rdfh.ch/0001/ZYNUiHtsTROWblui9xHEuw",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/ZYNUiHtsTROWblui9xHEuw",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/cL5AwEioRLOm6Vrqwl1RmQ"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/cL5AwEioRLOm6Vrqwl1RmQ"
     },
     "rdfs:label" : "excluded Alpha"
   }, {
-    "@id" : "http://rdfh.ch/0001/cL5AwEioRLOm6Vrqwl1RmQ",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/cL5AwEioRLOm6Vrqwl1RmQ",
     "@type" : "anything:Thing",
     "rdfs:label" : "Oscar"
   }, {
-    "@id" : "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/iqW_PBiHRdyTFzik8tuSog",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/start"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/start"
     },
     "rdfs:label" : "Quebec"
   }, {
-    "@id" : "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/nResNuvARcWYUdWyo0GWGw",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/tPfZeNMvRVujCQqbIbvO0A"
     },
     "rdfs:label" : "X-ray"
   }, {
-    "@id" : "http://rdfh.ch/0001/nVh9YJ1ZStSmCHb9hIdwWw",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/nVh9YJ1ZStSmCHb9hIdwWw",
     "@type" : "anything:Thing",
     "rdfs:label" : "excluded Charlie"
   }, {
-    "@id" : "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/sHCLAGg-R5qJ6oPZPV-zOQ",
     "@type" : "anything:Thing",
     "rdfs:label" : "Golf"
   }, {
-    "@id" : "http://rdfh.ch/0001/start",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/start",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : [ {
-      "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/0C-0L1kORryKzJAJxxRyRQ"
     }, {
-      "@id" : "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/WLSHxQUgTOmG1T0lBU2r5w"
     }, {
-      "@id" : "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/tPfZeNMvRVujCQqbIbvO0A"
     } ],
     "anything:isPartOfOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/9eSuQ_J7T0aOqoImTkwPxA"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/9eSuQ_J7T0aOqoImTkwPxA"
     },
     "rdfs:label" : "Romeo"
   }, {
-    "@id" : "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/tPfZeNMvRVujCQqbIbvO0A",
     "@type" : "anything:Thing",
     "anything:hasOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/Lz7WEqJETJqqsUZQYexBQg"
     },
     "anything:isPartOfOtherThing" : {
-      "@id" : "http://rdfh.ch/0001/ZYNUiHtsTROWblui9xHEuw"
+      "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/ZYNUiHtsTROWblui9xHEuw"
     },
     "rdfs:label" : "Echo"
   } ],

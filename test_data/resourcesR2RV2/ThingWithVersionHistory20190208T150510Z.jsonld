@@ -1,5 +1,5 @@
 {
-  "@id" : "http://rdfh.ch/0001/thing-with-history",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history",
   "@type" : "anything:Thing",
   "knora-api:arkUrl" : {
     "@type" : "xsd:anyURI",

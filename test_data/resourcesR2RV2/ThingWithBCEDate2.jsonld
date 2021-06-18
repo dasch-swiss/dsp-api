@@ -1,8 +1,8 @@
 {
-  "@id" : "http://rdfh.ch/0001/thing_with_BCE_date2",
+  "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing_with_BCE_date2",
   "@type" : "anything:Thing",
   "anything:hasDate" : {
-    "@id" : "http://rdfh.ch/0001/thing_with_BCE_date2/values/date_value",
+    "@id" : "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing_with_BCE_date2/values/date_value",
     "@type" : "knora-api:DateValue",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",

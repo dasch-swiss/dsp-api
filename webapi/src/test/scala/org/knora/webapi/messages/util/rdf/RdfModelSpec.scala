@@ -331,13 +331,13 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
       val expectedResults = Seq(
         Map(
-          "resource" -> "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw",
-          "value" -> "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg",
+          "resource" -> "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw",
+          "value" -> "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/H6gBWUuJSuuO-CilHV8kQw/values/bXMwnrHvQH2DMjOFrGmNzg",
           "decimalValue" -> "1.5"
         ),
         Map(
-          "resource" -> "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg",
-          "value" -> "http://rdfh.ch/0001/uqmMo72OQ2K2xe7mkIytlg/values/85et-o-STOmn2JcVqrGTCQ",
+          "resource" -> "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/uqmMo72OQ2K2xe7mkIytlg",
+          "value" -> "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/uqmMo72OQ2K2xe7mkIytlg/values/85et-o-STOmn2JcVqrGTCQ",
           "decimalValue" -> "2.1"
         )
       )

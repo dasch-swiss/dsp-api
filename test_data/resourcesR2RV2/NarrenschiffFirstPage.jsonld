@@ -1,8 +1,8 @@
 {
-  "@id" : "http://rdfh.ch/0803/7bbb8e59b703",
+  "@id" : "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/7bbb8e59b703",
   "@type" : "incunabula:page",
   "incunabula:origname" : {
-    "@id" : "http://rdfh.ch/0803/7bbb8e59b703/values/457707ecda0e",
+    "@id" : "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/7bbb8e59b703/values/457707ecda0e",
     "@type" : "knora-api:TextValue",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -25,7 +25,7 @@
     }
   },
   "incunabula:pagenum" : {
-    "@id" : "http://rdfh.ch/0803/7bbb8e59b703/values/fcf90d40da0e",
+    "@id" : "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/7bbb8e59b703/values/fcf90d40da0e",
     "@type" : "knora-api:TextValue",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -48,7 +48,7 @@
     }
   },
   "incunabula:partOfValue" : {
-    "@id" : "http://rdfh.ch/0803/7bbb8e59b703/values/448b77cc-b489-40af-83a5-7373d76b4443",
+    "@id" : "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/7bbb8e59b703/values/448b77cc-b489-40af-83a5-7373d76b4443",
     "@type" : "knora-api:LinkValue",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -59,7 +59,7 @@
     },
     "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
     "knora-api:linkValueHasTarget" : {
-      "@id" : "http://rdfh.ch/0803/b6b5ff1eb703",
+      "@id" : "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/b6b5ff1eb703",
       "@type" : "incunabula:book",
       "knora-api:arkUrl" : {
         "@type" : "xsd:anyURI",
@@ -95,7 +95,7 @@
     }
   },
   "incunabula:seqnum" : {
-    "@id" : "http://rdfh.ch/0803/7bbb8e59b703/values/824db4b2da0e",
+    "@id" : "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/7bbb8e59b703/values/824db4b2da0e",
     "@type" : "knora-api:IntValue",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",
@@ -133,7 +133,7 @@
   },
   "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
   "knora-api:hasStillImageFileValue" : {
-    "@id" : "http://rdfh.ch/0803/7bbb8e59b703/values/22bc3f713f07",
+    "@id" : "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/7bbb8e59b703/values/22bc3f713f07",
     "@type" : "knora-api:StillImageFileValue",
     "knora-api:arkUrl" : {
       "@type" : "xsd:anyURI",

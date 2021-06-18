@@ -131,7 +131,7 @@ lumieres-lausanne:hasLiteratureType rdf:type owl:ObjectProperty ;
                  knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
                  knora-base:objectClassConstraint knora-base:ListValue ;
                  salsah-gui:guiElement salsah-gui:Pulldown ;
-                 salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/310e60d607>" .
+                 salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/310e60d607>" .
 
 
 ### ###########################################
@@ -145,7 +145,7 @@ lumieres-lausanne:hasDocumentType rdf:type owl:ObjectProperty ;
                knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
                knora-base:objectClassConstraint knora-base:ListValue ;
                salsah-gui:guiElement salsah-gui:Pulldown ;
-               salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/a4de4cda09>" .
+               salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/a4de4cda09>" .
 
 
 # ### ###########################################
@@ -211,7 +211,7 @@ lumieres-lausanne:hasSubjectKeyword rdf:type owl:ObjectProperty ;
           knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
           knora-base:objectClassConstraint knora-base:ListValue ;
           salsah-gui:guiElement salsah-gui:List ;
-          salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/b039339503>" .
+          salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/b039339503>" .
 
 
 ### ###########################################
@@ -225,7 +225,7 @@ lumieres-lausanne:hasArchive rdf:type owl:ObjectProperty ;
          knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
          knora-base:objectClassConstraint knora-base:ListValue ;
          salsah-gui:guiElement salsah-gui:Pulldown ;
-         salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/9ddcacbb08>" .
+         salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/9ddcacbb08>" .
 
 
 ### ###########################################
@@ -397,7 +397,7 @@ lumieres-lausanne:hasSubjectSociety rdf:type owl:ObjectProperty ;
                  knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
                  knora-base:objectClassConstraint knora-base:ListValue ;
                  salsah-gui:guiElement salsah-gui:Pulldown ;
-                 salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/6e77a66709>" .
+                 salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/6e77a66709>" .
 
 
 ### ###########################################
@@ -438,7 +438,7 @@ lumieres-lausanne:hasLanguage rdf:type owl:ObjectProperty ;
           knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
           knora-base:objectClassConstraint knora-base:ListValue ;
           salsah-gui:guiElement salsah-gui:Pulldown ;
-          salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/02a9598208>" .
+          salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/02a9598208>" .
 
 
 ### ###########################################
@@ -661,7 +661,7 @@ lumieres-lausanne:hasManuscriptType rdf:type owl:ObjectProperty ;
                  knora-base:subjectClassConstraint lumieres-lausanne:BibliographicNotice ;
                  knora-base:objectClassConstraint knora-base:ListValue ;
                  salsah-gui:guiElement salsah-gui:Pulldown ;
-                 salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/6775064908>" .
+                 salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/6775064908>" .
 
 
 ### ###########################################
@@ -826,7 +826,7 @@ lumieres-lausanne:hasReligion rdf:type owl:ObjectProperty ;
           knora-base:subjectClassConstraint lumieres-lausanne:Person ;
           knora-base:objectClassConstraint knora-base:ListValue ;
           salsah-gui:guiElement salsah-gui:Pulldown ;
-          salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/381000f508>" .
+          salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/381000f508>" .
 
 
 ### ###########################################
@@ -1018,7 +1018,7 @@ lumieres-lausanne:hasNationality rdf:type owl:ObjectProperty ;
              knora-base:subjectClassConstraint lumieres-lausanne:Person ;
              knora-base:objectClassConstraint knora-base:ListValue ;
              salsah-gui:guiElement salsah-gui:Pulldown ;
-             salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/3ab9597711>" .
+             salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/3ab9597711>" .
 
 
 ### ###########################################
@@ -1054,7 +1054,7 @@ lumieres-lausanne:hasStatus rdf:type owl:ObjectProperty ;
         knora-base:subjectClassConstraint lumieres-lausanne:Transcription ;
         knora-base:objectClassConstraint knora-base:ListValue ;
         salsah-gui:guiElement salsah-gui:Pulldown ;
-        salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/3f12a0130a>" .
+        salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/3f12a0130a>" .
 
 
 ### ###########################################
@@ -1068,7 +1068,7 @@ lumieres-lausanne:hasScope rdf:type owl:ObjectProperty ;
        knora-base:subjectClassConstraint lumieres-lausanne:Transcription ;
        knora-base:objectClassConstraint knora-base:ListValue ;
        salsah-gui:guiElement salsah-gui:Pulldown ;
-       salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/da45f34c0a>" .
+       salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/da45f34c0a>" .
 
 
 ### ###########################################
@@ -1144,7 +1144,7 @@ lumieres-lausanne:societyHasName rdf:type owl:ObjectProperty ;
                     knora-base:subjectClassConstraint lumieres-lausanne:SocietyMembership ;
                     knora-base:objectClassConstraint knora-base:ListValue ;
                     salsah-gui:guiElement salsah-gui:Pulldown ;
-                    salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/6e77a66709>" .
+                    salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/6e77a66709>" .
 
 ### ###########################################
 ### http://www.knora.org/ontology/0113/lumieres-lausanne#date_society_beginning
@@ -1244,7 +1244,7 @@ lumieres-lausanne:hasRelationType rdf:type owl:ObjectProperty ;
                knora-base:subjectClassConstraint lumieres-lausanne:Relationship ;
                knora-base:objectClassConstraint knora-base:ListValue ;
                salsah-gui:guiElement salsah-gui:Pulldown ;
-               salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/d343532e09>" .
+               salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/d343532e09>" .
 
 
 ### ###########################################
@@ -1358,7 +1358,7 @@ lumieres-lausanne:hasContributionType rdf:type owl:ObjectProperty ;
                    knora-base:subjectClassConstraint lumieres-lausanne:Contribution ;
                    knora-base:objectClassConstraint knora-base:ListValue ;
                    salsah-gui:guiElement salsah-gui:Pulldown ;
-                   salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/6073662a07>" .
+                   salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/6073662a07>" .
 
 
 ### ###########################################
@@ -1511,7 +1511,7 @@ lumieres-lausanne:disseminationGroupHasType rdf:type owl:ObjectProperty ;
              knora-base:subjectClassConstraint lumieres-lausanne:DisseminationGroup ;
 			 knora-base:objectClassConstraint knora-base:ListValue ;
 	         salsah-gui:guiElement salsah-gui:Pulldown ;
-             salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/0113/disseminationGroupHasType>" .
+             salsah-gui:guiAttribute "hlist=<http://rdfh.ch/lists/vezijxSfAnMYkZGZ4xem4A/disseminationGroupHasType>" .
 
 
 ### ###########################################
