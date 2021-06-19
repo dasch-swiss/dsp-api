@@ -41,7 +41,7 @@ import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.{CanDoResponseV2, SuccessResponseV2}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
-import org.knora.webapi.responders.v2.ontology.Cache.{ONTOLOGY_CACHE_LOCK_IRI, getCacheData}
+import org.knora.webapi.responders.v2.ontology.Cache.{ONTOLOGY_CACHE_LOCK_IRI}
 import org.knora.webapi.responders.v2.ontology.{Cache, DeleteCardinalitiesFromClass, OntologyHelpers}
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util._
@@ -321,7 +321,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                                               standoffPropertyIris: Set[SmartIri] = Set.empty[SmartIri],
                                               requestingUser: UserADM): Future[StandoffEntityInfoGetResponseV2] = {
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
 
       entitiesInWrongSchema = (standoffClassIris ++ standoffPropertyIris).filter(
         _.getOntologySchema.contains(ApiV2Simple))
@@ -386,7 +386,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   private def getStandoffStandoffClassesWithDataTypeV2(
       requestingUser: UserADM): Future[StandoffClassesWithDataTypeGetResponseV2] = {
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
     } yield
       StandoffClassesWithDataTypeGetResponseV2(
         standoffClassInfoMap = cacheData.ontologies.values.flatMap { ontology =>
@@ -406,7 +406,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   private def getAllStandoffPropertyEntitiesV2(
       requestingUser: UserADM): Future[StandoffAllPropertyEntitiesGetResponseV2] = {
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
     } yield
       StandoffAllPropertyEntitiesGetResponseV2(
         standoffAllPropertiesEntityInfoMap = cacheData.ontologies.values.flatMap { ontology =>
@@ -424,7 +424,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     */
   private def checkSubClassV2(subClassIri: SmartIri, superClassIri: SmartIri): Future[CheckSubClassResponseV2] = {
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
       response = CheckSubClassResponseV2(
         isSubClass = cacheData.subClassOfRelations.get(subClassIri) match {
           case Some(baseClasses) => baseClasses.contains(superClassIri)
@@ -442,7 +442,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     */
   private def getSubClassesV2(classIri: SmartIri, requestingUser: UserADM): Future[SubClassesGetResponseV2] = {
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
 
       subClassIris = cacheData.superClassOfRelations(classIri).toVector.sorted
 
@@ -475,7 +475,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   private def getKnoraEntityIrisInNamedGraphV2(ontologyIri: SmartIri,
                                                requestingUser: UserADM): Future[OntologyKnoraEntitiesIriInfoV2] = {
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
       ontology = cacheData.ontologies(ontologyIri)
     } yield
       OntologyKnoraEntitiesIriInfoV2(
@@ -503,7 +503,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   private def getOntologyMetadataForProjectsV2(projectIris: Set[SmartIri],
                                                requestingUser: UserADM): Future[ReadOntologyMetadataV2] = {
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
       returnAllOntologies: Boolean = projectIris.isEmpty
 
       ontologyMetadata: Set[OntologyMetadataV2] = if (returnAllOntologies) {
@@ -534,7 +534,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   private def getOntologyMetadataByIriV2(ontologyIris: Set[SmartIri],
                                          requestingUser: UserADM): Future[ReadOntologyMetadataV2] = {
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
       returnAllOntologies: Boolean = ontologyIris.isEmpty
 
       ontologyMetadata: Set[OntologyMetadataV2] = if (returnAllOntologies) {
@@ -573,7 +573,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                                     allLanguages: Boolean,
                                     requestingUser: UserADM): Future[ReadOntologyV2] = {
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
 
       _ = if (ontologyIri.getOntologyName == "standoff" && ontologyIri.getOntologySchema.contains(ApiV2Simple)) {
         throw BadRequestException(s"The standoff ontology is not available in the API v2 simple schema")
@@ -609,7 +609,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                                                 allLanguages: Boolean,
                                                 requestingUser: UserADM): Future[ReadOntologyV2] = {
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
 
       ontologyIris = classIris.map(_.getOntologyFromEntity)
 
@@ -648,7 +648,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                                                    allLanguages: Boolean,
                                                    requestingUser: UserADM): Future[ReadOntologyV2] = {
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
 
       ontologyIris = propertyIris.map(_.getOntologyFromEntity)
 
@@ -931,7 +931,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       deleteOntologyCommentRequestV2: DeleteOntologyCommentRequestV2): Future[ReadOntologyMetadataV2] = {
     def makeTaskFuture(internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] = {
       for {
-        cacheData <- getCacheData
+        cacheData <- Cache.getCacheData
 
         // Check that the user has permission to update the ontology.
         projectIri <- OntologyHelpers.checkPermissionsForOntologyUpdate(
@@ -1033,7 +1033,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   private def createClass(createClassRequest: CreateClassRequestV2): Future[ReadOntologyV2] = {
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
       for {
-        cacheData <- getCacheData
+        cacheData <- Cache.getCacheData
         internalClassDef: ClassInfoContentV2 = createClassRequest.classInfoContent.toOntologySchema(InternalSchema)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
@@ -1248,7 +1248,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       addCardinalitiesRequest: AddCardinalitiesToClassRequestV2): Future[ReadOntologyV2] = {
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
       for {
-        cacheData <- getCacheData
+        cacheData <- Cache.getCacheData
         internalClassDef: ClassInfoContentV2 = addCardinalitiesRequest.classInfoContent.toOntologySchema(InternalSchema)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
@@ -1474,7 +1474,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   private def changeGuiOrder(changeGuiOrderRequest: ChangeGuiOrderRequestV2): Future[ReadOntologyV2] = {
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
       for {
-        cacheData <- getCacheData
+        cacheData <- Cache.getCacheData
         internalClassDef: ClassInfoContentV2 = changeGuiOrderRequest.classInfoContent.toOntologySchema(InternalSchema)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
@@ -1654,7 +1654,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     val internalOntologyIri: SmartIri = internalClassIri.getOntologyFromEntity
 
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
 
       ontology = cacheData.ontologies.getOrElse(
         internalOntologyIri,
@@ -1685,7 +1685,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       changeCardinalitiesRequest: ChangeCardinalitiesRequestV2): Future[ReadOntologyV2] = {
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
       for {
-        cacheData <- getCacheData
+        cacheData <- Cache.getCacheData
         internalClassDef: ClassInfoContentV2 = changeCardinalitiesRequest.classInfoContent.toOntologySchema(
           InternalSchema)
 
@@ -1924,7 +1924,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     val internalOntologyIri: SmartIri = internalClassIri.getOntologyFromEntity
 
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
 
       ontology = cacheData.ontologies.getOrElse(
         internalOntologyIri,
@@ -1949,7 +1949,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   private def deleteClass(deleteClassRequest: DeleteClassRequestV2): Future[ReadOntologyMetadataV2] = {
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] = {
       for {
-        cacheData <- getCacheData
+        cacheData <- Cache.getCacheData
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
         _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
@@ -2066,7 +2066,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     val internalOntologyIri = internalPropertyIri.getOntologyFromEntity
 
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
 
       ontology = cacheData.ontologies.getOrElse(
         internalOntologyIri,
@@ -2097,7 +2097,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   private def deleteProperty(deletePropertyRequest: DeletePropertyRequestV2): Future[ReadOntologyMetadataV2] = {
     def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyMetadataV2] = {
       for {
-        cacheData <- getCacheData
+        cacheData <- Cache.getCacheData
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
         _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
@@ -2235,7 +2235,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     val internalOntologyIri: SmartIri = canDeleteOntologyRequest.ontologyIri.toOntologySchema(InternalSchema)
 
     for {
-      cacheData <- getCacheData
+      cacheData <- Cache.getCacheData
 
       ontology = cacheData.ontologies.getOrElse(
         internalOntologyIri,
@@ -2244,14 +2244,14 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
       userCanUpdateOntology <- OntologyHelpers.canUserUpdateOntology(internalOntologyIri,
                                                                      canDeleteOntologyRequest.requestingUser)
-      subjectsUsingOntology <- OntologyHelpers.getSubjectsUsingOntology(ontology)
+      subjectsUsingOntology <- OntologyHelpers.getSubjectsUsingOntology(settings, storeManager, ontology)
     } yield CanDoResponseV2(userCanUpdateOntology && subjectsUsingOntology.isEmpty)
   }
 
   private def deleteOntology(deleteOntologyRequest: DeleteOntologyRequestV2): Future[SuccessResponseV2] = {
     def makeTaskFuture(internalOntologyIri: SmartIri): Future[SuccessResponseV2] = {
       for {
-        cacheData <- getCacheData
+        cacheData <- Cache.getCacheData
 
         // Check that the user has permission to update the ontology.
         _ <- OntologyHelpers.checkPermissionsForOntologyUpdate(
@@ -2271,7 +2271,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Check that none of the entities in the ontology are used in data or in other ontologies.
 
         ontology = cacheData.ontologies(internalOntologyIri)
-        subjectsUsingOntology: Set[IRI] <- OntologyHelpers.getSubjectsUsingOntology(ontology)
+        subjectsUsingOntology: Set[IRI] <- OntologyHelpers.getSubjectsUsingOntology(settings, storeManager, ontology)
 
         _ = if (subjectsUsingOntology.nonEmpty) {
           val sortedSubjects: Seq[IRI] = subjectsUsingOntology.map(s => "<" + s + ">").toVector.sorted
@@ -2368,7 +2368,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   private def createProperty(createPropertyRequest: CreatePropertyRequestV2): Future[ReadOntologyV2] = {
     def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
       for {
-        cacheData <- getCacheData
+        cacheData <- Cache.getCacheData
         internalPropertyDef = createPropertyRequest.propertyInfoContent.toOntologySchema(InternalSchema)
 
         // Check that the ontology exists and has not been updated by another user since the client last read it.
@@ -2701,7 +2701,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       changePropertyGuiElementRequest: ChangePropertyGuiElementRequest): Future[ReadOntologyV2] = {
     def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
       for {
-        cacheData <- getCacheData
+        cacheData <- Cache.getCacheData
 
         ontology = cacheData.ontologies(internalOntologyIri)
 
@@ -2911,7 +2911,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       changePropertyLabelsOrCommentsRequest: ChangePropertyLabelsOrCommentsRequestV2): Future[ReadOntologyV2] = {
     def makeTaskFuture(internalPropertyIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
       for {
-        cacheData <- getCacheData
+        cacheData <- Cache.getCacheData
 
         ontology = cacheData.ontologies(internalOntologyIri)
 
@@ -2963,6 +2963,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Check that the ontology's last modification date was updated.
 
         _ <- OntologyHelpers.checkOntologyLastModificationDateAfterUpdate(
+          settings = settings,
+          storeManager = storeManager,
           internalOntologyIri = internalOntologyIri,
           expectedLastModificationDate = currentTime,
           featureFactoryConfig = changePropertyLabelsOrCommentsRequest.featureFactoryConfig
@@ -3098,7 +3100,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       changeClassLabelsOrCommentsRequest: ChangeClassLabelsOrCommentsRequestV2): Future[ReadOntologyV2] = {
     def makeTaskFuture(internalClassIri: SmartIri, internalOntologyIri: SmartIri): Future[ReadOntologyV2] = {
       for {
-        cacheData <- getCacheData
+        cacheData <- Cache.getCacheData
 
         ontology = cacheData.ontologies(internalOntologyIri)
         currentReadClassInfo: ReadClassInfoV2 = ontology.classes.getOrElse(
