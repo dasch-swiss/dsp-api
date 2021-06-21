@@ -59,7 +59,7 @@ Construct {
     ?mEle ?pp ?oo .
     ?oo ?ppp ?ooo .
 }
-FROM <http://www.knora.org/data/0001/anything>
+FROM <http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA>
 WHERE {
     BIND(<http://rdfh.ch/projects/U7HxeFSUEQCHJxSLahw3AA/mappings/update-standard-mapping> as ?mapping)
     ?mapping ?p ?o .

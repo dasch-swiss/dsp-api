@@ -77,7 +77,8 @@ class ValuesV2R2RSpec extends R2RSpec {
   private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl",
+                  name = "http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA")
   )
 
   private def getResourceWithValues(resourceIri: IRI,

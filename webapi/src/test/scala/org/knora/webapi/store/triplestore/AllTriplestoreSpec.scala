@@ -57,7 +57,8 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
   // println(system.settings.config.getConfig("app.triplestore").root().render())
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl",
+                  name = "http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA")
   )
 
   val countTriplesQuery: String =

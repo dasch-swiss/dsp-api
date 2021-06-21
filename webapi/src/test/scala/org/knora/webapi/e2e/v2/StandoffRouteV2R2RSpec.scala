@@ -81,7 +81,8 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/incunabula"),
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
+    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl",
+                  name = "http://www.knora.org/data/wI8G0Ps-F1USDL-F06aRHA"),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/anything")
   )
 

@@ -59,7 +59,8 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProt
   private val testPass = java.net.URLEncoder.encode("test", "utf-8")
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl",
+                  name = "http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA")
   )
 
   def sessionLogin(email: String, password: String): String = {

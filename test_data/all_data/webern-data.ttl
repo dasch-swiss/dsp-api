@@ -1,4 +1,4 @@
-@prefix : <http://www.knora.org/data/0806/webern#> .
+@prefix : <http://www.knora.org/data/r5rM3chy87PJU1NZPFx3WQ#> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix xml: <http://www.w3.org/XML/1998/namespace> .

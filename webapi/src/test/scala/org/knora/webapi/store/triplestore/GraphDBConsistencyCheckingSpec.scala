@@ -24,8 +24,9 @@ class GraphDBConsistencyCheckingSpec extends CoreSpec(GraphDBConsistencyChecking
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/store.triplestore.GraphDBConsistencyCheckingSpec/incunabula-data.ttl",
-                  name = "http://www.knora.org/data/0803/incunabula"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+                  name = "http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g"),
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl",
+                  name = "http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA")
   )
 
   override def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
@@ -357,7 +358,7 @@ object GraphDBConsistencyCheckingSpec {
           |    USING <http://www.ontotext.com/explicit>
           |
           |WHERE {
-          |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
+          |    BIND(IRI("http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g") AS ?dataNamedGraph)
           |    BIND(IRI("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/missingPartOf") AS ?resource0)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#page") AS ?resourceClass0)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
@@ -599,7 +600,7 @@ object GraphDBConsistencyCheckingSpec {
           |    USING <http://www.ontotext.com/explicit>
           |
           |WHERE {
-          |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
+          |    BIND(IRI("http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g") AS ?dataNamedGraph)
           |    BIND(IRI("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/missingComment") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/knora-base#Annotation") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
@@ -928,7 +929,7 @@ object GraphDBConsistencyCheckingSpec {
           |    USING <http://www.ontotext.com/explicit>
           |
           |WHERE {
-          |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
+          |    BIND(IRI("http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g") AS ?dataNamedGraph)
           |    BIND(IRI("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/tooManyPublocs") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
@@ -1265,7 +1266,7 @@ object GraphDBConsistencyCheckingSpec {
           |    USING <http://www.ontotext.com/explicit>
           |
           |WHERE {
-          |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
+          |    BIND(IRI("http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g") AS ?dataNamedGraph)
           |    BIND(IRI("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/tooManyLastModificationDates") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
@@ -1472,7 +1473,7 @@ object GraphDBConsistencyCheckingSpec {
           |    USING <http://www.ontotext.com/explicit>
           |
           |WHERE {
-          |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
+          |    BIND(IRI("http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g") AS ?dataNamedGraph)
           |    BIND(IRI("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/wrongSubjectClass") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
@@ -1674,7 +1675,7 @@ object GraphDBConsistencyCheckingSpec {
           |    USING <http://www.ontotext.com/explicit>
           |
           |WHERE {
-          |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
+          |    BIND(IRI("http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g") AS ?dataNamedGraph)
           |    BIND(IRI("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/wrongObjectClass") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
@@ -1926,7 +1927,7 @@ object GraphDBConsistencyCheckingSpec {
           |    USING <http://www.ontotext.com/explicit>
           |
           |WHERE {
-          |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
+          |    BIND(IRI("http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g") AS ?dataNamedGraph)
           |    BIND(IRI("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/resourcePropWithNoCardinality") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
@@ -2153,7 +2154,7 @@ object GraphDBConsistencyCheckingSpec {
           |    USING <http://www.ontotext.com/explicit>
           |
           |WHERE {
-          |    BIND(IRI("http://www.knora.org/data/0803/incunabula") AS ?dataNamedGraph)
+          |    BIND(IRI("http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g") AS ?dataNamedGraph)
           |    BIND(IRI("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/valuePropWithNoCardinality") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0803/incunabula#book") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/b83acc5f05") AS ?creatorIri)
@@ -2302,7 +2303,7 @@ object GraphDBConsistencyCheckingSpec {
           |    USING <http://www.ontotext.com/explicit>
           |
           |WHERE {
-          |    BIND(IRI("http://www.knora.org/data/0001/anything") AS ?dataNamedGraph)
+          |    BIND(IRI("http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA") AS ?dataNamedGraph)
           |    BIND(IRI("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/wrongTargetClass") AS ?resource0)
           |    BIND(IRI("http://www.knora.org/ontology/0001/anything#BlueThing") AS ?resourceClass0)
           |    BIND(IRI("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)
@@ -2372,7 +2373,7 @@ object GraphDBConsistencyCheckingSpec {
           |    USING <http://www.ontotext.com/explicit>
           |
           |WHERE {
-          |    BIND(IRI("http://www.knora.org/data/0001/anything") AS ?dataNamedGraph)
+          |    BIND(IRI("http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA") AS ?dataNamedGraph)
           |    BIND(IRI("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/twoLabels") AS ?resource)
           |    BIND(IRI("http://www.knora.org/ontology/0001/anything#BlueThing") AS ?resourceClass)
           |    BIND(IRI("http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q") AS ?creatorIri)

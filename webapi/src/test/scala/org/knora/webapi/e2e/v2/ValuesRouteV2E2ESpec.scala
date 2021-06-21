@@ -78,7 +78,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
   private var linkValueUUID = UUID.randomUUID
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl",
+                  name = "http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA")
   )
 
   // If true, writes some API responses to test data files. If false, compares the API responses to the existing test data files.

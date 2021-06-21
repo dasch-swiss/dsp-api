@@ -74,7 +74,8 @@ class ProjectsADME2ESpec
   private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl",
+                  name = "http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA")
   )
 
   "The Projects Route ('admin/projects')" when {
@@ -761,7 +762,7 @@ class ProjectsADME2ESpec
           contextIris == Set(
             "http://www.knora.org/ontology/0001/something",
             "http://www.knora.org/ontology/0001/anything",
-            "http://www.knora.org/data/0001/anything",
+            "http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA",
             "http://www.knora.org/data/permissions",
             "http://www.knora.org/data/admin"
           ))

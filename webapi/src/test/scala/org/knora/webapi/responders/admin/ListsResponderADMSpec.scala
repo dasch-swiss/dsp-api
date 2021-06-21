@@ -55,8 +55,10 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl",
+                  name = "http://www.knora.org/data/wI8G0Ps-F1USDL-F06aRHA"),
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl",
+                  name = "http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA")
   )
 
   private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo

@@ -7,7 +7,7 @@
 @prefix standoff: <http://www.knora.org/ontology/standoff#> .
 @prefix anything: <http://www.knora.org/ontology/0001/anything#> .
 
-<http://www.knora.org/data/0001/anything> {
+<http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA> {
     <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/qN1igiDRSAemBBktbRHn6g> a anything:Thing;
       rdfs:label "Something with a lot of markup";
       knora-base:isDeleted false;

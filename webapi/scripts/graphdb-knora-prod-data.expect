@@ -24,17 +24,17 @@ send "load ../../test_data/all_data/system-data.ttl into http://www.knora.org/da
 expect $prompt
 send "load ../../test_data/ontologies/incunabula-onto.ttl into http://www.knora.org/ontology/0803/incunabula .\r"
 expect $prompt
-send "load ../../test_data/all_data/incunabula-data.ttl into http://www.knora.org/data/0803/incunabula .\r"
+send "load ../../test_data/all_data/incunabula-data.ttl into http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g .\r"
 expect $prompt
 send "load ../../test_data/ontologies/dokubib-onto.ttl into http://www.knora.org/ontology/0804/dokubib .\r"
 expect $prompt
 send "load ../../test_data/ontologies/images-onto.ttl into http://www.knora.org/ontology/00FF/images .\r"
 expect $prompt
-send "load ../../test_data/demo_data/images-demo-data.ttl into http://www.knora.org/data/00FF/images .\r"
+send "load ../../test_data/demo_data/images-demo-data.ttl into http://www.knora.org/data/wI8G0Ps-F1USDL-F06aRHA .\r"
 expect $prompt
 send "load ../../test_data/ontologies/anything-onto.ttl into http://www.knora.org/ontology/0001/anything .\r"
 expect $prompt
-send "load ../../test_data/all_data/anything-data.ttl into http://www.knora.org/data/0001/anything .\r"
+send "load ../../test_data/all_data/anything-data.ttl into http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA .\r"
 expect $prompt
 send "load ../../test_data/ontologies/beol-onto.ttl into http://www.knora.org/ontology/0801/beol .\r"
 expect $prompt
@@ -44,13 +44,11 @@ send "load ../../test_data/ontologies/newton-onto.ttl into http://www.knora.org/
 expect $prompt
 send "load ../../test_data/ontologies/leibniz-onto.ttl into http://www.knora.org/ontology/0801/leibniz .\r"
 expect $prompt
-send "load ../../test_data/all_data/biblio-data.ttl into http://www.knora.org/data/0801/biblio .\r"
-expect $prompt
-send "load ../../test_data/all_data/beol-data.ttl into http://www.knora.org/data/0801/beol .\r"
+send "load ../../test_data/all_data/beol-data.ttl into http://www.knora.org/data/yTerZGyxjZVqFMNNKXCDPF .\r"
 expect $prompt
 send "load ../../test_data/ontologies/webern-onto.ttl into http://www.knora.org/ontology/0806/webern .\r"
 expect $prompt
-send "load ../../test_data/all_data/webern-data.ttl into http://www.knora.org/data/0806/webern .\r"
+send "load ../../test_data/all_data/webern-data.ttl into http://www.knora.org/data/r5rM3chy87PJU1NZPFx3WQ .\r"
 expect $prompt
 
 send "close .\r"

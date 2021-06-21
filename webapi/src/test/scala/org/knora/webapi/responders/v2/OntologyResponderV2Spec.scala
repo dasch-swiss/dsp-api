@@ -56,7 +56,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
   private val exampleSharedOntology = RdfDataObject(path = "test_data/ontologies/example-box.ttl",
                                                     name = "http://www.knora.org/ontology/shared/example-box")
   private val anythingData =
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl",
+                  name = "http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA")
 
   // The default timeout for receiving reply messages from actors.
   private val timeout = 10.seconds

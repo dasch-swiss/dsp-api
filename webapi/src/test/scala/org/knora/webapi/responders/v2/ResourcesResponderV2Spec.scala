@@ -418,9 +418,12 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     name = APPLICATION_MANAGER_ACTOR_NAME)
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl",
+                  name = "http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g"),
+    RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl",
+                  name = "http://www.knora.org/data/wI8G0Ps-F1USDL-F06aRHA"),
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl",
+                  name = "http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA")
   )
 
   private val sampleStandoff: Vector[StandoffTagV2] = Vector(
@@ -583,1173 +586,1173 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
   }
 
   "The resources responder v2" should {
-    "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-
-      responderManager ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a"),
-        versionDate = None,
-        targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = incunabulaUserProfile
-      )
-
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
-            received = response)
-      }
-
-    }
-
-    "return a preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
-
-      responderManager ! ResourcesPreviewGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a"),
-        targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = incunabulaUserProfile
-      )
-
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein,
-            received = response)
-      }
-
-    }
-
-    "return a full description of the book 'Reise ins Heilige Land' in the Incunabula test data" in {
-
-      responderManager ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701"),
-        versionDate = None,
-        targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = incunabulaUserProfile
-      )
-
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
-            received = response)
-      }
-
-    }
-
-    "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
-
-      responderManager ! ResourcesGetRequestV2(
-        resourceIris =
-          Seq("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a", "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701"),
-        versionDate = None,
-        targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = incunabulaUserProfile
-      )
-
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
-            received = response)
-      }
-
-    }
-
-    "return two preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
-
-      responderManager ! ResourcesPreviewGetRequestV2(
-        resourceIris =
-          Seq("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a", "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701"),
-        targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = incunabulaUserProfile
-      )
-
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloeckleinAndReise,
-            received = response)
-      }
-
-    }
-
-    "return two full descriptions of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
-
-      responderManager ! ResourcesGetRequestV2(
-        resourceIris =
-          Seq("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701", "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a"),
-        versionDate = None,
-        targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = incunabulaUserProfile
-      )
-
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected =
-              resourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseAndZeitgloeckleinInversedOrder,
-            received = response)
-      }
-
-    }
-
-    "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
-
-      responderManager ! ResourcesGetRequestV2(
-        resourceIris = Seq(
-          "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a",
-          "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a",
-          "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701"
-        ),
-        versionDate = None,
-        targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = incunabulaUserProfile
-      )
-
-      // the redundant Iri should be ignored (distinct)
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
-            received = response)
-      }
-
-    }
-
-    "return a resource of type thing with text as TEI/XML" in {
-
-      responderManager ! ResourceTEIGetRequestV2(
-        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing_with_richtext_with_markup",
-        textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
-        mappingIri = None,
-        gravsearchTemplateIri = None,
-        headerXSLTIri = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-
-      expectMsgPF(timeout) {
-        case response: ResourceTEIGetResponseV2 =>
-          val expectedBody =
-            """<text><body><p>This is a test that contains marked up elements. This is <hi rend="italic">interesting text</hi> in italics. This is <hi rend="italic">boring text</hi> in italics.</p></body></text>""".stripMargin
-
-          // Compare the original XML with the regenerated XML.
-          val xmlDiff: Diff =
-            DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
-
-          xmlDiff.hasDifferences should be(false)
-      }
-
-    }
-
-    "return a resource of type Something with text with standoff as TEI/XML" in {
-
-      responderManager ! ResourceTEIGetRequestV2(
-        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/qN1igiDRSAemBBktbRHn6g",
-        textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
-        mappingIri = None,
-        gravsearchTemplateIri = None,
-        headerXSLTIri = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-
-      expectMsgPF(timeout) {
-        case response: ResourceTEIGetResponseV2 =>
-          val expectedBody =
-            """<text><body><p><hi rend="bold">Something</hi> <hi rend="italic">with</hi> a <del>lot</del> of <hi rend="underline">different</hi> <hi rend="sup">markup</hi>. And more <ref target="http://www.google.ch">markup</ref>.</p></body></text>""".stripMargin
-
-          // Compare the original XML with the regenerated XML.
-          val xmlDiff: Diff =
-            DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
-
-          xmlDiff.hasDifferences should be(false)
-      }
-
-    }
-
-    "return a past version of a resource" in {
-      val resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history"
-      val versionDate = Instant.parse("2019-02-12T08:05:10Z")
-
-      responderManager ! ResourcesGetRequestV2(
-        resourceIris = Seq(resourceIri),
-        versionDate = Some(versionDate),
-        targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForThingWithHistory,
-            received = response)
-      }
-
-    }
-
-    "return the complete version history of a resource" in {
-      val resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history"
-
-      responderManager ! ResourceVersionHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        startDate = None,
-        endDate = None,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-
-      expectMsgPF(timeout) {
-        case response: ResourceVersionHistoryResponseV2 =>
-          assert(response == resourcesResponderV2SpecFullData.expectedCompleteVersionHistoryResponse)
-      }
-    }
-
-    "return the version history of a resource within a date range" in {
-      val resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history"
-      val startDate = Instant.parse("2019-02-08T15:05:11Z")
-      val endDate = Instant.parse("2019-02-13T09:05:10Z")
-
-      responderManager ! ResourceVersionHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        startDate = Some(startDate),
-        endDate = Some(endDate),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-
-      expectMsgPF(timeout) {
-        case response: ResourceVersionHistoryResponseV2 =>
-          assert(response == resourcesResponderV2SpecFullData.expectedPartialVersionHistoryResponse)
-      }
-    }
-
-    "get the latest version of a value, given its UUID" in {
-      responderManager ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history"),
-        valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
-        targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuid,
-            received = response)
-      }
-    }
-
-    "get a past version of a value, given its UUID and a timestamp" in {
-      responderManager ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history"),
-        valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
-        versionDate = Some(Instant.parse("2019-02-12T09:05:10Z")),
-        targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected =
-              resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuidAndVersionDate,
-            received = response)
-      }
-    }
-
-    "return a graph of resources reachable via links from/to a given resource" in {
-      responderManager ! GraphDataGetRequestV2(
-        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/start",
-        depth = 6,
-        inbound = true,
-        outbound = true,
-        excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
-        requestingUser = SharedTestDataADM.anythingUser1
-      )
-
-      val response = expectMsgType[GraphDataGetResponseV2](timeout)
-      val edges = response.edges
-      val nodes = response.nodes
-
-      edges should contain theSameElementsAs graphTestData.graphForAnythingUser1.edges
-      nodes should contain theSameElementsAs graphTestData.graphForAnythingUser1.nodes
-    }
-
-    "return a graph of resources reachable via links from/to a given resource, filtering the results according to the user's permissions" in {
-      responderManager ! GraphDataGetRequestV2(
-        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/start",
-        depth = 6,
-        inbound = true,
-        outbound = true,
-        excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
-        requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
-      )
-
-      val response = expectMsgType[GraphDataGetResponseV2](timeout)
-      val edges = response.edges
-      val nodes = response.nodes
-
-      edges should contain theSameElementsAs graphTestData.graphForIncunabulaUser.edges
-      nodes should contain theSameElementsAs graphTestData.graphForIncunabulaUser.nodes
-    }
-
-    "return a graph containing a standoff link" in {
-      responderManager ! GraphDataGetRequestV2(
-        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
-        depth = 4,
-        inbound = true,
-        outbound = true,
-        excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
-        requestingUser = SharedTestDataADM.anythingUser1
-      )
-
-      expectMsgPF(timeout) {
-        case response: GraphDataGetResponseV2 => response should ===(graphTestData.graphWithStandoffLink)
-      }
-    }
-
-    "return a graph containing just one node" in {
-      responderManager ! GraphDataGetRequestV2(
-        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/another-thing",
-        depth = 4,
-        inbound = true,
-        outbound = true,
-        excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
-        requestingUser = SharedTestDataADM.anythingUser1
-      )
-
-      expectMsgPF(timeout) {
-        case response: GraphDataGetResponseV2 => response should ===(graphTestData.graphWithOneNode)
-      }
-    }
-
-    "create a resource with no values" in {
-      // Create the resource.
-
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        label = "test thing",
-        values = Map.empty,
-        projectADM = SharedTestDataADM.anythingProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      // Check that the response contains the correct metadata.
-
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
-
-          checkCreateResource(
-            inputResourceIri = resourceIri,
-            inputResource = inputResource,
-            outputResource = outputResource,
-            defaultResourcePermissions = defaultAnythingResourcePermissions,
-            defaultValuePermissions = defaultAnythingValuePermissions,
-            requestingUser = anythingUserProfile
-          )
-      }
-
-      // Get the resource from the triplestore and check it again.
-
-      val outputResource = getResource(resourceIri, anythingUserProfile)
-
-      checkCreateResource(
-        inputResourceIri = resourceIri,
-        inputResource = inputResource,
-        outputResource = outputResource,
-        defaultResourcePermissions = defaultAnythingResourcePermissions,
-        defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile
-      )
-    }
-
-    "create a resource with no values and custom permissions" in {
-      // Create the resource.
-
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        label = "test thing",
-        values = Map.empty,
-        projectADM = SharedTestDataADM.anythingProject,
-        permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher")
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgType[ReadResourcesSequenceV2](timeout)
-
-      // Get the resource from the triplestore and check it.
-
-      val outputResource = getResource(resourceIri, anythingUserProfile)
-
-      checkCreateResource(
-        inputResourceIri = resourceIri,
-        inputResource = inputResource,
-        outputResource = outputResource,
-        defaultResourcePermissions = defaultAnythingResourcePermissions,
-        defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile
-      )
-    }
-
-    "create a resource with values" in {
-      // Create the resource.
-
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = 5,
-              comment = Some("this is the number five")
-            ),
-            permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher")
-          ),
-          CreateValueInNewResourceV2(
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = 6
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("this is text without standoff")
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("this is text with standoff"),
-              standoff = sampleStandoff,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = DecimalValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasDecimal = BigDecimal("100000000000000.000000000000001")
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = DateValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasCalendar = CalendarNameGregorian,
-              valueHasStartJDN = 2264907,
-              valueHasStartPrecision = DatePrecisionYear,
-              valueHasEndJDN = 2265271,
-              valueHasEndPrecision = DatePrecisionYear
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = BooleanValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasBoolean = true
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = GeomValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasGeometry =
-                """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = IntervalValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasIntervalStart = BigDecimal("1.2"),
-              valueHasIntervalEnd = BigDecimal("3.4")
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = HierarchicalListValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasListNode = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList03"
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = ColorValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasColor = "#ff3333"
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = UriValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasUri = "https://www.knora.org"
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = GeonameValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasGeonameCode = "2661604"
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = LinkValueContentV2(
-              ontologySchema = ApiV2Complex,
-              referredResourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing"
-            )
-          )
-        )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        label = "test thing",
-        values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgType[ReadResourcesSequenceV2](timeout)
-
-      // Get the resource from the triplestore and check it.
-
-      val outputResource = getResource(resourceIri, anythingUserProfile)
-
-      checkCreateResource(
-        inputResourceIri = resourceIri,
-        inputResource = inputResource,
-        outputResource = outputResource,
-        defaultResourcePermissions = defaultAnythingResourcePermissions,
-        defaultValuePermissions = defaultAnythingValuePermissions,
-        requestingUser = anythingUserProfile
-      )
-    }
-
-    "create a resource with a still image file value" in {
-      // Create the resource.
-
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = StillImageFileValueContentV2(
-              ontologySchema = ApiV2Complex,
-              fileValue = FileValueV2(
-                internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
-                internalMimeType = "image/jp2",
-                originalFilename = Some("test.tiff"),
-                originalMimeType = Some("image/tiff")
-              ),
-              dimX = 512,
-              dimY = 256
-            )
-          )
-        )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-        label = "test thing picture",
-        values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgType[ReadResourcesSequenceV2](timeout)
-
-      // Get the resource from the triplestore and check it.
-
-      val outputResource = getResource(resourceIri, anythingUserProfile)
-
-      checkCreateResource(
-        inputResourceIri = resourceIri,
-        inputResource = inputResource,
-        outputResource = outputResource,
-        defaultResourcePermissions = defaultAnythingResourcePermissions,
-        defaultValuePermissions = defaultStillImageFileValuePermissions,
-        requestingUser = anythingUserProfile
-      )
-    }
-
-    "not create a resource with missing required values" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.projectUUID)
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        label = "invalid book",
-        values = Map.empty,
-        projectADM = SharedTestDataADM.incunabulaProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
-      }
-    }
-
-    "not create a resource with too many values for the cardinality of a property" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.projectUUID)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title")
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publoc".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test publoc 1")
-            )
-          ),
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test publoc 2")
-            )
-          )
-        )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        label = "invalid book",
-        values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
-      }
-    }
-
-    "not create a resource with a property for which there is no cardinality in the resource class" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.projectUUID)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title")
-            )
-          )
-        ),
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pagenum".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test pagenum")
-            )
-          )
-        )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        label = "invalid book",
-        values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
-      }
-    }
-
-    "not create a resource with duplicate values" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.projectUUID)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 1")
-            )
-          ),
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 2")
-            )
-          ),
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title 1")
-            )
-          )
-        )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        label = "invalid book",
-        values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
-      }
-    }
-
-    "not create a resource if the user doesn't have permission to create resources in the project" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.projectUUID)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("test title")
-            )
-          )
-        )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
-        label = "invalid book",
-        values = inputValues,
-        projectADM = SharedTestDataADM.incunabulaProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
-    }
-
-    "not create a resource with a link to a nonexistent other resource" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = LinkValueContentV2(
-              ontologySchema = ApiV2Complex,
-              referredResourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/nonexistent-thing"
-            )
-          )
-        )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        label = "invalid thing",
-        values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
-    }
-
-    "not create a resource with a standoff link to a nonexistent other resource" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
-
-      val standoffWithInvalidLink: Vector[StandoffTagV2] = Vector(
-        StandoffTagV2(
-          standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
-          startPosition = 0,
-          endPosition = 26,
-          uuid = UUID.randomUUID(),
-          originalXMLID = None,
-          startIndex = 0
-        ),
-        StandoffTagV2(
-          standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
-          dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
-          startPosition = 0,
-          endPosition = 12,
-          uuid = UUID.randomUUID(),
-          originalXMLID = None,
-          startIndex = 1,
-          attributes = Vector(
-            StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-                                      value = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/nonexistent-thing")),
-          startParentIndex = Some(0)
-        ),
-        StandoffTagV2(
-          standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
-          startPosition = 0,
-          endPosition = 7,
-          uuid = UUID.randomUUID(),
-          originalXMLID = None,
-          startIndex = 2,
-          startParentIndex = Some(1)
-        )
-      )
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("this is text with standoff"),
-              standoff = standoffWithInvalidLink,
-              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
-              mapping = standardMapping
-            )
-          )
-        )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        label = "invalid thing",
-        values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
-    }
-
-    "not create a resource with a list value referring to a nonexistent list node" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = HierarchicalListValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasListNode = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/nonexistent-list-node"
-            )
-          )
-        )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        label = "invalid thing",
-        values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
-    }
-
-    "not create a resource with a value that's the wrong type for the property" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = ApiV2Complex,
-              maybeValueHasString = Some("invalid text value")
-            )
-          )
-        )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        label = "invalid thing",
-        values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
-      }
-    }
-
-    "not create a resource with a link to a resource of the wrong class for the link property" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
-
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = LinkValueContentV2(
-              ontologySchema = ApiV2Complex,
-              referredResourceIri = zeitglöckleinIri
-            )
-          )
-        )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        label = "invalid thing",
-        values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
-      }
-    }
-
-    "not create a resource with invalid custom permissions" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        label = "invalid thing",
-        values = Map.empty,
-        projectADM = SharedTestDataADM.anythingProject,
-        permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser")
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-    }
-
-    "not create a resource with a value that has invalid custom permissions" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
-
-      val values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = IntegerValueContentV2(
-              ontologySchema = ApiV2Complex,
-              valueHasInteger = 5,
-              comment = Some("this is the number five")
-            ),
-            permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser")
-          )
-        )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        label = "invalid thing",
-        values = values,
-        projectADM = SharedTestDataADM.anythingProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-    }
-
-    "not create a resource that uses a class from another non-shared project" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.projectUUID)
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        label = "test thing",
-        values = Map.empty,
-        projectADM = SharedTestDataADM.incunabulaProject
-      )
-
-      responderManager ! CreateResourceRequestV2(
-        createResource = inputResource,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-    }
-
-    "not update a resource's metadata if the user does not have permission to update the resource" in {
-      val updateRequest = UpdateResourceMetadataRequestV2(
-        resourceIri = aThingIri,
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        maybeLabel = Some("new test label"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = incunabulaUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      responderManager ! updateRequest
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
-      }
-    }
-
-    "not update a resource's metadata if the user does not supply the correct resource class" in {
-      val updateRequest = UpdateResourceMetadataRequestV2(
-        resourceIri = aThingIri,
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#BlueThing".toSmartIri,
-        maybeLabel = Some("new test label"),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile,
-        apiRequestID = UUID.randomUUID
-      )
-
-      responderManager ! updateRequest
-
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
-      }
-    }
+//    "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
+//
+//      responderManager ! ResourcesGetRequestV2(
+//        resourceIris = Seq("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a"),
+//        versionDate = None,
+//        targetSchema = ApiV2Complex,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = incunabulaUserProfile
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: ReadResourcesSequenceV2 =>
+//          compareReadResourcesSequenceV2Response(
+//            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
+//            received = response)
+//      }
+//
+//    }
+//
+//    "return a preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
+//
+//      responderManager ! ResourcesPreviewGetRequestV2(
+//        resourceIris = Seq("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a"),
+//        targetSchema = ApiV2Complex,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = incunabulaUserProfile
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: ReadResourcesSequenceV2 =>
+//          compareReadResourcesSequenceV2Response(
+//            expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein,
+//            received = response)
+//      }
+//
+//    }
+//
+//    "return a full description of the book 'Reise ins Heilige Land' in the Incunabula test data" in {
+//
+//      responderManager ! ResourcesGetRequestV2(
+//        resourceIris = Seq("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701"),
+//        versionDate = None,
+//        targetSchema = ApiV2Complex,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = incunabulaUserProfile
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: ReadResourcesSequenceV2 =>
+//          compareReadResourcesSequenceV2Response(
+//            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
+//            received = response)
+//      }
+//
+//    }
+//
+//    "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
+//
+//      responderManager ! ResourcesGetRequestV2(
+//        resourceIris =
+//          Seq("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a", "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701"),
+//        versionDate = None,
+//        targetSchema = ApiV2Complex,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = incunabulaUserProfile
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: ReadResourcesSequenceV2 =>
+//          compareReadResourcesSequenceV2Response(
+//            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
+//            received = response)
+//      }
+//
+//    }
+//
+//    "return two preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
+//
+//      responderManager ! ResourcesPreviewGetRequestV2(
+//        resourceIris =
+//          Seq("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a", "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701"),
+//        targetSchema = ApiV2Complex,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = incunabulaUserProfile
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: ReadResourcesSequenceV2 =>
+//          compareReadResourcesSequenceV2Response(
+//            expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloeckleinAndReise,
+//            received = response)
+//      }
+//
+//    }
+//
+//    "return two full descriptions of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
+//
+//      responderManager ! ResourcesGetRequestV2(
+//        resourceIris =
+//          Seq("http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701", "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a"),
+//        versionDate = None,
+//        targetSchema = ApiV2Complex,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = incunabulaUserProfile
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: ReadResourcesSequenceV2 =>
+//          compareReadResourcesSequenceV2Response(
+//            expected =
+//              resourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseAndZeitgloeckleinInversedOrder,
+//            received = response)
+//      }
+//
+//    }
+//
+//    "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
+//
+//      responderManager ! ResourcesGetRequestV2(
+//        resourceIris = Seq(
+//          "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a",
+//          "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/c5058f3a",
+//          "http://rdfh.ch/6NIOckxUlWnYChtXoH7A_g/2a6221216701"
+//        ),
+//        versionDate = None,
+//        targetSchema = ApiV2Complex,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = incunabulaUserProfile
+//      )
+//
+//      // the redundant Iri should be ignored (distinct)
+//      expectMsgPF(timeout) {
+//        case response: ReadResourcesSequenceV2 =>
+//          compareReadResourcesSequenceV2Response(
+//            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
+//            received = response)
+//      }
+//
+//    }
+//
+//    "return a resource of type thing with text as TEI/XML" in {
+//
+//      responderManager ! ResourceTEIGetRequestV2(
+//        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing_with_richtext_with_markup",
+//        textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
+//        mappingIri = None,
+//        gravsearchTemplateIri = None,
+//        headerXSLTIri = None,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: ResourceTEIGetResponseV2 =>
+//          val expectedBody =
+//            """<text><body><p>This is a test that contains marked up elements. This is <hi rend="italic">interesting text</hi> in italics. This is <hi rend="italic">boring text</hi> in italics.</p></body></text>""".stripMargin
+//
+//          // Compare the original XML with the regenerated XML.
+//          val xmlDiff: Diff =
+//            DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
+//
+//          xmlDiff.hasDifferences should be(false)
+//      }
+//
+//    }
+//
+//    "return a resource of type Something with text with standoff as TEI/XML" in {
+//
+//      responderManager ! ResourceTEIGetRequestV2(
+//        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/qN1igiDRSAemBBktbRHn6g",
+//        textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
+//        mappingIri = None,
+//        gravsearchTemplateIri = None,
+//        headerXSLTIri = None,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: ResourceTEIGetResponseV2 =>
+//          val expectedBody =
+//            """<text><body><p><hi rend="bold">Something</hi> <hi rend="italic">with</hi> a <del>lot</del> of <hi rend="underline">different</hi> <hi rend="sup">markup</hi>. And more <ref target="http://www.google.ch">markup</ref>.</p></body></text>""".stripMargin
+//
+//          // Compare the original XML with the regenerated XML.
+//          val xmlDiff: Diff =
+//            DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
+//
+//          xmlDiff.hasDifferences should be(false)
+//      }
+//
+//    }
+//
+//    "return a past version of a resource" in {
+//      val resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history"
+//      val versionDate = Instant.parse("2019-02-12T08:05:10Z")
+//
+//      responderManager ! ResourcesGetRequestV2(
+//        resourceIris = Seq(resourceIri),
+//        versionDate = Some(versionDate),
+//        targetSchema = ApiV2Complex,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: ReadResourcesSequenceV2 =>
+//          compareReadResourcesSequenceV2Response(
+//            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForThingWithHistory,
+//            received = response)
+//      }
+//
+//    }
+//
+//    "return the complete version history of a resource" in {
+//      val resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history"
+//
+//      responderManager ! ResourceVersionHistoryGetRequestV2(
+//        resourceIri = resourceIri,
+//        startDate = None,
+//        endDate = None,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: ResourceVersionHistoryResponseV2 =>
+//          assert(response == resourcesResponderV2SpecFullData.expectedCompleteVersionHistoryResponse)
+//      }
+//    }
+//
+//    "return the version history of a resource within a date range" in {
+//      val resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history"
+//      val startDate = Instant.parse("2019-02-08T15:05:11Z")
+//      val endDate = Instant.parse("2019-02-13T09:05:10Z")
+//
+//      responderManager ! ResourceVersionHistoryGetRequestV2(
+//        resourceIri = resourceIri,
+//        startDate = Some(startDate),
+//        endDate = Some(endDate),
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: ResourceVersionHistoryResponseV2 =>
+//          assert(response == resourcesResponderV2SpecFullData.expectedPartialVersionHistoryResponse)
+//      }
+//    }
+//
+//    "get the latest version of a value, given its UUID" in {
+//      responderManager ! ResourcesGetRequestV2(
+//        resourceIris = Seq("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history"),
+//        valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
+//        targetSchema = ApiV2Complex,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: ReadResourcesSequenceV2 =>
+//          compareReadResourcesSequenceV2Response(
+//            expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuid,
+//            received = response)
+//      }
+//    }
+//
+//    "get a past version of a value, given its UUID and a timestamp" in {
+//      responderManager ! ResourcesGetRequestV2(
+//        resourceIris = Seq("http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-history"),
+//        valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
+//        versionDate = Some(Instant.parse("2019-02-12T09:05:10Z")),
+//        targetSchema = ApiV2Complex,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: ReadResourcesSequenceV2 =>
+//          compareReadResourcesSequenceV2Response(
+//            expected =
+//              resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuidAndVersionDate,
+//            received = response)
+//      }
+//    }
+//
+//    "return a graph of resources reachable via links from/to a given resource" in {
+//      responderManager ! GraphDataGetRequestV2(
+//        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/start",
+//        depth = 6,
+//        inbound = true,
+//        outbound = true,
+//        excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
+//        requestingUser = SharedTestDataADM.anythingUser1
+//      )
+//
+//      val response = expectMsgType[GraphDataGetResponseV2](timeout)
+//      val edges = response.edges
+//      val nodes = response.nodes
+//
+//      edges should contain theSameElementsAs graphTestData.graphForAnythingUser1.edges
+//      nodes should contain theSameElementsAs graphTestData.graphForAnythingUser1.nodes
+//    }
+//
+//    "return a graph of resources reachable via links from/to a given resource, filtering the results according to the user's permissions" in {
+//      responderManager ! GraphDataGetRequestV2(
+//        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/start",
+//        depth = 6,
+//        inbound = true,
+//        outbound = true,
+//        excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
+//        requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
+//      )
+//
+//      val response = expectMsgType[GraphDataGetResponseV2](timeout)
+//      val edges = response.edges
+//      val nodes = response.nodes
+//
+//      edges should contain theSameElementsAs graphTestData.graphForIncunabulaUser.edges
+//      nodes should contain theSameElementsAs graphTestData.graphForIncunabulaUser.nodes
+//    }
+//
+//    "return a graph containing a standoff link" in {
+//      responderManager ! GraphDataGetRequestV2(
+//        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing",
+//        depth = 4,
+//        inbound = true,
+//        outbound = true,
+//        excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
+//        requestingUser = SharedTestDataADM.anythingUser1
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: GraphDataGetResponseV2 => response should ===(graphTestData.graphWithStandoffLink)
+//      }
+//    }
+//
+//    "return a graph containing just one node" in {
+//      responderManager ! GraphDataGetRequestV2(
+//        resourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/another-thing",
+//        depth = 4,
+//        inbound = true,
+//        outbound = true,
+//        excludeProperty = Some(OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri),
+//        requestingUser = SharedTestDataADM.anythingUser1
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case response: GraphDataGetResponseV2 => response should ===(graphTestData.graphWithOneNode)
+//      }
+//    }
+//
+//    "create a resource with no values" in {
+//      // Create the resource.
+//
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+//        label = "test thing",
+//        values = Map.empty,
+//        projectADM = SharedTestDataADM.anythingProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      // Check that the response contains the correct metadata.
+//
+//      expectMsgPF(timeout) {
+//        case response: ReadResourcesSequenceV2 =>
+//          val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
+//
+//          checkCreateResource(
+//            inputResourceIri = resourceIri,
+//            inputResource = inputResource,
+//            outputResource = outputResource,
+//            defaultResourcePermissions = defaultAnythingResourcePermissions,
+//            defaultValuePermissions = defaultAnythingValuePermissions,
+//            requestingUser = anythingUserProfile
+//          )
+//      }
+//
+//      // Get the resource from the triplestore and check it again.
+//
+//      val outputResource = getResource(resourceIri, anythingUserProfile)
+//
+//      checkCreateResource(
+//        inputResourceIri = resourceIri,
+//        inputResource = inputResource,
+//        outputResource = outputResource,
+//        defaultResourcePermissions = defaultAnythingResourcePermissions,
+//        defaultValuePermissions = defaultAnythingValuePermissions,
+//        requestingUser = anythingUserProfile
+//      )
+//    }
+//
+//    "create a resource with no values and custom permissions" in {
+//      // Create the resource.
+//
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+//        label = "test thing",
+//        values = Map.empty,
+//        projectADM = SharedTestDataADM.anythingProject,
+//        permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher")
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgType[ReadResourcesSequenceV2](timeout)
+//
+//      // Get the resource from the triplestore and check it.
+//
+//      val outputResource = getResource(resourceIri, anythingUserProfile)
+//
+//      checkCreateResource(
+//        inputResourceIri = resourceIri,
+//        inputResource = inputResource,
+//        outputResource = outputResource,
+//        defaultResourcePermissions = defaultAnythingResourcePermissions,
+//        defaultValuePermissions = defaultAnythingValuePermissions,
+//        requestingUser = anythingUserProfile
+//      )
+//    }
+//
+//    "create a resource with values" in {
+//      // Create the resource.
+//
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
+//
+//      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = IntegerValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              valueHasInteger = 5,
+//              comment = Some("this is the number five")
+//            ),
+//            permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/U7HxeFSUEQCHJxSLahw3AA/thing-searcher")
+//          ),
+//          CreateValueInNewResourceV2(
+//            valueContent = IntegerValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              valueHasInteger = 6
+//            )
+//          )
+//        ),
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = TextValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              maybeValueHasString = Some("this is text without standoff")
+//            )
+//          )
+//        ),
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = TextValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              maybeValueHasString = Some("this is text with standoff"),
+//              standoff = sampleStandoff,
+//              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+//              mapping = standardMapping
+//            )
+//          )
+//        ),
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = DecimalValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              valueHasDecimal = BigDecimal("100000000000000.000000000000001")
+//            )
+//          )
+//        ),
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = DateValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              valueHasCalendar = CalendarNameGregorian,
+//              valueHasStartJDN = 2264907,
+//              valueHasStartPrecision = DatePrecisionYear,
+//              valueHasEndJDN = 2265271,
+//              valueHasEndPrecision = DatePrecisionYear
+//            )
+//          )
+//        ),
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = BooleanValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              valueHasBoolean = true
+//            )
+//          )
+//        ),
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = GeomValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              valueHasGeometry =
+//                """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
+//            )
+//          )
+//        ),
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = IntervalValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              valueHasIntervalStart = BigDecimal("1.2"),
+//              valueHasIntervalEnd = BigDecimal("3.4")
+//            )
+//          )
+//        ),
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = HierarchicalListValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              valueHasListNode = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/treeList03"
+//            )
+//          )
+//        ),
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = ColorValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              valueHasColor = "#ff3333"
+//            )
+//          )
+//        ),
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = UriValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              valueHasUri = "https://www.knora.org"
+//            )
+//          )
+//        ),
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = GeonameValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              valueHasGeonameCode = "2661604"
+//            )
+//          )
+//        ),
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = LinkValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              referredResourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/a-thing"
+//            )
+//          )
+//        )
+//      )
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+//        label = "test thing",
+//        values = inputValues,
+//        projectADM = SharedTestDataADM.anythingProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgType[ReadResourcesSequenceV2](timeout)
+//
+//      // Get the resource from the triplestore and check it.
+//
+//      val outputResource = getResource(resourceIri, anythingUserProfile)
+//
+//      checkCreateResource(
+//        inputResourceIri = resourceIri,
+//        inputResource = inputResource,
+//        outputResource = outputResource,
+//        defaultResourcePermissions = defaultAnythingResourcePermissions,
+//        defaultValuePermissions = defaultAnythingValuePermissions,
+//        requestingUser = anythingUserProfile
+//      )
+//    }
+//
+//    "create a resource with a still image file value" in {
+//      // Create the resource.
+//
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
+//
+//      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+//        OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = StillImageFileValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              fileValue = FileValueV2(
+//                internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
+//                internalMimeType = "image/jp2",
+//                originalFilename = Some("test.tiff"),
+//                originalMimeType = Some("image/tiff")
+//              ),
+//              dimX = 512,
+//              dimY = 256
+//            )
+//          )
+//        )
+//      )
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+//        label = "test thing picture",
+//        values = inputValues,
+//        projectADM = SharedTestDataADM.anythingProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgType[ReadResourcesSequenceV2](timeout)
+//
+//      // Get the resource from the triplestore and check it.
+//
+//      val outputResource = getResource(resourceIri, anythingUserProfile)
+//
+//      checkCreateResource(
+//        inputResourceIri = resourceIri,
+//        inputResource = inputResource,
+//        outputResource = outputResource,
+//        defaultResourcePermissions = defaultAnythingResourcePermissions,
+//        defaultValuePermissions = defaultStillImageFileValuePermissions,
+//        requestingUser = anythingUserProfile
+//      )
+//    }
+//
+//    "not create a resource with missing required values" in {
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.projectUUID)
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+//        label = "invalid book",
+//        values = Map.empty,
+//        projectADM = SharedTestDataADM.incunabulaProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = incunabulaUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+//      }
+//    }
+//
+//    "not create a resource with too many values for the cardinality of a property" in {
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.projectUUID)
+//
+//      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+//        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = TextValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              maybeValueHasString = Some("test title")
+//            )
+//          )
+//        ),
+//        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#publoc".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = TextValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              maybeValueHasString = Some("test publoc 1")
+//            )
+//          ),
+//          CreateValueInNewResourceV2(
+//            valueContent = TextValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              maybeValueHasString = Some("test publoc 2")
+//            )
+//          )
+//        )
+//      )
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+//        label = "invalid book",
+//        values = inputValues,
+//        projectADM = SharedTestDataADM.incunabulaProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = incunabulaUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+//      }
+//    }
+//
+//    "not create a resource with a property for which there is no cardinality in the resource class" in {
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.projectUUID)
+//
+//      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+//        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = TextValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              maybeValueHasString = Some("test title")
+//            )
+//          )
+//        ),
+//        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#pagenum".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = TextValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              maybeValueHasString = Some("test pagenum")
+//            )
+//          )
+//        )
+//      )
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+//        label = "invalid book",
+//        values = inputValues,
+//        projectADM = SharedTestDataADM.incunabulaProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = incunabulaUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+//      }
+//    }
+//
+//    "not create a resource with duplicate values" in {
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.projectUUID)
+//
+//      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+//        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = TextValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              maybeValueHasString = Some("test title 1")
+//            )
+//          ),
+//          CreateValueInNewResourceV2(
+//            valueContent = TextValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              maybeValueHasString = Some("test title 2")
+//            )
+//          ),
+//          CreateValueInNewResourceV2(
+//            valueContent = TextValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              maybeValueHasString = Some("test title 1")
+//            )
+//          )
+//        )
+//      )
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+//        label = "invalid book",
+//        values = inputValues,
+//        projectADM = SharedTestDataADM.incunabulaProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = incunabulaUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+//      }
+//    }
+//
+//    "not create a resource if the user doesn't have permission to create resources in the project" in {
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.projectUUID)
+//
+//      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+//        "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = TextValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              maybeValueHasString = Some("test title")
+//            )
+//          )
+//        )
+//      )
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book".toSmartIri,
+//        label = "invalid book",
+//        values = inputValues,
+//        projectADM = SharedTestDataADM.incunabulaProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+//      }
+//    }
+//
+//    "not create a resource with a link to a nonexistent other resource" in {
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
+//
+//      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = LinkValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              referredResourceIri = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/nonexistent-thing"
+//            )
+//          )
+//        )
+//      )
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+//        label = "invalid thing",
+//        values = inputValues,
+//        projectADM = SharedTestDataADM.anythingProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+//      }
+//    }
+//
+//    "not create a resource with a standoff link to a nonexistent other resource" in {
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
+//
+//      val standoffWithInvalidLink: Vector[StandoffTagV2] = Vector(
+//        StandoffTagV2(
+//          standoffTagClassIri = OntologyConstants.Standoff.StandoffRootTag.toSmartIri,
+//          startPosition = 0,
+//          endPosition = 26,
+//          uuid = UUID.randomUUID(),
+//          originalXMLID = None,
+//          startIndex = 0
+//        ),
+//        StandoffTagV2(
+//          standoffTagClassIri = OntologyConstants.KnoraBase.StandoffLinkTag.toSmartIri,
+//          dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
+//          startPosition = 0,
+//          endPosition = 12,
+//          uuid = UUID.randomUUID(),
+//          originalXMLID = None,
+//          startIndex = 1,
+//          attributes = Vector(
+//            StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
+//                                      value = "http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/nonexistent-thing")),
+//          startParentIndex = Some(0)
+//        ),
+//        StandoffTagV2(
+//          standoffTagClassIri = OntologyConstants.Standoff.StandoffBoldTag.toSmartIri,
+//          startPosition = 0,
+//          endPosition = 7,
+//          uuid = UUID.randomUUID(),
+//          originalXMLID = None,
+//          startIndex = 2,
+//          startParentIndex = Some(1)
+//        )
+//      )
+//
+//      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = TextValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              maybeValueHasString = Some("this is text with standoff"),
+//              standoff = standoffWithInvalidLink,
+//              mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+//              mapping = standardMapping
+//            )
+//          )
+//        )
+//      )
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+//        label = "invalid thing",
+//        values = inputValues,
+//        projectADM = SharedTestDataADM.anythingProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+//      }
+//    }
+//
+//    "not create a resource with a list value referring to a nonexistent list node" in {
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
+//
+//      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = HierarchicalListValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              valueHasListNode = "http://rdfh.ch/lists/U7HxeFSUEQCHJxSLahw3AA/nonexistent-list-node"
+//            )
+//          )
+//        )
+//      )
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+//        label = "invalid thing",
+//        values = inputValues,
+//        projectADM = SharedTestDataADM.anythingProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+//      }
+//    }
+//
+//    "not create a resource with a value that's the wrong type for the property" in {
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
+//
+//      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = TextValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              maybeValueHasString = Some("invalid text value")
+//            )
+//          )
+//        )
+//      )
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+//        label = "invalid thing",
+//        values = inputValues,
+//        projectADM = SharedTestDataADM.anythingProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+//      }
+//    }
+//
+//    "not create a resource with a link to a resource of the wrong class for the link property" in {
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
+//
+//      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = LinkValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              referredResourceIri = zeitglöckleinIri
+//            )
+//          )
+//        )
+//      )
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+//        label = "invalid thing",
+//        values = inputValues,
+//        projectADM = SharedTestDataADM.anythingProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+//      }
+//    }
+//
+//    "not create a resource with invalid custom permissions" in {
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+//        label = "invalid thing",
+//        values = Map.empty,
+//        projectADM = SharedTestDataADM.anythingProject,
+//        permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser")
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+//      }
+//    }
+//
+//    "not create a resource with a value that has invalid custom permissions" in {
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.projectUUID)
+//
+//      val values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+//        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = IntegerValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              valueHasInteger = 5,
+//              comment = Some("this is the number five")
+//            ),
+//            permissions = Some("M knora-admin:Creator,V knora-admin:KnownUser")
+//          )
+//        )
+//      )
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+//        label = "invalid thing",
+//        values = values,
+//        projectADM = SharedTestDataADM.anythingProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+//      }
+//    }
+//
+//    "not create a resource that uses a class from another non-shared project" in {
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.projectUUID)
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+//        label = "test thing",
+//        values = Map.empty,
+//        projectADM = SharedTestDataADM.incunabulaProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = incunabulaUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+//      }
+//    }
+
+//    "not update a resource's metadata if the user does not have permission to update the resource" in {
+//      val updateRequest = UpdateResourceMetadataRequestV2(
+//        resourceIri = aThingIri,
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+//        maybeLabel = Some("new test label"),
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = incunabulaUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      responderManager ! updateRequest
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+//      }
+//    }
+
+//    "not update a resource's metadata if the user does not supply the correct resource class" in {
+//      val updateRequest = UpdateResourceMetadataRequestV2(
+//        resourceIri = aThingIri,
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#BlueThing".toSmartIri,
+//        maybeLabel = Some("new test label"),
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      responderManager ! updateRequest
+//
+//      expectMsgPF(timeout) {
+//        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+//      }
+//    }
 
     "update a resource's metadata when it doesn't have a knora-base:lastModificationDate" in {
       val dateTimeStampBeforeUpdate = Instant.now

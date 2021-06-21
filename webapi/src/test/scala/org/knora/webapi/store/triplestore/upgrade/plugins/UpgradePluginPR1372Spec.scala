@@ -40,7 +40,7 @@ class UpgradePluginPR1372Spec extends UpgradePluginSpec {
         """PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
           |
           |SELECT ?value
-          |FROM <http://www.knora.org/data/0001/anything>
+          |FROM <http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA>
           |WHERE {
           |    ?value knora-base:valueCreationDate ?creationDate ;
           |    knora-base:hasPermissions ?permissions .

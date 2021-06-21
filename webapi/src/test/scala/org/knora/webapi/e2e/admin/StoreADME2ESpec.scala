@@ -51,16 +51,16 @@ class StoreADME2ESpec extends E2ESpec(StoreADME2ESpec.config) with TriplestoreJs
     * The Json which spray generates looks like this:
     *
     *  [
-    *     {"path": "test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/0803/incunabula"},
-    *     {"path": "test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/00FF/images"}
+    *     {"path": "test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g"},
+    *     {"path": "test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/wI8G0Ps-F1USDL-F06aRHA"}
     *  ]
     *
     * and could have been supplied to the post request instead of the scala object.
     */
   /*
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
-        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images")
+        RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g"),
+        RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/wI8G0Ps-F1USDL-F06aRHA")
     )
    */
 

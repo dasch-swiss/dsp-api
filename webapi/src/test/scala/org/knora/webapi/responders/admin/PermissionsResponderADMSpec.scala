@@ -70,8 +70,10 @@ class PermissionsResponderADMSpec
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/responders.admin.PermissionsResponderV1Spec/additional_permissions-data.ttl",
                   name = "http://www.knora.org/data/permissions"),
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl",
+                  name = "http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g"),
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl",
+                  name = "http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA")
   )
 
   "The PermissionsResponderADM" when {

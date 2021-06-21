@@ -32,7 +32,7 @@
 
                                 knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
-<http://www.knora.org/data/0001/anything> {
+<http://www.knora.org/data/U7HxeFSUEQCHJxSLahw3AA> {
     <http://rdfh.ch/U7HxeFSUEQCHJxSLahw3AA/thing-with-empty-string> a anything:Thing;
       knora-base:isDeleted false;
       knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
