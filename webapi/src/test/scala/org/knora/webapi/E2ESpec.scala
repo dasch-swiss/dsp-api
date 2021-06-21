@@ -54,9 +54,9 @@ object E2ESpec {
 }
 
 /**
-  * This class can be used in End-to-End testing. It starts the Knora-API server
-  * and provides access to settings and logging.
-  */
+ * This class can be used in End-to-End testing. It starts the Knora-API server
+ * and provides access to settings and logging.
+ */
 class E2ESpec(_system: ActorSystem)
     extends Core
     with StartupUtils
@@ -71,20 +71,20 @@ class E2ESpec(_system: ActorSystem)
 
   /* constructors */
   def this(name: String, config: Config) =
-    this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
+    this(ActorSystem(name, TestContainersAll.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
   def this(config: Config) =
-    this(ActorSystem("E2ETest", TestContainers.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
+    this(ActorSystem("E2ETest", TestContainersAll.PortConfig.withFallback(config.withFallback(E2ESpec.defaultConfig))))
 
-  def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(E2ESpec.defaultConfig)))
+  def this(name: String) = this(ActorSystem(name, TestContainersAll.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
-  def this() = this(ActorSystem("E2ETest", TestContainers.PortConfig.withFallback(E2ESpec.defaultConfig)))
+  def this() = this(ActorSystem("E2ETest", TestContainersAll.PortConfig.withFallback(E2ESpec.defaultConfig)))
 
   /* needed by the core trait */
 
-  implicit lazy val system: ActorSystem = _system
-  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+  implicit lazy val system: ActorSystem           = _system
+  implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
+  implicit val materializer: Materializer         = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // can be overridden in individual spec
@@ -122,15 +122,16 @@ class E2ESpec(_system: ActorSystem)
 
   }
 
-  override def afterAll(): Unit = {
+  override def afterAll(): Unit =
     /* Stop the server when everything else has finished */
     appActor ! AppStop()
-  }
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
     logger.info("Loading test data started ...")
-    val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent",
-                       HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+    val request = Post(
+      baseApiUrl + "/admin/store/ResetTriplestoreContent",
+      HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint)
+    )
     val response = Http().singleRequest(request)
 
     Try(Await.result(response, 479999.milliseconds)) match {
@@ -147,7 +148,7 @@ class E2ESpec(_system: ActorSystem)
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
-    val responseBodyStr = Await.result(responseBodyFuture, 10.seconds)
+    val responseBodyStr                    = Await.result(responseBodyFuture, 10.seconds)
     JsonLDUtil.parseJsonLD(responseBodyStr)
   }
 
@@ -157,7 +158,7 @@ class E2ESpec(_system: ActorSystem)
   }
 
   protected def doGetRequest(urlPath: String): String = {
-    val request = Get(s"$baseApiUrl$urlPath")
+    val request                = Get(s"$baseApiUrl$urlPath")
     val response: HttpResponse = singleAwaitingRequest(request)
     responseToString(response)
   }
@@ -183,27 +184,28 @@ class E2ESpec(_system: ActorSystem)
   }
 
   /**
-    * Reads or writes a test data file.
-    * The written test data files can be found under:
-    * ./bazel-out/darwin-fastbuild/testlogs/<package-name>/<target-name>/test.outputs/outputs.zip
-    *
-    * @param responseAsString the API response received from Knora.
-    * @param file             the file in which the expected API response is stored.
-    * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
-    * @return the expected response.
-    */
-  protected def readOrWriteTextFile(responseAsString: String, file: Path, writeFile: Boolean = false): String = {
+   * Reads or writes a test data file.
+   * The written test data files can be found under:
+   * ./bazel-out/darwin-fastbuild/testlogs/<package-name>/<target-name>/test.outputs/outputs.zip
+   *
+   * @param responseAsString the API response received from Knora.
+   * @param file             the file in which the expected API response is stored.
+   * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
+   * @return the expected response.
+   */
+  protected def readOrWriteTextFile(responseAsString: String, file: Path, writeFile: Boolean = false): String =
     if (writeFile) {
       // Per default only read access is allowed in the bazel sandbox.
       // This workaround allows to save test output.
       val testOutputDir: Path = Paths.get(sys.env("TEST_UNDECLARED_OUTPUTS_DIR"))
-      val newOutputFile = testOutputDir.resolve(file)
+      val newOutputFile       = testOutputDir.resolve(file)
       Files.createDirectories(newOutputFile.getParent)
-      FileUtil.writeTextFile(newOutputFile,
-                             responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
+      FileUtil.writeTextFile(
+        newOutputFile,
+        responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL")
+      )
       responseAsString
     } else {
       FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
     }
-  }
 }

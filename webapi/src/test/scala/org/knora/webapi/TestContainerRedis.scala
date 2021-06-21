@@ -26,12 +26,12 @@ import org.testcontainers.utility.DockerImageName
 import scala.jdk.CollectionConverters._
 
 /**
-  * Provides all containers necessary for running tests.
-  */
-object RedisTestContainer {
+ * Provides the Redis container necessary for running tests.
+ */
+object TestContainerRedis {
 
   val RedisImageName: DockerImageName = DockerImageName.parse("redis:5")
-  val RedisContainer = new GenericContainer(RedisImageName)
+  val RedisContainer                  = new GenericContainer(RedisImageName)
   RedisContainer.withExposedPorts(6379)
   RedisContainer.start()
 

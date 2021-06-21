@@ -26,17 +26,20 @@ import org.testcontainers.utility.DockerImageName
 import scala.jdk.CollectionConverters._
 
 /**
-  * Provides all containers necessary for running tests.
-  */
-object RedisTestContainer {
+ * Provides the Fuseki container necessary for running tests.
+ */
+object TestContainerFuseki {
 
-  val RedisImageName: DockerImageName = DockerImageName.parse("redis:5")
-  val RedisContainer = new GenericContainer(RedisImageName)
-  RedisContainer.withExposedPorts(6379)
-  RedisContainer.start()
+  val FusekiImageName: DockerImageName = DockerImageName.parse("bazel/docker/knora-jena-fuseki:image")
+  val FusekiContainer                  = new GenericContainer(FusekiImageName)
+
+  FusekiContainer.withExposedPorts(3030)
+  FusekiContainer.withEnv("ADMIN_PASSWORD", "test")
+  FusekiContainer.withEnv("JVM_ARGS", "-Xmx3G")
+  FusekiContainer.start()
 
   private val portMap = Map(
-    "app.cache-service.redis.port" -> RedisContainer.getFirstMappedPort
+    "app.triplestore.fuseki.port" -> FusekiContainer.getFirstMappedPort
   ).asJava
 
   // all tests need to be configured with these ports.
