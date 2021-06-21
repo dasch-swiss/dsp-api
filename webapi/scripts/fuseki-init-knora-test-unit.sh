@@ -15,7 +15,7 @@ upload-graph ../../knora-ontologies/standoff-data.ttl http://www.knora.org/data/
 upload-graph ../../knora-ontologies/salsah-gui.ttl http://www.knora.org/ontology/salsah-gui
 upload-graph ../../test_data/all_data/admin-data.ttl http://www.knora.org/data/admin
 upload-graph ../../test_data/all_data/permissions-data.ttl http://www.knora.org/data/permissions
-upload-graph ../../test_data/all_data/system-data.ttl http://www.knora.org/data/0000/SystemProject
+upload-graph ../../test_data/all_data/system-data.ttl http://www.knora.org/data/aboosmPQTBmEjQRsNiVs0w
 upload-graph ../../test_data/ontologies/incunabula-onto.ttl http://www.knora.org/ontology/0803/incunabula
 upload-graph ../../test_data/all_data/incunabula-data.ttl http://www.knora.org/data/6NIOckxUlWnYChtXoH7A_g
 upload-graph ../../test_data/ontologies/dokubib-onto.ttl http://www.knora.org/ontology/0804/dokubib

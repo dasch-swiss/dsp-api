@@ -38,7 +38,7 @@ class UpgradePluginPR1615Spec extends UpgradePluginSpec {
 
       val query1: String =
         """SELECT ?p ?o
-          |FROM <http://www.knora.org/data/0000/SystemProject>
+          |FROM <http://www.knora.org/data/aboosmPQTBmEjQRsNiVs0w>
           |WHERE {
           |    <http://rdfh.ch/SOIukqJ_qqwrLYY2AzMWog/forbiddenResource> ?p ?o .
           |}
@@ -51,7 +51,7 @@ class UpgradePluginPR1615Spec extends UpgradePluginSpec {
 
       val query2: String =
         """SELECT ?p ?o
-          |FROM <http://www.knora.org/data/0000/SystemProject>
+          |FROM <http://www.knora.org/data/aboosmPQTBmEjQRsNiVs0w>
           |WHERE {
           |    <http://rdfh.ch/lists/aboosmPQTBmEjQRsNiVs0w/ynm01> ?p ?o .
           |}

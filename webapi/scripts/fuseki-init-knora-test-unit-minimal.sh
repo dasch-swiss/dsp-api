@@ -15,4 +15,4 @@ upload-graph ../../knora-ontologies/standoff-data.ttl http://www.knora.org/data/
 upload-graph ../../knora-ontologies/salsah-gui.ttl http://www.knora.org/ontology/salsah-gui
 upload-graph ../../test_data/all_data/admin-data.ttl http://www.knora.org/data/admin
 upload-graph ../../test_data/all_data/permissions-data.ttl http://www.knora.org/data/permissions
-upload-graph ../../test_data/all_data/system-data.ttl http://www.knora.org/data/0000/SystemProject
+upload-graph ../../test_data/all_data/system-data.ttl http://www.knora.org/data/aboosmPQTBmEjQRsNiVs0w

@@ -103,7 +103,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
     RdfDataObject(path = "test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-onto.ttl",
                   name = "http://www.knora.org/ontology/0666/gravsearchtest1"),
     RdfDataObject(path = "test_data/e2e.v2.SearchRouteV2R2RSpec/gravsearchtest1-data.ttl",
-                  name = "http://www.knora.org/data/0666/gravsearchtest1")
+                  name = "http://www.knora.org/data/GWigci55WGF3pp3YWBlq9w")
   )
 
   "The Search v2 Endpoint" should {

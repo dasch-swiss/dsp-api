@@ -20,7 +20,7 @@ send "load ../_test_data/all_data/admin-data.ttl into http://www.knora.org/data/
 expect $prompt
 send "load ../_test_data/all_data/permissions-data.ttl into http://www.knora.org/data/permissions .\r"
 expect $prompt
-send "load ../_test_data/all_data/system-data.ttl into http://www.knora.org/data/0000/SystemProject .\r"
+send "load ../_test_data/all_data/system-data.ttl into http://www.knora.org/data/aboosmPQTBmEjQRsNiVs0w .\r"
 expect $prompt
 
 send "close .\r"

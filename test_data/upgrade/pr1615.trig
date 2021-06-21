@@ -9,7 +9,7 @@
 @prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
 @prefix standoff: <http://www.knora.org/ontology/standoff#> .
 
-<http://www.knora.org/data/0000/SystemProject> {
+<http://www.knora.org/data/aboosmPQTBmEjQRsNiVs0w> {
     <http://rdfh.ch/lists/aboosmPQTBmEjQRsNiVs0w/ynm01> a knora-base:ListNode ;
         knora-base:isRootNode true ;
         rdfs:label "The Yes, No, Maybe List"@en ;
