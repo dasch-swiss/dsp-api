@@ -196,7 +196,7 @@ class PermissionsResponderADMSpec
         )
         expectMsg(
           AdministrativePermissionsForProjectGetResponseADM(
-            Seq(perm002_a2.p, perm002_a3.p, perm002_a1.p)
+            Seq(perm002_a2.p, perm002_a1.p, perm002_a3.p)
           ))
       }
 
@@ -319,7 +319,7 @@ class PermissionsResponderADMSpec
 
         expectMsg(
           DefaultObjectAccessPermissionsForProjectGetResponseADM(
-            defaultObjectAccessPermissions = Seq(perm002_d2.p, perm002_d1.p, perm0003_a4.p)
+            defaultObjectAccessPermissions = Seq(perm002_d1.p, perm002_d2.p, perm0003_a4.p)
           ))
       }
 
