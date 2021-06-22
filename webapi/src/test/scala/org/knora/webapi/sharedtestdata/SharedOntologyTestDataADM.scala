@@ -28,7 +28,7 @@ object SharedOntologyTestDataADM {
   // anything
   val ANYTHING_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0001/anything"
   val ANYTHING_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/0001/anything/v2"
-  val ANYTHING_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0001/anything"
+  val ANYTHING_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/U7HxeFSUEQCHJxSLahw3AA"
   val ANYTHING_THING_RESOURCE_CLASS_LocalHost: IRI = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "Thing"
   val ANYTHING_HasListItem_PROPERTY_LocalHost: IRI = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "hasListItem"
   val ANYTHING_HasDate_PROPERTY_LocalHost: IRI = ANYTHING_ONTOLOGY_IRI_LocalHost + "#" + "hasDate"
@@ -40,7 +40,7 @@ object SharedOntologyTestDataADM {
   // images
   val IMAGES_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/00FF/images"
   val IMAGES_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/00FF/images/v2"
-  val IMAGES_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/00FF/images"
+  val IMAGES_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/wI8G0Ps-F1USDL-F06aRHA"
   val IMAGES_TITEL_PROPERTY: IRI = IMAGES_ONTOLOGY_IRI + "#" + "titel"
   val IMAGES_TITEL_PROPERTY_LocalHost: IRI = IMAGES_ONTOLOGY_IRI_LocalHost + "#" + "titel"
   val IMAGES_BILD_RESOURCE_CLASS: IRI = IMAGES_ONTOLOGY_IRI + "#" + "bild"
@@ -49,17 +49,16 @@ object SharedOntologyTestDataADM {
   // beol
   val BEOL_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0801/beol"
   val BEOL_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/0801/beol/v2"
-  val BEOL_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0801/beol"
+  val BEOL_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/yTerZGyxjZVqFMNNKXCDPF"
 
   // biblio
   val BIBLIO_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0801/biblio"
   val BIBLIO_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/0801/biblio/v2"
-  val BIBLIO_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0801/biblio"
 
   // incunabula
   val INCUNABULA_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0803/incunabula"
   val INCUNABULA_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/0803/incunabula/v2"
-  val INCUNABULA_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0803/incunabula"
+  val INCUNABULA_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/6NIOckxUlWnYChtXoH7A_g"
   val INCUNABULA_BOOK_RESOURCE_CLASS: IRI = INCUNABULA_ONTOLOGY_IRI + "#" + "book"
   val INCUNABULA_BOOK_RESOURCE_CLASS_LocalHost: IRI = INCUNABULA_ONTOLOGY_IRI_LocalHost + "#" + "book"
   val INCUNABULA_PAGE_RESOURCE_CLASS: IRI = INCUNABULA_ONTOLOGY_IRI + "#" + "page"
@@ -70,12 +69,12 @@ object SharedOntologyTestDataADM {
   // dokubib
   val DOKUBIB_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0804/dokubib"
   val DOKUBIB_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/0804/dokubib/v2"
-  val DOKUBIB_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0804/dokubib"
+  val DOKUBIB_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/uSId60bJZIbJ5QAsSay_Bw"
 
   // webern
   val WEBERN_ONTOLOGY_IRI: IRI = OntologyConstants.KnoraInternal.InternalOntologyStart + "/0806/webern"
   val WEBERN_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/0806/webern/v2"
-  val WEBERN_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/0806/webern"
+  val WEBERN_DATA_IRI: IRI = OntologyConstants.NamedGraphs.DataNamedGraphStart + "/r5rM3chy87PJU1NZPFx3WQ"
 
   //foo ontology
   val FOO_ONTOLOGY_IRI_LocalHost: IRI = LocalHost_Ontology + "/00FF/foo/v2"
