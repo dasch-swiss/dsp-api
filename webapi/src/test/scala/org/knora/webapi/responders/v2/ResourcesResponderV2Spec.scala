@@ -2399,17 +2399,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return full history of a-thing-picture resource" in {
       val resourceIri = "http://rdfh.ch/0001/a-thing-picture"
-      responderManager ! ResourceVersionHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        withDeletedResource = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
 
       responderManager ! ResourceFullHistoryGetRequestV2(
         resourceIri = resourceIri,
-        resourceVersionHistory = response.history,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
@@ -2429,17 +2421,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return full history of a resource as events" in {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
 
-      responderManager ! ResourceVersionHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        withDeletedResource = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
-
       responderManager ! ResourceFullHistoryGetRequestV2(
         resourceIri = resourceIri,
-        resourceVersionHistory = response.history,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
@@ -2467,17 +2450,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       val updateValuePermissionResponse = expectMsgType[UpdateValueResponseV2](timeout)
 
-      responderManager ! ResourceVersionHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        withDeletedResource = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
-
       responderManager ! ResourceFullHistoryGetRequestV2(
         resourceIri = resourceIri,
-        resourceVersionHistory = response.history,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
@@ -2516,17 +2490,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgType[CreateValueResponseV2](timeout)
 
-      responderManager ! ResourceVersionHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        withDeletedResource = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
-
       responderManager ! ResourceFullHistoryGetRequestV2(
         resourceIri = resourceIri,
-        resourceVersionHistory = response.history,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
@@ -2566,17 +2531,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
       expectMsgType[SuccessResponseV2](timeout)
-      responderManager ! ResourceVersionHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        withDeletedResource = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
 
       responderManager ! ResourceFullHistoryGetRequestV2(
         resourceIri = resourceIri,
-        resourceVersionHistory = response.history,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
@@ -2593,17 +2550,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return full history of a deleted resource" in {
       val resourceIri = "http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA"
-      responderManager ! ResourceVersionHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        withDeletedResource = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
 
       responderManager ! ResourceFullHistoryGetRequestV2(
         resourceIri = resourceIri,
-        resourceVersionHistory = response.history,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
@@ -2630,17 +2579,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgType[SuccessResponseV2](timeout)
 
-      responderManager ! ResourceVersionHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        withDeletedResource = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
-
       responderManager ! ResourceFullHistoryGetRequestV2(
         resourceIri = resourceIri,
-        resourceVersionHistory = response.history,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )

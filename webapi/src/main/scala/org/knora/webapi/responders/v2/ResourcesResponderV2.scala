@@ -2468,17 +2468,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       historyOfResourcesAsSeqOfFutures: Seq[Future[Seq[ResourceAndValueHistoryV2]]] = mainResourceIris.map {
         resourceIri =>
           for {
-            resourceHistory: ResourceVersionHistoryResponseV2 <- getResourceHistoryV2(
-              ResourceVersionHistoryGetRequestV2(
-                resourceIri = resourceIri,
-                withDeletedResource = true,
-                featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
-                requestingUser = projectResourcesGetRequest.requestingUser
-              ))
+
             resourceFullHist: Seq[ResourceAndValueHistoryV2] <- getResourceHistoryEvents(
               ResourceFullHistoryGetRequestV2(
                 resourceIri = resourceIri,
-                resourceVersionHistory = resourceHistory.history,
                 featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
                 requestingUser = projectResourcesGetRequest.requestingUser
               ))
@@ -2497,21 +2490,26 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @return the full history of resource as sequence of [[ResourceAndValueHistoryV2]].
     */
   def getResourceHistoryEvents(
-      resourceFullHistRequest: ResourceFullHistoryGetRequestV2): Future[Seq[ResourceAndValueHistoryV2]] = {
-
-    val resourceHist: Seq[ResourceHistoryEntry] = resourceFullHistRequest.resourceVersionHistory.reverse
-    // Collect the full representations of the resource for each version date
-    val histories: Seq[Future[(ResourceHistoryEntry, ReadResourceV2)]] = resourceHist.map { hist =>
-      for {
-        fullRepresentations <- getResourceAtGivenTime(
+      resourceFullHistRequest: ResourceFullHistoryGetRequestV2): Future[Seq[ResourceAndValueHistoryV2]] =
+    for {
+      resourceHistory: ResourceVersionHistoryResponseV2 <- getResourceHistoryV2(
+        ResourceVersionHistoryGetRequestV2(
+          resourceIri = resourceFullHistRequest.resourceIri,
+          withDeletedResource = true,
+          featureFactoryConfig = resourceFullHistRequest.featureFactoryConfig,
+          requestingUser = resourceFullHistRequest.requestingUser
+        ))
+      resourceHist: Seq[ResourceHistoryEntry] = resourceHistory.history.reverse
+      // Collect the full representations of the resource for each version date
+      histories: Seq[Future[(ResourceHistoryEntry, ReadResourceV2)]] = resourceHist.map { hist =>
+        getResourceAtGivenTime(
           resourceIri = resourceFullHistRequest.resourceIri,
           versionHist = hist,
           featureFactoryConfig = resourceFullHistRequest.featureFactoryConfig,
           requestingUser = resourceFullHistRequest.requestingUser
         )
-      } yield fullRepresentations
-    }
-    for {
+      }
+
       fullReps: Seq[(ResourceHistoryEntry, ReadResourceV2)] <- Future.sequence(histories)
 
       // Create an event for the resource at creation time
@@ -2540,7 +2538,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                                                                                    resourceDeleteEvent)
 
     } yield resourceCreationEvent ++ resourceDeleteEvent ++ valuesEvents ++ resourceMetadataUpdateEvent
-  }
 
   /**
     * Returns the full representation of a resource at a given date.

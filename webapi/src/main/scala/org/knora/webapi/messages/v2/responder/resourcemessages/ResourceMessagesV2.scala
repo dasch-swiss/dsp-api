@@ -148,12 +148,10 @@ case class ResourceVersionHistoryGetRequestV2(resourceIri: IRI,
   * Requests the full version history of a resource and its values as events.
   *
   * @param resourceIri            the IRI of the resource.
-  * @param resourceVersionHistory the version history of the resource and its values.
   * @param featureFactoryConfig   the feature factory configuration.
   * @param requestingUser         the user making the request.
   */
 case class ResourceFullHistoryGetRequestV2(resourceIri: IRI,
-                                           resourceVersionHistory: Seq[ResourceHistoryEntry],
                                            featureFactoryConfig: FeatureFactoryConfig,
                                            requestingUser: UserADM)
     extends ResourcesResponderRequestV2
