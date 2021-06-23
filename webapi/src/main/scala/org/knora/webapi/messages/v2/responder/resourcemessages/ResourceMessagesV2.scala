@@ -1331,7 +1331,7 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
 }
 
 /**
-  * Represents the version history of a resource or a values as events.
+  * Represents the version history of a resource or a value as events.
   *
   * @param eventType    the type of the operation that is one of [[ResourceAndValueEventsUtil]]
   * @param versionDate  the version date of the event.
@@ -1339,10 +1339,10 @@ case class GraphDataGetResponseV2(nodes: Seq[GraphNodeV2], edges: Seq[GraphEdgeV
   * @param eventBody    the request body in the form of [[ResourceOrValueEventBody]] needed for the operation indicated
   *                     by eventType.
   */
-case class ResourceAndValueHistoryV2(eventType: String,
-                                     versionDate: Instant,
-                                     author: IRI,
-                                     eventBody: ResourceOrValueEventBody)
+case class ResourceAndValueHistoryEvent(eventType: String,
+                                        versionDate: Instant,
+                                        author: IRI,
+                                        eventBody: ResourceOrValueEventBody)
 
 abstract class ResourceOrValueEventBody
 
@@ -1550,9 +1550,9 @@ case class ValueEventBody(resourceIri: IRI,
 }
 
 /**
-  * Represents the history of the project resources and values.
+  * Represents the resource and value history events.
   */
-case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceAndValueHistoryV2])
+case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceAndValueHistoryEvent])
     extends KnoraJsonLDResponseV2 {
 
   /**
@@ -1572,7 +1572,7 @@ case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceA
 
     // Convert the history entries to an array of JSON-LD objects.
 
-    val projectHistoryAsJsonLD: Seq[JsonLDObject] = historyEvents.map { historyEntry: ResourceAndValueHistoryV2 =>
+    val historyEventsAsJsonLD: Seq[JsonLDObject] = historyEvents.map { historyEntry: ResourceAndValueHistoryEvent =>
       // convert event body to JsonLD object
       val eventBodyAsJsonLD: JsonLDObject = historyEntry.eventBody match {
         case valueEventBody: ValueEventBody => valueEventBody.toJsonLD(targetSchema, settings, schemaOptions)
@@ -1610,7 +1610,7 @@ case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceA
 
     // Make the JSON-LD document.
 
-    val body = JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(projectHistoryAsJsonLD)))
+    val body = JsonLDObject(Map(JsonLDKeywords.GRAPH -> JsonLDArray(historyEventsAsJsonLD)))
 
     JsonLDDocument(body = body, context = context)
   }

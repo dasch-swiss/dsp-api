@@ -2395,7 +2395,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
-      val events: Seq[ResourceAndValueHistoryV2] = response.historyEvents
+      val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size shouldEqual (3)
       val createResourceEvents =
         events.filter(historyEvent => historyEvent.eventType == ResourceAndValueEventsUtil.CREATE_RESOURCE_EVENT)
@@ -2418,7 +2418,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
-      val events: Seq[ResourceAndValueHistoryV2] = response.historyEvents
+      val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size should be(9)
     }
 
@@ -2449,9 +2449,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
-      val events: Seq[ResourceAndValueHistoryV2] = response.historyEvents
+      val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size should be(10)
-      val updatePermissionEvent: Option[ResourceAndValueHistoryV2] =
+      val updatePermissionEvent: Option[ResourceAndValueHistoryEvent] =
         events.find(event => event.eventType == ResourceAndValueEventsUtil.UPDATE_VALUE_PERMISSION_EVENT)
       assert(updatePermissionEvent.isDefined)
       val updatePermissionPayload = updatePermissionEvent.get.eventBody
@@ -2491,9 +2491,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
-      val events: Seq[ResourceAndValueHistoryV2] = response.historyEvents
+      val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size should be(11)
-      val createValueEvent: Option[ResourceAndValueHistoryV2] =
+      val createValueEvent: Option[ResourceAndValueHistoryEvent] =
         events.find(
           event =>
             event.eventType == ResourceAndValueEventsUtil.CREATE_VALUE_EVENT && event.eventBody
@@ -2535,9 +2535,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
-      val events: Seq[ResourceAndValueHistoryV2] = response.historyEvents
+      val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size should be(12)
-      val deleteValueEvent: Option[ResourceAndValueHistoryV2] =
+      val deleteValueEvent: Option[ResourceAndValueHistoryEvent] =
         events.find(
           event =>
             event.eventType == ResourceAndValueEventsUtil.DELETE_VALUE_EVENT && event.eventBody
@@ -2557,9 +2557,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
-      val events: Seq[ResourceAndValueHistoryV2] = response.historyEvents
+      val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size should be(2)
-      val deleteResourceEvent: Option[ResourceAndValueHistoryV2] =
+      val deleteResourceEvent: Option[ResourceAndValueHistoryEvent] =
         events.find(event => event.eventType == ResourceAndValueEventsUtil.DELETE_RESOURCE_EVENT)
       assert(deleteResourceEvent.isDefined)
       val deletionInfo = deleteResourceEvent.get.eventBody.asInstanceOf[ResourceEventBody].deletionInfo.get
@@ -2586,9 +2586,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
-      val events: Seq[ResourceAndValueHistoryV2] = response.historyEvents
+      val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size should be(2)
-      val updateMetadataEvent: Option[ResourceAndValueHistoryV2] =
+      val updateMetadataEvent: Option[ResourceAndValueHistoryEvent] =
         events.find(event => event.eventType == ResourceAndValueEventsUtil.UPDATE_RESOURCE_METADATA_EVENT)
       assert(updateMetadataEvent.isDefined)
     }
