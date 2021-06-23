@@ -154,9 +154,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
     case resourceIIIFManifestRequest: ResourceIIIFManifestGetRequestV2 => getIIIFManifestV2(resourceIIIFManifestRequest)
 
-    case projectResourcesWithHistoryRequestV2: ProjectResourcesWithHistoryGetRequestV2 =>
-      getProjectResourcesWithHistoryV2(projectResourcesWithHistoryRequestV2)
-    case resourceFullHistRequest: ResourceFullHistoryGetRequestV2 => getResourceHistoryEvents(resourceFullHistRequest)
+    case resourceHistoryEventsRequest: ResourceHistoryEventsGetRequestV2 =>
+      getResourceHistoryEvents(resourceHistoryEventsRequest)
+
+    case projectHistoryEventsRequestV2: ProjectResourcesWithHistoryGetRequestV2 =>
+      getProjectResourceHistoryEvents(projectHistoryEventsRequestV2)
 
     case other =>
       handleUnexpectedMessage(other, log, this.getClass.getName)
@@ -2439,19 +2441,44 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
   }
 
   /**
-    * Returns the resources of a project with version history ordered by date.
+    * Returns all events describing the history of a resource ordered by version date.
     *
-    * @param projectResourcesGetRequest the resources with version history request.
-    * @return the all resources of project with ordered version history.
+    * @param resourceHistoryEventsGetRequest the request for events describing history of a resource.
+    * @return the events extracted from full representation of a resource at each time point in its history ordered by version date.
     */
-  def getProjectResourcesWithHistoryV2(projectResourcesGetRequest: ProjectResourcesWithHistoryGetRequestV2)
+  def getResourceHistoryEvents(resourceHistoryEventsGetRequest: ResourceHistoryEventsGetRequestV2)
+    : Future[ResourceAndValueVersionHistoryResponseV2] =
+    for {
+      resourceHistory: ResourceVersionHistoryResponseV2 <- getResourceHistoryV2(
+        ResourceVersionHistoryGetRequestV2(
+          resourceIri = resourceHistoryEventsGetRequest.resourceIri,
+          withDeletedResource = true,
+          featureFactoryConfig = resourceHistoryEventsGetRequest.featureFactoryConfig,
+          requestingUser = resourceHistoryEventsGetRequest.requestingUser
+        ))
+      resourceFullHist: Seq[ResourceAndValueHistoryV2] <- extractEventsFromHistory(
+        resourceIri = resourceHistoryEventsGetRequest.resourceIri,
+        resourceHistory = resourceHistory.history,
+        featureFactoryConfig = resourceHistoryEventsGetRequest.featureFactoryConfig,
+        requestingUser = resourceHistoryEventsGetRequest.requestingUser
+      )
+      sortedResourceHistory = resourceFullHist.sortBy(_.versionDate)
+    } yield ResourceAndValueVersionHistoryResponseV2(historyEvents = sortedResourceHistory)
+
+  /**
+    * Returns events representing the history of all resources and values belonging to a project ordered by date.
+    *
+    * @param projectResourceHistoryEventsGetRequest the request for history events of a project.
+    * @return the all history events of resources of a project ordered by version date.
+    */
+  def getProjectResourceHistoryEvents(projectResourceHistoryEventsGetRequest: ProjectResourcesWithHistoryGetRequestV2)
     : Future[ResourceAndValueVersionHistoryResponseV2] =
     for {
       // Get the project; checks if a project with given IRI exists.
       projectInfoResponse: ProjectGetResponseADM <- (responderManager ? ProjectGetRequestADM(
-        identifier = ProjectIdentifierADM(maybeIri = Some(projectResourcesGetRequest.projectIri)),
-        featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
-        requestingUser = projectResourcesGetRequest.requestingUser
+        identifier = ProjectIdentifierADM(maybeIri = Some(projectResourceHistoryEventsGetRequest.projectIri)),
+        featureFactoryConfig = projectResourceHistoryEventsGetRequest.featureFactoryConfig,
+        requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
       )).mapTo[ProjectGetResponseADM]
 
       // Do a SELECT prequery to get the IRIs of the resources that belong to the project.
@@ -2468,45 +2495,49 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       historyOfResourcesAsSeqOfFutures: Seq[Future[Seq[ResourceAndValueHistoryV2]]] = mainResourceIris.map {
         resourceIri =>
           for {
-
-            resourceFullHist: Seq[ResourceAndValueHistoryV2] <- getResourceHistoryEvents(
-              ResourceFullHistoryGetRequestV2(
+            resourceHistory: ResourceVersionHistoryResponseV2 <- getResourceHistoryV2(
+              ResourceVersionHistoryGetRequestV2(
                 resourceIri = resourceIri,
-                featureFactoryConfig = projectResourcesGetRequest.featureFactoryConfig,
-                requestingUser = projectResourcesGetRequest.requestingUser
+                withDeletedResource = true,
+                featureFactoryConfig = projectResourceHistoryEventsGetRequest.featureFactoryConfig,
+                requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
               ))
+            resourceFullHist: Seq[ResourceAndValueHistoryV2] <- extractEventsFromHistory(
+              resourceIri = resourceIri,
+              resourceHistory = resourceHistory.history,
+              featureFactoryConfig = projectResourceHistoryEventsGetRequest.featureFactoryConfig,
+              requestingUser = projectResourceHistoryEventsGetRequest.requestingUser
+            )
           } yield resourceFullHist
       }
 
       projectHistory: Seq[Seq[ResourceAndValueHistoryV2]] <- Future.sequence(historyOfResourcesAsSeqOfFutures)
       sortedProjectHistory: Seq[ResourceAndValueHistoryV2] = projectHistory.flatten.sortBy(_.versionDate)
 
-    } yield ResourceAndValueVersionHistoryResponseV2(projectHistory = sortedProjectHistory)
+    } yield ResourceAndValueVersionHistoryResponseV2(historyEvents = sortedProjectHistory)
 
   /**
-    * Returns the full history of a resource as events.
+    * Extract events from full representations of resource in each point of its history.
     *
-    * @param resourceFullHistRequest the version history of a resource.
+    * @param resourceIri     the IRI of the resource.
+    * @param resourceHistory the full representations of the resource in each point in its history.
+    * @param featureFactoryConfig       the feature factory configuration.
+    * @param requestingUser             the user making the request.
     * @return the full history of resource as sequence of [[ResourceAndValueHistoryV2]].
     */
-  def getResourceHistoryEvents(
-      resourceFullHistRequest: ResourceFullHistoryGetRequestV2): Future[Seq[ResourceAndValueHistoryV2]] =
+  def extractEventsFromHistory(resourceIri: IRI,
+                               resourceHistory: Seq[ResourceHistoryEntry],
+                               featureFactoryConfig: FeatureFactoryConfig,
+                               requestingUser: UserADM): Future[Seq[ResourceAndValueHistoryV2]] =
     for {
-      resourceHistory: ResourceVersionHistoryResponseV2 <- getResourceHistoryV2(
-        ResourceVersionHistoryGetRequestV2(
-          resourceIri = resourceFullHistRequest.resourceIri,
-          withDeletedResource = true,
-          featureFactoryConfig = resourceFullHistRequest.featureFactoryConfig,
-          requestingUser = resourceFullHistRequest.requestingUser
-        ))
-      resourceHist: Seq[ResourceHistoryEntry] = resourceHistory.history.reverse
+      resourceHist: Seq[ResourceHistoryEntry] <- Future.successful(resourceHistory.reverse)
       // Collect the full representations of the resource for each version date
       histories: Seq[Future[(ResourceHistoryEntry, ReadResourceV2)]] = resourceHist.map { hist =>
         getResourceAtGivenTime(
-          resourceIri = resourceFullHistRequest.resourceIri,
+          resourceIri = resourceIri,
           versionHist = hist,
-          featureFactoryConfig = resourceFullHistRequest.featureFactoryConfig,
-          requestingUser = resourceFullHistRequest.requestingUser
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
         )
       }
 

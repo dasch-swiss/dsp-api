@@ -611,9 +611,18 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       }
     }
 
+    "return all history events for a given resource" in {
+      val resourceIri = URLEncoder.encode("http://rdfh.ch/0001/a-thing-picture", "UTF-8")
+      val resourceHistoryRequest = Get(s"$baseApiUrl/v2/resources/resourceHistoryEvents/$resourceIri")
+        .addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
+      val resourceHistoryResponse: HttpResponse = singleAwaitingRequest(resourceHistoryRequest)
+      val historyResponseAsString = responseToString(resourceHistoryResponse)
+      assert(resourceHistoryResponse.status == StatusCodes.OK, historyResponseAsString)
+    }
+
     "return entire resource and value history events for a given project" in {
       val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0001", "UTF-8")
-      val projectHistoryRequest = Get(s"$baseApiUrl/v2/resources/projectHistory/$projectIri")
+      val projectHistoryRequest = Get(s"$baseApiUrl/v2/resources/projectHistoryEvents/$projectIri")
         .addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingAdminUser.email, password))
       val projectHistoryResponse: HttpResponse = singleAwaitingRequest(projectHistoryRequest)
       val historyResponseAsString = responseToString(projectHistoryResponse)

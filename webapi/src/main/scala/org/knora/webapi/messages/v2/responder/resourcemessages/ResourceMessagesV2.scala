@@ -151,10 +151,13 @@ case class ResourceVersionHistoryGetRequestV2(resourceIri: IRI,
   * @param featureFactoryConfig   the feature factory configuration.
   * @param requestingUser         the user making the request.
   */
-case class ResourceFullHistoryGetRequestV2(resourceIri: IRI,
-                                           featureFactoryConfig: FeatureFactoryConfig,
-                                           requestingUser: UserADM)
-    extends ResourcesResponderRequestV2
+case class ResourceHistoryEventsGetRequestV2(resourceIri: IRI,
+                                             featureFactoryConfig: FeatureFactoryConfig,
+                                             requestingUser: UserADM)
+    extends ResourcesResponderRequestV2 {
+  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+  stringFormatter.validateAndEscapeIri(resourceIri, throw BadRequestException(s"Invalid resource IRI: $resourceIri"))
+}
 
 /**
   * Requests the version history of all resources of a project.
@@ -1549,7 +1552,7 @@ case class ValueEventBody(resourceIri: IRI,
 /**
   * Represents the history of the project resources and values.
   */
-case class ResourceAndValueVersionHistoryResponseV2(projectHistory: Seq[ResourceAndValueHistoryV2])
+case class ResourceAndValueVersionHistoryResponseV2(historyEvents: Seq[ResourceAndValueHistoryV2])
     extends KnoraJsonLDResponseV2 {
 
   /**
@@ -1569,7 +1572,7 @@ case class ResourceAndValueVersionHistoryResponseV2(projectHistory: Seq[Resource
 
     // Convert the history entries to an array of JSON-LD objects.
 
-    val projectHistoryAsJsonLD: Seq[JsonLDObject] = projectHistory.map { historyEntry: ResourceAndValueHistoryV2 =>
+    val projectHistoryAsJsonLD: Seq[JsonLDObject] = historyEvents.map { historyEntry: ResourceAndValueHistoryV2 =>
       // convert event body to JsonLD object
       val eventBodyAsJsonLD: JsonLDObject = historyEntry.eventBody match {
         case valueEventBody: ValueEventBody => valueEventBody.toJsonLD(targetSchema, settings, schemaOptions)

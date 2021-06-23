@@ -9,7 +9,7 @@ import org.knora.webapi.sharedtestdata._
   * Tests [[ResourceMessagesV2]].
   */
 class ResourcesMessagesV2Spec extends CoreSpec() {
-  "All Resources of a Project With History Get Requests" should {
+  "Get history events of all resources of a project" should {
     "fail if given project IRI is not valid" in {
       val projectIri = "invalid-project-IRI"
       val caught = intercept[BadRequestException](
@@ -31,6 +31,19 @@ class ResourcesMessagesV2Spec extends CoreSpec() {
         )
       )
       assert(caught.getMessage === "Given IRI is not a project IRI.")
+    }
+  }
+  "Get history events of a single resource" should {
+    "fail if given resource IRI is not valid" in {
+      val resourceIri = "invalid-resource-IRI"
+      val caught = intercept[BadRequestException](
+        ResourceHistoryEventsGetRequestV2(
+          resourceIri = resourceIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01
+        )
+      )
+      assert(caught.getMessage === s"Invalid resource IRI: $resourceIri")
     }
   }
 }
