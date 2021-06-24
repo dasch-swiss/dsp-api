@@ -369,6 +369,9 @@ object OntologyConstants {
     /* Permissions */
     val HasPermissions: IRI = KnoraBasePrefixExpansion + "hasPermissions"
 
+    /* Resource UUID */
+    val ResourceHasUUID: IRI = KnoraBasePrefixExpansion + "resourceHasUUID"
+
     val PermissionListDelimiter: Char = '|'
     val GroupListDelimiter: Char = ','
 
@@ -772,6 +775,7 @@ object OntologyConstants {
     val HasStandoffLinkTo: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkTo"
     val HasStandoffLinkToValue: IRI = KnoraApiV2PrefixExpansion + "hasStandoffLinkToValue"
     val HasPermissions: IRI = KnoraApiV2PrefixExpansion + "hasPermissions"
+    val ResourceHasUUID: IRI = KnoraApiV2PrefixExpansion + "resourceHasUUID"
     val UserHasPermission: String = KnoraApiV2PrefixExpansion + "userHasPermission"
     val CreationDate: IRI = KnoraApiV2PrefixExpansion + "creationDate"
     val LastModificationDate: IRI = KnoraApiV2PrefixExpansion + "lastModificationDate"

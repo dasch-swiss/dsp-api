@@ -1630,6 +1630,18 @@
                 :objectDatatypeConstraint xsd:string .
 
 
+###  http://www.knora.org/ontology/knora-base#resourceHasUUID
+
+:resourceHasUUID  rdf:type owl:DatatypeProperty ;
+
+                  rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+                  rdfs:comment "The UUID of a resource"@en ;
+
+                  :subjectClassConstraint :Resource ;
+
+                  :objectDatatypeConstraint xsd:string .
+
 
 #################################################################
 #
@@ -2281,6 +2293,10 @@
                           ] ,
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :creationDate ;
+                            owl:cardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :resourceHasUUID ;
                             owl:cardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;

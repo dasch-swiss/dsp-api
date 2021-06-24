@@ -20,6 +20,7 @@
 package org.knora.webapi.messages.twirl
 
 import java.time.Instant
+import java.util.UUID
 
 import org.knora.webapi._
 
@@ -34,6 +35,7 @@ import org.knora.webapi._
   * @param resourceCreationDate the creation date that should be attached to the resource.
   */
 case class SparqlTemplateResourceToCreate(resourceIri: IRI,
+                                          resourceUUID: Option[UUID] = None,
                                           permissions: String,
                                           sparqlForValues: String,
                                           resourceClassIri: IRI,

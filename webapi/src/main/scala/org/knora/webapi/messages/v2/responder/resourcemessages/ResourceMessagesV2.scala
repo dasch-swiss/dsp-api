@@ -395,6 +395,7 @@ case class ReadResourceV2(resourceIri: IRI,
                           attachedToUser: IRI,
                           projectADM: ProjectADM,
                           permissions: String,
+                          resourceUUID: UUID,
                           userPermission: EntityPermission,
                           values: Map[SmartIri, Seq[ReadValueV2]],
                           creationDate: Instant,
@@ -463,6 +464,8 @@ case class ReadResourceV2(resourceIri: IRI,
         OntologyConstants.KnoraApiV2Complex.AttachedToUser -> JsonLDUtil.iriToJsonLDObject(attachedToUser),
         OntologyConstants.KnoraApiV2Complex.AttachedToProject -> JsonLDUtil.iriToJsonLDObject(projectADM.id),
         OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(permissions),
+        OntologyConstants.KnoraApiV2Complex.ResourceHasUUID -> JsonLDString(
+          stringFormatter.base64EncodeUuid(resourceUUID)),
         OntologyConstants.KnoraApiV2Complex.UserHasPermission -> JsonLDString(userPermission.toString),
         OntologyConstants.KnoraApiV2Complex.CreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
           value = creationDate.toString,
@@ -561,6 +564,7 @@ case class CreateValueInNewResourceV2(valueContent: ValueContentV2,
   * @param values           the resource's values.
   * @param projectADM       the project that the resource should belong to.
   * @param permissions      the permissions to be given to the new resource. If not provided, these will be taken from defaults.
+  * @param resourceUUID     the UUID to be given to the new resource. If not provided, a unique random base 64 UUID will be assigned.
   * @param creationDate     the optional creation date of the resource.
   */
 case class CreateResourceV2(resourceIri: Option[SmartIri],
@@ -569,6 +573,7 @@ case class CreateResourceV2(resourceIri: Option[SmartIri],
                             values: Map[SmartIri, Seq[CreateValueInNewResourceV2]],
                             projectADM: ProjectADM,
                             permissions: Option[String] = None,
+                            resourceUUID: Option[UUID] = None,
                             creationDate: Option[Instant] = None)
     extends ResourceV2 {
   lazy val flatValues: Iterable[CreateValueInNewResourceV2] = values.values.flatten
@@ -641,6 +646,10 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
 
       // Get the custom resource IRI if provided.
       maybeCustomResourceIri: Option[SmartIri] = jsonLDDocument.maybeIDAsKnoraDataIri
+
+      // Get the custom resource UUID if provided.
+      maybeCustomResourceUUID: Option[UUID] = jsonLDDocument.maybeUUID(
+        OntologyConstants.KnoraApiV2Complex.ResourceHasUUID)
 
       // Get the resource's rdfs:label.
       label: String = jsonLDDocument.requireStringWithValidation(OntologyConstants.Rdfs.Label,
@@ -777,6 +786,7 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
           values = propertyValuesMap,
           projectADM = projectInfoResponse.project,
           permissions = permissions,
+          resourceUUID = maybeCustomResourceUUID,
           creationDate = creationDate
         ),
         featureFactoryConfig = featureFactoryConfig,
