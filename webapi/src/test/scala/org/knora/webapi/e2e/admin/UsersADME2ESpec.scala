@@ -105,6 +105,8 @@ class UsersADME2ESpec
   // Collects client test data
   private val clientTestDataCollector = new ClientTestDataCollector(settings)
 
+  private val customUserIri = "http://rdfh.ch/users/prWbAoyJA7fECqhKwhSUtQ"
+
   /**
     * Convenience method returning the users project memberships.
     *
@@ -336,7 +338,7 @@ class UsersADME2ESpec
       "create a user with the provided custom IRI " in {
         val createUserWithCustomIriRequest: String =
           s"""{
-                       |    "id": "http://rdfh.ch/users/userWithCustomIri",
+                       |    "id": "$customUserIri",
                        |    "username": "userWithCustomIri",
                        |    "email": "userWithCustomIri@example.org",
                        |    "givenName": "a user",
@@ -366,7 +368,7 @@ class UsersADME2ESpec
         val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
 
         //check that the custom IRI is correctly assigned
-        result.id should be("http://rdfh.ch/users/userWithCustomIri")
+        result.id should be(customUserIri)
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -383,7 +385,7 @@ class UsersADME2ESpec
       "return 'BadRequest' if the supplied IRI for the user is not unique" in {
         val params =
           s"""{
-                       |    "id": "http://rdfh.ch/users/userWithCustomIri",
+                       |    "id": "$customUserIri",
                        |    "username": "userWithDuplicateCustomIri",
                        |    "email": "userWithDuplicateCustomIri@example.org",
                        |    "givenName": "a user",
@@ -400,7 +402,7 @@ class UsersADME2ESpec
 
         val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], 1.second)
         val invalidIri: Boolean =
-          errorMessage.contains(s"IRI: 'http://rdfh.ch/users/userWithCustomIri' already exists, try another one.")
+          errorMessage.contains(s"IRI: '$customUserIri' already exists, try another one.")
         invalidIri should be(true)
       }
     }
@@ -726,7 +728,7 @@ class UsersADME2ESpec
       }
 
       "delete a user" in {
-        val userIriEncoded = java.net.URLEncoder.encode("http://rdfh.ch/users/userWithCustomIri", "utf-8")
+        val userIriEncoded = java.net.URLEncoder.encode(customUserIri, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/users/iri/$userIriEncoded") ~> addCredentials(
           BasicHttpCredentials(rootCreds.email, rootCreds.password))
         val response: HttpResponse = singleAwaitingRequest(request)

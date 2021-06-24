@@ -435,15 +435,16 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                requestingUser: UserADM): Future[UnverifiedValueV2] = {
     for {
 
-      // Make an IRI for the new value.
-      newValueIri: IRI <- checkOrCreateEntityIri(maybeValueIri,
-                                                 stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
-
       // Make a UUID for the new value
-      newValueUUID: UUID = maybeValueUUID match {
-        case Some(customValueUUID) => customValueUUID
-        case None                  => UUID.randomUUID
+      newValueUUID: UUID <- maybeValueUUID match {
+        case Some(customValueUUID) => Future.successful(customValueUUID)
+        case None                  => Future.successful(UUID.randomUUID)
       }
+
+      // Make an IRI for the new value.
+      newValueIri: IRI <- checkOrCreateEntityIri(
+        maybeValueIri,
+        stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID)))
 
       // Make a creation date for the new value
       creationDate: Instant = maybeValueCreationDate match {
@@ -666,14 +667,14 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       resourceCreationDate: Instant,
       requestingUser: UserADM): Future[InsertSparqlWithUnverifiedValue] = {
     for {
-      newValueIri: IRI <- checkOrCreateEntityIri(valueToCreate.customValueIri,
-                                                 stringFormatter.makeRandomValueIri(resourceIri))
-
-      // Make a UUID for the new value.
-      newValueUUID: UUID = valueToCreate.customValueUUID match {
-        case Some(customValueUUID) => customValueUUID
-        case None                  => UUID.randomUUID
+      // Make a UUID for the new value
+      newValueUUID: UUID <- valueToCreate.customValueUUID match {
+        case Some(customValueUUID) => Future.successful(customValueUUID)
+        case None                  => Future.successful(UUID.randomUUID)
       }
+
+      newValueIri: IRI <- checkOrCreateEntityIri(valueToCreate.customValueIri,
+                                                 stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID)))
 
       // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
       // use resource creation date for the value.

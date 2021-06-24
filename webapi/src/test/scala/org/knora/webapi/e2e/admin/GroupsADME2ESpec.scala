@@ -101,10 +101,10 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
     }
 
     "given a custom Iri" should {
+      val customGroupIri = "http://rdfh.ch/groups/00FF/3eFYejZEduOCowwXQq5Iqg"
       "create a group with the provided custom IRI " in {
-
         val createGroupWithCustomIriRequest: String =
-          s"""{   "id": "http://rdfh.ch/groups/00FF/group-with-customIri",
+          s"""{   "id": "$customGroupIri",
                        |    "name": "NewGroupWithCustomIri",
                        |    "description": "A new group with a custom Iri",
                        |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
@@ -134,7 +134,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
         val result: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
 
         //check that the custom IRI is correctly assigned
-        result.id should be("http://rdfh.ch/groups/00FF/group-with-customIri")
+        result.id should be(customGroupIri)
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(
@@ -149,7 +149,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
       "return 'BadRequest' if the supplied IRI for the group is not unique" in {
         val params =
-          s"""{   "id": "http://rdfh.ch/groups/00FF/group-with-customIri",
+          s"""{             "id": "$customGroupIri",
                        |    "name": "NewGroupWithDuplicateCustomIri",
                        |    "description": "A new group with a duplicate custom Iri",
                        |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
@@ -163,8 +163,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
         response.status should be(StatusCodes.BadRequest)
 
         val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], 1.second)
-        val invalidIri: Boolean = errorMessage.contains(
-          s"IRI: 'http://rdfh.ch/groups/00FF/group-with-customIri' already exists, try another one.")
+        val invalidIri: Boolean = errorMessage.contains(s"IRI: '$customGroupIri' already exists, try another one.")
         invalidIri should be(true)
       }
     }
