@@ -2385,35 +2385,17 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "not return resources of a project which does not exist" in {
-
-      responderManager ! ProjectResourcesWithHistoryGetRequestV2(
-        projectIri = "http://rdfh.ch/projects/1111",
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = SharedTestDataADM.anythingAdminUser
-      )
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
-    }
-
     "return full history of a-thing-picture resource" in {
       val resourceIri = "http://rdfh.ch/0001/a-thing-picture"
-      responderManager ! ResourceVersionHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        withDeletedResource = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
 
-      responderManager ! ResourceFullHistoryGetRequestV2(
+      responderManager ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        resourceVersionHistory = response.history,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
-      val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      val response: ResourceAndValueVersionHistoryResponseV2 =
+        expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
+      val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size shouldEqual (3)
       val createResourceEvents =
         events.filter(historyEvent => historyEvent.eventType == ResourceAndValueEventsUtil.CREATE_RESOURCE_EVENT)
@@ -2429,21 +2411,14 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return full history of a resource as events" in {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
 
-      responderManager ! ResourceVersionHistoryGetRequestV2(
+      responderManager ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        withDeletedResource = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
-      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
-
-      responderManager ! ResourceFullHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        resourceVersionHistory = response.history,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-      val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      val response: ResourceAndValueVersionHistoryResponseV2 =
+        expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
+      val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size should be(9)
     }
 
@@ -2467,23 +2442,16 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       val updateValuePermissionResponse = expectMsgType[UpdateValueResponseV2](timeout)
 
-      responderManager ! ResourceVersionHistoryGetRequestV2(
+      responderManager ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        withDeletedResource = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
-      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
-
-      responderManager ! ResourceFullHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        resourceVersionHistory = response.history,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-      val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      val response: ResourceAndValueVersionHistoryResponseV2 =
+        expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
+      val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size should be(10)
-      val updatePermissionEvent: Option[ResourceAndValueHistoryV2] =
+      val updatePermissionEvent: Option[ResourceAndValueHistoryEvent] =
         events.find(event => event.eventType == ResourceAndValueEventsUtil.UPDATE_VALUE_PERMISSION_EVENT)
       assert(updatePermissionEvent.isDefined)
       val updatePermissionPayload = updatePermissionEvent.get.eventBody
@@ -2516,23 +2484,16 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgType[CreateValueResponseV2](timeout)
 
-      responderManager ! ResourceVersionHistoryGetRequestV2(
+      responderManager ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        withDeletedResource = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
-      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
-
-      responderManager ! ResourceFullHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        resourceVersionHistory = response.history,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-      val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      val response: ResourceAndValueVersionHistoryResponseV2 =
+        expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
+      val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size should be(11)
-      val createValueEvent: Option[ResourceAndValueHistoryV2] =
+      val createValueEvent: Option[ResourceAndValueHistoryEvent] =
         events.find(
           event =>
             event.eventType == ResourceAndValueEventsUtil.CREATE_VALUE_EVENT && event.eventBody
@@ -2566,23 +2527,17 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
       expectMsgType[SuccessResponseV2](timeout)
-      responderManager ! ResourceVersionHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        withDeletedResource = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
 
-      responderManager ! ResourceFullHistoryGetRequestV2(
+      responderManager ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        resourceVersionHistory = response.history,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
-      val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      val response: ResourceAndValueVersionHistoryResponseV2 =
+        expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
+      val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size should be(12)
-      val deleteValueEvent: Option[ResourceAndValueHistoryV2] =
+      val deleteValueEvent: Option[ResourceAndValueHistoryEvent] =
         events.find(
           event =>
             event.eventType == ResourceAndValueEventsUtil.DELETE_VALUE_EVENT && event.eventBody
@@ -2593,24 +2548,18 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return full history of a deleted resource" in {
       val resourceIri = "http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA"
-      responderManager ! ResourceVersionHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        withDeletedResource = true,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
 
-      responderManager ! ResourceFullHistoryGetRequestV2(
+      responderManager ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        resourceVersionHistory = response.history,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
 
-      val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      val response: ResourceAndValueVersionHistoryResponseV2 =
+        expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
+      val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size should be(2)
-      val deleteResourceEvent: Option[ResourceAndValueHistoryV2] =
+      val deleteResourceEvent: Option[ResourceAndValueHistoryEvent] =
         events.find(event => event.eventType == ResourceAndValueEventsUtil.DELETE_RESOURCE_EVENT)
       assert(deleteResourceEvent.isDefined)
       val deletionInfo = deleteResourceEvent.get.eventBody.asInstanceOf[ResourceEventBody].deletionInfo.get
@@ -2630,25 +2579,30 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgType[SuccessResponseV2](timeout)
 
-      responderManager ! ResourceVersionHistoryGetRequestV2(
+      responderManager ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
-        withDeletedResource = true,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUserProfile
       )
-      val response: ResourceVersionHistoryResponseV2 = expectMsgType[ResourceVersionHistoryResponseV2](timeout)
-
-      responderManager ! ResourceFullHistoryGetRequestV2(
-        resourceIri = resourceIri,
-        resourceVersionHistory = response.history,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUserProfile
-      )
-      val events: Seq[ResourceAndValueHistoryV2] = expectMsgType[Seq[ResourceAndValueHistoryV2]](timeout)
+      val response: ResourceAndValueVersionHistoryResponseV2 =
+        expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
+      val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size should be(2)
-      val updateMetadataEvent: Option[ResourceAndValueHistoryV2] =
+      val updateMetadataEvent: Option[ResourceAndValueHistoryEvent] =
         events.find(event => event.eventType == ResourceAndValueEventsUtil.UPDATE_RESOURCE_METADATA_EVENT)
       assert(updateMetadataEvent.isDefined)
+    }
+
+    "not return resources of a project which does not exist" in {
+
+      responderManager ! ProjectResourcesWithHistoryGetRequestV2(
+        projectIri = "http://rdfh.ch/projects/1111",
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.anythingAdminUser
+      )
+      expectMsgPF(timeout) {
+        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      }
     }
 
     "return seq of full history events for each resource of a project" in {
@@ -2659,7 +2613,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
       val response: ResourceAndValueVersionHistoryResponseV2 =
         expectMsgType[ResourceAndValueVersionHistoryResponseV2](timeout)
-      response.projectHistory.size should be > 1
+      response.historyEvents.size should be > 1
 
     }
   }

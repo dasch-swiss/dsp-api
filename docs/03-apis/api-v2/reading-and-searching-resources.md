@@ -571,28 +571,32 @@ be sorted alphabetically by resource IRI (an arbitrary but consistent order).
 The value of `page` is a 0-based integer page number. Paging works as it does
 in [Gravsearch](query-language.md)).
 
-### Get the Version History of Resources and Values of a Project
+### Get the Full History of a Resource and its Values as Events
 
-To get a list of the changes that have been made to resources and values of a project since their creation ordered by date
-use this route:
+To get a list of the changes that have been made to a resource and its values since its creation as events ordered by 
+date:
 
 ```
-HTTP GET to http://host/v2/resources/projectHistory/projectIRI
+HTTP GET to http://host/v2/resources/resourceHistoryEvents/<resourceIRI>
 ```
 
-The project IRI must be URL-encoded. The response is a list of events describing changes made to the resource and its values,
+The resource IRI must be URL-encoded. The response is a list of events describing changes made to the resource and its values,
  in chronological order. Each entry has the properties: 
  `knora-api:eventType` (the type of the operation performed on a specific date. The operation can be either
- `createResource`, `deleteResource`, `createValue`, `updateValueContent`, `updateValuePermissions`, or `deleteValue`.), 
+ `createdResource`, `updatedResourceMetadata`, `deletedResource`, `createdValue`, `updatedValueContent`, 
+ `updatedValuePermissions`, or `deletedValue`.), 
 `knora-api:versionDate` (the date when the change was made),
 `knora-api:author` (the IRI of the user who made the change),
-`knora-api:eventBody` (the information necessary to make the same request). For example:
+`knora-api:eventBody` (the information necessary to make the same request). 
+
+For example, the following response contains the list of events describing the version history of the resource 
+`http://rdfh.ch/0001/thing-with-history` ordered by date:
 
 ```jsonld
 {
   "@graph" : [ 
         {
-            "knora-api:eventType": "createResource",
+            "knora-api:eventType": "createdResource",
             "knora-api:author": {
                 "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
             },
@@ -615,7 +619,7 @@ The project IRI must be URL-encoded. The response is a list of events describing
             }
         },
         {
-            "knora-api:eventType": "createValue",
+            "knora-api:eventType": "createdValue",
             "knora-api:author": {
                 "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
             },
@@ -643,7 +647,7 @@ The project IRI must be URL-encoded. The response is a list of events describing
             }
         },
         {
-            "knora-api:eventType": "updateValueContent",
+            "knora-api:eventType": "updatedValueContent",
             "knora-api:author": {
                 "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
             },
@@ -669,7 +673,7 @@ The project IRI must be URL-encoded. The response is a list of events describing
             }
         },
         {
-            "knora-api:eventType": "deleteValue",
+            "knora-api:eventType": "deletedValue",
             "knora-api:author": {
                 "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
             },
@@ -700,3 +704,24 @@ The project IRI must be URL-encoded. The response is a list of events describing
   }
 }
 ```
+
+Since the history of changes made to the metadata of a resource is not part of resouce's version history, there are no 
+events describing the changes on metadata elements like its `rdfs:label` or `rdfs:comment`. 
+The only record depicting a change in a resource's metadata is the `knora-api:lastModificationDate` of the resource. Thus 
+the event `updatedResourceMetadata` indicates a change in a resource's metadata, its `knora-api:eventBody` contains the 
+payload needed to update the value of the resource's `lastModificationDate`, see 
+[modifying metadata of a resource](editing-resources.md#modifying-a-resources-metadata).
+
+
+
+### Get the Full History of all Resources of a Project as Events
+
+To get a list of the changes that have been made to the resources and their values of a project as events ordered by 
+date:
+
+```
+HTTP GET to http://host/v2/resources/projectHistoryEvents/<projectIRI>
+```
+
+The project IRI must be URL-encoded. The response contains the resource history events of all resources that belong to 
+the specified project.
