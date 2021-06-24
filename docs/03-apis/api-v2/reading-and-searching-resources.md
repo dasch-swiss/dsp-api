@@ -583,8 +583,8 @@ HTTP GET to http://host/v2/resources/resourceHistoryEvents/<resourceIRI>
 The resource IRI must be URL-encoded. The response is a list of events describing changes made to the resource and its values,
  in chronological order. Each entry has the properties: 
  `knora-api:eventType` (the type of the operation performed on a specific date. The operation can be either
- `createResource`, `updateResourceMetadata`, `deleteResource`, `createValue`, `updateValueContent`, `updateValuePermissions`, 
-  or `deleteValue`.), 
+ `createdResource`, `updatedResourceMetadata`, `deletedResource`, `createdValue`, `updatedValueContent`, 
+ `updatedValuePermissions`, or `deletedValue`.), 
 `knora-api:versionDate` (the date when the change was made),
 `knora-api:author` (the IRI of the user who made the change),
 `knora-api:eventBody` (the information necessary to make the same request). 
@@ -596,7 +596,7 @@ For example, the following response contains the list of events describing the v
 {
   "@graph" : [ 
         {
-            "knora-api:eventType": "createResource",
+            "knora-api:eventType": "createdResource",
             "knora-api:author": {
                 "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
             },
@@ -619,7 +619,7 @@ For example, the following response contains the list of events describing the v
             }
         },
         {
-            "knora-api:eventType": "createValue",
+            "knora-api:eventType": "createdValue",
             "knora-api:author": {
                 "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
             },
@@ -647,7 +647,7 @@ For example, the following response contains the list of events describing the v
             }
         },
         {
-            "knora-api:eventType": "updateValueContent",
+            "knora-api:eventType": "updatedValueContent",
             "knora-api:author": {
                 "@id": "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
             },
@@ -673,7 +673,7 @@ For example, the following response contains the list of events describing the v
             }
         },
         {
-            "knora-api:eventType": "deleteValue",
+            "knora-api:eventType": "deletedValue",
             "knora-api:author": {
                 "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
             },
@@ -708,7 +708,7 @@ For example, the following response contains the list of events describing the v
 Since the history of changes made to the metadata of a resource is not part of resouce's version history, there are no 
 events describing the changes on metadata elements like its `rdfs:label` or `rdfs:comment`. 
 The only record depicting a change in a resource's metadata is the `knora-api:lastModificationDate` of the resource. Thus 
-the event `updateResourceMetadat` indicates a change in a resource's metadata, its `knora-api:eventBody` contains the 
+the event `updatedResourceMetadata` indicates a change in a resource's metadata, its `knora-api:eventBody` contains the 
 payload needed to update the value of the resource's `lastModificationDate`, see 
 [modifying metadata of a resource](editing-resources.md#modifying-a-resources-metadata).
 

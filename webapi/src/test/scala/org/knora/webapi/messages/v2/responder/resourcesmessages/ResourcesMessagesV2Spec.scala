@@ -33,6 +33,7 @@ class ResourcesMessagesV2Spec extends CoreSpec() {
       assert(caught.getMessage === "Given IRI is not a project IRI.")
     }
   }
+
   "Get history events of a single resource" should {
     "fail if given resource IRI is not valid" in {
       val resourceIri = "invalid-resource-IRI"
@@ -44,6 +45,18 @@ class ResourcesMessagesV2Spec extends CoreSpec() {
         )
       )
       assert(caught.getMessage === s"Invalid resource IRI: $resourceIri")
+    }
+
+    "fail if given IRI is not a resource IRI" in {
+      val resourceIri = "http://rdfh.ch/projects/0001"
+      val caught = intercept[BadRequestException](
+        ResourceHistoryEventsGetRequestV2(
+          resourceIri = resourceIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01
+        )
+      )
+      assert(caught.getMessage === s"Given IRI is not a resource IRI: $resourceIri")
     }
   }
 }

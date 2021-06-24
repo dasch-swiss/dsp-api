@@ -157,6 +157,9 @@ case class ResourceHistoryEventsGetRequestV2(resourceIri: IRI,
     extends ResourcesResponderRequestV2 {
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
   stringFormatter.validateAndEscapeIri(resourceIri, throw BadRequestException(s"Invalid resource IRI: $resourceIri"))
+  if (!stringFormatter.toSmartIri(resourceIri).isKnoraResourceIri) {
+    throw BadRequestException(s"Given IRI is not a resource IRI: $resourceIri")
+  }
 }
 
 /**
