@@ -89,7 +89,7 @@ Additionally, each project can have an optional custom IRI (of [Knora IRI](../ap
     
 ```json
     {
-        "id": "http://rdfh.ch/projects/3333",
+        "id": "http://rdfh.ch/projects/9TaSVMUuiRhQsuWHDPr8rw",
         "shortname": "newprojectWithIri",
         "shortcode": "3333",
         "longname": "new project with a custom IRI",
