@@ -982,11 +982,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       */
     def createPermissionsForAdminsAndMembersOfNewProject(projectIri: IRI, projectShortCode: String): Future[Unit] =
       for {
-        baseIri: String <- Future.successful(s"http://$IriDomain/permissions/$projectShortCode/")
         // Give the admins of the new project rights for any operation in project level, and rights to create resources.
         _ <- (responderManager ? AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
-            id = Some(baseIri + "defaultApForAdmin"),
             forProject = projectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
             hasPermissions =
@@ -1000,7 +998,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         // Give the members of the new project rights to create resources.
         _ <- (responderManager ? AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
-            id = Some(baseIri + "defaultApForMember"),
             forProject = projectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
@@ -1014,7 +1011,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         // and restricted view of all resources and values that belong to the project.
         _ <- (responderManager ? DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            id = Some(baseIri + "defaultDoapForAdmin"),
             forProject = projectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             hasPermissions = Set(
@@ -1034,7 +1030,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         // that belong to the project.
         _ <- (responderManager ? DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            id = Some(baseIri + "defaultDoapForMember"),
             forProject = projectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(
