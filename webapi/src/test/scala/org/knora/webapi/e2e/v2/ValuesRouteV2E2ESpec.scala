@@ -682,7 +682,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
     )
   }
-  private val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/CpO1TIDf1IS55dQbyIuDsA"
+  private val customValueUUID = "CpO1TIDf1IS55dQbyIuDsA"
+  private val customValueIri: IRI = s"http://rdfh.ch/0001/a-thing/values/$customValueUUID"
 
   "The values v2 endpoint" should {
     "get the latest versions of values, given their UUIDs" in {
@@ -851,6 +852,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val valueIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
       assert(valueIri == customValueIri)
+      val valueUUID = responseJsonDoc.body.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+      assert(valueUUID == customValueUUID)
     }
 
     "return a DuplicateValueException during value creation when the supplied value IRI is not unique" in {
@@ -885,7 +888,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "create an integer value with a custom UUID" in {
       val resourceIri: IRI = AThing.iri
       val intValue: Int = 45
-      val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
+      val intValueCustomUUID = "IN4R19yYR0ygi3K2VEHpUQ"
 
       val jsonLDEntity =
         s"""{
@@ -894,7 +897,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                    |  "anything:hasInteger" : {
                    |    "@type" : "knora-api:IntValue",
                    |    "knora-api:intValueAsInt" : $intValue,
-                   |    "knora-api:valueHasUUID" : "$customValueUUID"
+                   |    "knora-api:valueHasUUID" : "$intValueCustomUUID"
                    |  },
                    |  "@context" : {
                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -920,8 +923,52 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
-      val valueUUID = responseJsonDoc.body.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
-      assert(valueUUID == customValueUUID)
+      val valueUUID: String = responseJsonDoc.body.requireString(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
+      assert(valueUUID == intValueCustomUUID)
+      val valueIri: IRI =
+        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      assert(valueIri.endsWith(valueUUID))
+
+    }
+
+    "do not create an integer value if the custom UUID is not part of the custom IRI" in {
+      val resourceIri: IRI = AThing.iri
+      val intValue: Int = 45
+      val aUUID = "IN4R19yYR0ygi3K2VEHpUQ"
+      val valueIri = s"http://rdfh.ch/0001/a-thing/values/IN4R19yYR0ygi3K2VEHpNN"
+      val jsonLDEntity =
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@id" : "$valueIri",
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue,
+           |    "knora-api:valueHasUUID" : "$aUUID"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
+
+      clientTestDataCollector.addFile(
+        TestDataFileContent(
+          filePath = TestDataFilePath(
+            directoryPath = clientTestDataPath,
+            filename = "create-int-value-with-custom-UUID-request",
+            fileExtension = "json"
+          ),
+          text = jsonLDEntity
+        )
+      )
+
+      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password))
+      val response: HttpResponse = singleAwaitingRequest(request)
+
+      assert(response.status == StatusCodes.BadRequest, response.toString)
     }
 
     "create an integer value with a custom creation date" in {
@@ -982,7 +1029,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI = AThing.iri
       val intValue: Int = 10
       val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/7VDvMOnuitf_r1Ju7BglsQ"
-      val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
+      val customValueUUID = "7VDvMOnuitf_r1Ju7BglsQ"
       val customCreationDate: Instant = Instant.parse("2020-06-04T12:58:54.502951Z")
 
       val jsonLDEntity =
@@ -3218,7 +3265,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri: IRI = AThing.iri
       val targetResourceIri: IRI = "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
       val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw"
-      val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
+      val customValueUUID = "mr9i2aUUJolv64V_9hYdTw"
       val customCreationDate: Instant = Instant.parse("2020-06-04T11:36:54.502951Z")
 
       val jsonLDEntity =
@@ -3228,7 +3275,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                    |  "anything:hasOtherThingValue" : {
                    |    "@id" : "$customValueIri",
                    |    "@type" : "knora-api:LinkValue",
-                   |    "knora-api:valueHasUUID": "IN4R19yYR0ygi3K2VEHpUQ",
+                   |    "knora-api:valueHasUUID": "$customValueUUID",
                    |    "knora-api:linkValueHasTargetIri" : {
                    |      "@id" : "$targetResourceIri"
                    |    },
@@ -3517,7 +3564,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "not update an integer value with a custom new value version IRI that refers to the wrong resource" in {
       val resourceIri: IRI = AThing.iri
       val intValue: Int = 8
-      val newValueVersionIri: IRI = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw/values/foo"
+      val newValueVersionIri: IRI = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw/values/iEYi6E7Ntjvj2syzJZiXlg"
 
       val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,
