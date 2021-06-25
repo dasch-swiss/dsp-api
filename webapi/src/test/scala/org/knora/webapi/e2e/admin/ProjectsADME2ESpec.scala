@@ -685,7 +685,7 @@ class ProjectsADME2ESpec
         assert(response.status === StatusCodes.OK)
 
         val keywords: Seq[String] = AkkaHttpUtils.httpResponseToJson(response).fields("keywords").convertTo[Seq[String]]
-        keywords.size should be(21)
+        keywords.size should be(20)
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(

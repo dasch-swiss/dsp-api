@@ -31,7 +31,6 @@ import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{
   UserADM,

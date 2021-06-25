@@ -2564,7 +2564,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "create a new value to test create value history event" in {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
-      val newValueIri = "http://rdfh.ch/0001/thing-with-history/values/newText"
+      val newValueIri = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
       val testValue = "a test value"
       // create new value.
 
@@ -2614,7 +2614,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "delete the newly created value to check the delete value event of resource history" in {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
-      val valueToDelete = "http://rdfh.ch/0001/thing-with-history/values/newText"
+      val valueToDelete = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
       val deleteComment = "delete value test"
       // delete the new value.
 

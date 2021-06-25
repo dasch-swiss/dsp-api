@@ -51,7 +51,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
   // Collects client test data
   private val clientTestDataCollector = new ClientTestDataCollector(settings)
-  private val customDOAPIri = "http://rdfh.ch/permissions/00FF/DOAP-with-customIri"
+  private val customDOAPIri = "http://rdfh.ch/permissions/00FF/eIAywlYBJA3a_5yI77UsMQ"
   "The Permissions Route ('admin/permissions')" when {
 
     "getting permissions" should {

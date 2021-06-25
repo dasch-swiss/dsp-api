@@ -682,6 +682,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
     )
   }
+  private val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/CpO1TIDf1IS55dQbyIuDsA"
 
   "The values v2 endpoint" should {
     "get the latest versions of values, given their UUIDs" in {
@@ -814,7 +815,6 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "create an integer value with a custom value IRI" in {
       val resourceIri: IRI = AThing.iri
       val intValue: Int = 30
-      val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/int-with-valueIRI"
 
       val jsonLDEntity =
         s"""{
@@ -861,7 +861,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
                    |  "@id" : "${AThing.iri}",
                    |  "@type" : "anything:Thing",
                    |  "anything:hasInteger" : {
-                   |    "@id" : "http://rdfh.ch/0001/a-thing/values/int-with-valueIRI",
+                   |    "@id" : "$customValueIri",
                    |    "@type" : "knora-api:IntValue",
                    |    "knora-api:intValueAsInt" : 43
                    |  },
@@ -878,8 +878,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       assert(response.status == StatusCodes.BadRequest, response.toString)
 
       val errorMessage: String = Await.result(Unmarshal(response.entity).to[String], 1.second)
-      val invalidIri: Boolean = errorMessage.contains(
-        s"IRI: 'http://rdfh.ch/0001/a-thing/values/int-with-valueIRI' already exists, try another one.")
+      val invalidIri: Boolean = errorMessage.contains(s"IRI: '$customValueIri' already exists, try another one.")
       invalidIri should be(true)
     }
 
@@ -982,7 +981,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "create an integer value with custom IRI, UUID, and creation date" in {
       val resourceIri: IRI = AThing.iri
       val intValue: Int = 10
-      val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/int-with-IRI"
+      val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/7VDvMOnuitf_r1Ju7BglsQ"
       val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
       val customCreationDate: Instant = Instant.parse("2020-06-04T12:58:54.502951Z")
 
@@ -3218,7 +3217,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "create a link between two resources with a custom link value IRI, UUID, creationDate" in {
       val resourceIri: IRI = AThing.iri
       val targetResourceIri: IRI = "http://rdfh.ch/0001/CNhWoNGGT7iWOrIwxsEqvA"
-      val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/link-Value-With-IRI"
+      val customValueIri: IRI = "http://rdfh.ch/0001/a-thing/values/mr9i2aUUJolv64V_9hYdTw"
       val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
       val customCreationDate: Instant = Instant.parse("2020-06-04T11:36:54.502951Z")
 
@@ -3425,7 +3424,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val intValue: Int = 7
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
-      val newValueVersionIri: IRI = s"http://rdfh.ch/0001/a-thing/values/updated-int-value"
+      val newValueVersionIri: IRI = s"http://rdfh.ch/0001/a-thing/values/DrXts3Up3DijGriI403nhg"
 
       val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,
@@ -3461,7 +3460,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "not update an integer value with a custom new value version IRI that is the same as the current IRI" in {
       val resourceIri: IRI = AThing.iri
       val intValue: Int = 8
-      val newValueVersionIri: IRI = s"http://rdfh.ch/0001/a-thing/values/updated-int-value"
+      val newValueVersionIri: IRI = s"http://rdfh.ch/0001/a-thing/values/DrXts3Up3DijGriI403nhg"
 
       val jsonLDEntity = updateIntValueWithCustomNewValueVersionIriRequest(
         resourceIri = resourceIri,
