@@ -67,6 +67,7 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       updateResourceMetadata(featureFactoryConfig) ~
       getResourcesInProject(featureFactoryConfig) ~
       getResourceHistory(featureFactoryConfig) ~
+      getResourceHistoryEvents(featureFactoryConfig) ~
       getProjectResourceAndValueHistory(featureFactoryConfig) ~
       getResources(featureFactoryConfig) ~
       getResourcesPreview(featureFactoryConfig) ~
@@ -302,8 +303,38 @@ class ResourcesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) 
       }
     }
 
+  private def getResourceHistoryEvents(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(ResourcesBasePath / "resourceHistoryEvents" / Segment) { resourceIri: IRI =>
+      get { requestContext =>
+        {
+          val requestMessageFuture: Future[ResourceHistoryEventsGetRequestV2] = for {
+            requestingUser <- getUserADM(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
+          } yield
+            ResourceHistoryEventsGetRequestV2(
+              resourceIri = resourceIri,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser
+            )
+
+          RouteUtilV2.runRdfRouteWithFuture(
+            requestMessageF = requestMessageFuture,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log,
+            targetSchema = ApiV2Complex,
+            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+          )
+        }
+      }
+    }
+
   private def getProjectResourceAndValueHistory(featureFactoryConfig: FeatureFactoryConfig): Route =
-    path(ResourcesBasePath / "projectHistory" / Segment) { projectIri: IRI =>
+    path(ResourcesBasePath / "projectHistoryEvents" / Segment) { projectIri: IRI =>
       get { requestContext =>
         {
           val requestMessageFuture: Future[ProjectResourcesWithHistoryGetRequestV2] = for {
