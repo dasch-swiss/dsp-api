@@ -21,6 +21,7 @@
 package org.knora.webapi.responders.v2.ontology
 
 import akka.actor.ActorRef
+import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.exceptions.BadRequestException
@@ -31,8 +32,9 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.{
   ReadOntologyV2
 }
 import org.knora.webapi.settings.KnoraSettingsImpl
-
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
+import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -42,10 +44,13 @@ import scala.concurrent.{ExecutionContext, Future}
 object DeleteCardinalitiesFromClass {
 
   /**
+   * Deletes the supplied cardinalities from a class, if the referenced properties are not used in instances
+   * of the class and any subclasses.
+   *
    * @param settings the applications settings.
    * @param storeManager the store manager actor.
-   * @param internalClassIri
-   * @param internalOntologyIri
+   * @param internalClassIri the Class from which the cardinalities are deleted.
+   * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
   def deleteCardinalitiesFromClassTaskFuture(
@@ -107,4 +112,34 @@ object DeleteCardinalitiesFromClass {
       // TODO: If class is used in data, check additionally if the property(ies) being removed is(are) truly used and if not, then allow.
 
     } yield ???
+
+  /**
+   * Check if a property entity is used in instances of TBD ...
+   *
+   * @param settings application settings.
+   * @param storeManager store manager actor ref.
+   * @param propertyIri the IRI of the entity that is being checked for usage.
+   * @param ec the execution context onto with the future will run.
+   * @param timeout the timeout for the future.
+   * @return a [[Boolean]] denoting if the property entity is used.
+   */
+  def isPropertyUsedInClassesAndSubclasses(
+    settings: KnoraSettingsImpl,
+    storeManager: ActorRef,
+    propertyIri: SmartIri
+  )(implicit ec: ExecutionContext, timeout: Timeout): Future[Boolean] =
+    for {
+      request <- Future(
+                   org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+                     .isEntityUsed(
+                       triplestore = settings.triplestoreType,
+                       entityIri = propertyIri,
+                       ignoreKnoraConstraints = true,
+                       ignoreRdfSubjectAndObject = true
+                     )
+                     .toString()
+                 )
+      response: SparqlSelectResult <-
+        (storeManager ? SparqlSelectRequest(request)).mapTo[SparqlSelectResult]
+    } yield response.results.bindings.nonEmpty
 }

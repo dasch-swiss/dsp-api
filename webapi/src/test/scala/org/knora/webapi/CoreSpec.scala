@@ -157,7 +157,6 @@ abstract class CoreSpec(_system: ActorSystem)
 
   final override def afterAll(): () =
     appActor ! AppStop()
-  // memusage()
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
     logger.info("Loading test data started ...")
@@ -187,15 +186,4 @@ abstract class CoreSpec(_system: ActorSystem)
       case Failure(e)   => logger.error(s"Flushing Redis cache failed: ${e.getMessage}")
     }
   }
-
-  def memusage(): Unit = {
-    // memory info
-    val mb      = 1024 * 1024
-    val runtime = Runtime.getRuntime
-    println("** Used Memory:  " + (runtime.totalMemory - runtime.freeMemory) / mb)
-    println("** Free Memory:  " + runtime.freeMemory / mb)
-    println("** Total Memory: " + runtime.totalMemory / mb)
-    println("** Max Memory:   " + runtime.maxMemory / mb)
-  }
-
 }

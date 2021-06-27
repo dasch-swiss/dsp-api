@@ -5246,7 +5246,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
        *
        * def prop hasName extends hasTitle
        * class PictureBook extends Book
-       *  - hasTitle - implicit?)
+       *  - hasTitle - implicit?
        *  - hasName - additional property or does hasName override hasTitle?
        */
 

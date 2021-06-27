@@ -20,17 +20,41 @@
 
 package org.knora.webapi.responders.v2.ontology
 
-import org.knora.webapi.{TestContainerFuseki, UnitSpec}
+import akka.actor.Props
+import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.settings.KnoraDispatchers
+import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
+import org.knora.webapi.{IntegrationSpec, TestContainerFuseki}
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.DeleteCardinalitiesFromClass]].
  * Adding the [[TestContainerFuseki.PortConfig]] config will start the Fuseki container and make it
  * available to the test.
  */
-class DeleteCardinalitiesFromClassSpec extends UnitSpec(TestContainerFuseki.PortConfig) {
+class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  implicit val ec: scala.concurrent.ExecutionContext      = scala.concurrent.ExecutionContext.global
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+  // start fuseki http connector actor
+  private val fusekiActor = system.actorOf(
+    Props(new HttpTriplestoreConnector()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+    name = "httpTriplestoreConnector"
+  )
+
+  override def beforeAll(): Unit = {
+    waitForReadyTriplestore(fusekiActor)
+    loadTestData(fusekiActor)
+  }
+
+  // use started actor in tests instead of the store manager
+  "DeleteCardinalitiesFromClass" should {
+    "check if a property entity is used in instances of TBD ..." in {
+      val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
+      val propertyIri         = AnythingOntologyIri.makeEntityIri("hasName")
+
+      val resF = DeleteCardinalitiesFromClass.isPropertyUsedInClassesAndSubclasses(settings, fusekiActor, propertyIri)
+      resF map { res => res should equal(true) }
+    }
+  }
 }

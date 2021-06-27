@@ -27,6 +27,12 @@ def dependencies():
             "com.typesafe.akka:akka-http-jackson_2.13:%s" % (AKKA_HTTP_VERSION),
             "com.typesafe:config:1.3.3",
 
+            # ZIO
+            "dev.zio:zio_2.13:1.0.9",
+            "dev.zio:zio-json_2.13:0.1.5",
+            "dev.zio:zio-test_2.13:1.0.9",
+            "dev.zio:zio-test-junit_2.13:1.0.9",
+
             # CORS support
             "ch.megard:akka-http-cors_2.13:1.0.0",
 
@@ -125,7 +131,7 @@ def dependencies():
             "org.scalatest:scalatest-shouldmatchers_2.13:3.2.2",
             "org.scalatest:scalatest-compatible:3.2.2",
             "org.testcontainers:testcontainers:1.15.3",
-            "junit:junit:4.13",
+            "junit:junit:4.13.2",
             "io.gatling.highcharts:gatling-charts-highcharts:3.2.1",
             "io.gatling:gatling-test-framework:3.2.1",
 

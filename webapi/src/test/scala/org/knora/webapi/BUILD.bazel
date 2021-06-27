@@ -10,6 +10,7 @@ filegroup(
         "E2ESpec.scala",
         "ITKnoraFakeSpec.scala",
         "ITKnoraLiveSpec.scala",
+        "IntegrationSpec.scala",
         "KnoraFakeCore.scala",
         "ManagersWithMockedSipi.scala",
         "R2RSpec.scala",
