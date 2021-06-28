@@ -3232,4 +3232,10 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
         StringLiteralV2(value = fromSparqlEncodedString(stringLiteral.value), language = stringLiteral.language))
     )
   }
+  def unescapeOptionalString(optionalString: Option[String]): Option[String] = {
+    optionalString match {
+      case Some(s: String) => Some(fromSparqlEncodedString(s))
+      case None            => None
+    }
+  }
 }

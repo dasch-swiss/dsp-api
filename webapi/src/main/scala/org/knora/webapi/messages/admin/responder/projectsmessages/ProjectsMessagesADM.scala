@@ -66,6 +66,8 @@ case class CreateProjectApiRequestADM(id: Option[IRI] = None,
   // Check that collection parameters are not empty.
   if (description.isEmpty) throw BadRequestException("Project description needs to be supplied.")
   if (keywords.isEmpty) throw BadRequestException("At least one keyword must be supplied for a new project.")
+  if (shortcode.isEmpty) throw BadRequestException("Project shortcode must be supplied.")
+  if (shortname.isEmpty) throw BadRequestException("Project shortname must be supplied.")
 
   /* Convert to Json */
   def toJsValue: JsValue = createProjectApiRequestADMFormat.write(this)
@@ -135,6 +137,7 @@ case class ChangeProjectApiRequestADM(shortname: Option[String] = None,
                                       status: Option[Boolean] = None,
                                       selfjoin: Option[Boolean] = None)
     extends ProjectsADMJsonProtocol {
+  implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   val parametersCount: Int = List(
     shortname,
@@ -150,6 +153,53 @@ case class ChangeProjectApiRequestADM(shortname: Option[String] = None,
   if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
 
   def toJsValue: JsValue = changeProjectApiRequestADMFormat.write(this)
+
+  /* validates and escapes the given values.*/
+  def validateAndEscape: ChangeProjectApiRequestADM = {
+
+    val validatedShortname: Option[String] = stringFormatter.validateAndEscapeOptionalProjectShortname(
+      shortname,
+      errorFun = throw BadRequestException(s"The supplied short name: '$shortname' is not valid."))
+
+    val validatedLongName: Option[String] = stringFormatter.escapeOptionalString(
+      longname,
+      errorFun = throw BadRequestException(s"The supplied longname: '$longname' is not valid."))
+
+    val validatedLogo: Option[String] = stringFormatter.escapeOptionalString(
+      logo,
+      errorFun = throw BadRequestException(s"The supplied logo: '$logo' is not valid."))
+
+    val validatedDescriptions: Option[Seq[StringLiteralV2]] = description match {
+      case Some(descriptions: Seq[StringLiteralV2]) =>
+        val escapedDescriptions = descriptions.map { des =>
+          val escapedValue =
+            stringFormatter.toSparqlEncodedString(
+              des.value,
+              errorFun = throw BadRequestException(s"The supplied description: '${des.value}' is not valid."))
+          StringLiteralV2(value = escapedValue, language = des.language)
+        }
+        Some(escapedDescriptions)
+      case None => None
+    }
+
+    val validatedKeywords: Option[Seq[String]] = keywords match {
+      case Some(givenKeywords: Seq[String]) =>
+        val escapedKeywords = givenKeywords.map(
+          keyword =>
+            stringFormatter.toSparqlEncodedString(
+              keyword,
+              errorFun = throw BadRequestException(s"The supplied keyword: '$keyword' is not valid.")))
+        Some(escapedKeywords)
+      case None => None
+    }
+    copy(
+      shortname = validatedShortname,
+      longname = validatedLongName,
+      description = validatedDescriptions,
+      keywords = validatedKeywords,
+      logo = validatedLogo
+    )
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -436,7 +486,7 @@ case class ProjectADM(id: IRI,
                       status: Boolean,
                       selfjoin: Boolean)
     extends Ordered[ProjectADM] {
-
+  implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   if (description.isEmpty) {
     throw OntologyConstraintException("Project description is a required property.")
   }
@@ -509,6 +559,20 @@ case class ProjectADM(id: IRI,
       .append(status)
       .append(selfjoin)
       .toHashCode
+  }
+
+  def unescape: ProjectADM = {
+    val unescapedDescriptions: Seq[StringLiteralV2] = description.map(desc =>
+      StringLiteralV2(value = stringFormatter.fromSparqlEncodedString(desc.value), language = desc.language))
+    val unescapedKeywords: Seq[String] = keywords.map(key => stringFormatter.fromSparqlEncodedString(key))
+    copy(
+      shortcode = stringFormatter.fromSparqlEncodedString(shortcode),
+      shortname = stringFormatter.fromSparqlEncodedString(shortname),
+      longname = stringFormatter.unescapeOptionalString(longname),
+      logo = stringFormatter.unescapeOptionalString(logo),
+      description = unescapedDescriptions,
+      keywords = unescapedKeywords
+    )
   }
 }
 
