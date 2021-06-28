@@ -70,7 +70,7 @@ class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
           logo = Some("/fu/bar/baz.jpg"),
           status = true,
           selfjoin = false
-        )
+        ).validateAndEscape
       )
       assert(caught.getMessage === "Invalid project IRI")
     }

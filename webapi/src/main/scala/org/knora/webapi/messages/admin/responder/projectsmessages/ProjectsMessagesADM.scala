@@ -63,11 +63,57 @@ case class CreateProjectApiRequestADM(id: Option[IRI] = None,
     extends ProjectsADMJsonProtocol {
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+  // Check that collection parameters are not empty.
+  if (description.isEmpty) throw BadRequestException("Project description needs to be supplied.")
+  if (keywords.isEmpty) throw BadRequestException("At least one keyword must be supplied for a new project.")
+
+  /* Convert to Json */
   def toJsValue: JsValue = createProjectApiRequestADMFormat.write(this)
 
-  if (description.isEmpty) throw BadRequestException("Project description needs to be supplied.")
+  /* validates and escapes the given values.*/
+  def validateAndEscape: CreateProjectApiRequestADM = {
+    val maybeProjectIri =
+      stringFormatter.validateAndEscapeOptionalProjectIri(id, throw BadRequestException(s"Invalid project IRI"))
+    val validatedShortcode = stringFormatter.validateAndEscapeProjectShortcode(
+      shortcode,
+      errorFun = throw BadRequestException(s"The supplied short code: '$shortcode' is not valid."))
 
-  stringFormatter.validateOptionalProjectIri(id, throw BadRequestException(s"Invalid project IRI"))
+    val validatedShortname = stringFormatter.validateAndEscapeProjectShortname(
+      shortname,
+      errorFun = throw BadRequestException(s"The supplied short name: '$shortname' is not valid."))
+
+    val validatedLongName = stringFormatter.escapeOptionalString(
+      longname,
+      errorFun = throw BadRequestException(s"The supplied longname: '$longname' is not valid."))
+
+    val validatedLogo = stringFormatter.escapeOptionalString(
+      logo,
+      errorFun = throw BadRequestException(s"The supplied logo: '$logo' is not valid."))
+
+    val validatedDescriptions: Seq[StringLiteralV2] = description.map { des =>
+      val escapedValue =
+        stringFormatter.toSparqlEncodedString(
+          des.value,
+          errorFun = throw BadRequestException(s"The supplied description: '${des.value}' is not valid."))
+      StringLiteralV2(value = escapedValue, language = des.language)
+    }
+
+    val validatedKeywords = keywords.map(
+      keyword =>
+        stringFormatter.toSparqlEncodedString(
+          keyword,
+          errorFun = throw BadRequestException(s"The supplied keyword: '$keyword' is not valid.")))
+    copy(
+      id = maybeProjectIri,
+      shortcode = validatedShortcode,
+      shortname = validatedShortname,
+      longname = validatedLongName,
+      description = validatedDescriptions,
+      keywords = validatedKeywords,
+      logo = validatedLogo
+    )
+  }
+
 }
 
 /**

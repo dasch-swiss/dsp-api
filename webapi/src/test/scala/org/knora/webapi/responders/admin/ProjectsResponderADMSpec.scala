@@ -222,7 +222,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             logo = Some("/fu/bar/baz.jpg"),
             status = true,
             selfjoin = false
-          ),
+          ).validateAndEscape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -316,7 +316,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             logo = Some("/fu/bar/baz.jpg"),
             status = true,
             selfjoin = false
-          ),
+          ).validateAndEscape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -343,7 +343,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             logo = Some("/fu/bar/baz.jpg"),
             status = true,
             selfjoin = false
-          ),
+          ).validateAndEscape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -362,7 +362,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             logo = Some("/fu/bar/baz.jpg"),
             status = true,
             selfjoin = false
-          ),
+          ).validateAndEscape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -382,7 +382,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             logo = Some("/fu/bar/baz.jpg"),
             status = true,
             selfjoin = false
-          ),
+          ).validateAndEscape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -402,7 +402,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             logo = Some("/fu/bar/baz.jpg"),
             status = true,
             selfjoin = false
-          ),
+          ).validateAndEscape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()

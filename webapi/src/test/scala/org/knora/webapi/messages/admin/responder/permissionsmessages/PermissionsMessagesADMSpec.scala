@@ -35,14 +35,15 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
   "Administrative Permission Get Requests" should {
     "return 'BadRequest' if the supplied project IRI for AdministrativePermissionsForProjectGetRequestADM is not valid" in {
+      val projectIri = "invalid-project-IRI"
       val caught = intercept[BadRequestException](
         AdministrativePermissionsForProjectGetRequestADM(
-          projectIri = "invalid-project-IRI",
+          projectIri = projectIri,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Invalid project IRI")
+      assert(caught.getMessage === s"Invalid project IRI $projectIri")
     }
 
     "return 'ForbiddenException' if the user requesting AdministrativePermissionsForProjectGetRequestADM is not system or project Admin" in {
@@ -80,14 +81,15 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "return 'BadRequest' if the supplied project IRI for AdministrativePermissionForProjectGroupGetADM is not valid" in {
+      val projectIri = "invalid-project-IRI"
       val caught = intercept[BadRequestException](
         AdministrativePermissionForProjectGroupGetADM(
-          projectIri = "invalid-project-IRI",
+          projectIri = projectIri,
           groupIri = OntologyConstants.KnoraAdmin.ProjectMember,
           requestingUser = SharedTestDataADM.imagesUser01
         )
       )
-      assert(caught.getMessage === "Invalid project IRI")
+      assert(caught.getMessage === s"Invalid project IRI $projectIri")
     }
 
     "return 'ForbiddenException' if the user requesting AdministrativePermissionForProjectGroupGetADM is not system or project Admin" in {
@@ -104,10 +106,11 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
   "Administrative Permission Create Requests" should {
     "return 'BadRequest' if the supplied project IRI for AdministrativePermissionCreateRequestADM is not valid" in {
+      val forProject = "invalid-project-IRI"
       val caught = intercept[BadRequestException](
         AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
-            forProject = "invalid-project-IRI",
+            forProject = forProject,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
           ),
@@ -116,7 +119,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Invalid project IRI")
+      assert(caught.getMessage === s"Invalid project IRI $forProject")
     }
 
     "return 'BadRequest' if the supplied group IRI for AdministrativePermissionCreateRequestADM is not valid" in {
@@ -215,14 +218,15 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
   "Default Object Access Permission Get Requests" should {
 
     "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionGetADM is not valid" in {
+      val projectIri = "invalid-project-IRI"
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionGetRequestADM(
-          projectIri = "invalid-project-IRI",
+          projectIri = projectIri,
           groupIri = Some(OntologyConstants.KnoraAdmin.ProjectMember),
           requestingUser = SharedTestDataADM.imagesUser01
         )
       )
-      assert(caught.getMessage === "Invalid project IRI")
+      assert(caught.getMessage === s"Invalid project IRI $projectIri")
     }
 
     "return 'BadRequest' if the supplied resourceClass IRI for DefaultObjectAccessPermissionGetADM is not valid" in {
@@ -297,14 +301,15 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionsForProjectGetRequestADM is not valid" in {
+      val projectIri = "invalid-project-IRI"
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionsForProjectGetRequestADM(
-          projectIri = "invalid-project-IRI",
+          projectIri = projectIri,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Invalid project IRI")
+      assert(caught.getMessage === s"Invalid project IRI $projectIri")
     }
 
     "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionsForProjectGetRequestADM is not System or project Admin" in {
@@ -356,15 +361,16 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "return 'BadRequest' if the supplied project IRI DefaultObjectAccessPermissionsStringForResourceClassGetADM is not valid" in {
+      val projectIri = "invalid-project-IRI"
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionsStringForResourceClassGetADM(
-          projectIri = "invalid-project-IRI",
+          projectIri = projectIri,
           resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
           targetUser = SharedTestDataADM.imagesUser02,
           requestingUser = SharedTestDataADM.imagesUser01
         )
       )
-      assert(caught.getMessage === "Invalid project IRI")
+      assert(caught.getMessage === s"Invalid project IRI $projectIri")
     }
 
     "return 'BadRequest' if the target user of DefaultObjectAccessPermissionsStringForResourceClassGetADM is an Anonymous user" in {
@@ -380,16 +386,17 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "return 'BadRequest' if the supplied project IRI DefaultObjectAccessPermissionsStringForPropertyGetADM is not valid" in {
+      val projectIri = ""
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionsStringForPropertyGetADM(
-          projectIri = "",
+          projectIri = projectIri,
           resourceClassIri = SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS,
           propertyIri = SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY,
           targetUser = SharedTestDataADM.imagesUser02,
           requestingUser = SharedTestDataADM.imagesUser01
         )
       )
-      assert(caught.getMessage === "Invalid project IRI")
+      assert(caught.getMessage === s"Invalid project IRI $projectIri")
     }
 
     "return 'BadRequest' if the supplied resourceClass IRI for DefaultObjectAccessPermissionsStringForPropertyGetADM is not valid" in {
@@ -449,10 +456,11 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
   "Default Object Access Permission Create Requests" should {
     "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
+      val forProject = "invalid-project-IRI"
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            forProject = "invalid-project-IRI",
+            forProject = forProject,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
           ),
@@ -461,7 +469,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Invalid project IRI")
+      assert(caught.getMessage === s"Invalid project IRI $forProject")
     }
 
     "return 'BadRequest' if the supplied group IRI for DefaultObjectAccessPermissionCreateRequestADM is not valid" in {
@@ -616,15 +624,16 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
 
   "get all project permissions" should {
     "return 'BadRequest' if the supplied project IRI for PermissionsForProjectGetRequestADM is not valid" in {
+      val projectIri = "invalid-project-IRI"
       val caught = intercept[BadRequestException](
         PermissionsForProjectGetRequestADM(
-          projectIri = "invalid-project-IRI",
+          projectIri = projectIri,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
         )
       )
-      assert(caught.getMessage === "Invalid project IRI")
+      assert(caught.getMessage === s"Invalid project IRI $projectIri")
     }
 
     "return 'ForbiddenException' if the user requesting PermissionsForProjectGetRequestADM is not system or project Admin" in {
