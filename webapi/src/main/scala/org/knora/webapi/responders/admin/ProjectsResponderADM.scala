@@ -916,11 +916,12 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
           throw UpdateNotPerformedException(
             "Project's 'shortname' was not updated. Please report this as a possible bug.")
       }
-
-      unescapedLongname: Option[String] = stringFormatter.unescapeOptionalString(projectUpdatePayload.longname)
-      _ = if (updatedProject.longname != unescapedLongname)
-        throw UpdateNotPerformedException("Project's 'longname' was not updated. Please report this as a possible bug.")
-
+      _ = if (projectUpdatePayload.longname.isDefined) {
+        val unescapedLongname: Option[String] = stringFormatter.unescapeOptionalString(projectUpdatePayload.longname)
+        if (updatedProject.longname != unescapedLongname)
+          throw UpdateNotPerformedException(
+            s"Project's 'longname' was not updated. Please report this as a possible bug.")
+      }
       _ = if (projectUpdatePayload.description.isDefined) {
         val unescapedDescriptions: Seq[StringLiteralV2] = projectUpdatePayload.description.get.map(desc =>
           StringLiteralV2(stringFormatter.fromSparqlEncodedString(desc.value), desc.language))
@@ -936,11 +937,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
           throw UpdateNotPerformedException(
             "Project's 'keywords' was not updated. Please report this as a possible bug.")
       }
-
-      unescapedLogo: Option[String] = stringFormatter.unescapeOptionalString(projectUpdatePayload.logo)
-      _ = if (updatedProject.logo != unescapedLogo)
-        throw UpdateNotPerformedException("Project's 'logo' was not updated. Please report this as a possible bug.")
-
+      _ = if (projectUpdatePayload.logo.isDefined) {
+        val unescapedLogo: Option[String] = stringFormatter.unescapeOptionalString(projectUpdatePayload.logo)
+        if (updatedProject.logo != unescapedLogo)
+          throw UpdateNotPerformedException("Project's 'logo' was not updated. Please report this as a possible bug.")
+      }
       _ = if (projectUpdatePayload.status.isDefined) {
         if (updatedProject.status != projectUpdatePayload.status.get)
           throw UpdateNotPerformedException("Project's 'status' was not updated. Please report this as a possible bug.")
