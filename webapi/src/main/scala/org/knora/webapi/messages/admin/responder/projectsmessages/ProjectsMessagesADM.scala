@@ -486,7 +486,7 @@ case class ProjectADM(id: IRI,
                       status: Boolean,
                       selfjoin: Boolean)
     extends Ordered[ProjectADM] {
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
   if (description.isEmpty) {
     throw OntologyConstraintException("Project description is a required property.")
   }
@@ -562,6 +562,7 @@ case class ProjectADM(id: IRI,
   }
 
   def unescape: ProjectADM = {
+    val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     val unescapedDescriptions: Seq[StringLiteralV2] = description.map(desc =>
       StringLiteralV2(value = stringFormatter.fromSparqlEncodedString(desc.value), language = desc.language))
     val unescapedKeywords: Seq[String] = keywords.map(key => stringFormatter.fromSparqlEncodedString(key))
