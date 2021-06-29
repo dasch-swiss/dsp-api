@@ -2384,7 +2384,110 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
           assert(entityUsedResponse.results.bindings.isEmpty, s"Link value was not erased")
       }
     }
+  }
+  "When given a custom IRI" should {
 
+    "create a resource with no values but a custom IRI" in {
+      // Create the resource.
+
+      val resourceIri: IRI = "http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9kk"
+
+      val inputResource = CreateResourceV2(
+        resourceIri = Some(resourceIri.toSmartIri),
+        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+        label = "thing with a custom IRI",
+        values = Map.empty,
+        projectADM = SharedTestDataADM.anythingProject
+      )
+
+      responderManager ! CreateResourceRequestV2(
+        createResource = inputResource,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID
+      )
+
+      // Check that the response contains the correct metadata.
+
+      expectMsgPF(timeout) {
+        case response: ReadResourcesSequenceV2 =>
+          val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
+
+          checkCreateResource(
+            inputResourceIri = resourceIri,
+            inputResource = inputResource,
+            outputResource = outputResource,
+            defaultResourcePermissions = defaultAnythingResourcePermissions,
+            defaultValuePermissions = defaultAnythingValuePermissions,
+            requestingUser = anythingUserProfile
+          )
+      }
+
+      // Get the resource from the triplestore and check it again.
+
+      val outputResource = getResource(resourceIri, anythingUserProfile)
+
+      checkCreateResource(
+        inputResourceIri = resourceIri,
+        inputResource = inputResource,
+        outputResource = outputResource,
+        defaultResourcePermissions = defaultAnythingResourcePermissions,
+        defaultValuePermissions = defaultAnythingValuePermissions,
+        requestingUser = anythingUserProfile
+      )
+    }
+
+    "create a resource with a value that has custom UUID" in {
+      // Create the resource.
+
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = 5,
+              comment = Some("this is the number five")
+            ),
+            permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher"),
+            customValueUUID = Some(stringFormatter.base64DecodeUuid("IN4R19yYR0ygi3K2VEHpUQ"))
+          )
+        )
+      )
+
+      val inputResource = CreateResourceV2(
+        resourceIri = Some(resourceIri.toSmartIri),
+        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+        label = "thing with custom value UUID",
+        values = inputValues,
+        projectADM = SharedTestDataADM.anythingProject
+      )
+
+      responderManager ! CreateResourceRequestV2(
+        createResource = inputResource,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgType[ReadResourcesSequenceV2](timeout)
+
+      // Get the resource from the triplestore and check it.
+
+      val outputResource = getResource(resourceIri, anythingUserProfile)
+
+      checkCreateResource(
+        inputResourceIri = resourceIri,
+        inputResource = inputResource,
+        outputResource = outputResource,
+        defaultResourcePermissions = defaultAnythingResourcePermissions,
+        defaultValuePermissions = defaultAnythingValuePermissions,
+        requestingUser = anythingUserProfile
+      )
+    }
+  }
+  "When asked for events" should {
     "return full history of a-thing-picture resource" in {
       val resourceIri = "http://rdfh.ch/0001/a-thing-picture"
 
@@ -2461,7 +2564,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "create a new value to test create value history event" in {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
-      val newValueIri = "http://rdfh.ch/0001/thing-with-history/values/newText"
+      val newValueIri = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
       val testValue = "a test value"
       // create new value.
 
@@ -2511,7 +2614,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "delete the newly created value to check the delete value event of resource history" in {
       val resourceIri = "http://rdfh.ch/0001/thing-with-history"
-      val valueToDelete = "http://rdfh.ch/0001/thing-with-history/values/newText"
+      val valueToDelete = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
       val deleteComment = "delete value test"
       // delete the new value.
 

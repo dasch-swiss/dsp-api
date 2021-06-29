@@ -32,8 +32,14 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, NotFoundException}
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{
+  AdministrativePermissionADM,
   AdministrativePermissionGetResponseADM,
+  AdministrativePermissionsForProjectGetRequestADM,
+  AdministrativePermissionsForProjectGetResponseADM,
+  DefaultObjectAccessPermissionADM,
   DefaultObjectAccessPermissionGetResponseADM,
+  DefaultObjectAccessPermissionsForProjectGetRequestADM,
+  DefaultObjectAccessPermissionsForProjectGetResponseADM,
   PermissionADM,
   PermissionByIriGetRequestADM
 }
@@ -237,72 +243,65 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
         newProjectIri.set(received.project.id)
 
-        /* Check that ProjectAdmin group has got administrative and default object access permissions */
-        // Check Administrative Permission of ProjectAdmin
-        responderManager ! PermissionByIriGetRequestADM(
-          permissionIri = s"http://rdfh.ch/permissions/${shortCode.toUpperCase}/defaultApForAdmin",
-          requestingUser = rootUser
+        // Check Administrative Permissions
+        responderManager ! AdministrativePermissionsForProjectGetRequestADM(
+          projectIri = received.project.id,
+          requestingUser = rootUser,
+          apiRequestID = UUID.randomUUID()
         )
+        // Check Administrative Permission of ProjectAdmin
+        val receivedApAdmin: AdministrativePermissionsForProjectGetResponseADM =
+          expectMsgType[AdministrativePermissionsForProjectGetResponseADM]
+        val hasAPForProjectAdmin = receivedApAdmin.administrativePermissions.filter { ap: AdministrativePermissionADM =>
+          ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectAdmin &&
+          ap.hasPermissions
+            .equals(Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission))
+        }
 
-        val receivedApAdmin: AdministrativePermissionGetResponseADM =
-          expectMsgType[AdministrativePermissionGetResponseADM]
-        receivedApAdmin.administrativePermission.forProject should be(received.project.id)
-        receivedApAdmin.administrativePermission.forGroup should be(OntologyConstants.KnoraAdmin.ProjectAdmin)
-        val expectedAdminApPermissions: Set[PermissionADM] =
-          Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission)
-        assert(receivedApAdmin.administrativePermission.hasPermissions === expectedAdminApPermissions)
+        hasAPForProjectAdmin.size shouldBe 1
+
+        // Check Administrative Permission of ProjectMember
+        val hasAPForProjectMember = receivedApAdmin.administrativePermissions.filter {
+          ap: AdministrativePermissionADM =>
+            ap.forProject == received.project.id && ap.forGroup == OntologyConstants.KnoraAdmin.ProjectMember &&
+            ap.hasPermissions.equals(Set(PermissionADM.ProjectResourceCreateAllPermission))
+        }
+        hasAPForProjectMember.size shouldBe 1
+
+        // Check Default Object Access permissions
+        responderManager ! DefaultObjectAccessPermissionsForProjectGetRequestADM(
+          projectIri = received.project.id,
+          requestingUser = rootUser,
+          apiRequestID = UUID.randomUUID()
+        )
+        val receivedDoaps: DefaultObjectAccessPermissionsForProjectGetResponseADM =
+          expectMsgType[DefaultObjectAccessPermissionsForProjectGetResponseADM]
 
         // Check Default Object Access permission of ProjectAdmin
-        responderManager ! PermissionByIriGetRequestADM(
-          permissionIri = s"http://rdfh.ch/permissions/${shortCode.toUpperCase}/defaultDoapForAdmin",
-          requestingUser = rootUser
-        )
-        val receivedDoapAdmin: DefaultObjectAccessPermissionGetResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
-        receivedDoapAdmin.defaultObjectAccessPermission.forProject should be(received.project.id)
-        receivedDoapAdmin.defaultObjectAccessPermission.forGroup should be(
-          Some(OntologyConstants.KnoraAdmin.ProjectAdmin))
-        val expectedAdminDoapPermissions: Set[PermissionADM] =
-          Set(
-            PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-            PermissionADM.deletePermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-            PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-            PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-            PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin)
-          )
-        assert(receivedDoapAdmin.defaultObjectAccessPermission.hasPermissions === expectedAdminDoapPermissions)
-
-        /* Check that ProjectMember group has got administrative and default object access permissions */
-        // Check Administrative Permission of ProjectMember
-        responderManager ! PermissionByIriGetRequestADM(
-          permissionIri = s"http://rdfh.ch/permissions/${shortCode.toUpperCase}/defaultApForMember",
-          requestingUser = rootUser
-        )
-        val receivedApMember: AdministrativePermissionGetResponseADM =
-          expectMsgType[AdministrativePermissionGetResponseADM]
-        receivedApMember.administrativePermission.forProject should be(received.project.id)
-        receivedApMember.administrativePermission.forGroup should be(OntologyConstants.KnoraAdmin.ProjectMember)
-        val expectedMemberApPermissions: Set[PermissionADM] =
-          Set(PermissionADM.ProjectResourceCreateAllPermission)
-        assert(receivedApMember.administrativePermission.hasPermissions === expectedMemberApPermissions)
+        val hasDOAPForProjectAdmin = receivedDoaps.defaultObjectAccessPermissions.filter {
+          doap: DefaultObjectAccessPermissionADM =>
+            doap.forProject == received.project.id && doap.forGroup.contains(OntologyConstants.KnoraAdmin.ProjectAdmin) &&
+            doap.hasPermissions.equals(Set(
+              PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+              PermissionADM.deletePermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+              PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+              PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+              PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin)
+            ))
+        }
+        hasDOAPForProjectAdmin.size shouldBe 1
 
         // Check Default Object Access permission of ProjectMember
-        responderManager ! PermissionByIriGetRequestADM(
-          permissionIri = s"http://rdfh.ch/permissions/${shortCode.toUpperCase}/defaultDoapForMember",
-          requestingUser = rootUser
-        )
-        val receivedDoapMember: DefaultObjectAccessPermissionGetResponseADM =
-          expectMsgType[DefaultObjectAccessPermissionGetResponseADM]
-        receivedDoapMember.defaultObjectAccessPermission.forProject should be(received.project.id)
-        receivedDoapMember.defaultObjectAccessPermission.forGroup should be(
-          Some(OntologyConstants.KnoraAdmin.ProjectMember))
-        val expectedMemberDoapPermissions: Set[PermissionADM] =
-          Set(
-            PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
-            PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectMember),
-            PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectMember)
-          )
-        assert(receivedDoapMember.defaultObjectAccessPermission.hasPermissions === expectedMemberDoapPermissions)
+        val hasDOAPForProjectMember = receivedDoaps.defaultObjectAccessPermissions.filter {
+          doap: DefaultObjectAccessPermissionADM =>
+            doap.forProject == received.project.id && doap.forGroup.contains(OntologyConstants.KnoraAdmin.ProjectMember) &&
+            doap.hasPermissions.equals(Set(
+              PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+              PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+              PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+            ))
+        }
+        hasDOAPForProjectMember.size shouldBe 1
       }
 
       "CREATE a project and return the project info if the supplied shortname and shortcode is unique" in {

@@ -20,13 +20,12 @@
 package org.knora.webapi
 package responders
 
-import exceptions.{DuplicateValueException, UnexpectedMessageException}
+import exceptions.{BadRequestException, DuplicateValueException, UnexpectedMessageException}
 import messages.store.triplestoremessages.SparqlSelectRequest
 import messages.util.ResponderData
 import messages.util.rdf.SparqlSelectResult
 import messages.{SmartIri, StringFormatter}
 import settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
-
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
@@ -174,14 +173,23 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     * @return IRI of the entity.
     */
   protected def checkOrCreateEntityIri(entityIri: Option[SmartIri], iriFormatter: => IRI): Future[IRI] = {
+
     entityIri match {
-      case Some(customResourceIri) =>
+      case Some(customEntityIri: SmartIri) =>
+        val entityIriAsString = customEntityIri.toString
         for {
-          result <- stringFormatter.checkIriExists(customResourceIri.toString, storeManager)
+
+          result <- stringFormatter.checkIriExists(entityIriAsString, storeManager)
           _ = if (result) {
-            throw DuplicateValueException(s"IRI: '${customResourceIri.toString}' already exists, try another one.")
+            throw DuplicateValueException(s"IRI: '$entityIriAsString' already exists, try another one.")
           }
-        } yield customResourceIri.toString
+          // Check that given entityIRI ends with a UUID
+          ending: String = entityIriAsString.split('/').last
+          _ = stringFormatter.validateBase64EncodedUuid(
+            ending,
+            throw BadRequestException(s"IRI: '$entityIriAsString' must end with a valid base 64 UUID."))
+
+        } yield entityIriAsString
 
       case None => stringFormatter.makeUnusedIri(iriFormatter, storeManager, loggingAdapter)
     }

@@ -462,16 +462,16 @@ object SharedTestDataADM {
   /** **********************************/
   val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/0001"
 
-  val customResourceIRI: IRI = "http://rdfh.ch/0001/a-thing-with-IRI"
-  val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/a-thing-with-value-IRI"
+  val customResourceIRI: IRI = "http://rdfh.ch/0001/aUrDPcJRmFNzBHW_AlR1hw"
+  val customResourceIRI_resourceWithValues: IRI = "http://rdfh.ch/0001/5zCt1EMJKezFUOW_RCB0Gw"
   val customValueIRI_withResourceIriAndValueIRIAndValueUUID: IRI =
-    "http://rdfh.ch/0001/a-thing-with-value-IRI/values/a-value-with-IRI-and-UUID"
-  val customValueUUID = "IN4R19yYR0ygi3K2VEHpUQ"
-  val customValueIRI: IRI = "http://rdfh.ch/0001/a-thing-with-value-IRI/values/a-value-with-IRI"
+    "http://rdfh.ch/0001/5zCt1EMJKezFUOW_RCB0Gw/values/fdqCOaqT6dP19pWI84X1XQ"
+  val customValueUUID = "fdqCOaqT6dP19pWI84X1XQ"
+  val customValueIRI: IRI = "http://rdfh.ch/0001/5zCt1EMJKezFUOW_RCB0Gw/values/tdWAtnWK2qUC6tr4uQLAHA"
   val customResourceCreationDate: Instant = Instant.parse("2019-01-09T15:45:54.502951Z")
   val customValueCreationDate: Instant = Instant.parse("2020-06-09T17:04:54.502951Z")
 
-  val customListIRI: IRI = "http://rdfh.ch/lists/0001/a-list-with-IRI"
+  val customListIRI: IRI = "http://rdfh.ch/lists/0001/WYHQu7y6BGrTBcnRtg76Tg"
 
   def anythingAdminUser: UserADM =
     UserADM(
