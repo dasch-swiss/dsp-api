@@ -215,7 +215,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             text = responseToString(response)
           )
         )
-        val customAPIri = "http://rdfh.ch/permissions/0001/AP-with-customIri"
+        val customAPIri = "http://rdfh.ch/permissions/0001/u0PRnDl3kgcbrehZnRlEfA"
         val createAdministrativePermissionWithCustomIriRequest: String =
           s"""{
                |    "id": "$customAPIri,
