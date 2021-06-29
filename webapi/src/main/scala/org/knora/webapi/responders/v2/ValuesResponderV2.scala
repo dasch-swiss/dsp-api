@@ -435,15 +435,13 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                requestingUser: UserADM): Future[UnverifiedValueV2] = {
     for {
 
-      // Make an IRI for the new value.
-      newValueIri: IRI <- checkOrCreateEntityIri(maybeValueIri,
-                                                 stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
+      // Make a new value UUID.
+      newValueUUID: UUID <- Future.successful(makeNewValueUUID(maybeValueIri, maybeValueUUID))
 
-      // Make a UUID for the new value
-      newValueUUID: UUID = maybeValueUUID match {
-        case Some(customValueUUID) => customValueUUID
-        case None                  => UUID.randomUUID
-      }
+      // Make an IRI for the new value.
+      newValueIri: IRI <- checkOrCreateEntityIri(
+        maybeValueIri,
+        stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID)))
 
       // Make a creation date for the new value
       creationDate: Instant = maybeValueCreationDate match {
@@ -532,11 +530,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                            valueCreator: IRI,
                                            valuePermissions: String,
                                            requestingUser: UserADM): Future[UnverifiedValueV2] = {
-
-    val newValueUUID: UUID = maybeValueUUID match {
-      case Some(customValueUUID) => customValueUUID
-      case None                  => UUID.randomUUID
-    }
+    // Make a new value UUID.
+    val newValueUUID: UUID = makeNewValueUUID(maybeValueIri, maybeValueUUID)
 
     for {
       sparqlTemplateLinkUpdate <- incrementLinkValue(
@@ -666,14 +661,12 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       resourceCreationDate: Instant,
       requestingUser: UserADM): Future[InsertSparqlWithUnverifiedValue] = {
     for {
-      newValueIri: IRI <- checkOrCreateEntityIri(valueToCreate.customValueIri,
-                                                 stringFormatter.makeRandomValueIri(resourceIri))
+      // Make new value UUID.
+      newValueUUID: UUID <- Future.successful(
+        makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID))
 
-      // Make a UUID for the new value.
-      newValueUUID: UUID = valueToCreate.customValueUUID match {
-        case Some(customValueUUID) => customValueUUID
-        case None                  => UUID.randomUUID
-      }
+      newValueIri: IRI <- checkOrCreateEntityIri(valueToCreate.customValueIri,
+                                                 stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID)))
 
       // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
       // use resource creation date for the value.
@@ -2464,5 +2457,38 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     */
   private def makeUnusedValueIri(resourceIri: IRI): Future[IRI] = {
     stringFormatter.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri), storeManager, loggingAdapter)
+  }
+
+  /**
+    * Make a new value UUID considering optional custom value UUID and custom value IRI.
+    * If a custom UUID is given, this method checks that it matches the ending of a given IRI, if there was any.
+    * If no custom UUID is given for a value, it checks if a custom value IRI is given or not. If yes, it extracts the
+    * UUID from the given IRI. If no custom value IRI was given, it generates a random UUID.
+    *
+    * @param maybeCustomIri  the optional value IRI.
+    * @param maybeCustomUUID the optional value UUID.
+    * @return the new value UUID.
+    */
+  private def makeNewValueUUID(maybeCustomIri: Option[SmartIri], maybeCustomUUID: Option[UUID]): UUID = {
+    // Is there any custom value UUID given?
+    maybeCustomUUID match {
+      case Some(customValueUUID) =>
+        // Yes. Check that if a custom IRI is given, it ends with the same UUID
+        if (maybeCustomIri.nonEmpty && stringFormatter.base64DecodeUuid(maybeCustomIri.get.toString.split("/").last) != customValueUUID) {
+          throw BadRequestException(
+            s" Given custom IRI ${maybeCustomIri.get} should contain the given custom UUID ${stringFormatter
+              .base64EncodeUuid(customValueUUID)}.")
+        }
+        customValueUUID
+      case None =>
+        // No. Is there a custom IRI given?
+        maybeCustomIri match {
+          case Some(customIri: SmartIri) =>
+            // Yes. Get the UUID from the given value IRI
+            val endingUUID: UUID = stringFormatter.base64DecodeUuid(customIri.toString.split("/").last)
+            endingUUID
+          case None => UUID.randomUUID
+        }
+    }
   }
 }

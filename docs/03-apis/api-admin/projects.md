@@ -95,7 +95,7 @@ specified by the `id` in the request body as below:
     
 ```json
     {
-        "id": "http://rdfh.ch/projects/3333",
+        "id": "http://rdfh.ch/projects/9TaSVMUuiRhQsuWHDPr8rw",
         "shortname": "newprojectWithIri",
         "shortcode": "3333",
         "longname": "new project with a custom IRI",

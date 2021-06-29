@@ -88,7 +88,7 @@ class OldListsRouteADMFeatureE2ESpec
 
   private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
   private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
-
+  private val customChildNodeIRI = "http://rdfh.ch/lists/0001/JbKZ-L_i5rTwHlv4dSNp4A"
   def addChildListNodeRequest(parentNodeIri: IRI, name: String, label: String, comment: String): String = {
     s"""{
            |    "parentNodeIri": "$parentNodeIri",
@@ -360,8 +360,6 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "add a child with a custom IRI" in {
-
-        val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
 
         val createChildNodeWithCustomIriRequest =
           s"""
@@ -1077,10 +1075,9 @@ class OldListsRouteADMFeatureE2ESpec
 
       "update node information of a node that has custom IRI with a new name" in {
         val newName = "modified third child"
-        val customChildNodeIRI = "http://rdfh.ch/lists/0001/a-child-node-with-IRI"
         val updateNodeName =
           s"""{
-                       |    "listIri": "${customChildNodeIRI}",
+                       |    "listIri": "$customChildNodeIRI",
                        |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                        |    "name": "${newName}"
                        |}""".stripMargin

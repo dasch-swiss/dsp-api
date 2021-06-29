@@ -248,9 +248,10 @@ class PermissionsResponderADMSpec
       }
 
       "create and return an administrative permission with a custom IRI" in {
+        val customIri = "http://rdfh.ch/permissions/0001/YCHszszUkzmZp5YURnmBDA"
         responderManager ! AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
-            id = Some("http://rdfh.ch/permissions/0001/AP-with-customIri"),
+            id = Some(customIri),
             forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
             forGroup = SharedTestDataADM.thingSearcherGroup.id,
             hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
@@ -261,7 +262,7 @@ class PermissionsResponderADMSpec
         )
         val received: AdministrativePermissionCreateResponseADM =
           expectMsgType[AdministrativePermissionCreateResponseADM]
-        assert(received.administrativePermission.iri == "http://rdfh.ch/permissions/0001/AP-with-customIri")
+        assert(received.administrativePermission.iri == customIri)
         assert(received.administrativePermission.forProject == SharedTestDataADM.ANYTHING_PROJECT_IRI)
         assert(received.administrativePermission.forGroup == SharedTestDataADM.thingSearcherGroup.id)
       }
@@ -430,9 +431,10 @@ class PermissionsResponderADMSpec
       }
 
       "create a DefaultObjectAccessPermission for project and group with custom IRI" in {
+        val customIri = "http://rdfh.ch/permissions/0001/mnL_QA0D06zkE7p9LMqBCA"
         responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            id = Some("http://rdfh.ch/permissions/0001/DOAP-with-customIri"),
+            id = Some(customIri),
             forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
             forGroup = Some(OntologyConstants.KnoraAdmin.UnknownUser),
             hasPermissions = Set(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser))
@@ -443,7 +445,7 @@ class PermissionsResponderADMSpec
         )
         val received: DefaultObjectAccessPermissionCreateResponseADM =
           expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
-        assert(received.defaultObjectAccessPermission.iri == "http://rdfh.ch/permissions/0001/DOAP-with-customIri")
+        assert(received.defaultObjectAccessPermission.iri == customIri)
         assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.ANYTHING_PROJECT_IRI)
         assert(received.defaultObjectAccessPermission.forGroup.contains(OntologyConstants.KnoraAdmin.UnknownUser))
         assert(
