@@ -1,5 +1,12 @@
 # Changelog
 
+## [13.13.0](https://www.github.com/dasch-swiss/dsp-api/compare/v13.12.0...v13.13.0) (2021-06-29)
+
+
+### Enhancements
+
+* **customIRIs:** custom IRIs must contain a UUID (DSP-1763) ([#1884](https://www.github.com/dasch-swiss/dsp-api/issues/1884)) ([593d9cb](https://www.github.com/dasch-swiss/dsp-api/commit/593d9cb30a7fb332f8062898bcfa07abf1e7951d))
+
 ## [13.12.0](https://www.github.com/dasch-swiss/dsp-api/compare/v13.11.0...v13.12.0) (2021-06-24)
 
 
