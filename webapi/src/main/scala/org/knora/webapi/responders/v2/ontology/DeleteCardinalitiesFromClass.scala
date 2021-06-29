@@ -123,7 +123,7 @@ object DeleteCardinalitiesFromClass {
    * @param timeout the timeout for the future.
    * @return a [[Boolean]] denoting if the property entity is used.
    */
-  def isPropertyUsedInClassesAndSubclasses(
+  def isPropertyUsedInResources(
     settings: KnoraSettingsImpl,
     storeManager: ActorRef,
     propertyIri: SmartIri

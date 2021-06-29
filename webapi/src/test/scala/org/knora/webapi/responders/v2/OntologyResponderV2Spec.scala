@@ -19,9 +19,6 @@
 
 package org.knora.webapi.responders.v2
 
-import java.time.Instant
-import java.util.UUID
-
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
@@ -32,10 +29,19 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.v2.responder.resourcemessages.{
+  CreateResourceRequestV2,
+  CreateResourceV2,
+  CreateValueInNewResourceV2,
+  ReadResourcesSequenceV2
+}
+import org.knora.webapi.messages.v2.responder.valuemessages.IntegerValueContentV2
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
@@ -5237,7 +5243,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "create a class with several cardinalities, then remove one of the cardinalities not used in data" in {
+    "create a class with two cardinalities, use one in data, allow only removal of cardinalities not used in data" in {
 
       /**
        * def prop hasTitle
@@ -5259,7 +5265,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
               objects = Vector(
                 StringLiteralV2(
-                  value = "test class",
+                  value = "test class 2",
                   language = Some("en")
                 )
               )
@@ -5268,7 +5274,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
                 StringLiteralV2(
-                  value = "A test class",
+                  value = "A test class 2",
                   language = Some("en")
                 )
               )
@@ -5278,7 +5284,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
             )
           ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri,
+          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass2".toSmartIri,
           ontologySchema = ApiV2Complex,
           subClassOf = Set("http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri)
         ),
@@ -5299,7 +5305,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreatePropertyRequestV2(
         propertyInfoContent = PropertyInfoContentV2(
-          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#testTextProp".toSmartIri,
+          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTestTextProp2".toSmartIri,
           predicates = Map(
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
@@ -5313,13 +5319,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
               objects =
-                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
+                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass2".toSmartIri))
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
                 StringLiteralV2(
-                  value = "A test text property",
+                  value = "A test text property 2",
                   language = Some("en")
                 )
               )
@@ -5354,13 +5360,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreatePropertyRequestV2(
         propertyInfoContent = PropertyInfoContentV2(
-          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#testIntProp".toSmartIri,
+          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTestIntProp2".toSmartIri,
           predicates = Map(
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
               objects = Vector(
                 StringLiteralV2(
-                  value = "test int property",
+                  value = "test int property 2",
                   language = Some("en")
                 )
               )
@@ -5368,13 +5374,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
               objects =
-                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
+                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass2".toSmartIri))
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
               objects = Vector(
                 StringLiteralV2(
-                  value = "A test int property",
+                  value = "A test int property 2",
                   language = Some("en")
                 )
               )
@@ -5405,61 +5411,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         anythingLastModDate = newAnythingLastModDate
       }
 
-      // Create a link property.
-
-      responderManager ! CreatePropertyRequestV2(
-        propertyInfoContent = PropertyInfoContentV2(
-          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#testLinkProp".toSmartIri,
-          predicates = Map(
-            "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
-              objects = Vector(
-                StringLiteralV2(
-                  value = "test link property",
-                  language = Some("en")
-                )
-              )
-            ),
-            "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects =
-                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
-            ),
-            "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
-              objects = Vector(
-                StringLiteralV2(
-                  value = "A test link property",
-                  language = Some("en")
-                )
-              )
-            ),
-            "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
-              objects =
-                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
-            ),
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
-              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
-              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#ObjectProperty".toSmartIri))
-            )
-          ),
-          subPropertyOf = Set("http://api.knora.org/ontology/knora-api/v2#hasLinkTo".toSmartIri),
-          ontologySchema = ApiV2Complex
-        ),
-        lastModificationDate = anythingLastModDate,
-        apiRequestID = UUID.randomUUID,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingAdminUser
-      )
-
-      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val newAnythingLastModDate = msg.ontologyMetadata.lastModificationDate
-          .getOrElse(throw AssertionException(s"${msg.ontologyMetadata.ontologyIri} has no last modification date"))
-        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
-        anythingLastModDate = newAnythingLastModDate
-      }
-
       // Add cardinalities to the class.
 
       responderManager ! AddCardinalitiesToClassRequestV2(
@@ -5470,16 +5421,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
             )
           ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri,
+          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass2".toSmartIri,
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testTextProp".toSmartIri -> KnoraCardinalityInfo(
+            "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTestTextProp2".toSmartIri -> KnoraCardinalityInfo(
               cardinality = Cardinality.MayHaveOne
             ),
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testIntProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = Cardinality.MayHaveOne
-            ),
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testLinkProp".toSmartIri -> KnoraCardinalityInfo(
+            "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTestIntProp2".toSmartIri -> KnoraCardinalityInfo(
               cardinality = Cardinality.MayHaveOne
             )
           )
@@ -5497,7 +5445,41 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         anythingLastModDate = newAnythingLastModDate
       }
 
-      // Remove the link value cardinality from the class.
+      // Create a resource of #TestClass2 using only #hasTestIntProp2.
+
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTestIntProp2".toSmartIri -> Seq(
+          CreateValueInNewResourceV2(
+            valueContent = IntegerValueContentV2(
+              ontologySchema = ApiV2Complex,
+              valueHasInteger = 5,
+              comment = Some("this is the number five")
+            ),
+            permissions = Some("CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher")
+          )
+        )
+      )
+
+      val inputResource = CreateResourceV2(
+        resourceIri = Some(resourceIri.toSmartIri),
+        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass2".toSmartIri,
+        label = "my test class 2 thing",
+        values = inputValues,
+        projectADM = SharedTestDataADM.anythingProject
+      )
+
+      responderManager ! CreateResourceRequestV2(
+        createResource = inputResource,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgType[ReadResourcesSequenceV2](timeout)
+
+      // Remove the int value cardinality from the class.
 
       responderManager ! ChangeCardinalitiesRequestV2(
         classInfoContent = ClassInfoContentV2(
@@ -5507,13 +5489,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
             )
           ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri,
+          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass2".toSmartIri,
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testTextProp".toSmartIri -> KnoraCardinalityInfo(
-              cardinality = Cardinality.MayHaveOne
-            ),
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testIntProp".toSmartIri -> KnoraCardinalityInfo(
+            "http://0.0.0.0:3333/ontology/0001/anything/v2#testTextProp2".toSmartIri -> KnoraCardinalityInfo(
               cardinality = Cardinality.MayHaveOne
             )
           )
@@ -5539,7 +5518,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           |
           |SELECT ?cardinalityProp
           |WHERE {
-          |  <http://www.knora.org/ontology/0001/anything#TestClass> rdfs:subClassOf ?restriction .
+          |  <http://www.knora.org/ontology/0001/anything#TestClass2> rdfs:subClassOf ?restriction .
           |  FILTER isBlank(?restriction)
           |  ?restriction owl:onProperty ?cardinalityProp .
           |}""".stripMargin
@@ -5548,8 +5527,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       expectMsgPF(timeout) { case msg: SparqlSelectResult =>
         assert(
           msg.results.bindings.map(_.rowMap("cardinalityProp")).sorted == Seq(
-            "http://www.knora.org/ontology/0001/anything#testIntProp",
-            "http://www.knora.org/ontology/0001/anything#testTextProp"
+            "http://www.knora.org/ontology/0001/anything#testTextProp2"
           )
         )
       }

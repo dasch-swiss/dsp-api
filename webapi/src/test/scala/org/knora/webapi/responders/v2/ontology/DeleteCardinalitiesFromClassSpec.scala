@@ -49,11 +49,11 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
 
   // use started actor in tests instead of the store manager
   "DeleteCardinalitiesFromClass" should {
-    "check if a property entity is used in instances of TBD ..." in {
+    "check if a property entity is used in any resources (data)" in {
       val AnythingOntologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
       val propertyIri         = AnythingOntologyIri.makeEntityIri("hasName")
 
-      val resF = DeleteCardinalitiesFromClass.isPropertyUsedInClassesAndSubclasses(settings, fusekiActor, propertyIri)
+      val resF = DeleteCardinalitiesFromClass.isPropertyUsedInResources(settings, fusekiActor, propertyIri)
       resF map { res => res should equal(true) }
     }
   }
