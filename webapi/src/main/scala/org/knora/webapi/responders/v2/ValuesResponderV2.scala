@@ -2460,7 +2460,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
   }
 
   /**
-    * Make a new value UUID considering optional custom value UUDI and custom value IRI.
+    * Make a new value UUID considering optional custom value UUID and custom value IRI.
     * If a custom UUID is given, this method checks that it matches the ending of a given IRI, if there was any.
     * If no custom UUID is given for a value, it checks if a custom value IRI is given or not. If yes, it extracts the
     * UUID from the given IRI. If no custom value IRI was given, it generates a random UUID.
