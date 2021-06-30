@@ -30,6 +30,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:46Z"),
+        resourceUUID = stringFormatter.decodeUuid("ZFfBbHGUt7Oze4sOj_Su1w"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -64,6 +65,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:40Z"),
+        resourceUUID = stringFormatter.decodeUuid("beTuPifAJfYmre6v798J1w"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -98,6 +100,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:49Z"),
+        resourceUUID = stringFormatter.decodeUuid("q1k7fNrkMSwss3zwJmvF6Q"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -132,6 +135,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:50Z"),
+        resourceUUID = stringFormatter.decodeUuid("R3e1qLNYD_M5NduJcsuJWw"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -166,6 +170,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:40Z"),
+        resourceUUID = stringFormatter.decodeUuid("yUqZX_vmZ-njfchh8NhsNw"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -200,6 +205,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:47Z"),
+        resourceUUID = stringFormatter.decodeUuid("bTfuFg9hHAm8xShDt5_8tQ"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -234,6 +240,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:47Z"),
+        resourceUUID = stringFormatter.decodeUuid("hacrLXl1PtEq15rpNMrs9g"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -268,6 +275,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:48Z"),
+        resourceUUID = stringFormatter.decodeUuid("UUpUbVvBU_MJobQL-L3b7g"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -300,6 +308,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         userPermission = RestrictedViewPermission,
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        resourceUUID = stringFormatter.decodeUuid("bLvsDqJcO8FBUWi3tMdKMQ"),
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:48Z"),
         values = Map(
@@ -336,6 +345,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:45Z"),
+        resourceUUID = stringFormatter.decodeUuid("mOSuxC6TrdCmwLVaNfI0pw"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -370,6 +380,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:48Z"),
+        resourceUUID = stringFormatter.decodeUuid("k4CjtEsMQJ-6sAE5pBesyg"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -404,6 +415,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:45Z"),
+        resourceUUID = stringFormatter.decodeUuid("TvSBaca6Yhf3wKbribA-hA"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -438,6 +450,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:49Z"),
+        resourceUUID = stringFormatter.decodeUuid("yJYuAaQA1_THT-RY78se2A"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -472,6 +485,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:40Z"),
+        resourceUUID = stringFormatter.decodeUuid("Ra5nc8FfYz1v6Eaza8N7RQ"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -506,6 +520,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:40Z"),
+        resourceUUID = stringFormatter.decodeUuid("GHYh-MOhWJFc3NBM_6N2Bg"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -540,6 +555,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:47Z"),
+        resourceUUID = stringFormatter.decodeUuid("FIqG6DAn-B2pSmbtPcZcTg"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -574,6 +590,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:44Z"),
+        resourceUUID = stringFormatter.decodeUuid("3_Z7FdthfxDUDfQxK0gdjg"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -608,6 +625,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:47Z"),
+        resourceUUID = stringFormatter.decodeUuid("_83qeu0PHEFc3sfW7YYmsA"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -642,6 +660,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:48Z"),
+        resourceUUID = stringFormatter.decodeUuid("NCwOJSq_HRl2tMA9qtPBNw"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -676,6 +695,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:45Z"),
+        resourceUUID = stringFormatter.decodeUuid("mKWdtro6EsRLFxDU7H45_g"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -710,6 +730,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:48Z"),
+        resourceUUID = stringFormatter.decodeUuid("NW3TmjPurr6ot6SEbxgB9g"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -744,6 +765,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:45Z"),
+        resourceUUID = stringFormatter.decodeUuid("Qm_L-xPXyFvzX3Az0nxY6w"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -778,6 +800,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:45Z"),
+        resourceUUID = stringFormatter.decodeUuid("ZC0W_HeCqlCPHe6fQFGbuA"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -812,6 +835,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:42Z"),
+        resourceUUID = stringFormatter.decodeUuid("DXCALizS06Y9p3NZBtCbSw"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -846,6 +870,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:48Z"),
+        resourceUUID = stringFormatter.decodeUuid("PA12ujvXSpTKNtDmnlvz8g"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -884,6 +909,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         projectADM = SharedTestDataADM.anythingProject,
         creationDate = Instant.parse("2016-03-02T15:05:10Z"),
+        resourceUUID = stringFormatter.decodeUuid("jT0UHG9_wtaX23VoYydmGg"),
         values = Map("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri -> Vector(
           ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -1648,6 +1674,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:10Z"),
+        resourceUUID = stringFormatter.decodeUuid("7dGkt1CLKdZbrxVj324eaw"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -1681,6 +1708,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:23Z"),
+        resourceUUID = stringFormatter.decodeUuid("i4egXDOr2dZR3JRcdlapSQ"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(

@@ -25,6 +25,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
     projectADM = SharedTestDataADM.incunabulaProject,
     creationDate = Instant.parse("2016-03-02T15:05:21Z"),
+    resourceUUID = stringFormatter.decodeUuid("w1JN2mMZam7F1_eiyvz6pw"),
     values = Map(
       "http://www.knora.org/ontology/0803/incunabula#physical_desc".toSmartIri -> Vector(
         ReadTextValueV2(

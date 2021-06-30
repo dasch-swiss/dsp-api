@@ -3016,6 +3016,17 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     }
   }
 
+  def getUUIDFromIriOrMakeRandom(givenIRI: IRI): String = {
+    val ending: String = givenIRI.split('/').last
+    val decodeTry = Try {
+      base64DecodeUuid(ending)
+    }
+    decodeTry match {
+      case Success(_) => ending
+      case Failure(_) => makeRandomBase64EncodedUuid
+    }
+  }
+
   /**
     * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
     *

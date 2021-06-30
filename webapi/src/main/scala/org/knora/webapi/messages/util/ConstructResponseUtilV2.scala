@@ -1451,6 +1451,8 @@ object ConstructResponseUtilV2 {
       resourceWithValueRdfData.requireIriObject(OntologyConstants.KnoraBase.AttachedToProject.toSmartIri)
     val resourcePermissions: String =
       resourceWithValueRdfData.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)
+    val resourceUUID: UUID = stringFormatter.decodeUuid(
+      resourceWithValueRdfData.requireStringObject(OntologyConstants.KnoraBase.ResourceHasUUID.toSmartIri))
     val resourceCreationDate: Instant =
       resourceWithValueRdfData.requireDateTimeObject(OntologyConstants.KnoraBase.CreationDate.toSmartIri)
     val resourceLastModificationDate: Option[Instant] =
@@ -1562,6 +1564,7 @@ object ConstructResponseUtilV2 {
         attachedToUser = resourceAttachedToUser,
         projectADM = projectResponse.project,
         permissions = resourcePermissions,
+        resourceUUID = resourceUUID,
         userPermission = resourceWithValueRdfData.userPermission.get,
         values = valueObjects,
         creationDate = resourceCreationDate,

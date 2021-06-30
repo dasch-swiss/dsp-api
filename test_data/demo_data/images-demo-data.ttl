@@ -31,6 +31,7 @@
   rdfs:label "1 Alpinismus";
   knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/0cb8286054d5/values/c66133bf942f01>;
   knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "cy070FFsv8s32ZvDFAkShg"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/0cb8286054d5/values/0b80b43aee0f04> a knora-base:TextValue;
@@ -200,6 +201,7 @@
   images:zugangsart <http://rdfh.ch/00FF/0d036c5957d5/values/edbf09a7081004>;
   rdfs:label "foto_digital Fotografie digital";
   knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "hYVM4_TdRYiWnwDndM7-JA"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser,knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/0d036c5957d5/values/2a96b66d081004> a knora-base:ListValue;
@@ -269,6 +271,7 @@
   rdfs:label "5 Spazieren";
   knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/20cf644a55d5/values/c2f87fa4952f01>;
   knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "UWa05UwpuLyIwqo7a7qIvw"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/20cf644a55d5/values/223b20b9f40f04> a knora-base:DateValue;
@@ -451,6 +454,7 @@
   rdfs:label "1 Ballon";
   knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/34e6a03456d5/values/be8fcc89962f01>;
   knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "Vt5Iwsbcw23JrZbItE90Ng"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/34e6a03456d5/values/146e783bfd0f04> a knora-base:DateValue;
@@ -625,6 +629,7 @@
   images:comment <http://rdfh.ch/00FF/47b2992554d5/values/e78ace8aeb0f04>;
   rdfs:label "postkarte_sw Postkarte s/w";
   knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "Xi5ZnlEKQShXo9fmX-NGoA"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser,knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/47b2992554d5/values/18ba2e6cea0f04> a knora-base:ListValue;
@@ -733,6 +738,7 @@
   rdfs:label "2 Delta";
   knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/48fddc1e57d5/values/ba26196f972f01>;
   knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "h-XWeqIsLilSV5vSmdItcg"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/48fddc1e57d5/values/06a1d0bd051004> a knora-base:DateValue;
@@ -905,6 +911,7 @@
   images:zugangsart <http://rdfh.ch/00FF/5bc9d50f55d5/values/90402d61f30f04>;
   rdfs:label "foto_sw Fotografie s/w";
   knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "MhFsGlERuZrWOITDyJMKKg"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser,knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/5bc9d50f55d5/values/0aed86eef20f04> a knora-base:IntValue;
@@ -995,6 +1002,7 @@
   rdfs:label "6 Skikjöring";
   knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/691e7e2244d5/values/06f2696a862f01>;
   knora-base:creationDate "2016-03-02T15:05:58Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "Gtm-AxqBuy_-OyPnOPOEJw"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/691e7e2244d5/values/06f2696a862f01> a knora-base:StillImageFileValue;
@@ -1167,6 +1175,7 @@
   images:zugangsart <http://rdfh.ch/00FF/6fe011fa55d5/values/827385e3fb0f04>;
   rdfs:label "foto_sw Fotografie s/w";
   knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "GMqFls0c01ccFCnKmw3hVA"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser,knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/6fe011fa55d5/values/08c72b56fc0f04> a knora-base:TextValue;
@@ -1257,6 +1266,7 @@
   rdfs:label "3 Trecking mit Tieren";
   knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/82ac0aeb53d5/values/48168d4c942f01>;
   knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "T07ROOjmiNnuiFSMLclWKw"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/82ac0aeb53d5/values/0c13e286e90f04> a knora-base:TextValue;
@@ -1429,6 +1439,7 @@
   images:comment <http://rdfh.ch/00FF/83f74de456d5/values/bd23d711051004>;
   rdfs:label "foto_digital Fotografie digital";
   knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "QB0zKakXSnLX0LteoHA9Jg"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser" .
 
 <http://rdfh.ch/00FF/83f74de456d5/values/74a6dd65041004> a knora-base:ListValue;
@@ -1519,6 +1530,7 @@
   rdfs:label "1 Alpinismus";
   knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/96c346d554d5/values/44add931952f01>;
   knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "6-OQeOHUVa27QLTrABpoMg"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/96c346d554d5/values/23ce4d05f00f04> a knora-base:TextValue;
@@ -1691,6 +1703,7 @@
   images:zugangsart <http://rdfh.ch/00FF/a418efe743d5/values/065853c4590f04>;
   rdfs:label "foto_sw Fotografie s/w";
   knora-base:creationDate "2016-03-02T15:05:58Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "ChOpki-Xes0osTj-DgMQpA"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser,knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/a418efe743d5/values/065853c4590f04> a knora-base:ListValue;
@@ -1781,6 +1794,7 @@
   rdfs:label "1 Ballon";
   knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/aada82bf55d5/values/40442617962f01>;
   knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "ueoGXxXdeYJLxQkVmgFrmg"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/aada82bf55d5/values/1501a687f80f04> a knora-base:TextValue;
@@ -1951,6 +1965,7 @@
   images:zugangsart <http://rdfh.ch/00FF/bda67bb053d5/values/62ca5564e60f04>;
   rdfs:label "9x13cm";
   knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "E2_cidsI3VzhW3W7PWm87w"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser" .
 
 <http://rdfh.ch/00FF/bda67bb053d5/values/62ca5564e60f04> a knora-base:ListValue;
@@ -2017,6 +2032,7 @@
   rdfs:label "2 Delta";
   knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/bef1bea956d5/values/3cdb72fc962f01>;
   knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "ED8NXZonQl-6LR5_KmlZCA"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/bef1bea956d5/values/0734fe09011004> a knora-base:TextValue;
@@ -2189,6 +2205,7 @@
   images:comment <http://rdfh.ch/00FF/d1bdb79a54d5/values/60a4facbef0f04>;
   rdfs:label "foto_digital Fotografie digital";
   knora-base:creationDate "2016-03-02T15:05:57Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "NIPcL_ZP4zaXuYpkctzIbQ"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser" .
 
 <http://rdfh.ch/00FF/d1bdb79a54d5/values/17270120ef0f04> a knora-base:ListValue;
@@ -2279,6 +2296,7 @@
   rdfs:label "3 Flugzeuge";
   knora-base:hasStillImageFileValue <http://rdfh.ch/00FF/d208fb9357d5/values/3872bfe1972f01>;
   knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "5YZuCYFApwVGNOu-9pUxIA"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/d208fb9357d5/values/050ea3710a1004> a knora-base:TextValue;
@@ -2448,6 +2466,7 @@
   images:city <http://rdfh.ch/00FF/df1260ad43d5/values/bdda5918590f04>;
   rdfs:label "Cornaz";
   knora-base:creationDate "2016-03-02T15:05:58Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "ZwlkxnS0AbesXSIMDWgO4g"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser,knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/df1260ad43d5/values/3787b3a5580f04> a knora-base:TextValue;
@@ -2499,6 +2518,7 @@
   images:zugangsart <http://rdfh.ch/00FF/e5d4f38455d5/values/095a59a2f70f04>;
   rdfs:label "foto_sw Fotografie s/w";
   knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "pZlptB2LDkDxdS8xnb9jug"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser,knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/e5d4f38455d5/values/095a59a2f70f04> a knora-base:ListValue;
@@ -2579,6 +2599,7 @@
   images:comment <http://rdfh.ch/00FF/f9eb2f6f56d5/values/440aabd0001004>;
   rdfs:label "foto_digital Fotografie digital";
   knora-base:creationDate "2016-03-02T15:05:56Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "GhhaHCxlV-d1cVtfjjlBcQ"^^xsd:string;
   knora-base:hasPermissions "CR knora-admin:ProjectMember,knora-admin:Creator|V knora-admin:KnownUser,knora-admin:UnknownUser" .
 
 <http://rdfh.ch/00FF/f9eb2f6f56d5/values/38635eebff0f04> a knora-base:ListValue;

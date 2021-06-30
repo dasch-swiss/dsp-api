@@ -19,6 +19,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
     resourceIri = "http://rdfh.ch/0803/c5058f3a",
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    resourceUUID = stringFormatter.decodeUuid("7dGkt1CLKdZbrxVj324eaw"),
     userPermission = ChangeRightsPermission,
     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
@@ -249,6 +250,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
     userPermission = ChangeRightsPermission,
     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+    resourceUUID = stringFormatter.decodeUuid("7dGkt1CLKdZbrxVj324eaw"),
     projectADM = SharedTestDataADM.incunabulaProject,
     creationDate = Instant.parse("2016-03-02T15:05:10Z"),
     values = Map(),
@@ -265,6 +267,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
     userPermission = ChangeRightsPermission,
     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+    resourceUUID = stringFormatter.decodeUuid("w1JN2mMZam7F1_eiyvz6pw"),
     projectADM = SharedTestDataADM.incunabulaProject,
     creationDate = Instant.parse("2016-03-02T15:05:21Z"),
     versionDate = None,
@@ -746,6 +749,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
     label = "Reise ins Heilige Land",
     creationDate = Instant.parse("2016-03-02T15:05:21Z"),
     resourceIri = "http://rdfh.ch/0803/2a6221216701",
+    resourceUUID = stringFormatter.decodeUuid("w1JN2mMZam7F1_eiyvz6pw"),
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     userPermission = ChangeRightsPermission,
@@ -780,6 +784,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         creationDate = Instant.parse("2019-02-08T15:05:10Z"),
+        resourceUUID = stringFormatter.decodeUuid("0xfMLw0jVhmBIoAxuTbVxw"),
         values = Map(
           "http://www.knora.org/ontology/0001/anything#hasText".toSmartIri -> Vector(
             ReadTextValueV2(
@@ -934,6 +939,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         label = "A thing with version history",
         resourceIri = "http://rdfh.ch/0001/thing-with-history",
         permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
+        resourceUUID = stringFormatter.decodeUuid("0xfMLw0jVhmBIoAxuTbVxw"),
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         creationDate = Instant.parse("2019-02-08T15:05:10Z"),
@@ -969,6 +975,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           label = "A thing with version history",
           resourceIri = "http://rdfh.ch/0001/thing-with-history",
           permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
+          resourceUUID = stringFormatter.decodeUuid("0xfMLw0jVhmBIoAxuTbVxw"),
           attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
           resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
           creationDate = Instant.parse("2019-02-08T15:05:10Z"),

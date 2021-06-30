@@ -125,17 +125,31 @@
 
 <http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> :creationDate "2018-06-06T12:08:56.619Z"^^xsd:dateTime .
 
+<http://rdfh.ch/0666/tWf2vqMqQ_OcUMJSRj6e5w> :resourceHasUUID "tWf2vqMqQ_OcUMJSRj6e5w"^^xsd:string .
+
 <http://rdfh.ch/0666/1rK4ZevpT5eIxj48kgncsQ> :creationDate "2018-06-06T12:08:56.759Z"^^xsd:dateTime .
+
+<http://rdfh.ch/0666/1rK4ZevpT5eIxj48kgncsQ> :resourceHasUUID "1rK4ZevpT5eIxj48kgncsQ"^^xsd:string .
 
 <http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> :creationDate "2018-06-06T12:08:56.890Z"^^xsd:dateTime .
 
+<http://rdfh.ch/0666/NLe33EVtTKGozGJOqKT_2Q> :resourceHasUUID "NLe33EVtTKGozGJOqKT_2Q"^^xsd:string .
+
 <http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> :creationDate "2018-06-06T12:08:57.175Z"^^xsd:dateTime .
+
+<http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A> :resourceHasUUID "wopH6GHOSpCyASdrsNqg_A"^^xsd:string .
 
 <http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> :creationDate "2018-06-06T12:08:57.382Z"^^xsd:dateTime .
 
+<http://rdfh.ch/0666/xY8O4uSeQb-MDC4VtvQGdw> :resourceHasUUID "xY8O4uSeQb-MDC4VtvQGdw"^^xsd:string .
+
 <http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> :creationDate "2018-06-06T12:08:57.561Z"^^xsd:dateTime .
 
+<http://rdfh.ch/0666/yjOFfSKPR_uiw8KoJu5mQg> :resourceHasUUID "yjOFfSKPR_uiw8KoJu5mQg"^^xsd:string .
+
 <http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> :creationDate "2018-06-06T12:08:57.777Z"^^xsd:dateTime .
+
+<http://rdfh.ch/0666/tWxW7jM0S2uMYKifwF0mtQ> :resourceHasUUID "tWxW7jM0S2uMYKifwF0mtQ"^^xsd:string .
 
 <http://rdfh.ch/0666/wopH6GHOSpCyASdrsNqg_A/values/UKYA3eNMQK6OWmPjxVAbsA> :valueCreationDate "2018-06-06T12:08:57.175Z"^^xsd:dateTime .
 
