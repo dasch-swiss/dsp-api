@@ -58,18 +58,23 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 ### Create a new project:
 
   - Required permission: SystemAdmin
-  - Required information: shortname (unique; used for named graphs),
-    status, selfjoin
-  - Optional information: longname, description, keywords, logo
+  - Required information: 
+    - shortcode (unique, 4-digits)
+    - shortname (unique; it should be in the form of a 
+  [xsd:NCNAME](https://www.w3.org/TR/xmlschema11-2/#NCName))
+    - description (collection of descriptions as strings with language tag.)
+    - keywords (collection of keywords)
+    - status (true, if project is active. false, if project is inactive)
+    - selfjoin 
+  - Optional information: longname, logo
   - Returns information about the newly created project
   - Remark: There are two distinct use cases / payload combination:
   
     (1) change ontology and data graph: ontologygraph, datagraph,
     
-    (2) basic project information: shortname, longname, description,
+    (2) basic project information: shortcode, shortname, longname, description,
     keywords, logo, institution, status, selfjoin
     
-  - TypeScript Docs: projectFormats - CreateProjectApiRequestV1
   - POST: `/admin/projects/`
   - BODY:
   
@@ -77,15 +82,16 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
     {
       "shortname": "newproject",
       "longname": "project longname",
-      "description": "project description",
-      "keywords": "keywords",
+      "description": [{"value": "project description", "language": "en"}],
+      "keywords": ["test project"],
       "logo": "/fu/bar/baz.jpg",
       "status": true,
       "selfjoin": false
     }
 ```
 
-Additionally, each project can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
+Additionally, each project can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) 
+specified by the `id` in the request body as below:
     
 ```json
     {
@@ -100,6 +106,7 @@ Additionally, each project can have an optional custom IRI (of [Knora IRI](../ap
         "selfjoin": false
     }   
 ```
+
 #### Default set of permissions for a new project:
 When a new project is created, following default permissions are added to its admins and members:
 - ProjectAdmin group receives an administrative permission to do all project level operations and to create resources 
@@ -123,7 +130,7 @@ belongs to the project. This default object access permission is retrievable thr
 
   - Required permission: SystemAdmin / ProjectAdmin
   - Changeable information: shortname, longname, description,
-    keywords, logo, status, selfjoin
+    keywords, logo, status, selfjoin. The payload must at least contain a new value for one of these properties.
   - TypeScript Docs: projectFormats - ChangeProjectApiRequestV1
   - PUT: `/admin/projects/iri/<projectIri>`
   - BODY:
@@ -132,8 +139,8 @@ belongs to the project. This default object access permission is retrievable thr
     {
       "shortname": "newproject",
       "longname": "project longname",
-      "description": "project description",
-      "keywords": "keywords",
+      "description": [{"value": "a new description", "language": "en"}],
+      "keywords": ["a new key"],
       "logo": "/fu/bar/baz.jpg",
       "status": true,
       "selfjoin": false

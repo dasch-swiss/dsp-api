@@ -1181,12 +1181,32 @@ class StringFormatterSpec extends CoreSpec() {
     }
 
     "validate project shortname" in {
-      stringFormatter.validateAndEscapeProjectShortname("images", throw AssertionException("not valid")) should be(
-        "images")
+      // shortname with dash is valid
+      stringFormatter.validateAndEscapeProjectShortname("valid-shortname", throw AssertionException("not valid")) should be(
+        "valid-shortname")
 
-      // to short
+      // shortname with numbers
+      stringFormatter.validateAndEscapeProjectShortname("valid_1111", throw AssertionException("not valid")) should be(
+        "valid_1111")
+      // has special character colon
       an[AssertionException] should be thrownBy {
-        stringFormatter.validateAndEscapeProjectShortname("abc", throw AssertionException("not valid"))
+        stringFormatter.validateAndEscapeProjectShortname("invalid:shortname", throw AssertionException("not valid"))
+      }
+      // begins with dash
+      an[AssertionException] should be thrownBy {
+        stringFormatter.validateAndEscapeProjectShortname("-invalidshortname", throw AssertionException("not valid"))
+      }
+      // begins with dot
+      an[AssertionException] should be thrownBy {
+        stringFormatter.validateAndEscapeProjectShortname(".invalidshortname", throw AssertionException("not valid"))
+      }
+      // includes slash
+      an[AssertionException] should be thrownBy {
+        stringFormatter.validateAndEscapeProjectShortname("invalid/shortname", throw AssertionException("not valid"))
+      }
+      // includes @
+      an[AssertionException] should be thrownBy {
+        stringFormatter.validateAndEscapeProjectShortname("invalid@shortname", throw AssertionException("not valid"))
       }
     }
 
