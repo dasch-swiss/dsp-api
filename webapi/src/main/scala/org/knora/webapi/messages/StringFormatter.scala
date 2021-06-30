@@ -886,14 +886,6 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     """^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$""".r
 
   /**
-    * A regex that matches a valid project shortname
-    * - 4 - 50 characters long
-    * - Only contains alphanumeric characters.
-    */
-  private val ProjectShortnameRegex: Regex =
-    """^(?=.{4,50}$)[a-zA-Z0-9]+$""".r
-
-  /**
     * The information that is stored about non-Knora IRIs.
     */
   private val UnknownIriInfo = SmartIriInfo(
@@ -2451,33 +2443,6 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
   }
 
   /**
-    * Given the project IRI, checks if it is in a valid format.
-    *
-    * @param iri the project's IRI.
-    * @return the IRI of the project.
-    */
-  def validateProjectIri(iri: IRI, errorFun: => Nothing): IRI = {
-    if (isKnoraProjectIriStr(iri)) {
-      iri
-    } else {
-      errorFun
-    }
-  }
-
-  /**
-    * Given the optional project IRI, checks if it is in a valid format.
-    *
-    * @param maybeIri the optional project's IRI to be checked.
-    * @return the same optional IRI.
-    */
-  def validateOptionalProjectIri(maybeIri: Option[IRI], errorFun: => Nothing): Option[IRI] = {
-    maybeIri match {
-      case Some(iri) => Some(validateProjectIri(iri, errorFun))
-      case None      => None
-    }
-  }
-
-  /**
     * Check that the supplied IRI represents a valid project IRI.
     *
     * @param iri      the string to be checked.
@@ -2501,7 +2466,7 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     *                    project IRI.
     * @return the same optional string but escaped.
     */
-  def validateAndEscapeOptionalProjectIri(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
+  def validateAndEscapeOptionalProjectIri(maybeString: Option[String], errorFun: => Nothing): Option[IRI] = {
     maybeString match {
       case Some(s) => Some(validateAndEscapeProjectIri(s, errorFun))
       case None    => None
@@ -2517,7 +2482,7 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     * @return the same string.
     */
   def validateAndEscapeProjectShortname(value: String, errorFun: => Nothing): String = {
-    ProjectShortnameRegex.findFirstIn(value) match {
+    NCNameRegex.findFirstIn(value) match {
       case Some(shortname) => toSparqlEncodedString(shortname, errorFun)
       case None            => errorFun
     }
@@ -2591,6 +2556,14 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     maybeString match {
       case Some(s) => Some(validateAndEscapeProjectShortcode(s, errorFun))
       case None    => None
+    }
+  }
+
+  def escapeOptionalString(maybeString: Option[String], errorFun: => Nothing): Option[String] = {
+    maybeString match {
+      case Some(s) =>
+        Some(toSparqlEncodedString(s, errorFun))
+      case None => None
     }
   }
 
@@ -3262,5 +3235,11 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
       stringLiterals = stringLiteralSeq.stringLiterals.map(stringLiteral =>
         StringLiteralV2(value = fromSparqlEncodedString(stringLiteral.value), language = stringLiteral.language))
     )
+  }
+  def unescapeOptionalString(optionalString: Option[String]): Option[String] = {
+    optionalString match {
+      case Some(s: String) => Some(fromSparqlEncodedString(s))
+      case None            => None
+    }
   }
 }

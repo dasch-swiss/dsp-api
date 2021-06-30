@@ -140,7 +140,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           )
         } yield
           ProjectCreateRequestADM(
-            createRequest = apiRequest,
+            createRequest = apiRequest.validateAndEscape,
             featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
@@ -332,7 +332,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           } yield
             ProjectChangeRequestADM(
               projectIri = checkedProjectIri,
-              changeProjectRequest = apiRequest,
+              changeProjectRequest = apiRequest.validateAndEscape,
               featureFactoryConfig = featureFactoryConfig,
               requestingUser = requestingUser,
               apiRequestID = UUID.randomUUID()

@@ -228,7 +228,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             logo = Some("/fu/bar/baz.jpg"),
             status = true,
             selfjoin = false
-          ),
+          ).validateAndEscape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -315,7 +315,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             logo = Some("/fu/bar/baz.jpg"),
             status = true,
             selfjoin = false
-          ),
+          ).validateAndEscape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -328,7 +328,36 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         received.project.description should be(
           Seq(StringLiteralV2(value = "project description", language = Some("en"))))
 
-        //println(s"newProjectIri: ${newProjectIri.get}")
+      }
+
+      "CREATE a project that its info has special characters" in {
+
+        val longnameWithSpecialCharacter = "New \\\"Longname\\\""
+        val descriptionWithSpecialCharacter = "project \\\"description\\\""
+        val keywordWithSpecialCharacter = "new \\\"keyword\\\""
+        responderManager ! ProjectCreateRequestADM(
+          CreateProjectApiRequestADM(
+            shortname = "project_with_character",
+            shortcode = "1312",
+            longname = Some(longnameWithSpecialCharacter),
+            description = Seq(StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))),
+            keywords = Seq(keywordWithSpecialCharacter),
+            logo = Some("/fu/bar/baz.jpg"),
+            status = true,
+            selfjoin = false
+          ).validateAndEscape,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          SharedTestDataADM.rootUser,
+          UUID.randomUUID()
+        )
+        val received: ProjectOperationResponseADM = expectMsgType[ProjectOperationResponseADM](timeout)
+
+        received.project.longname should contain(stringFormatter.fromSparqlEncodedString(longnameWithSpecialCharacter))
+        received.project.description should be(
+          Seq(StringLiteralV2(value = stringFormatter.fromSparqlEncodedString(descriptionWithSpecialCharacter),
+                              language = Some("en"))))
+        received.project.keywords should contain(stringFormatter.fromSparqlEncodedString(keywordWithSpecialCharacter))
+
       }
 
       "return a 'DuplicateValueException' during creation if the supplied project shortname is not unique" in {
@@ -342,7 +371,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             logo = Some("/fu/bar/baz.jpg"),
             status = true,
             selfjoin = false
-          ),
+          ).validateAndEscape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -361,52 +390,12 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             logo = Some("/fu/bar/baz.jpg"),
             status = true,
             selfjoin = false
-          ),
+          ).validateAndEscape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
         )
         expectMsg(Failure(DuplicateValueException(s"Project with the shortcode: '111C' already exists")))
-      }
-
-      "return 'BadRequestException' if project 'shortname' during creation is missing" in {
-
-        responderManager ! ProjectCreateRequestADM(
-          CreateProjectApiRequestADM(
-            shortname = "",
-            shortcode = "1114",
-            longname = Some("project longname"),
-            description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
-            keywords = Seq("keywords"),
-            logo = Some("/fu/bar/baz.jpg"),
-            status = true,
-            selfjoin = false
-          ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
-          SharedTestDataADM.rootUser,
-          UUID.randomUUID()
-        )
-        expectMsg(Failure(BadRequestException("'Shortname' cannot be empty")))
-      }
-
-      "return 'BadRequestException' if project 'shortcode' during creation is missing" in {
-
-        responderManager ! ProjectCreateRequestADM(
-          CreateProjectApiRequestADM(
-            shortname = "newproject4",
-            shortcode = "",
-            longname = Some("project longname"),
-            description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
-            keywords = Seq("keywords"),
-            logo = Some("/fu/bar/baz.jpg"),
-            status = true,
-            selfjoin = false
-          ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
-          SharedTestDataADM.rootUser,
-          UUID.randomUUID()
-        )
-        expectMsg(Failure(BadRequestException("The supplied short code: '' is not valid.")))
       }
 
       "UPDATE a project" in {
@@ -422,7 +411,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             logo = Some("/fu/bar/baz-updated.jpg"),
             status = Some(false),
             selfjoin = Some(true)
-          ),
+          ).validateAndEscape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -443,7 +432,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       "return 'NotFound' if a not existing project IRI is submitted during update" in {
         responderManager ! ProjectChangeRequestADM(
           projectIri = "http://rdfh.ch/projects/notexisting",
-          changeProjectRequest = ChangeProjectApiRequestADM(longname = Some("new long name")),
+          changeProjectRequest = ChangeProjectApiRequestADM(longname = Some("new long name")).validateAndEscape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -670,7 +659,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
           SharedTestDataADM.rootUser
         )
         val received: ProjectsKeywordsGetResponseADM = expectMsgType[ProjectsKeywordsGetResponseADM](timeout)
-        received.keywords.size should be(20)
+        received.keywords.size should be(21)
       }
 
       "return all keywords for a single project" in {

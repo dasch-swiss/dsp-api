@@ -70,9 +70,43 @@ class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
           logo = Some("/fu/bar/baz.jpg"),
           status = true,
           selfjoin = false
-        )
+        ).validateAndEscape
       )
       assert(caught.getMessage === "Invalid project IRI")
+    }
+
+    "return 'BadRequestException' if project 'shortname' during creation is missing" in {
+
+      val caught = intercept[BadRequestException](
+        CreateProjectApiRequestADM(
+          shortname = "",
+          shortcode = "1114",
+          longname = Some("project longname"),
+          description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+          keywords = Seq("keywords"),
+          logo = Some("/fu/bar/baz.jpg"),
+          status = true,
+          selfjoin = false
+        ).validateAndEscape
+      )
+      assert(caught.getMessage === s"Project shortname must be supplied.")
+    }
+
+    "return 'BadRequestException' if project 'shortcode' during creation is missing" in {
+
+      val caught = intercept[BadRequestException](
+        CreateProjectApiRequestADM(
+          shortname = "newproject4",
+          shortcode = "",
+          longname = Some("project longname"),
+          description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+          keywords = Seq("keywords"),
+          logo = Some("/fu/bar/baz.jpg"),
+          status = true,
+          selfjoin = false
+        ).validateAndEscape
+      )
+      assert(caught.getMessage === "Project shortcode must be supplied.")
     }
   }
 
