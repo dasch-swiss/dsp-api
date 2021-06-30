@@ -84,9 +84,12 @@ Permissions for the new value can be given by adding `knora-api:hasPermissions`.
 }
 ```
 
-Each value can have an optional custom IRI (of [Knora IRI](knora-iris.md#iris-for-data) form) specified by the `@id` attribute, a custom creation date specified by adding 
-`knora-api:valueCreationDate` (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)), or a custom UUID 
-given by `knora-api:valueHasUUID`. Each custom UUID must be [base64url-encoded](rfc:4648#section-5), without padding.
+Each value can have an optional custom IRI (of [Knora IRI](knora-iris.md#iris-for-data) form) specified by the `@id` attribute, 
+a custom creation date specified by adding `knora-api:valueCreationDate` (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)), 
+or a custom UUID given by `knora-api:valueHasUUID`. Each custom UUID must be [base64url-encoded](rfc:4648#section-5), without padding. 
+If a custom UUID is provided, it will be used in value IRI. If a custom IRI is given for the value, its UUID should match 
+the given custom UUID. If a custom IRI is provided, but there 
+is no custom UUID provided, then the UUID given in the IRI will be assigned to the `knora-api:valueHasUUID`. 
 A custom value IRI must be the IRI of the containing resource, followed
 by a `/values/` and a custom ID string. For example: 
 
@@ -95,7 +98,7 @@ by a `/values/` and a custom ID string. For example:
   "@id" : "http://rdfh.ch/0001/a-thing",
   "@type" : "anything:Thing",
   "anything:hasInteger" : {
-    "@id" : "http://rdfh.ch/0001/a-thing/values/int-value-IRI",
+    "@id" : "http://rdfh.ch/0001/a-thing/values/IN4R19yYR0ygi3K2VEHpUQ",
     "@type" : "knora-api:IntValue",
     "knora-api:intValueAsInt" : 21,
     "knora-api:valueHasUUID" : "IN4R19yYR0ygi3K2VEHpUQ",

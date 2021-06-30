@@ -3068,11 +3068,15 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     * Creates a new value IRI based on a UUID.
     *
     * @param resourceIri the IRI of the resource that will contain the value.
+    * @param givenUUID   the optional given UUID of the value. If not provided, create a random one.
     * @return a new value IRI.
     */
-  def makeRandomValueIri(resourceIri: IRI): IRI = {
-    val knoraValueUuid = makeRandomBase64EncodedUuid
-    s"$resourceIri/values/$knoraValueUuid"
+  def makeRandomValueIri(resourceIri: IRI, givenUUID: Option[UUID] = None): IRI = {
+    val valueUUID = givenUUID match {
+      case Some(uuid: UUID) => base64EncodeUuid(uuid)
+      case _                => makeRandomBase64EncodedUuid
+    }
+    s"$resourceIri/values/$valueUUID"
   }
 
   /**
