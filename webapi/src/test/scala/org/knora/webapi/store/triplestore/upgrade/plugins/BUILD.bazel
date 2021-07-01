@@ -122,3 +122,23 @@ scala_test(
         "//webapi:test_library",
     ] + BASE_TEST_DEPENDENCIES,
 )
+
+scala_test(
+    name = "UpgradePluginPR1885Spec",
+    size = "small",
+    srcs = [
+        "UpgradePluginPR1885Spec.scala",
+        "UpgradePluginSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+        "//test_data/upgrade",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    # unused_dependency_checker_mode = "warn",
+    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
+        "//webapi:main_library",
+        "//webapi:test_library",
+    ] + BASE_TEST_DEPENDENCIES,
+)
