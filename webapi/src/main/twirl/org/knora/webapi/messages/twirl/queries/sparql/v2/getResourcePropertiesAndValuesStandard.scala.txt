@@ -70,6 +70,7 @@ CONSTRUCT {
     ?resource a knora-base:Resource ;
         knora-base:isMainResource true ;
         knora-base:attachedToProject ?resourceProject ;
+        knora-base:resourceHasUUID ?resourceUUID ;
         rdfs:label ?label ;
         a ?resourceType ;
         knora-base:attachedToUser ?resourceCreator ;
@@ -119,6 +120,7 @@ CONSTRUCT {
         knora-base:attachedToUser ?resourceCreator ;
         knora-base:hasPermissions ?resourcePermissions ;
         knora-base:creationDate ?creationDate ;
+        knora-base:resourceHasUUID ?resourceUUID ;
         rdfs:label ?label .
 
     @* If deleted resource is not wanted, ignore deleted resources. *@

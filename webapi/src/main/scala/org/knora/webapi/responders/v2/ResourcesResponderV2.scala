@@ -273,7 +273,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             triplestore = settings.triplestoreType,
             resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
             projectIri = createResourceRequestV2.createResource.projectADM.id,
-            creatorIri = createResourceRequestV2.requestingUser.id
+            creatorIri = createResourceRequestV2.requestingUser.id,
+            stringFormatter = stringFormatter
           )
           .toString()
 
@@ -854,10 +855,14 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           creationDate = creationDate,
           requestingUser = requestingUser
         )).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
+
+      // get resource UUID
+      resourceUUID: UUID = stringFormatter.getUUIDFromIriOrMakeRandom(resourceIri)
     } yield
       ResourceReadyToCreate(
         sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
           resourceIri = resourceIri,
+          resourceUUID = Some(resourceUUID),
           permissions = resourcePermissions,
           sparqlForValues = sparqlForValuesResponse.insertSparql,
           resourceClassIri = internalCreateResource.resourceClassIri.toString,
@@ -1264,6 +1269,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
       _ = if (resource.resourceClassIri.toString != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceClassIri) {
         throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong resource class")
+      }
+
+      _ = if (resource.resourceUUID != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceUUID.get) {
+        throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong UUID")
       }
 
       _ = if (resource.attachedToUser != requestingUser.id) {

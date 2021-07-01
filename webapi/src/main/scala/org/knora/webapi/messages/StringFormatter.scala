@@ -3016,14 +3016,21 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     }
   }
 
-  def getUUIDFromIriOrMakeRandom(givenIRI: IRI): String = {
+  /**
+    * If an IRI ends with a UUID, validates that it is a Base64-encoded UUID. If it is a valid UUID, returns it. Otherwise,
+    * makes a random UUID and returns that.
+    *
+    * @param givenIRI the IRI of an entity.
+    * @return a Base64-encoded UUID.
+    */
+  def getUUIDFromIriOrMakeRandom(givenIRI: IRI): UUID = {
     val ending: String = givenIRI.split('/').last
     val decodeTry = Try {
       base64DecodeUuid(ending)
     }
     decodeTry match {
-      case Success(_) => ending
-      case Failure(_) => makeRandomBase64EncodedUuid
+      case Success(_) => base64DecodeUuid(ending)
+      case Failure(_) => UUID.randomUUID
     }
   }
 

@@ -44,11 +44,11 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig) extends Up
   override def transform(model: RdfModel): Unit = {
     // Add UUID to each resource.
     for (resourceIriNode: IriNode <- collectResourceIris(model)) {
-      val resourceUUID = stringFormatter.getUUIDFromIriOrMakeRandom(resourceIriNode.iri)
+      val resourceUUID: UUID = stringFormatter.getUUIDFromIriOrMakeRandom(resourceIriNode.iri)
       model.add(
         subj = resourceIriNode,
         pred = ResourceHasUUIDIri,
-        obj = nodeFactory.makeStringLiteral(resourceUUID)
+        obj = nodeFactory.makeStringLiteral(stringFormatter.base64EncodeUuid(resourceUUID))
       )
     }
   }
