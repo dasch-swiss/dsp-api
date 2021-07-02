@@ -125,7 +125,7 @@ scala_test(
 
 scala_test(
     name = "UpgradePluginPR1885Spec",
-    size = "small",
+    size = "large",
     srcs = [
         "UpgradePluginPR1885Spec.scala",
         "UpgradePluginSpec.scala",

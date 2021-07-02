@@ -34,12 +34,31 @@
       knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
       knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
       incunabula:pagenum <http://rdfh.ch/0803/00014b43f902/values/d155a0eed50b>;
-      incunabula:partOf <http://rdfh.ch/0803/861b5644b302>;
-      incunabula:partOfValue <http://rdfh.ch/0803/00014b43f902/values/a3a1ec4d-84b5-4769-83ab-319a1cfcf8a3>;
+      incunabula:partOf <http://rdfh.ch/0803/3341c4984004>;
+      incunabula:partOfValue <http://rdfh.ch/0803/3341c4984004/values/a3a1ec4d-84b5-4769-83ab-319a1cfcf8a3>;
       incunabula:seqnum <http://rdfh.ch/0803/00014b43f902/values/57a94661d60b>;
       incunabula:origname <http://rdfh.ch/0803/00014b43f902/values/1ad3999ad60b>;
       rdfs:label "t8r";
       knora-base:hasStillImageFileValue <http://rdfh.ch/0803/00014b43f902/values/18dc0912cd05>;
       knora-base:creationDate "2016-03-02T15:05:37Z"^^xsd:dateTime;
       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
+
+
+      <http://rdfh.ch/0803/3341c4984004> a incunabula:book;
+        knora-base:isDeleted false;
+        knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
+        knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
+        incunabula:title <http://rdfh.ch/0803/3341c4984004/values/dfa708e5f310>;
+        incunabula:hasAuthor <http://rdfh.ch/0803/3341c4984004/values/a2d15b1ef410>;
+        incunabula:publisher <http://rdfh.ch/0803/3341c4984004/values/65fbae57f410>;
+        incunabula:publoc <http://rdfh.ch/0803/3341c4984004/values/28250291f410>;
+        incunabula:pubdate <http://rdfh.ch/0803/3341c4984004/values/eb4e55caf410>;
+        incunabula:location <http://rdfh.ch/0803/3341c4984004/values/ae78a803f510>;
+        incunabula:url <http://rdfh.ch/0803/3341c4984004/values/4db6b940cc2704>;
+        incunabula:physical_desc <http://rdfh.ch/0803/3341c4984004/values/71a2fb3cf510>;
+        incunabula:note <http://rdfh.ch/0803/3341c4984004/values/34cc4e76f510>;
+        incunabula:citation <http://rdfh.ch/0803/3341c4984004/values/f7f5a1aff510>, <http://rdfh.ch/0803/3341c4984004/values/ba1ff5e8f510>;
+        rdfs:label "Die wunderbare Meerfahrt des hl. Brandan";
+        knora-base:creationDate "2016-03-02T15:05:53Z"^^xsd:dateTime;
+        knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
 }

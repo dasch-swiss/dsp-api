@@ -3055,6 +3055,12 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     s"http://$IriDomain/$projectShortcode/$knoraResourceID"
   }
 
+  def makeResourceIri(resourceUUID: UUID): IRI = {
+    val knoraResourceID = base64EncodeUuid(resourceUUID)
+    s"http://$IriDomain/resources/$knoraResourceID"
+  }
+
+
   /**
     * Creates a new value IRI based on a UUID.
     *
