@@ -29,20 +29,23 @@
       knora-base:isDeleted false .
 }
 <http://www.knora.org/data/0803/incunabula> {
-    <http://rdfh.ch/0803/00014b43f902> a incunabula:page;
+
+    <http://rdfh.ch/0803/0d1fc798cf03> a incunabula:page;
       knora-base:isDeleted false;
       knora-base:attachedToUser <http://rdfh.ch/users/91e19f1e01>;
       knora-base:attachedToProject <http://rdfh.ch/projects/0803>;
-      incunabula:pagenum <http://rdfh.ch/0803/00014b43f902/values/d155a0eed50b>;
+      knora-base:resourceHasUUID "bLvsDqJcO8FBUWi3tMdKMQ"^^xsd:string;
+      incunabula:pagenum <http://rdfh.ch/0803/0d1fc798cf03/values/f424cb31390f>;
       incunabula:partOf <http://rdfh.ch/0803/3341c4984004>;
-      incunabula:partOfValue <http://rdfh.ch/0803/3341c4984004/values/a3a1ec4d-84b5-4769-83ab-319a1cfcf8a3>;
-      incunabula:seqnum <http://rdfh.ch/0803/00014b43f902/values/57a94661d60b>;
-      incunabula:origname <http://rdfh.ch/0803/00014b43f902/values/1ad3999ad60b>;
-      rdfs:label "t8r";
-      knora-base:hasStillImageFileValue <http://rdfh.ch/0803/00014b43f902/values/18dc0912cd05>;
-      knora-base:creationDate "2016-03-02T15:05:37Z"^^xsd:dateTime;
+      incunabula:partOfValue <http://rdfh.ch/0803/0d1fc798cf03/values/b6272897-d0e2-4f62-930c-dfeeb10d5abf>;
+      incunabula:seqnum <http://rdfh.ch/0803/0d1fc798cf03/values/7a7871a4390f>;
+      incunabula:description <http://rdfh.ch/0803/0d1fc798cf03/values/e75f1e764d26>;
+      incunabula:page_comment <http://rdfh.ch/0803/0d1fc798cf03/values/a86316175726>;
+      incunabula:origname <http://rdfh.ch/0803/0d1fc798cf03/values/3da2c4dd390f>;
+      rdfs:label "g5r";
+      knora-base:hasStillImageFileValue <http://rdfh.ch/0803/0d1fc798cf03/values/4efe1aea6e07>;
+      knora-base:creationDate "2016-03-02T15:05:48Z"^^xsd:dateTime;
       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser" .
-
 
       <http://rdfh.ch/0803/3341c4984004> a incunabula:book;
         knora-base:isDeleted false;

@@ -58,9 +58,9 @@ class UpgradePluginPR1885Spec extends UpgradePluginSpec with LazyLogging {
     // Parse the input file.
     val model: RdfModel = trigFileToModel("test_data/upgrade/pr1885.trig")
 
-    //      val fileInputStream = new BufferedInputStream(new FileInputStream("test_data/all_data/incunabula-data.ttl"))
-    //      val model: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
-    //      fileInputStream.close()
+//    val fileInputStream = new BufferedInputStream(new FileInputStream("test_data/all_data/incunabula-data.ttl"))
+//    val model: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
+//    fileInputStream.close()
 
     // Use the plugin to transform the input.
     val plugin = new UpgradePluginPR1885(defaultFeatureFactoryConfig, logger)
@@ -106,10 +106,10 @@ class UpgradePluginPR1885Spec extends UpgradePluginSpec with LazyLogging {
       }
     }
 
-    "change resource IRI of `t8r of incunabula project` and add resourceUUID" in {
+    "change resource IRI of `g5r of incunabula project` that already has a UUID" in {
 
       val creationDateIri = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.CreationDate)
-      val obj = nodeFactory.makeDatatypeLiteral("2016-03-02T15:05:37Z", OntologyConstants.Xsd.DateTime)
+      val obj = nodeFactory.makeDatatypeLiteral("2016-03-02T15:05:48Z", OntologyConstants.Xsd.DateTime)
 
       model
         .find(
@@ -124,8 +124,7 @@ class UpgradePluginPR1885Spec extends UpgradePluginSpec with LazyLogging {
             case iriNode: IriNode =>
               assert(iriNode.iri.startsWith("http://rdfh.ch/resources/"))
               val ending = iriNode.iri.split("/").last
-              stringFormatter.validateBase64EncodedUuid(ending,
-                                                        throw BadRequestException(s"${ending} is not a validUUID"))
+              assert(ending == "bLvsDqJcO8FBUWi3tMdKMQ")
               // Check that resource UUID is added to the statement with new resource IRI
               val subj = iriNode
               val expectedUUID: DatatypeLiteral = nodeFactory.makeStringLiteral(ending)

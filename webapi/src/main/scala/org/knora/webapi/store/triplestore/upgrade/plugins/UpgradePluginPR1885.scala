@@ -39,7 +39,6 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
   private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
 
-
   private val ResourceHasUUIDIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ResourceHasUUID)
   private val CreationDateIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.CreationDate)
 
@@ -48,15 +47,15 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
     val statementsToAdd: collection.mutable.Set[Statement] = collection.mutable.Set.empty
 
     /**
-     * Changes the IRI of resources to the form rdf.ch/resources/resourecUUID.
-     * It also updated all statements in which object is a resource IRI.
-     *
-     * @param irisDict a map collection of old resource IRI to new ones.
-     */
+      * Changes the IRI of resources to the form rdf.ch/resources/resourecUUID.
+      * It also updated all statements in which object is a resource IRI.
+      *
+      * @param irisDict a map collection of old resource IRI to new ones.
+      */
     def changeResourceIri(irisDict: Map[IriNode, IriNode]): Unit = {
       model.map { statement: Statement =>
         val maybeSubject: Option[(IriNode, IriNode)] = irisDict.find { case (oldIri, _) => statement.subj == oldIri }
-        val maybeObject: Option[(IriNode, IriNode)] = irisDict.find { case (oldIri, _) => statement.obj == oldIri }
+        val maybeObject: Option[(IriNode, IriNode)] = irisDict.find { case (oldIri, _)  => statement.obj == oldIri }
         // Is the subject of the statement an old resource IRI?
         maybeSubject match {
           // Yes.
@@ -106,20 +105,27 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
 
     val resourcesWithOldIris = collectResourceIris(model)
     val irisDict: collection.mutable.Map[IriNode, IriNode] = collection.mutable.Map.empty
-    resourcesWithOldIris.foreach { oldIri =>
-      val resourceUUID: UUID = stringFormatter.getUUIDFromIriOrMakeRandom(oldIri.iri)
-      val newResourceIri = stringFormatter.makeResourceIri(resourceUUID)
 
-      // Add UUID to each resource.
-      val newIri = nodeFactory.makeIriNode(newResourceIri)
-      model.add(
-        subj = newIri,
-        pred = ResourceHasUUIDIri,
-        obj = nodeFactory.makeStringLiteral(stringFormatter.base64EncodeUuid(resourceUUID))
-      )
-      if (oldIri.iri != newResourceIri) {
-        log.warn(s"Changed resource IRI from <${oldIri.iri}> to <$newResourceIri>")
-        irisDict(oldIri) =  newIri
+    resourcesWithOldIris.foreach { oldIri =>
+      val newIri: IriNode = hasResourceUUIDProperty(model, oldIri) match {
+        case Some(givenUUID: DatatypeLiteral) =>
+          val resourceUUID: UUID = stringFormatter.base64DecodeUuid(givenUUID.value)
+          nodeFactory.makeIriNode(stringFormatter.makeResourceIri(resourceUUID))
+        case None =>
+          val resourceUUID: UUID = stringFormatter.getUUIDFromIriOrMakeRandom(oldIri.iri)
+          val newResourceIri = nodeFactory.makeIriNode(stringFormatter.makeResourceIri(resourceUUID))
+          // Add UUID to each resource.
+          model.add(
+            subj = newResourceIri,
+            pred = ResourceHasUUIDIri,
+            obj = nodeFactory.makeStringLiteral(stringFormatter.base64EncodeUuid(resourceUUID))
+          )
+          newResourceIri
+      }
+
+      if (oldIri.iri != newIri.iri) {
+        log.warn(s"Changed resource IRI from <${oldIri.iri}> to <${newIri.iri}>")
+        irisDict(oldIri) = newIri
       }
     }
 
@@ -128,11 +134,10 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
     model.addStatements(statementsToAdd.toSet)
 
 //    val formatted = rdfFormatUtil.format(rdfModel = model, rdfFormat = Turtle)
-//    new PrintWriter("/tmp/incunabula-data.ttl") {
+//    new PrintWriter("/tmp/incunabula-data-uuid.ttl") {
 //      write(formatted); close
 //    }
   }
-
 
   /**
     * Collects the IRIs of all resources.
@@ -145,6 +150,22 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
         case iriNode: IriNode => iriNode
         case other            => throw InconsistentRepositoryDataException(s"Unexpected subject for $CreationDateIri: $other")
       }
+  }
+
+  /**
+    * Check if the resource already has a UUID. If so, return it.
+    */
+  private def hasResourceUUIDProperty(model: RdfModel, subj: IriNode): Option[DatatypeLiteral] = {
+    val resourceUUIDStatements: Set[Statement] = model.find(Some(subj), Some(ResourceHasUUIDIri), None).toSet
+    resourceUUIDStatements.headOption match {
+      case Some(statement: Statement) =>
+        statement.obj match {
+          case datatypeLiteral: DatatypeLiteral =>
+            Some(datatypeLiteral)
+          case other => throw InconsistentRepositoryDataException(s"Unexpected value for $ResourceHasUUIDIri: $other")
+        }
+      case None => None
+    }
   }
 
 }
