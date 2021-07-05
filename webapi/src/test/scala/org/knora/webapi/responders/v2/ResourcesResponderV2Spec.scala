@@ -931,7 +931,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "create a resource with no values" in {
       // Create the resource.
 
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
@@ -981,7 +981,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "create a resource with no values and custom permissions" in {
       // Create the resource.
 
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
@@ -1018,7 +1018,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "create a resource with values" in {
       // Create the resource.
 
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
@@ -1178,7 +1178,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "create a resource with a still image file value" in {
       // Create the resource.
 
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri -> Seq(
@@ -1230,7 +1230,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not create a resource with missing required values" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
@@ -1253,7 +1253,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not create a resource with too many values for the cardinality of a property" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1301,7 +1301,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not create a resource with a property for which there is no cardinality in the resource class" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1343,7 +1343,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not create a resource with duplicate values" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1389,7 +1389,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not create a resource if the user doesn't have permission to create resources in the project" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0803/incunabula/v2#title".toSmartIri -> Seq(
@@ -1423,7 +1423,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not create a resource with a link to a nonexistent other resource" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
@@ -1457,7 +1457,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not create a resource with a standoff link to a nonexistent other resource" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val standoffWithInvalidLink: Vector[StandoffTagV2] = Vector(
         StandoffTagV2(
@@ -1527,7 +1527,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not create a resource with a list value referring to a nonexistent list node" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
@@ -1561,7 +1561,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not create a resource with a value that's the wrong type for the property" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem".toSmartIri -> Seq(
@@ -1595,7 +1595,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not create a resource with a link to a resource of the wrong class for the link property" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri -> Seq(
@@ -1629,7 +1629,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not create a resource with invalid custom permissions" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
@@ -1653,7 +1653,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not create a resource with a value that has invalid custom permissions" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val values: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
@@ -1689,7 +1689,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not create a resource that uses a class from another non-shared project" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
@@ -1966,7 +1966,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not accept custom resource permissions that would give the requesting user a higher permission on a resource than the default" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
@@ -1991,7 +1991,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "accept custom resource permissions that would give the requesting user a higher permission on a resource than the default if the user is a system admin" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
@@ -2013,7 +2013,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "accept custom resource permissions that would give the requesting user a higher permission on a resource than the default if the user is a project admin" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
@@ -2035,7 +2035,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not accept custom value permissions that would give the requesting user a higher permission on a value than the default" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
@@ -2072,7 +2072,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a system admin" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
@@ -2106,7 +2106,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/00FF/images/v2#stueckzahl".toSmartIri -> Seq(
@@ -2142,7 +2142,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "create a resource with version history so we can test erasing it" in {
       // Create the resource.
 
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
       resourceIriToErase.set(resourceIri)
       val resourceClassIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext".toSmartIri
@@ -2256,7 +2256,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "not erase a resource if another resource has a link to it" in {
       // Create a resource with a link to the resource that is to be deleted.
 
-      val resourceWithLinkIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceWithLinkIri: IRI = stringFormatter.makeResourceIri()
       val resourceClassIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri
       val linkValuePropertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue".toSmartIri
 
@@ -2385,12 +2385,13 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
   }
+
   "When given a custom IRI" should {
 
     "create a resource with no values but a custom IRI" in {
       // Create the resource.
 
-      val resourceIri: IRI = "http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9kk"
+      val resourceIri: IRI = "http://rdfh.ch/resources/L9WNFBTMUzyFhsEmIndcAQ"
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
@@ -2421,6 +2422,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
             defaultValuePermissions = defaultAnythingValuePermissions,
             requestingUser = anythingUserProfile
           )
+
+          assert(stringFormatter.base64EncodeUuid(outputResource.resourceUUID) == "L9WNFBTMUzyFhsEmIndcAQ")
       }
 
       // Get the resource from the triplestore and check it again.
@@ -2440,7 +2443,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "create a resource with a value that has custom UUID" in {
       // Create the resource.
 
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
         "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri -> Seq(
