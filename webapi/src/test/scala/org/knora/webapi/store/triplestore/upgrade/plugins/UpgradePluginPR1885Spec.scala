@@ -58,7 +58,7 @@ class UpgradePluginPR1885Spec extends UpgradePluginSpec with LazyLogging {
     // Parse the input file.
     val model: RdfModel = trigFileToModel("test_data/upgrade/pr1885.trig")
 
-//    val fileInputStream = new BufferedInputStream(new FileInputStream("test_data/all_data/incunabula-data.ttl"))
+//    val fileInputStream = new BufferedInputStream(new FileInputStream("test_data/all_data/anything-data.ttl"))
 //    val model: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
 //    fileInputStream.close()
 
@@ -146,6 +146,21 @@ class UpgradePluginPR1885Spec extends UpgradePluginSpec with LazyLogging {
                 case otherObj => throw AssertionException(s"Unexpected object for $partOf: $otherObj")
               }
 
+              // check that any value IRIs are also updated.
+              val pagenum = nodeFactory.makeIriNode("http://www.knora.org/ontology/0803/incunabula#pagenum")
+              val pagenumStatements: Set[Statement] = model
+                .find(
+                  subj = Some(iriNode),
+                  pred = Some(pagenum),
+                  obj = None
+                )
+                .toSet
+              assert(pagenumStatements.size == 1)
+              partOfStatements.head.obj match {
+                case iriNode: IriNode =>
+                  assert(iriNode.iri.startsWith(iriNode.iri))
+                case otherObj => throw AssertionException(s"Unexpected object for $pagenum: $otherObj")
+              }
             case other =>
               throw AssertionException(s"Unexpected object for $creationDateIri: $other")
           }

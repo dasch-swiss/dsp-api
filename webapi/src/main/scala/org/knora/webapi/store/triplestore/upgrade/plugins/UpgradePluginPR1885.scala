@@ -21,7 +21,6 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import java.util.UUID
 import com.typesafe.scalalogging.Logger
-import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
@@ -47,6 +46,26 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
     val statementsToAdd: collection.mutable.Set[Statement] = collection.mutable.Set.empty
 
     /**
+      * Changes an old resource IRIs embedded in value IRI to its corresponding new form.
+      *
+      * @param statement       a statement with a value IRI.
+      * @param subject         subject of the new statement.
+      * @param oldResourceIri  old resource IRI in the value IRI.
+      * @param newResourceIri  new resource IRI to be part of value IRI
+      */
+    def changeValueIri(statement: Statement, subject: RdfResource, oldResourceIri: IriNode, newResourceIri: IriNode) = {
+      val oldValueIri = statement.obj.asInstanceOf[IriNode].iri
+      val newValueIri = oldValueIri.replace(oldResourceIri.iri, newResourceIri.iri)
+      log.warn(s"Changed value IRI from <$oldValueIri> to <$newValueIri>")
+      statementsToAdd += nodeFactory.makeStatement(
+        subj = subject,
+        pred = statement.pred,
+        obj = nodeFactory.makeIriNode(iri = newValueIri),
+        context = statement.context
+      )
+    }
+
+    /**
       * Changes the IRI of resources to the form rdf.ch/resources/resourecUUID.
       * It also updated all statements in which object is a resource IRI.
       *
@@ -55,7 +74,16 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
     def changeResourceIri(irisDict: Map[IriNode, IriNode]): Unit = {
       model.map { statement: Statement =>
         val maybeSubject: Option[(IriNode, IriNode)] = irisDict.find { case (oldIri, _) => statement.subj == oldIri }
-        val maybeObject: Option[(IriNode, IriNode)] = irisDict.find { case (oldIri, _)  => statement.obj == oldIri }
+        // old IRI is object of the statement
+        val maybeObject: Option[(IriNode, IriNode)] = irisDict.find { case (oldIri, _) => statement.obj == oldIri }
+
+        // object of the statement is a value IRI starting with an old Iri
+        val maybeValueObject: Option[(IriNode, IriNode)] = irisDict.find {
+          case (oldIri, _) =>
+            statement.obj.isInstanceOf[IriNode] &&
+              statement.obj.asInstanceOf[IriNode].iri.startsWith(oldIri.iri + "/values/")
+        }
+
         // Is the subject of the statement an old resource IRI?
         maybeSubject match {
           // Yes.
@@ -70,14 +98,22 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
                   obj = objectNewIri,
                   context = statement.context
                 )
-              // No. Change only the subject IRI to its corresponding new form.
+              // No.
               case _ =>
-                statementsToAdd += nodeFactory.makeStatement(
-                  subj = subjectNewIri,
-                  pred = statement.pred,
-                  obj = statement.obj,
-                  context = statement.context
-                )
+                // Is object of the statement a value IRI starting with the old resource IRI?
+                maybeValueObject match {
+                  //Yes.
+                  case Some((oldIri: IriNode, newIri: IriNode)) =>
+                    changeValueIri(statement, subjectNewIri, oldIri, newIri)
+                  // No. Change only the subject IRI to its corresponding new form.
+                  case _ =>
+                    statementsToAdd += nodeFactory.makeStatement(
+                      subj = subjectNewIri,
+                      pred = statement.pred,
+                      obj = statement.obj,
+                      context = statement.context
+                    )
+                }
             }
             // the statement containing old IRI can be removed.
             statementsToRemove += statement
@@ -96,8 +132,17 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
                 )
                 // the statement containing old IRI can be removed.
                 statementsToRemove += statement
-              // No. Do nothing.
-              case _ => Nil
+              // No. Is the object a value IRI?
+              case _ =>
+                // Is object of the statement a value IRI starting with the old resource IRI?
+                maybeValueObject match {
+                  //Yes.
+                  case Some((oldIri: IriNode, newIri: IriNode)) =>
+                    changeValueIri(statement, statement.subj, oldIri, newIri)
+                    statementsToRemove += statement
+                  // No. do nothing.
+                  case _ => Nil
+                }
             }
         }
       }
@@ -134,7 +179,7 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
     model.addStatements(statementsToAdd.toSet)
 
 //    val formatted = rdfFormatUtil.format(rdfModel = model, rdfFormat = Turtle)
-//    new PrintWriter("/tmp/incunabula-data-uuid.ttl") {
+//    new PrintWriter("/tmp/anything-data-RV.ttl") {
 //      write(formatted); close
 //    }
   }
