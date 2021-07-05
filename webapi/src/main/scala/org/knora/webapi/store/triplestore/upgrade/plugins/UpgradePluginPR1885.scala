@@ -110,10 +110,10 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
       val newIri: IriNode = hasResourceUUIDProperty(model, oldIri) match {
         case Some(givenUUID: DatatypeLiteral) =>
           val resourceUUID: UUID = stringFormatter.base64DecodeUuid(givenUUID.value)
-          nodeFactory.makeIriNode(stringFormatter.makeResourceIri(resourceUUID))
+          nodeFactory.makeIriNode(stringFormatter.makeResourceIri(Some(resourceUUID)))
         case None =>
           val resourceUUID: UUID = stringFormatter.getUUIDFromIriOrMakeRandom(oldIri.iri)
-          val newResourceIri = nodeFactory.makeIriNode(stringFormatter.makeResourceIri(resourceUUID))
+          val newResourceIri = nodeFactory.makeIriNode(stringFormatter.makeResourceIri(Some(resourceUUID)))
           // Add UUID to each resource.
           model.add(
             subj = newResourceIri,

@@ -436,12 +436,12 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     for {
 
       // Make a new value UUID.
-      newValueUUID: UUID <- Future.successful(makeNewValueUUID(maybeValueIri, maybeValueUUID))
+      newValueUUID: UUID <- Future.successful(makeNewUUID(maybeValueIri, maybeValueUUID))
 
       // Make an IRI for the new value.
       newValueIri: IRI <- checkOrCreateEntityIri(
         maybeValueIri,
-        stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID)))
+        stringFormatter.makeValueIri(resourceInfo.resourceIri, Some(newValueUUID)))
 
       // Make a creation date for the new value
       creationDate: Instant = maybeValueCreationDate match {
@@ -531,7 +531,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                            valuePermissions: String,
                                            requestingUser: UserADM): Future[UnverifiedValueV2] = {
     // Make a new value UUID.
-    val newValueUUID: UUID = makeNewValueUUID(maybeValueIri, maybeValueUUID)
+    val newValueUUID: UUID = makeNewUUID(maybeValueIri, maybeValueUUID)
 
     for {
       sparqlTemplateLinkUpdate <- incrementLinkValue(
@@ -662,11 +662,10 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       requestingUser: UserADM): Future[InsertSparqlWithUnverifiedValue] = {
     for {
       // Make new value UUID.
-      newValueUUID: UUID <- Future.successful(
-        makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID))
+      newValueUUID: UUID <- Future.successful(makeNewUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID))
 
       newValueIri: IRI <- checkOrCreateEntityIri(valueToCreate.customValueIri,
-                                                 stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID)))
+                                                 stringFormatter.makeValueIri(resourceIri, Some(newValueUUID)))
 
       // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
       // use resource creation date for the value.
@@ -997,7 +996,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
         newValueIri: IRI <- checkOrCreateEntityIri(updateValuePermissionsV2.newValueVersionIri,
-                                                   stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
+                                                   stringFormatter.makeValueIri(resourceInfo.resourceIri))
 
         currentTime: Instant = updateValuePermissionsV2.valueCreationDate.getOrElse(Instant.now)
 
@@ -1280,7 +1279,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                requestingUser: UserADM): Future[UnverifiedValueV2] = {
     for {
       newValueIri: IRI <- checkOrCreateEntityIri(newValueVersionIri,
-                                                 stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
+                                                 stringFormatter.makeValueIri(resourceInfo.resourceIri))
 
       // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
       standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- (currentValue.valueContent, newValueVersion) match {
@@ -2261,7 +2260,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     for {
       // Make an IRI for the new LinkValue.
       newLinkValueIri: IRI <- checkOrCreateEntityIri(customNewLinkValueIri,
-                                                     stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri))
+                                                     stringFormatter.makeValueIri(sourceResourceInfo.resourceIri))
 
       linkUpdate = maybeLinkValueInfo match {
         case Some(linkValueInfo) =>
@@ -2410,9 +2409,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
 
         for {
           // If no custom IRI was provided, generate an IRI for the new LinkValue.
-          newLinkValueIri: IRI <- checkOrCreateEntityIri(
-            customNewLinkValueIri,
-            stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri))
+          newLinkValueIri: IRI <- checkOrCreateEntityIri(customNewLinkValueIri,
+                                                         stringFormatter.makeValueIri(sourceResourceInfo.resourceIri))
 
         } yield
           SparqlTemplateLinkUpdate(
@@ -2456,39 +2454,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     * @return the new value IRI.
     */
   private def makeUnusedValueIri(resourceIri: IRI): Future[IRI] = {
-    stringFormatter.makeUnusedIri(stringFormatter.makeRandomValueIri(resourceIri), storeManager, loggingAdapter)
-  }
-
-  /**
-    * Make a new value UUID considering optional custom value UUID and custom value IRI.
-    * If a custom UUID is given, this method checks that it matches the ending of a given IRI, if there was any.
-    * If no custom UUID is given for a value, it checks if a custom value IRI is given or not. If yes, it extracts the
-    * UUID from the given IRI. If no custom value IRI was given, it generates a random UUID.
-    *
-    * @param maybeCustomIri  the optional value IRI.
-    * @param maybeCustomUUID the optional value UUID.
-    * @return the new value UUID.
-    */
-  private def makeNewValueUUID(maybeCustomIri: Option[SmartIri], maybeCustomUUID: Option[UUID]): UUID = {
-    // Is there any custom value UUID given?
-    maybeCustomUUID match {
-      case Some(customValueUUID) =>
-        // Yes. Check that if a custom IRI is given, it ends with the same UUID
-        if (maybeCustomIri.nonEmpty && stringFormatter.base64DecodeUuid(maybeCustomIri.get.toString.split("/").last) != customValueUUID) {
-          throw BadRequestException(
-            s" Given custom IRI ${maybeCustomIri.get} should contain the given custom UUID ${stringFormatter
-              .base64EncodeUuid(customValueUUID)}.")
-        }
-        customValueUUID
-      case None =>
-        // No. Is there a custom IRI given?
-        maybeCustomIri match {
-          case Some(customIri: SmartIri) =>
-            // Yes. Get the UUID from the given value IRI
-            val endingUUID: UUID = stringFormatter.base64DecodeUuid(customIri.toString.split("/").last)
-            endingUUID
-          case None => UUID.randomUUID
-        }
-    }
+    stringFormatter.makeUnusedIri(stringFormatter.makeValueIri(resourceIri), storeManager, loggingAdapter)
   }
 }

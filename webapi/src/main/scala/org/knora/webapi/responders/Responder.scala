@@ -26,6 +26,7 @@ import messages.util.ResponderData
 import messages.util.rdf.SparqlSelectResult
 import messages.{SmartIri, StringFormatter}
 import settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
+
 import akka.actor.{ActorRef, ActorSystem}
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
@@ -34,6 +35,7 @@ import akka.util.Timeout
 import com.typesafe.scalalogging.{LazyLogging, Logger}
 import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
@@ -192,6 +194,39 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
         } yield entityIriAsString
 
       case None => stringFormatter.makeUnusedIri(iriFormatter, storeManager, loggingAdapter)
+    }
+  }
+
+  /**
+    * Make a new UUID considering optional custom UUID and custom IRI.
+    * If a custom UUID is given, this method checks that it matches the ending of a given IRI, if there was any.
+    * If no custom UUID is given for the entity, it checks if a custom IRI is given or not. If yes, it extracts the
+    * UUID from the given IRI. If no custom IRI was given, it generates a random UUID.
+    *
+    * @param maybeCustomIri  the optional IRI.
+    * @param maybeCustomUUID the optional UUID.
+    * @return the new UUID.
+    */
+  protected def makeNewUUID(maybeCustomIri: Option[SmartIri], maybeCustomUUID: Option[UUID]): UUID = {
+    // Is there any custom UUID given?
+    maybeCustomUUID match {
+      case Some(customUUID) =>
+        // Yes. Check that if a custom IRI is given, it ends with the same UUID
+        if (maybeCustomIri.nonEmpty && stringFormatter.base64DecodeUuid(maybeCustomIri.get.toString.split("/").last) != customUUID) {
+          throw BadRequestException(
+            s" Given custom IRI ${maybeCustomIri.get} should contain the given custom UUID ${stringFormatter
+              .base64EncodeUuid(customUUID)}.")
+        }
+        customUUID
+      case None =>
+        // No. Is there a custom IRI given?
+        maybeCustomIri match {
+          case Some(customIri: SmartIri) =>
+            // Yes. Get the UUID from the given IRI
+            val endingUUID: UUID = stringFormatter.base64DecodeUuid(customIri.toString.split("/").last)
+            endingUUID
+          case None => UUID.randomUUID
+        }
     }
   }
 }

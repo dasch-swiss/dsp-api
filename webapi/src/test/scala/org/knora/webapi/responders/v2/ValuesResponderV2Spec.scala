@@ -1022,7 +1022,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       // Update the value.
 
       val intValue = 1000
-      val newValueVersionIri: IRI = stringFormatter.makeRandomValueIri(resourceIri)
+      val newValueVersionIri: IRI = stringFormatter.makeValueIri(resourceIri)
 
       responderManager ! UpdateValueRequestV2(
         UpdateValueContentV2(
@@ -4487,7 +4487,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "not accept custom value permissions that would give the requesting user a higher permission on a value than the default" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
@@ -4532,7 +4532,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a system admin" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
@@ -4575,7 +4575,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "accept custom value permissions that would give the requesting user a higher permission on a value than the default if the user is a project admin" in {
-      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.imagesProject.shortcode)
+      val resourceIri: IRI = stringFormatter.makeResourceIri()
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),

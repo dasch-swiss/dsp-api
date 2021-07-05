@@ -436,7 +436,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
               deleteDirectLink = false,
               linkValueExists = false,
               linkTargetExists = true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
-              newLinkValueIri = stringFormatter.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
+              newLinkValueIri = stringFormatter.makeValueIri(createMultipleValuesRequest.resourceIri),
               linkTargetIri = realTargetIri,
               currentReferenceCount = 0,
               newReferenceCount = initialReferenceCount,
@@ -501,7 +501,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 valuesToCreate.foldLeft(SparqlGenerationResultForProperty()) {
                   case (propertyAcc: SparqlGenerationResultForProperty, valueToCreate: NumberedValueToCreate) =>
                     val updateValueV1 = valueToCreate.createValueV1WithComment.updateValueV1
-                    val newValueIri = stringFormatter.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
+                    val newValueIri = stringFormatter.makeValueIri(createMultipleValuesRequest.resourceIri)
 
                     // How we generate the SPARQL depends on whether we're creating a link or an ordinary value.
                     val insertSparql: String = valueToCreate.createValueV1WithComment.updateValueV1 match {
@@ -1003,7 +1003,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
           case _ =>
             // We're updating an ordinary value. Generate an IRI for the new version of the value.
-            val newValueIri = stringFormatter.makeRandomValueIri(findResourceWithValueResult.resourceIri)
+            val newValueIri = stringFormatter.makeValueIri(findResourceWithValueResult.resourceIri)
 
             // Give the new version the same permissions as the previous version.
 
@@ -1091,7 +1091,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // Everything looks OK, so update the comment.
 
         // Generate an IRI for the new value.
-        newValueIri = stringFormatter.makeRandomValueIri(findResourceWithValueResult.resourceIri)
+        newValueIri = stringFormatter.makeValueIri(findResourceWithValueResult.resourceIri)
 
         // Get project info
         maybeProjectInfo <- {
@@ -2352,7 +2352,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                featureFactoryConfig: FeatureFactoryConfig,
                                                userProfile: UserADM): Future[UnverifiedValueV1] = {
     // Generate an IRI for the new value.
-    val newValueIri = stringFormatter.makeRandomValueIri(resourceIri)
+    val newValueIri = stringFormatter.makeValueIri(resourceIri)
     val creationDate: Instant = Instant.now
 
     for {
@@ -2731,7 +2731,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       )
 
       // Generate an IRI for the new LinkValue.
-      newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri)
+      newLinkValueIri = stringFormatter.makeValueIri(sourceResourceIri)
 
       linkUpdate = maybeLinkValueQueryResult match {
         case Some(linkValueQueryResult) =>
@@ -2829,7 +2829,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
           val deleteDirectLink = linkValueQueryResult.directLinkExists && newReferenceCount == 0
 
           // Generate an IRI for the new LinkValue.
-          val newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri)
+          val newLinkValueIri = stringFormatter.makeValueIri(sourceResourceIri)
 
           SparqlTemplateLinkUpdate(
             linkPropertyIri = linkPropertyIri.toSmartIri,

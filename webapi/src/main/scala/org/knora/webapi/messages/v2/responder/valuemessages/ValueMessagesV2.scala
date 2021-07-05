@@ -1783,7 +1783,7 @@ case class TextValueContentV2(ontologySchema: OntologySchema,
         standoffNode: StandoffTagV2 =>
           CreateStandoffTagV2InTriplestore(
             standoffNode = standoffNode,
-            standoffTagInstanceIri = stringFormatter.makeRandomStandoffTagIri(
+            standoffTagInstanceIri = stringFormatter.makeStandoffTagIri(
               valueIri = valueIri,
               startIndex = standoffNode.startIndex) // generate IRI for new standoff node
           )

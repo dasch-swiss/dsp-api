@@ -172,7 +172,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     */
   private def createResourceV2(createResourceRequestV2: CreateResourceRequestV2): Future[ReadResourcesSequenceV2] = {
 
-    def makeTaskFuture(resourceIri: IRI): Future[ReadResourcesSequenceV2] = {
+    def makeTaskFuture(resourceIri: IRI, resourceUUID: UUID): Future[ReadResourcesSequenceV2] = {
       for {
         //check if resourceIri already exists holding a lock on the IRI
         result <- stringFormatter.checkIriExists(resourceIri, storeManager)
@@ -252,6 +252,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // for creating the resource.
         resourceReadyToCreate: ResourceReadyToCreate <- generateResourceReadyToCreate(
           resourceIri = resourceIri,
+          resourceUUID = resourceUUID,
           internalCreateResource = internalCreateResource,
           linkTargetClasses = linkTargetClasses,
           entityInfo = allEntityInfo,
@@ -340,15 +341,19 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           s"User ${createResourceRequestV2.requestingUser.username} does not have permission to create a resource of class <${createResourceRequestV2.createResource.resourceClassIri}> in project <$projectIri>")
       }
 
-      resourceIri: IRI <- checkOrCreateEntityIri(
-        createResourceRequestV2.createResource.resourceIri,
-        stringFormatter.makeRandomResourceIri(createResourceRequestV2.createResource.projectADM.shortcode))
+      // Make new UUID.
+      resourceUUID: UUID <- Future.successful(
+        makeNewUUID(createResourceRequestV2.createResource.resourceIri,
+                    createResourceRequestV2.createResource.resourceUUID))
+
+      resourceIri: IRI <- checkOrCreateEntityIri(createResourceRequestV2.createResource.resourceIri,
+                                                 stringFormatter.makeResourceIri(Some(resourceUUID)))
 
       // Do the remaining pre-update checks and the update while holding an update lock on the resource to be created.
       taskResult <- IriLocker.runWithIriLock(
         createResourceRequestV2.apiRequestID,
         resourceIri,
-        () => makeTaskFuture(resourceIri)
+        () => makeTaskFuture(resourceIri, resourceUUID)
       )
     } yield taskResult
 
@@ -729,6 +734,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @return a [[ResourceReadyToCreate]].
     */
   private def generateResourceReadyToCreate(resourceIri: IRI,
+                                            resourceUUID: UUID,
                                             internalCreateResource: CreateResourceV2,
                                             linkTargetClasses: Map[IRI, SmartIri],
                                             entityInfo: EntityInfoGetResponseV2,
@@ -856,8 +862,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           requestingUser = requestingUser
         )).mapTo[GenerateSparqlToCreateMultipleValuesResponseV2]
 
-      // get resource UUID
-      resourceUUID: UUID = stringFormatter.getUUIDFromIriOrMakeRandom(resourceIri)
     } yield
       ResourceReadyToCreate(
         sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
