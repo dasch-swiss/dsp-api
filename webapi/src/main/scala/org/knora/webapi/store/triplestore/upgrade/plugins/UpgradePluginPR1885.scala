@@ -21,6 +21,7 @@ package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import java.util.UUID
 import com.typesafe.scalalogging.Logger
+import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.InconsistentRepositoryDataException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
@@ -44,25 +45,34 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
   override def transform(model: RdfModel): Unit = {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
     val statementsToAdd: collection.mutable.Set[Statement] = collection.mutable.Set.empty
+    val resourceIrisDict: collection.mutable.Map[IriNode, IriNode] = collection.mutable.Map.empty
+    val valueIrisDict: collection.mutable.Map[IRI, IRI] = collection.mutable.Map.empty
 
     /**
-      * Changes an old resource IRIs embedded in value IRI to its corresponding new form.
+      * Change the current IRI given as subject or object of the statement to the new format, if it is an old resource
+      * or value IRI. Otherwise, return the current IRI.
       *
-      * @param statement       a statement with a value IRI.
-      * @param subject         subject of the new statement.
-      * @param oldResourceIri  old resource IRI in the value IRI.
-      * @param newResourceIri  new resource IRI to be part of value IRI
+      * @param maybeResourceIri       IRI maybe be a resource IRI.
+      * @param maybeValueIri          IRI maybe a value IRI.
+      * @param currIri                current IRI.
+      * @return updated IRI.
       */
-    def changeValueIri(statement: Statement, subject: RdfResource, oldResourceIri: IriNode, newResourceIri: IriNode) = {
-      val oldValueIri = statement.obj.asInstanceOf[IriNode].iri
-      val newValueIri = oldValueIri.replace(oldResourceIri.iri, newResourceIri.iri)
-      log.warn(s"Changed value IRI from <$oldValueIri> to <$newValueIri>")
-      statementsToAdd += nodeFactory.makeStatement(
-        subj = subject,
-        pred = statement.pred,
-        obj = nodeFactory.makeIriNode(iri = newValueIri),
-        context = statement.context
-      )
+    def updateIri(maybeResourceIri: Option[(IriNode, IriNode)],
+                  maybeValueIri: Option[(IriNode, IriNode)],
+                  currIri: IriNode): IriNode = {
+      maybeResourceIri match {
+        case Some((oldResourceIri: IriNode, newResourceIri: IriNode)) =>
+          newResourceIri
+        case None =>
+          maybeValueIri match {
+            case Some((oldResourceIri: IriNode, newResourceIri: IriNode)) =>
+              val oldValueIri: IRI = currIri.iri
+              val newValueIri: IRI = oldValueIri.replace(oldResourceIri.iri, newResourceIri.iri)
+              valueIrisDict(oldValueIri) = newValueIri
+              nodeFactory.makeIriNode(iri = newValueIri)
+            case None => currIri
+          }
+      }
     }
 
     /**
@@ -71,85 +81,62 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
       *
       * @param irisDict a map collection of old resource IRI to new ones.
       */
-    def changeResourceIri(irisDict: Map[IriNode, IriNode]): Unit = {
+    def updateResourceValueIris(irisDict: Map[IriNode, IriNode]): Unit = {
       model.map { statement: Statement =>
-        val maybeSubject: Option[(IriNode, IriNode)] = irisDict.find { case (oldIri, _) => statement.subj == oldIri }
-        // old IRI is object of the statement
-        val maybeObject: Option[(IriNode, IriNode)] = irisDict.find { case (oldIri, _) => statement.obj == oldIri }
+        /* Check and update the subject of the statement if it is either an old resource IRI or a value IRI */
+        // Is the subject of the statement an old resource IRI?
+        val resourceAsSubject: Option[(IriNode, IriNode)] = irisDict.find {
+          case (oldIri, _) => statement.subj == oldIri
+        }
 
-        // object of the statement is a value IRI starting with an old Iri
-        val maybeValueObject: Option[(IriNode, IriNode)] = irisDict.find {
+        // Is the subject of the statement a value IRI starting with an old resource Iri?
+        val valueAsSubject: Option[(IriNode, IriNode)] = irisDict.find {
+          case (oldIri, _) =>
+            statement.subj.isInstanceOf[IriNode] &&
+              statement.subj.asInstanceOf[IriNode].iri.startsWith(oldIri.iri + "/values/")
+        }
+
+        // Is subject of the statement an IRI?
+        val updatedSubject: RdfResource = statement.subj.isInstanceOf[IriNode] match {
+          // Yes. Update the subject of the statement if it is an old resource or value IRI
+          case true => updateIri(resourceAsSubject, valueAsSubject, statement.subj.asInstanceOf[IriNode])
+          // No. Don't do anything.
+          case false => statement.subj
+        }
+
+        /* Check and update the object of the statement if it is either an old resource IRI or a value IRI */
+        // Is object of the statement an old resource IRI?
+        val resourceAsObject: Option[(IriNode, IriNode)] = irisDict.find { case (oldIri, _) => statement.obj == oldIri }
+
+        // Is object of the statement a value IRI starting with an old resource Iri?
+        val valueAsObject: Option[(IriNode, IriNode)] = irisDict.find {
           case (oldIri, _) =>
             statement.obj.isInstanceOf[IriNode] &&
               statement.obj.asInstanceOf[IriNode].iri.startsWith(oldIri.iri + "/values/")
         }
 
-        // Is the subject of the statement an old resource IRI?
-        maybeSubject match {
-          // Yes.
-          case Some((_: IriNode, subjectNewIri: IriNode)) =>
-            // Is the object of the statement is also as old resource IRI?
-            maybeObject match {
-              // Yes. Change both subject and object IRIs to their corresponding new form.
-              case Some((_: IriNode, objectNewIri: IriNode)) =>
-                statementsToAdd += nodeFactory.makeStatement(
-                  subj = subjectNewIri,
-                  pred = statement.pred,
-                  obj = objectNewIri,
-                  context = statement.context
-                )
-              // No.
-              case _ =>
-                // Is object of the statement a value IRI starting with the old resource IRI?
-                maybeValueObject match {
-                  //Yes.
-                  case Some((oldIri: IriNode, newIri: IriNode)) =>
-                    changeValueIri(statement, subjectNewIri, oldIri, newIri)
-                  // No. Change only the subject IRI to its corresponding new form.
-                  case _ =>
-                    statementsToAdd += nodeFactory.makeStatement(
-                      subj = subjectNewIri,
-                      pred = statement.pred,
-                      obj = statement.obj,
-                      context = statement.context
-                    )
-                }
-            }
-            // the statement containing old IRI can be removed.
-            statementsToRemove += statement
+        // Is object of the statement an IRI?
+        val updatedObject: RdfNode = statement.obj.isInstanceOf[IriNode] match {
+          //Yes. Update the object of the statement if it is an old resource or value IRI
+          case true => updateIri(resourceAsObject, valueAsObject, statement.obj.asInstanceOf[IriNode])
+          // No. Don't do anything.
+          case false => statement.obj
+        }
 
-          // No. The subject of statement does not contain an old IRI, check its object.
-          case None =>
-            // Is the object of the statement an old IRI?
-            maybeObject match {
-              // Yes. Change only the object IRI to its corresponding new form.
-              case Some((_: IriNode, objectNewIri: IriNode)) =>
-                statementsToAdd += nodeFactory.makeStatement(
-                  subj = statement.subj,
-                  pred = statement.pred,
-                  obj = objectNewIri,
-                  context = statement.context
-                )
-                // the statement containing old IRI can be removed.
-                statementsToRemove += statement
-              // No. Is the object a value IRI?
-              case _ =>
-                // Is object of the statement a value IRI starting with the old resource IRI?
-                maybeValueObject match {
-                  //Yes.
-                  case Some((oldIri: IriNode, newIri: IriNode)) =>
-                    changeValueIri(statement, statement.subj, oldIri, newIri)
-                    statementsToRemove += statement
-                  // No. do nothing.
-                  case _ => Nil
-                }
-            }
+        // update the model only if either of the subject or object of the statement are changed.
+        if (updatedObject != statement.obj || updatedSubject != statement.subj) {
+          statementsToAdd += nodeFactory.makeStatement(
+            subj = updatedSubject,
+            pred = statement.pred,
+            obj = updatedObject,
+            context = statement.context
+          )
+          statementsToRemove += statement
         }
       }
     }
 
     val resourcesWithOldIris = collectResourceIris(model)
-    val irisDict: collection.mutable.Map[IriNode, IriNode] = collection.mutable.Map.empty
 
     resourcesWithOldIris.foreach { oldIri =>
       val newIri: IriNode = hasResourceUUIDProperty(model, oldIri) match {
@@ -170,13 +157,18 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
 
       if (oldIri.iri != newIri.iri) {
         log.warn(s"Changed resource IRI from <${oldIri.iri}> to <${newIri.iri}>")
-        irisDict(oldIri) = newIri
+        resourceIrisDict(oldIri) = newIri
       }
     }
 
-    changeResourceIri(irisDict.toMap)
+    updateResourceValueIris(resourceIrisDict.toMap)
     model.removeStatements(statementsToRemove.toSet)
     model.addStatements(statementsToAdd.toSet)
+
+    valueIrisDict.foreach {
+      case (oldValueIRI, newValueIri) =>
+        log.warn(s"Changed value IRI from <$oldValueIRI> to <$newValueIri>")
+    }
 
 //    val formatted = rdfFormatUtil.format(rdfModel = model, rdfFormat = Turtle)
 //    new PrintWriter("/tmp/anything-data-RV.ttl") {

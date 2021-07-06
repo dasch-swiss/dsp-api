@@ -3210,17 +3210,12 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     * Validates a custom value IRI, throwing [[BadRequestException]] if the IRI is not valid.
     *
     * @param customValueIri the custom value IRI to be validated.
-    * @param projectCode the project code of the containing resource.
     * @param resourceID the ID of the containing resource.
     * @return the validated IRI.
     */
-  def validateCustomValueIri(customValueIri: SmartIri, projectCode: String, resourceID: String): SmartIri = {
+  def validateCustomValueIri(customValueIri: SmartIri, resourceID: String): SmartIri = {
     if (!customValueIri.isKnoraValueIri) {
       throw BadRequestException(s"<$customValueIri> is not a Knora value IRI")
-    }
-
-    if (!customValueIri.getProjectCode.contains(projectCode)) {
-      throw BadRequestException(s"The provided value IRI does not contain the correct project code")
     }
 
     if (!customValueIri.getResourceID.contains(resourceID)) {

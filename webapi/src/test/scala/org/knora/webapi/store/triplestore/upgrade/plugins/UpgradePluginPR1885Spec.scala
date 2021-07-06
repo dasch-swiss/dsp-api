@@ -20,9 +20,10 @@
 package org.knora.webapi.store.triplestore.upgrade.plugins
 
 import com.typesafe.scalalogging.LazyLogging
+import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException}
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 
 import java.io.{BufferedInputStream, BufferedOutputStream, FileInputStream, FileOutputStream}
 import java.nio.file.{Files, Paths}
@@ -166,6 +167,105 @@ class UpgradePluginPR1885Spec extends UpgradePluginSpec with LazyLogging {
           }
 
         case None => throw AssertionException(s"No statement found with predicate $creationDateIri")
+      }
+    }
+
+    "change value IRI used as subject or object of statements" in {
+      val creationDateIri = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.CreationDate)
+      val valueHasRichText = nodeFactory.makeIriNode("http://www.knora.org/ontology/0001/anything#hasRichtext")
+      val obj = nodeFactory.makeDatatypeLiteral("2018-01-31T15:05:10Z", OntologyConstants.Xsd.DateTime)
+
+      model
+        .find(
+          subj = None,
+          pred = Some(creationDateIri),
+          obj = Some(obj)
+        )
+        .toSet
+        .headOption match {
+        case Some(statement: Statement) =>
+          statement.subj match {
+            case resourceIriNode: IriNode =>
+              val resourceIri = resourceIriNode.iri
+              assert(resourceIri.startsWith("http://rdfh.ch/resources/"))
+              // check that value IRI used as object is changed.
+              model
+                .find(
+                  subj = Some(resourceIriNode),
+                  pred = Some(valueHasRichText),
+                  obj = None
+                )
+                .toSet
+                .headOption match {
+                case Some(statement: Statement) =>
+                  statement.obj match {
+                    case valueIriNode: IriNode =>
+                      val valueIri = valueIriNode.iri
+                      assert(valueIri.contains(resourceIri))
+                      // get the statements with value IRI as subject
+                      val valueIriAsSubject = model
+                        .find(
+                          subj = Some(valueIriNode),
+                          pred = None,
+                          obj = None
+                        )
+                        .toSet
+                      assert(valueIriAsSubject.size > 1)
+                    case other => throw AssertionException(s"Unexpected object for $valueHasRichText: $other")
+                  }
+                case None => throw AssertionException(s"No statement found with predicate $valueHasRichText")
+              }
+            case other => throw AssertionException(s"Unexpected object for $creationDateIri: $other")
+          }
+        case None => throw AssertionException(s"No statement found with predicate $creationDateIri")
+      }
+    }
+    "change standoff value IRI used as subject or object of statements" in {
+      val valueCreationDateIri = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueCreationDate)
+      val valueHasStandoff = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasStandoff)
+      val standoffUUID = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.StandoffTagHasUUID)
+      val creationDate = nodeFactory.makeDatatypeLiteral("2018-04-16T13:24:53.578Z", OntologyConstants.Xsd.DateTime)
+      val standoffUUIDValue =
+        nodeFactory.makeDatatypeLiteral("0a3e72a7-ac7b-430b-81ed-1c4239598231", OntologyConstants.Xsd.String)
+      model
+        .find(
+          subj = None,
+          pred = Some(valueCreationDateIri),
+          obj = Some(creationDate)
+        )
+        .toSet
+        .headOption match {
+        case Some(statement: Statement) =>
+          statement.subj match {
+            case valueIriNode: IriNode =>
+              assert(valueIriNode.iri.startsWith("http://rdfh.ch/resources/"))
+              val standoffs = model
+                .find(
+                  subj = Some(valueIriNode),
+                  pred = Some(valueHasStandoff),
+                  obj = None
+                )
+                .toSet
+              assert(standoffs.size == 4)
+              val statement_1: Set[Statement] = standoffs.filter { statement =>
+                statement.obj
+                  .isInstanceOf[IriNode] && statement.obj.asInstanceOf[IriNode].iri == valueIriNode.iri + "/standoff/1"
+              }
+              assert(statement_1.size == 1)
+
+              val standoffAsSubject = model
+                .find(
+                  subj = Some(statement_1.head.obj.asInstanceOf[IriNode]),
+                  pred = Some(standoffUUID),
+                  obj = Some(standoffUUIDValue)
+                )
+                .toSet
+              assert(standoffAsSubject.size == 1)
+
+            case other => throw AssertionException(s"Unexpected subject for $creationDate: $other")
+          }
+        case None =>
+          throw AssertionException(s"No statement found with predicate $valueCreationDateIri and object $creationDate")
       }
     }
 

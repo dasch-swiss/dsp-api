@@ -126,7 +126,6 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
             maybeCustomValueIri: Option[SmartIri] = jsonLDObject.maybeIDAsKnoraDataIri.map { definedNewIri =>
               stringFormatter.validateCustomValueIri(
                 customValueIri = definedNewIri,
-                projectCode = resourceIri.getProjectCode.get,
                 resourceID = resourceIri.getResourceID.get
               )
             }
@@ -301,7 +300,6 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
 
               stringFormatter.validateCustomValueIri(
                 customValueIri = definedNewIri,
-                projectCode = valueIri.getProjectCode.get,
                 resourceID = valueIri.getResourceID.get
               )
             }
