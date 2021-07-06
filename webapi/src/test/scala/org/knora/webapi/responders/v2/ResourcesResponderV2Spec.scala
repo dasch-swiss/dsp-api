@@ -63,9 +63,9 @@ object ResourcesResponderV2Spec {
   private val defaultStillImageFileValuePermissions =
     "M knora-admin:Creator,knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
 
-  private val zeitglöckleinIri = "http://rdfh.ch/0803/c5058f3a"
+  private val zeitglöckleinIri = "http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw"
 
-  private val aThingIri = "http://rdfh.ch/0001/a-thing"
+  private val aThingIri = "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA"
   private var aThingLastModificationDate = Instant.now
 
   private val resourceIriToErase = new MutableTestIri
@@ -81,156 +81,156 @@ class GraphTestData {
   val graphForAnythingUser1: GraphDataGetResponseV2 = GraphDataGetResponseV2(
     edges = Vector(
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+        target = "http://rdfh.ch/resources/tPfZeNMvRVujCQqbIbvO0A",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"
+        source = "http://rdfh.ch/resources/nResNuvARcWYUdWyo0GWGw"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA",
+        target = "http://rdfh.ch/resources/cmfk1DMHRBiR4-_6HXpEFA",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+        source = "http://rdfh.ch/resources/5IEswyQFQp2bxXDrOyEfEA"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ",
+        target = "http://rdfh.ch/resources/7uuGcnFcQJq08dMOralyCQ",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"
+        source = "http://rdfh.ch/resources/sHCLAGg-R5qJ6oPZPV-zOQ"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
+        target = "http://rdfh.ch/resources/nResNuvARcWYUdWyo0GWGw",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"
+        source = "http://rdfh.ch/resources/MiBwAFcxQZGHNL-WfgFAPQ"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+        target = "http://rdfh.ch/resources/0C-0L1kORryKzJAJxxRyRQ",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start"
+        source = "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
+        target = "http://rdfh.ch/resources/iqW_PBiHRdyTFzik8tuSog",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"
+        source = "http://rdfh.ch/resources/L5xU7Qe5QUu6Wz3cDaCxbA"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/start",
+        target = "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+        source = "http://rdfh.ch/resources/Lz7WEqJETJqqsUZQYexBQg"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
+        target = "http://rdfh.ch/resources/sHCLAGg-R5qJ6oPZPV-zOQ",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+        source = "http://rdfh.ch/resources/Lz7WEqJETJqqsUZQYexBQg"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
+        target = "http://rdfh.ch/resources/WLSHxQUgTOmG1T0lBU2r5w",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start"
+        source = "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
+        target = "http://rdfh.ch/resources/A67ka6UQRHWf313tbhQBjw",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+        source = "http://rdfh.ch/resources/WLSHxQUgTOmG1T0lBU2r5w"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
+        target = "http://rdfh.ch/resources/MiBwAFcxQZGHNL-WfgFAPQ",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
+        source = "http://rdfh.ch/resources/LOV-6aLYQFW15jwdyS51Yw"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/start",
+        target = "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+        source = "http://rdfh.ch/resources/iqW_PBiHRdyTFzik8tuSog"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+        target = "http://rdfh.ch/resources/Lz7WEqJETJqqsUZQYexBQg",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+        source = "http://rdfh.ch/resources/tPfZeNMvRVujCQqbIbvO0A"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+        target = "http://rdfh.ch/resources/tPfZeNMvRVujCQqbIbvO0A",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start"
+        source = "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA",
+        target = "http://rdfh.ch/resources/L5xU7Qe5QUu6Wz3cDaCxbA",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+        source = "http://rdfh.ch/resources/cmfk1DMHRBiR4-_6HXpEFA"
       )
     ),
     nodes = Vector(
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Tango",
-        resourceIri = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+        resourceIri = "http://rdfh.ch/resources/WLSHxQUgTOmG1T0lBU2r5w"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Foxtrot",
-        resourceIri = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+        resourceIri = "http://rdfh.ch/resources/Lz7WEqJETJqqsUZQYexBQg"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Echo",
-        resourceIri = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+        resourceIri = "http://rdfh.ch/resources/tPfZeNMvRVujCQqbIbvO0A"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Golf",
-        resourceIri = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"
+        resourceIri = "http://rdfh.ch/resources/sHCLAGg-R5qJ6oPZPV-zOQ"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Whiskey",
-        resourceIri = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"
+        resourceIri = "http://rdfh.ch/resources/MiBwAFcxQZGHNL-WfgFAPQ"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Mike",
-        resourceIri = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
+        resourceIri = "http://rdfh.ch/resources/cmfk1DMHRBiR4-_6HXpEFA"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "X-ray",
-        resourceIri = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"
+        resourceIri = "http://rdfh.ch/resources/nResNuvARcWYUdWyo0GWGw"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Uniform",
-        resourceIri = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
+        resourceIri = "http://rdfh.ch/resources/LOV-6aLYQFW15jwdyS51Yw"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Sierra",
-        resourceIri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
+        resourceIri = "http://rdfh.ch/resources/0C-0L1kORryKzJAJxxRyRQ"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Romeo",
-        resourceIri = "http://rdfh.ch/0001/start"
+        resourceIri = "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Quebec",
-        resourceIri = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+        resourceIri = "http://rdfh.ch/resources/iqW_PBiHRdyTFzik8tuSog"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Hotel",
-        resourceIri = "http://rdfh.ch/0001/7uuGcnFcQJq08dMOralyCQ"
+        resourceIri = "http://rdfh.ch/resources/7uuGcnFcQJq08dMOralyCQ"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Papa",
-        resourceIri = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"
+        resourceIri = "http://rdfh.ch/resources/L5xU7Qe5QUu6Wz3cDaCxbA"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Victor",
-        resourceIri = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw"
+        resourceIri = "http://rdfh.ch/resources/A67ka6UQRHWf313tbhQBjw"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Delta",
-        resourceIri = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+        resourceIri = "http://rdfh.ch/resources/5IEswyQFQp2bxXDrOyEfEA"
       )
     ),
     ontologySchema = InternalSchema
@@ -239,126 +239,126 @@ class GraphTestData {
   val graphForIncunabulaUser: GraphDataGetResponseV2 = GraphDataGetResponseV2(
     edges = Vector(
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+        target = "http://rdfh.ch/resources/tPfZeNMvRVujCQqbIbvO0A",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"
+        source = "http://rdfh.ch/resources/nResNuvARcWYUdWyo0GWGw"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw",
+        target = "http://rdfh.ch/resources/nResNuvARcWYUdWyo0GWGw",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"
+        source = "http://rdfh.ch/resources/MiBwAFcxQZGHNL-WfgFAPQ"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
+        target = "http://rdfh.ch/resources/0C-0L1kORryKzJAJxxRyRQ",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start"
+        source = "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog",
+        target = "http://rdfh.ch/resources/iqW_PBiHRdyTFzik8tuSog",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"
+        source = "http://rdfh.ch/resources/L5xU7Qe5QUu6Wz3cDaCxbA"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/start",
+        target = "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+        source = "http://rdfh.ch/resources/Lz7WEqJETJqqsUZQYexBQg"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ",
+        target = "http://rdfh.ch/resources/sHCLAGg-R5qJ6oPZPV-zOQ",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+        source = "http://rdfh.ch/resources/Lz7WEqJETJqqsUZQYexBQg"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w",
+        target = "http://rdfh.ch/resources/WLSHxQUgTOmG1T0lBU2r5w",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start"
+        source = "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw",
+        target = "http://rdfh.ch/resources/A67ka6UQRHWf313tbhQBjw",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+        source = "http://rdfh.ch/resources/WLSHxQUgTOmG1T0lBU2r5w"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ",
+        target = "http://rdfh.ch/resources/MiBwAFcxQZGHNL-WfgFAPQ",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
+        source = "http://rdfh.ch/resources/LOV-6aLYQFW15jwdyS51Yw"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/start",
+        target = "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+        source = "http://rdfh.ch/resources/iqW_PBiHRdyTFzik8tuSog"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg",
+        target = "http://rdfh.ch/resources/Lz7WEqJETJqqsUZQYexBQg",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+        source = "http://rdfh.ch/resources/tPfZeNMvRVujCQqbIbvO0A"
       ),
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A",
+        target = "http://rdfh.ch/resources/tPfZeNMvRVujCQqbIbvO0A",
         propertyIri = "http://www.knora.org/ontology/0001/anything#hasOtherThing".toSmartIri,
-        source = "http://rdfh.ch/0001/start"
+        source = "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw"
       )
     ),
     nodes = Vector(
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Tango",
-        resourceIri = "http://rdfh.ch/0001/WLSHxQUgTOmG1T0lBU2r5w"
+        resourceIri = "http://rdfh.ch/resources/WLSHxQUgTOmG1T0lBU2r5w"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Foxtrot",
-        resourceIri = "http://rdfh.ch/0001/Lz7WEqJETJqqsUZQYexBQg"
+        resourceIri = "http://rdfh.ch/resources/Lz7WEqJETJqqsUZQYexBQg"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Echo",
-        resourceIri = "http://rdfh.ch/0001/tPfZeNMvRVujCQqbIbvO0A"
+        resourceIri = "http://rdfh.ch/resources/tPfZeNMvRVujCQqbIbvO0A"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Golf",
-        resourceIri = "http://rdfh.ch/0001/sHCLAGg-R5qJ6oPZPV-zOQ"
+        resourceIri = "http://rdfh.ch/resources/sHCLAGg-R5qJ6oPZPV-zOQ"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Whiskey",
-        resourceIri = "http://rdfh.ch/0001/MiBwAFcxQZGHNL-WfgFAPQ"
+        resourceIri = "http://rdfh.ch/resources/MiBwAFcxQZGHNL-WfgFAPQ"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "X-ray",
-        resourceIri = "http://rdfh.ch/0001/nResNuvARcWYUdWyo0GWGw"
+        resourceIri = "http://rdfh.ch/resources/nResNuvARcWYUdWyo0GWGw"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Uniform",
-        resourceIri = "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
+        resourceIri = "http://rdfh.ch/resources/LOV-6aLYQFW15jwdyS51Yw"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Sierra",
-        resourceIri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
+        resourceIri = "http://rdfh.ch/resources/0C-0L1kORryKzJAJxxRyRQ"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Romeo",
-        resourceIri = "http://rdfh.ch/0001/start"
+        resourceIri = "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Quebec",
-        resourceIri = "http://rdfh.ch/0001/iqW_PBiHRdyTFzik8tuSog"
+        resourceIri = "http://rdfh.ch/resources/iqW_PBiHRdyTFzik8tuSog"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Papa",
-        resourceIri = "http://rdfh.ch/0001/L5xU7Qe5QUu6Wz3cDaCxbA"
+        resourceIri = "http://rdfh.ch/resources/L5xU7Qe5QUu6Wz3cDaCxbA"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Victor",
-        resourceIri = "http://rdfh.ch/0001/A67ka6UQRHWf313tbhQBjw"
+        resourceIri = "http://rdfh.ch/resources/A67ka6UQRHWf313tbhQBjw"
       )
     ),
     ontologySchema = InternalSchema
@@ -367,20 +367,20 @@ class GraphTestData {
   val graphWithStandoffLink: GraphDataGetResponseV2 = GraphDataGetResponseV2(
     edges = Vector(
       GraphEdgeV2(
-        target = "http://rdfh.ch/0001/a-thing",
+        target = "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
         propertyIri = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo".toSmartIri,
-        source = "http://rdfh.ch/0001/a-thing-with-text-values"
+        source = "http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg"
       )),
     nodes = Vector(
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
-        resourceIri = "http://rdfh.ch/0001/a-thing-with-text-values"
+        resourceIri = "http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg"
       ),
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "A thing",
-        resourceIri = "http://rdfh.ch/0001/a-thing"
+        resourceIri = "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA"
       )
     ),
     ontologySchema = InternalSchema
@@ -392,7 +392,7 @@ class GraphTestData {
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Another thing",
-        resourceIri = "http://rdfh.ch/0001/another-thing"
+        resourceIri = "http://rdfh.ch/resources/4ExjVniQehNpL3hQsU3Dgw"
       )),
     ontologySchema = InternalSchema
   )
@@ -586,7 +586,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
       responderManager ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
+        resourceIris = Seq("http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw"),
         versionDate = None,
         targetSchema = ApiV2Complex,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -605,7 +605,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return a preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
 
       responderManager ! ResourcesPreviewGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/c5058f3a"),
+        resourceIris = Seq("http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw"),
         targetSchema = ApiV2Complex,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile
@@ -623,7 +623,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return a full description of the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
       responderManager ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/2a6221216701"),
+        resourceIris = Seq("http://rdfh.ch/resources/w1JN2mMZam7F1_eiyvz6pw"),
         versionDate = None,
         targetSchema = ApiV2Complex,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -642,7 +642,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
       responderManager ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
+        resourceIris =
+          Seq("http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw", "http://rdfh.ch/resources/w1JN2mMZam7F1_eiyvz6pw"),
         versionDate = None,
         targetSchema = ApiV2Complex,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -661,7 +662,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return two preview descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data" in {
 
       responderManager ! ResourcesPreviewGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
+        resourceIris =
+          Seq("http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw", "http://rdfh.ch/resources/w1JN2mMZam7F1_eiyvz6pw"),
         targetSchema = ApiV2Complex,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUserProfile
@@ -679,7 +681,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return two full descriptions of the 'Reise ins Heilige Land' and the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data (inversed order)" in {
 
       responderManager ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0803/2a6221216701", "http://rdfh.ch/0803/c5058f3a"),
+        resourceIris =
+          Seq("http://rdfh.ch/resources/w1JN2mMZam7F1_eiyvz6pw", "http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw"),
         versionDate = None,
         targetSchema = ApiV2Complex,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -699,8 +702,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return two full descriptions of the book 'Zeitglöcklein des Lebens und Leidens Christi' and the book 'Reise ins Heilige Land' in the Incunabula test data providing redundant resource Iris" in {
 
       responderManager ! ResourcesGetRequestV2(
-        resourceIris =
-          Seq("http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/c5058f3a", "http://rdfh.ch/0803/2a6221216701"),
+        resourceIris = Seq("http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw",
+                           "http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw",
+                           "http://rdfh.ch/resources/w1JN2mMZam7F1_eiyvz6pw"),
         versionDate = None,
         targetSchema = ApiV2Complex,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -720,7 +724,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return a resource of type thing with text as TEI/XML" in {
 
       responderManager ! ResourceTEIGetRequestV2(
-        resourceIri = "http://rdfh.ch/0001/thing_with_richtext_with_markup",
+        resourceIri = "http://rdfh.ch/resources/XJ3fePWZDnOJnEqXLL4ldw",
         textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
         mappingIri = None,
         gravsearchTemplateIri = None,
@@ -746,7 +750,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return a resource of type Something with text with standoff as TEI/XML" in {
 
       responderManager ! ResourceTEIGetRequestV2(
-        resourceIri = "http://rdfh.ch/0001/qN1igiDRSAemBBktbRHn6g",
+        resourceIri = "http://rdfh.ch/resources/qN1igiDRSAemBBktbRHn6g",
         textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
         mappingIri = None,
         gravsearchTemplateIri = None,
@@ -770,7 +774,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "return a past version of a resource" in {
-      val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+      val resourceIri = "http://rdfh.ch/resources/0xfMLw0jVhmBIoAxuTbVxw"
       val versionDate = Instant.parse("2019-02-12T08:05:10Z")
 
       responderManager ! ResourcesGetRequestV2(
@@ -791,7 +795,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "return the complete version history of a resource" in {
-      val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+      val resourceIri = "http://rdfh.ch/resources/0xfMLw0jVhmBIoAxuTbVxw"
 
       responderManager ! ResourceVersionHistoryGetRequestV2(
         resourceIri = resourceIri,
@@ -808,7 +812,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "return the version history of a resource within a date range" in {
-      val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+      val resourceIri = "http://rdfh.ch/resources/0xfMLw0jVhmBIoAxuTbVxw"
       val startDate = Instant.parse("2019-02-08T15:05:11Z")
       val endDate = Instant.parse("2019-02-13T09:05:10Z")
 
@@ -828,7 +832,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "get the latest version of a value, given its UUID" in {
       responderManager ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
+        resourceIris = Seq("http://rdfh.ch/resources/0xfMLw0jVhmBIoAxuTbVxw"),
         valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
         targetSchema = ApiV2Complex,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -845,7 +849,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "get a past version of a value, given its UUID and a timestamp" in {
       responderManager ! ResourcesGetRequestV2(
-        resourceIris = Seq("http://rdfh.ch/0001/thing-with-history"),
+        resourceIris = Seq("http://rdfh.ch/resources/0xfMLw0jVhmBIoAxuTbVxw"),
         valueUuid = Some(stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g")),
         versionDate = Some(Instant.parse("2019-02-12T09:05:10Z")),
         targetSchema = ApiV2Complex,
@@ -864,7 +868,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return a graph of resources reachable via links from/to a given resource" in {
       responderManager ! GraphDataGetRequestV2(
-        resourceIri = "http://rdfh.ch/0001/start",
+        resourceIri = "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw",
         depth = 6,
         inbound = true,
         outbound = true,
@@ -882,7 +886,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return a graph of resources reachable via links from/to a given resource, filtering the results according to the user's permissions" in {
       responderManager ! GraphDataGetRequestV2(
-        resourceIri = "http://rdfh.ch/0001/start",
+        resourceIri = "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw",
         depth = 6,
         inbound = true,
         outbound = true,
@@ -900,7 +904,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return a graph containing a standoff link" in {
       responderManager ! GraphDataGetRequestV2(
-        resourceIri = "http://rdfh.ch/0001/a-thing",
+        resourceIri = "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
         depth = 4,
         inbound = true,
         outbound = true,
@@ -915,7 +919,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "return a graph containing just one node" in {
       responderManager ! GraphDataGetRequestV2(
-        resourceIri = "http://rdfh.ch/0001/another-thing",
+        resourceIri = "http://rdfh.ch/resources/4ExjVniQehNpL3hQsU3Dgw",
         depth = 4,
         inbound = true,
         outbound = true,
@@ -1138,7 +1142,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
           CreateValueInNewResourceV2(
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
-              referredResourceIri = "http://rdfh.ch/0001/a-thing"
+              referredResourceIri = "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA"
             )
           )
         )
@@ -1430,7 +1434,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
           CreateValueInNewResourceV2(
             valueContent = LinkValueContentV2(
               ontologySchema = ApiV2Complex,
-              referredResourceIri = "http://rdfh.ch/0001/nonexistent-thing"
+              referredResourceIri = "http://rdfh.ch/resources/rJvywsW7e4FDZ9KEptTtMg"
             )
           )
         )
@@ -1478,7 +1482,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
           startIndex = 1,
           attributes = Vector(
             StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-                                      value = "http://rdfh.ch/0001/nonexistent-thing")),
+                                      value = "http://rdfh.ch/resources/rJvywsW7e4FDZ9KEptTtMg")),
           startParentIndex = Some(0)
         ),
         StandoffTagV2(
@@ -1930,7 +1934,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "mark a resource as deleted, supplying a custom delete date" in {
-      val resourceIri = "http://rdfh.ch/0001/5IEswyQFQp2bxXDrOyEfEA"
+      val resourceIri = "http://rdfh.ch/resources/5IEswyQFQp2bxXDrOyEfEA"
       val deleteDate: Instant = Instant.now
 
       val deleteRequest = DeleteOrEraseResourceRequestV2(
@@ -2492,7 +2496,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
   }
   "When asked for events" should {
     "return full history of a-thing-picture resource" in {
-      val resourceIri = "http://rdfh.ch/0001/a-thing-picture"
+      val resourceIri = "http://rdfh.ch/resources/h2TEa725XPK7CfG15Bk0bA"
 
       responderManager ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
@@ -2515,7 +2519,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "return full history of a resource as events" in {
-      val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+      val resourceIri = "http://rdfh.ch/resources/0xfMLw0jVhmBIoAxuTbVxw"
 
       responderManager ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
@@ -2529,7 +2533,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "update value permission to test update permission event" in {
-      val resourceIri = "http://rdfh.ch/0001/thing-with-history"
+      val resourceIri = "http://rdfh.ch/resources/0xfMLw0jVhmBIoAxuTbVxw"
       // Update the value permission.
 
       responderManager ! UpdateValueRequestV2(
@@ -2537,7 +2541,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
           resourceIri = resourceIri,
           resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
           propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri,
-          valueIri = "http://rdfh.ch/0001/thing-with-history/values/1c",
+          valueIri = "http://rdfh.ch/resources/0xfMLw0jVhmBIoAxuTbVxw/values/1c",
           valueType = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
           permissions = "CR knora-admin:Creator|V knora-admin:KnownUser"
         ),
@@ -2566,8 +2570,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "create a new value to test create value history event" in {
-      val resourceIri = "http://rdfh.ch/0001/thing-with-history"
-      val newValueIri = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
+      val resourceIri = "http://rdfh.ch/resources/0xfMLw0jVhmBIoAxuTbVxw"
+      val newValueIri = "http://rdfh.ch/resources/0xfMLw0jVhmBIoAxuTbVxw/values/xZisRC3jPkcplt1hQQdb-A"
       val testValue = "a test value"
       // create new value.
 
@@ -2616,8 +2620,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "delete the newly created value to check the delete value event of resource history" in {
-      val resourceIri = "http://rdfh.ch/0001/thing-with-history"
-      val valueToDelete = "http://rdfh.ch/0001/thing-with-history/values/xZisRC3jPkcplt1hQQdb-A"
+      val resourceIri = "http://rdfh.ch/resources/0xfMLw0jVhmBIoAxuTbVxw"
+      val valueToDelete = "http://rdfh.ch/resources/0xfMLw0jVhmBIoAxuTbVxw/values/xZisRC3jPkcplt1hQQdb-A"
       val deleteComment = "delete value test"
       // delete the new value.
 
@@ -2653,7 +2657,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "return full history of a deleted resource" in {
-      val resourceIri = "http://rdfh.ch/0001/PHbbrEsVR32q5D_ioKt6pA"
+      val resourceIri = "http://rdfh.ch/resources/PHbbrEsVR32q5D_ioKt6pA"
 
       responderManager ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
@@ -2673,7 +2677,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     }
 
     "update resource's metadata to test update resource metadata event" in {
-      val resourceIri = "http://rdfh.ch/0001/thing_with_BCE_date2"
+      val resourceIri = "http://rdfh.ch/resources/qpW9FkcgiCEC_AabCrYDYQ"
       responderManager ! UpdateResourceMetadataRequestV2(
         resourceIri = resourceIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
