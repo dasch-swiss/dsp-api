@@ -2694,12 +2694,22 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           case (subject, predicate) => subject == OntologyConstants.KnoraBase.AttachedToProject
         }
 
-        resourceProject = maybeResourceProjectStatement
+        resourceProject: IRI = maybeResourceProjectStatement
           .getOrElse(
             throw InconsistentRepositoryDataException(s"Resource $resourceIri has no knora-base:attachedToProject"))
           ._2
-        projectShortcode: String = resourceIri.toSmartIri.getProjectCode
-          .getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI $resourceIri"))
+
+        projectInfoResponse <- {
+          responderManager ? ProjectGetRequestADM(
+            identifier = ProjectIdentifierADM(maybeIri = Some(resourceProject)),
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = userProfile
+          )
+        }.mapTo[ProjectGetResponseADM]
+
+        projectADM = projectInfoResponse.project
+        //TODO: change this to project UUID
+        projectShortcode: String = projectADM.shortcode
 
         // Get the rows describing file values from the query results, grouped by file value IRI.
         fileValueGroupedRows: Seq[(IRI, Seq[VariableResultsRow])] = resInfoResponseRows

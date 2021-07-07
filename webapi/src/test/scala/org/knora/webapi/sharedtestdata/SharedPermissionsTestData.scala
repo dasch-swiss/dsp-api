@@ -202,9 +202,9 @@ object SharedPermissionsTestData {
 
   val perm003_o1: oap =
     oap(
-      iri = "http://rdfh.ch/0803/00014b43f902", // incunabula:page
+      iri = "http://rdfh.ch/resources/ZtMRyqFrRSuBW3WtfRDreQ", // incunabula:page
       p = ObjectAccessPermissionADM(
-        forResource = Some("http://rdfh.ch/0803/00014b43f902"),
+        forResource = Some("http://rdfh.ch/resources/ZtMRyqFrRSuBW3WtfRDreQ"),
         hasPermissions = Set(
           PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator),
           PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
@@ -216,9 +216,9 @@ object SharedPermissionsTestData {
 
   val perm003_o2: oap =
     oap(
-      iri = "http://rdfh.ch/0803/00014b43f902/values/1ad3999ad60b", // knora-base:TextValue
+      iri = "http://rdfh.ch/resources/ZtMRyqFrRSuBW3WtfRDreQ/values/1ad3999ad60b", // knora-base:TextValue
       p = ObjectAccessPermissionADM(
-        forValue = Some("http://rdfh.ch/0803/00014b43f902/values/1ad3999ad60b"),
+        forValue = Some("http://rdfh.ch/resources/ZtMRyqFrRSuBW3WtfRDreQ/values/1ad3999ad60b"),
         hasPermissions = Set(
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.UnknownUser),
           PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.KnownUser),

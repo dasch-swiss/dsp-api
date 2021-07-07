@@ -3,24 +3,25 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<http://rdfh.ch/0001/a-thing-with-text-values> a <http://www.knora.org/ontology/0001/anything#Thing>,
+<http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg> a <http://www.knora.org/ontology/0001/anything#Thing>,
     knora-base:Resource;
-  <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/0001/a-thing-with-text-values/values/1>,
-    <http://rdfh.ch/0001/a-thing-with-text-values/values/2>;
+  <http://www.knora.org/ontology/0001/anything#hasText> <http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/1>,
+    <http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/2>;
   knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
   knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "jT0UHG9_wtaX23VoYydmGg";
   knora-base:hasLinkTo <http://rdfh.ch/0001/a-thing>;
   knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:ProjectMember";
-  knora-base:hasStandoffLinkTo <http://rdfh.ch/0001/a-thing>;
-  knora-base:hasStandoffLinkToValue <http://rdfh.ch/0001/a-thing-with-text-values/values/0>;
-  knora-base:hasValue <http://rdfh.ch/0001/a-thing-with-text-values/values/0>, <http://rdfh.ch/0001/a-thing-with-text-values/values/1>,
-    <http://rdfh.ch/0001/a-thing-with-text-values/values/2>;
+  knora-base:hasStandoffLinkTo <http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA>;
+  knora-base:hasStandoffLinkToValue <http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/0>;
+  knora-base:hasValue <http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/0>, <http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/1>,
+    <http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/2>;
   knora-base:isDeleted false;
   knora-base:isMainResource true;
   rdfs:label "Ein Ding für jemanden, dem die Dinge gefallen" .
 
-<http://rdfh.ch/0001/a-thing-with-text-values/values/0> a knora-base:LinkValue;
+<http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/0> a knora-base:LinkValue;
   knora-base:attachedToUser <http://www.knora.org/ontology/knora-admin#SystemUser>;
   knora-base:hasPermissions "CR knora-admin:Creator|V knora-admin:UnknownUser";
   knora-base:isDeleted false;
@@ -28,11 +29,11 @@
   knora-base:valueHasRefCount 2;
   knora-base:valueHasString "http://rdfh.ch/0001/a-thing";
   knora-base:valueHasUUID "0";
-  rdf:object <http://rdfh.ch/0001/a-thing>;
+  rdf:object <http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA>;
   rdf:predicate knora-base:hasStandoffLinkTo;
-  rdf:subject <http://rdfh.ch/0001/a-thing-with-text-values> .
+  rdf:subject <http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg> .
 
-<http://rdfh.ch/0001/a-thing-with-text-values/values/1> a knora-base:TextValue;
+<http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/1> a knora-base:TextValue;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
   knora-base:hasPermissions "CR knora-admin:Creator";
   knora-base:isDeleted false;
@@ -40,12 +41,12 @@
   knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>;
   knora-base:valueHasMaxStandoffStartIndex "1"^^xsd:nonNegativeInteger;
   knora-base:valueHasOrder 0;
-  knora-base:valueHasStandoff <http://rdfh.ch/0001/a-thing-with-text-values/values/1/standoff/0>,
-    <http://rdfh.ch/0001/a-thing-with-text-values/values/1/standoff/1>;
+  knora-base:valueHasStandoff <http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/1/standoff/0>,
+    <http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/1/standoff/1>;
   knora-base:valueHasString "Ich liebe die Dinge, sie sind alles für mich.";
   knora-base:valueHasUUID "1" .
 
-<http://rdfh.ch/0001/a-thing-with-text-values/values/2> a knora-base:TextValue;
+<http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/2> a knora-base:TextValue;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
   knora-base:hasPermissions "CR knora-admin:Creator";
   knora-base:isDeleted false;
@@ -53,44 +54,45 @@
   knora-base:valueHasMapping <http://rdfh.ch/standoff/mappings/StandardMapping>;
   knora-base:valueHasMaxStandoffStartIndex "1"^^xsd:nonNegativeInteger;
   knora-base:valueHasOrder 0;
-  knora-base:valueHasStandoff <http://rdfh.ch/0001/a-thing-with-text-values/values/2/standoff/0>,
-    <http://rdfh.ch/0001/a-thing-with-text-values/values/2/standoff/1>;
+  knora-base:valueHasStandoff <http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/2/standoff/0>,
+    <http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/2/standoff/1>;
   knora-base:valueHasString "Na ja, die Dinge sind OK.";
   knora-base:valueHasUUID "2" .
 
-<http://rdfh.ch/0001/a-thing-with-text-values/values/1/standoff/0> a <http://www.knora.org/ontology/standoff#StandoffRootTag>;
+<http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/1/standoff/0> a <http://www.knora.org/ontology/standoff#StandoffRootTag>;
   knora-base:standoffTagHasEnd "45"^^xsd:int;
   knora-base:standoffTagHasStart "0"^^xsd:int;
   knora-base:standoffTagHasStartIndex 0;
   knora-base:standoffTagHasUUID "2e136103-2a4b-4e59-ac8f-79a53f54b496" .
 
-<http://rdfh.ch/0001/a-thing-with-text-values/values/1/standoff/1> a knora-base:StandoffLinkTag;
+<http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/1/standoff/1> a knora-base:StandoffLinkTag;
   knora-base:standoffTagHasEnd 19;
-  knora-base:standoffTagHasLink <http://rdfh.ch/0001/a-thing>;
+  knora-base:standoffTagHasLink <http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA>;
   knora-base:standoffTagHasStart 14;
   knora-base:standoffTagHasStartIndex 1;
-  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/a-thing-with-text-values/values/1/standoff/0>;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/1/standoff/0>;
   knora-base:standoffTagHasUUID "80133696-26a1-4941-967b-6bf210d7d5e1" .
 
-<http://rdfh.ch/0001/a-thing-with-text-values/values/2/standoff/0> a <http://www.knora.org/ontology/standoff#StandoffRootTag>;
+<http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/2/standoff/0> a <http://www.knora.org/ontology/standoff#StandoffRootTag>;
   knora-base:standoffTagHasEnd "25"^^xsd:int;
   knora-base:standoffTagHasStart "0"^^xsd:int;
   knora-base:standoffTagHasStartIndex 0;
   knora-base:standoffTagHasUUID "fd583868-2a3c-4941-a330-990f5a972f71" .
 
-<http://rdfh.ch/0001/a-thing-with-text-values/values/2/standoff/1> a knora-base:StandoffLinkTag;
+<http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/2/standoff/1> a knora-base:StandoffLinkTag;
   knora-base:standoffTagHasEnd 16;
-  knora-base:standoffTagHasLink <http://rdfh.ch/0001/a-thing>;
+  knora-base:standoffTagHasLink <http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA>;
   knora-base:standoffTagHasStart 11;
   knora-base:standoffTagHasStartIndex 1;
-  knora-base:standoffTagHasStartParent <http://rdfh.ch/0001/a-thing-with-text-values/values/2/standoff/0>;
+  knora-base:standoffTagHasStartParent <http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/2/standoff/0>;
   knora-base:standoffTagHasUUID "59a36237-95a9-4acc-8361-7c8fac311063" .
 
-<http://rdfh.ch/0001/a-thing> a <http://www.knora.org/ontology/0001/anything#Thing>,
+<http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA> a <http://www.knora.org/ontology/0001/anything#Thing>,
     knora-base:Resource;
   knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
   knora-base:creationDate "2016-03-02T15:05:10Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "SHnkVt4X2LHAM2nNZVwkoA";
   knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
   knora-base:isDeleted false;
   rdfs:label "A thing" .

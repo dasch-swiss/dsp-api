@@ -1825,9 +1825,21 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       val valueProps = valueUtilV1.createValueProps(valueIri, rows)
 
       for {
-        projectShortcode: String <- Future(
-          valueIri.toSmartIri.getProjectCode
-            .getOrElse(throw InconsistentRepositoryDataException(s"Invalid value IRI: $valueIri")))
+        resourceIri <- Future(
+          valueIri.substring(0, valueIri.indexOf("/values/"))
+        )
+        resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(
+          iri = resourceIri,
+          featureFactoryConfig = featureFactoryConfig,
+          userProfile = userProfile
+        )).mapTo[ResourceInfoResponseV1]
+
+        //TODO: change this to project UUID
+        projectShortcode: String = resourceInfoResponse.resource_info
+          .getOrElse(
+            throw NotFoundException(
+              s"Invalid value IRI, $valueIri. It contains IRI of a resource that does not exist."))
+          .project_shortcode
 
         value <- valueUtilV1.makeValueV1(
           valueProps = valueProps,

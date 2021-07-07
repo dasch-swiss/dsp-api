@@ -526,15 +526,15 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
               case OntologyConstants.KnoraBase.GeonameValue =>
                 // sanitize Geoname search string
                 val searchString = stringFormatter
-                  .toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid Geoname search string: '$searchval'"))
+                  .toSparqlEncodedString(searchval,
+                                         throw BadRequestException(s"Invalid Geoname search string: '$searchval'"))
 
                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
               case OntologyConstants.KnoraBase.UriValue =>
                 // validate URI
-                val searchString = stringFormatter.validateAndEscapeIri(
-                  searchval,
-                  throw BadRequestException(s"Invalid URI: $searchval"))
+                val searchString =
+                  stringFormatter.validateAndEscapeIri(searchval, throw BadRequestException(s"Invalid URI: $searchval"))
                 searchParamWithoutValue.copy(searchValue = Some(searchString))
 
               case OntologyConstants.KnoraBase.ListValue =>

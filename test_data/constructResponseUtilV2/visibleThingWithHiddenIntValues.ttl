@@ -3,21 +3,22 @@
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-<http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg> a <http://www.knora.org/ontology/0001/anything#Thing>,
+<http://rdfh.ch/resources/F8L7zPp7TI-4MGJQlCO4Zg> a <http://www.knora.org/ontology/0001/anything#Thing>,
     knora-base:Resource;
-  <http://www.knora.org/ontology/0001/anything#hasInteger> <http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g>,
-    <http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw>;
+  <http://www.knora.org/ontology/0001/anything#hasInteger> <http://rdfh.ch/resources/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g>,
+    <http://rdfh.ch/resources/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw>;
   knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
   knora-base:creationDate "2019-11-29T10:00:00.673298Z"^^xsd:dateTime;
+  knora-base:resourceHasUUID "F8L7zPp7TI-4MGJQlCO4Zg";
   knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
-  knora-base:hasValue <http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g>,
-    <http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw>;
+  knora-base:hasValue <http://rdfh.ch/resources/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g>,
+    <http://rdfh.ch/resources/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw>;
   knora-base:isDeleted false;
   knora-base:isMainResource true;
   rdfs:label "visible thing with hidden int values" .
 
-<http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw> a knora-base:IntValue;
+<http://rdfh.ch/resources/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw> a knora-base:IntValue;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
   knora-base:hasPermissions "M knora-admin:ProjectMember";
   knora-base:isDeleted false;
@@ -28,7 +29,7 @@
   knora-base:valueHasString "123454321";
   knora-base:valueHasUUID "yVTqO37cRkCSvXbFc3vTyw" .
 
-<http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g> a knora-base:IntValue;
+<http://rdfh.ch/resources/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g> a knora-base:IntValue;
   knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
   knora-base:hasPermissions "M knora-admin:ProjectMember";
   knora-base:isDeleted false;
