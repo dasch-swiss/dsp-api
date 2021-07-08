@@ -1,5 +1,5 @@
 {
-    "id": "http://rdfh.ch/0001/thing-with-pages/manifest",
+    "id": "http://rdfh.ch/resources/ZQF1NaDlRt6HgNZh-mXjAw/manifest",
     "@context": "http://iiif.io/api/presentation/3/context.json",
     "label": {
         "en": [
@@ -9,7 +9,7 @@
     "items": [
         {
             "height": 256,
-            "id": "http://rdfh.ch/0001/thing-page-1/canvas",
+            "id": "http://rdfh.ch/resources/LHwJZ3OZ0NWCqy-5FvMVuA/canvas",
             "type": "Canvas",
             "width": 512,
             "label": {
@@ -19,11 +19,11 @@
             },
             "items": [
                 {
-                    "id": "http://rdfh.ch/0001/thing-page-1/values/1/image",
+                    "id": "http://rdfh.ch/resources/LHwJZ3OZ0NWCqy-5FvMVuA/values/1/image",
                     "type": "AnnotationPage",
                     "items": [
                         {
-                            "id": "http://rdfh.ch/0001/thing-page-1/values/1",
+                            "id": "http://rdfh.ch/resources/LHwJZ3OZ0NWCqy-5FvMVuA/values/1",
                             "type": "Annotation",
                             "motivation": "painting",
                             "body": {
@@ -47,7 +47,7 @@
         },
         {
             "height": 256,
-            "id": "http://rdfh.ch/0001/thing-page-2/canvas",
+            "id": "http://rdfh.ch/resources/rlW1av42iqrqnc7Elw2dDw/canvas",
             "type": "Canvas",
             "width": 512,
             "label": {
@@ -57,11 +57,11 @@
             },
             "items": [
                 {
-                    "id": "http://rdfh.ch/0001/thing-page-2/values/1/image",
+                    "id": "http://rdfh.ch/resources/rlW1av42iqrqnc7Elw2dDw/values/1/image",
                     "type": "AnnotationPage",
                     "items": [
                         {
-                            "id": "http://rdfh.ch/0001/thing-page-2/values/1",
+                            "id": "http://rdfh.ch/resources/rlW1av42iqrqnc7Elw2dDw/values/1",
                             "type": "Annotation",
                             "motivation": "painting",
                             "body": {

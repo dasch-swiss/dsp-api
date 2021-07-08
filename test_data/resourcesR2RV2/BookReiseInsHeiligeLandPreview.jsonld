@@ -1,32 +1,34 @@
+
 {
-  "@id" : "http://rdfh.ch/0803/2a6221216701",
-  "@type" : "incunabula:book",
-  "knora-api:arkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W"
-  },
-  "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/0803"
-  },
-  "knora-api:attachedToUser" : {
-    "@id" : "http://rdfh.ch/users/91e19f1e01"
-  },
-  "knora-api:creationDate" : {
-    "@type" : "xsd:dateTimeStamp",
-    "@value" : "2016-03-02T15:05:21Z"
-  },
-  "knora-api:hasPermissions" : "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-  "knora-api:userHasPermission" : "RV",
-  "knora-api:versionArkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W.20160302T150521Z"
-  },
-  "rdfs:label" : "Reise ins Heilige Land",
-  "@context" : {
-    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "incunabula" : "http://0.0.0.0:3333/ontology/0803/incunabula/v2#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-  }
+    "knora-api:arkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/w1JN2mMZam7F1_eiyvz6pwt",
+        "@type": "xsd:anyURI"
+    },
+    "rdfs:label": "Reise ins Heilige Land",
+    "knora-api:versionArkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/w1JN2mMZam7F1_eiyvz6pwt.20160302T150521Z",
+        "@type": "xsd:anyURI"
+    },
+    "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/0803"
+    },
+    "knora-api:userHasPermission": "RV",
+    "knora-api:creationDate": {
+        "@value": "2016-03-02T15:05:21Z",
+        "@type": "xsd:dateTimeStamp"
+    },
+    "knora-api:attachedToUser": {
+        "@id": "http://rdfh.ch/users/91e19f1e01"
+    },
+    "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    "@type": "incunabula:book",
+    "knora-api:resourceHasUUID": "w1JN2mMZam7F1_eiyvz6pw",
+    "@id": "http://rdfh.ch/resources/w1JN2mMZam7F1_eiyvz6pw",
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "incunabula": "http://0.0.0.0:3333/ontology/0803/incunabula/v2#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#"
+    }
 }

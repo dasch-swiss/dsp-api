@@ -61,7 +61,7 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
                   maybeValueIri: Option[(IriNode, IriNode)],
                   currIri: IriNode): IriNode = {
       maybeResourceIri match {
-        case Some((oldResourceIri: IriNode, newResourceIri: IriNode)) =>
+        case Some((_: IriNode, newResourceIri: IriNode)) =>
           newResourceIri
         case None =>
           maybeValueIri match {

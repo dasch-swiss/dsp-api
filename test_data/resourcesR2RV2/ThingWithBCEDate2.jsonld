@@ -1,64 +1,66 @@
+
 {
-  "@id" : "http://rdfh.ch/0001/thing_with_BCE_date2",
-  "@type" : "anything:Thing",
-  "anything:hasDate" : {
-    "@id" : "http://rdfh.ch/0001/thing_with_BCE_date2/values/date_value",
-    "@type" : "knora-api:DateValue",
-    "knora-api:arkUrl" : {
-      "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_date2S/000000000000date_valuQ9"
+    "knora-api:arkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/qpW9FkcgiCEC_AabCrYDYQG",
+        "@type": "xsd:anyURI"
     },
-    "knora-api:attachedToUser" : {
-      "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+    "rdfs:label": "A thing that has a BCE date value",
+    "knora-api:versionArkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/qpW9FkcgiCEC_AabCrYDYQG.20180131T150510Z",
+        "@type": "xsd:anyURI"
     },
-    "knora-api:dateValueHasCalendar" : "JULIAN",
-    "knora-api:dateValueHasEndDay" : 10,
-    "knora-api:dateValueHasEndEra" : "CE",
-    "knora-api:dateValueHasEndMonth" : 1,
-    "knora-api:dateValueHasEndYear" : 10,
-    "knora-api:dateValueHasStartDay" : 10,
-    "knora-api:dateValueHasStartEra" : "BCE",
-    "knora-api:dateValueHasStartMonth" : 1,
-    "knora-api:dateValueHasStartYear" : 10,
-    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-    "knora-api:userHasPermission" : "V",
-    "knora-api:valueAsString" : "JULIAN:0010-01-10 BCE:0010-01-10 CE",
-    "knora-api:valueCreationDate" : {
-      "@type" : "xsd:dateTimeStamp",
-      "@value" : "2018-01-31T15:05:10Z"
+    "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/0001"
     },
-    "knora-api:valueHasUUID" : "000000000000date_valuQ",
-    "knora-api:versionArkUrl" : {
-      "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_date2S/000000000000date_valuQ9.20180131T150510Z"
+    "knora-api:userHasPermission": "V",
+    "knora-api:creationDate": {
+        "@value": "2018-01-31T15:05:10Z",
+        "@type": "xsd:dateTimeStamp"
+    },
+    "knora-api:attachedToUser": {
+        "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+    },
+    "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+    "knora-api:resourceHasUUID": "qpW9FkcgiCEC_AabCrYDYQ",
+    "@id": "http://rdfh.ch/resources/qpW9FkcgiCEC_AabCrYDYQ",
+    "anything:hasDate": {
+        "knora-api:dateValueHasStartDay": 10,
+        "knora-api:arkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/2/qpW9FkcgiCEC_AabCrYDYQG/000000000000date_valuQ9",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:versionArkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/2/qpW9FkcgiCEC_AabCrYDYQG/000000000000date_valuQ9.20180131T150510Z",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:dateValueHasEndYear": 10,
+        "knora-api:userHasPermission": "V",
+        "knora-api:valueCreationDate": {
+            "@value": "2018-01-31T15:05:10Z",
+            "@type": "xsd:dateTimeStamp"
+        },
+        "knora-api:dateValueHasEndDay": 10,
+        "knora-api:dateValueHasEndEra": "CE",
+        "knora-api:valueHasUUID": "000000000000date_valuQ",
+        "knora-api:dateValueHasCalendar": "JULIAN",
+        "knora-api:dateValueHasStartMonth": 1,
+        "@type": "knora-api:DateValue",
+        "@id": "http://rdfh.ch/resources/qpW9FkcgiCEC_AabCrYDYQ/values/date_value",
+        "knora-api:valueAsString": "JULIAN:0010-01-10 BCE:0010-01-10 CE",
+        "knora-api:dateValueHasStartEra": "BCE",
+        "knora-api:dateValueHasEndMonth": 1,
+        "knora-api:attachedToUser": {
+            "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+        },
+        "knora-api:dateValueHasStartYear": 10,
+        "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember"
+    },
+    "@type": "anything:Thing",
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
     }
-  },
-  "knora-api:arkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_date2S"
-  },
-  "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/0001"
-  },
-  "knora-api:attachedToUser" : {
-    "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
-  },
-  "knora-api:creationDate" : {
-    "@type" : "xsd:dateTimeStamp",
-    "@value" : "2018-01-31T15:05:10Z"
-  },
-  "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-  "knora-api:userHasPermission" : "V",
-  "knora-api:versionArkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_BCE_date2S.20180131T150510Z"
-  },
-  "rdfs:label" : "A thing that has a BCE date value",
-  "@context" : {
-    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-  }
 }

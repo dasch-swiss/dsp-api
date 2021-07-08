@@ -1,56 +1,58 @@
+
 {
-  "@id" : "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",
-  "@type" : "anything:Thing",
-  "anything:hasText" : {
-    "@id" : "http://rdfh.ch/0001/a-thing-with-text-valueslanguage/values/1",
-    "@type" : "knora-api:TextValue",
-    "knora-api:arkUrl" : {
-      "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valueslanguageX/000000000000000000000ws"
+    "knora-api:arkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/mniT9VYSIrfwKupam8VzngB",
+        "@type": "xsd:anyURI"
     },
-    "knora-api:attachedToUser" : {
-      "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+    "rdfs:label": "ein verdammtes Ding mit einer Sprache",
+    "knora-api:versionArkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/mniT9VYSIrfwKupam8VzngB.20160302T150510Z",
+        "@type": "xsd:anyURI"
     },
-    "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-    "knora-api:textValueHasLanguage" : "fr",
-    "knora-api:userHasPermission" : "V",
-    "knora-api:valueAsString" : "Bonjour",
-    "knora-api:valueCreationDate" : {
-      "@type" : "xsd:dateTimeStamp",
-      "@value" : "2016-03-02T15:05:54Z"
+    "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/0001"
     },
-    "knora-api:valueHasUUID" : "000000000000000000000w",
-    "knora-api:versionArkUrl" : {
-      "@type" : "xsd:anyURI",
-      "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valueslanguageX/000000000000000000000ws.20160302T150554Z"
+    "knora-api:userHasPermission": "V",
+    "knora-api:creationDate": {
+        "@value": "2016-03-02T15:05:10Z",
+        "@type": "xsd:dateTimeStamp"
+    },
+    "knora-api:attachedToUser": {
+        "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+    },
+    "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+    "anything:hasText": {
+        "knora-api:valueAsString": "Bonjour",
+        "knora-api:arkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/2/mniT9VYSIrfwKupam8VzngB/000000000000000000000ws",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:versionArkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/2/mniT9VYSIrfwKupam8VzngB/000000000000000000000ws.20160302T150554Z",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:textValueHasLanguage": "fr",
+        "knora-api:userHasPermission": "V",
+        "knora-api:valueCreationDate": {
+            "@value": "2016-03-02T15:05:54Z",
+            "@type": "xsd:dateTimeStamp"
+        },
+        "knora-api:attachedToUser": {
+            "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+        },
+        "knora-api:valueHasUUID": "000000000000000000000w",
+        "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+        "@type": "knora-api:TextValue",
+        "@id": "http://rdfh.ch/resources/mniT9VYSIrfwKupam8Vzng/values/1"
+    },
+    "@type": "anything:Thing",
+    "knora-api:resourceHasUUID": "mniT9VYSIrfwKupam8Vzng",
+    "@id": "http://rdfh.ch/resources/mniT9VYSIrfwKupam8Vzng",
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
     }
-  },
-  "knora-api:arkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB"
-  },
-  "knora-api:attachedToProject" : {
-    "@id" : "http://rdfh.ch/projects/0001"
-  },
-  "knora-api:attachedToUser" : {
-    "@id" : "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
-  },
-  "knora-api:creationDate" : {
-    "@type" : "xsd:dateTimeStamp",
-    "@value" : "2016-03-02T15:05:10Z"
-  },
-  "knora-api:hasPermissions" : "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-  "knora-api:userHasPermission" : "V",
-  "knora-api:versionArkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB.20160302T150510Z"
-  },
-  "rdfs:label" : "ein verdammtes Ding mit einer Sprache",
-  "@context" : {
-    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-  }
 }

@@ -1,24 +1,25 @@
+
 {
-  "@id" : "http://rdfh.ch/0001/thing_with_list_value",
-  "@type" : "anything:Thing",
-  "anything:hasListItem" : {
-    "@type" : "knora-api:ListNode",
-    "@value" : "Tree list node 02"
-  },
-  "knora-api:arkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_list_valueO"
-  },
-  "knora-api:versionArkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_list_valueO.20180131T150510Z"
-  },
-  "rdfs:label" : "A thing that has a list value",
-  "@context" : {
-    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
-  }
+    "rdfs:label": "A thing that has a list value",
+    "knora-api:versionArkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/QhkalmdntjSkYOLsDZ9lHgz.20180131T150510Z",
+        "@type": "xsd:anyURI"
+    },
+    "anything:hasListItem": {
+        "@value": "Tree list node 02",
+        "@type": "knora-api:ListNode"
+    },
+    "knora-api:arkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/QhkalmdntjSkYOLsDZ9lHgz",
+        "@type": "xsd:anyURI"
+    },
+    "@type": "anything:Thing",
+    "@id": "http://rdfh.ch/resources/QhkalmdntjSkYOLsDZ9lHg",
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/simple/v2#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "anything": "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
+    }
 }

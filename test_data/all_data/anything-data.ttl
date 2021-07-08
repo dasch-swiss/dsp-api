@@ -1349,13 +1349,23 @@
 <http://rdfh.ch/resources/mniT9VYSIrfwKupam8Vzng>
         a                             anything:Thing ;
         rdfs:label                    "ein verdammtes Ding mit einer Sprache" ;
-        anything:hasText              <http://rdfh.ch/0001/a-thing-with-text-valueslanguage/values/1> ;
+        anything:hasText              <http://rdfh.ch/resources/mniT9VYSIrfwKupam8Vzng/values/1> ;
         knora-base:attachedToProject  <http://rdfh.ch/projects/0001> ;
         knora-base:attachedToUser     <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q> ;
         knora-base:creationDate       "2016-03-02T15:05:10Z"^^xsd:dateTime ;
         knora-base:hasPermissions     "V knora-admin:UnknownUser|M knora-admin:ProjectMember" ;
         knora-base:isDeleted          false ;
         knora-base:resourceHasUUID    "mniT9VYSIrfwKupam8Vzng" .
+
+<http://rdfh.ch/resources/mniT9VYSIrfwKupam8Vzng/values/1> a knora-base:TextValue;
+        knora-base:valueHasUUID "1"^^xsd:string;
+        knora-base:isDeleted false;
+        knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+        knora-base:valueHasString "Bonjour";
+        knora-base:valueHasLanguage "fr";
+        knora-base:valueHasOrder 0;
+        knora-base:valueCreationDate "2016-03-02T15:05:54Z"^^xsd:dateTime;
+        knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember" .
 
 <http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/2>
         a                             knora-base:TextValue ;

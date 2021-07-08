@@ -1,24 +1,25 @@
+
 {
-  "@id" : "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage",
-  "@type" : "anything:Thing",
-  "anything:hasText" : {
-    "@language" : "fr",
-    "@value" : "Bonjour"
-  },
-  "knora-api:arkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB"
-  },
-  "knora-api:versionArkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB.20160302T150510Z"
-  },
-  "rdfs:label" : "ein verdammtes Ding mit einer Sprache",
-  "@context" : {
-    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
-  }
+    "rdfs:label": "ein verdammtes Ding mit einer Sprache",
+    "knora-api:versionArkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/mniT9VYSIrfwKupam8VzngB.20160302T150510Z",
+        "@type": "xsd:anyURI"
+    },
+    "anything:hasText": {
+        "@value": "Bonjour",
+        "@language": "fr"
+    },
+    "knora-api:arkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/mniT9VYSIrfwKupam8VzngB",
+        "@type": "xsd:anyURI"
+    },
+    "@type": "anything:Thing",
+    "@id": "http://rdfh.ch/resources/mniT9VYSIrfwKupam8Vzng",
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/simple/v2#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "anything": "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
+    }
 }

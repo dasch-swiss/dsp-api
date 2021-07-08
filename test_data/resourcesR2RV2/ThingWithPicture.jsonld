@@ -2,11 +2,11 @@
 {
     "anything:hasThingPictureValue": {
         "knora-api:arkUrl": {
-            "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=pictureE/000000000000linkValuewU",
+            "@value": "http://0.0.0.0:3336/ark:/72163/2/Cq3JSR3jXFXgyDClrnxOUAY/000000000000linkValuewU",
             "@type": "xsd:anyURI"
         },
         "knora-api:versionArkUrl": {
-            "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=pictureE/000000000000linkValuewU.20161017T171604916Z",
+            "@value": "http://0.0.0.0:3336/ark:/72163/2/Cq3JSR3jXFXgyDClrnxOUAY/000000000000linkValuewU.20161017T171604916Z",
             "@type": "xsd:anyURI"
         },
         "knora-api:userHasPermission": "V",
@@ -20,12 +20,12 @@
         "knora-api:valueHasUUID": "000000000000linkValuew",
         "knora-api:linkValueHasTarget": {
             "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=picture0",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/h2TEa725XPK7CfG15Bk0bAH",
                 "@type": "xsd:anyURI"
             },
             "rdfs:label": "A thing with a picture",
             "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=picture0.20110302T150510Z",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/h2TEa725XPK7CfG15Bk0bAH.20110302T150510Z",
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
@@ -41,19 +41,20 @@
             },
             "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|RV knora-admin:UnknownUser",
             "@type": "anything:ThingPicture",
-            "@id": "http://rdfh.ch/0001/a-thing-picture"
+            "knora-api:resourceHasUUID": "h2TEa725XPK7CfG15Bk0bA",
+            "@id": "http://rdfh.ch/resources/h2TEa725XPK7CfG15Bk0bA"
         },
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
         "@type": "knora-api:LinkValue",
-        "@id": "http://rdfh.ch/0001/a-thing-with-picture/values/linkValue1"
+        "@id": "http://rdfh.ch/resources/Cq3JSR3jXFXgyDClrnxOUA/values/linkValue1"
     },
     "knora-api:arkUrl": {
-        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=pictureE",
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/Cq3JSR3jXFXgyDClrnxOUAY",
         "@type": "xsd:anyURI"
     },
     "rdfs:label": "A thing with a picture",
     "knora-api:versionArkUrl": {
-        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=pictureE.20160302T150510Z",
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/Cq3JSR3jXFXgyDClrnxOUAY.20160302T150510Z",
         "@type": "xsd:anyURI"
     },
     "knora-api:attachedToProject": {
@@ -69,7 +70,8 @@
     },
     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
     "@type": "anything:Thing",
-    "@id": "http://rdfh.ch/0001/a-thing-with-picture",
+    "knora-api:resourceHasUUID": "Cq3JSR3jXFXgyDClrnxOUA",
+    "@id": "http://rdfh.ch/resources/Cq3JSR3jXFXgyDClrnxOUA",
     "@context": {
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "knora-api": "http://api.knora.org/ontology/knora-api/v2#",

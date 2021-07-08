@@ -1,23 +1,24 @@
+
 {
-  "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
-  "@type" : "anything:Thing",
-  "anything:isPartOfOtherThing" : {
-    "@id" : "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw"
-  },
-  "knora-api:arkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY"
-  },
-  "knora-api:versionArkUrl" : {
-    "@type" : "xsd:anyURI",
-    "@value" : "http://0.0.0.0:3336/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20161017T171604916Z"
-  },
-  "rdfs:label" : "Sierra",
-  "@context" : {
-    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
-  }
+    "anything:isPartOfOtherThing": {
+        "@id": "http://rdfh.ch/resources/LOV-6aLYQFW15jwdyS51Yw"
+    },
+    "rdfs:label": "Sierra",
+    "knora-api:versionArkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/0C=0L1kORryKzJAJxxRyRQY.20161017T171604916Z",
+        "@type": "xsd:anyURI"
+    },
+    "knora-api:arkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/0C=0L1kORryKzJAJxxRyRQY",
+        "@type": "xsd:anyURI"
+    },
+    "@type": "anything:Thing",
+    "@id": "http://rdfh.ch/resources/0C-0L1kORryKzJAJxxRyRQ",
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/simple/v2#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "anything": "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
+    }
 }

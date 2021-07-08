@@ -1,38 +1,39 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <rdf:RDF
-	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	xmlns:knora-api="http://api.knora.org/ontology/knora-api/simple/v2#"
-	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-	xmlns:incunabula="http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#"
-	xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
-<incunabula:book rdf:about="http://rdfh.ch/0803/2a6221216701">
-	<incunabula:book_comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Katalogaufnahme anhand ISTC und v.d.Haegen</incunabula:book_comment>
-	<incunabula:citation rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Van der Haegen I: 9,14</incunabula:citation>
-	<incunabula:citation rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Goff M165</incunabula:citation>
-	<incunabula:citation rdf:datatype="http://www.w3.org/2001/XMLSchema#string">C 3833</incunabula:citation>
-	<incunabula:citation rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Klebs 651.2</incunabula:citation>
-	<incunabula:citation rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schr 4799</incunabula:citation>
-	<incunabula:citation rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Schramm XXI p. 9 &amp; 26</incunabula:citation>
-	<incunabula:citation rdf:datatype="http://www.w3.org/2001/XMLSchema#string">FairMur(G) 283</incunabula:citation>
-	<incunabula:citation rdf:datatype="http://www.w3.org/2001/XMLSchema#string">IBP 3556</incunabula:citation>
-	<incunabula:citation rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Borm 1751</incunabula:citation>
-	<incunabula:location rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Basel UB, Sign: Aleph D III 13:1</incunabula:location>
-	<incunabula:note rdf:datatype="http://www.w3.org/2001/XMLSchema#string">deutsch von Otto von Diemeringen</incunabula:note>
-	<incunabula:note rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Rubr. mit Init. J zu Beginn</incunabula:note>
-	<incunabula:note rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Holzschnitte nicht koloriert</incunabula:note>
-	<incunabula:note rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Besitzervermerke: Kartause, H. Zscheckenbürlin</incunabula:note>
-	<incunabula:note rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516</incunabula:note>
-	<incunabula:physical_desc rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Extent: 1 Bd.; Dimensions: f°</incunabula:physical_desc>
-	<incunabula:pubdate rdf:datatype="http://api.knora.org/ontology/knora-api/simple/v2#Date">JULIAN:1481 CE</incunabula:pubdate>
-	<incunabula:publisher rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Bernhard Richel</incunabula:publisher>
-	<incunabula:publoc rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Basel</incunabula:publoc>
-	<incunabula:title rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reise ins Heilige Land</incunabula:title>
-	<incunabula:title rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reysen und wanderschafften durch das Gelobte Land</incunabula:title>
-	<incunabula:title rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Itinerarius</incunabula:title>
-	<incunabula:url rdf:datatype="http://www.w3.org/2001/XMLSchema#string">http://aleph.unibas.ch/F/?local_base=DSV01&amp;con_lng=GER&amp;func=find-b&amp;find_code=SYS&amp;request=002610320</incunabula:url>
-	<knora-api:arkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W</knora-api:arkUrl>
-	<knora-api:versionArkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://0.0.0.0:3336/ark:/72163/1/0803/2a6221216701W.20160302T150521Z</knora-api:versionArkUrl>
-	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Reise ins Heilige Land</rdfs:label>
-</incunabula:book>
-
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:knora-api="http://api.knora.org/ontology/knora-api/simple/v2#"
+    xmlns:incunabula="http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+  <incunabula:book rdf:about="http://rdfh.ch/resources/w1JN2mMZam7F1_eiyvz6pw">
+    <incunabula:note>Besitzervermerke: Kartause, H. Zscheckenbürlin</incunabula:note>
+    <incunabula:physical_desc>Extent: 1 Bd.; Dimensions: f°</incunabula:physical_desc>
+    <incunabula:note>deutsch von Otto von Diemeringen</incunabula:note>
+    <incunabula:citation>IBP 3556</incunabula:citation>
+    <incunabula:citation>Borm 1751</incunabula:citation>
+    <incunabula:title>Itinerarius</incunabula:title>
+    <knora-api:arkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI"
+    >http://0.0.0.0:3336/ark:/72163/2/w1JN2mMZam7F1_eiyvz6pwt</knora-api:arkUrl>
+    <incunabula:publisher>Bernhard Richel</incunabula:publisher>
+    <incunabula:citation>FairMur(G) 283</incunabula:citation>
+    <incunabula:url>http://aleph.unibas.ch/F/?local_base=DSV01&amp;con_lng=GER&amp;func=find-b&amp;find_code=SYS&amp;request=002610320</incunabula:url>
+    <incunabula:publoc>Basel</incunabula:publoc>
+    <incunabula:title>Reise ins Heilige Land</incunabula:title>
+    <incunabula:title>Reysen und wanderschafften durch das Gelobte Land</incunabula:title>
+    <incunabula:citation>Van der Haegen I: 9,14</incunabula:citation>
+    <incunabula:citation>Schr 4799</incunabula:citation>
+    <incunabula:citation>Klebs 651.2</incunabula:citation>
+    <incunabula:note>Rubr. mit Init. J zu Beginn</incunabula:note>
+    <incunabula:note>Holzschnitte nicht koloriert</incunabula:note>
+    <incunabula:note>Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516</incunabula:note>
+    <incunabula:citation>C 3833</incunabula:citation>
+    <incunabula:citation>Schramm XXI p. 9 &amp; 26</incunabula:citation>
+    <incunabula:location>Basel UB, Sign: Aleph D III 13:1</incunabula:location>
+    <incunabula:citation>Goff M165</incunabula:citation>
+    <incunabula:book_comment>Katalogaufnahme anhand ISTC und v.d.Haegen</incunabula:book_comment>
+    <rdfs:label>Reise ins Heilige Land</rdfs:label>
+    <knora-api:versionArkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI"
+    >http://0.0.0.0:3336/ark:/72163/2/w1JN2mMZam7F1_eiyvz6pwt.20160302T150521Z</knora-api:versionArkUrl>
+    <incunabula:pubdate rdf:datatype="http://api.knora.org/ontology/knora-api/simple/v2#Date"
+    >JULIAN:1481 CE</incunabula:pubdate>
+  </incunabula:book>
 </rdf:RDF>
