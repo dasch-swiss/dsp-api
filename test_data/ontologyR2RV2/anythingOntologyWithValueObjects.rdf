@@ -13,13 +13,24 @@
     >2017-12-19T15:23:42.166Z</knora-api:lastModificationDate>
   </owl:Ontology>
   <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument">
+    <rdfs:comment>A document about a thing</rdfs:comment>
+    <knora-api:resourceIcon>thing.png</knora-api:resourceIcon>
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionDate"/>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasIncomingLinkValue"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -35,47 +46,9 @@
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <knora-api:resourceIcon>thing.png</knora-api:resourceIcon>
-    <rdfs:comment>A document about a thing</rdfs:comment>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#creationDate"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasDocumentTitle"/>
-        </owl:onProperty>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#DocumentRepresentation"/>
@@ -85,16 +58,7 @@
         >true</knora-api:isInherited>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#isDeleted"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deletedBy"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionDate"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -103,29 +67,11 @@
         >true</knora-api:isInherited>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <knora-api:canBeInstantiated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
     >true</knora-api:canBeInstantiated>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionArkUrl"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
@@ -139,30 +85,9 @@
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#arkUrl"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasIncomingLinkValue"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:label>Document</rdfs:label>
-    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-    >true</knora-api:isResourceClass>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#resourceHasUUID"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -180,7 +105,25 @@
         >true</knora-api:isInherited>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deletedBy"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#isDeleted"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -189,30 +132,64 @@
         >true</knora-api:isInherited>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#creationDate"/>
       </owl:Restriction>
     </rdfs:subClassOf>
-  </owl:Class>
-  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#Thing">
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >12</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#Resource"/>
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionDate"/>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionArkUrl"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:label>Document</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasDocumentTitle"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >true</knora-api:isResourceClass>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#arkUrl"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -222,6 +199,40 @@
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
         <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#Thing">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#Resource"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >11</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >4</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"/>
+        </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -239,24 +250,24 @@
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deletedBy"/>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToUser"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >2</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext"/>
+        </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <knora-api:canBeInstantiated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
     >true</knora-api:canBeInstantiated>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >4</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
         <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
@@ -266,15 +277,6 @@
         <owl:onProperty>
           <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri"/>
         </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#creationDate"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -291,93 +293,11 @@
     <rdfs:subClassOf>
       <owl:Restriction>
         <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >15</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >10</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >2</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasIncomingLinkValue"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >2</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasText"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >13</salsah-gui:guiOrder>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >11</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry"/>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocument"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -387,7 +307,16 @@
         >true</knora-api:isInherited>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#lastModificationDate"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deletedBy"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -405,33 +334,31 @@
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <knora-api:resourceIcon>thing.png</knora-api:resourceIcon>
-    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-    >true</knora-api:isResourceClass>
     <rdfs:subClassOf>
       <owl:Restriction>
         <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >13</salsah-gui:guiOrder>
+        >15</salsah-gui:guiOrder>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocumentValue"/>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:label>Thing</rdfs:label>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#lastModificationDate"/>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >5</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal"/>
+        </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -443,7 +370,59 @@
         <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:comment>'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking</rdfs:comment>
+    <knora-api:resourceIcon>thing.png</knora-api:resourceIcon>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#creationDate"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >15</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >true</knora-api:isResourceClass>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionDate"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:label>Thing</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >6</salsah-gui:guiOrder>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasIncomingLinkValue"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
@@ -455,13 +434,25 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</salsah-gui:guiOrder>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"/>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem"/>
+        </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#resourceHasUUID"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment>'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking</rdfs:comment>
     <rdfs:subClassOf>
       <owl:Restriction>
         <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
@@ -491,27 +482,18 @@
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocument"/>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#isDeleted"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
         <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</salsah-gui:guiOrder>
+        >12</salsah-gui:guiOrder>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem"/>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -521,18 +503,7 @@
         >true</knora-api:isInherited>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToUser"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >5</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal"/>
-        </owl:onProperty>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -552,7 +523,7 @@
         >true</knora-api:isInherited>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -569,226 +540,14 @@
     <rdfs:subClassOf>
       <owl:Restriction>
         <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >6</salsah-gui:guiOrder>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >15</salsah-gui:guiOrder>
+        >13</salsah-gui:guiOrder>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue"/>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocumentValue"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#arkUrl"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-  </owl:Class>
-  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#StandoffEventTag">
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#StandoffDateTag"/>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParentIndex"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <knora-api:isStandoffClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-    >true</knora-api:isStandoffClass>
-    <rdfs:comment>Represents an event in a TextValue</rdfs:comment>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:label>Represents an event in a TextValue</rdfs:label>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParentIndex"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#standoffEventTagHasDescription"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-  </owl:Class>
-  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#ThingWithRegion">
-    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#Resource"/>
-    <knora-api:canBeInstantiated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-    >true</knora-api:canBeInstantiated>
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
@@ -809,63 +568,6 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#thingHasRegion"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-    >true</knora-api:isResourceClass>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToUser"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionArkUrl"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#creationDate"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:label>Thing with region</rdfs:label>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
@@ -875,19 +577,32 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deletedBy"/>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >10</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor"/>
+        </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >2</salsah-gui:guiOrder>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#thingHasRegionValue"/>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasText"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -900,13 +615,15 @@
         <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#isDeleted"/>
       </owl:Restriction>
     </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#StandoffEventTag">
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasStart"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -915,7 +632,188 @@
         >true</knora-api:isInherited>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionDate"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasStartDay"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndIndex"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasEnd"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasStartMonth"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#StandoffDateTag"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasStartEra"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasUUID"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParent"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasOriginalXMLID"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <knora-api:isStandoffClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >true</knora-api:isStandoffClass>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#standoffEventTagHasDescription"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartIndex"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasEndYear"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasEndEra"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment>Represents an event in a TextValue</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParentIndex"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:label>Represents an event in a TextValue</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasCalendar"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasStartYear"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasEndParent"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasEndMonth"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#standoffTagHasStartParentIndex"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#dateValueHasEndDay"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#ThingWithRegion">
+    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#Resource"/>
+    <knora-api:canBeInstantiated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >true</knora-api:canBeInstantiated>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#thingHasRegion"/>
+        </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -933,7 +831,18 @@
         >true</knora-api:isInherited>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionArkUrl"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >true</knora-api:isResourceClass>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#resourceHasUUID"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -942,17 +851,25 @@
         >true</knora-api:isInherited>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#lastModificationDate"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deletedBy"/>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:comment>A thing with a region</rdfs:comment>
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#thingHasRegionValue"/>
+        </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -964,43 +881,7 @@
         <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
       </owl:Restriction>
     </rdfs:subClassOf>
-  </owl:Class>
-  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#BlueThing">
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >11</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >5</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
+    <rdfs:label>Thing with region</rdfs:label>
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
@@ -1016,29 +897,16 @@
         >true</knora-api:isInherited>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#creationDate"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -1056,7 +924,86 @@
         >true</knora-api:isInherited>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment>A thing with a region</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionDate"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
         <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToUser"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#arkUrl"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#BlueThing">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >3</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -1077,6 +1024,19 @@
         >true</knora-api:isInherited>
         <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >13</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >12</salsah-gui:guiOrder>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
       </owl:Restriction>
@@ -1096,46 +1056,47 @@
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >3</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >6</salsah-gui:guiOrder>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#resourceHasUUID"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#isDeleted"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#arkUrl"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing"/>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor"/>
         </owl:onProperty>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
         <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >15</salsah-gui:guiOrder>
+        >10</salsah-gui:guiOrder>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
       </owl:Restriction>
@@ -1143,7 +1104,7 @@
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocumentValue"/>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp"/>
         </owl:onProperty>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
@@ -1151,6 +1112,28 @@
         >13</salsah-gui:guiOrder>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >9</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionDate"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -1170,92 +1153,9 @@
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionDate"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasText"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >2</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
         <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:label>Blue thing</rdfs:label>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >9</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >63</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasBlueThing"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >10</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >13</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:comment>Diese Resource-Klasse beschreibt ein blaues Ding</rdfs:comment>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionArkUrl"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -1270,155 +1170,12 @@
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >12</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-    >true</knora-api:isResourceClass>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp"/>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue"/>
         </owl:onProperty>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
         <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >13</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#creationDate"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >15</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >7</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >4</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <knora-api:canBeInstantiated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-    >true</knora-api:canBeInstantiated>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deletedBy"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#arkUrl"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf rdf:resource="http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"/>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >2</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-  </owl:Class>
-  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#ThingWithSeqnum">
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >2</salsah-gui:guiOrder>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
       </owl:Restriction>
@@ -1438,138 +1195,11 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >13</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >13</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >12</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#arkUrl"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionDate"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >11</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >100</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#seqnum"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -1591,7 +1221,30 @@
         >true</knora-api:isInherited>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deletedBy"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >11</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:label>Blue thing</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#creationDate"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -1600,18 +1253,111 @@
         >true</knora-api:isInherited>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#isDeleted"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deletedBy"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate"/>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri"/>
         </owl:onProperty>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
         <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >3</salsah-gui:guiOrder>
+        >7</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionArkUrl"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToUser"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >15</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment>Diese Resource-Klasse beschreibt ein blaues Ding</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >15</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >true</knora-api:isResourceClass>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >2</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >63</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasBlueThing"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</salsah-gui:guiOrder>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
       </owl:Restriction>
@@ -1631,11 +1377,170 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <knora-api:canBeInstantiated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >true</knora-api:canBeInstantiated>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasText"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >2</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocumentValue"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >13</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#lastModificationDate"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#ThingWithSeqnum">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deletedBy"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#isDeleted"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >15</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >4</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >15</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -1666,123 +1571,7 @@
         >true</knora-api:isInherited>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
         <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionArkUrl"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:comment>Diese Resource-Klasse beschreibt ein Ding mit einer Sequenznummer</rdfs:comment>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >7</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:label>Thing with sequence number</rdfs:label>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocumentValue"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >13</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocument"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >13</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasText"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >2</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >10</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -1802,45 +1591,61 @@
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-    >true</knora-api:isResourceClass>
     <rdfs:subClassOf>
       <owl:Restriction>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue"/>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp"/>
         </owl:onProperty>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
         <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >15</salsah-gui:guiOrder>
+        >13</salsah-gui:guiOrder>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:subClassOf rdf:resource="http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"/>
     <rdfs:subClassOf>
       <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem"/>
+        </owl:onProperty>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToUser"/>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <knora-api:canBeInstantiated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-    >true</knora-api:canBeInstantiated>
     <rdfs:subClassOf>
       <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname"/>
+        </owl:onProperty>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >12</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >6</salsah-gui:guiOrder>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -1850,51 +1655,6 @@
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
         <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#creationDate"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing"/>
-        </owl:onProperty>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >15</salsah-gui:guiOrder>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-  </owl:Class>
-  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#ThingWithRepresentation">
-    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#Resource"/>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deletedBy"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-    >true</knora-api:isResourceClass>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionArkUrl"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -1912,6 +1672,81 @@
         >true</knora-api:isInherited>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#arkUrl"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >7</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment>Diese Resource-Klasse beschreibt ein Ding mit einer Sequenznummer</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >5</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >3</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >11</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
         <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToUser"/>
       </owl:Restriction>
     </rdfs:subClassOf>
@@ -1919,27 +1754,45 @@
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#isDeleted"/>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasText"/>
+        </owl:onProperty>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >2</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:label>Thing with sequence number</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >10</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -1948,22 +1801,67 @@
         >true</knora-api:isInherited>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >2</salsah-gui:guiOrder>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasRepresentationValue"/>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:label>Thing with representation</rdfs:label>
     <rdfs:subClassOf>
       <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#resourceHasUUID"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</salsah-gui:guiOrder>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasRepresentation"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >13</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >true</knora-api:isResourceClass>
+    <rdfs:subClassOf rdf:resource="http://0.0.0.0:3333/ontology/0001/anything/v2#Thing"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >100</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#seqnum"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <knora-api:canBeInstantiated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
@@ -1979,11 +1877,94 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocumentValue"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >13</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionDate"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocument"/>
+        </owl:onProperty>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <salsah-gui:guiOrder rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >13</salsah-gui:guiOrder>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#ThingWithRepresentation">
+    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#Resource"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToUser"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >true</knora-api:isResourceClass>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasRepresentationValue"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasIncomingLinkValue"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#arkUrl"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -1999,11 +1980,123 @@
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#arkUrl"/>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"/>
       </owl:Restriction>
     </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deletedBy"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:label>Thing with representation</rdfs:label>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasRepresentation"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <knora-api:canBeInstantiated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >true</knora-api:canBeInstantiated>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#lastModificationDate"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionArkUrl"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#resourceHasUUID"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionDate"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment>A thing with a representation</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#isDeleted"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasIncomingLinkValue"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#TrivialThing">
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
@@ -2022,43 +2115,13 @@
         <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:comment>A thing with a representation</rdfs:comment>
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-  </owl:Class>
-  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#TrivialThing">
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#Resource"/>
@@ -2074,33 +2137,6 @@
     <knora-api:resourceIcon>thing.png</knora-api:resourceIcon>
     <knora-api:canBeInstantiated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
     >true</knora-api:canBeInstantiated>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionArkUrl"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#creationDate"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
     <rdfs:comment>Diese Resource-Klasse beschreibt ein unbedeutendes Ding</rdfs:comment>
     <rdfs:subClassOf>
       <owl:Restriction>
@@ -2108,16 +2144,7 @@
         >true</knora-api:isInherited>
         <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasIncomingLinkValue"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -2136,36 +2163,7 @@
         >true</knora-api:isInherited>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#lastModificationDate"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-    >true</knora-api:isResourceClass>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
         <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#isDeleted"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionDate"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -2174,7 +2172,54 @@
         >true</knora-api:isInherited>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#creationDate"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionArkUrl"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >true</knora-api:isResourceClass>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
         <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#arkUrl"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#resourceHasUUID"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -2190,27 +2235,6 @@
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasIncomingLinkValue"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-  </owl:Class>
-  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture">
-    <rdfs:label>Picture of a thing</rdfs:label>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#lastModificationDate"/>
@@ -2220,12 +2244,11 @@
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <knora-api:resourceIcon>thing.png</knora-api:resourceIcon>
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
@@ -2241,7 +2264,29 @@
         >true</knora-api:isInherited>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToUser"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture">
+    <rdfs:label>Picture of a thing</rdfs:label>
+    <knora-api:resourceIcon>thing.png</knora-api:resourceIcon>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasPictureTitle"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -2259,28 +2304,27 @@
         >true</knora-api:isInherited>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty>
-          <owl:ObjectProperty rdf:about="http://0.0.0.0:3333/ontology/0001/anything/v2#hasPictureTitle"/>
-        </owl:onProperty>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#resourceHasUUID"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"/>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:comment>Diese Resource-Klasse beschreibt ein Bild eines Dinges</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionDate"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
@@ -2296,7 +2340,35 @@
         >true</knora-api:isInherited>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteComment"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#lastModificationDate"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment>Diese Resource-Klasse beschreibt ein Bild eines Dinges</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToUser"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasIncomingLinkValue"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <knora-api:canBeInstantiated rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
@@ -2305,9 +2377,9 @@
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >0</owl:minCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -2317,17 +2389,6 @@
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
         <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#isDeleted"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-    >true</knora-api:isResourceClass>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#arkUrl"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -2345,17 +2406,18 @@
         >true</knora-api:isInherited>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#attachedToProject"/>
       </owl:Restriction>
     </rdfs:subClassOf>
-    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation"/>
+    <knora-api:isResourceClass rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >true</knora-api:isResourceClass>
     <rdfs:subClassOf>
       <owl:Restriction>
         <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
         >true</knora-api:isInherited>
-        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >0</owl:minCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasIncomingLinkValue"/>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:maxCardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deletedBy"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -2364,7 +2426,26 @@
         >true</knora-api:isInherited>
         <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:cardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#hasPermissions"/>
+        <owl:onProperty rdf:resource="http://www.w3.org/2000/01/rdf-schema#label"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#userHasPermission"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://api.knora.org/ontology/knora-api/v2#StillImageRepresentation"/>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+        >true</knora-api:isInherited>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
+        >1</owl:cardinality>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#arkUrl"/>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
@@ -2373,16 +2454,7 @@
         >true</knora-api:isInherited>
         <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
         >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#versionDate"/>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <knora-api:isInherited rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
-        >true</knora-api:isInherited>
-        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#integer"
-        >1</owl:maxCardinality>
-        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deletedBy"/>
+        <owl:onProperty rdf:resource="http://api.knora.org/ontology/knora-api/v2#deleteDate"/>
       </owl:Restriction>
     </rdfs:subClassOf>
   </owl:Class>

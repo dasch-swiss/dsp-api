@@ -48,6 +48,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:versionArkUrl"
                     },
                     "owl:cardinality": 1
@@ -97,6 +104,13 @@
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
@@ -166,6 +180,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:versionArkUrl"
                     },
                     "owl:cardinality": 1
@@ -228,6 +249,13 @@
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
@@ -332,6 +360,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:versionArkUrl"
                     },
                     "owl:cardinality": 1
@@ -391,6 +426,13 @@
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
@@ -469,6 +511,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:versionArkUrl"
                     },
                     "owl:cardinality": 1
@@ -523,6 +572,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:versionArkUrl"
                     },
                     "owl:cardinality": 1
@@ -562,6 +618,13 @@
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
@@ -619,6 +682,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:versionArkUrl"
                     },
                     "owl:cardinality": 1
@@ -672,6 +742,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:versionArkUrl"
                     },
                     "owl:cardinality": 1
@@ -721,6 +798,13 @@
                         "@id": "knora-api:hasTextFile"
                     },
                     "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
@@ -1050,6 +1134,17 @@
             "@type": "rdf:Property",
             "rdfs:label": "Object type",
             "rdfs:comment": "Specifies the required type of the objects of a property"
+        },
+        {
+            "rdfs:comment": "The UUID of a resource",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:resourceHasUUID"
         },
         {
             "@id": "knora-api:resourceIcon",

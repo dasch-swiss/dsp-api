@@ -125,6 +125,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:userHasPermission"
                     },
                     "owl:cardinality": 1,
@@ -292,6 +300,14 @@
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:lastModificationDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -759,6 +775,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:userHasPermission"
                     },
                     "owl:cardinality": 1,
@@ -1069,6 +1093,14 @@
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:lastModificationDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true

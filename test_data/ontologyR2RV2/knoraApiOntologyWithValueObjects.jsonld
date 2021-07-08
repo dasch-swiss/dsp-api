@@ -138,6 +138,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:userHasPermission"
                     },
                     "owl:cardinality": 1,
@@ -424,6 +432,14 @@
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:lastModificationDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -994,6 +1010,14 @@
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:lastModificationDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -1704,6 +1728,14 @@
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:lastModificationDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -2551,6 +2583,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:userHasPermission"
                     },
                     "owl:cardinality": 1,
@@ -3153,6 +3193,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:userHasPermission"
                     },
                     "owl:cardinality": 1,
@@ -3338,6 +3386,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:userHasPermission"
                     },
                     "owl:cardinality": 1,
@@ -3493,6 +3549,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:userHasPermission"
                     },
                     "owl:cardinality": 1,
@@ -3619,6 +3683,13 @@
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:lastModificationDate"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
                     },
                     "owl:maxCardinality": 1
                 },
@@ -5184,6 +5255,14 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:userHasPermission"
                     },
                     "owl:cardinality": 1,
@@ -5463,6 +5542,14 @@
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:lastModificationDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -6171,6 +6258,14 @@
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
                         "@id": "knora-api:lastModificationDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
                     },
                     "owl:maxCardinality": 1,
                     "knora-api:isInherited": true
@@ -7414,6 +7509,17 @@
                 "@id": "xsd:string"
             },
             "@id": "knora-api:ontologyName"
+        },
+        {
+            "@type": "owl:DatatypeProperty",
+            "knora-api:objectType": {
+                "@id": "xsd:string"
+            },
+            "@id": "knora-api:resourceHasUUID",
+            "knora-api:subjectType": {
+                "@id": "knora-api:Resource"
+            },
+            "rdfs:comment": "The UUID of a resource"
         },
         {
             "@id": "knora-api:resourceIcon",

@@ -41,6 +41,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:versionArkUrl"
                     },
                     "owl:cardinality": 1
@@ -104,6 +111,13 @@
                         "@id": "knora-api:hasStandoffLinkTo"
                     },
                     "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
@@ -354,6 +368,13 @@
                 {
                     "@type": "owl:Restriction",
                     "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
                         "@id": "knora-api:versionArkUrl"
                     },
                     "owl:cardinality": 1
@@ -496,6 +517,13 @@
                         "@id": "knora-api:hasStillImageFile"
                     },
                     "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:resourceHasUUID"
+                    },
+                    "owl:maxCardinality": 1
                 },
                 {
                     "@type": "owl:Restriction",
