@@ -81,7 +81,7 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
     "produce the expected JSON-LD context object (on the server side)" in {
 
-      Get("/v2/resources/" + URLEncoder.encode("http://rdfh.ch/0803/7bbb8e59b703", "UTF-8")) ~> resourcesPath ~> check {
+      Get("/v2/resources/" + URLEncoder.encode("http://rdfh.ch/resources/O_wI0t9iQYy4cUG6ex_UAg", "UTF-8")) ~> resourcesPath ~> check {
 
         assert(status == StatusCodes.OK, response.toString)
 
