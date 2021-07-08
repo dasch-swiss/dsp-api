@@ -1,5 +1,5 @@
 {
-  "@id" : "http://rdfh.ch/0001/a-thing",
+  "@id" : "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
   "@type" : "anything:Thing",
   "anything:hasText" : {
     "@id" : "VALUE_IRI",

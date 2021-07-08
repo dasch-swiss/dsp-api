@@ -1,12 +1,12 @@
 
 {
     "knora-api:arkUrl": {
-        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk",
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/H6gBWUuJSuuO=CilHV8kQwk",
         "@type": "xsd:anyURI"
     },
     "rdfs:label": "testding",
     "knora-api:versionArkUrl": {
-        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk.20180528T155203897Z",
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/H6gBWUuJSuuO=CilHV8kQwk.20180528T155203897Z",
         "@type": "xsd:anyURI"
     },
     "knora-api:attachedToProject": {
@@ -22,10 +22,11 @@
     },
     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     "@type": "anything:Thing",
-    "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw",
+    "knora-api:resourceHasUUID": "H6gBWUuJSuuO-CilHV8kQw",
+    "@id": "http://rdfh.ch/resources/H6gBWUuJSuuO-CilHV8kQw",
     "anything:hasTimeStamp": {
         "knora-api:arkUrl": {
-            "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk/l6DhS5SCT9WhXSoYEZRTRwY",
+            "@value": "http://0.0.0.0:3336/ark:/72163/2/H6gBWUuJSuuO=CilHV8kQwk/l6DhS5SCT9WhXSoYEZRTRwY",
             "@type": "xsd:anyURI"
         },
         "knora-api:timeValueAsTimeStamp": {
@@ -33,7 +34,7 @@
             "@type": "xsd:dateTimeStamp"
         },
         "knora-api:versionArkUrl": {
-            "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/H6gBWUuJSuuO=CilHV8kQwk/l6DhS5SCT9WhXSoYEZRTRwY.20191216T093116095523Z",
+            "@value": "http://0.0.0.0:3336/ark:/72163/2/H6gBWUuJSuuO=CilHV8kQwk/l6DhS5SCT9WhXSoYEZRTRwY.20191216T093116095523Z",
             "@type": "xsd:anyURI"
         },
         "knora-api:userHasPermission": "M",
@@ -47,7 +48,7 @@
         "knora-api:valueHasUUID": "l6DhS5SCT9WhXSoYEZRTRw",
         "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
         "@type": "knora-api:TimeValue",
-        "@id": "http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw/values/l6DhS5SCT9WhXSoYEZRTRw"
+        "@id": "http://rdfh.ch/resources/H6gBWUuJSuuO-CilHV8kQw/values/l6DhS5SCT9WhXSoYEZRTRw"
     },
     "@context": {
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",

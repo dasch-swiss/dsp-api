@@ -63,7 +63,7 @@ class ValuesV2R2RSpec extends R2RSpec {
     Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = APPLICATION_MANAGER_ACTOR_NAME)
 
-  private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
+  private val aThingPictureIri = "http://rdfh.ch/resources/h2TEa725XPK7CfG15Bk0bA"
 
   private val anythingUserEmail = SharedTestDataADM.anythingUser1.email
   private val password = SharedTestDataADM.testPass
@@ -158,7 +158,7 @@ class ValuesV2R2RSpec extends R2RSpec {
                    |  "@id" : "$resourceIri",
                    |  "@type" : "anything:ThingPicture",
                    |  "knora-api:hasStillImageFileValue" : {
-                   |    "@id" : "http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q",
+                   |    "@id" : "http://rdfh.ch/resources/h2TEa725XPK7CfG15Bk0bA/values/goZ7JFRNSeqF-dNxsqAS7Q",
                    |    "@type" : "knora-api:StillImageFileValue",
                    |    "knora-api:fileValueHasFilename" : "$internalFilename"
                    |  },
