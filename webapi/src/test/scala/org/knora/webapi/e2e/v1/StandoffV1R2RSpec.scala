@@ -674,7 +674,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         s"""
                         {
                           "project_id": "http://rdfh.ch/projects/0001",
-                          "res_id": "http://rdfh.ch/0001/a-thing",
+                          "res_id": "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
                           "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                           "richtext_value": {
                                 "xml": ${JsString(xmlFileToSend)},
@@ -791,7 +791,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         s"""
                 {
                   "project_id": "$ANYTHING_PROJECT_IRI",
-                  "res_id": "http://rdfh.ch/0001/a-thing",
+                  "res_id": "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(xmlStrToSend)},
@@ -881,7 +881,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         s"""
                 {
                   "project_id": "http://rdfh.ch/projects/0001",
-                  "res_id": "http://rdfh.ch/0001/a-thing",
+                  "res_id": "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(xmlStrToSend)},
@@ -940,7 +940,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         s"""
                 {
                   "project_id": "http://rdfh.ch/projects/0001",
-                  "res_id": "http://rdfh.ch/0001/a-thing",
+                  "res_id": "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(xmlStrToSend)},
@@ -999,7 +999,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         s"""
                 {
                   "project_id": "http://rdfh.ch/projects/0001",
-                  "res_id": "http://rdfh.ch/0001/a-thing",
+                  "res_id": "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(xmlStrToSend)},
@@ -1062,7 +1062,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         s"""
                 {
                   "project_id": "http://rdfh.ch/projects/0001",
-                  "res_id": "http://rdfh.ch/0001/a-thing",
+                  "res_id": "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
@@ -1099,7 +1099,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         s"""
                 {
                   "project_id": "http://rdfh.ch/projects/0001",
-                  "res_id": "http://rdfh.ch/0001/a-thing",
+                  "res_id": "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
@@ -1134,7 +1134,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         s"""
                 {
                   "project_id": "http://rdfh.ch/projects/0001",
-                  "res_id": "http://rdfh.ch/0001/a-thing",
+                  "res_id": "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
@@ -1169,7 +1169,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         s"""
                 {
                   "project_id": "http://rdfh.ch/projects/0001",
-                  "res_id": "http://rdfh.ch/0001/a-thing",
+                  "res_id": "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
@@ -1207,7 +1207,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         s"""
                 {
                   "project_id": "http://rdfh.ch/projects/0001",
-                  "res_id": "http://rdfh.ch/0001/a-thing",
+                  "res_id": "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(wrongXML)},
@@ -1242,7 +1242,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         s"""
                 {
                   "project_id": "http://rdfh.ch/projects/0001",
-                  "res_id": "http://rdfh.ch/0001/a-thing",
+                  "res_id": "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
                   "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                   "richtext_value": {
                         "xml": ${JsString(xml)},
@@ -1345,7 +1345,7 @@ class StandoffV1R2RSpec extends R2RSpec {
         s"""
                     {
                       "project_id": "http://rdfh.ch/projects/0001",
-                      "res_id": "http://rdfh.ch/0001/a-thing",
+                      "res_id": "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
                       "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                       "richtext_value": {
                             "xml": ${JsString(xmlToSend)},

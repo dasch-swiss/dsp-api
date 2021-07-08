@@ -141,7 +141,7 @@ class SipiV1R2RSpec extends R2RSpec {
         file = internalFilename
       )
 
-      val resIri = URLEncoder.encode("http://rdfh.ch/0803/8a0b1e75", "UTF-8")
+      val resIri = URLEncoder.encode("http://rdfh.ch/resources/K6iJ0CvUR2CgRDTz0vdncg", "UTF-8")
 
       Put("/v1/filevalue/" + resIri, HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(
         BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> valuesPath ~> check {

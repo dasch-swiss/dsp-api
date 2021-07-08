@@ -602,9 +602,8 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
             // Does the user have permission to see the resource?
 
             val resourceCreator = firstRowMap("resourceCreator")
-            val resourceProject = firstRowMap("resourceProject")
-            val resourceProjectShortcode = resourceIri.toSmartIri.getProjectCode.getOrElse(
-              throw InconsistentRepositoryDataException(s"Invalid resource IRI: $resourceIri"))
+            val resourceProject: String = firstRowMap("resourceProject")
+            val resourceProjectShortcode = resourceProject.split("/").last // TODO: this should be project UUID
             val resourcePermissions = firstRowMap("resourcePermissions")
 
             val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(

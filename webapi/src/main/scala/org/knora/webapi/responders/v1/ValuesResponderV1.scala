@@ -1941,11 +1941,21 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
       // Convert the query results into a LinkValueV1.
       val valueProps = valueUtilV1.createValueProps(linkValueIri, rows)
+      val resourceIri = linkValueIri.substring(0, linkValueIri.indexOf("/values/"))
 
       for {
-        projectShortcode: String <- Future(
-          linkValueIri.toSmartIri.getProjectCode
-            .getOrElse(throw InconsistentRepositoryDataException(s"Invalid value IRI: $linkValueIri")))
+        resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(
+          iri = resourceIri,
+          featureFactoryConfig = featureFactoryConfig,
+          userProfile = userProfile
+        )).mapTo[ResourceInfoResponseV1]
+
+        //TODO: change this to project UUID
+        projectShortcode: String = resourceInfoResponse.resource_info
+          .getOrElse(
+            throw NotFoundException(
+              s"Invalid value IRI, $linkValueIri. It contains IRI of a resource that does not exist."))
+          .project_shortcode
 
         linkValueMaybe <- valueUtilV1.makeValueV1(
           valueProps = valueProps,

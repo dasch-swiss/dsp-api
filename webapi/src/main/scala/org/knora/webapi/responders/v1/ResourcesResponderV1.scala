@@ -944,7 +944,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 internalMimeType = row.rowMap("internalMimeType"),
                 internalFilename = row.rowMap("internalFilename"),
                 originalFilename = row.rowMap.get("originalFilename"),
-                projectShortcode = projectShortcode,
+                projectShortcode = projectShortcode, // TODO change to project UUID
                 dimX = row.rowMap("dimX").toInt,
                 dimY = row.rowMap("dimY").toInt
               )
@@ -993,7 +993,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         firstprop = row.rowMap.get("firstprop"),
         seqnum = row.rowMap.get("seqnum").map(_.toInt),
         permissionCode = permissionCode,
-        projectShortcode = projectShortcode,
+        projectShortcode = projectShortcode, // TODO: change to project UUID
         fileValue = createStillImageFileValueFromResultRow(projectShortcode, row)
       )
     }
@@ -1077,11 +1077,11 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             .mapTo[SparqlSelectResult]
           rows: Seq[VariableResultsRow] = contextQueryResponse.results.bindings
 
+          projectShortcode: String = resInfoV1.project_shortcode //TODO: change this to project UUID
+
           // The results consist of one row per source object.
           sourceObjects: Seq[SourceObject] = rows.map { row: VariableResultsRow =>
             val sourceObject: IRI = row.rowMap("sourceObject")
-            val projectShortcode: String = sourceObject.toSmartIri.getProjectCode
-              .getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI: $sourceObject"))
             createSourceObjectFromResultRow(projectShortcode, row)
           }
 
@@ -2613,6 +2613,10 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       groupedPropsByType: GroupedPropertiesByType <- getGroupedProperties(resourceIri)
 
+      (_, resInfo) <- getResourceInfoV1(resourceIri = resourceIri,
+                                        featureFactoryConfig = featureFactoryConfig,
+                                        userProfile = userProfile,
+                                        queryOntology = true)
       // TODO: Should we get rid of the tuple and replace it by a case class?
       (propertyInfoMap: Map[IRI, PropertyInfoV1],
        resourceEntityInfoMap: Map[IRI, ClassInfoV1],
@@ -2644,8 +2648,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           Future((Map.empty[IRI, PropertyInfoV1], Map.empty[IRI, ClassInfoV1], Map.empty[IRI, KnoraCardinalityInfo]))
       }
 
-      projectShortcode = resourceIri.toSmartIri.getProjectCode
-        .getOrElse(throw InconsistentRepositoryDataException(s"Invalid resource IRI: $resourceIri"))
+      projectShortcode = resInfo.project_shortcode //TODO: change this to project UUID
 
       queryResult <- queryResults2PropertyV1s(
         containingResourceIri = resourceIri,
