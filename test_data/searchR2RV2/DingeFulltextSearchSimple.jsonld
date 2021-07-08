@@ -2,7 +2,7 @@
 {
     "rdfs:label": "Ein Ding für jemanden, dem die Dinge gefallen",
     "knora-api:versionArkUrl": {
-        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv.20160302T150510Z",
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/jT0UHG9_wtaX23VoYydmGgH.20160302T150510Z",
         "@type": "xsd:anyURI"
     },
     "anything:hasText": [
@@ -10,11 +10,11 @@
         "Na ja, die Dinge sind OK."
     ],
     "knora-api:arkUrl": {
-        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv",
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/jT0UHG9_wtaX23VoYydmGgH",
         "@type": "xsd:anyURI"
     },
     "@type": "anything:Thing",
-    "@id": "http://rdfh.ch/0001/a-thing-with-text-values",
+    "@id": "http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg",
     "@context": {
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "knora-api": "http://api.knora.org/ontology/knora-api/simple/v2#",

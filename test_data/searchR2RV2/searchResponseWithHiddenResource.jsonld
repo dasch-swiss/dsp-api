@@ -3,12 +3,208 @@
     "@graph": [
         {
             "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/OOtb7AzgSOKyyF0VJeERGQ8",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "g3r",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/OOtb7AzgSOKyyF0VJeERGQ8.20160302T150511Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "RV",
+            "incunabula:description": {
+                "knora-api:valueAsString": "Zwei neue Textabschnitte: \"Das pfullment.| Hilff mir herr iesu christe/| mit andacht vnd nachuolgen | seliclich betrachten/ dine bu(o)ß|werck ...\"; \"SCho(e)ppfer der zitt/ ewi-|ger gott/ der alle ding | in geordneter zal maß | vnd wag ordnest ...\".\nInitiale \"S\" (Kolorierung in Blau und Gelb).\nBordüre mit Meerwesen, Holzschnitt.\nKolorierung: Rot, Blau, Grün, Gelb, Braun, Grau.",
+                "knora-api:arkUrl": {
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/OOtb7AzgSOKyyF0VJeERGQ8/000000000016bfda32332wZ",
+                    "@type": "xsd:anyURI"
+                },
+                "knora-api:versionArkUrl": {
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/OOtb7AzgSOKyyF0VJeERGQ8/000000000016bfda32332wZ.20160302T150511Z",
+                    "@type": "xsd:anyURI"
+                },
+                "knora-api:userHasPermission": "V",
+                "knora-api:valueCreationDate": {
+                    "@value": "2016-03-02T15:05:11Z",
+                    "@type": "xsd:dateTimeStamp"
+                },
+                "knora-api:attachedToUser": {
+                    "@id": "http://rdfh.ch/users/b83acc5f05"
+                },
+                "knora-api:valueHasUUID": "000000000016bfda32332w",
+                "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+                "@type": "knora-api:TextValue",
+                "@id": "http://rdfh.ch/resources/OOtb7AzgSOKyyF0VJeERGQ/values/16bfda323323"
+            },
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:11Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/91e19f1e01"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+            "@type": "incunabula:page",
+            "knora-api:resourceHasUUID": "OOtb7AzgSOKyyF0VJeERGQ",
+            "@id": "http://rdfh.ch/resources/OOtb7AzgSOKyyF0VJeERGQ"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/YmN=kLk6TtGDawSvzyjcUQM",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "(1)r",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/YmN=kLk6TtGDawSvzyjcUQM.20160302T150539Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "RV",
+            "incunabula:description": {
+                "knora-api:valueAsString": "Besitznachweis und Inhaltsangabe (Feder, dunkelbraun): \"Jn diesem bu(o)ch so den Cartusern zu(o) mind(er)n | basel gehörtt stand diß nachgeschrib(e)n ding (...)\". Die vierte Position mit einem Zettel überklebt, auf dem ein neuer Eintrag in hellerer Tinte steht. Unten späterer Besitznachweis von anderer Hand, ebenfalls in hellerer Tinte, mit zweimaliger Datierung \"1545\" und der Namensnennung \"Johannes Bachtaler von Lörach\"; darunter, in der unteren rechten Ecke ein Bibliotheksstempel (Queroval, schwarz): \"BIBL. PUBL. | BASILEENSIS.\"\n ",
+                "knora-api:arkUrl": {
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/YmN=kLk6TtGDawSvzyjcUQM/00000000009becc538942wt",
+                    "@type": "xsd:anyURI"
+                },
+                "knora-api:versionArkUrl": {
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/YmN=kLk6TtGDawSvzyjcUQM/00000000009becc538942wt.20160302T150539Z",
+                    "@type": "xsd:anyURI"
+                },
+                "knora-api:userHasPermission": "V",
+                "knora-api:valueCreationDate": {
+                    "@value": "2016-03-02T15:05:39Z",
+                    "@type": "xsd:dateTimeStamp"
+                },
+                "knora-api:attachedToUser": {
+                    "@id": "http://rdfh.ch/users/b83acc5f05"
+                },
+                "knora-api:valueHasUUID": "00000000009becc538942w",
+                "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+                "@type": "knora-api:TextValue",
+                "@id": "http://rdfh.ch/resources/YmN-kLk6TtGDawSvzyjcUQ/values/9becc5389426"
+            },
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:39Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/91e19f1e01"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+            "@type": "incunabula:page",
+            "knora-api:resourceHasUUID": "YmN-kLk6TtGDawSvzyjcUQ",
+            "@id": "http://rdfh.ch/resources/YmN-kLk6TtGDawSvzyjcUQ"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/bOuXuJPHQQCASIKaszSjWw6",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "12v",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/bOuXuJPHQQCASIKaszSjWw6.20160302T150521Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "RV",
+            "incunabula:description": {
+                "knora-api:valueAsString": "Ende des 8. Kapitels.\nBeginn des 9. Kapitels: \"Als ouch vil lute geren horten | wunderliche ding die sie nicht gesehen hand. dorumb will ich sagen ein | wunder das in der inselen ist zu(o) Langho von Ypocras tochter.(...)\".\nRubrizierung in Rot.",
+                "knora-api:arkUrl": {
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/bOuXuJPHQQCASIKaszSjWw6/000000000056665e77ef2wJ",
+                    "@type": "xsd:anyURI"
+                },
+                "knora-api:versionArkUrl": {
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/bOuXuJPHQQCASIKaszSjWw6/000000000056665e77ef2wJ.20160302T150521Z",
+                    "@type": "xsd:anyURI"
+                },
+                "knora-api:userHasPermission": "V",
+                "knora-api:valueCreationDate": {
+                    "@value": "2016-03-02T15:05:21Z",
+                    "@type": "xsd:dateTimeStamp"
+                },
+                "knora-api:attachedToUser": {
+                    "@id": "http://rdfh.ch/users/b83acc5f05"
+                },
+                "knora-api:valueHasUUID": "000000000056665e77ef2w",
+                "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+                "@type": "knora-api:TextValue",
+                "@id": "http://rdfh.ch/resources/bOuXuJPHQQCASIKaszSjWw/values/56665e77ef24"
+            },
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:21Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/91e19f1e01"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+            "@type": "incunabula:page",
+            "knora-api:resourceHasUUID": "bOuXuJPHQQCASIKaszSjWw",
+            "@id": "http://rdfh.ch/resources/bOuXuJPHQQCASIKaszSjWw"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/g0JJGdpTTzGiMD_jSiyDywO",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "30v",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/g0JJGdpTTzGiMD_jSiyDywO.20160302T150521Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0803"
+            },
+            "knora-api:userHasPermission": "RV",
+            "incunabula:description": {
+                "knora-api:valueAsString": "Text:\nEnde des 33. Kapitels. Beginn des 34. Kapitels: \"Dis vorgeschriben vn(d) sunst vil | andre ding vnd  heilige stette sint in der stat zu(o) Jherusalem (...)\". Rubrizierung in Rot.",
+                "knora-api:arkUrl": {
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/g0JJGdpTTzGiMD_jSiyDywO/00000000002d55be9d3d2wg",
+                    "@type": "xsd:anyURI"
+                },
+                "knora-api:versionArkUrl": {
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/g0JJGdpTTzGiMD_jSiyDywO/00000000002d55be9d3d2wg.20160302T150521Z",
+                    "@type": "xsd:anyURI"
+                },
+                "knora-api:userHasPermission": "V",
+                "knora-api:valueCreationDate": {
+                    "@value": "2016-03-02T15:05:21Z",
+                    "@type": "xsd:dateTimeStamp"
+                },
+                "knora-api:attachedToUser": {
+                    "@id": "http://rdfh.ch/users/b83acc5f05"
+                },
+                "knora-api:valueHasUUID": "00000000002d55be9d3d2w",
+                "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+                "@type": "knora-api:TextValue",
+                "@id": "http://rdfh.ch/resources/g0JJGdpTTzGiMD_jSiyDyw/values/2d55be9d3d25"
+            },
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:21Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/91e19f1e01"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+            "@type": "incunabula:page",
+            "knora-api:resourceHasUUID": "g0JJGdpTTzGiMD_jSiyDyw",
+            "@id": "http://rdfh.ch/resources/g0JJGdpTTzGiMD_jSiyDyw"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/mniT9VYSIrfwKupam8VzngB",
                 "@type": "xsd:anyURI"
             },
             "rdfs:label": "ein verdammtes Ding mit einer Sprache",
             "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesLanguageB.20160302T150510Z",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/mniT9VYSIrfwKupam8VzngB.20160302T150510Z",
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
@@ -24,199 +220,8 @@
             },
             "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
             "@type": "anything:Thing",
-            "@id": "http://rdfh.ch/0001/a-thing-with-text-valuesLanguage"
-        },
-        {
-            "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/6ad3e2c47501O",
-                "@type": "xsd:anyURI"
-            },
-            "rdfs:label": "30v",
-            "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/6ad3e2c47501O.20160302T150521Z",
-                "@type": "xsd:anyURI"
-            },
-            "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
-            },
-            "knora-api:userHasPermission": "RV",
-            "incunabula:description": {
-                "knora-api:valueAsString": "Text:\nEnde des 33. Kapitels. Beginn des 34. Kapitels: \"Dis vorgeschriben vn(d) sunst vil | andre ding vnd  heilige stette sint in der stat zu(o) Jherusalem (...)\". Rubrizierung in Rot.",
-                "knora-api:arkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/6ad3e2c47501O/00000000002d55be9d3d2wg",
-                    "@type": "xsd:anyURI"
-                },
-                "knora-api:versionArkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/6ad3e2c47501O/00000000002d55be9d3d2wg.20160302T150521Z",
-                    "@type": "xsd:anyURI"
-                },
-                "knora-api:userHasPermission": "V",
-                "knora-api:valueCreationDate": {
-                    "@value": "2016-03-02T15:05:21Z",
-                    "@type": "xsd:dateTimeStamp"
-                },
-                "knora-api:attachedToUser": {
-                    "@id": "http://rdfh.ch/users/b83acc5f05"
-                },
-                "knora-api:valueHasUUID": "00000000002d55be9d3d2w",
-                "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/6ad3e2c47501/values/2d55be9d3d25"
-            },
-            "knora-api:creationDate": {
-                "@value": "2016-03-02T15:05:21Z",
-                "@type": "xsd:dateTimeStamp"
-            },
-            "knora-api:attachedToUser": {
-                "@id": "http://rdfh.ch/users/91e19f1e01"
-            },
-            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-            "@type": "incunabula:page",
-            "@id": "http://rdfh.ch/0803/6ad3e2c47501"
-        },
-        {
-            "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/7e4cfc5417g",
-                "@type": "xsd:anyURI"
-            },
-            "rdfs:label": "g3r",
-            "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/7e4cfc5417g.20160302T150511Z",
-                "@type": "xsd:anyURI"
-            },
-            "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
-            },
-            "knora-api:userHasPermission": "RV",
-            "incunabula:description": {
-                "knora-api:valueAsString": "Zwei neue Textabschnitte: \"Das pfullment.| Hilff mir herr iesu christe/| mit andacht vnd nachuolgen | seliclich betrachten/ dine bu(o)ß|werck ...\"; \"SCho(e)ppfer der zitt/ ewi-|ger gott/ der alle ding | in geordneter zal maß | vnd wag ordnest ...\".\nInitiale \"S\" (Kolorierung in Blau und Gelb).\nBordüre mit Meerwesen, Holzschnitt.\nKolorierung: Rot, Blau, Grün, Gelb, Braun, Grau.",
-                "knora-api:arkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/7e4cfc5417g/000000000016bfda32332wZ",
-                    "@type": "xsd:anyURI"
-                },
-                "knora-api:versionArkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/7e4cfc5417g/000000000016bfda32332wZ.20160302T150511Z",
-                    "@type": "xsd:anyURI"
-                },
-                "knora-api:userHasPermission": "V",
-                "knora-api:valueCreationDate": {
-                    "@value": "2016-03-02T15:05:11Z",
-                    "@type": "xsd:dateTimeStamp"
-                },
-                "knora-api:attachedToUser": {
-                    "@id": "http://rdfh.ch/users/b83acc5f05"
-                },
-                "knora-api:valueHasUUID": "000000000016bfda32332w",
-                "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/7e4cfc5417/values/16bfda323323"
-            },
-            "knora-api:creationDate": {
-                "@value": "2016-03-02T15:05:11Z",
-                "@type": "xsd:dateTimeStamp"
-            },
-            "knora-api:attachedToUser": {
-                "@id": "http://rdfh.ch/users/91e19f1e01"
-            },
-            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-            "@type": "incunabula:page",
-            "@id": "http://rdfh.ch/0803/7e4cfc5417"
-        },
-        {
-            "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/ad88963d2703=",
-                "@type": "xsd:anyURI"
-            },
-            "rdfs:label": "(1)r",
-            "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/ad88963d2703=.20160302T150539Z",
-                "@type": "xsd:anyURI"
-            },
-            "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
-            },
-            "knora-api:userHasPermission": "RV",
-            "incunabula:description": {
-                "knora-api:valueAsString": "Besitznachweis und Inhaltsangabe (Feder, dunkelbraun): \"Jn diesem bu(o)ch so den Cartusern zu(o) mind(er)n | basel gehörtt stand diß nachgeschrib(e)n ding (...)\". Die vierte Position mit einem Zettel überklebt, auf dem ein neuer Eintrag in hellerer Tinte steht. Unten späterer Besitznachweis von anderer Hand, ebenfalls in hellerer Tinte, mit zweimaliger Datierung \"1545\" und der Namensnennung \"Johannes Bachtaler von Lörach\"; darunter, in der unteren rechten Ecke ein Bibliotheksstempel (Queroval, schwarz): \"BIBL. PUBL. | BASILEENSIS.\"\n ",
-                "knora-api:arkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/ad88963d2703=/00000000009becc538942wt",
-                    "@type": "xsd:anyURI"
-                },
-                "knora-api:versionArkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/ad88963d2703=/00000000009becc538942wt.20160302T150539Z",
-                    "@type": "xsd:anyURI"
-                },
-                "knora-api:userHasPermission": "V",
-                "knora-api:valueCreationDate": {
-                    "@value": "2016-03-02T15:05:39Z",
-                    "@type": "xsd:dateTimeStamp"
-                },
-                "knora-api:attachedToUser": {
-                    "@id": "http://rdfh.ch/users/b83acc5f05"
-                },
-                "knora-api:valueHasUUID": "00000000009becc538942w",
-                "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/ad88963d2703/values/9becc5389426"
-            },
-            "knora-api:creationDate": {
-                "@value": "2016-03-02T15:05:39Z",
-                "@type": "xsd:dateTimeStamp"
-            },
-            "knora-api:attachedToUser": {
-                "@id": "http://rdfh.ch/users/91e19f1e01"
-            },
-            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-            "@type": "incunabula:page",
-            "@id": "http://rdfh.ch/0803/ad88963d2703"
-        },
-        {
-            "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b603c6886d01T",
-                "@type": "xsd:anyURI"
-            },
-            "rdfs:label": "12v",
-            "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b603c6886d01T.20160302T150521Z",
-                "@type": "xsd:anyURI"
-            },
-            "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0803"
-            },
-            "knora-api:userHasPermission": "RV",
-            "incunabula:description": {
-                "knora-api:valueAsString": "Ende des 8. Kapitels.\nBeginn des 9. Kapitels: \"Als ouch vil lute geren horten | wunderliche ding die sie nicht gesehen hand. dorumb will ich sagen ein | wunder das in der inselen ist zu(o) Langho von Ypocras tochter.(...)\".\nRubrizierung in Rot.",
-                "knora-api:arkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b603c6886d01T/000000000056665e77ef2wJ",
-                    "@type": "xsd:anyURI"
-                },
-                "knora-api:versionArkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b603c6886d01T/000000000056665e77ef2wJ.20160302T150521Z",
-                    "@type": "xsd:anyURI"
-                },
-                "knora-api:userHasPermission": "V",
-                "knora-api:valueCreationDate": {
-                    "@value": "2016-03-02T15:05:21Z",
-                    "@type": "xsd:dateTimeStamp"
-                },
-                "knora-api:attachedToUser": {
-                    "@id": "http://rdfh.ch/users/b83acc5f05"
-                },
-                "knora-api:valueHasUUID": "000000000056665e77ef2w",
-                "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-                "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/b603c6886d01/values/56665e77ef24"
-            },
-            "knora-api:creationDate": {
-                "@value": "2016-03-02T15:05:21Z",
-                "@type": "xsd:dateTimeStamp"
-            },
-            "knora-api:attachedToUser": {
-                "@id": "http://rdfh.ch/users/91e19f1e01"
-            },
-            "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-            "@type": "incunabula:page",
-            "@id": "http://rdfh.ch/0803/b603c6886d01"
+            "knora-api:resourceHasUUID": "mniT9VYSIrfwKupam8Vzng",
+            "@id": "http://rdfh.ch/resources/mniT9VYSIrfwKupam8Vzng"
         }
     ],
     "@context": {

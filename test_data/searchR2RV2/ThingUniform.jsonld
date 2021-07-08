@@ -1,12 +1,12 @@
 
 {
     "knora-api:arkUrl": {
-        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/LOV=6aLYQFW15jwdyS51YwF",
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/LOV=6aLYQFW15jwdyS51YwF",
         "@type": "xsd:anyURI"
     },
     "rdfs:label": "Uniform",
     "knora-api:versionArkUrl": {
-        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/LOV=6aLYQFW15jwdyS51YwF.20161017T171604916Z",
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/LOV=6aLYQFW15jwdyS51YwF.20161017T171604916Z",
         "@type": "xsd:anyURI"
     },
     "knora-api:attachedToProject": {
@@ -22,7 +22,8 @@
     },
     "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "@type": "anything:Thing",
-    "@id": "http://rdfh.ch/0001/LOV-6aLYQFW15jwdyS51Yw",
+    "knora-api:resourceHasUUID": "LOV-6aLYQFW15jwdyS51Yw",
+    "@id": "http://rdfh.ch/resources/LOV-6aLYQFW15jwdyS51Yw",
     "@context": {
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "knora-api": "http://api.knora.org/ontology/knora-api/v2#",

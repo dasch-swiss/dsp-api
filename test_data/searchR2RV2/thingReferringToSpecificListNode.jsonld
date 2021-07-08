@@ -1,12 +1,12 @@
 
 {
     "knora-api:arkUrl": {
-        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_list_valueO",
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/QhkalmdntjSkYOLsDZ9lHgz",
         "@type": "xsd:anyURI"
     },
     "rdfs:label": "A thing that has a list value",
     "knora-api:versionArkUrl": {
-        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_list_valueO.20180131T150510Z",
+        "@value": "http://0.0.0.0:3336/ark:/72163/2/QhkalmdntjSkYOLsDZ9lHgz.20180131T150510Z",
         "@type": "xsd:anyURI"
     },
     "knora-api:attachedToProject": {
@@ -22,9 +22,10 @@
     },
     "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
     "@type": "anything:Thing",
+    "knora-api:resourceHasUUID": "QhkalmdntjSkYOLsDZ9lHg",
     "anything:hasListItem": {
         "knora-api:arkUrl": {
-            "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_list_valueO/000000000000list_valuQm",
+            "@value": "http://0.0.0.0:3336/ark:/72163/2/QhkalmdntjSkYOLsDZ9lHgz/000000000000list_valuQm",
             "@type": "xsd:anyURI"
         },
         "knora-api:userHasPermission": "V",
@@ -38,16 +39,16 @@
         "knora-api:valueHasUUID": "000000000000list_valuQ",
         "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
         "@type": "knora-api:ListValue",
-        "@id": "http://rdfh.ch/0001/thing_with_list_value/values/list_value",
+        "@id": "http://rdfh.ch/resources/QhkalmdntjSkYOLsDZ9lHg/values/list_value",
         "knora-api:listValueAsListNode": {
             "@id": "http://rdfh.ch/lists/0001/treeList02"
         },
         "knora-api:versionArkUrl": {
-            "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing_with_list_valueO/000000000000list_valuQm.20180131T150510Z",
+            "@value": "http://0.0.0.0:3336/ark:/72163/2/QhkalmdntjSkYOLsDZ9lHgz/000000000000list_valuQm.20180131T150510Z",
             "@type": "xsd:anyURI"
         }
     },
-    "@id": "http://rdfh.ch/0001/thing_with_list_value",
+    "@id": "http://rdfh.ch/resources/QhkalmdntjSkYOLsDZ9lHg",
     "@context": {
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
         "knora-api": "http://api.knora.org/ontology/knora-api/v2#",

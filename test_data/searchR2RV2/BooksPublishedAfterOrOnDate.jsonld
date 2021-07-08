@@ -3,12 +3,12 @@
     "@graph": [
         {
             "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/de6d83112e04o",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/crYsTLA7Tx=jCd2Qlelr1gV",
                 "@type": "xsd:anyURI"
             },
             "rdfs:label": "Itinerarius seu peregrinatio beatae virginis Mariae",
             "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/de6d83112e04o.20160302T150553Z",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/crYsTLA7Tx=jCd2Qlelr1gV.20160302T150553Z",
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
@@ -22,11 +22,11 @@
             "incunabula:title": {
                 "knora-api:valueAsString": "Itinerarius seu peregrinatio beatae virginis Mariae",
                 "knora-api:arkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/de6d83112e04o/0000000000d6f61a91ab1wf",
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/crYsTLA7Tx=jCd2Qlelr1gV/0000000000d6f61a91ab1wf",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:versionArkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/de6d83112e04o/0000000000d6f61a91ab1wf.20160302T150553Z",
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/crYsTLA7Tx=jCd2Qlelr1gV/0000000000d6f61a91ab1wf.20160302T150553Z",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:userHasPermission": "V",
@@ -40,20 +40,21 @@
                 "knora-api:valueHasUUID": "0000000000d6f61a91ab1w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/de6d83112e04/values/d6f61a91ab10"
+                "@id": "http://rdfh.ch/resources/crYsTLA7Tx-jCd2Qlelr1g/values/d6f61a91ab10"
             },
             "knora-api:attachedToUser": {
                 "@id": "http://rdfh.ch/users/91e19f1e01"
             },
             "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
             "@type": "incunabula:book",
+            "knora-api:resourceHasUUID": "crYsTLA7Tx-jCd2Qlelr1g",
             "incunabula:pubdate": {
                 "knora-api:arkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/de6d83112e04o/000000000099206ecaab1wW",
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/crYsTLA7Tx=jCd2Qlelr1gV/000000000099206ecaab1wW",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:versionArkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/de6d83112e04o/000000000099206ecaab1wW.20160302T150553Z",
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/crYsTLA7Tx=jCd2Qlelr1gV/000000000099206ecaab1wW.20160302T150553Z",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:dateValueHasEndYear": 1499,
@@ -69,22 +70,22 @@
                 "knora-api:valueHasUUID": "000000000099206ecaab1w",
                 "knora-api:dateValueHasCalendar": "JULIAN",
                 "@type": "knora-api:DateValue",
-                "@id": "http://rdfh.ch/0803/de6d83112e04/values/99206ecaab10",
+                "@id": "http://rdfh.ch/resources/crYsTLA7Tx-jCd2Qlelr1g/values/99206ecaab10",
                 "knora-api:valueAsString": "JULIAN:1475 CE:1499 CE",
                 "knora-api:dateValueHasStartEra": "CE",
                 "knora-api:dateValueHasStartYear": 1475,
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
             },
-            "@id": "http://rdfh.ch/0803/de6d83112e04"
+            "@id": "http://rdfh.ch/resources/crYsTLA7Tx-jCd2Qlelr1g"
         },
         {
             "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/6YOj7lQTRNqIwwsiqCJj9QY",
                 "@type": "xsd:anyURI"
             },
             "rdfs:label": "[Das] Narrenschiff (lat.)",
             "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G.20160302T150543Z",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/6YOj7lQTRNqIwwsiqCJj9QY.20160302T150543Z",
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
@@ -99,11 +100,11 @@
                 {
                     "knora-api:valueAsString": "[Das] Narrenschiff (lat.)",
                     "knora-api:arkUrl": {
-                        "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G/0000000000463b6498b70Ql",
+                        "@value": "http://0.0.0.0:3336/ark:/72163/2/6YOj7lQTRNqIwwsiqCJj9QY/0000000000463b6498b70Ql",
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:versionArkUrl": {
-                        "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G/0000000000463b6498b70Ql.20160302T150543Z",
+                        "@value": "http://0.0.0.0:3336/ark:/72163/2/6YOj7lQTRNqIwwsiqCJj9QY/0000000000463b6498b70Ql.20160302T150543Z",
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:userHasPermission": "V",
@@ -117,16 +118,16 @@
                     "knora-api:valueHasUUID": "0000000000463b6498b70Q",
                     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     "@type": "knora-api:TextValue",
-                    "@id": "http://rdfh.ch/0803/8be1b7cf7103/values/463b6498b70d"
+                    "@id": "http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q/values/463b6498b70d"
                 },
                 {
                     "knora-api:valueAsString": "Stultifera navis (...)",
                     "knora-api:arkUrl": {
-                        "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G/00000000000965b7d1b70Qx",
+                        "@value": "http://0.0.0.0:3336/ark:/72163/2/6YOj7lQTRNqIwwsiqCJj9QY/00000000000965b7d1b70Qx",
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:versionArkUrl": {
-                        "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G/00000000000965b7d1b70Qx.20160302T150543Z",
+                        "@value": "http://0.0.0.0:3336/ark:/72163/2/6YOj7lQTRNqIwwsiqCJj9QY/00000000000965b7d1b70Qx.20160302T150543Z",
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:userHasPermission": "V",
@@ -140,7 +141,7 @@
                     "knora-api:valueHasUUID": "00000000000965b7d1b70Q",
                     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     "@type": "knora-api:TextValue",
-                    "@id": "http://rdfh.ch/0803/8be1b7cf7103/values/0965b7d1b70d"
+                    "@id": "http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q/values/0965b7d1b70d"
                 }
             ],
             "knora-api:attachedToUser": {
@@ -148,14 +149,15 @@
             },
             "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
             "@type": "incunabula:book",
+            "knora-api:resourceHasUUID": "6YOj7lQTRNqIwwsiqCJj9Q",
             "incunabula:pubdate": {
                 "knora-api:dateValueHasStartDay": 1,
                 "knora-api:arkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G/0000000000150c04b7b80QV",
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/6YOj7lQTRNqIwwsiqCJj9QY/0000000000150c04b7b80QV",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:versionArkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/8be1b7cf7103G/0000000000150c04b7b80QV.20160302T150543Z",
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/6YOj7lQTRNqIwwsiqCJj9QY/0000000000150c04b7b80QV.20160302T150543Z",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:dateValueHasEndYear": 1497,
@@ -170,7 +172,7 @@
                 "knora-api:dateValueHasCalendar": "JULIAN",
                 "knora-api:dateValueHasStartMonth": 3,
                 "@type": "knora-api:DateValue",
-                "@id": "http://rdfh.ch/0803/8be1b7cf7103/values/150c04b7b80d",
+                "@id": "http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q/values/150c04b7b80d",
                 "knora-api:valueAsString": "JULIAN:1497-03-01 CE",
                 "knora-api:dateValueHasStartEra": "CE",
                 "knora-api:dateValueHasEndMonth": 3,
@@ -180,16 +182,16 @@
                 "knora-api:dateValueHasStartYear": 1497,
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
             },
-            "@id": "http://rdfh.ch/0803/8be1b7cf7103"
+            "@id": "http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q"
         },
         {
             "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/WtGAxVQ5QQ=ZiLJh4xaxsw2",
                 "@type": "xsd:anyURI"
             },
             "rdfs:label": "[Das] Narrenschiff (lat.)",
             "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T.20160302T150547Z",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/WtGAxVQ5QQ=ZiLJh4xaxsw2.20160302T150547Z",
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
@@ -204,11 +206,11 @@
                 {
                     "knora-api:valueAsString": "[Das] Narrenschiff (lat.)",
                     "knora-api:arkUrl": {
-                        "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T/0000000000e6d1cf0dcf0QL",
+                        "@value": "http://0.0.0.0:3336/ark:/72163/2/WtGAxVQ5QQ=ZiLJh4xaxsw2/0000000000e6d1cf0dcf0QL",
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:versionArkUrl": {
-                        "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T/0000000000e6d1cf0dcf0QL.20160302T150547Z",
+                        "@value": "http://0.0.0.0:3336/ark:/72163/2/WtGAxVQ5QQ=ZiLJh4xaxsw2/0000000000e6d1cf0dcf0QL.20160302T150547Z",
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:userHasPermission": "V",
@@ -222,16 +224,16 @@
                     "knora-api:valueHasUUID": "0000000000e6d1cf0dcf0Q",
                     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     "@type": "knora-api:TextValue",
-                    "@id": "http://rdfh.ch/0803/b6b5ff1eb703/values/e6d1cf0dcf0e"
+                    "@id": "http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw/values/e6d1cf0dcf0e"
                 },
                 {
                     "knora-api:valueAsString": "Stultifera navis (...)",
                     "knora-api:arkUrl": {
-                        "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T/0000000000a9fb2247cf0QX",
+                        "@value": "http://0.0.0.0:3336/ark:/72163/2/WtGAxVQ5QQ=ZiLJh4xaxsw2/0000000000a9fb2247cf0QX",
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:versionArkUrl": {
-                        "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T/0000000000a9fb2247cf0QX.20160302T150547Z",
+                        "@value": "http://0.0.0.0:3336/ark:/72163/2/WtGAxVQ5QQ=ZiLJh4xaxsw2/0000000000a9fb2247cf0QX.20160302T150547Z",
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:userHasPermission": "V",
@@ -245,7 +247,7 @@
                     "knora-api:valueHasUUID": "0000000000a9fb2247cf0Q",
                     "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                     "@type": "knora-api:TextValue",
-                    "@id": "http://rdfh.ch/0803/b6b5ff1eb703/values/a9fb2247cf0e"
+                    "@id": "http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw/values/a9fb2247cf0e"
                 }
             ],
             "knora-api:attachedToUser": {
@@ -253,14 +255,15 @@
             },
             "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
             "@type": "incunabula:book",
+            "knora-api:resourceHasUUID": "WtGAxVQ5QQ-ZiLJh4xaxsw",
             "incunabula:pubdate": {
                 "knora-api:dateValueHasStartDay": 1,
                 "knora-api:arkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T/0000000000b5a26f2cd00Qm",
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/WtGAxVQ5QQ=ZiLJh4xaxsw2/0000000000b5a26f2cd00Qm",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:versionArkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/b6b5ff1eb703T/0000000000b5a26f2cd00Qm.20160302T150547Z",
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/WtGAxVQ5QQ=ZiLJh4xaxsw2/0000000000b5a26f2cd00Qm.20160302T150547Z",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:dateValueHasEndYear": 1497,
@@ -275,7 +278,7 @@
                 "knora-api:dateValueHasCalendar": "JULIAN",
                 "knora-api:dateValueHasStartMonth": 8,
                 "@type": "knora-api:DateValue",
-                "@id": "http://rdfh.ch/0803/b6b5ff1eb703/values/b5a26f2cd00e",
+                "@id": "http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw/values/b5a26f2cd00e",
                 "knora-api:valueAsString": "JULIAN:1497-08-01 CE",
                 "knora-api:dateValueHasStartEra": "CE",
                 "knora-api:dateValueHasEndMonth": 8,
@@ -285,16 +288,16 @@
                 "knora-api:dateValueHasStartYear": 1497,
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
             },
-            "@id": "http://rdfh.ch/0803/b6b5ff1eb703"
+            "@id": "http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw"
         },
         {
             "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/60QF3uJ=SdKOj6Awfb5XIg1",
                 "@type": "xsd:anyURI"
             },
             "rdfs:label": "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)",
             "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u.20160302T150514Z",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/60QF3uJ=SdKOj6Awfb5XIg1.20160302T150514Z",
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
@@ -308,11 +311,11 @@
             "incunabula:title": {
                 "knora-api:valueAsString": "Eyn biechlin sancti Methodij mar//trers. vnd bischoffs zuo partinentz. jn kriechen land (...)",
                 "knora-api:arkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u/0000000000e6e02fe3980wF",
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/60QF3uJ=SdKOj6Awfb5XIg1/0000000000e6e02fe3980wF",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:versionArkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u/0000000000e6e02fe3980wF.20160302T150514Z",
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/60QF3uJ=SdKOj6Awfb5XIg1/0000000000e6e02fe3980wF.20160302T150514Z",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:userHasPermission": "V",
@@ -326,20 +329,21 @@
                 "knora-api:valueHasUUID": "0000000000e6e02fe3980w",
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
                 "@type": "knora-api:TextValue",
-                "@id": "http://rdfh.ch/0803/9935159f67/values/e6e02fe39801"
+                "@id": "http://rdfh.ch/resources/60QF3uJ-SdKOj6Awfb5XIg/values/e6e02fe39801"
             },
             "knora-api:attachedToUser": {
                 "@id": "http://rdfh.ch/users/91e19f1e01"
             },
             "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
             "@type": "incunabula:book",
+            "knora-api:resourceHasUUID": "60QF3uJ-SdKOj6Awfb5XIg",
             "incunabula:pubdate": {
                 "knora-api:arkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u/0000000000f2877cc8990wv",
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/60QF3uJ=SdKOj6Awfb5XIg1/0000000000f2877cc8990wv",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:versionArkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/9935159f67u/0000000000f2877cc8990wv.20160302T150514Z",
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/60QF3uJ=SdKOj6Awfb5XIg1/0000000000f2877cc8990wv.20160302T150514Z",
                     "@type": "xsd:anyURI"
                 },
                 "knora-api:dateValueHasEndYear": 1504,
@@ -355,13 +359,13 @@
                 "knora-api:valueHasUUID": "0000000000f2877cc8990w",
                 "knora-api:dateValueHasCalendar": "JULIAN",
                 "@type": "knora-api:DateValue",
-                "@id": "http://rdfh.ch/0803/9935159f67/values/f2877cc89901",
+                "@id": "http://rdfh.ch/resources/60QF3uJ-SdKOj6Awfb5XIg/values/f2877cc89901",
                 "knora-api:valueAsString": "JULIAN:1504 CE",
                 "knora-api:dateValueHasStartEra": "CE",
                 "knora-api:dateValueHasStartYear": 1504,
                 "knora-api:hasPermissions": "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser"
             },
-            "@id": "http://rdfh.ch/0803/9935159f67"
+            "@id": "http://rdfh.ch/resources/60QF3uJ-SdKOj6Awfb5XIg"
         }
     ],
     "@context": {

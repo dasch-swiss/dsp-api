@@ -324,7 +324,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         assert(status == StatusCodes.OK, response.toString)
 
-        checkCountResponse(responseAs[String], 44)
+        checkCountResponse(responseAs[String], 43)
 
       }
 
@@ -656,7 +656,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
@@ -664,10 +664,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page a incunabula:page .
                   |        ?page a knora-api:Resource .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
-                  |        <http://rdfh.ch/0803/b6b5ff1eb703> a knora-api:Resource .
+                  |        <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> a knora-api:Resource .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |        incunabula:seqnum knora-api:objectType xsd:integer .
@@ -709,10 +709,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page a incunabula:page .
                   |        ?page a knora-api:Resource .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
-                  |        <http://rdfh.ch/0803/b6b5ff1eb703> a knora-api:Resource .
+                  |        <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> a knora-api:Resource .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |        incunabula:seqnum knora-api:objectType xsd:integer .
@@ -748,7 +748,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
@@ -756,10 +756,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page a incunabula:page .
                   |        ?page a knora-api:Resource .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
-                  |        <http://rdfh.ch/0803/b6b5ff1eb703> a knora-api:Resource .
+                  |        <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> a knora-api:Resource .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |        incunabula:seqnum knora-api:objectType xsd:integer .
@@ -795,7 +795,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
@@ -803,10 +803,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page a incunabula:page .
                   |        ?page a knora-api:Resource .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
-                  |        <http://rdfh.ch/0803/b6b5ff1eb703> a knora-api:Resource .
+                  |        <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> a knora-api:Resource .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |        incunabula:seqnum knora-api:objectType xsd:integer .
@@ -840,7 +840,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
@@ -848,10 +848,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page a incunabula:page .
                   |        ?page a knora-api:Resource .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |        knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
-                  |        <http://rdfh.ch/0803/b6b5ff1eb703> a knora-api:Resource .
+                  |        <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> a knora-api:Resource .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |        incunabula:seqnum knora-api:objectType xsd:integer .
@@ -1305,7 +1305,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?region knora-api:isMainResource true .
                   |
-                  |        ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
+                  |        ?region knora-api:isRegionOf <http://rdfh.ch/resources/fE-I7Nv6TG2is88g_nYXSw> .
                   |
                   |        ?region knora-api:hasGeometry ?geom .
                   |
@@ -1317,10 +1317,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?region a knora-api:Region .
                   |        ?region a knora-api:Resource .
                   |
-                  |        ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
+                  |        ?region knora-api:isRegionOf <http://rdfh.ch/resources/fE-I7Nv6TG2is88g_nYXSw> .
                   |        knora-api:isRegionOf knora-api:objectType knora-api:Resource .
                   |
-                  |        <http://rdfh.ch/0803/9d626dc76c03> a knora-api:Resource .
+                  |        <http://rdfh.ch/resources/fE-I7Nv6TG2is88g_nYXSw> a knora-api:Resource .
                   |
                   |        ?region knora-api:hasGeometry ?geom .
                   |        knora-api:hasGeometry knora-api:objectType knora-api:Geom .
@@ -1368,11 +1368,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    ?book incunabula:title ?title .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:isPartOf ?book .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:seqnum ?seqnum .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFile ?file .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:hasStillImageFile ?file .
                   |
                   |} WHERE {
                   |
@@ -1384,17 +1384,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    ?title a xsd:string .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:isPartOf ?book .
                   |    knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> a knora-api:Resource .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> a knora-api:Resource .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:seqnum ?seqnum .
                   |    knora-api:seqnum knora-api:objectType xsd:integer .
                   |
                   |    ?seqnum a xsd:integer .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFile ?file .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:hasStillImageFile ?file .
                   |    knora-api:hasStillImageFile knora-api:objectType knora-api:File .
                   |
                   |    ?file a knora-api:File .
@@ -1429,7 +1429,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    ?book incunabula:title ?title .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:isPartOf ?book .
                   |
                   |} WHERE {
                   |
@@ -1441,17 +1441,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    ?title a xsd:string .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:isPartOf ?book .
                   |    knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> a knora-api:Resource .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> a knora-api:Resource .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:seqnum ?seqnum .
                   |    knora-api:seqnum knora-api:objectType xsd:integer .
                   |
                   |    ?seqnum a xsd:integer .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFile ?file .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:hasStillImageFile ?file .
                   |    knora-api:hasStillImageFile knora-api:objectType knora-api:File .
                   |
                   |    ?file a knora-api:File .
@@ -1483,15 +1483,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?incomingRes knora-api:isMainResource true .
                   |
-                  |     ?incomingRes ?incomingProp <http://rdfh.ch/0803/8be1b7cf7103> .
+                  |     ?incomingRes ?incomingProp <http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q> .
                   |
                   |} WHERE {
                   |
                   |     ?incomingRes a knora-api:Resource .
                   |
-                  |     ?incomingRes ?incomingProp <http://rdfh.ch/0803/8be1b7cf7103> .
+                  |     ?incomingRes ?incomingProp <http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q> .
                   |
-                  |     <http://rdfh.ch/0803/8be1b7cf7103> a knora-api:Resource .
+                  |     <http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q> a knora-api:Resource .
                   |
                   |     ?incomingProp knora-api:objectType knora-api:Resource .
                   |
@@ -1499,11 +1499,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |     knora-api:isPartOf knora-api:objectType knora-api:Resource .
                   |
                   |     FILTER NOT EXISTS {
-                  |         ?incomingRes  knora-api:isRegionOf <http://rdfh.ch/0803/8be1b7cf7103> .
+                  |         ?incomingRes  knora-api:isRegionOf <http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q> .
                   |     }
                   |
                   |     FILTER NOT EXISTS {
-                  |         ?incomingRes  knora-api:isPartOf <http://rdfh.ch/0803/8be1b7cf7103> .
+                  |         ?incomingRes  knora-api:isPartOf <http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q> .
                   |     }
                   |
                   |} OFFSET 0
@@ -2449,7 +2449,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?letter beol:creationDate ?date .
                   |
-                  |        ?letter ?linkingProp1  <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+                  |        ?letter ?linkingProp1  <http://rdfh.ch/resources/VvYVIy-FSbOJBsh2d9ZFJw> .
                   |
                   |
                   |    } WHERE {
@@ -2462,9 +2462,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?date a knora-api:Date .
                   |
                   |        # testperson2
-                  |        ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+                  |        ?letter ?linkingProp1 <http://rdfh.ch/resources/VvYVIy-FSbOJBsh2d9ZFJw> .
                   |
-                  |        <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> a knora-api:Resource .
+                  |        <http://rdfh.ch/resources/VvYVIy-FSbOJBsh2d9ZFJw> a knora-api:Resource .
                   |
                   |        ?linkingProp1 knora-api:objectType knora-api:Resource .
                   |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
@@ -2503,7 +2503,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?letter beol:creationDate ?date .
                   |
-                  |        ?letter ?linkingProp1  <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+                  |        ?letter ?linkingProp1  <http://rdfh.ch/resources/VvYVIy-FSbOJBsh2d9ZFJw> .
                   |
                   |
                   |    } WHERE {
@@ -2516,9 +2516,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?date a knora-api:Date .
                   |
                   |        # testperson2
-                  |        ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+                  |        ?letter ?linkingProp1 <http://rdfh.ch/resources/VvYVIy-FSbOJBsh2d9ZFJw> .
                   |
-                  |        <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> a knora-api:Resource .
+                  |        <http://rdfh.ch/resources/VvYVIy-FSbOJBsh2d9ZFJw> a knora-api:Resource .
                   |
                   |        ?linkingProp1 knora-api:objectType knora-api:Resource .
                   |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
@@ -2786,7 +2786,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |         anything:hasInteger ?integer .
                   |
                   |} WHERE {
-                  |     BIND(<http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> AS ?thing)
+                  |     BIND(<http://rdfh.ch/resources/H6gBWUuJSuuO-CilHV8kQw> AS ?thing)
                   |
                   |     ?thing a knora-api:Resource .
                   |     ?thing a anything:Thing .
@@ -2829,7 +2829,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |
                   |    } WHERE {
-                  |        BIND(<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> AS ?letter)
+                  |        BIND(<http://rdfh.ch/resources/_B3lQa6tSymIq7_7SowBsA> AS ?letter)
                   |        ?letter a knora-api:Resource .
                   |        ?letter a beol:letter .
                   |
@@ -2884,7 +2884,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page knora-api:isPartOf ?book ;
                   |            incunabula:seqnum ?seqnum .
                   |    } WHERE {
-                  |        BIND(<http://rdfh.ch/0803/b6b5ff1eb703> AS ?book)
+                  |        BIND(<http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> AS ?book)
                   |        ?book a knora-api:Resource .
                   |
                   |        ?book incunabula:title ?title .
@@ -2932,7 +2932,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page knora-api:isPartOf ?book ;
                   |            incunabula:seqnum ?seqnum .
                   |    } WHERE {
-                  |        BIND(<http://rdfh.ch/0803/b6b5ff1eb703> AS ?book)
+                  |        BIND(<http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> AS ?book)
                   |        ?book a knora-api:Resource .
                   |
                   |        ?book incunabula:title ?title .
@@ -3070,17 +3070,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |    ?letter knora-api:isMainResource true .
                   |    ?letter beol:creationDate ?date .
-                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
                   |} WHERE {
                   |    ?letter a beol:letter .
                   |    ?letter beol:creationDate ?date .
                   |    beol:creationDate knora-api:objectType knora-api:Date .
                   |    ?date a knora-api:Date .
-                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> a beol:person .
                   |    ?linkingProp1 knora-api:objectType knora-api:Resource .
-                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |    <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
                   |    beol:hasFamilyName knora-api:objectType xsd:string .
                   |    ?name a xsd:string .
                   |
@@ -3114,16 +3114,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |    ?letter knora-api:isMainResource true .
                   |    ?letter beol:creationDate ?date .
-                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
                   |} WHERE {
                   |    ?letter a beol:letter .
                   |    ?letter beol:creationDate ?date .
                   |    ?date a knora-api:Date .
-                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> a beol:person .
                   |    ?linkingProp1 knora-api:objectType knora-api:Resource .
-                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |    <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
                   |    ?name a xsd:string .
                   |
                   |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
@@ -3156,15 +3156,15 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |    ?letter knora-api:isMainResource true .
                   |    ?letter beol:creationDate ?date .
-                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
                   |} WHERE {
                   |    ?letter a beol:letter .
                   |    ?letter beol:creationDate ?date .
-                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> a beol:person .
                   |    ?linkingProp1 knora-api:objectType knora-api:Resource .
-                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |    <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
                   |
                   |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
                   |} ORDER BY ?date
@@ -3196,14 +3196,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |    ?letter knora-api:isMainResource true .
                   |    ?letter beol:creationDate ?date .
-                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
                   |} WHERE {
                   |    ?letter a beol:letter .
                   |    ?letter beol:creationDate ?date .
-                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> a beol:person .
-                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> a beol:person .
+                  |    <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
                   |
                   |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
                   |} ORDER BY ?date
@@ -3235,12 +3235,12 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |    ?letter knora-api:isMainResource true .
                   |    ?letter beol:creationDate ?date .
-                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
                   |} WHERE {
                   |    ?letter beol:creationDate ?date .
-                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
-                  |    <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> .
+                  |    <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> beol:hasFamilyName ?name .
                   |
                   |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
                   |
@@ -3274,10 +3274,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |CONSTRUCT {
                   |    ?letter knora-api:isMainResource true .
                   |    ?letter beol:creationDate ?date .
-                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> .
                   |} WHERE {
                   |    ?letter beol:creationDate ?date .
-                  |    ?letter ?linkingProp1 <http://rdfh.ch/0801/H7s3FmuWTkaCXa54eFANOA> .
+                  |    ?letter ?linkingProp1 <http://rdfh.ch/resources/H7s3FmuWTkaCXa54eFANOA> .
                   |
                   |    FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
                   |
@@ -3669,14 +3669,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
                   |
                   |        ?page a incunabula:page .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
@@ -3709,14 +3709,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
                   |
                   |        ?page a incunabula:page .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
@@ -3749,7 +3749,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?page a incunabula:page .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
@@ -3782,14 +3782,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
                   |
                   |        ?page a incunabula:page .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
@@ -3822,14 +3822,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
                   |
                   |        ?page a incunabula:page .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
@@ -3860,14 +3860,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
                   |
                   |        ?page a incunabula:page .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
@@ -4261,7 +4261,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?region knora-api:isMainResource true .
                   |
-                  |        ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
+                  |        ?region knora-api:isRegionOf <http://rdfh.ch/resources/fE-I7Nv6TG2is88g_nYXSw> .
                   |
                   |        ?region knora-api:hasGeometry ?geom .
                   |
@@ -4272,7 +4272,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?region a knora-api:Region .
                   |
-                  |        ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
+                  |        ?region knora-api:isRegionOf <http://rdfh.ch/resources/fE-I7Nv6TG2is88g_nYXSw> .
                   |
                   |        ?region knora-api:hasGeometry ?geom .
                   |
@@ -4311,11 +4311,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    ?book incunabula:title ?title .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:isPartOf ?book .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:seqnum ?seqnum .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFile ?file .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:hasStillImageFile ?file .
                   |
                   |} WHERE {
                   |
@@ -4323,11 +4323,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    ?book incunabula:title ?title .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:isPartOf ?book .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:seqnum ?seqnum .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFile ?file .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:hasStillImageFile ?file .
                   |
                   |} OFFSET 0
                 """.stripMargin
@@ -4359,7 +4359,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    ?book incunabula:title ?title .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:isPartOf ?book .
                   |
                   |} WHERE {
                   |
@@ -4367,11 +4367,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    ?book incunabula:title ?title .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:isPartOf ?book .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:seqnum ?seqnum .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFile ?file .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:hasStillImageFile ?file .
                   |
                   |} OFFSET 0
                 """.stripMargin
@@ -4401,17 +4401,17 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?incomingRes knora-api:isMainResource true .
                   |
-                  |     ?incomingRes ?incomingProp <http://rdfh.ch/0803/8be1b7cf7103> .
+                  |     ?incomingRes ?incomingProp <http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q> .
                   |
                   |} WHERE {
                   |
-                  |     ?incomingRes ?incomingProp <http://rdfh.ch/0803/8be1b7cf7103> .
+                  |     ?incomingRes ?incomingProp <http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q> .
                   |
-                  |     <http://rdfh.ch/0803/8be1b7cf7103> a incunabula:book .
+                  |     <http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q> a incunabula:book .
                   |
                   |
                   |     FILTER NOT EXISTS {
-                  |         ?incomingRes knora-api:isPartOf <http://rdfh.ch/0803/8be1b7cf7103> .
+                  |         ?incomingRes knora-api:isPartOf <http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q> .
                   |     }
                   |
                   |} OFFSET 0
@@ -5064,7 +5064,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?letter beol:creationDate ?date .
                   |
-                  |        ?letter ?linkingProp1  <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+                  |        ?letter ?linkingProp1  <http://rdfh.ch/resources/VvYVIy-FSbOJBsh2d9ZFJw> .
                   |
                   |
                   |    } WHERE {
@@ -5073,7 +5073,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?letter beol:creationDate ?date .
                   |
                   |        # testperson2
-                  |        ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+                  |        ?letter ?linkingProp1 <http://rdfh.ch/resources/VvYVIy-FSbOJBsh2d9ZFJw> .
                   |
                   |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
                   |
@@ -5259,7 +5259,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |         anything:hasInteger ?integer .
                   |
                   |} WHERE {
-                  |     BIND(<http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> AS ?thing)
+                  |     BIND(<http://rdfh.ch/resources/H6gBWUuJSuuO-CilHV8kQw> AS ?thing)
                   |
                   |     ?thing a anything:Thing .
                   |     ?thing anything:hasText ?text .
@@ -5297,7 +5297,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |
                   |    } WHERE {
-                  |        BIND(<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> AS ?letter)
+                  |        BIND(<http://rdfh.ch/resources/_B3lQa6tSymIq7_7SowBsA> AS ?letter)
                   |        ?letter a beol:letter .
                   |
                   |        ?letter beol:creationDate ?date .
@@ -5338,7 +5338,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page knora-api:isPartOf ?book ;
                   |            incunabula:seqnum ?seqnum .
                   |    } WHERE {
-                  |        BIND(<http://rdfh.ch/0803/b6b5ff1eb703> AS ?book)
+                  |        BIND(<http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> AS ?book)
                   |        ?book a incunabula:book .
                   |
                   |        ?book incunabula:title ?title .
@@ -5379,7 +5379,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page knora-api:isPartOf ?book ;
                   |            incunabula:seqnum ?seqnum .
                   |    } WHERE {
-                  |        BIND(<http://rdfh.ch/0803/b6b5ff1eb703> AS ?book)
+                  |        BIND(<http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> AS ?book)
                   |
                   |        ?book incunabula:title ?title .
                   |
@@ -5949,14 +5949,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
                   |
                   |        ?page a incunabula:page .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
@@ -5989,14 +5989,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
                   |
                   |        ?page a incunabula:page .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
@@ -6028,7 +6028,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?page a incunabula:page .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
@@ -6061,14 +6061,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
                   |
                   |        ?page a incunabula:page .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
@@ -6103,14 +6103,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
                   |
                   |        ?page a incunabula:page .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
@@ -6141,14 +6141,14 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    CONSTRUCT {
                   |        ?page knora-api:isMainResource true .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |    } WHERE {
                   |
                   |        ?page a incunabula:page .
                   |
-                  |        ?page knora-api:isPartOf <http://rdfh.ch/0803/b6b5ff1eb703> .
+                  |        ?page knora-api:isPartOf <http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> .
                   |
                   |        ?page incunabula:seqnum ?seqnum .
                   |
@@ -6517,13 +6517,13 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |    ?region knora-api:isMainResource true .
-                  |    ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
+                  |    ?region knora-api:isRegionOf <http://rdfh.ch/resources/fE-I7Nv6TG2is88g_nYXSw> .
                   |    ?region knora-api:hasGeometry ?geom .
                   |    ?region knora-api:hasComment ?comment .
                   |    ?region knora-api:hasColor ?color .
                   |} WHERE {
                   |    ?region a knora-api:Region .
-                  |    ?region knora-api:isRegionOf <http://rdfh.ch/0803/9d626dc76c03> .
+                  |    ?region knora-api:isRegionOf <http://rdfh.ch/resources/fE-I7Nv6TG2is88g_nYXSw> .
                   |    ?region knora-api:hasGeometry ?geom .
                   |    ?region knora-api:hasComment ?comment .
                   |    ?region knora-api:hasColor ?color .
@@ -6557,11 +6557,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    ?book incunabula:title ?title .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:isPartOf ?book .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:seqnum ?seqnum .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFileValue ?file .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:hasStillImageFileValue ?file .
                   |
                   |} WHERE {
                   |
@@ -6569,11 +6569,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    ?book incunabula:title ?title .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:isPartOf ?book .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:seqnum ?seqnum .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFileValue ?file .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:hasStillImageFileValue ?file .
                   |
                   |} OFFSET 0
                 """.stripMargin
@@ -6605,7 +6605,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    ?book incunabula:title ?title .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:isPartOf ?book .
                   |
                   |} WHERE {
                   |
@@ -6613,11 +6613,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |    ?book incunabula:title ?title .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:isPartOf ?book .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:isPartOf ?book .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:seqnum ?seqnum .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:seqnum ?seqnum .
                   |
-                  |    <http://rdfh.ch/0803/50e7460a7203> knora-api:hasStillImageFileValue ?file .
+                  |    <http://rdfh.ch/resources/zEgcddZ0Ta-DJUmOEwh8_A> knora-api:hasStillImageFileValue ?file .
                   |
                   |} OFFSET 0
                 """.stripMargin
@@ -6647,16 +6647,16 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |     ?incomingRes knora-api:isMainResource true .
                   |
-                  |     ?incomingRes ?incomingProp <http://rdfh.ch/0803/8be1b7cf7103> .
+                  |     ?incomingRes ?incomingProp <http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q> .
                   |
                   |} WHERE {
                   |
-                  |     ?incomingRes ?incomingProp <http://rdfh.ch/0803/8be1b7cf7103> .
+                  |     ?incomingRes ?incomingProp <http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q> .
                   |
-                  |     <http://rdfh.ch/0803/8be1b7cf7103> a incunabula:book .
+                  |     <http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q> a incunabula:book .
                   |
                   |     FILTER NOT EXISTS {
-                  |         ?incomingRes knora-api:isPartOf <http://rdfh.ch/0803/8be1b7cf7103> .
+                  |         ?incomingRes knora-api:isPartOf <http://rdfh.ch/resources/6YOj7lQTRNqIwwsiqCJj9Q> .
                   |     }
                   |
                   |} OFFSET 0
@@ -6830,10 +6830,10 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |CONSTRUCT {
                   |    ?thing knora-api:isMainResource true .
-                  |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
+                  |    ?thing anything:hasOtherThing <http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw> .
                   |} WHERE {
                   |    ?thing a anything:Thing .
-                  |    ?thing anything:hasOtherThing <http://rdfh.ch/0001/start> .
+                  |    ?thing anything:hasOtherThing <http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw> .
                   |}""".stripMargin
 
       Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(
@@ -7325,7 +7325,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |        ?letter beol:creationDate ?date .
                   |
-                  |        ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+                  |        ?letter ?linkingProp1 <http://rdfh.ch/resources/VvYVIy-FSbOJBsh2d9ZFJw> .
                   |
                   |
                   |    } WHERE {
@@ -7334,7 +7334,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?letter beol:creationDate ?date .
                   |
                   |        # testperson2
-                  |        ?letter ?linkingProp1 <http://rdfh.ch/0801/VvYVIy-FSbOJBsh2d9ZFJw> .
+                  |        ?letter ?linkingProp1 <http://rdfh.ch/resources/VvYVIy-FSbOJBsh2d9ZFJw> .
                   |
                   |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
                   |
@@ -7469,7 +7469,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |         anything:hasInteger ?integer .
                   |
                   |} WHERE {
-                  |     BIND(<http://rdfh.ch/0001/H6gBWUuJSuuO-CilHV8kQw> AS ?thing)
+                  |     BIND(<http://rdfh.ch/resources/H6gBWUuJSuuO-CilHV8kQw> AS ?thing)
                   |
                   |     ?thing a anything:Thing .
                   |     ?thing anything:hasText ?text .
@@ -7507,7 +7507,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |
                   |
                   |    } WHERE {
-                  |        BIND(<http://rdfh.ch/0801/_B3lQa6tSymIq7_7SowBsA> AS ?letter)
+                  |        BIND(<http://rdfh.ch/resources/_B3lQa6tSymIq7_7SowBsA> AS ?letter)
                   |        ?letter a beol:letter .
                   |
                   |        ?letter beol:creationDate ?date .
@@ -7548,7 +7548,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page knora-api:isPartOf ?book ;
                   |            incunabula:seqnum ?seqnum .
                   |    } WHERE {
-                  |        BIND(<http://rdfh.ch/0803/b6b5ff1eb703> AS ?book)
+                  |        BIND(<http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> AS ?book)
                   |        ?book a incunabula:book .
                   |
                   |        ?book incunabula:title ?title .
@@ -7591,7 +7591,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |        ?page knora-api:isPartOf ?book ;
                   |            incunabula:seqnum ?seqnum .
                   |    } WHERE {
-                  |        BIND(<http://rdfh.ch/0803/b6b5ff1eb703> AS ?book)
+                  |        BIND(<http://rdfh.ch/resources/WtGAxVQ5QQ-ZiLJh4xaxsw> AS ?book)
                   |
                   |        ?book incunabula:title ?title .
                   |
@@ -8062,8 +8062,8 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    ?thing anything:hasText ?text .
                   |    ?text knora-api:textValueHasStandoff ?standoffTag .
                   |    ?standoffTag a knora-api:StandoffLinkTag .
-                  |    FILTER knora-api:standoffLink(?thing, ?standoffTag, <http://rdfh.ch/0001/a-thing>)
-                  |    <http://rdfh.ch/0001/a-thing> a anything:Thing .
+                  |    FILTER knora-api:standoffLink(?thing, ?standoffTag, <http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA>)
+                  |    <http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA> a anything:Thing .
                   |}
                 """.stripMargin
 
@@ -8095,9 +8095,9 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    ?thing anything:hasText ?text .
                   |    ?text knora-api:textValueHasStandoff ?standoffTag .
                   |    ?standoffTag a knora-api:StandoffLinkTag .
-                  |    FILTER knora-api:standoffLink(?thing, ?standoffTag, <http://rdfh.ch/0001/a-thing>)
+                  |    FILTER knora-api:standoffLink(?thing, ?standoffTag, <http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA>)
                   |
-                  |    # Note that <http://rdfh.ch/0001/a-thing> is only used as a argument in the function, not in any other statement
+                  |    # Note that <http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA> is only used as a argument in the function, not in any other statement
                   |}
                 """.stripMargin
 
@@ -8986,7 +8986,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |}
                   |OFFSET 0""".stripMargin
 
-      // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+      // We should get one result, not including <http://rdfh.ch/resources/XNn6wanrTHWShGTjoULm5g> ("letter to self").
 
       Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
         val searchResponseStr = responseAs[String]
@@ -9015,7 +9015,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |}
                   |OFFSET 0""".stripMargin
 
-      // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+      // We should get one result, not including <http://rdfh.ch/resources/XNn6wanrTHWShGTjoULm5g> ("letter to self").
 
       Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
         val searchResponseStr = responseAs[String]
@@ -9039,11 +9039,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    ?letter a beol:letter .
                   |    ?letter beol:hasAuthor ?person1 .
                   |    ?letter beol:hasRecipient ?person2 .
-                  |    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
+                  |    FILTER(?person1 != <http://rdfh.ch/resources/F4n1xKa3TCiR4llJeElAGA>) .
                   |}
                   |OFFSET 0""".stripMargin
 
-      // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+      // We should get one result, not including <http://rdfh.ch/resources/XNn6wanrTHWShGTjoULm5g> ("letter to self").
 
       Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
         val searchResponseStr = responseAs[String]
@@ -9067,11 +9067,11 @@ class SearchRouteV2R2RSpec extends R2RSpec {
                   |    ?letter a beol:letter .
                   |    ?letter beol:hasAuthor ?person1 .
                   |    ?letter beol:hasRecipient ?person2 .
-                  |    FILTER(?person1 != <http://rdfh.ch/0801/F4n1xKa3TCiR4llJeElAGA>) .
+                  |    FILTER(?person1 != <http://rdfh.ch/resources/F4n1xKa3TCiR4llJeElAGA>) .
                   |}
                   |OFFSET 0""".stripMargin
 
-      // We should get one result, not including <http://rdfh.ch/0801/XNn6wanrTHWShGTjoULm5g> ("letter to self").
+      // We should get one result, not including <http://rdfh.ch/resources/XNn6wanrTHWShGTjoULm5g> ("letter to self").
 
       Post("/v2/searchextended", HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> searchPath ~> check {
         val searchResponseStr = responseAs[String]

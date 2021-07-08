@@ -3,12 +3,64 @@
     "@graph": [
         {
             "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/g_6nDsLHoB8MDPkwVJWHagO",
+                "@type": "xsd:anyURI"
+            },
+            "rdfs:label": "A thing that only project members can see",
+            "knora-api:versionArkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/g_6nDsLHoB8MDPkwVJWHagO.20160302T150510Z",
+                "@type": "xsd:anyURI"
+            },
+            "knora-api:attachedToProject": {
+                "@id": "http://rdfh.ch/projects/0001"
+            },
+            "knora-api:userHasPermission": "CR",
+            "knora-api:creationDate": {
+                "@value": "2016-03-02T15:05:10Z",
+                "@type": "xsd:dateTimeStamp"
+            },
+            "knora-api:attachedToUser": {
+                "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+            },
+            "knora-api:hasPermissions": "CR knora-admin:Creator|V knora-admin:ProjectMember",
+            "anything:hasText": {
+                "knora-api:textValueHasMapping": {
+                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
+                },
+                "knora-api:arkUrl": {
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/g_6nDsLHoB8MDPkwVJWHagO/000000000000000000000ws",
+                    "@type": "xsd:anyURI"
+                },
+                "knora-api:versionArkUrl": {
+                    "@value": "http://0.0.0.0:3336/ark:/72163/2/g_6nDsLHoB8MDPkwVJWHagO/000000000000000000000ws.20160302T150554Z",
+                    "@type": "xsd:anyURI"
+                },
+                "knora-api:userHasPermission": "CR",
+                "knora-api:valueCreationDate": {
+                    "@value": "2016-03-02T15:05:54Z",
+                    "@type": "xsd:dateTimeStamp"
+                },
+                "knora-api:attachedToUser": {
+                    "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+                },
+                "knora-api:valueHasUUID": "000000000000000000000w",
+                "knora-api:hasPermissions": "CR knora-admin:Creator",
+                "@id": "http://rdfh.ch/resources/g_6nDsLHoB8MDPkwVJWHag/values/2",
+                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>This is a <a href=\"http://rdfh.ch/resources/lBGY9SS0rIr-bHv4iPePHw\" class=\"salsah-link\">standoff link</a>.</text>",
+                "@type": "knora-api:TextValue"
+            },
+            "@type": "anything:Thing",
+            "knora-api:resourceHasUUID": "g_6nDsLHoB8MDPkwVJWHag",
+            "@id": "http://rdfh.ch/resources/g_6nDsLHoB8MDPkwVJWHag"
+        },
+        {
+            "knora-api:arkUrl": {
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/jT0UHG9_wtaX23VoYydmGgH",
                 "@type": "xsd:anyURI"
             },
             "rdfs:label": "Ein Ding für jemanden, dem die Dinge gefallen",
             "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv.20160302T150510Z",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/jT0UHG9_wtaX23VoYydmGgH.20160302T150510Z",
                 "@type": "xsd:anyURI"
             },
             "knora-api:attachedToProject": {
@@ -29,11 +81,11 @@
                         "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
                     },
                     "knora-api:arkUrl": {
-                        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv/000000000000000000000ws",
+                        "@value": "http://0.0.0.0:3336/ark:/72163/2/jT0UHG9_wtaX23VoYydmGgH/000000000000000000000ws",
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:versionArkUrl": {
-                        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv/000000000000000000000ws.20160302T150554Z",
+                        "@value": "http://0.0.0.0:3336/ark:/72163/2/jT0UHG9_wtaX23VoYydmGgH/000000000000000000000ws.20160302T150554Z",
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:userHasPermission": "CR",
@@ -46,8 +98,8 @@
                     },
                     "knora-api:valueHasUUID": "000000000000000000000w",
                     "knora-api:hasPermissions": "CR knora-admin:Creator",
-                    "@id": "http://rdfh.ch/0001/a-thing-with-text-values/values/1",
-                    "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Ich liebe die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a>, sie sind alles für mich.</text>",
+                    "@id": "http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/1",
+                    "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Ich liebe die <a href=\"http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA\" class=\"salsah-link\">Dinge</a>, sie sind alles für mich.</text>",
                     "@type": "knora-api:TextValue"
                 },
                 {
@@ -55,11 +107,11 @@
                         "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
                     },
                     "knora-api:arkUrl": {
-                        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv/000000000000000000000ws",
+                        "@value": "http://0.0.0.0:3336/ark:/72163/2/jT0UHG9_wtaX23VoYydmGgH/000000000000000000000ws",
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:versionArkUrl": {
-                        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thing=with=text=valuesv/000000000000000000000ws.20160302T150554Z",
+                        "@value": "http://0.0.0.0:3336/ark:/72163/2/jT0UHG9_wtaX23VoYydmGgH/000000000000000000000ws.20160302T150554Z",
                         "@type": "xsd:anyURI"
                     },
                     "knora-api:userHasPermission": "CR",
@@ -72,64 +124,14 @@
                     },
                     "knora-api:valueHasUUID": "000000000000000000000w",
                     "knora-api:hasPermissions": "CR knora-admin:Creator",
-                    "@id": "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
-                    "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Na ja, die <a href=\"http://rdfh.ch/0001/a-thing\" class=\"salsah-link\">Dinge</a> sind OK.</text>",
+                    "@id": "http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg/values/2",
+                    "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>Na ja, die <a href=\"http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA\" class=\"salsah-link\">Dinge</a> sind OK.</text>",
                     "@type": "knora-api:TextValue"
                 }
             ],
             "@type": "anything:Thing",
-            "@id": "http://rdfh.ch/0001/a-thing-with-text-values"
-        },
-        {
-            "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/project=thing=1m",
-                "@type": "xsd:anyURI"
-            },
-            "rdfs:label": "A thing that only project members can see",
-            "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/project=thing=1m.20160302T150510Z",
-                "@type": "xsd:anyURI"
-            },
-            "knora-api:attachedToProject": {
-                "@id": "http://rdfh.ch/projects/0001"
-            },
-            "knora-api:userHasPermission": "CR",
-            "knora-api:creationDate": {
-                "@value": "2016-03-02T15:05:10Z",
-                "@type": "xsd:dateTimeStamp"
-            },
-            "knora-api:attachedToUser": {
-                "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
-            },
-            "knora-api:hasPermissions": "CR knora-admin:Creator|V knora-admin:ProjectMember",
-            "anything:hasText": {
-                "knora-api:textValueHasMapping": {
-                    "@id": "http://rdfh.ch/standoff/mappings/StandardMapping"
-                },
-                "knora-api:arkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/project=thing=1m/000000000000000000000ws",
-                    "@type": "xsd:anyURI"
-                },
-                "knora-api:versionArkUrl": {
-                    "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/project=thing=1m/000000000000000000000ws.20160302T150554Z",
-                    "@type": "xsd:anyURI"
-                },
-                "knora-api:userHasPermission": "CR",
-                "knora-api:valueCreationDate": {
-                    "@value": "2016-03-02T15:05:54Z",
-                    "@type": "xsd:dateTimeStamp"
-                },
-                "knora-api:attachedToUser": {
-                    "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
-                },
-                "knora-api:valueHasUUID": "000000000000000000000w",
-                "knora-api:hasPermissions": "CR knora-admin:Creator",
-                "@id": "http://rdfh.ch/0001/project-thing-1/values/2",
-                "knora-api:textValueAsXml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<text>This is a <a href=\"http://rdfh.ch/0001/project-thing-2\" class=\"salsah-link\">standoff link</a>.</text>",
-                "@type": "knora-api:TextValue"
-            },
-            "@type": "anything:Thing",
-            "@id": "http://rdfh.ch/0001/project-thing-1"
+            "knora-api:resourceHasUUID": "jT0UHG9_wtaX23VoYydmGg",
+            "@id": "http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg"
         }
     ],
     "@context": {

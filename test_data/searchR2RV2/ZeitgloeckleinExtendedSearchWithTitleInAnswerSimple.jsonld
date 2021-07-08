@@ -4,28 +4,28 @@
         {
             "rdfs:label": "Zeitglöcklein des Lebens und Leidens Christi",
             "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5.20160302T150510Z",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/7dGkt1CLKdZbrxVj324eaw0.20160302T150510Z",
                 "@type": "xsd:anyURI"
             },
             "@type": "incunabula:book",
-            "@id": "http://rdfh.ch/0803/c5058f3a",
+            "@id": "http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw",
             "incunabula:title": "Zeitglöcklein des Lebens und Leidens Christi",
             "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/c5058f3a5",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/7dGkt1CLKdZbrxVj324eaw0",
                 "@type": "xsd:anyURI"
             }
         },
         {
             "rdfs:label": "Zeitglöcklein des Lebens und Leidens Christi",
             "knora-api:versionArkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j.20160302T150523Z",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/i4egXDOr2dZR3JRcdlapSQ9.20160302T150523Z",
                 "@type": "xsd:anyURI"
             },
             "@type": "incunabula:book",
-            "@id": "http://rdfh.ch/0803/ff17e5ef9601",
+            "@id": "http://rdfh.ch/resources/i4egXDOr2dZR3JRcdlapSQ",
             "incunabula:title": "Zeitglöcklein des Lebens und Leidens Christi",
             "knora-api:arkUrl": {
-                "@value": "http://0.0.0.0:3336/ark:/72163/1/0803/ff17e5ef9601j",
+                "@value": "http://0.0.0.0:3336/ark:/72163/2/i4egXDOr2dZR3JRcdlapSQ9",
                 "@type": "xsd:anyURI"
             }
         }
