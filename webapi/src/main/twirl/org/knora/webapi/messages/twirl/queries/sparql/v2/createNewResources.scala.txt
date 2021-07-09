@@ -31,13 +31,14 @@
  * @param resourcesToCreate a collection of resources to be created.
  * @param projectIri        the IRI of the project in which the resources are to be created.
  * @param creatorIri        the IRI of the creator of the resources.
+ * @param formatter         instance of stringFormatter.
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
   resourcesToCreate: Seq[SparqlTemplateResourceToCreate],
   projectIri: IRI,
   creatorIri: IRI,
-  stringFormatter: StringFormatter)
+  formatter: StringFormatter)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -52,7 +53,7 @@ INSERT DATA {
                 knora-base:isDeleted false ;
                 knora-base:attachedToUser <@creatorIri> ;
                 knora-base:attachedToProject <@projectIri> ;
-                knora-base:resourceHasUUID "@{stringFormatter.base64EncodeUuid(res.resourceUUID.get)}"^^xsd:string ;
+                knora-base:resourceHasUUID "@{formatter.base64EncodeUuid(res.resourceUUID)}"^^xsd:string ;
                 rdfs:label """@res.resourceLabel""" ;
  				knora-base:hasPermissions "@res.permissions" ;
                 knora-base:creationDate "@res.resourceCreationDate"^^xsd:dateTime .

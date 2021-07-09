@@ -35,7 +35,7 @@ import org.knora.webapi._
   * @param resourceCreationDate the creation date that should be attached to the resource.
   */
 case class SparqlTemplateResourceToCreate(resourceIri: IRI,
-                                          resourceUUID: Option[UUID] = None,
+                                          resourceUUID: UUID,
                                           permissions: String,
                                           sparqlForValues: String,
                                           resourceClassIri: IRI,

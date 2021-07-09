@@ -1452,10 +1452,17 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
       namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectADM)
 
-      // Create random IRIs for resources, collect in Map[clientResourceID, IRI]
+      // Create random UUIDs for resources, collect in Map[clientResourceID, UUID]
+      clientResourceIDsToResourceUUIDs: Map[String, UUID] = resourcesToCreate
+        .map(resRequest => resRequest.clientResourceID -> UUID.randomUUID)
+        .toMap
+
       clientResourceIDsToResourceIris: Map[String, IRI] = new ErrorHandlingMap(
         toWrap = resourcesToCreate
-          .map(resRequest => resRequest.clientResourceID -> stringFormatter.makeResourceIri())
+          .map(
+            resRequest =>
+              resRequest.clientResourceID -> stringFormatter.makeResourceIri(
+                clientResourceIDsToResourceUUIDs.get(resRequest.clientResourceID)))
           .toMap,
         errorTemplateFun = { key =>
           s"Resource $key is the target of a link, but was not provided in the request"
@@ -1604,7 +1611,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               throw BadRequestException(
                 s"Instances of knora-base:Resource cannot be created, only instances of subclasses")
             }
-
+            resourceUUID = clientResourceIDsToResourceUUIDs(resourceCreateRequest.clientResourceID)
             resourceIri = clientResourceIDsToResourceIris(resourceCreateRequest.clientResourceID)
 
             // Check every resource to be created with respect of ontology and cardinalities. Links are still
@@ -1660,6 +1667,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           } yield
             SparqlTemplateResourceToCreate(
               resourceIri = resourceIri,
+              resourceUUID = resourceUUID,
               permissions = defaultObjectAccessPermissions,
               sparqlForValues = generateSparqlForValuesResponse.insertSparql,
               resourceClassIri = resourceCreateRequest.resourceTypeIri,
@@ -1951,7 +1959,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
         triplestore = settings.triplestoreType,
         resourcesToCreate = resourcesToCreate,
         projectIri = projectIri,
-        creatorIri = creatorIri
+        creatorIri = creatorIri,
+        formatter = stringFormatter
       )
       .toString()
   }
@@ -2045,6 +2054,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                              projectADM: ProjectADM,
                              label: String,
                              resourceIri: IRI,
+                             resourceUUID: UUID,
                              values: Map[IRI, Seq[CreateValueV1WithComment]],
                              file: Option[FileValueV1],
                              creatorIri: IRI,
@@ -2136,6 +2146,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       resourcesToCreate: Seq[SparqlTemplateResourceToCreate] = Seq(
         SparqlTemplateResourceToCreate(
           resourceIri = resourceIri,
+          resourceUUID = resourceUUID,
           permissions = defaultResourceClassAccessPermissions,
           sparqlForValues = generateSparqlForValuesResponse.insertSparql,
           resourceClassIri = resourceClassIri,
@@ -2242,8 +2253,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           s"Cannot create a resource in project $resourceProjectIri with resource class $resourceClassIri, which is defined in a non-shared ontology in another project")
       }
 
-      namedGraph = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectResponse.project)
-      resourceIri: IRI = stringFormatter.makeResourceIri()
+      namedGraph: IRI = StringFormatter.getGeneralInstance.projectDataNamedGraphV2(projectResponse.project)
+      resourceUUID: UUID = UUID.randomUUID
+      resourceIri: IRI = stringFormatter.makeResourceIri(Some(resourceUUID))
 
       // Check user's PermissionProfile (part of UserADM) to see if the user has the permission to
       // create a new resource in the given project.
@@ -2263,6 +2275,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
             projectADM = projectResponse.project,
             label = label,
             resourceIri = resourceIri,
+            resourceUUID = resourceUUID,
             values = values,
             file = file,
             creatorIri = userIri,

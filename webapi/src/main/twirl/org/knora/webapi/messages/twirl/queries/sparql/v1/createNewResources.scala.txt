@@ -21,7 +21,7 @@
 @import org.knora.webapi.IRI
 @import org.knora.webapi.messages.v1.responder.valuemessages._
 @import org.knora.webapi.messages.twirl.SparqlTemplateResourceToCreate
-
+@import org.knora.webapi.messages.StringFormatter
 
 @**
  * Creates new resources.
@@ -31,12 +31,14 @@
  * @param resourcesToCreate a collection of resources to be created.
  * @param projectIri        the IRI of the project in which the resources are to be created.
  * @param creatorIri        the IRI of the creator of the resources.
+ * @param formatter         instance of stringFormatter.
  *@
 @(dataNamedGraph: IRI,
   triplestore: String,
   resourcesToCreate: Seq[SparqlTemplateResourceToCreate],
   projectIri: IRI,
-  creatorIri: IRI)
+  creatorIri: IRI,
+  formatter: StringFormatter)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -53,6 +55,7 @@ INSERT DATA {
                 knora-base:attachedToProject <@projectIri> ;
                 rdfs:label """@res.resourceLabel""" ;
  				knora-base:hasPermissions "@res.permissions" ;
+ 				knora-base:resourceHasUUID "@{formatter.base64EncodeUuid(res.resourceUUID)}"^^xsd:string ;
                 knora-base:creationDate "@res.resourceCreationDate"^^xsd:dateTime .
 
             @res.sparqlForValues

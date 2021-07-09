@@ -275,7 +275,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             resourcesToCreate = Seq(resourceReadyToCreate.sparqlTemplateResourceToCreate),
             projectIri = createResourceRequestV2.createResource.projectADM.id,
             creatorIri = createResourceRequestV2.requestingUser.id,
-            stringFormatter = stringFormatter
+            formatter = stringFormatter
           )
           .toString()
 
@@ -866,7 +866,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       ResourceReadyToCreate(
         sparqlTemplateResourceToCreate = SparqlTemplateResourceToCreate(
           resourceIri = resourceIri,
-          resourceUUID = Some(resourceUUID),
+          resourceUUID = resourceUUID,
           permissions = resourcePermissions,
           sparqlForValues = sparqlForValuesResponse.insertSparql,
           resourceClassIri = internalCreateResource.resourceClassIri.toString,
@@ -1275,7 +1275,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong resource class")
       }
 
-      _ = if (resource.resourceUUID != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceUUID.get) {
+      _ = if (resource.resourceUUID != resourceReadyToCreate.sparqlTemplateResourceToCreate.resourceUUID) {
         throw AssertionException(s"Resource <$resourceIri> was saved, but it has the wrong UUID")
       }
 
@@ -1431,8 +1431,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             stringFormatter = stringFormatter
           )
           .toString())
-
-      // _ = println(resourceRequestSparql)
 
       resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
         sparql = resourceRequestSparql,
