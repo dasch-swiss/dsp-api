@@ -136,8 +136,7 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
       }
     }
 
-    val resourcesWithOldIris = collectResourceIris(model)
-
+    val resourcesWithOldIris: Iterator[IriNode] = collectResourceIris(model)
     resourcesWithOldIris.foreach { oldIri =>
       val newIri: IriNode = hasResourceUUIDProperty(model, oldIri) match {
         case Some(givenUUID: DatatypeLiteral) =>
