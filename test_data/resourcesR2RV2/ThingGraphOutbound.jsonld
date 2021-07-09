@@ -1,3 +1,4 @@
+
 {
     "@graph": [
         {
@@ -7,11 +8,6 @@
             "anything:isPartOfOtherThing": {
                 "@id": "http://rdfh.ch/resources/LOV-6aLYQFW15jwdyS51Yw"
             }
-        },
-        {
-            "@id": "http://rdfh.ch/resources/7uuGcnFcQJq08dMOralyCQ",
-            "@type": "anything:Thing",
-            "rdfs:label": "Hotel"
         },
         {
             "@id": "http://rdfh.ch/resources/9eSuQ_J7T0aOqoImTkwPxA",
@@ -116,10 +112,7 @@
         {
             "@id": "http://rdfh.ch/resources/sHCLAGg-R5qJ6oPZPV-zOQ",
             "@type": "anything:Thing",
-            "rdfs:label": "Golf",
-            "anything:hasOtherThing": {
-                "@id": "http://rdfh.ch/resources/7uuGcnFcQJq08dMOralyCQ"
-            }
+            "rdfs:label": "Golf"
         },
         {
             "rdfs:label": "Echo",

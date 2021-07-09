@@ -1,22 +1,10 @@
+
 {
     "@graph": [
         {
             "@id": "http://rdfh.ch/resources/0C-0L1kORryKzJAJxxRyRQ",
             "@type": "anything:Thing",
             "rdfs:label": "Sierra"
-        },
-        {
-            "@id": "http://rdfh.ch/resources/5IEswyQFQp2bxXDrOyEfEA",
-            "@type": "anything:Thing",
-            "rdfs:label": "Delta",
-            "anything:hasOtherThing": {
-                "@id": "http://rdfh.ch/resources/cmfk1DMHRBiR4-_6HXpEFA"
-            }
-        },
-        {
-            "@id": "http://rdfh.ch/resources/7uuGcnFcQJq08dMOralyCQ",
-            "@type": "anything:Thing",
-            "rdfs:label": "Hotel"
         },
         {
             "@id": "http://rdfh.ch/resources/A67ka6UQRHWf313tbhQBjw",
@@ -61,14 +49,6 @@
             }
         },
         {
-            "@id": "http://rdfh.ch/resources/cmfk1DMHRBiR4-_6HXpEFA",
-            "@type": "anything:Thing",
-            "rdfs:label": "Mike",
-            "anything:hasOtherThing": {
-                "@id": "http://rdfh.ch/resources/L5xU7Qe5QUu6Wz3cDaCxbA"
-            }
-        },
-        {
             "@id": "http://rdfh.ch/resources/gKGfzQuqCIvrXmagQI-Xuw",
             "@type": "anything:Thing",
             "rdfs:label": "Romeo",
@@ -103,10 +83,7 @@
         {
             "@id": "http://rdfh.ch/resources/sHCLAGg-R5qJ6oPZPV-zOQ",
             "@type": "anything:Thing",
-            "rdfs:label": "Golf",
-            "anything:hasOtherThing": {
-                "@id": "http://rdfh.ch/resources/7uuGcnFcQJq08dMOralyCQ"
-            }
+            "rdfs:label": "Golf"
         },
         {
             "@id": "http://rdfh.ch/resources/tPfZeNMvRVujCQqbIbvO0A",

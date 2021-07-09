@@ -87,7 +87,7 @@ class SipiV1R2RSpec extends R2RSpec {
           )),
         "http://www.knora.org/ontology/0803/incunabula#partOf" -> Seq(
           CreateResourceValueV1(
-            link_value = Some("http://rdfh.ch/0803/5e77e98d2603")
+            link_value = Some("http://rdfh.ch/resources/m3iqHLxZSt689pieHwW__w")
           )),
         "http://www.knora.org/ontology/0803/incunabula#seqnum" -> Seq(
           CreateResourceValueV1(

@@ -1,13 +1,6 @@
+
 {
     "@graph": [
-        {
-            "@id": "http://rdfh.ch/resources/5IEswyQFQp2bxXDrOyEfEA",
-            "@type": "anything:Thing",
-            "rdfs:label": "Delta",
-            "anything:hasOtherThing": {
-                "@id": "http://rdfh.ch/resources/cmfk1DMHRBiR4-_6HXpEFA"
-            }
-        },
         {
             "@id": "http://rdfh.ch/resources/L5xU7Qe5QUu6Wz3cDaCxbA",
             "@type": "anything:Thing",
@@ -30,14 +23,6 @@
             "rdfs:label": "Whiskey",
             "anything:hasOtherThing": {
                 "@id": "http://rdfh.ch/resources/nResNuvARcWYUdWyo0GWGw"
-            }
-        },
-        {
-            "@id": "http://rdfh.ch/resources/cmfk1DMHRBiR4-_6HXpEFA",
-            "@type": "anything:Thing",
-            "rdfs:label": "Mike",
-            "anything:hasOtherThing": {
-                "@id": "http://rdfh.ch/resources/L5xU7Qe5QUu6Wz3cDaCxbA"
             }
         },
         {
