@@ -223,8 +223,11 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
         maybeCustomIri match {
           case Some(customIri: SmartIri) =>
             // Yes. Get the UUID from the given IRI
-            val endingUUID: UUID = stringFormatter.base64DecodeUuid(customIri.toString.split("/").last)
-            endingUUID
+            val uuidInIRI = customIri.toString.split("/").last
+            stringFormatter.validateBase64EncodedUuid(
+              uuidInIRI,
+              throw BadRequestException(s"Given IRI $customIri does not contain a valid base64 UUID"))
+
           case None => UUID.randomUUID
         }
     }

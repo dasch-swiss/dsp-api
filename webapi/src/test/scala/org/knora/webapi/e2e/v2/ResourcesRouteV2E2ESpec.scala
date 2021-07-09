@@ -1075,7 +1075,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
     }
 
     "not create a resource with an invalid custom IRI" in {
-      val customIRI: IRI = "http://rdfh.ch/invalid-resource-IRI"
+      val customIRI: IRI = "http://rdfh.ch/resources/invalid-resource-IRI"
       val jsonLDEntity = createResourceWithCustomIRI(customIRI)
       val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password))

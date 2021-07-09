@@ -673,10 +673,6 @@ object CreateResourceRequestV2 extends KnoraJsonLDRequestReaderV2[CreateResource
         if (!definedResourceIri.isKnoraResourceIri) {
           throw BadRequestException(s"<$definedResourceIri> is not a Knora resource IRI")
         }
-
-        if (!definedResourceIri.getProjectCode.contains(projectInfoResponse.project.shortcode)) {
-          throw BadRequestException(s"The provided resource IRI does not contain the correct project code")
-        }
       }
 
       // Get the resource's permissions.
