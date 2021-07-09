@@ -35,7 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatest.wordspec.{AnyWordSpecLike, AsyncWordSpecLike}
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
@@ -46,7 +46,7 @@ import zio.Schedule.Decision
 import zio.clock.Clock
 import zio.console.{Console, putStrLn}
 import zio.duration._
-import zio.{BootstrapRuntime, Runtime, IO, Schedule, Task, ZIO}
+import zio.{BootstrapRuntime, IO, Runtime, Schedule, Task, ZIO}
 
 object IntegrationSpec {
 
@@ -71,7 +71,7 @@ object IntegrationSpec {
 }
 
 abstract class IntegrationSpec(_config: Config)
-    extends AnyWordSpecLike
+    extends AsyncWordSpecLike
     with Matchers
     with BeforeAndAfterAll
     with LazyLogging {
@@ -85,9 +85,10 @@ abstract class IntegrationSpec(_config: Config)
       TestContainerFuseki.PortConfig.withFallback(IntegrationSpec.defaultConfig)
     )
 
-  implicit val settings: KnoraSettingsImpl        = KnoraSettings(system)
-  implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-  implicit val timeout: Timeout                   = settings.defaultTimeout
+  implicit val settings: KnoraSettingsImpl = KnoraSettings(system)
+  override implicit val executionContext: ExecutionContext =
+    system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
+  implicit val timeout: Timeout = settings.defaultTimeout
 
   // needs to be initialized early on
   StringFormatter.initForTest()
@@ -119,10 +120,13 @@ abstract class IntegrationSpec(_config: Config)
     rt.unsafeRun(checkTriplestore.retry(ScheduleUtil.schedule))
   }
 
-  protected def loadTestData(actorRef: ActorRef): Unit = {
+  protected def loadTestData(
+    actorRef: ActorRef,
+    rdfDataObjects: Seq[RdfDataObject] = Seq.empty[RdfDataObject]
+  ): Unit = {
     logger.info("Loading test data started ...")
     implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
-    Try(Await.result(actorRef ? ResetRepositoryContent(Seq.empty[RdfDataObject]), 479999.milliseconds.asScala)) match {
+    Try(Await.result(actorRef ? ResetRepositoryContent(rdfDataObjects), 479999.milliseconds.asScala)) match {
       case Success(res) => logger.info("... loading test data done.")
       case Failure(e)   => logger.error(s"Loading test data failed: ${e.getMessage}")
     }

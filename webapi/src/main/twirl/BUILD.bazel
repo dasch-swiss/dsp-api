@@ -32,3 +32,31 @@ genrule(
     cmd = "jar -cf \"$@\" $(locations :twirl_sources)",
     # tools = ["jar"],
 )
+
+twirl_templates(
+    name = "twirl_new_sources",
+    srcs = [
+        "org/knora/webapi/queries/sparql/v2/isPropertyUsed.scala.txt"
+    ],
+    additional_imports = [
+        "play.twirl.api.TwirlFeatureImports._",
+        "play.twirl.api.TwirlHelperImports._",
+        "play.twirl.api.Html",
+        "play.twirl.api.JavaScript",
+        "play.twirl.api.Txt",
+        "play.twirl.api.Xml",
+    ],
+    source_directory = ".",
+)
+
+scala_library(
+    name = "library",
+    srcs = [":twirl_new_sources"],
+    deps = [
+        "//webapi/src/main/scala/org/knora/webapi",
+        "@maven//:com_typesafe_akka_akka_actor_2_13",
+        "@maven//:com_typesafe_play_twirl_api_2_13",
+        "@maven//:org_scala_lang_modules_scala_xml_2_13",
+        "@maven//:org_slf4j_slf4j_api",
+    ],
+)

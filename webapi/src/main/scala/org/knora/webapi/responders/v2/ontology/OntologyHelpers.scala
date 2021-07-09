@@ -30,6 +30,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.StringFormatter.{SalsahGuiAttribute, SalsahGuiAttributeDefinition}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
@@ -37,7 +38,7 @@ import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeC
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.responders.v2.ontology.Cache.OntologyCacheData
 import org.knora.webapi.settings.KnoraSettingsImpl
-import org.knora.webapi.{ApiV2Complex, IRI, InternalSchema, OntologySchema}
+import org.knora.webapi.{ApiV2Complex, ApiV2Schema, ApiV2Simple, IRI, InternalSchema, OntologySchema}
 
 import java.time.Instant
 import scala.collection.immutable
@@ -1309,6 +1310,261 @@ object OntologyHelpers {
       ontologySchema = individualIri.getOntologySchema.get
     )
   }
+
+  /**
+   * Given a list of resource IRIs and a list of property IRIs (ontology entities), returns an [[EntityInfoGetResponseV2]] describing both resource and property entities.
+   *
+   * @param classIris      the IRIs of the resource entities to be queried.
+   * @param propertyIris   the IRIs of the property entities to be queried.
+   * @param requestingUser the user making the request.
+   * @return an [[EntityInfoGetResponseV2]].
+   */
+  def getEntityInfoResponseV2(
+    classIris: Set[SmartIri] = Set.empty[SmartIri],
+    propertyIris: Set[SmartIri] = Set.empty[SmartIri],
+    requestingUser: UserADM
+  )(implicit ec: ExecutionContext): Future[EntityInfoGetResponseV2] = {
+    for {
+      cacheData <- Cache.getCacheData
+
+      // See if any of the requested entities are not Knora entities.
+
+      nonKnoraEntities = (classIris ++ propertyIris).filter(!_.isKnoraEntityIri)
+
+      _ = if (nonKnoraEntities.nonEmpty) {
+            throw BadRequestException(
+              s"Some requested entities are not Knora entities: ${nonKnoraEntities.mkString(", ")}"
+            )
+          }
+
+      // See if any of the requested entities are unavailable in the requested schema.
+
+      classesUnavailableInSchema: Set[SmartIri] = classIris.foldLeft(Set.empty[SmartIri]) { case (acc, classIri) =>
+                                                    // Is this class IRI hard-coded in the requested schema?
+                                                    if (
+                                                      KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd
+                                                        .contains(classIri) ||
+                                                      KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd
+                                                        .contains(classIri)
+                                                    ) {
+                                                      // Yes, so it's available.
+                                                      acc
+                                                    } else {
+                                                      // No. Is it among the classes removed from the internal ontology in the requested schema?
+                                                      classIri.getOntologySchema.get match {
+                                                        case apiV2Schema: ApiV2Schema =>
+                                                          val internalClassIri =
+                                                            classIri.toOntologySchema(InternalSchema)
+                                                          val knoraBaseClassesToRemove = OntologyTransformationRules
+                                                            .getTransformationRules(
+                                                              classIri.getOntologyFromEntity,
+                                                              apiV2Schema
+                                                            )
+                                                            .internalClassesToRemove
+
+                                                          if (knoraBaseClassesToRemove.contains(internalClassIri)) {
+                                                            // Yes. Include it in the set of unavailable classes.
+                                                            acc + classIri
+                                                          } else {
+                                                            // No. It's available.
+                                                            acc
+                                                          }
+
+                                                        case InternalSchema => acc
+                                                      }
+                                                    }
+                                                  }
+
+      propertiesUnavailableInSchema: Set[SmartIri] = propertyIris.foldLeft(Set.empty[SmartIri]) {
+                                                       case (acc, propertyIri) =>
+                                                         // Is this property IRI hard-coded in the requested schema?
+                                                         if (
+                                                           KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd
+                                                             .contains(propertyIri) ||
+                                                           KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd
+                                                             .contains(propertyIri)
+                                                         ) {
+                                                           // Yes, so it's available.
+                                                           acc
+                                                         } else {
+                                                           // No. See if it's available in the requested schema.
+                                                           propertyIri.getOntologySchema.get match {
+                                                             case apiV2Schema: ApiV2Schema =>
+                                                               val internalPropertyIri =
+                                                                 propertyIri.toOntologySchema(InternalSchema)
+
+                                                               // If it's a link value property and it's requested in the simple schema, it's unavailable.
+                                                               if (
+                                                                 apiV2Schema == ApiV2Simple && OntologyHelpers
+                                                                   .isLinkValueProp(internalPropertyIri, cacheData)
+                                                               ) {
+                                                                 acc + propertyIri
+                                                               } else {
+                                                                 // Is it among the properties removed from the internal ontology in the requested schema?
+
+                                                                 val knoraBasePropertiesToRemove =
+                                                                   OntologyTransformationRules
+                                                                     .getTransformationRules(
+                                                                       propertyIri.getOntologyFromEntity,
+                                                                       apiV2Schema
+                                                                     )
+                                                                     .internalPropertiesToRemove
+
+                                                                 if (
+                                                                   knoraBasePropertiesToRemove.contains(
+                                                                     internalPropertyIri
+                                                                   )
+                                                                 ) {
+                                                                   // Yes. Include it in the set of unavailable properties.
+                                                                   acc + propertyIri
+                                                                 } else {
+                                                                   // No. It's available.
+                                                                   acc
+                                                                 }
+                                                               }
+
+                                                             case InternalSchema => acc
+                                                           }
+                                                         }
+                                                     }
+
+      entitiesUnavailableInSchema = classesUnavailableInSchema ++ propertiesUnavailableInSchema
+
+      _ = if (entitiesUnavailableInSchema.nonEmpty) {
+            throw NotFoundException(
+              s"Some requested entities were not found: ${entitiesUnavailableInSchema.mkString(", ")}"
+            )
+          }
+
+      // See if any of the requested entities are hard-coded for knora-api.
+
+      hardCodedExternalClassesAvailable: Map[SmartIri, ReadClassInfoV2] =
+        KnoraBaseToApiV2SimpleTransformationRules.externalClassesToAdd.view
+          .filterKeys(classIris)
+          .toMap ++
+          KnoraBaseToApiV2ComplexTransformationRules.externalClassesToAdd.view.filterKeys(classIris).toMap
+
+      hardCodedExternalPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] =
+        KnoraBaseToApiV2SimpleTransformationRules.externalPropertiesToAdd.view
+          .filterKeys(propertyIris)
+          .toMap ++
+          KnoraBaseToApiV2ComplexTransformationRules.externalPropertiesToAdd.view.filterKeys(propertyIris)
+
+      // Convert the remaining external entity IRIs to internal ones.
+
+      internalToExternalClassIris: Map[SmartIri, SmartIri] =
+        (classIris -- hardCodedExternalClassesAvailable.keySet)
+          .map(externalIri => externalIri.toOntologySchema(InternalSchema) -> externalIri)
+          .toMap
+      internalToExternalPropertyIris: Map[SmartIri, SmartIri] =
+        (propertyIris -- hardCodedExternalPropertiesAvailable.keySet)
+          .map(externalIri => externalIri.toOntologySchema(InternalSchema) -> externalIri)
+          .toMap
+
+      classIrisForCache    = internalToExternalClassIris.keySet
+      propertyIrisForCache = internalToExternalPropertyIris.keySet
+
+      // Get the entities that are available in the ontology cache.
+
+      classOntologiesForCache: Iterable[ReadOntologyV2] = cacheData.ontologies.view
+                                                            .filterKeys(classIrisForCache.map(_.getOntologyFromEntity))
+                                                            .toMap
+                                                            .values
+      propertyOntologiesForCache: Iterable[ReadOntologyV2] =
+        cacheData.ontologies.view
+          .filterKeys(propertyIrisForCache.map(_.getOntologyFromEntity))
+          .toMap
+          .values
+
+      classesAvailableFromCache: Map[SmartIri, ReadClassInfoV2] = classOntologiesForCache.flatMap { ontology =>
+                                                                    ontology.classes.view
+                                                                      .filterKeys(classIrisForCache)
+                                                                      .toMap
+                                                                  }.toMap
+
+      propertiesAvailableFromCache: Map[SmartIri, ReadPropertyInfoV2] = propertyOntologiesForCache.flatMap { ontology =>
+                                                                          ontology.properties.view
+                                                                            .filterKeys(propertyIrisForCache)
+                                                                            .toMap
+                                                                        }.toMap
+
+      allClassesAvailable: Map[SmartIri, ReadClassInfoV2] =
+        classesAvailableFromCache ++ hardCodedExternalClassesAvailable
+      allPropertiesAvailable: Map[SmartIri, ReadPropertyInfoV2] =
+        propertiesAvailableFromCache ++ hardCodedExternalPropertiesAvailable
+
+      // See if any entities are missing.
+
+      allExternalClassIrisAvailable: Set[SmartIri] = allClassesAvailable.keySet.map { classIri =>
+                                                       if (classIri.getOntologySchema.contains(InternalSchema)) {
+                                                         internalToExternalClassIris(classIri)
+                                                       } else {
+                                                         classIri
+                                                       }
+                                                     }
+
+      allExternalPropertyIrisAvailable = allPropertiesAvailable.keySet.map { propertyIri =>
+                                           if (propertyIri.getOntologySchema.contains(InternalSchema)) {
+                                             internalToExternalPropertyIris(propertyIri)
+                                           } else {
+                                             propertyIri
+                                           }
+                                         }
+
+      missingClasses    = classIris -- allExternalClassIrisAvailable
+      missingProperties = propertyIris -- allExternalPropertyIrisAvailable
+
+      missingEntities = missingClasses ++ missingProperties
+
+      _ = if (missingEntities.nonEmpty) {
+            throw NotFoundException(s"Some requested entities were not found: ${missingEntities.mkString(", ")}")
+          }
+
+      response = EntityInfoGetResponseV2(
+                   classInfoMap = new ErrorHandlingMap(allClassesAvailable, key => s"Resource class $key not found"),
+                   propertyInfoMap = new ErrorHandlingMap(allPropertiesAvailable, key => s"Property $key not found")
+                 )
+    } yield response
+  }
+
+  /**
+   * Requests information about OWL classes in a single ontology.
+   *
+   * @param classIris      the IRIs (internal or external) of the classes to query for.
+   * @param requestingUser the user making the request.
+   * @return a [[ReadOntologyV2]].
+   */
+  def getClassDefinitionsFromOntologyV2(
+    classIris: Set[SmartIri],
+    allLanguages: Boolean,
+    requestingUser: UserADM
+  )(implicit ec: ExecutionContext): Future[ReadOntologyV2] =
+    for {
+      cacheData <- Cache.getCacheData
+
+      ontologyIris = classIris.map(_.getOntologyFromEntity)
+
+      _ = if (ontologyIris.size != 1) {
+            throw BadRequestException(s"Only one ontology may be queried per request")
+          }
+
+      classInfoResponse: EntityInfoGetResponseV2 <-
+        getEntityInfoResponseV2(classIris = classIris, requestingUser = requestingUser)
+      internalOntologyIri = ontologyIris.head.toOntologySchema(InternalSchema)
+
+      // Are we returning data in the user's preferred language, or in all available languages?
+      userLang = if (!allLanguages) {
+                   // Just the user's preferred language.
+                   Some(requestingUser.lang)
+                 } else {
+                   // All available languages.
+                   None
+                 }
+    } yield ReadOntologyV2(
+      ontologyMetadata = cacheData.ontologies(internalOntologyIri).ontologyMetadata,
+      classes = classInfoResponse.classInfoMap,
+      userLang = userLang
+    )
 
   /**
    * Loads a class definition from the triplestore and converts it to a [[ClassInfoContentV2]].

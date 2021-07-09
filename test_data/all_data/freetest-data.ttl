@@ -1,0 +1,81 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@prefix freetest: <http://www.knora.org/ontology/0001/freetest#> .
+
+<http://rdfh.ch/0001/free-test-instance-01> a freetest:FreeTest ;
+  knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+  knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
+  knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+  knora-base:creationDate "2019-11-29T10:00:00.673298Z"^^xsd:dateTime;
+
+  freetest:hasText <http://rdfh.ch/0001/free-test-instance-01/values/has-text-value-01> ;
+  freetest:hasBoolean <http://rdfh.ch/0001/free-test-instance-01/values/has-boolean-value-01>;
+  rdfs:label "a free test instance";
+  knora-base:isDeleted false .
+
+<http://rdfh.ch/0001/free-test-instance-01/values/has-text-value-01> a knora-base:TextValue;
+  knora-base:valueHasUUID "SZyeLLmOTcCCuS3B0VksHQ"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:valueCreationDate "2018-05-28T15:52:03.897Z"^^xsd:dateTime;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "test";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+<http://rdfh.ch/0001/free-test-instance-01/values/has-boolean-value-01> a knora-base:BooleanValue;
+  knora-base:valueHasUUID "IN4R19yYR0ygi3K2VEHpUQ"^^xsd:string;
+  knora-base:isDeleted false;
+  knora-base:valueCreationDate "2018-05-28T15:52:03.897Z"^^xsd:dateTime;
+  knora-base:valueHasBoolean true;
+  knora-base:valueHasOrder 0;
+  knora-base:valueHasString "true";
+  knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+  knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+<http://rdfh.ch/0001/short-free-test-instance-01> a freetest:FreeTest ;
+ knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
+ knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
+ knora-base:hasPermissions "V knora-admin:UnknownUser|M knora-admin:ProjectMember";
+ knora-base:creationDate "2019-11-29T10:00:00.673298Z"^^xsd:dateTime;
+
+ freetest:hasText <http://rdfh.ch/0001/short-free-test-instance-01/values/has-text-value-01> ;
+ freetest:hasBoolean <http://rdfh.ch/0001/short-free-test-instance-01/values/has-boolean-value-01>;
+ freetest:hasDecimal <http://rdfh.ch/0001/short-free-test-instance-01/values/has-decimal-value-01>;
+ rdfs:label "a short free test instance";
+ knora-base:isDeleted false .
+
+<http://rdfh.ch/0001/short-free-test-instance-01/values/has-text-value-01> a knora-base:TextValue;
+ knora-base:valueHasUUID "SZyeLLmOTcCCuS3B0VksHQ"^^xsd:string;
+ knora-base:isDeleted false;
+ knora-base:valueCreationDate "2018-05-28T15:52:03.897Z"^^xsd:dateTime;
+ knora-base:valueHasOrder 0;
+ knora-base:valueHasString "test";
+ knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+ knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+<http://rdfh.ch/0001/short-free-test-instance-01/values/has-boolean-value-01> a knora-base:BooleanValue;
+ knora-base:valueHasUUID "IN4R19yYR0ygi3K2VEHpUQ"^^xsd:string;
+ knora-base:isDeleted false;
+ knora-base:valueCreationDate "2018-05-28T15:52:03.897Z"^^xsd:dateTime;
+ knora-base:valueHasBoolean true;
+ knora-base:valueHasOrder 0;
+ knora-base:valueHasString "true";
+ knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+ knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+<http://rdfh.ch/0001/short-free-test-instance-01/values/has-decimal-value-01> a knora-base:DecimalValue;
+ knora-base:valueHasUUID "bXMwnrHvQH2DMjOFrGmNzg"^^xsd:string;
+ knora-base:isDeleted false;
+ knora-base:valueCreationDate "2018-05-28T15:52:03.897Z"^^xsd:dateTime;
+ knora-base:valueHasDecimal "1.5"^^xsd:decimal;
+ knora-base:valueHasOrder 0;
+ knora-base:valueHasString "1.5";
+ knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser";
+ knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
