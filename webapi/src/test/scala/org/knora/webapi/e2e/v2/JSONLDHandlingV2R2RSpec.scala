@@ -21,14 +21,13 @@ package org.knora.webapi.e2e.v2
 
 import java.net.URLEncoder
 import java.nio.file.Paths
-
 import akka.actor.ActorSystem
 import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.testkit.RouteTestTimeout
 import org.knora.webapi._
 import org.knora.webapi.e2e.v2.ResponseCheckerV2._
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
-import org.knora.webapi.messages.util.rdf.JsonLDUtil
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.routing.v2.ResourcesRouteV2
 import spray.json._
 
@@ -50,6 +49,8 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
+  // If true, writes all API responses to test data files. If false, compares the API responses to the existing test data files.
+  private val writeTestDataFiles = false
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
@@ -59,43 +60,45 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
   "The JSON-LD processor" should {
 
-    "expand prefixes (on the client side)" in {
-
-      // JSON-LD with prefixes and context object
-      val jsonldWithPrefixes =
-        readOrWriteTextFile("", Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false)
-
-      // expand JSON-LD with JSON-LD processor
-      val jsonldParsedExpanded = JsonLDUtil.parseJsonLD(jsonldWithPrefixes)
-
-      // expected result after expansion
-      val expectedJsonldExpandedParsed = JsonLDUtil.parseJsonLD(
-        readOrWriteTextFile("",
-                            Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"),
-                            writeFile = false))
-
-      compareParsedJSONLDForResourcesResponse(expectedResponse = expectedJsonldExpandedParsed,
-                                              receivedResponse = jsonldParsedExpanded)
-
-    }
-
     "produce the expected JSON-LD context object (on the server side)" in {
 
       Get("/v2/resources/" + URLEncoder.encode("http://rdfh.ch/resources/O_wI0t9iQYy4cUG6ex_UAg", "UTF-8")) ~> resourcesPath ~> check {
 
         assert(status == StatusCodes.OK, response.toString)
+        val responseAsString = responseAs[String]
+        val receivedJson: JsObject = JsonParser(responseAsString).asJsObject
 
-        val receivedJson: JsObject = JsonParser(responseAs[String]).asJsObject
-
-        val expectedJson: JsObject =
-          JsonParser(
-            readOrWriteTextFile("",
-                                Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
-                                writeFile = false)).asJsObject
+        val expectedJson: JsObject = JsonParser(
+          readOrWriteTextFile(responseAsString,
+                              Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
+                              writeFile = writeTestDataFiles)
+        ).asJsObject
 
         assert(receivedJson.fields("@context") == expectedJson.fields("@context"), "@context incorrect")
 
       }
+
+    }
+
+    "expand prefixes (on the client side)" in {
+
+      // Reads the JSON-LD with prefixes and context object, since this reads the already existing
+      // NarrenschiffFirstPage.jsonld,  writeFile should always be false
+      val jsonldWithPrefixes =
+        readOrWriteTextFile("", Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"), writeFile = false)
+
+      // expand JSON-LD with JSON-LD processor
+      val jsonldParsedExpanded: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonldWithPrefixes)
+
+      // expected result after expansion
+      val expectedJsonldExpandedParsed = JsonLDUtil.parseJsonLD(
+        readOrWriteTextFile(jsonldParsedExpanded.body.toString,
+                            Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"),
+                            writeFile = writeTestDataFiles)
+      )
+
+      compareParsedJSONLDForResourcesResponse(expectedResponse = expectedJsonldExpandedParsed,
+                                              receivedResponse = jsonldParsedExpanded)
 
     }
 
