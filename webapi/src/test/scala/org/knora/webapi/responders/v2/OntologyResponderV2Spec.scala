@@ -409,8 +409,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           cause.isInstanceOf[BadRequestException] should ===(true)
 
           val expectedSubjects = Set(
-            "<http://rdfh.ch/0001/a-thing>", // rdf:type anything:Thing
-            "<http://rdfh.ch/0001/a-blue-thing>", // rdf:type anything:BlueThing, a subclass of anything:Thing
+            "<http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA>", // rdf:type anything:Thing
+            "<http://rdfh.ch/resources/QUYp92LBXyOlCTz7CRs24g>", // rdf:type anything:BlueThing, a subclass of anything:Thing
             "<http://www.knora.org/ontology/0001/something#Something>", // a subclass of anything:Thing in another ontology
             "<http://www.knora.org/ontology/0001/something#hasOtherSomething>" // a subproperty of anything:hasOtherThing in another ontology
           )

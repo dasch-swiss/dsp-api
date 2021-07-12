@@ -48,7 +48,8 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   private val defaultShowNRows = 25
 
   def makeExtendedSearchRequestMessage(userADM: UserADM,
-                                       reverseParams: Map[String, Seq[String]]): ExtendedSearchGetRequestV1 = {
+                                       reverseParams: Map[String, Seq[String]],
+                                       featureFactoryConfig: FeatureFactoryConfig): ExtendedSearchGetRequestV1 = {
     val stringFormatter = StringFormatter.getGeneralInstance
 
     // Spray returns the parameters in reverse order, so reverse them before processing, because the JavaScript GUI expects the order to be preserved.
@@ -169,13 +170,15 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       searchValue = searchval, // not processed (escaped) yet
       userProfile = userADM,
       showNRows = showNRows,
-      startAt = startAt
+      startAt = startAt,
+      featureFactoryConfig = featureFactoryConfig
     )
   }
 
   def makeFulltextSearchRequestMessage(userADM: UserADM,
                                        searchval: String,
-                                       params: Map[String, String]): FulltextSearchGetRequestV1 = {
+                                       params: Map[String, String],
+                                       featureFactoryConfig: FeatureFactoryConfig): FulltextSearchGetRequestV1 = {
     val stringFormatter = StringFormatter.getGeneralInstance
 
     params.get("searchtype") match {
@@ -230,7 +233,8 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       filterByProject = projectIri,
       userProfile = userADM,
       showNRows = showNRows,
-      startAt = startAt
+      startAt = startAt,
+      featureFactoryConfig = featureFactoryConfig
     )
   }
 
@@ -249,7 +253,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
               featureFactoryConfig = featureFactoryConfig
             )
             params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
-          } yield makeExtendedSearchRequestMessage(userADM, params)
+          } yield makeExtendedSearchRequestMessage(userADM, params, featureFactoryConfig)
 
           RouteUtilV1.runJsonRouteWithFuture(
             requestMessage,
@@ -270,7 +274,7 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 featureFactoryConfig = featureFactoryConfig
               )
               params: Map[String, String] = requestContext.request.uri.query().toMap
-            } yield makeFulltextSearchRequestMessage(userADM, searchval, params)
+            } yield makeFulltextSearchRequestMessage(userADM, searchval, params, featureFactoryConfig)
 
             RouteUtilV1.runJsonRouteWithFuture(
               requestMessage,

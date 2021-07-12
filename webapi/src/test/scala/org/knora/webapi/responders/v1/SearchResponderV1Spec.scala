@@ -21,6 +21,7 @@ package org.knora.webapi.responders.v1
 
 import akka.testkit._
 import org.knora.webapi._
+import org.knora.webapi.exceptions.ForbiddenException
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v1.responder.searchmessages._
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
@@ -63,7 +64,7 @@ object SearchResponderV1Spec {
       icontitle = Some("Ding"),
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
-      obj_id = "http://rdfh.ch/0001/a-thing-with-text-values"
+      obj_id = "http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg"
     ))
 
   private val fulltextValueInThingResultsForUser1 = Vector(
@@ -87,7 +88,7 @@ object SearchResponderV1Spec {
       icontitle = Some("Ding"),
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
-      obj_id = "http://rdfh.ch/0001/a-thing-with-text-values"
+      obj_id = "http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg"
     ))
 
   private val fulltextThingResultsForUser2 = Vector(
@@ -102,7 +103,7 @@ object SearchResponderV1Spec {
       icontitle = Some("Ding"),
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
-      obj_id = "http://rdfh.ch/0001/a-thing-with-text-values"
+      obj_id = "http://rdfh.ch/resources/jT0UHG9_wtaX23VoYydmGg"
     ))
 
   private val hasOtherThingResultsForUser1 = Vector(
@@ -126,7 +127,7 @@ object SearchResponderV1Spec {
       icontitle = Some("Ding"),
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
-      obj_id = "http://rdfh.ch/0001/project-thing-1"
+      obj_id = "http://rdfh.ch/resources/g_6nDsLHoB8MDPkwVJWHag"
     ))
 
   private val hasStandoffLinkToResultsForUser1 = Vector(
@@ -150,7 +151,7 @@ object SearchResponderV1Spec {
       icontitle = Some("Ding"),
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
-      obj_id = "http://rdfh.ch/0001/project-thing-1"
+      obj_id = "http://rdfh.ch/resources/g_6nDsLHoB8MDPkwVJWHag"
     ))
 
   private val hasStandoffLinkToResultsForUser2 = Vector(
@@ -174,7 +175,7 @@ object SearchResponderV1Spec {
       icontitle = Some("Ding"),
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
-      obj_id = "http://rdfh.ch/0001/project-thing-1"
+      obj_id = "http://rdfh.ch/resources/g_6nDsLHoB8MDPkwVJWHag"
     ))
 
 }
@@ -229,7 +230,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         icontitle = Some("Buch"),
         iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
         preview_path = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
-        obj_id = "http://rdfh.ch/0803/c5058f3a"
+        obj_id = "http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw"
       ),
       SearchResultRowV1(
         rights = Some(6),
@@ -251,7 +252,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         icontitle = Some("Buch"),
         iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
         preview_path = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
-        obj_id = "http://rdfh.ch/0803/ff17e5ef9601"
+        obj_id = "http://rdfh.ch/resources/i4egXDOr2dZR3JRcdlapSQ"
       )
     )
   )
@@ -259,7 +260,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
   val bertholdResponse = SearchGetResponseV1(
     subjects = Vector(
       SearchResultRowV1(
-        obj_id = "http://rdfh.ch/0803/c5058f3a",
+        obj_id = "http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw",
         preview_path = Some("http://0.0.0.0:3335/project-icons/incunabula/book.gif"),
         iconsrc = Some("http://0.0.0.0:3335/project-icons/incunabula/book.gif"),
         icontitle = Some("Buch"),
@@ -273,7 +274,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         rights = Some(6)
       ),
       SearchResultRowV1(
-        obj_id = "http://rdfh.ch/0803/ff17e5ef9601",
+        obj_id = "http://rdfh.ch/resources/i4egXDOr2dZR3JRcdlapSQ",
         preview_path = Some("http://0.0.0.0:3335/project-icons/incunabula/book.gif"),
         iconsrc = Some("http://0.0.0.0:3335/project-icons/incunabula/book.gif"),
         icontitle = Some("Buch"),
@@ -299,7 +300,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         searchValue = "Zeitglöcklein",
         userProfile = incunabulaUser,
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -313,7 +315,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         searchValue = "Zeitglöcklein AND Lebens",
         userProfile = incunabulaUser,
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -328,7 +331,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         userProfile = incunabulaUser,
         startAt = 0,
         showNRows = 25,
-        filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page")
+        filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -346,7 +350,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         searchValue = "Orationes",
         userProfile = incunabulaUser,
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -360,7 +365,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         searchValue = "Berthold AND Bruder",
         userProfile = incunabulaUser,
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsg(timeout, bertholdResponse)
@@ -375,7 +381,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsg(timeout, twoZeitglöckleinBooksResponse)
@@ -390,7 +397,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsg(timeout, twoZeitglöckleinBooksResponse)
@@ -406,7 +414,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                              "http://www.knora.org/ontology/0803/incunabula#pubdate"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -423,7 +432,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsg(timeout, twoZeitglöckleinBooksResponse)
@@ -447,7 +457,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -464,7 +475,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsg(timeout, twoZeitglöckleinBooksResponse)
@@ -479,7 +491,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -496,7 +509,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector(),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -513,7 +527,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -530,7 +545,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#seqnum"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -547,7 +563,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#seqnum"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
         startAt = 0,
-        showNRows = 100
+        showNRows = 100,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -563,7 +580,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#seqnum"),
         filterByRestype = Some("http://www.knora.org/ontology/knora-base#Representation"),
         startAt = 0,
-        showNRows = 100
+        showNRows = 100,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -580,7 +598,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#pubdate"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -597,7 +616,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#pubdate"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -614,7 +634,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#pubdate"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -626,12 +647,13 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
       // http://0.0.0.0:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Frdfh.ch%2Fc5058f3a
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = incunabulaUser,
-        searchValue = Vector("http://rdfh.ch/0803/c5058f3a"),
+        searchValue = Vector("http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw"),
         compareProps = Vector(SearchComparisonOperatorV1.EQ),
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#partOf"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
         startAt = 0,
-        showNRows = 500
+        showNRows = 500,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -649,7 +671,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                              "http://www.knora.org/ontology/0803/incunabula#partOf"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -666,7 +689,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
                              "http://www.knora.org/ontology/knora-base#isPartOf"),
         filterByRestype = Some("http://www.knora.org/ontology/knora-base#Representation"),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -678,13 +702,14 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
       // http://0.0.0.0:3333/v1/search/?searchtype=extended&filter_by_restype=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23page&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23partOf&compop=EQ&searchval=http%3A%2F%2Frdfh.ch%2Fc5058f3a&property_id=http%3A%2F%2Fwww.knora.org%2Fontology%2Fincunabula%23seqnum&compop=EXISTS&searchval=
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = incunabulaUser,
-        searchValue = Vector("http://rdfh.ch/0803/c5058f3a", ""),
+        searchValue = Vector("http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw", ""),
         compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
         propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#partOf",
                              "http://www.knora.org/ontology/0803/incunabula#seqnum"),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
         startAt = 0,
-        showNRows = 500
+        showNRows = 500,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -696,13 +721,14 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
     "return all the representations that are part of Zeitglöcklein des Lebens and have a seqnum (using base properties from knora-base)" in {
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = incunabulaUser,
-        searchValue = Vector("http://rdfh.ch/0803/c5058f3a", ""),
+        searchValue = Vector("http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw", ""),
         compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
         propertyIri = Vector("http://www.knora.org/ontology/knora-base#isPartOf",
                              "http://www.knora.org/ontology/knora-base#seqnum"),
         filterByRestype = Some("http://www.knora.org/ontology/knora-base#Representation"),
         startAt = 0,
-        showNRows = 500
+        showNRows = 500,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -714,7 +740,7 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
     "return all the pages that are part of Zeitglöcklein des Lebens, have a seqnum less than or equal to 200, and have a page number that is not 'a1r, Titelblatt'" in {
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = incunabulaUser,
-        searchValue = Vector("http://rdfh.ch/0803/c5058f3a", "200", "a1r, Titelblatt"),
+        searchValue = Vector("http://rdfh.ch/resources/7dGkt1CLKdZbrxVj324eaw", "200", "a1r, Titelblatt"),
         compareProps =
           Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.LT_EQ, SearchComparisonOperatorV1.NOT_EQ),
         propertyIri = Vector(
@@ -724,7 +750,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         ),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
         startAt = 0,
-        showNRows = 300
+        showNRows = 300,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -742,7 +769,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector(IMAGES_TITEL_PROPERTY),
         filterByRestype = Some(IMAGES_BILD_RESOURCE_CLASS),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -760,7 +788,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector(IMAGES_TITEL_PROPERTY),
         filterByRestype = Some(IMAGES_BILD_RESOURCE_CLASS),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -778,7 +807,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector(IMAGES_TITEL_PROPERTY),
         filterByRestype = Some(IMAGES_BILD_RESOURCE_CLASS),
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -796,7 +826,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         userProfile = anythingUser1,
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -810,7 +841,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         userProfile = anythingUser2,
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -824,7 +856,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         userProfile = anythingUser2,
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -839,7 +872,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         userProfile = anythingUser1,
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -853,7 +887,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         userProfile = anythingUser2,
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -867,11 +902,13 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         userProfile = incunabulaUser,
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+        case msg: akka.actor.Status.Failure =>
+          msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
 
       responderManager ! FulltextSearchGetRequestV1(
@@ -879,11 +916,13 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         userProfile = incunabulaUser,
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+        case msg: akka.actor.Status.Failure =>
+          msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
 
       responderManager ! FulltextSearchGetRequestV1(
@@ -891,11 +930,13 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         userProfile = incunabulaUser,
         startAt = 0,
-        showNRows = 25
+        showNRows = 25,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+        case msg: akka.actor.Status.Failure =>
+          msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
 
@@ -907,7 +948,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/0001/anything#hasOtherThing"),
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         startAt = 0,
-        showNRows = 10
+        showNRows = 10,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -921,7 +963,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         startAt = 0,
-        showNRows = 10
+        showNRows = 10,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -934,12 +977,13 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = anythingUser1,
-        searchValue = Vector("http://rdfh.ch/0001/project-thing-2"),
+        searchValue = Vector("http://rdfh.ch/resources/lBGY9SS0rIr-bHv4iPePHw"),
         compareProps = Vector(SearchComparisonOperatorV1.EQ),
         propertyIri = Vector("http://www.knora.org/ontology/0001/anything#hasOtherThing"),
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         startAt = 0,
-        showNRows = 10
+        showNRows = 10,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -948,12 +992,13 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = anythingUser1,
-        searchValue = Vector("http://rdfh.ch/0001/project-thing-2"),
+        searchValue = Vector("http://rdfh.ch/resources/lBGY9SS0rIr-bHv4iPePHw"),
         compareProps = Vector(SearchComparisonOperatorV1.EQ),
         propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         startAt = 0,
-        showNRows = 10
+        showNRows = 10,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -964,12 +1009,13 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = anythingUser2,
-        searchValue = Vector("http://rdfh.ch/0001/project-thing-2"),
+        searchValue = Vector("http://rdfh.ch/resources/lBGY9SS0rIr-bHv4iPePHw"),
         compareProps = Vector(SearchComparisonOperatorV1.EQ),
         propertyIri = Vector("http://www.knora.org/ontology/0001/anything#hasOtherThing"),
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         startAt = 0,
-        showNRows = 10
+        showNRows = 10,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {
@@ -978,12 +1024,13 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! ExtendedSearchGetRequestV1(
         userProfile = anythingUser2,
-        searchValue = Vector("http://rdfh.ch/0001/project-thing-2"),
+        searchValue = Vector("http://rdfh.ch/resources/lBGY9SS0rIr-bHv4iPePHw"),
         compareProps = Vector(SearchComparisonOperatorV1.EQ),
         propertyIri = Vector("http://www.knora.org/ontology/knora-base#hasStandoffLinkTo"),
         filterByRestype = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         startAt = 0,
-        showNRows = 10
+        showNRows = 10,
+        featureFactoryConfig = defaultFeatureFactoryConfig
       )
 
       expectMsgPF(timeout) {

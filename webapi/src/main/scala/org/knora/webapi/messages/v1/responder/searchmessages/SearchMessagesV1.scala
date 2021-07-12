@@ -22,6 +22,7 @@ package org.knora.webapi.messages.v1.responder.searchmessages
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v1.responder.{KnoraRequestV1, KnoraResponseV1}
 import spray.json._
@@ -57,6 +58,7 @@ case class FulltextSearchGetRequestV1(searchValue: String,
                                       filterByProject: Option[IRI] = None,
                                       startAt: Int,
                                       showNRows: Int,
+                                      featureFactoryConfig: FeatureFactoryConfig,
                                       userProfile: UserADM)
     extends SearchResponderRequestV1
 
@@ -74,6 +76,7 @@ case class ExtendedSearchGetRequestV1(filterByRestype: Option[IRI] = None,
                                       searchValue: Seq[String] = Nil, // parallel structure
                                       startAt: Int,
                                       showNRows: Int,
+                                      featureFactoryConfig: FeatureFactoryConfig,
                                       userProfile: UserADM)
     extends SearchResponderRequestV1
 

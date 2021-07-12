@@ -21,14 +21,18 @@ package org.knora.webapi.responders.v1
 
 import akka.pattern._
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, InconsistentRepositoryDataException}
-import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.exceptions.{BadRequestException, InconsistentRepositoryDataException, NotFoundException}
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.store.triplestoremessages.SparqlSelectRequest
 import org.knora.webapi.messages.twirl.SearchCriterion
 import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
 import org.knora.webapi.messages.util.{DateUtilV1, PermissionUtilADM, ResponderData, ValueUtilV1}
 import org.knora.webapi.messages.v1.responder.ontologymessages.{EntityInfoGetRequestV1, EntityInfoGetResponseV1, _}
+import org.knora.webapi.messages.v1.responder.resourcemessages.{
+  ResourceInfoGetRequestV1,
+  ResourceInfoResponseV1,
+  ResourceInfoV1
+}
 import org.knora.webapi.messages.v1.responder.searchmessages._
 import org.knora.webapi.messages.v1.responder.valuemessages.KnoraCalendarV1
 import org.knora.webapi.responders.Responder
@@ -201,6 +205,20 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
       groupedByResourceIri: Map[IRI, Seq[VariableResultsRow]] = searchResponse.results.bindings
         .groupBy(_.rowMap("resource"))
 
+      resourceInfoFutures: Map[IRI, Future[Option[ResourceInfoV1]]] = groupedByResourceIri.keySet.foldLeft(
+        Map.empty[IRI, Future[Option[ResourceInfoV1]]]) { (acc, resourceIri: IRI) =>
+        val resInfo: Future[Option[ResourceInfoV1]] = for {
+          resInfoResponse: ResourceInfoResponseV1 <- (responderManager ? ResourceInfoGetRequestV1(
+            resourceIri,
+            featureFactoryConfig = searchGetRequest.featureFactoryConfig,
+            userProfile = searchGetRequest.userProfile)).mapTo[ResourceInfoResponseV1]
+        } yield resInfoResponse.resource_info
+        acc + (resourceIri -> resInfo)
+      }
+      resInfos: Map[IRI, Option[ResourceInfoV1]] <- Future
+        .sequence(resourceInfoFutures.map(entry => entry._2.map(i => (entry._1, i))))
+        .map(_.toMap)
+
       // Convert the query result rows into SearchResultRowV1 objects.
 
       subjects: Vector[SearchResultRowV1] = groupedByResourceIri
@@ -212,8 +230,11 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
 
             val resourceCreator = firstRowMap("resourceCreator")
             val resourceProject = firstRowMap("resourceProject")
-            val resourceProjectShortcode = resourceIri.toSmartIri.getProjectCode.getOrElse(
-              throw InconsistentRepositoryDataException(s"Invalid resource IRI: $resourceIri"))
+
+            val resourceProjectShortcode = resInfos(resourceIri)
+              .getOrElse(throw NotFoundException(s"No resource with IRI $resourceIri is found."))
+              .project_shortcode
+
             val resourcePermissions = firstRowMap("resourcePermissions")
 
             val resourcePermissionCode: Option[Int] = PermissionUtilADM.getUserPermissionV1(
