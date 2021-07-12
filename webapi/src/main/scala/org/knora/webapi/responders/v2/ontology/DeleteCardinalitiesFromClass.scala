@@ -117,8 +117,8 @@ object DeleteCardinalitiesFromClass {
           internalOntologyIri
         )
 
-      // Check that it a subclass of knora-base:Resource
-      _ <- isKnoraResourceClass(deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema))
+      // FIXME: This seems not to work or is not needed. Check that it is a subclass of knora-base:Resource
+      // _ <- isKnoraResourceClass(deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema))
 
       // Check that the submitted cardinality to delete is defined on this class
 
@@ -344,7 +344,7 @@ object DeleteCardinalitiesFromClass {
     } else {
       FastFuture.failed(
         throw BadRequestException(
-          s"Class ${submittedClassInfoContentV2.classIri} is not a subclass of ${KnoraBase.Resource.toSmartIri}."
+          s"Class ${submittedClassInfoContentV2.classIri} is not a subclass of ${KnoraBase.Resource.toSmartIri}. $submittedClassInfoContentV2"
         )
       )
     }
