@@ -87,7 +87,7 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
   private def checkModelForRdfTypeBook(rdfModel: RdfModel, context: Option[IRI] = None): Unit = {
     val statements: Set[Statement] = rdfModel
       .find(
-        subj = Some(rdfNodeFactory.makeIriNode("http://rdfh.ch/0803/2a6221216701")),
+        subj = Some(rdfNodeFactory.makeIriNode("http://rdfh.ch/resources/w1JN2mMZam7F1_eiyvz6pw")),
         pred = Some(rdfNodeFactory.makeIriNode(OntologyConstants.Rdf.Type)),
         obj = None,
         context = context

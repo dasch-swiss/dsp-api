@@ -236,13 +236,13 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
         """@prefix foo: <http://example.org/foo#> .
                   |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
                   |
-                  |<http://rdfh.ch/foo1> a foo:Foo;
+                  |<http://rdfh.ch/resources/foo1> a foo:Foo;
                   |  rdfs:label "foo 1";
-                  |  foo:hasOtherFoo <http://rdfh.ch/foo2>.
+                  |  foo:hasOtherFoo <http://rdfh.ch/resources/foo2>.
                   |
-                  |<http://rdfh.ch/foo2> a foo:Foo;
+                  |<http://rdfh.ch/resources/foo2> a foo:Foo;
                   |  rdfs:label "foo 2";
-                  |  foo:hasOtherFoo <http://rdfh.ch/foo1>.
+                  |  foo:hasOtherFoo <http://rdfh.ch/resources/foo1>.
                   |""".stripMargin
 
       // Parse it to an RDF4J Model.
@@ -255,29 +255,29 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
       val expectedWithFoo1AtTopLevel = JsonLDObject(
         value = Map(
-          "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
+          "@id" -> JsonLDString(value = "http://rdfh.ch/resources/foo1"),
           "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
           "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
           "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value = Map(
-            "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
+            "@id" -> JsonLDString(value = "http://rdfh.ch/resources/foo2"),
             "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
             "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
             "http://example.org/foo#hasOtherFoo" -> JsonLDObject(
-              value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo1"))),
+              value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/resources/foo1"))),
           )),
         ))
 
       val expectedWithFoo2AtTopLevel = JsonLDObject(
         value = Map(
-          "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
+          "@id" -> JsonLDString(value = "http://rdfh.ch/resources/foo2"),
           "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
           "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
           "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value = Map(
-            "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
+            "@id" -> JsonLDString(value = "http://rdfh.ch/resources/foo1"),
             "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
             "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
             "http://example.org/foo#hasOtherFoo" -> JsonLDObject(
-              value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2")))
+              value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/resources/foo2")))
           ))
         ))
 
@@ -294,15 +294,15 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
                   |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
                   |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
                   |
-                  |<http://rdfh.ch/foo1> a foo:Foo;
+                  |<http://rdfh.ch/resources/foo1> a foo:Foo;
                   |  rdfs:label "foo 1";
                   |  foo:hasBar [
                   |    a foo:Bar;
                   |    rdfs:label "bar 1"
                   |  ];
-                  |  foo:hasOtherFoo <http://rdfh.ch/foo2>.
+                  |  foo:hasOtherFoo <http://rdfh.ch/resources/foo2>.
                   |
-                  |<http://rdfh.ch/foo2> a foo:Foo;
+                  |<http://rdfh.ch/resources/foo2> a foo:Foo;
                   |  rdfs:label "foo 2";
                   |  foo:hasIndex "3"^^xsd:integer;
                   |  foo:hasBar [
@@ -319,7 +319,7 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
       val expectedHierarchicalJsonLD = JsonLDObject(
         value = Map(
-          "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
+          "@id" -> JsonLDString(value = "http://rdfh.ch/resources/foo1"),
           "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
           "http://example.org/foo#hasBar" -> JsonLDObject(
             value = Map(
@@ -328,7 +328,7 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
             )),
           "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
           "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value = Map(
-            "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
+            "@id" -> JsonLDString(value = "http://rdfh.ch/resources/foo2"),
             "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
             "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
             "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
@@ -347,7 +347,7 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
       val expectedFlatJsonLD = JsonLDObject(
         value = Map("@graph" -> JsonLDArray(value = Vector(
           JsonLDObject(value = Map(
-            "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
+            "@id" -> JsonLDString(value = "http://rdfh.ch/resources/foo1"),
             "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
             "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
             "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
@@ -355,10 +355,10 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
               "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
             )),
             "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value =
-              Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2")))
+              Map("@id" -> JsonLDString(value = "http://rdfh.ch/resources/foo2")))
           )),
           JsonLDObject(value = Map(
-            "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
+            "@id" -> JsonLDString(value = "http://rdfh.ch/resources/foo2"),
             "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
             "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
             "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
