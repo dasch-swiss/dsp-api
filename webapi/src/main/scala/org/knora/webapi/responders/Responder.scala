@@ -168,15 +168,14 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     } yield ()
 
   /**
-    * Checks whether an entity with the provided custom IRI exists in the triplestore, if yes, throws an exception.
-    * If no custom IRI was given, creates a random unused IRI.
-    *
-    * @param entityIri    the optional custom IRI of the entity.
-    * @param iriFormatter the stringFormatter method that must be used to create a random Iri.
-    * @return IRI of the entity.
-    */
-  protected def checkOrCreateEntityIri(entityIri: Option[SmartIri], iriFormatter: => IRI): Future[IRI] = {
-
+   * Checks whether an entity with the provided custom IRI exists in the triplestore, if yes, throws an exception.
+   * If no custom IRI was given, creates a random unused IRI.
+   *
+   * @param entityIri    the optional custom IRI of the entity.
+   * @param iriFormatter the stringFormatter method that must be used to create a random Iri.
+   * @return IRI of the entity.
+   */
+  protected def checkOrCreateEntityIri(entityIri: Option[SmartIri], iriFormatter: => IRI): Future[IRI] =
     entityIri match {
       case Some(customEntityIri: SmartIri) =>
         val entityIriAsString = customEntityIri.toString
@@ -184,13 +183,14 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
 
           result <- stringFormatter.checkIriExists(entityIriAsString, storeManager)
           _ = if (result) {
-            throw DuplicateValueException(s"IRI: '$entityIriAsString' already exists, try another one.")
-          }
+                throw DuplicateValueException(s"IRI: '$entityIriAsString' already exists, try another one.")
+              }
           // Check that given entityIRI ends with a UUID
           ending: String = entityIriAsString.split('/').last
           _ = stringFormatter.validateBase64EncodedUuid(
-            ending,
-            throw BadRequestException(s"IRI: '$entityIriAsString' must end with a valid base 64 UUID."))
+                ending,
+                throw BadRequestException(s"IRI: '$entityIriAsString' must end with a valid base 64 UUID.")
+              )
 
         } yield entityIriAsString
 
