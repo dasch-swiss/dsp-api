@@ -51,7 +51,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
   // Collects client test data
   private val clientTestDataCollector = new ClientTestDataCollector(settings)
-
+  private val customDOAPIri = "http://rdfh.ch/permissions/00FF/eIAywlYBJA3a_5yI77UsMQ"
   "The Permissions Route ('admin/permissions')" when {
 
     "getting permissions" should {
@@ -215,10 +215,10 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             text = responseToString(response)
           )
         )
-
+        val customAPIri = "http://rdfh.ch/permissions/0001/u0PRnDl3kgcbrehZnRlEfA"
         val createAdministrativePermissionWithCustomIriRequest: String =
           s"""{
-               |    "id": "http://rdfh.ch/permissions/0001/AP-with-customIri",
+               |    "id": "$customAPIri,
                |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
                |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
@@ -247,7 +247,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
                |                "permissionCode": null
                |            }
                |        ],
-               |        "iri": "http://rdfh.ch/permissions/0001/AP-with-customIri"
+               |        "iri": "$customAPIri"
                |    }
                |}""".stripMargin
 
@@ -363,7 +363,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val createDefaultObjectAccessPermissionWithCustomIriRequest: String =
           s"""{
 
-                 |    "id": "http://rdfh.ch/permissions/00FF/DOAP-with-customIri",
+                 |    "id": "$customDOAPIri",
                  |    "forGroup":null,
                  |    "forProject":"${SharedTestDataADM.IMAGES_PROJECT_IRI}",
                  |    "forProperty":null,
@@ -394,7 +394,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val permissionIri = result
           .getOrElse("iri", throw DeserializationException("The expected field 'iri' is missing."))
           .convertTo[String]
-        assert(permissionIri == "http://rdfh.ch/permissions/00FF/DOAP-with-customIri")
+        assert(permissionIri == customDOAPIri)
         val forResourceClassIRI = result
           .getOrElse("forResourceClass",
                      throw DeserializationException("The expected field 'forResourceClass' is missing."))
@@ -685,7 +685,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
     "delete request" should {
       "erase a defaultObjectAccess permission" in {
-        val permissionIri = "http://rdfh.ch/permissions/00FF/DOAP-with-customIri"
+        val permissionIri = customDOAPIri
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
           BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))

@@ -94,7 +94,7 @@ Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v
 
 ```json
   {
-    "id": "http://rdfh.ch/lists/0001/a-list",
+    "id": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
     "projectIri": "http://rdfh.ch/projects/0001",
     "name": "a new list",
     "labels": [{ "value": "Neue Liste mit IRI", "language": "de"}],
@@ -110,7 +110,7 @@ The response will contain the basic information of the list, `listinfo` and an e
         "children": [],
         "listinfo": {
             "comments": [],
-            "id": "http://rdfh.ch/lists/0001/a-list",
+            "id": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
             "isRootNode": true,
             "labels": [
                 {
@@ -131,7 +131,7 @@ Furthermore, the request body should also contain the project IRI of the list an
   
 ```json
      {   
-         "parentNodeIri": "http://rdfh.ch/lists/0001/a-list",
+         "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
          "projectIri": "http://rdfh.ch/projects/0001",
          "name": "a child",
          "labels": [{ "value": "New List Node", "language": "en"}],
@@ -142,8 +142,8 @@ Furthermore, the request body should also contain the project IRI of the list an
 Additionally, each child node can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
 
 ```json
-{    "id": "http://rdfh.ch/lists/0001/a-childNode",
-     "parentNodeIri": "http://rdfh.ch/lists/0001/a-list",
+{    "id": "http://rdfh.ch/lists/0001/8u37MxBVMbX3XQ8-d31x6w",
+     "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
      "projectIri": "http://rdfh.ch/projects/0001",
      "name": "a child",
      "labels": [{ "value": "New List Node", "language": "en"}],
@@ -157,8 +157,8 @@ The response will contain the basic information of the node, `nodeinfo`, as belo
 {
     "nodeinfo": {
         "comments": [],
-        "hasRootNode": "http://rdfh.ch/lists/0001/a-list",
-        "id": "http://rdfh.ch/lists/0001/a-childNode",
+        "hasRootNode": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
+        "id": "http://rdfh.ch/lists/0001/8u37MxBVMbX3XQ8-d31x6w",
         "labels": [
             {
                 "value": "New List Node",
@@ -176,7 +176,7 @@ according to the given position, the sibling nodes will be shifted. Note that `p
 number of existing children.
 
 ```json
-{   "parentNodeIri": "http://rdfh.ch/lists/0001/a-list",
+{   "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
     "projectIri": "http://rdfh.ch/projects/0001",
     "name": "Inserted new child",
     "position": 0,

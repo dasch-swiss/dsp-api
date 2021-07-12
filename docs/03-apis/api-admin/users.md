@@ -96,7 +96,7 @@ specified by the `id` in the request body as below:
 
 ```json
     { 
-      "id" : "http://rdfh.ch/users/donaldDuck",
+      "id" : "http://rdfh.ch/users/FnjFfIQFVDvI7ex8zSyUyw",
       "email": "donald.duck@example.org",
       "givenName": "Donald",
       "familyName": "Duck",

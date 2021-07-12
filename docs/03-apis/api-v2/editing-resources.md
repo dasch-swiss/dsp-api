@@ -202,13 +202,13 @@ For example:
 
 ```jsonld
 {
-   "@id" : "http://rdfh.ch/0001/a-custom-thing",
+   "@id" : "http://rdfh.ch/0001/oveR1dQltEUwNrls9Lu5Rw",
    "@type" : "anything:Thing",
    "knora-api:attachedToProject" : {
      "@id" : "http://rdfh.ch/projects/0001"
    },
    "anything:hasInteger" : {
-       "@id" : "http://rdfh.ch/0001/a-custom-thing/values/int-value-IRI",
+       "@id" : "http://rdfh.ch/0001/oveR1dQltEUwNrls9Lu5Rw/values/IN4R19yYR0ygi3K2VEHpUQ",
        "@type" : "knora-api:IntValue",
        "knora-api:intValueAsInt" : 10,
        "knora-api:valueHasUUID" : "IN4R19yYR0ygi3K2VEHpUQ",

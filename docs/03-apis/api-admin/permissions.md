@@ -58,7 +58,7 @@ the `@id` attribute which will then be assigned to the permission; otherwise the
 A custom permission IRI must be `http://rdfh.ch/permissions/PROJECT_SHORTCODE/` (where `PROJECT_SHORTCODE`
 is the shortcode of the project that the permission belongs to), plus a custom ID string. For example:
 ```
-"id": "http://rdfh.ch/permissions/0001/AP-with-customIri",
+"id": "http://rdfh.ch/permissions/0001/jKIYuaEUETBcyxpenUwRzQ",
 ```
 
 As a response, the created administrative permission and its IRI are returned as below:
@@ -108,7 +108,7 @@ a resource class of a specific project:
 
 ```json
 {
-    "id": "http://rdfh.ch/permissions/00FF/DOAP-with-customIri",
+    "id": "http://rdfh.ch/permissions/00FF/fSw7w1sI5IwDjEfFi1jOeQ",
     "forGroup":null,
     "forProject":"http://rdfh.ch/projects/00FF",
     "forProperty":null,
@@ -133,7 +133,7 @@ The response contains the newly created permission and its IRI, as:
                 "permissionCode": 7
             }
         ],
-        "iri": "http://rdfh.ch/permissions/00FF/DOAP-with-customIri"
+        "iri": "http://rdfh.ch/permissions/00FF/fSw7w1sI5IwDjEfFi1jOeQ"
     }
 }
 ```

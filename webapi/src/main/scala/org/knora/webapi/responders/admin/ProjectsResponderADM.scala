@@ -31,7 +31,6 @@ import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.StringFormatter.IriDomain
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{
   UserADM,
@@ -892,7 +891,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       // _ = log.debug(s"updateProjectADM - update query: {}", updateProjectSparqlString)
 
-      updateProjectResponse <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString))
+      _ <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString))
         .mapTo[SparqlUpdateResponse]
 
       /* Verify that the project was updated. */
@@ -911,34 +910,37 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
                     updatedProject)
 
       _ = if (projectUpdatePayload.shortname.isDefined) {
-        if (updatedProject.shortname != projectUpdatePayload.shortname.get)
+        val unescapedShortName: String = stringFormatter.fromSparqlEncodedString(projectUpdatePayload.shortname.get)
+        if (updatedProject.shortname != unescapedShortName)
           throw UpdateNotPerformedException(
             "Project's 'shortname' was not updated. Please report this as a possible bug.")
       }
-
       _ = if (projectUpdatePayload.longname.isDefined) {
-        if (updatedProject.longname != projectUpdatePayload.longname)
+        val unescapedLongname: Option[String] = stringFormatter.unescapeOptionalString(projectUpdatePayload.longname)
+        if (updatedProject.longname != unescapedLongname)
           throw UpdateNotPerformedException(
-            "Project's 'longname' was not updated. Please report this as a possible bug.")
+            s"Project's 'longname' was not updated. Please report this as a possible bug.")
       }
-
       _ = if (projectUpdatePayload.description.isDefined) {
-        if (updatedProject.description.diff(projectUpdatePayload.description.get).nonEmpty)
+        val unescapedDescriptions: Seq[StringLiteralV2] = projectUpdatePayload.description.get.map(desc =>
+          StringLiteralV2(stringFormatter.fromSparqlEncodedString(desc.value), desc.language))
+        if (updatedProject.description.diff(unescapedDescriptions).nonEmpty)
           throw UpdateNotPerformedException(
             "Project's 'description' was not updated. Please report this as a possible bug.")
       }
 
       _ = if (projectUpdatePayload.keywords.isDefined) {
-        if (updatedProject.keywords.sorted != projectUpdatePayload.keywords.get.sorted)
+        val unescapedKeywords: Seq[String] =
+          projectUpdatePayload.keywords.get.map(key => stringFormatter.fromSparqlEncodedString(key))
+        if (updatedProject.keywords.sorted != unescapedKeywords.sorted)
           throw UpdateNotPerformedException(
             "Project's 'keywords' was not updated. Please report this as a possible bug.")
       }
-
       _ = if (projectUpdatePayload.logo.isDefined) {
-        if (updatedProject.logo != projectUpdatePayload.logo)
+        val unescapedLogo: Option[String] = stringFormatter.unescapeOptionalString(projectUpdatePayload.logo)
+        if (updatedProject.logo != unescapedLogo)
           throw UpdateNotPerformedException("Project's 'logo' was not updated. Please report this as a possible bug.")
       }
-
       _ = if (projectUpdatePayload.status.isDefined) {
         if (updatedProject.status != projectUpdatePayload.status.get)
           throw UpdateNotPerformedException("Project's 'status' was not updated. Please report this as a possible bug.")
@@ -982,11 +984,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       */
     def createPermissionsForAdminsAndMembersOfNewProject(projectIri: IRI, projectShortCode: String): Future[Unit] =
       for {
-        baseIri: String <- Future.successful(s"http://$IriDomain/permissions/$projectShortCode/")
         // Give the admins of the new project rights for any operation in project level, and rights to create resources.
-        apPermissionForProjectAdmin: AdministrativePermissionCreateResponseADM <- (responderManager ? AdministrativePermissionCreateRequestADM(
+        _ <- (responderManager ? AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
-            id = Some(baseIri + "defaultApForAdmin"),
             forProject = projectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
             hasPermissions =
@@ -998,9 +998,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         )).mapTo[AdministrativePermissionCreateResponseADM]
 
         // Give the members of the new project rights to create resources.
-        apPermissionForProjectMember: AdministrativePermissionCreateResponseADM <- (responderManager ? AdministrativePermissionCreateRequestADM(
+        _ <- (responderManager ? AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
-            id = Some(baseIri + "defaultApForMember"),
             forProject = projectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
@@ -1012,9 +1011,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
         // Give the admins of the new project rights to change rights, modify, delete, view,
         // and restricted view of all resources and values that belong to the project.
-        doapForProjectAdmin <- (responderManager ? DefaultObjectAccessPermissionCreateRequestADM(
+        _ <- (responderManager ? DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            id = Some(baseIri + "defaultDoapForAdmin"),
             forProject = projectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             hasPermissions = Set(
@@ -1032,9 +1030,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
         // Give the members of the new project rights to modify, view, and restricted view of all resources and values
         // that belong to the project.
-        doapForProjectMember <- (responderManager ? DefaultObjectAccessPermissionCreateRequestADM(
+        _ <- (responderManager ? DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
-            id = Some(baseIri + "defaultDoapForMember"),
             forProject = projectIri,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(
@@ -1052,15 +1049,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     def projectCreateTask(createProjectRequest: CreateProjectApiRequestADM,
                           requestingUser: UserADM): Future[ProjectOperationResponseADM] =
       for {
-        // check if required properties are not empty
-        _ <- Future(
-          if (createProjectRequest.shortname.isEmpty) throw BadRequestException("'Shortname' cannot be empty"))
-
-        // check if the requesting user is allowed to create project
-        _ = if (!requestingUser.permissions.isSystemAdmin) {
-          // not a system admin
-          throw ForbiddenException("A new project can only be created by a system admin.")
-        }
 
         // check if the supplied shortname is unique
         shortnameExists <- projectByShortnameExists(createProjectRequest.shortname)
@@ -1069,24 +1057,25 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             s"Project with the shortname: '${createProjectRequest.shortname}' already exists")
         }
 
-        validatedShortcode: String = StringFormatter.getGeneralInstance.validateProjectShortcode(
-          createProjectRequest.shortcode,
-          errorFun =
-            throw BadRequestException(s"The supplied short code: '${createProjectRequest.shortcode}' is not valid.")
-        )
-
         // check if the optionally supplied shortcode is valid and unique
-        shortcodeExists <- projectByShortcodeExists(validatedShortcode)
+        shortcodeExists <- projectByShortcodeExists(createProjectRequest.shortcode)
 
         _ = if (shortcodeExists) {
           throw DuplicateValueException(
             s"Project with the shortcode: '${createProjectRequest.shortcode}' already exists")
         }
 
+        // check if the requesting user is allowed to create project
+        _ = if (!requestingUser.permissions.isSystemAdmin) {
+          // not a system admin
+          throw ForbiddenException("A new project can only be created by a system admin.")
+        }
+
         // check the custom IRI; if not given, create an unused IRI
         customProjectIri: Option[SmartIri] = createProjectRequest.id.map(iri => iri.toSmartIri)
-        newProjectIRI: IRI <- checkOrCreateEntityIri(customProjectIri,
-                                                     stringFormatter.makeRandomProjectIri(validatedShortcode))
+        newProjectIRI: IRI <- checkOrCreateEntityIri(
+          customProjectIri,
+          stringFormatter.makeRandomProjectIri(createProjectRequest.shortcode))
 
         createNewProjectSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .createNewProject(
@@ -1095,7 +1084,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             projectIri = newProjectIRI,
             projectClassIri = OntologyConstants.KnoraAdmin.KnoraProject,
             shortname = createProjectRequest.shortname,
-            shortcode = validatedShortcode,
+            shortcode = createProjectRequest.shortcode,
             maybeLongname = createProjectRequest.longname,
             maybeDescriptions = if (createProjectRequest.description.nonEmpty) {
               Some(createProjectRequest.description)
@@ -1109,7 +1098,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
           )
           .toString
 
-        createProjectResponse <- (storeManager ? SparqlUpdateRequest(createNewProjectSparqlString))
+        _ <- (storeManager ? SparqlUpdateRequest(createNewProjectSparqlString))
           .mapTo[SparqlUpdateResponse]
 
         // try to retrieve newly created project (will also add to cache)
@@ -1128,7 +1117,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI, newProjectADM.shortcode)
 
-      } yield ProjectOperationResponseADM(project = newProjectADM)
+      } yield ProjectOperationResponseADM(project = newProjectADM.unescape)
 
     for {
       // run user creation with an global IRI lock
@@ -1286,7 +1275,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         .head
         .asInstanceOf[BooleanLiteralV2]
         .value
-    )
+    ).unescape
   }
 
   /**
@@ -1380,7 +1369,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     result.map {
       case Some(project) =>
         log.debug("getProjectFromCache - cache hit for: {}", identifier)
-        Some(project)
+        Some(project.unescape)
       case None =>
         log.debug("getUserProjectCache - no cache hit for: {}", identifier)
         None
