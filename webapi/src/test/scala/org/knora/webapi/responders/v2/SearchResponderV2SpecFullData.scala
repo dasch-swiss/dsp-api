@@ -21,16 +21,16 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
   val fulltextSearchForNarr: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
     resources = Vector(
       ReadResourceV2(
-        label = "p7v",
-        resourceIri = "http://rdfh.ch/resources/ZFfBbHGUt7Oze4sOj_Su1w",
+        label = "b4v",
+        resourceIri = "http://rdfh.ch/resources/-2e6G_noRH-0BzzGkt7Qnw",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:46Z"),
-        resourceUUID = stringFormatter.decodeUuid("ZFfBbHGUt7Oze4sOj_Su1w"),
+        creationDate = Instant.parse("2016-03-02T15:05:39Z"),
+        resourceUUID = stringFormatter.decodeUuid("-2e6G_noRH-0BzzGkt7Qnw"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -38,11 +38,81 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               valueHasLanguage = None,
               comment = None,
               maybeValueHasString = Some(
-                "Beginn Kapitel 105.\nHolzschnitt identisch mit Kap. 95: In einer Landschaft fasst ein Narr, der ein Zepter in der Linken h\u00E4lt, einem Mann an die Schulter und redet auf ihn ein, er m\u00F6ge die Feiertage missachten, 11.7 x 8.6 cm.")
+                "Beginn Kapitel 8.\nHolzschnitt zu Kap. 8: Guten Rat verschmähen.\nEin Narr, dessen Linke mit einem Falknerhandschuh geschützt wird, auf dem ein Vogel sitzt, lenkt einen Pflug, den ein zweiter Narr zieht.\n11.6 x 8.6 cm.\nUnkoloriert.")
             ),
             valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/ZFfBbHGUt7Oze4sOj_Su1w/values/549527258a26",
-            valueHasUUID = stringFormatter.decodeUuid("549527258a26"),
+            valueIri = "http://rdfh.ch/resources/-2e6G_noRH-0BzzGkt7Qnw/values/9ad344462626",
+            valueHasUUID = stringFormatter.decodeUuid("9ad344462626"),
+            permissions =
+              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            userPermission = ViewPermission,
+            previousValueIri = None,
+            valueCreationDate = Instant.parse("2016-03-02T15:05:39Z"),
+            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
+            deletionInfo = None
+          ))),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      ),
+      ReadResourceV2(
+        label = "n7r",
+        resourceIri = "http://rdfh.ch/resources/-4Hta14aSU2LjsMOvoe_lA",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = RestrictedViewPermission,
+        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        projectADM = SharedTestDataADM.incunabulaProject,
+        creationDate = Instant.parse("2016-03-02T15:05:42Z"),
+        resourceUUID = stringFormatter.decodeUuid("-4Hta14aSU2LjsMOvoe_lA"),
+        values = Map(
+          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = InternalSchema,
+              valueHasLanguage = None,
+              comment = None,
+              maybeValueHasString = Some(
+                "Beginn Kapitel 78.\nHolzschnitt zu Kap. 78: Von Narren, die sich selbst Bedrückung verschaffen.\nEin Narr, dem ein Esel auf den Rücken zu springen versucht, stürzt zu Boden.\n11.6 x 8.4 cm.\nUnkoloriert.\nOben rechts Blattnummerierung (Graphitstift): \"103\".")
+            ),
+            valueHasMaxStandoffStartIndex = None,
+            valueIri = "http://rdfh.ch/resources/-4Hta14aSU2LjsMOvoe_lA/values/a15ed7017826",
+            valueHasUUID = stringFormatter.decodeUuid("a15ed7017826"),
+            permissions =
+              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            userPermission = ViewPermission,
+            previousValueIri = None,
+            valueCreationDate = Instant.parse("2016-03-02T15:05:42Z"),
+            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
+            deletionInfo = None
+          ))),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      ),
+      ReadResourceV2(
+        label = "r8v",
+        resourceIri = "http://rdfh.ch/resources/-EAaDSarSLqcgWBxIBTfUg",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = RestrictedViewPermission,
+        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        projectADM = SharedTestDataADM.incunabulaProject,
+        creationDate = Instant.parse("2016-03-02T15:05:46Z"),
+        resourceUUID = stringFormatter.decodeUuid("-EAaDSarSLqcgWBxIBTfUg"),
+        values = Map(
+          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = InternalSchema,
+              valueHasLanguage = None,
+              comment = None,
+              maybeValueHasString = Some(
+                "Beginn Kapitel 111.\nHolzschnitt zu Kap. 111: Entschuldigung des Dichters\nEin Narr hat seine Attribute – die Kappe und das Zepter - hinter sich abgelegt und kniet betend vor einem Altar. In seinen Händen hält er die Kappe des Gelehrten.  Von hinten nähert sich eine fünfköpfige Narrenschar und kommentiert das Geschehen mit erregten Gesten, 11.6 x 8.4 cm.\n")
+            ),
+            valueHasMaxStandoffStartIndex = None,
+            valueIri = "http://rdfh.ch/resources/-EAaDSarSLqcgWBxIBTfUg/values/22d399f78f26",
+            valueHasUUID = stringFormatter.decodeUuid("22d399f78f26"),
             permissions =
               "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
             userPermission = ViewPermission,
@@ -56,16 +126,16 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         deletionInfo = None
       ),
       ReadResourceV2(
-        label = "d4v",
-        resourceIri = "http://rdfh.ch/resources/beTuPifAJfYmre6v798J1w",
+        label = "d7r",
+        resourceIri = "http://rdfh.ch/resources/-xfmn8-4Qi6q0nCGeZvaBQ",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:40Z"),
-        resourceUUID = stringFormatter.decodeUuid("beTuPifAJfYmre6v798J1w"),
+        creationDate = Instant.parse("2016-03-02T15:05:48Z"),
+        resourceUUID = stringFormatter.decodeUuid("-xfmn8-4Qi6q0nCGeZvaBQ"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -73,16 +143,16 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               valueHasLanguage = None,
               comment = None,
               maybeValueHasString = Some(
-                "Beginn Kapitel 21.\nHolzschnitt zu Kap. 21: Andere tadeln und selbst unrecht handeln.\nEin Narr, der mit seinen Beinen im Sumpf steckt, zeigt auf einen nahen Weg, an dem ein Bildstock die Richtung weist.\n11.7 x 8.5 cm.\nUnkoloriert.\n")
+                "Beginn Kapitel 20.\nHolzschnitt zu Kap. 20: Vom Finden fremden Eigentums.\nEin Narr streckt seine Hände nach einem Schatz im Boden aus. Von Hinten tritt der Teufel in Gestalt eines Mischwesens heran und flüstert dem Narr mit einem Blasebalg einen Gedanken ein, 11.6 x 8.5 cm.\n")
             ),
             valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/beTuPifAJfYmre6v798J1w/values/af68552c3626",
-            valueHasUUID = stringFormatter.decodeUuid("af68552c3626"),
+            valueIri = "http://rdfh.ch/resources/-xfmn8-4Qi6q0nCGeZvaBQ/values/e097b50d3526",
+            valueHasUUID = stringFormatter.decodeUuid("e097b50d3526"),
             permissions =
               "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
             userPermission = ViewPermission,
             previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:40Z"),
+            valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
             attachedToUser = "http://rdfh.ch/users/b83acc5f05",
             deletionInfo = None
           ))),
@@ -91,16 +161,16 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         deletionInfo = None
       ),
       ReadResourceV2(
-        label = "o5v",
-        resourceIri = "http://rdfh.ch/resources/q1k7fNrkMSwss3zwJmvF6Q",
+        label = "b5v",
+        resourceIri = "http://rdfh.ch/resources/0-TZQXbJTleHBEM5PdscWw",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:49Z"),
-        resourceUUID = stringFormatter.decodeUuid("q1k7fNrkMSwss3zwJmvF6Q"),
+        creationDate = Instant.parse("2016-03-02T15:05:39Z"),
+        resourceUUID = stringFormatter.decodeUuid("0-TZQXbJTleHBEM5PdscWw"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -108,16 +178,16 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               valueHasLanguage = None,
               comment = None,
               maybeValueHasString = Some(
-                "Beginn Kapitel 99.\nHolzschnitt zu Kap. 99: Von der Einbusse des christlichen Reiches\nAuf einem Hof kniet ein Narr vor den Vertretern der kirchlichen und weltlichen Obrigkeit, die vor ein Portal getreten sind, und bittet darum, sie m\u00F6gen die Narrenkappe verschm\u00E4hen. Im Hintergrund kommentieren zwei weitere Narren \u00FCber die Hofmauer hinweg das Geschehen mit ungl\u00E4ubigen Gesten, 11.7 x 8.5 cm.")
+                "Beginn Kapitel 9.\nHolzschnitt Lemmer 1979, S. 115: Variante für Kap. 9.\nEin junger, reich gekleideter Mann zieht seine Narrenkappe an einem Strick hinter sich her. Der Bildinhalt stimmt weitgehend mit dem ursprünglichen Holzschnitt überein: zusätzlich zur Kappe zieht der Narr hier auch ein Zepter hinter sich her.\n11.8 x 8.4 cm.\nUnkoloriert.")
             ),
             valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/q1k7fNrkMSwss3zwJmvF6Q/values/1852a8aa8526",
-            valueHasUUID = stringFormatter.decodeUuid("1852a8aa8526"),
+            valueIri = "http://rdfh.ch/resources/0-TZQXbJTleHBEM5PdscWw/values/d58396742f26",
+            valueHasUUID = stringFormatter.decodeUuid("d58396742f26"),
             permissions =
               "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
             userPermission = ViewPermission,
             previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:49Z"),
+            valueCreationDate = Instant.parse("2016-03-02T15:05:39Z"),
             attachedToUser = "http://rdfh.ch/users/b83acc5f05",
             deletionInfo = None
           ))),
@@ -126,8 +196,8 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         deletionInfo = None
       ),
       ReadResourceV2(
-        label = "q2v",
-        resourceIri = "http://rdfh.ch/resources/R3e1qLNYD_M5NduJcsuJWw",
+        label = "p2v",
+        resourceIri = "http://rdfh.ch/resources/08JxnmdMSdu_4DihTUbdAg",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -135,7 +205,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:50Z"),
-        resourceUUID = stringFormatter.decodeUuid("R3e1qLNYD_M5NduJcsuJWw"),
+        resourceUUID = stringFormatter.decodeUuid("08JxnmdMSdu_4DihTUbdAg"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -143,11 +213,11 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               valueHasLanguage = None,
               comment = None,
               maybeValueHasString = Some(
-                "Beginn Kapitel 109.\nHolzschnitt zu Kap. 109: Von Verachtung des Ungl\u00FCcks\nEin Narr hat sich in einem Boot zu weit vom Ufer entfernt. Nun birst der Schiffsrumpf, das Segel flattert haltlos umher. Der Narr h\u00E4lt sich an einem Seil der Takelage fest, 11.6 x 8.4 cm.")
+                "Beginn Kapitel 101.\nHolzschnitt zu Kap. 101: Von der Ohrenbläserei\nVor einer Landschaftskulisse flüstert ein Narr, der ein Zepter in seiner Rechten hält, einem anderen Narr, der links neben ihm steht und sich begierig zur Seite neigt, etwas ins Ohr, 11.6 x 8.4 cm.")
             ),
             valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/R3e1qLNYD_M5NduJcsuJWw/values/6ce3c0ef8b26",
-            valueHasUUID = stringFormatter.decodeUuid("6ce3c0ef8b26"),
+            valueIri = "http://rdfh.ch/resources/08JxnmdMSdu_4DihTUbdAg/values/aa4c9b028726",
+            valueHasUUID = stringFormatter.decodeUuid("aa4c9b028726"),
             permissions =
               "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
             userPermission = ViewPermission,
@@ -161,8 +231,8 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         deletionInfo = None
       ),
       ReadResourceV2(
-        label = "g6v",
-        resourceIri = "http://rdfh.ch/resources/yUqZX_vmZ-njfchh8NhsNw",
+        label = "e6v",
+        resourceIri = "http://rdfh.ch/resources/0QwaQ4JKSTGwe_NCi6wihQ",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -170,7 +240,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:40Z"),
-        resourceUUID = stringFormatter.decodeUuid("yUqZX_vmZ-njfchh8NhsNw"),
+        resourceUUID = stringFormatter.decodeUuid("0QwaQ4JKSTGwe_NCi6wihQ"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -178,11 +248,11 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               valueHasLanguage = None,
               comment = None,
               maybeValueHasString = Some(
-                "Beginn Kapitel 44.\nHolzschnitt zu Kap. 44: Vom L\u00E4rmen in der Kirche\nEin junger Narr in edler Kleidung, der einen Jagdfalken auf dem Arm h\u00E4lt, von Hunden begleitet wird, und klappernde Schuhsohlen tr\u00E4gt, geht auf ein Portal zu, in dem eine Frau steht und ihm sch\u00F6ne Augen macht.\n11.7 x 8.5 cm.\nUnkoloriert.")
+                "Beginn Kapitel 30.\nHolzschnitt zu Kap. 30: Von Pfründenjägern.\nEin Narr lädt so viele Säcke auf seinen Esel, dass dieser unter der Last zusammenbricht.\n11.5 x 8.2 cm.\nUnkoloriert.\n")
             ),
             valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/yUqZX_vmZ-njfchh8NhsNw/values/aa8971af4d26",
-            valueHasUUID = stringFormatter.decodeUuid("aa8971af4d26"),
+            valueIri = "http://rdfh.ch/resources/0QwaQ4JKSTGwe_NCi6wihQ/values/ba7c74c53b26",
+            valueHasUUID = stringFormatter.decodeUuid("ba7c74c53b26"),
             permissions =
               "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
             userPermission = ViewPermission,
@@ -196,253 +266,8 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         deletionInfo = None
       ),
       ReadResourceV2(
-        label = "a1r; Titelblatt, recto",
-        resourceIri = "http://rdfh.ch/resources/bTfuFg9hHAm8xShDt5_8tQ",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
-        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-        projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:47Z"),
-        resourceUUID = stringFormatter.decodeUuid("bTfuFg9hHAm8xShDt5_8tQ"),
-        values = Map(
-          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasLanguage = None,
-              comment = None,
-              maybeValueHasString = Some(
-                "Titelblatt (Hartl 2001: Stultitia Navis I).\nHolzschnitt: \nErsatzholzschnitt f\u00FCr Titelblatt, recto:\nEin Schiff voller Narren f\u00E4hrt nach links. Hinten auf der Br\u00FCcke trinkt ein Narr aus einer Flasche, vorne pr\u00FCgeln sich zwei weitere narren so sehr, dass einer von ihnen \u00FCber Bord zu gehen droht. Oben die Inschrift \"Nauis stultoru(m).\"; auf dem Schiffsrumpf die Datierung \"1.4.9.7.\".\n6.5 x 11.5 cm.\noben rechts die bibliographische Angabe  (Graphitstift) \"Hain 3750\"; unten rechts Bibliotheksstempel (queroval, schwarz): \"BIBL. PUBL.| BASILEENSIS\".")
-            ),
-            valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/bTfuFg9hHAm8xShDt5_8tQ/values/5f23f3171d26",
-            valueHasUUID = stringFormatter.decodeUuid("5f23f3171d26"),
-            permissions =
-              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-            userPermission = ViewPermission,
-            previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:47Z"),
-            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
-            deletionInfo = None
-          ))),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
-      ),
-      ReadResourceV2(
-        label = "b6r",
-        resourceIri = "http://rdfh.ch/resources/hacrLXl1PtEq15rpNMrs9g",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
-        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-        projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:47Z"),
-        resourceUUID = stringFormatter.decodeUuid("hacrLXl1PtEq15rpNMrs9g"),
-        values = Map(
-          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasLanguage = None,
-              comment = None,
-              maybeValueHasString = Some(
-                "Beginn Kapitel 4.\nHolzschnitt zu Kap. 4: Von neumodischen Sitten.\nEin alter Narr mit Becher h\u00E4lt einem jungen Mann in modischer Tracht einen Spiegel vor. Zwischen Narr und J\u00FCngling steht der Name \u201E.VLI.\u201C; \u00FCber den beiden schwebt eine Banderole mit der Aufschrift \u201Evly . von . stouffen .  . frisch . vnd vngschaffen\u201C; zwischen den F\u00FCssen des J\u00FCnglings ist die Jahreszahl \u201E.1.4.9.4.\u201C zu lesen.\n11.6 x 8.5 cm.")
-            ),
-            valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/hacrLXl1PtEq15rpNMrs9g/values/77718ce21e26",
-            valueHasUUID = stringFormatter.decodeUuid("77718ce21e26"),
-            permissions =
-              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-            userPermission = ViewPermission,
-            previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:47Z"),
-            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
-            deletionInfo = None
-          ))),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
-      ),
-      ReadResourceV2(
-        label = "e8r",
-        resourceIri = "http://rdfh.ch/resources/UUpUbVvBU_MJobQL-L3b7g",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
-        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-        projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:48Z"),
-        resourceUUID = stringFormatter.decodeUuid("UUpUbVvBU_MJobQL-L3b7g"),
-        values = Map(
-          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasLanguage = None,
-              comment = None,
-              maybeValueHasString = Some(
-                "Beginn Kapitel 29.\nHolzschnitt zu Kap. 29: Von Verkennung der Mitmenschen.\nEin Narr verspottet einen Sterbenden, neben dessen Bett eine Frau betet, w\u00E4hrend sich unter dem Narren die H\u00F6lle in Gestalt eines gefr\u00E4ssigen Drachenkopfs auftut, 11.7 x 8.5 cm.\n")
-            ),
-            valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/UUpUbVvBU_MJobQL-L3b7g/values/f752218c3b26",
-            valueHasUUID = stringFormatter.decodeUuid("f752218c3b26"),
-            permissions =
-              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-            userPermission = ViewPermission,
-            previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
-            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
-            deletionInfo = None
-          ))),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
-      ),
-      ReadResourceV2(
-        label = "g5r",
-        resourceIri = "http://rdfh.ch/resources/bLvsDqJcO8FBUWi3tMdKMQ",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
-        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-        resourceUUID = stringFormatter.decodeUuid("bLvsDqJcO8FBUWi3tMdKMQ"),
-        projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:48Z"),
-        values = Map(
-          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasLanguage = None,
-              comment = None,
-              maybeValueHasString = Some(
-                "Beginn Kapitel 43.\nHolzschnitt zu Kap. 43: Missachten der ewigen Seligkeit\nEin Narr steht mit einer grossen Waage in einer Landschaft und wiegt das Himmelsfirmament (links) gegen eine Burg (rechts) auf. Die Zunge der Waage schl\u00E4gt zugunsten der Burg aus, 11.5 x 8.4 cm.\n")
-            ),
-            valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/bLvsDqJcO8FBUWi3tMdKMQ/values/e75f1e764d26",
-            valueHasUUID = stringFormatter.decodeUuid("e75f1e764d26"),
-            permissions =
-              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-            userPermission = ViewPermission,
-            previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
-            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
-            deletionInfo = None
-          ))),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
-      ),
-      ReadResourceV2(
-        label = "k4r",
-        resourceIri = "http://rdfh.ch/resources/mOSuxC6TrdCmwLVaNfI0pw",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
-        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-        projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:45Z"),
-        resourceUUID = stringFormatter.decodeUuid("mOSuxC6TrdCmwLVaNfI0pw"),
-        values = Map(
-          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasLanguage = None,
-              comment = None,
-              maybeValueHasString = Some(
-                "Beginn Kapitel 66.\nHolzschnitt zu Kap. 66: Von der Erforschung der Welt.\nEin Narr hat ein Schema des Universums auf den Boden Gezeichnet und vermisst es mit einem Zirkel. Von hinten blickt ein zweiter Narr \u00FCber eine Mauer und wendet sich dem ersten mit sp\u00F6ttischen Gesten zu.\n11.6 x 8.4 cm.")
-            ),
-            valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/mOSuxC6TrdCmwLVaNfI0pw/values/4dcdbebc7126",
-            valueHasUUID = stringFormatter.decodeUuid("4dcdbebc7126"),
-            permissions =
-              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-            userPermission = ViewPermission,
-            previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
-            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
-            deletionInfo = None
-          ))),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
-      ),
-      ReadResourceV2(
-        label = "i2r",
-        resourceIri = "http://rdfh.ch/resources/k4CjtEsMQJ-6sAE5pBesyg",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
-        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-        projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:48Z"),
-        resourceUUID = stringFormatter.decodeUuid("k4CjtEsMQJ-6sAE5pBesyg"),
-        values = Map(
-          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasLanguage = None,
-              comment = None,
-              maybeValueHasString = Some(
-                "Beginn Kapitel 58.\nHolzschnitt zu Kap. 58: Sich um die Angelegenheiten anderer k\u00FCmmern.\nEin Narr versucht mit einem Wassereimer den Brand im Haus des Nachbarn zu l\u00F6schen und wird dabei von einem anderen Narren, der an seinem Mantel zerrt, unterbrochen, den hinter ihm steht auch sein eigenes Haus in Flammen.\n11.6 x 8.5 cm.")
-            ),
-            valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/k4CjtEsMQJ-6sAE5pBesyg/values/9a966e995f26",
-            valueHasUUID = stringFormatter.decodeUuid("9a966e995f26"),
-            permissions =
-              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-            userPermission = ViewPermission,
-            previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
-            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
-            deletionInfo = None
-          ))),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
-      ),
-      ReadResourceV2(
-        label = "m1r",
-        resourceIri = "http://rdfh.ch/resources/TvSBaca6Yhf3wKbribA-hA",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
-        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-        projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:45Z"),
-        resourceUUID = stringFormatter.decodeUuid("TvSBaca6Yhf3wKbribA-hA"),
-        values = Map(
-          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasLanguage = None,
-              comment = None,
-              maybeValueHasString = Some(
-                "Beginn Kapitel 81.\nHolzschnitt zu Kap. 81: Aus K\u00FCche und Keller.\nEin Narr f\u00FChrt von einem Boot aus vier Knechte am Strick, die sich in einer K\u00FCche \u00FCber Spreis und Trank hermachen, w\u00E4hrend eine Frau, die am Herdfeuer sitzt, das Essen zubereitet, 11.7 x 8.5 cm.")
-            ),
-            valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/TvSBaca6Yhf3wKbribA-hA/values/b9ac70cc7926",
-            valueHasUUID = stringFormatter.decodeUuid("b9ac70cc7926"),
-            permissions =
-              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-            userPermission = ViewPermission,
-            previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
-            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
-            deletionInfo = None
-          ))),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
-      ),
-      ReadResourceV2(
-        label = "k7r",
-        resourceIri = "http://rdfh.ch/resources/yJYuAaQA1_THT-RY78se2A",
+        label = "k3r",
+        resourceIri = "http://rdfh.ch/resources/0zNyXyzNQFm-iamKjSkeYg",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -450,7 +275,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:49Z"),
-        resourceUUID = stringFormatter.decodeUuid("yJYuAaQA1_THT-RY78se2A"),
+        resourceUUID = stringFormatter.decodeUuid("0zNyXyzNQFm-iamKjSkeYg"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -458,11 +283,11 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               valueHasLanguage = None,
               comment = None,
               maybeValueHasString = Some(
-                "Beginn Kapitel 69.\nHolzschnitt Lemmer 1979, S. 117: Variante zu Kap. 69.\nEin Narr, der vor einer Stadtkulisse steht, hat mit seiner Rechten einen Ball in die Luft geworfen und schl\u00E4gt mit seiner Linken einen Mann, der sogleich nach seinem Dolch greift. Ein junger Mann beobachtet das Geschehen.\nDer Bildinhalt stimmt weitgehend mit dem urspr\u00FCnglichen Holzschnitt \u00FCberein.\n11.7 x 8.4 cm.")
+                "Beginn Kapitel 65.\nHolzschnitt zu Kap. 65: Von Astrologie und anderem Aberglauben.\nEin Narr, an dessen Seite ein Fuchsschwanz hängt, will einen Gelehrten überreden, auf die Gestirne und den Flug der Vögel zu achten. Dafür fasst er den Gelehrten bei der Schulter des Gelehrten und weist mit seiner Rechten zum Himmel.\n11.6 x 8.4 cm.")
             ),
             valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/yJYuAaQA1_THT-RY78se2A/values/c99f73e26726",
-            valueHasUUID = stringFormatter.decodeUuid("c99f73e26726"),
+            valueIri = "http://rdfh.ch/resources/0zNyXyzNQFm-iamKjSkeYg/values/ee2787de6526",
+            valueHasUUID = stringFormatter.decodeUuid("ee2787de6526"),
             permissions =
               "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
             userPermission = ViewPermission,
@@ -476,16 +301,16 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         deletionInfo = None
       ),
       ReadResourceV2(
-        label = "d6v",
-        resourceIri = "http://rdfh.ch/resources/Ra5nc8FfYz1v6Eaza8N7RQ",
+        label = "p7r",
+        resourceIri = "http://rdfh.ch/resources/12nMo1fqSOWkDg2YRWnTlw",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        resourceUUID = stringFormatter.decodeUuid("12nMo1fqSOWkDg2YRWnTlw"),
         projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:40Z"),
-        resourceUUID = stringFormatter.decodeUuid("Ra5nc8FfYz1v6Eaza8N7RQ"),
+        creationDate = Instant.parse("2016-03-02T15:05:42Z"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -493,16 +318,17 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               valueHasLanguage = None,
               comment = None,
               maybeValueHasString = Some(
-                "Beginn Kapitel 23.\nHolzschnitt zu Kap. 23: Vom blinden Vertrauen auf das Gl\u00FCck.\nEin Narr schaut oben aus dem Fenster seines Hauses, das unten lichterloh brennt. Am Himmel erscheint die r\u00E4chende Gotteshand, die mit einen Hammer auf Haus und Narr einschl\u00E4gt. Auf der Fahne \u00FCber dem Erker des Hauses ist der Baselstab zu erkennen.\n11.5 x 8.2 cm.\nUnkoloriert.\n")
+                "Beginn Kapitel 89.\nHolzschnitt zu Kap. 89: Von törichtem Tausch.\nEin Narr, der in einer Landschaft einem Mann begegnet, tauscht mit diesem sein Maultier gegen einen Dudelsack.\n11.7 x 8.3 cm.\nUnkoloriert.\nOben rechts Blattnummerierung (Graphitstift): \"119\"."
+              )
             ),
             valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/Ra5nc8FfYz1v6Eaza8N7RQ/values/7e39f54a3726",
-            valueHasUUID = stringFormatter.decodeUuid("7e39f54a3726"),
+            valueIri = "http://rdfh.ch/resources/12nMo1fqSOWkDg2YRWnTlw/values/c4c08f657f26",
+            valueHasUUID = stringFormatter.decodeUuid("c4c08f657f26"),
             permissions =
               "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
             userPermission = ViewPermission,
             previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:40Z"),
+            valueCreationDate = Instant.parse("2016-03-02T15:05:42Z"),
             attachedToUser = "http://rdfh.ch/users/b83acc5f05",
             deletionInfo = None
           ))),
@@ -511,16 +337,16 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         deletionInfo = None
       ),
       ReadResourceV2(
-        label = "f3v",
-        resourceIri = "http://rdfh.ch/resources/GHYh-MOhWJFc3NBM_6N2Bg",
+        label = "o2v",
+        resourceIri = "http://rdfh.ch/resources/19lzzvPvRXymR-eSe8gAnQ",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:40Z"),
-        resourceUUID = stringFormatter.decodeUuid("GHYh-MOhWJFc3NBM_6N2Bg"),
+        creationDate = Instant.parse("2016-03-02T15:05:46Z"),
+        resourceUUID = stringFormatter.decodeUuid("19lzzvPvRXymR-eSe8gAnQ"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -528,16 +354,87 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               valueHasLanguage = None,
               comment = None,
               maybeValueHasString = Some(
-                "Beginn Kapitel 34.\nHolzschnitt zu Kap. 34: Ein Narr sein und es bleiben.\nEin Narr wird von drei G\u00E4nsen umgeben, deren eine von ihm wegfliegt.\n11.7 x 8.4 cm.\nUnkoloriert.")
+                "Beginn Kapitel 96.\nHolzschnitt zu Kap. 96: Schenken und hinterdrein bereuen.\nEin Narr, der vor einem Haus steht, überreicht einem bärtigen Alten ein Geschenk, kratzt sich dabei aber unschlüssig am Kopf, 11.6 x 8.3 cm."
+              )
             ),
             valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/GHYh-MOhWJFc3NBM_6N2Bg/values/1ab5d9ef4226",
-            valueHasUUID = stringFormatter.decodeUuid("1ab5d9ef4226"),
+            valueIri = "http://rdfh.ch/resources/19lzzvPvRXymR-eSe8gAnQ/values/00040fe08326",
+            valueHasUUID = stringFormatter.decodeUuid("00040fe08326"),
             permissions =
               "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
             userPermission = ViewPermission,
             previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:40Z"),
+            valueCreationDate = Instant.parse("2016-03-02T15:05:46Z"),
+            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
+            deletionInfo = None
+          ))),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      ),
+      ReadResourceV2(
+        label = "k8r",
+        resourceIri = "http://rdfh.ch/resources/1TLr1UJ-TB-6PLPfF4kwww",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = RestrictedViewPermission,
+        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        projectADM = SharedTestDataADM.incunabulaProject,
+        creationDate = Instant.parse("2016-03-02T15:05:45Z"),
+        resourceUUID = stringFormatter.decodeUuid("1TLr1UJ-TB-6PLPfF4kwww"),
+        values = Map(
+          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = InternalSchema,
+              valueHasLanguage = None,
+              comment = None,
+              maybeValueHasString = Some(
+                "Beginn Kapitel 70.\nHolzschnitt zu Kap. 70: Nicht Vorsorgen in der Zeit.\nEin ärmlich gekleideter Narr, der einen Strick mit sich trägt zieht umher. Rechts unten kauert ein Bär, der an seiner Pfote saugt. Hinten sammeln Insekten einen Futtervorrat.\n11.7 x 8.5 cm.")
+            ),
+            valueHasMaxStandoffStartIndex = None,
+            valueIri = "http://rdfh.ch/resources/1TLr1UJ-TB-6PLPfF4kwww/values/651b58877326",
+            valueHasUUID = stringFormatter.decodeUuid("651b58877326"),
+            permissions =
+              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            userPermission = ViewPermission,
+            previousValueIri = None,
+            valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
+            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
+            deletionInfo = None
+          ))),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      ),
+      ReadResourceV2(
+        label = "c6r",
+        resourceIri = "http://rdfh.ch/resources/1j4E5-PSR5Cnxe-B1Dmt9g",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = RestrictedViewPermission,
+        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        projectADM = SharedTestDataADM.incunabulaProject,
+        creationDate = Instant.parse("2016-03-02T15:05:47Z"),
+        resourceUUID = stringFormatter.decodeUuid("1j4E5-PSR5Cnxe-B1Dmt9g"),
+        values = Map(
+          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = InternalSchema,
+              valueHasLanguage = None,
+              comment = None,
+              maybeValueHasString = Some(
+                "Beginn Kapitel 11.\nHolzschnitt zu Kap. 11: Von Missachtung der Heiligen Schrift.\nEin Narr, der zwei Bücher mit Füssen tritt, spricht mit einem in ein Leichentuch gehüllten, wiedererweckten Toten, der auf seiner Bahre hockt.\n11.6 x 8.5 cm.")
+            ),
+            valueHasMaxStandoffStartIndex = None,
+            valueIri = "http://rdfh.ch/resources/1j4E5-PSR5Cnxe-B1Dmt9g/values/21ba18052226",
+            valueHasUUID = stringFormatter.decodeUuid("21ba18052226"),
+            permissions =
+              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            userPermission = ViewPermission,
+            previousValueIri = None,
+            valueCreationDate = Instant.parse("2016-03-02T15:05:47Z"),
             attachedToUser = "http://rdfh.ch/users/b83acc5f05",
             deletionInfo = None
           ))),
@@ -547,15 +444,15 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ),
       ReadResourceV2(
         label = "b8r",
-        resourceIri = "http://rdfh.ch/resources/FIqG6DAn-B2pSmbtPcZcTg",
+        resourceIri = "http://rdfh.ch/resources/2E9I0Q9xSzS-g2T8y_GMMg",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:47Z"),
-        resourceUUID = stringFormatter.decodeUuid("FIqG6DAn-B2pSmbtPcZcTg"),
+        creationDate = Instant.parse("2016-03-02T15:05:44Z"),
+        resourceUUID = stringFormatter.decodeUuid("2E9I0Q9xSzS-g2T8y_GMMg"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -563,16 +460,191 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               valueHasLanguage = None,
               comment = None,
               maybeValueHasString = Some(
-                "Beginn Kapitel 6.\nHolzschnitt zu Kap. 6: Von mangelhafter Erziehung der Kinder.\nZwei Jungen geraten am Spieltisch \u00FCber Karten und W\u00FCrfen in Streit. W\u00E4hrend der eine einen Dolch z\u00FCckt und der andere nach seinem Schwert greift, sitzt ein \u00E4lterer Narr mit verbundenen Augen ahnungslos neben dem Geschehen.\n11.7 x 8.5 cm.")
+                "Beginn Kapitel 6.\nHolzschnitt zu Kap. 6: Von mangelhafter Erziehung der Kinder.\nZwei Jungen geraten am Spieltisch über Karten und Würfen in Streit. Während der eine einen Dolch zückt und der andere nach seinem Schwert greift, sitzt ein älterer Narr mit verbundenen Augen ahnungslos neben dem Geschehen.\n11.7 x 8.5 cm.")
             ),
             valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/FIqG6DAn-B2pSmbtPcZcTg/values/8318d9c71f26",
-            valueHasUUID = stringFormatter.decodeUuid("8318d9c71f26"),
+            valueIri = "http://rdfh.ch/resources/2E9I0Q9xSzS-g2T8y_GMMg/values/b18eb0c42c26",
+            valueHasUUID = stringFormatter.decodeUuid("b18eb0c42c26"),
             permissions =
               "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
             userPermission = ViewPermission,
             previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:47Z"),
+            valueCreationDate = Instant.parse("2016-03-02T15:05:44Z"),
+            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
+            deletionInfo = None
+          ))),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      ),
+      ReadResourceV2(
+        label = "h8r",
+        resourceIri = "http://rdfh.ch/resources/2aZq3UeaSPShCZpiv62H1A",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = RestrictedViewPermission,
+        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        projectADM = SharedTestDataADM.incunabulaProject,
+        creationDate = Instant.parse("2016-03-02T15:05:48Z"),
+        resourceUUID = stringFormatter.decodeUuid("2aZq3UeaSPShCZpiv62H1A"),
+        values = Map(
+          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = InternalSchema,
+              valueHasLanguage = None,
+              comment = None,
+              maybeValueHasString = Some(
+                "Beginn Kapitel 56.\nHolzschnitt zu Kap. 56: Alle Macht nimmt einmal ein Ende.\nHolzschnitt identisch mit Kap. 37: Die Hand Gottes treibt das Glücksrad an, auf dem ein Esel und zwei Mischwesen – halb Esel, halb Narr – herumgewirbelt werden. Der von der Abwärtsbewegung des Rades Mitgerissene stürzt in das unter ihm ausgehobene Grab, dessen Deckel im Vordergrund bereit liegt.\n11.5 x 8.4 cm.")
+            ),
+            valueHasMaxStandoffStartIndex = None,
+            valueIri = "http://rdfh.ch/resources/2aZq3UeaSPShCZpiv62H1A/values/e4a695915b26",
+            valueHasUUID = stringFormatter.decodeUuid("e4a695915b26"),
+            permissions =
+              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            userPermission = ViewPermission,
+            previousValueIri = None,
+            valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
+            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
+            deletionInfo = None
+          ))),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      ),
+      ReadResourceV2(
+        label = "f3r",
+        resourceIri = "http://rdfh.ch/resources/2mBnruqDRMWf6jeo1fb4EA",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = RestrictedViewPermission,
+        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        projectADM = SharedTestDataADM.incunabulaProject,
+        creationDate = Instant.parse("2016-03-02T15:05:48Z"),
+        resourceUUID = stringFormatter.decodeUuid("2mBnruqDRMWf6jeo1fb4EA"),
+        values = Map(
+          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = InternalSchema,
+              valueHasLanguage = None,
+              comment = None,
+              maybeValueHasString = Some(
+                "Beginn Kapitel 32.\nHolzschnitt zu Kap. 32: Vom Bewachen der Frauentugend.\nIm Vordergrund giesst ein Narr Wasser in einen Brunnen, ein zweiter reinigt Ziegelsteine. Dahinter steht ein dritter Narr, der eine Heuschreckenherde hütet. Er blickt zu einem Gebäude, aus dessen Fenster eine Frau schaut und ihm „hu(e)t fast“ zuruft, 11.7 x 8.6 cm.\n")
+            ),
+            valueHasMaxStandoffStartIndex = None,
+            valueIri = "http://rdfh.ch/resources/2mBnruqDRMWf6jeo1fb4EA/values/d2ca0d903d26",
+            valueHasUUID = stringFormatter.decodeUuid("d2ca0d903d26"),
+            permissions =
+              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            userPermission = ViewPermission,
+            previousValueIri = None,
+            valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
+            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
+            deletionInfo = None
+          ))),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      ),
+      ReadResourceV2(
+        label = "p3v",
+        resourceIri = "http://rdfh.ch/resources/3IiGawhMSZK8M0jRCo8eLg",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = RestrictedViewPermission,
+        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        projectADM = SharedTestDataADM.incunabulaProject,
+        creationDate = Instant.parse("2016-03-02T15:05:46Z"),
+        resourceUUID = stringFormatter.decodeUuid("3IiGawhMSZK8M0jRCo8eLg"),
+        values = Map(
+          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = InternalSchema,
+              valueHasLanguage = None,
+              comment = None,
+              maybeValueHasString = Some(
+                "Beginn Kapitel 102.\nHolzschnitt zu Kap. 102: Von Falschheit und Betrug\nEin Narr hantiert mit Gerätschaften aus der Alchimistenküche an einem Ofen. Ihm assistiert eine Gelehrter, der Hinter ihm steht. Ein zweiter Narr hockt vor einem Weinfass und rührt mit einem Knochen in dessen Inhalt herum, 11.6 x 8.4 cm.")
+            ),
+            valueHasMaxStandoffStartIndex = None,
+            valueIri = "http://rdfh.ch/resources/3IiGawhMSZK8M0jRCo8eLg/values/b6f3e7e78726",
+            valueHasUUID = stringFormatter.decodeUuid("b6f3e7e78726"),
+            permissions =
+              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            userPermission = ViewPermission,
+            previousValueIri = None,
+            valueCreationDate = Instant.parse("2016-03-02T15:05:46Z"),
+            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
+            deletionInfo = None
+          ))),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      ),
+      ReadResourceV2(
+        label = "n3r",
+        resourceIri = "http://rdfh.ch/resources/3L71Or56S3GzQzIU-AjQOA",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = RestrictedViewPermission,
+        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        projectADM = SharedTestDataADM.incunabulaProject,
+        creationDate = Instant.parse("2016-03-02T15:05:49Z"),
+        resourceUUID = stringFormatter.decodeUuid("3L71Or56S3GzQzIU-AjQOA"),
+        values = Map(
+          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = InternalSchema,
+              valueHasLanguage = None,
+              comment = None,
+              maybeValueHasString = Some(
+                "Beginn Kapitel 89.\nHolzschnitt zu Kap. 89: Von törichtem Tausch.\nEin Narr, der in einer Landschaft einem Mann begegnet, tauscht mit diesem sein Maultier gegen einen Dudelsack, 11.7 x 8.3 cm.")
+            ),
+            valueHasMaxStandoffStartIndex = None,
+            valueIri = "http://rdfh.ch/resources/3L71Or56S3GzQzIU-AjQOA/values/3e6de9f27e26",
+            valueHasUUID = stringFormatter.decodeUuid("3e6de9f27e26"),
+            permissions =
+              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            userPermission = ViewPermission,
+            previousValueIri = None,
+            valueCreationDate = Instant.parse("2016-03-02T15:05:49Z"),
+            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
+            deletionInfo = None
+          ))),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      ),
+      ReadResourceV2(
+        label = "e5v",
+        resourceIri = "http://rdfh.ch/resources/3TcOKBj7R1WhhLgYNy08Fw",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = RestrictedViewPermission,
+        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        projectADM = SharedTestDataADM.incunabulaProject,
+        creationDate = Instant.parse("2016-03-02T15:05:40Z"),
+        resourceUUID = stringFormatter.decodeUuid("3TcOKBj7R1WhhLgYNy08Fw"),
+        values = Map(
+          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = InternalSchema,
+              valueHasLanguage = None,
+              comment = None,
+              maybeValueHasString = Some(
+                "Beginn Kapitel 29.\nHolzschnitt zu Kap. 29: Von Verkennung der Mitmenschen.\nEin Narr verspottet einen Sterbenden, neben dessen Bett eine Frau betet, während sich unter dem Narren die Hölle in Gestalt eines gefrässigen Drachenkopfs auftut.\n11.7 x 8.5 cm.\nUnkoloriert.\n")
+            ),
+            valueHasMaxStandoffStartIndex = None,
+            valueIri = "http://rdfh.ch/resources/3TcOKBj7R1WhhLgYNy08Fw/values/3429ce523b26",
+            valueHasUUID = stringFormatter.decodeUuid("3429ce523b26"),
+            permissions =
+              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            userPermission = ViewPermission,
+            previousValueIri = None,
+            valueCreationDate = Instant.parse("2016-03-02T15:05:40Z"),
             attachedToUser = "http://rdfh.ch/users/b83acc5f05",
             deletionInfo = None
           ))),
@@ -589,7 +661,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         attachedToUser = "http://rdfh.ch/users/91e19f1e01",
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:44Z"),
+        creationDate = Instant.parse("2016-03-02T15:05:48Z"),
         resourceUUID = stringFormatter.decodeUuid("3_Z7FdthfxDUDfQxK0gdjg"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
@@ -598,7 +670,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               valueHasLanguage = None,
               comment = None,
               maybeValueHasString = Some(
-                "Beginn Kapitel 28.\nHolzschnitt zu Kap. 28: Vom N\u00F6rgeln an Gottes Werken.\nEin Narr, der auf einem Berg ein Feuer entfacht hat, h\u00E4lt seine Hand sch\u00FCtzend \u00FCber die Augen, w\u00E4hrend er seinen Blick auf die hell am Himmel strahlende Sonne richtet. 11.7 x 8.5 cm.")
+                "Beginn Kapitel 28.\nHolzschnitt zu Kap. 28: Vom Nörgeln an Gottes Werken.\nEin Narr, der auf einem Berg ein Feuer entfacht hat, hält seine Hand schützend über die Augen, während er seinen Blick auf die hell am Himmel strahlende Sonne richtet. 11.7 x 8.5 cm.")
             ),
             valueHasMaxStandoffStartIndex = None,
             valueIri = "http://rdfh.ch/resources/3_Z7FdthfxDUDfQxK0gdjg/values/2882816d3a26",
@@ -616,8 +688,183 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         deletionInfo = None
       ),
       ReadResourceV2(
-        label = "d5r",
-        resourceIri = "http://rdfh.ch/resources/_83qeu0PHEFc3sfW7YYmsA",
+        label = "f7r",
+        resourceIri = "http://rdfh.ch/resources/3dDvRcapRauO5sw_Dx6K8w",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = RestrictedViewPermission,
+        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        projectADM = SharedTestDataADM.incunabulaProject,
+        creationDate = Instant.parse("2016-03-02T15:05:44Z"),
+        resourceUUID = stringFormatter.decodeUuid("3dDvRcapRauO5sw_Dx6K8w"),
+        values = Map(
+          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = InternalSchema,
+              valueHasLanguage = None,
+              comment = None,
+              maybeValueHasString = Some(
+                "Beginn Kapitel 37.\nHolzschnitt zu Kap. 37: Von der Wandelbarkeit des Glücks.\nHolzschnitt identisch mit Kap. 56. Die Hand Gottes treibt das Glücksrad an, auf dem ein Esel und zwei Mischwesen – halb Esel, halb Narr – herumgewirbelt werden. Der von der Abwärtsbewegung des Rades Mitgerissene stürzt in das unter ihm ausgehobene Grab, dessen Deckel im Vordergrund bereit liegt.\n11.5 x 8.4 cm.")
+            ),
+            valueHasMaxStandoffStartIndex = None,
+            valueIri = "http://rdfh.ch/resources/3dDvRcapRauO5sw_Dx6K8w/values/25c9f8884826",
+            valueHasUUID = stringFormatter.decodeUuid("25c9f8884826"),
+            permissions =
+              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            userPermission = ViewPermission,
+            previousValueIri = None,
+            valueCreationDate = Instant.parse("2016-03-02T15:05:44Z"),
+            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
+            deletionInfo = None
+          ))),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      ),
+      ReadResourceV2(
+        label = "k3r",
+        resourceIri = "http://rdfh.ch/resources/3v9z1DeGTJS-iBIgG9_Ofw",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = RestrictedViewPermission,
+        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        projectADM = SharedTestDataADM.incunabulaProject,
+        creationDate = Instant.parse("2016-03-02T15:05:45Z"),
+        resourceUUID = stringFormatter.decodeUuid("3v9z1DeGTJS-iBIgG9_Ofw"),
+        values = Map(
+          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = InternalSchema,
+              valueHasLanguage = None,
+              comment = None,
+              maybeValueHasString = Some(
+                "Beginn Kapitel 65.\nHolzschnitt zu Kap. 65: Von Astrologie und anderem Aberglauben.\nEin Narr, an dessen Seite ein Fuchsschwanz hängt, will einen Gelehrten überreden, auf die Gestirne und den Flug der Vögel zu achten. Dafür fasst er den Gelehrten bei der Schulter des Gelehrten und weist mit seiner Rechten zum Himmel.\n11.6 x 8.4 cm.")
+            ),
+            valueHasMaxStandoffStartIndex = None,
+            valueIri = "http://rdfh.ch/resources/3v9z1DeGTJS-iBIgG9_Ofw/values/c779184a7126",
+            valueHasUUID = stringFormatter.decodeUuid("c779184a7126"),
+            permissions =
+              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            userPermission = ViewPermission,
+            previousValueIri = None,
+            valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
+            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
+            deletionInfo = None
+          ))),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      ),
+      ReadResourceV2(
+        label = "c3r",
+        resourceIri = "http://rdfh.ch/resources/4G9DJIBkSfKdMg8yxStjjg",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = RestrictedViewPermission,
+        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        projectADM = SharedTestDataADM.incunabulaProject,
+        creationDate = Instant.parse("2016-03-02T15:05:44Z"),
+        resourceUUID = stringFormatter.decodeUuid("4G9DJIBkSfKdMg8yxStjjg"),
+        values = Map(
+          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = InternalSchema,
+              valueHasLanguage = None,
+              comment = None,
+              maybeValueHasString = Some(
+                "Beginn Kapitel 8.\nHolzschnitt zu Kap. 8: Guten Rat verschmähen.\nEin Narr, dessen Linke mit einem Falknerhandschuh geschützt wird, auf dem ein Vogel sitzt, lenkt einen Pflug, den ein zweiter Narr zieht.\n11.6 x 8.6 cm.")
+            ),
+            valueHasMaxStandoffStartIndex = None,
+            valueIri = "http://rdfh.ch/resources/4G9DJIBkSfKdMg8yxStjjg/values/125a433b2f26",
+            valueHasUUID = stringFormatter.decodeUuid("125a433b2f26"),
+            permissions =
+              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            userPermission = ViewPermission,
+            previousValueIri = None,
+            valueCreationDate = Instant.parse("2016-03-02T15:05:44Z"),
+            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
+            deletionInfo = None
+          ))),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      ),
+      ReadResourceV2(
+        label = "d1v",
+        resourceIri = "http://rdfh.ch/resources/4J6hWAUKQtyRqQ1CLpDrCQ",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = RestrictedViewPermission,
+        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        projectADM = SharedTestDataADM.incunabulaProject,
+        creationDate = Instant.parse("2016-03-02T15:05:39Z"),
+        resourceUUID = stringFormatter.decodeUuid("4J6hWAUKQtyRqQ1CLpDrCQ"),
+        values = Map(
+          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = InternalSchema,
+              valueHasLanguage = None,
+              comment = None,
+              maybeValueHasString = Some(
+                "Beginn Kapitel 19.\nHolzschnitt zu Kap. 19: Von überflüssigen Schwätzen.\nEin Narr steht mit herausgestreckter Zunge unter einem Baum. Er erblickt in dessen Krone das Nest eines Spechts, der unten ein Loch in den Stamm hämmert.\n11.6 x 8.5 cm.\nUnkoloriert.\n")
+            ),
+            valueHasMaxStandoffStartIndex = None,
+            valueIri = "http://rdfh.ch/resources/4J6hWAUKQtyRqQ1CLpDrCQ/values/1d6e62d43426",
+            valueHasUUID = stringFormatter.decodeUuid("1d6e62d43426"),
+            permissions =
+              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            userPermission = ViewPermission,
+            previousValueIri = None,
+            valueCreationDate = Instant.parse("2016-03-02T15:05:39Z"),
+            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
+            deletionInfo = None
+          ))),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      ),
+      ReadResourceV2(
+        label = "d7r",
+        resourceIri = "http://rdfh.ch/resources/4WfLxyL3QDe8A8XWucD9rg",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = RestrictedViewPermission,
+        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+        projectADM = SharedTestDataADM.incunabulaProject,
+        creationDate = Instant.parse("2016-03-02T15:05:44Z"),
+        resourceUUID = stringFormatter.decodeUuid("4WfLxyL3QDe8A8XWucD9rg"),
+        values = Map(
+          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
+            valueContent = TextValueContentV2(
+              ontologySchema = InternalSchema,
+              valueHasLanguage = None,
+              comment = None,
+              maybeValueHasString = Some(
+                "Beginn Kapitel 20.\nHolzschnitt zu Kap. 20: Vom Finden fremden Eigentums.\nEin Narr streckt seine Hände nach einem Schatz im Boden aus. Von Hinten tritt der Teufel in Gestalt eines Mischwesens heran und flüstert dem Narr mit einem Blasebalg einen Gedanken ein. 11.6 x 8.5 cm.\n")
+            ),
+            valueHasMaxStandoffStartIndex = None,
+            valueIri = "http://rdfh.ch/resources/4WfLxyL3QDe8A8XWucD9rg/values/a3c108473526",
+            valueHasUUID = stringFormatter.decodeUuid("a3c108473526"),
+            permissions =
+              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
+            userPermission = ViewPermission,
+            previousValueIri = None,
+            valueCreationDate = Instant.parse("2016-03-02T15:05:44Z"),
+            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
+            deletionInfo = None
+          ))),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      ),
+      ReadResourceV2(
+        label = "c2r",
+        resourceIri = "http://rdfh.ch/resources/5-nqe82tSnC82x01bE4zEw",
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -625,7 +872,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
         projectADM = SharedTestDataADM.incunabulaProject,
         creationDate = Instant.parse("2016-03-02T15:05:47Z"),
-        resourceUUID = stringFormatter.decodeUuid("_83qeu0PHEFc3sfW7YYmsA"),
+        resourceUUID = stringFormatter.decodeUuid("5-nqe82tSnC82x01bE4zEw"),
         values = Map(
           "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
             valueContent = TextValueContentV2(
@@ -633,261 +880,16 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               valueHasLanguage = None,
               comment = None,
               maybeValueHasString = Some(
-                "Beginn Kapitel 18.\nHolzschnitt zu Kap. 18: Vom Dienst an zwei Herren.\nEin mit Spiess bewaffneter Narr bl\u00E4st in ein Horn. Sein Hund versucht derweil im Hintergrund zwei Hasen gleichzeitig zu erjagen, 11.6 x 8.4 cm.\n")
+                "Beginn Kapitel 7.\nHolzschnitt zu Kap. 7: Vom Zwietracht stiften.\nEin Narr wird von zwei Mühlsteinen zerdrückt, ein zweiter hat seinen Finger in einer Türangel eingeklemmt und wird von einem dritten Narren beobachtet, der so hinter einer Wand verborgen ist, dass die Ohren seiner Narrenkappe sein Versteck verraten.\n11.7 x 8.4 cm.")
             ),
             valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/_83qeu0PHEFc3sfW7YYmsA/values/4e9dc2b53326",
-            valueHasUUID = stringFormatter.decodeUuid("4e9dc2b53326"),
+            valueIri = "http://rdfh.ch/resources/5-nqe82tSnC82x01bE4zEw/values/096c7f3a2026",
+            valueHasUUID = stringFormatter.decodeUuid("096c7f3a2026"),
             permissions =
               "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
             userPermission = ViewPermission,
             previousValueIri = None,
             valueCreationDate = Instant.parse("2016-03-02T15:05:47Z"),
-            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
-            deletionInfo = None
-          ))),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
-      ),
-      ReadResourceV2(
-        label = "f2r",
-        resourceIri = "http://rdfh.ch/resources/NCwOJSq_HRl2tMA9qtPBNw",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
-        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-        projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:48Z"),
-        resourceUUID = stringFormatter.decodeUuid("NCwOJSq_HRl2tMA9qtPBNw"),
-        values = Map(
-          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasLanguage = None,
-              comment = None,
-              maybeValueHasString = Some(
-                "Beginn Kapitel 31.\nHolzschnitt zu Kap. 31: Vom Hinausschieben auf morgen.\nEin Narr steht mit ausgebreiteten Armen auf einer Strasse. Auf seinen H\u00E4nden sitzen zwei Raben, die beide \u201ECras\u201C \u2013 das lateinische Wort f\u00FCr \u201Emorgen\u201C \u2013 rufen. Auf dem Kopf des Narren sitzt ein Papagei und ahmt den Ruf der Kr\u00E4hen nach, 11.6 x 8.5 cm.")
-            ),
-            valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/NCwOJSq_HRl2tMA9qtPBNw/values/c623c1aa3c26",
-            valueHasUUID = stringFormatter.decodeUuid("c623c1aa3c26"),
-            permissions =
-              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-            userPermission = ViewPermission,
-            previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
-            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
-            deletionInfo = None
-          ))),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
-      ),
-      ReadResourceV2(
-        label = "i1r",
-        resourceIri = "http://rdfh.ch/resources/mKWdtro6EsRLFxDU7H45_g",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
-        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-        projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:45Z"),
-        resourceUUID = stringFormatter.decodeUuid("mKWdtro6EsRLFxDU7H45_g"),
-        values = Map(
-          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasLanguage = None,
-              comment = None,
-              maybeValueHasString = Some(
-                "Beginn Kapitel 57.\nHolzschnitt zu Kap. 57: Von der Gnadenwahl Gottes.\nEin Narr, der auf einem Krebs reitet, st\u00FCtzt sich auf ein brechendes Schildrohr, das ihm die Hand  durchbohrt. Ein Vogel fliegt auf den offenen Mund des Narren zu.\n11.6 x 8.5 cm.")
-            ),
-            valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/mKWdtro6EsRLFxDU7H45_g/values/118a3f426d26",
-            valueHasUUID = stringFormatter.decodeUuid("118a3f426d26"),
-            permissions =
-              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-            userPermission = ViewPermission,
-            previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
-            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
-            deletionInfo = None
-          ))),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
-      ),
-      ReadResourceV2(
-        label = "g7r",
-        resourceIri = "http://rdfh.ch/resources/NW3TmjPurr6ot6SEbxgB9g",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
-        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-        projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:48Z"),
-        resourceUUID = stringFormatter.decodeUuid("NW3TmjPurr6ot6SEbxgB9g"),
-        values = Map(
-          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasLanguage = None,
-              comment = None,
-              maybeValueHasString = Some(
-                "Beginn Kapitel 45.\nHolzschnitt zu Kap. 45: Von selbstverschuldetem Ungl\u00FCck.\nIn Gestalt eines Narren springt Empedokles in den lodernden Krater des \u00C4tna. Im Vordergrund l\u00E4sst sich ein anderer Narr in einen Brunnen fallen. Beide werden von drei M\u00E4nnern beobachtet, die das Verhalten mit \u201EJn geschicht recht\u201C  kommentieren, 11.7 x 8.3 cm.\n")
-            ),
-            valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/NW3TmjPurr6ot6SEbxgB9g/values/b630be944e26",
-            valueHasUUID = stringFormatter.decodeUuid("b630be944e26"),
-            permissions =
-              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-            userPermission = ViewPermission,
-            previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
-            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
-            deletionInfo = None
-          ))),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
-      ),
-      ReadResourceV2(
-        label = "k6r",
-        resourceIri = "http://rdfh.ch/resources/Qm_L-xPXyFvzX3Az0nxY6w",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
-        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-        projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:45Z"),
-        resourceUUID = stringFormatter.decodeUuid("Qm_L-xPXyFvzX3Az0nxY6w"),
-        values = Map(
-          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasLanguage = None,
-              comment = None,
-              maybeValueHasString = Some(
-                "Beginn Kapitel 68.\nHolzschnitt zu Kap. 68: Keinen Scherz verstehen.\nEin Kind, das auf einem Steckenpferd reitet und mit einem Stock als Gerte umher fuchtelt, wird von einem Narren am rechten Rand ausgeschimpft. Ein anderer Narr, der neben dem Kind steht, ist dabei, sein Schwert aus der Scheide zu ziehen.\n11.7 x 8.5 cm.")
-            ),
-            valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/Qm_L-xPXyFvzX3Az0nxY6w/values/59740ba27226",
-            valueHasUUID = stringFormatter.decodeUuid("59740ba27226"),
-            permissions =
-              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-            userPermission = ViewPermission,
-            previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
-            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
-            deletionInfo = None
-          ))),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
-      ),
-      ReadResourceV2(
-        label = "m3r",
-        resourceIri = "http://rdfh.ch/resources/ZC0W_HeCqlCPHe6fQFGbuA",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
-        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-        projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:45Z"),
-        resourceUUID = stringFormatter.decodeUuid("ZC0W_HeCqlCPHe6fQFGbuA"),
-        values = Map(
-          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasLanguage = None,
-              comment = None,
-              maybeValueHasString = Some(
-                "Beginn Kapitel 83.\nneuer Holzschitt (nicht in Lemmer 1979): Vor einer H\u00E4userkulisse kniet ein Narr mit einem Beutel in der Linken und zwei Keulen in der Rechten vor einem Mann mit Hut und einem j\u00FCngeren Begleiter, 11.6 x 8.6 cm.")
-            ),
-            valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/ZC0W_HeCqlCPHe6fQFGbuA/values/4ba763247b26",
-            valueHasUUID = stringFormatter.decodeUuid("4ba763247b26"),
-            permissions =
-              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-            userPermission = ViewPermission,
-            previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:45Z"),
-            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
-            deletionInfo = None
-          ))),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
-      ),
-      ReadResourceV2(
-        label = "q8r",
-        resourceIri = "http://rdfh.ch/resources/DXCALizS06Y9p3NZBtCbSw",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
-        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-        projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:42Z"),
-        resourceUUID = stringFormatter.decodeUuid("DXCALizS06Y9p3NZBtCbSw"),
-        values = Map(
-          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasLanguage = None,
-              comment = None,
-              maybeValueHasString = Some(
-                "Beginn Kapitel 96.\nHolzschnitt zu Kap. 96: Schenken und hinterdrein bereuen.\nEin Narr, der vor einem Haus steht, \u00FCberreicht einem b\u00E4rtigen Alten ein Geschenk, kratzt sich dabei aber unschl\u00FCssig am Kopf.\n11.6 x 8.3 cm.\nUnkoloriert.\nOben rechts Blattnummerierung (Graphitstift): \"128\".")
-            ),
-            valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/DXCALizS06Y9p3NZBtCbSw/values/c32d62198426",
-            valueHasUUID = stringFormatter.decodeUuid("c32d62198426"),
-            permissions =
-              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-            userPermission = ViewPermission,
-            previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:42Z"),
-            attachedToUser = "http://rdfh.ch/users/b83acc5f05",
-            deletionInfo = None
-          ))),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
-      ),
-      ReadResourceV2(
-        label = "i4r",
-        resourceIri = "http://rdfh.ch/resources/PA12ujvXSpTKNtDmnlvz8g",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = RestrictedViewPermission,
-        attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-        resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-        projectADM = SharedTestDataADM.incunabulaProject,
-        creationDate = Instant.parse("2016-03-02T15:05:48Z"),
-        resourceUUID = stringFormatter.decodeUuid("PA12ujvXSpTKNtDmnlvz8g"),
-        values = Map(
-          "http://www.knora.org/ontology/0803/incunabula#description".toSmartIri -> Vector(ReadTextValueV2(
-            valueContent = TextValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasLanguage = None,
-              comment = None,
-              maybeValueHasString = Some(
-                "Beginn Kapitel 60.\nHolzschnitt zu Kap. 60: Von Selbstgef\u00E4lligkeit.\nEin alter Narr steht am Ofen und r\u00FChrt in einem Topf. Gleichzeitig schaut er sich dabei in einem Handspiegel an.\n11.7 x 8.5 cm.")
-            ),
-            valueHasMaxStandoffStartIndex = None,
-            valueIri = "http://rdfh.ch/resources/PA12ujvXSpTKNtDmnlvz8g/values/a63dbb7e6026",
-            valueHasUUID = stringFormatter.decodeUuid("a63dbb7e6026"),
-            permissions =
-              "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser,knora-admin:KnownUser",
-            userPermission = ViewPermission,
-            previousValueIri = None,
-            valueCreationDate = Instant.parse("2016-03-02T15:05:48Z"),
             attachedToUser = "http://rdfh.ch/users/b83acc5f05",
             deletionInfo = None
           ))),

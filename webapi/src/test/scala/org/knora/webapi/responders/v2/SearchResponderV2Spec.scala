@@ -222,7 +222,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     }
 
-    "perform a a count search query by label for incunabula:book that contain 'Das Narrenschiff'" in {
+    "perform acount search query by label for incunabula:book that contain 'Das Narrenschiff'" in {
 
       responderManager ! SearchResourceByLabelCountRequestV2(
         searchValue = "Das Narrenschiff",
