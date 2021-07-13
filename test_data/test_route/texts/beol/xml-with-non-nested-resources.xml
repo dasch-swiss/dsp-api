@@ -5,10 +5,10 @@
 	xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
 	xmlns:beol="http://0.0.0.0:3333/ontology/0801/beol/v2#"
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
-<beol:letter rdf:about="http://rdfh.ch/0801/42dfmzZYQZODMN6crzM1gw">
-	<beol:creationDate rdf:resource="http://rdfh.ch/0801/42dfmzZYQZODMN6crzM1gw/values/qT60z--pRdONoxeCqm8gFg"/>
-	<beol:hasAuthorValue rdf:resource="http://rdfh.ch/0801/42dfmzZYQZODMN6crzM1gw/values/J19v80MsQr-IUEUEdQrpZQ"/>
-	<beol:hasRecipientValue rdf:resource="http://rdfh.ch/0801/42dfmzZYQZODMN6crzM1gw/values/ZxFoMvc2SSmsvqHxWnGf7A"/>
+<beol:letter rdf:about="http://rdfh.ch/resources/42dfmzZYQZODMN6crzM1gw">
+	<beol:creationDate rdf:resource="http://rdfh.ch/resources/42dfmzZYQZODMN6crzM1gw/values/qT60z--pRdONoxeCqm8gFg"/>
+	<beol:hasAuthorValue rdf:resource="http://rdfh.ch/resources/42dfmzZYQZODMN6crzM1gw/values/J19v80MsQr-IUEUEdQrpZQ"/>
+	<beol:hasRecipientValue rdf:resource="http://rdfh.ch/resources/42dfmzZYQZODMN6crzM1gw/values/ZxFoMvc2SSmsvqHxWnGf7A"/>
 	<knora-api:arkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://0.0.0.0:3336/ark:/72163/1/0801/42dfmzZYQZODMN6crzM1gwv</knora-api:arkUrl>
 	<knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"/>
 	<knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
@@ -16,7 +16,7 @@
 	<knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
 	<rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Testletter</rdfs:label>
 </beol:letter>
-<knora-api:DateValue rdf:about="http://rdfh.ch/0801/42dfmzZYQZODMN6crzM1gw/values/qT60z--pRdONoxeCqm8gFg">
+<knora-api:DateValue rdf:about="http://rdfh.ch/resources/42dfmzZYQZODMN6crzM1gw/values/qT60z--pRdONoxeCqm8gFg">
 	<knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
 	<knora-api:dateValueHasCalendar rdf:datatype="http://www.w3.org/2001/XMLSchema#string">GREGORIAN</knora-api:dateValueHasCalendar>
 	<knora-api:dateValueHasEndDay rdf:datatype="http://www.w3.org/2001/XMLSchema#integer">10</knora-api:dateValueHasEndDay>
@@ -30,15 +30,15 @@
 	<knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
 	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">GREGORIAN:1703-06-10 CE</knora-api:valueAsString>
 </knora-api:DateValue>
-<knora-api:LinkValue rdf:about="http://rdfh.ch/0801/42dfmzZYQZODMN6crzM1gw/values/J19v80MsQr-IUEUEdQrpZQ">
+<knora-api:LinkValue rdf:about="http://rdfh.ch/resources/42dfmzZYQZODMN6crzM1gw/values/J19v80MsQr-IUEUEdQrpZQ">
 	<knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
 	<knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
-	<knora-api:linkValueHasTarget rdf:resource="http://rdfh.ch/0801/ONh6zMXCSu6hhH0ejHCOwA"/>
+	<knora-api:linkValueHasTarget rdf:resource="http://rdfh.ch/resources/ONh6zMXCSu6hhH0ejHCOwA"/>
 </knora-api:LinkValue>
-<beol:person rdf:about="http://rdfh.ch/0801/ONh6zMXCSu6hhH0ejHCOwA">
-    <beol:hasFamilyName rdf:resource="http://rdfh.ch/0801/ONh6zMXCSu6hhH0ejHCOwA/values/3ZWEXirgQp2kcdh10Azf3A"/>
-    <beol:hasGivenName rdf:resource="http://rdfh.ch/0801/ONh6zMXCSu6hhH0ejHCOwA/values/rHiRwvy-TuaBHi_C2-jl4A"/>
-    <beol:hasIAFIdentifier rdf:resource="http://rdfh.ch/0801/ONh6zMXCSu6hhH0ejHCOwA/values/bA4QPVEqSmyWE6Wq4Vp-Xg"/>
+<beol:person rdf:about="http://rdfh.ch/resources/ONh6zMXCSu6hhH0ejHCOwA">
+    <beol:hasFamilyName rdf:resource="http://rdfh.ch/resources/ONh6zMXCSu6hhH0ejHCOwA/values/3ZWEXirgQp2kcdh10Azf3A"/>
+    <beol:hasGivenName rdf:resource="http://rdfh.ch/resources/ONh6zMXCSu6hhH0ejHCOwA/values/rHiRwvy-TuaBHi_C2-jl4A"/>
+    <beol:hasIAFIdentifier rdf:resource="http://rdfh.ch/resources/ONh6zMXCSu6hhH0ejHCOwA/values/bA4QPVEqSmyWE6Wq4Vp-Xg"/>
     <knora-api:arkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://0.0.0.0:3336/ark:/72163/1/0801/ONh6zMXCSu6hhH0ejHCOwAl</knora-api:arkUrl>
     <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"/>
     <knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
@@ -46,30 +46,30 @@
     <knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
     <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Johann Jacob Scheuchzer</rdfs:label>
 </beol:person>
-<knora-api:TextValue rdf:about="http://rdfh.ch/0801/ONh6zMXCSu6hhH0ejHCOwA/values/3ZWEXirgQp2kcdh10Azf3A">
+<knora-api:TextValue rdf:about="http://rdfh.ch/resources/ONh6zMXCSu6hhH0ejHCOwA/values/3ZWEXirgQp2kcdh10Azf3A">
 	<knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
 	<knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
 	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Scheuchzer</knora-api:valueAsString>
 </knora-api:TextValue>
-<knora-api:TextValue rdf:about="http://rdfh.ch/0801/ONh6zMXCSu6hhH0ejHCOwA/values/rHiRwvy-TuaBHi_C2-jl4A">
+<knora-api:TextValue rdf:about="http://rdfh.ch/resources/ONh6zMXCSu6hhH0ejHCOwA/values/rHiRwvy-TuaBHi_C2-jl4A">
 	<knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
 	<knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
 	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Johann Jacob</knora-api:valueAsString>
 </knora-api:TextValue>
-<knora-api:TextValue rdf:about="http://rdfh.ch/0801/ONh6zMXCSu6hhH0ejHCOwA/values/bA4QPVEqSmyWE6Wq4Vp-Xg">
+<knora-api:TextValue rdf:about="http://rdfh.ch/resources/ONh6zMXCSu6hhH0ejHCOwA/values/bA4QPVEqSmyWE6Wq4Vp-Xg">
 	<knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
 	<knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
 	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">(DE-588)118607308</knora-api:valueAsString>
 </knora-api:TextValue>
-<knora-api:LinkValue rdf:about="http://rdfh.ch/0801/42dfmzZYQZODMN6crzM1gw/values/ZxFoMvc2SSmsvqHxWnGf7A">
+<knora-api:LinkValue rdf:about="http://rdfh.ch/resources/42dfmzZYQZODMN6crzM1gw/values/ZxFoMvc2SSmsvqHxWnGf7A">
 	<knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
 	<knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
-	<knora-api:linkValueHasTarget rdf:resource="http://rdfh.ch/0801/MKVdi4vQTFCOA1f9ToYEWQ"/>
+	<knora-api:linkValueHasTarget rdf:resource="http://rdfh.ch/resources/MKVdi4vQTFCOA1f9ToYEWQ"/>
 </knora-api:LinkValue>
-<beol:person rdf:about="http://rdfh.ch/0801/MKVdi4vQTFCOA1f9ToYEWQ">
-    <beol:hasFamilyName rdf:resource="http://rdfh.ch/0801/MKVdi4vQTFCOA1f9ToYEWQ/values/t8wT1_69RvGeIWTjNooVHw"/>
-    <beol:hasGivenName rdf:resource="http://rdfh.ch/0801/MKVdi4vQTFCOA1f9ToYEWQ/values/IczV-yEQQfqFEy1iAmgAIQ"/>
-    <beol:hasIAFIdentifier rdf:resource="http://rdfh.ch/0801/MKVdi4vQTFCOA1f9ToYEWQ/values/HKAx-HaBTeGojOQ_H7P7gA"/>
+<beol:person rdf:about="http://rdfh.ch/resources/MKVdi4vQTFCOA1f9ToYEWQ">
+    <beol:hasFamilyName rdf:resource="http://rdfh.ch/resources/MKVdi4vQTFCOA1f9ToYEWQ/values/t8wT1_69RvGeIWTjNooVHw"/>
+    <beol:hasGivenName rdf:resource="http://rdfh.ch/resources/MKVdi4vQTFCOA1f9ToYEWQ/values/IczV-yEQQfqFEy1iAmgAIQ"/>
+    <beol:hasIAFIdentifier rdf:resource="http://rdfh.ch/resources/MKVdi4vQTFCOA1f9ToYEWQ/values/HKAx-HaBTeGojOQ_H7P7gA"/>
     <knora-api:arkUrl rdf:datatype="http://www.w3.org/2001/XMLSchema#anyURI">http://0.0.0.0:3336/ark:/72163/1/0801/MKVdi4vQTFCOA1f9ToYEWQp</knora-api:arkUrl>
     <knora-api:attachedToProject rdf:resource="http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"/>
     <knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
@@ -77,17 +77,17 @@
     <knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
     <rdfs:label rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Jacob Hermann</rdfs:label>
 </beol:person>
-<knora-api:TextValue rdf:about="http://rdfh.ch/0801/MKVdi4vQTFCOA1f9ToYEWQ/values/t8wT1_69RvGeIWTjNooVHw">
+<knora-api:TextValue rdf:about="http://rdfh.ch/resources/MKVdi4vQTFCOA1f9ToYEWQ/values/t8wT1_69RvGeIWTjNooVHw">
 	<knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
 	<knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
 	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Hermann</knora-api:valueAsString>
 </knora-api:TextValue>
-<knora-api:TextValue rdf:about="http://rdfh.ch/0801/MKVdi4vQTFCOA1f9ToYEWQ/values/IczV-yEQQfqFEy1iAmgAIQ">
+<knora-api:TextValue rdf:about="http://rdfh.ch/resources/MKVdi4vQTFCOA1f9ToYEWQ/values/IczV-yEQQfqFEy1iAmgAIQ">
 	<knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
 	<knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
 	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">Jacob</knora-api:valueAsString>
 </knora-api:TextValue>
-<knora-api:TextValue rdf:about="http://rdfh.ch/0801/MKVdi4vQTFCOA1f9ToYEWQ/values/HKAx-HaBTeGojOQ_H7P7gA">
+<knora-api:TextValue rdf:about="http://rdfh.ch/resources/MKVdi4vQTFCOA1f9ToYEWQ/values/HKAx-HaBTeGojOQ_H7P7gA">
 	<knora-api:attachedToUser rdf:resource="http://rdfh.ch/users/root"/>
 	<knora-api:hasPermissions rdf:datatype="http://www.w3.org/2001/XMLSchema#string">CR knora-base:Creator|M knora-base:ProjectMember|V knora-base:KnownUser|RV knora-base:UnknownUser</knora-api:hasPermissions>
 	<knora-api:valueAsString rdf:datatype="http://www.w3.org/2001/XMLSchema#string">(DE-588)119112450</knora-api:valueAsString>

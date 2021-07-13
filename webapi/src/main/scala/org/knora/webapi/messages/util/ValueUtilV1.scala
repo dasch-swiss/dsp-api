@@ -162,6 +162,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       "application/xml" -> "XML",
       "text/xml" -> "XML",
       "text/csv" -> "CSV",
+      "text/plain" -> "TEXT",
       "application/zip" -> "ZIP",
       "application/x-compressed-zip" -> "ZIP",
       "audio/mpeg" -> "AUDIO",
