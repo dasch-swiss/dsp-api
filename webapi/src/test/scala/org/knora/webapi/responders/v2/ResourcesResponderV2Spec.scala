@@ -724,7 +724,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "return a resource of type thing with text as TEI/XML" in {
 
       responderManager ! ResourceTEIGetRequestV2(
-        resourceIri = "http://rdfh.ch/resources/XJ3fePWZDnOJnEqXLL4ldw",
+        resourceIri = "http://rdfh.ch/resources/bTeEHKqnAHeqfwWBQWLbkA",
         textProperty = "http://www.knora.org/ontology/0001/anything#hasRichtext".toSmartIri,
         mappingIri = None,
         gravsearchTemplateIri = None,
