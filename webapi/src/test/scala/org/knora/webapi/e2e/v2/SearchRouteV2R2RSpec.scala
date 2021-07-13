@@ -324,7 +324,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
 
         assert(status == StatusCodes.OK, response.toString)
 
-        checkCountResponse(responseAs[String], 43)
+        checkCountResponse(responseAs[String], 44)
 
       }
 
@@ -8194,7 +8194,7 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         s"""
                    |{
                    |  "project_id": "http://rdfh.ch/projects/0001",
-                   |  "res_id": "http://rdfh.ch/0001/a-thing",
+                   |  "res_id": "http://rdfh.ch/resources/SHnkVt4X2LHAM2nNZVwkoA",
                    |  "prop": "http://www.knora.org/ontology/0001/anything#hasText",
                    |  "richtext_value": {
                    |        "xml": ${JsString(FileUtil.readTextFile(xmlFileToSend))},
@@ -8268,7 +8268,6 @@ class SearchRouteV2R2RSpec extends R2RSpec {
         BasicHttpCredentials(anythingUserEmail, password)) ~> searchPath ~> check {
 
         assert(status == StatusCodes.OK, response.toString)
-
         assert(responseAs[String].contains("we will have a party"))
 
       }

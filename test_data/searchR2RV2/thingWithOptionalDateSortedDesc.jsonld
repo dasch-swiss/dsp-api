@@ -626,7 +626,7 @@
                 "@value": "http://0.0.0.0:3336/ark:/72163/2/XJ3fePWZDnOJnEqXLL4ldwC",
                 "@type": "xsd:anyURI"
             },
-            "rdfs:label": "test thing with markup",
+            "rdfs:label": "A thing that has two list values",
             "knora-api:versionArkUrl": {
                 "@value": "http://0.0.0.0:3336/ark:/72163/2/XJ3fePWZDnOJnEqXLL4ldwC.20180131T150510Z",
                 "@type": "xsd:anyURI"
