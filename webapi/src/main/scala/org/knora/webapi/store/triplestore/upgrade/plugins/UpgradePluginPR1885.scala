@@ -169,10 +169,10 @@ class UpgradePluginPR1885(featureFactoryConfig: FeatureFactoryConfig, log: Logge
         log.warn(s"Changed value IRI from <$oldValueIRI> to <$newValueIri>")
     }
 
-    val formatted = rdfFormatUtil.format(rdfModel = model, rdfFormat = Turtle)
-    new PrintWriter("/tmp/gravsearchtest1-data.ttl") {
-      write(formatted); close
-    }
+//    val formatted = rdfFormatUtil.format(rdfModel = model, rdfFormat = Turtle)
+//    new PrintWriter("/tmp/gravsearchtest1-data.ttl") {
+//      write(formatted); close
+//    }
   }
 
   /**
