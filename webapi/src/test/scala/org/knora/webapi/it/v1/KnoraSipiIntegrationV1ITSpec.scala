@@ -646,7 +646,7 @@ class KnoraSipiIntegrationV1ITSpec
         case Some(JsString(gravsearchIri)) => gravsearchIri
         case _                             => throw InvalidApiJsonException("expected IRI for header XSLT template")
       }
-
+      println(headerXSLTIri)
       // get tei TEI/XML representation of a beol:letter
 
       val letterTEIRequest: HttpRequest = Get(
@@ -713,7 +713,7 @@ class KnoraSipiIntegrationV1ITSpec
     }
 
     "provide a helpful error message if an XSLT file is not found" in {
-      val missingHeaderXSLTIri = "http://rdfh.ch/0801/608NfPLCRpeYnkXKABC5mg"
+      val missingHeaderXSLTIri = "http://rdfh.ch/resources/608NfPLCRpeYnkXKABC5mg"
 
       val letterTEIRequest: HttpRequest = Get(
         baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +
