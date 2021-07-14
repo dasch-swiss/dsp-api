@@ -153,6 +153,13 @@ case class ChangePermissionHasPermissionsApiRequestADM(hasPermissions: Set[Permi
   if (hasPermissions.isEmpty) {
     throw BadRequestException(s"hasPermissions cannot be empty.")
   }
+  hasPermissions.foreach { permission =>
+    if (permission.additionalInformation.isEmpty)
+      throw BadRequestException(s"additionalInformation cannot be empty for a default object access permission.")
+
+    if (permission.permissionCode.isEmpty)
+      throw BadRequestException(s"permissionCode cannot be empty for a default object access permission.")
+  }
 
   def toJsValue: JsValue = changePermissionHasPermissionsApiRequestADMFormat.write(this)
 }
