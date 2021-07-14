@@ -82,7 +82,7 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                                   featureFactoryConfig,
                                                   requestingUser,
                                                   apiRequestID) =>
-      administrativePermissionCreateRequestADM(newAdministrativePermission,
+      administrativePermissionCreateRequestADM(newAdministrativePermission.prepareHasPermissions,
                                                featureFactoryConfig,
                                                requestingUser,
                                                apiRequestID)
@@ -127,7 +127,10 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
                                                        featureFactoryConfig,
                                                        requestingUser,
                                                        apiRequestID) =>
-      defaultObjectAccessPermissionCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID)
+      defaultObjectAccessPermissionCreateRequestADM(createRequest.prepareHasPermissions,
+                                                    featureFactoryConfig,
+                                                    requestingUser,
+                                                    apiRequestID)
     case PermissionsForProjectGetRequestADM(projectIri, groupIri, featureFactoryConfig, requestingUser) =>
       permissionsForProjectGetRequestADM(projectIri, groupIri, featureFactoryConfig, requestingUser)
     case PermissionByIriGetRequestADM(permissionIri, requestingUser) =>
@@ -1688,18 +1691,18 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
       apiRequestID: UUID): Future[PermissionGetResponseADM] = {
 
     /*Verify that hasPermissions is updated successfully*/
-    def verifyUpdateOfHasPermissions: Future[PermissionItemADM] =
+    def verifyUpdateOfHasPermissions(expectedPermissions: Set[PermissionADM]): Future[PermissionItemADM] =
       for {
         updatedPermission <- permissionGetADM(permissionIri, requestingUser)
 
         /*Verify that update was successful*/
         _ = updatedPermission match {
           case ap: AdministrativePermissionADM =>
-            if (!ap.hasPermissions.equals(changeHasPermissionsRequest.hasPermissions))
+            if (!ap.hasPermissions.equals(expectedPermissions))
               throw UpdateNotPerformedException(
                 s"The hasPermissions set of permission $permissionIri was not updated. Please report this as a bug.")
           case doap: DefaultObjectAccessPermissionADM =>
-            if (!doap.hasPermissions.equals(changeHasPermissionsRequest.hasPermissions)) {
+            if (!doap.hasPermissions.equals(expectedPermissions)) {
               throw UpdateNotPerformedException(
                 s"The hasPermissions set of permission $permissionIri was not updated. Please report this as a bug.")
             }
@@ -1720,19 +1723,23 @@ class PermissionsResponderADM(responderData: ResponderData) extends Responder(re
           // Is permission an administrative permission?
           case ap: AdministrativePermissionADM =>
             // Yes.
+            val verifiedPermissions =
+              PermissionsMessagesUtilADM.verifyHasPermissionsAP(changeHasPermissionsRequest.hasPermissions)
             for {
               formattedPermissions <- Future(
-                PermissionUtilADM.formatPermissionADMs(changeHasPermissionsRequest.hasPermissions, PermissionType.AP))
+                PermissionUtilADM.formatPermissionADMs(verifiedPermissions, PermissionType.AP))
               _ <- updatePermission(permissionIri = ap.iri, maybeHasPermissions = Some(formattedPermissions))
-              updatedPermission <- verifyUpdateOfHasPermissions
+              updatedPermission <- verifyUpdateOfHasPermissions(verifiedPermissions)
             } yield AdministrativePermissionGetResponseADM(updatedPermission.asInstanceOf[AdministrativePermissionADM])
           case doap: DefaultObjectAccessPermissionADM =>
             //No. It is a default object access permission.
+            val verifiedPermissions =
+              PermissionsMessagesUtilADM.verifyHasPermissionsDOAP(changeHasPermissionsRequest.hasPermissions)
             for {
               formattedPermissions <- Future(
-                PermissionUtilADM.formatPermissionADMs(changeHasPermissionsRequest.hasPermissions, PermissionType.OAP))
+                PermissionUtilADM.formatPermissionADMs(verifiedPermissions, PermissionType.OAP))
               _ <- updatePermission(permissionIri = doap.iri, maybeHasPermissions = Some(formattedPermissions))
-              updatedPermission <- verifyUpdateOfHasPermissions
+              updatedPermission <- verifyUpdateOfHasPermissions(verifiedPermissions)
             } yield
               DefaultObjectAccessPermissionGetResponseADM(
                 updatedPermission.asInstanceOf[DefaultObjectAccessPermissionADM])
