@@ -245,6 +245,23 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       fooLastModDate = newFooLastModDate
     }
 
+    "not create an ontology if the given name matches NCName pattern but is not URL safe" in {
+      responderManager ! CreateOntologyRequestV2(
+        ontologyName = "bär",
+        projectIri = imagesProjectIri,
+        label = "The bär ontology",
+        comment = Some("some comment"),
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = imagesUser
+      )
+
+      expectMsgPF(timeout) {
+        case msg: akka.actor.Status.Failure =>
+          msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      }
+    }
+
     "create an empty ontology called 'bar' with a comment" in {
       responderManager ! CreateOntologyRequestV2(
         ontologyName = "bar",

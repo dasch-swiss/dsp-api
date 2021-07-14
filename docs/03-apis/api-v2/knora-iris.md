@@ -68,7 +68,7 @@ http://www.knora.org/ontology/0001/example
 ```
 
 An ontology name must be a valid XML
-[NCName](https://www.w3.org/TR/xml-names/#NT-NCName).
+[NCName](https://www.w3.org/TR/xml-names/#NT-NCName) and must be URL safe.
 The following names are reserved for built-in internal DSP ontologies:
 
   - `knora-base`
