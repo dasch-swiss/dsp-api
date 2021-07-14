@@ -108,6 +108,40 @@ class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
       )
       assert(caught.getMessage === "Project shortcode must be supplied.")
     }
+
+    "return 'BadRequestException' if project 'shortname' is not NCName valid" in {
+      val invalidShortName = "abd%2"
+      val caught = intercept[BadRequestException](
+        CreateProjectApiRequestADM(
+          shortname = invalidShortName,
+          shortcode = "1114",
+          longname = Some("project longname"),
+          description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+          keywords = Seq("keywords"),
+          logo = Some("/fu/bar/baz.jpg"),
+          status = true,
+          selfjoin = false
+        ).validateAndEscape
+      )
+      assert(caught.getMessage === s"The supplied short name: '$invalidShortName' is not valid.")
+    }
+
+    "return 'BadRequestException' if project 'shortname' is not URL safe" in {
+      val invalidShortName = "äbd2"
+      val caught = intercept[BadRequestException](
+        CreateProjectApiRequestADM(
+          shortname = invalidShortName,
+          shortcode = "1114",
+          longname = Some("project longname"),
+          description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
+          keywords = Seq("keywords"),
+          logo = Some("/fu/bar/baz.jpg"),
+          status = true,
+          selfjoin = false
+        ).validateAndEscape
+      )
+      assert(caught.getMessage === s"The supplied short name: '$invalidShortName' is not valid.")
+    }
   }
 
   "The ChangeProjectApiRequestADM case class" should {
