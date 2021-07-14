@@ -39,7 +39,7 @@ for the group is returned.
 permissions for a project. As a response, all `default_object_acces_permissions` of a 
 project are returned. 
 
-### Creating New Permissions:
+### Creating New Administrative Permissions:
  
 - `POST: /admin/permissions/ap`: create a new administrative permission. The type of 
 permissions, the project and group to which the permission should be added must be 
@@ -84,6 +84,9 @@ ProjectMember groups (See [Default set of permissions for a new project](./proje
 Therefore, it is not possible to create new administrative permissions for the ProjectAdmin and ProjectMember groups of 
 a project. However, the default permissions set for these groups can be modified (See [update permission](./permissions.md#updating-a-permissions-scope)).
 
+
+### Creating New Default Object Access Permissions:
+
 - `POST: /admin/permissions/doap` : create a new default object access permission. 
 A single instance of `knora-admin:DefaultObjectAccessPermission` must
 always reference a project, but can only reference **either** a group
@@ -101,6 +104,10 @@ default object access permission for a group of a project the request body would
     "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
 }
 ```
+`hasPermissions` contains permission types that must be granted. Each permission type should contain the followings:
+- `additionalInformation` : To whom the permission should be granted: project members, known users, unknown users, etc.
+- `name` : indicates the type of the type of the permission. 
+
 
 Similar to the previous case a custom IRI can be assigned to a permission specified by the `id` in the request body. 
 The example below shows the request body to create a new default object access permission with a custom IRI defined for 
