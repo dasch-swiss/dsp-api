@@ -58,25 +58,25 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
 
   // use started actor in tests instead of the store manager
   "DeleteCardinalitiesFromClass" should {
-    "detect that property is in use, when used in an instance of parent class" in {
+    "detect that property is in use, when used in a resource" in {
       val FreetestOntologyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
       val internalPropertyIri = FreetestOntologyIri.makeEntityIri("hasText").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
       val resF = DeleteCardinalitiesFromClass.isPropertyUsedInResources(settings, fusekiActor, internalPropertyIri)
-      resF map { res => println(res); assert(res, "property is used in instance of parent class") }
+      resF map { res => println(res); assert(res, "property is used in resource (instance of resource class)") }
     }
 
-    "detect that property is in use, when used in an instance of subclass" in {
+    "detect that property is in use, when used in a resource of a subclass" in {
       val FreetestOntologyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
       val internalPropertyIri = FreetestOntologyIri.makeEntityIri("hasDecimal").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
       val resF = DeleteCardinalitiesFromClass.isPropertyUsedInResources(settings, fusekiActor, internalPropertyIri)
-      resF map { res => println(res); assert(res, "property is used in instance of subclass") }
+      resF map { res => println(res); assert(res, "property is used in a resource of subclass") }
     }
 
-    "detect that property is not in use, when not used in any instance" in {
+    "detect that property is not in use, when not used in any resource" in {
       val FreetestOntologyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
       val internalPropertyIri = FreetestOntologyIri.makeEntityIri("hasInteger").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")

@@ -38,6 +38,8 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.store.triplestoremessages.{
+  SparqlAskRequest,
+  SparqlAskResponse,
   SparqlSelectRequest,
   SparqlUpdateRequest,
   SparqlUpdateResponse
@@ -300,9 +302,9 @@ object DeleteCardinalitiesFromClass {
                      )
                      .toString()
                  )
-      response: SparqlSelectResult <-
-        (storeManager ? SparqlSelectRequest(request)).mapTo[SparqlSelectResult]
-    } yield response.results.bindings.nonEmpty
+      response: SparqlAskResponse <-
+        (storeManager ? SparqlAskRequest(request)).mapTo[SparqlAskResponse]
+    } yield response.result
 
   /**
    * Checks if the class is defined inside the ontology found in the cache.
