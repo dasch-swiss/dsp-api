@@ -1698,7 +1698,11 @@ case class MovingImageFileValueV1(internalMimeType: String,
                                   internalFilename: String,
                                   originalFilename: Option[String],
                                   originalMimeType: Option[String] = None,
-                                  projectShortcode: String)
+                                  projectShortcode: String,
+                                  dimX: Int,
+                                  dimY: Int,
+                                  fps: Option[BigDecimal] = None,
+                                  duration: Option[BigDecimal] = None)
     extends FileValueV1 {
 
   def valueTypeIri: IRI = OntologyConstants.KnoraBase.MovingImageFileValue
@@ -1736,7 +1740,19 @@ case class MovingImageFileValueV1(internalMimeType: String,
   }
 
   override def toFileValueContentV2: FileValueContentV2 = {
-    throw NotImplementedException("Moving image file values are not supported in Knora API v1")
+    MovingImageFileValueContentV2(
+      ontologySchema = InternalSchema,
+      fileValue = FileValueV2(
+        internalFilename = internalFilename,
+        internalMimeType = internalMimeType,
+        originalFilename = originalFilename,
+        originalMimeType = Some(internalMimeType)
+      ),
+      dimX = dimX,
+      dimY = dimY,
+      fps = fps,
+      duration = duration
+    )
   }
 }
 
@@ -1879,7 +1895,7 @@ object ApiValueV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol 
   implicit val documentFileValueV1Format: JsonFormat[DocumentFileValueV1] = jsonFormat8(DocumentFileValueV1)
   implicit val textFileValueV1Format: JsonFormat[TextFileValueV1] = jsonFormat5(TextFileValueV1)
   implicit val audioFileValueV1Format: JsonFormat[AudioFileValueV1] = jsonFormat6(AudioFileValueV1)
-  implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat5(MovingImageFileValueV1)
+  implicit val movingImageFileValueV1Format: JsonFormat[MovingImageFileValueV1] = jsonFormat9(MovingImageFileValueV1)
   implicit val valueVersionV1Format: JsonFormat[ValueVersionV1] = jsonFormat3(ValueVersionV1)
   implicit val linkValueV1Format: JsonFormat[LinkValueV1] = jsonFormat4(LinkValueV1)
   implicit val valueVersionHistoryGetResponseV1Format: RootJsonFormat[ValueVersionHistoryGetResponseV1] = jsonFormat1(

@@ -33,7 +33,7 @@
 
     :attachedToProject knora-admin:SystemProject ;
 
-    :ontologyVersion "knora-base v11" .
+    :ontologyVersion "knora-base v12" .
 
 
 
@@ -2159,7 +2159,7 @@
                                       ] ,
                                       [ rdf:type owl:Restriction ;
                                         owl:onProperty :fps ;
-                                        owl:cardinality "1"^^xsd:nonNegativeInteger
+                                        owl:maxCardinality "1"^^xsd:nonNegativeInteger
                                       ] ,
                                       [ rdf:type owl:Restriction ;
                                         owl:onProperty :duration ;
