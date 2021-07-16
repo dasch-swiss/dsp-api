@@ -71,7 +71,8 @@ class MockSipiConnector extends Actor with ActorLogging {
         width = Some(512),
         height = Some(256),
         pageCount = None,
-        duration = None
+        duration = None,
+        fps = None
       )
     }
 
