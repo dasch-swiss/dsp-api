@@ -81,6 +81,7 @@ class KnoraSipiIntegrationV1ITSpec
   private val pdfResourceIri = new MutableTestIri
   private val zipResourceIri = new MutableTestIri
   private val wavResourceIri = new MutableTestIri
+  private val videoResourceIri = new MutableTestIri
 
   private val minimalPdfOriginalFilename = "minimal.pdf"
   private val pathToMinimalPdf = s"test_data/test_route/files/$minimalPdfOriginalFilename"
@@ -103,6 +104,12 @@ class KnoraSipiIntegrationV1ITSpec
 
   private val testWavOriginalFilename = "test.wav"
   private val pathToTestWav = s"test_data/test_route/files/$testWavOriginalFilename"
+
+  private val testVideoOriginalFilename = "testVideo.mp4"
+  private val pathToTestVideo = s"test_data/test_route/files/$testVideoOriginalFilename"
+
+  private val testVideo2OriginalFilename = "testVideo2.mp4"
+  private val pathToTestVideo2 = s"test_data/test_route/files/$testVideoOriginalFilename"
 
   /**
     * Adds the IRI of a XSL transformation to the given mapping.
@@ -1001,6 +1008,97 @@ class KnoraSipiIntegrationV1ITSpec
 
       // Request the file from Sipi.
       val sipiGetRequest = Get(wavUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
+      checkResponseOK(sipiGetRequest)
+    }
+
+    //TODO: activate the following two tests after video support is implemented in sipi
+    "create a resource with a video file attached" ignore {
+      // Upload the video file to Sipi.
+      val zipUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToTestVideo, mimeType = MediaTypes.`video/mp4`))
+      )
+
+      val uploadedVideoFile: SipiUploadResponseEntry = zipUploadResponse.uploadedFiles.head
+      uploadedVideoFile.originalFilename should ===(testVideoOriginalFilename)
+
+      // Create a resource for the video file.
+      val createVideoResourceParams = JsObject(
+        Map(
+          "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#MovingImageRepresentation"),
+          "label" -> JsString("Wav file"),
+          "project_id" -> JsString("http://rdfh.ch/projects/0001"),
+          "properties" -> JsObject(),
+          "file" -> JsString(uploadedVideoFile.internalFilename)
+        )
+      )
+
+      // Send the JSON in a POST request to the Knora API server.
+      val createVideoResourceRequest: HttpRequest = Post(
+        baseApiUrl + "/v1/resources",
+        HttpEntity(ContentTypes.`application/json`, createVideoResourceParams.compactPrint)) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      val createVideoResourceResponseJson: JsObject = getResponseJson(createVideoResourceRequest)
+
+      // get the IRI of the audio file resource
+      val resourceIri: String = createVideoResourceResponseJson.fields.get("res_id") match {
+        case Some(JsString(res_id: String)) => res_id
+        case _                              => throw InvalidApiJsonException("member 'res_id' was expected")
+      }
+
+      videoResourceIri.set(resourceIri)
+
+      // Request the video file resource from the Knora API server.
+      val videoResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      val videoResourceResponse: JsObject = getResponseJson(videoResourceRequest)
+      val locdata = videoResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val videoUrl =
+        locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
+
+      // Request the file from Sipi.
+      val sipiGetRequest = Get(videoUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
+      checkResponseOK(sipiGetRequest)
+    }
+
+    "change the video file attached to a resource" ignore {
+      // Upload the file to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToTestVideo2, mimeType = MediaTypes.`video/mp4`))
+      )
+
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.originalFilename should ===(testVideo2OriginalFilename)
+
+      // JSON describing the new file to Knora.
+      val knoraParams = JsObject(
+        Map(
+          "file" -> JsString(s"${uploadedFile.internalFilename}")
+        )
+      )
+
+      // Send the JSON in a PUT request to the Knora API server.
+      val knoraPutRequest = Put(
+        baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(wavResourceIri.get, "UTF-8"),
+        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      checkResponseOK(knoraPutRequest)
+
+      // Request the document resource from the Knora API server.
+      val videoResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(videoResourceIri.get, "UTF-8")) ~> addCredentials(
+        BasicHttpCredentials(userEmail, password))
+
+      val videoResourceResponse: JsObject = getResponseJson(videoResourceRequest)
+      val locdata = videoResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val videoUrl =
+        locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
+
+      // Request the file from Sipi.
+      val sipiGetRequest = Get(videoUrl) ~> addCredentials(BasicHttpCredentials(userEmail, password))
       checkResponseOK(sipiGetRequest)
     }
   }

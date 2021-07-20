@@ -1348,6 +1348,17 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
             log = log
           )
 
+        case OntologyConstants.KnoraApiV2Complex.MovingImageFileValue =>
+          MovingImageFileValueContentV2.fromJsonLDObject(
+            jsonLDObject = jsonLDObject,
+            requestingUser = requestingUser,
+            responderManager = responderManager,
+            storeManager = storeManager,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            log = log
+          )
+
         case other => throw NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other")
       }
 
@@ -3561,6 +3572,120 @@ object AudioFileValueContentV2 extends ValueContentReaderV2[AudioFileValueConten
         ontologySchema = ApiV2Complex,
         fileValue = fileValueWithSipiMetadata.fileValue,
         duration = fileValueWithSipiMetadata.sipiFileMetadata.duration,
+        comment = getComment(jsonLDObject)
+      )
+  }
+}
+
+/**
+  * Represents video file metadata.
+  *
+  * @param fileValue the basic metadata about the file value.
+  * @param dimX      the with of the the image in pixels.
+  * @param dimY      the height of the the image in pixels.
+  * @param fps       the frame rate of the video.
+  * @param duration  the duration of the video file in seconds.
+  * @param comment a comment on this [[MovingImageFileValueContentV2]], if any.
+  */
+case class MovingImageFileValueContentV2(ontologySchema: OntologySchema,
+                                         fileValue: FileValueV2,
+                                         dimX: Int,
+                                         dimY: Int,
+                                         fps: Option[BigDecimal] = None,
+                                         duration: Option[BigDecimal] = None,
+                                         comment: Option[String] = None)
+    extends FileValueContentV2 {
+  override def valueType: SmartIri = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    OntologyConstants.KnoraBase.MovingImageFileValue.toSmartIri.toOntologySchema(ontologySchema)
+  }
+
+  override def valueHasString: String = fileValue.internalFilename
+
+  override def toOntologySchema(targetSchema: OntologySchema): MovingImageFileValueContentV2 =
+    copy(ontologySchema = targetSchema)
+
+  override def toJsonLDValue(targetSchema: ApiV2Schema,
+                             projectADM: ProjectADM,
+                             settings: KnoraSettingsImpl,
+                             schemaOptions: Set[SchemaOption]): JsonLDValue = {
+    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
+
+    targetSchema match {
+      case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
+
+      case ApiV2Complex =>
+        JsonLDObject(
+          toJsonLDObjectMapInComplexSchema(fileUrl) ++ Map(
+            OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimX -> JsonLDInt(dimX),
+            OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimY -> JsonLDInt(dimY)
+          ))
+    }
+  }
+
+  override def unescape: ValueContentV2 = {
+    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+  }
+
+  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean = {
+    that match {
+      case thatVideoFile: MovingImageFileValueContentV2 =>
+        fileValue == thatVideoFile.fileValue
+
+      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
+    }
+  }
+
+  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = {
+    currentVersion match {
+      case thatVideoFile: MovingImageFileValueContentV2 =>
+        fileValue == thatVideoFile.fileValue &&
+          comment == thatVideoFile.comment
+
+      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+    }
+  }
+}
+
+/**
+  * Constructs [[MovingImageFileValueContentV2]] objects based on JSON-LD input.
+  */
+object MovingImageFileValueContentV2 extends ValueContentReaderV2[MovingImageFileValueContentV2] {
+  override def fromJsonLDObject(jsonLDObject: JsonLDObject,
+                                requestingUser: UserADM,
+                                responderManager: ActorRef,
+                                storeManager: ActorRef,
+                                featureFactoryConfig: FeatureFactoryConfig,
+                                settings: KnoraSettingsImpl,
+                                log: LoggingAdapter)(
+      implicit timeout: Timeout,
+      executionContext: ExecutionContext): Future[MovingImageFileValueContentV2] = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    for {
+      fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
+        jsonLDObject = jsonLDObject,
+        requestingUser = requestingUser,
+        responderManager = responderManager,
+        storeManager = storeManager,
+        settings = settings,
+        log = log
+      )
+
+      _ = if (!settings.videoMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
+        throw BadRequestException(
+          s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for video files")
+      }
+    } yield
+      MovingImageFileValueContentV2(
+        ontologySchema = ApiV2Complex,
+        fileValue = fileValueWithSipiMetadata.fileValue,
+        duration = fileValueWithSipiMetadata.sipiFileMetadata.duration,
+        dimX = fileValueWithSipiMetadata.sipiFileMetadata.width
+          .getOrElse(throw SipiException(s"Sipi did not return the video width")),
+        dimY = fileValueWithSipiMetadata.sipiFileMetadata.height
+          .getOrElse(throw SipiException(s"Sipi did not return the video height")),
+        fps = fileValueWithSipiMetadata.sipiFileMetadata.fps,
         comment = getComment(jsonLDObject)
       )
   }

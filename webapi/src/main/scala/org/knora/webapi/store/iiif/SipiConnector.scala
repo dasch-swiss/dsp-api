@@ -99,7 +99,8 @@ class SipiConnector extends Actor with ActorLogging {
                                    width: Option[Int],
                                    height: Option[Int],
                                    numpages: Option[Int],
-                                   duration: Option[BigDecimal]) {
+                                   duration: Option[BigDecimal],
+                                   fps: Option[BigDecimal]) {
     if (originalFilename.contains("")) {
       throw SipiException(s"Sipi returned an empty originalFilename")
     }
@@ -110,7 +111,7 @@ class SipiConnector extends Actor with ActorLogging {
   }
 
   object SipiKnoraJsonResponseProtocol extends SprayJsonSupport with DefaultJsonProtocol {
-    implicit val sipiKnoraJsonResponseFormat: RootJsonFormat[SipiKnoraJsonResponse] = jsonFormat7(SipiKnoraJsonResponse)
+    implicit val sipiKnoraJsonResponseFormat: RootJsonFormat[SipiKnoraJsonResponse] = jsonFormat8(SipiKnoraJsonResponse)
   }
 
   /**
@@ -136,7 +137,8 @@ class SipiConnector extends Actor with ActorLogging {
         width = sipiResponse.width,
         height = sipiResponse.height,
         pageCount = sipiResponse.numpages,
-        duration = sipiResponse.duration
+        duration = sipiResponse.duration,
+        fps = sipiResponse.fps
       )
   }
 

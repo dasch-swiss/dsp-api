@@ -24,6 +24,7 @@ TEXT = "text"
 IMAGE = "image"
 DOCUMENT = "document"
 AUDIO = "audio"
+VIDEO = "video"
 
 -------------------------------------------------------------------------------
 -- Mimetype constants
@@ -52,6 +53,7 @@ local APPLICATION_ZIP = "application/zip"
 local APPLICATION_TAR = "application/x-tar"
 local APPLICATION_ISO = "application/x-iso9660-image"
 local APPLICATION_GZIP = "application/gzip"
+local VIDEO_MP4 = "video/mp4"
 
 
 local image_mime_types = {
@@ -89,6 +91,10 @@ local document_mime_types = {
     APPLICATION_PPTX
 }
 
+local video_mime_types = {
+    VIDEO_MP4
+}
+
 local audio_extensions = {
     "mp3",
     "mp4",
@@ -117,6 +123,10 @@ local document_extensions = {
     "pptx"
 }
 
+local video_extensions = {
+    "mp4"
+}
+
 function make_image_file_info(extension)
     return {
         media_type = IMAGE,
@@ -133,6 +143,13 @@ function make_audio_file_info(extension)
             extension = extension
         }
     end
+end
+
+function make_video_file_info(extension)
+    return {
+        media_type = VIDEO,
+        extension = extension
+    }
 end
 
 function make_text_file_info(extension)
@@ -176,6 +193,8 @@ function get_file_info(filename, mimetype)
         return make_image_file_info(extension)
     elseif table.contains(audio_mime_types, mimetype) then
         return make_audio_file_info(extension)
+    elseif table.contains(video_mime_types, mimetype) then
+        return make_video_file_info(extension)
     elseif table.contains(text_mime_types, mimetype) then
         return make_text_file_info(extension)
     elseif table.contains(document_mime_types, mimetype) then
