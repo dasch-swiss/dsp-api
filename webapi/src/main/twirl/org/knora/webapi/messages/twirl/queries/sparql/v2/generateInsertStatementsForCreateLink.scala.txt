@@ -42,6 +42,7 @@
   linkUpdate: SparqlTemplateLinkUpdate,
   creationDate: Instant,
   newValueUUID: UUID,
+  arkUrl: IRI,
   maybeComment: Option[String],
   maybeValueHasOrder: Option[Int],
   stringFormatter: StringFormatter)
@@ -82,6 +83,7 @@
             knora-base:isDeleted false ;
             knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(newValueUUID)}" ;
             knora-base:valueCreationDate "@creationDate"^^xsd:dateTime ;
+            knora-base:hasArkUrl <@arkUrl> ;
             knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
             knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions"^^xsd:string .
 

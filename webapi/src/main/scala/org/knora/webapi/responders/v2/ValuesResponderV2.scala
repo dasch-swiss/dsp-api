@@ -665,8 +665,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       newValueUUID: UUID <- Future.successful(
         makeNewValueUUID(valueToCreate.customValueIri, valueToCreate.customValueUUID))
 
+      // Make new value IRI.
       newValueIri: IRI <- checkOrCreateEntityIri(valueToCreate.customValueIri,
                                                  stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID)))
+      // Make new ARK URL.
+      valueArkUrl: IRI = newValueIri.toSmartIri.fromValueIriToArkUrl(newValueUUID)
 
       // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
       // use resource creation date for the value.
@@ -703,6 +706,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
               resourceIri = resourceIri,
               linkUpdate = sparqlTemplateLinkUpdate,
               creationDate = valueCreationDate,
+              arkUrl = valueArkUrl,
               newValueUUID = newValueUUID,
               maybeComment = valueToCreate.valueContent.comment,
               maybeValueHasOrder = Some(valueHasOrder),
@@ -719,6 +723,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
               value = otherValueContentV2,
               newValueIri = newValueIri,
               newValueUUID = newValueUUID,
+              arkUrl = valueArkUrl,
               linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
               valueCreator = requestingUser.id,
               valuePermissions = valueToCreate.permissions,
