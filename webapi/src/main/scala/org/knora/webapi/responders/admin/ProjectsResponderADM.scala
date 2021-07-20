@@ -991,7 +991,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             forGroup = OntologyConstants.KnoraAdmin.ProjectAdmin,
             hasPermissions =
               Set(PermissionADM.ProjectAdminAllPermission, PermissionADM.ProjectResourceCreateAllPermission)
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
@@ -1003,7 +1003,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             forProject = projectIri,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectResourceCreateAllPermission)
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
@@ -1022,7 +1022,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
               PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
               PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin)
             )
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
@@ -1039,7 +1039,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
               PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectMember),
               PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectMember)
             )
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()

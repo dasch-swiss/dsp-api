@@ -20,13 +20,14 @@
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
 import java.util.UUID
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException, InconsistentRepositoryDataException}
 import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataType.PermissionProfileType
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
@@ -59,8 +60,15 @@ case class CreateAdministrativePermissionAPIRequestADM(id: Option[IRI] = None,
     id,
     throw BadRequestException(s"Invalid permission IRI ${id.get} is given."))
   if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
+
   if (!OntologyConstants.KnoraAdmin.BuiltInGroups.contains(forGroup)) {
     stringFormatter.validateGroupIri(forGroup, throw BadRequestException(s"Invalid group IRI $forGroup"))
+  }
+
+  def prepareHasPermissions: CreateAdministrativePermissionAPIRequestADM = {
+    copy(
+      hasPermissions = PermissionsMessagesUtilADM.verifyHasPermissionsAP(hasPermissions)
+    )
   }
 }
 
@@ -123,8 +131,14 @@ case class CreateDefaultObjectAccessPermissionAPIRequestADM(id: Option[IRI] = No
       }
     case None => None
   }
+
   if (hasPermissions.isEmpty) throw BadRequestException("Permissions needs to be supplied.")
 
+  def prepareHasPermissions: CreateDefaultObjectAccessPermissionAPIRequestADM = {
+    copy(
+      hasPermissions = PermissionsMessagesUtilADM.verifyHasPermissionsDOAP(hasPermissions)
+    )
+  }
 }
 
 /**
@@ -155,6 +169,7 @@ case class ChangePermissionHasPermissionsApiRequestADM(hasPermissions: Set[Permi
   }
 
   def toJsValue: JsValue = changePermissionHasPermissionsApiRequestADMFormat.write(this)
+
 }
 
 /**
@@ -1138,6 +1153,7 @@ object PermissionADM {
       permissionCode = Some(1)
     )
   }
+
 }
 
 /**
