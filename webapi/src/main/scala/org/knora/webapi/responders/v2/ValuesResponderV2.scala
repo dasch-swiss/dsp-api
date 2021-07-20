@@ -671,6 +671,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       // Make new ARK URL.
       valueArkUrl: IRI = newValueIri.toSmartIri.fromValueIriToArkUrl(newValueUUID)
 
+      valueArkUrl = newValueIri.toSmartIri.fromValueIriToArkUrl(newValueUUID)
+
       // Make a creation date for the value. If a custom creation date is given for a value, consider that otherwise
       // use resource creation date for the value.
       valueCreationDate: Instant = valueToCreate.customValueCreationDate match {

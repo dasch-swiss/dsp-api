@@ -1074,6 +1074,15 @@
 
               :objectDatatypeConstraint xsd:dateTime .
 
+###  http://www.knora.org/ontology/knora-base#hasArkUrl
+
+:hasArkUrl rdf:type owl:DatatypeProperty ;
+
+           rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
+
+           rdfs:comment "Indicates the ARK URL of the entity"@en ;
+
+           :objectDatatypeConstraint xsd:anyURI .
 
 
 ###  http://www.knora.org/ontology/knora-base#deleteDate
@@ -2298,6 +2307,10 @@
                           [ rdf:type owl:Restriction ;
                             owl:onProperty :deleteComment ;
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                          ] ,
+                          [ rdf:type owl:Restriction ;
+                            owl:onProperty :hasArkUrl ;
+                            owl:minCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
 
           rdfs:label "Ressource"@de ,
@@ -2726,6 +2739,10 @@
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :hasPermissions ;
                          owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                       ] ,
+                       [ rdf:type owl:Restriction ;
+                         owl:onProperty :hasArkUrl ;
+                         owl:minCardinality "1"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :valueHasOrder ;

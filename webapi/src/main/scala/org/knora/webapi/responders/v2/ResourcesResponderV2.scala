@@ -248,6 +248,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         // Make a versionDate for the resource and its values.
         creationDate: Instant = internalCreateResource.creationDate.getOrElse(Instant.now)
 
+        // Make ark URL for the new resource
+        arkUrl: IRI = resourceIri.toSmartIri.fromResourceIriToArkUrl()
+
         // Do the remaining pre-update checks and make a ResourceReadyToCreate describing the SPARQL
         // for creating the resource.
         resourceReadyToCreate: ResourceReadyToCreate <- generateResourceReadyToCreate(
@@ -259,6 +262,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           defaultResourcePermissions = defaultResourcePermissions,
           defaultPropertyPermissions = defaultPropertyPermissions,
           creationDate = creationDate,
+          arkUrl = arkUrl,
           featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
           requestingUser = createResourceRequestV2.requestingUser
         )
@@ -735,6 +739,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                             defaultResourcePermissions: String,
                                             defaultPropertyPermissions: Map[SmartIri, String],
                                             creationDate: Instant,
+                                            arkURL: IRI,
                                             featureFactoryConfig: FeatureFactoryConfig,
                                             requestingUser: UserADM): Future[ResourceReadyToCreate] = {
     val resourceIDForErrorMsg: String =
@@ -862,7 +867,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           sparqlForValues = sparqlForValuesResponse.insertSparql,
           resourceClassIri = internalCreateResource.resourceClassIri.toString,
           resourceLabel = internalCreateResource.label,
-          resourceCreationDate = creationDate
+          resourceCreationDate = creationDate,
+          resourceArkUrl = arkURL
         ),
         values = sparqlForValuesResponse.unverifiedValues,
         hasStandoffLink = sparqlForValuesResponse.hasStandoffLink
