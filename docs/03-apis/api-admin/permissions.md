@@ -82,7 +82,7 @@ As a response, the created administrative permission and its IRI are returned as
 `hasPermissions` contains permission types that must be granted. See [the complete description of administrative
 permission types](../../05-internals/design/api-admin/administration.md#administrative-permissions).
 In summary, each permission should contain followings:
-- `name` : indicates the type of the type of the permission that can be one of the followings:
+- `name` : indicates the type of the permission that can be one of the followings:
    - `ProjectAdminAllPermission`: gives the user the permission to do anything
      on project level, i.e. create new groups, modify all
      existing groups
@@ -140,7 +140,7 @@ In summary, each permission should contain followings:
    - `M` modify permission
    - `D`: delete permission
    - `CR`: change rights permission (most privileged)
-- `permissionCode`: The code assigned to a permission indicating its hierarchical lever. These codes are as below:
+- `permissionCode`: The code assigned to a permission indicating its hierarchical level. These codes are as below:
   - `1`: for restricted view permission (least privileged)
   - `2`: for view permission
   - `6`: for modify permission

@@ -106,6 +106,11 @@ object PermissionsMessagesUtilADM {
     CacheUtil.remove(PermissionsCacheName, key)
   }
 
+  /**
+    * Validates the parameters of the `hasPermissions` collections of a DOAP.
+    *
+    * @param hasPermissions       Set of the permissions.
+    */
   def validateDOAPHasPermissions(hasPermissions: Set[PermissionADM]) = {
 
     hasPermissions.foreach { permission =>
@@ -141,6 +146,7 @@ object PermissionsMessagesUtilADM {
   /**
     * For administrative permission we only need the name parameter of each PermissionADM given in hasPermissions collection.
     * This method, validates the content of hasPermissions collection by only keeping the values of name params.
+    * @param hasPermissions       Set of the permissions.
     */
   def verifyHasPermissionsAP(hasPermissions: Set[PermissionADM]): Set[PermissionADM] = {
     val updatedPermissions = hasPermissions.map { permission =>
@@ -158,8 +164,12 @@ object PermissionsMessagesUtilADM {
   }
 
   /**
-    * For default object access permission, we need to make sure that the value given for the projectCode matches the value of name parameter.
-    * This method, validates the content of hasPermissions collection by verifying that both projectCode and name indicate the same type of permission.
+    * For default object access permission, we need to make sure that the value given for the permissionCode matches
+    * the value of name parameter.
+    * This method, validates the content of hasPermissions collection by verifying that both permissionCode and name
+    * indicate the same type of permission.
+    *
+    * @param hasPermissions       Set of the permissions.
     */
   def verifyHasPermissionsDOAP(hasPermissions: Set[PermissionADM]): Set[PermissionADM] = {
     validateDOAPHasPermissions(hasPermissions)
