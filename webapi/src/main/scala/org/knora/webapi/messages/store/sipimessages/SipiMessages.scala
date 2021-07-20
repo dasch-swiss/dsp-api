@@ -60,7 +60,8 @@ case class GetFileMetadataResponse(originalFilename: Option[String],
                                    width: Option[Int],
                                    height: Option[Int],
                                    pageCount: Option[Int],
-                                   duration: Option[BigDecimal])
+                                   duration: Option[BigDecimal],
+                                   fps: Option[BigDecimal])
 
 /**
   * Asks Sipi to move a file from temporary to permanent storage.

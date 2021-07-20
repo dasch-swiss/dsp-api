@@ -34,6 +34,7 @@ import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.v1.responder.valuemessages.{
+  MovingImageFileValueV1,
   AudioFileValueV1,
   DocumentFileValueV1,
   FileValueV1,
@@ -284,15 +285,18 @@ object RouteUtilV1 {
     * MIME types used in Sipi to store audio files.
     */
   private val audioMimeTypes: Set[String] = Set(
-    "application/xml",
-    "text/xml",
-    "text/csv",
-    "text/plain",
     "audio/mpeg",
     "audio/mp4",
     "audio/wav",
     "audio/x-wav",
     "audio/vnd.wave"
+  )
+
+  /**
+    * MIME types used in Sipi to store video files.
+    */
+  private val videoMimeTypes: Set[String] = Set(
+    "video/mp4"
   )
 
   /**
@@ -344,6 +348,19 @@ object RouteUtilV1 {
         originalMimeType = fileMetadataResponse.originalMimeType,
         projectShortcode = projectShortcode,
         duration = fileMetadataResponse.duration
+      )
+    } else if (videoMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
+      MovingImageFileValueV1(
+        internalFilename = filename,
+        internalMimeType = fileMetadataResponse.internalMimeType,
+        originalFilename = fileMetadataResponse.originalFilename,
+        originalMimeType = fileMetadataResponse.originalMimeType,
+        projectShortcode = projectShortcode,
+        duration = fileMetadataResponse.duration,
+        fps = fileMetadataResponse.fps,
+        dimX = fileMetadataResponse.width.getOrElse(throw SipiException(s"Sipi did not return the width of the video")),
+        dimY =
+          fileMetadataResponse.height.getOrElse(throw SipiException(s"Sipi did not return the height of the video"))
       )
     } else {
       throw BadRequestException(s"MIME type ${fileMetadataResponse.internalMimeType} not supported in Knora API v1")

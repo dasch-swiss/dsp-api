@@ -233,7 +233,9 @@ DSP-API v2 currently supports using Sipi to store the following types of files:
 
 * Images: JPEG, JPEG2000, TIFF, or PNG which are stored internally as JPEG2000
 * Documents: PDF
-* Text files: XML or CSV
+* Audio: MPEG, MP4, or Waveform audio file format (.wav, .x-wav, .vnd.wave)
+* Text files: TXT, XML, or CSV
+* Video files: MP4
 
 Support for other types of files will be added in the future.
 
