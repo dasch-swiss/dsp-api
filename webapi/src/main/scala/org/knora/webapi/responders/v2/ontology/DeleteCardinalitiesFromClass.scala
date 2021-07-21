@@ -250,7 +250,7 @@ object DeleteCardinalitiesFromClass {
             )
           }
 
-      // Update the cache.
+      // Update subclasses and write the cache.
 
       updatedOntology = ontology.copy(
                           ontologyMetadata = ontology.ontologyMetadata.copy(
@@ -260,8 +260,11 @@ object DeleteCardinalitiesFromClass {
                         )
 
       _ = Cache.storeCacheData(
-            cacheData.copy(
-              ontologies = cacheData.ontologies + (internalOntologyIri -> updatedOntology)
+            Cache.updateSubClasses(
+              baseClassIri = internalClassIri,
+              cacheData = cacheData.copy(
+                ontologies = cacheData.ontologies + (internalOntologyIri -> updatedOntology)
+              )
             )
           )
 
