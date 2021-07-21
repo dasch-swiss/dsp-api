@@ -369,6 +369,9 @@ object OntologyConstants {
     /* Permissions */
     val HasPermissions: IRI = KnoraBasePrefixExpansion + "hasPermissions"
 
+    /* Ark-URL*/
+    val ArkUrl: IRI = KnoraBasePrefixExpansion + "arkUrl"
+
     val PermissionListDelimiter: Char = '|'
     val GroupListDelimiter: Char = ','
 

@@ -73,9 +73,6 @@ DELETE {
             @if(linkUpdate.linkValueExists) {
                 ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
 
-                @* Delete the UUID from the current version of the link value, because the new version will store it. *@
-                ?linkValue@linkValueIndex knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
-
                 @* Delete the permissions from the current version of the link value, because the new version will store them. *@
                 ?linkValue@linkValueIndex knora-base:hasPermissions ?linkValuePermissions@linkValueIndex .
             }
@@ -133,11 +130,11 @@ DELETE {
 
             *@
             @if(linkUpdate.linkValueExists) {
-                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex ;
-                    knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
-            } else {
-                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" .
+                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex .
             }
+
+            <@linkUpdate.newLinkValueIri>  knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(linkUpdate.newLinkValueUUID)}" ;
+                                           knora-base:arkUrl  <@linkUpdate.newLinkValueArkUrl> .
 
             @* Attach the new LinkValue to its containing resource. *@
             ?resource <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .

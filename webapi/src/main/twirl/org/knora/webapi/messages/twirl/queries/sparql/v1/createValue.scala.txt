@@ -22,25 +22,28 @@
 @import org.knora.webapi.messages.StringFormatter
 @import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v1.responder.valuemessages._
+@import java.util.UUID
 
 @**
  * Inserts a new value of a resource property (as opposed to a new version of an existing value). This template is used only
  * when creating a single value in an existing resource.
  *
- * @param dataNamedGraph the named graph in which the project stores its data.
- * @param triplestore the name of the triplestore being used.
- * @param resourceIri the resource to update.
- * @param propertyIri the resource property to update.
- * @param newValueIri the new value IRI.
- * @param valueTypeIri the type of the new value.
- * @param value the value to insert.
- * @param linkUpdates a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
- *        updated for resource references in Standoff text values.
- * @param maybeComment an optional comment on the value.
- * @param valueCreator the IRI of the user who created the value.
- * @param valuePermissions the permissions that should be attached to the value.
- * @param creationDate an xsd:dateTimeStamp to be attached to the value.
- * @param stringFormatter a [[StringFormatter]].
+ * @param dataNamedGraph        the named graph in which the project stores its data.
+ * @param triplestore           the name of the triplestore being used.
+ * @param resourceIri           the resource to update.
+ * @param propertyIri           the resource property to update.
+ * @param newValueIri           the new value IRI.
+ * @param newValueUUID          the new value UUID.
+ * @param newValueArkUrl        the new value Ark-Url.
+ * @param valueTypeIri          the type of the new value.
+ * @param value                 the value to insert.
+ * @param linkUpdates           a list of [[LinkUpdate]] objects describing links and LinkValues that need to be
+ *                              updated for resource references in Standoff text values.
+ * @param maybeComment          an optional comment on the value.
+ * @param valueCreator          the IRI of the user who created the value.
+ * @param valuePermissions      the permissions that should be attached to the value.
+ * @param creationDate          an xsd:dateTimeStamp to be attached to the value.
+ * @param stringFormatter       a [[StringFormatter]].
  *
  * The generated WHERE clause does some consistency checks. If these fail, the operation will do nothing.
  * To find out whether the update succeeded, the application must query the property's version history.
@@ -50,6 +53,8 @@
   resourceIri: IRI,
   propertyIri: IRI,
   newValueIri: IRI,
+  newValueUUID: UUID,
+  newValueArkUrl: IRI,
   valueTypeIri: IRI,
   value: UpdateValueV1,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
@@ -84,9 +89,6 @@ DELETE {
                     *@
                     ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
 
-                    @* Delete the UUID from the current version of the link value, because the new version will store it. *@
-                    ?linkValue@linkValueIndex knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
-
                     @* Delete the permissions from the current version of the link value, because the new version will store them. *@
                     ?linkValue@linkValueIndex knora-base:hasPermissions ?linkValuePermissions@linkValueIndex .
                 }
@@ -102,6 +104,8 @@ DELETE {
                                                                          propertyIri = propertyIri,
                                                                          value = value,
                                                                          newValueIri = newValueIri,
+                                                                         newValueUUID = newValueUUID,
+                                                                         newValueArkUrl = newValueArkUrl,
                                                                          linkUpdates = linkUpdates,
                                                                          maybeComment = maybeComment,
                                                                          valueCreator = valueCreator,

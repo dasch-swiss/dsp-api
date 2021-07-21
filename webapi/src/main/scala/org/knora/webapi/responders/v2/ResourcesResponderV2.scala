@@ -262,7 +262,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           defaultResourcePermissions = defaultResourcePermissions,
           defaultPropertyPermissions = defaultPropertyPermissions,
           creationDate = creationDate,
-          arkUrl = arkUrl,
+          resourceArkUrl = arkUrl,
           featureFactoryConfig = createResourceRequestV2.featureFactoryConfig,
           requestingUser = createResourceRequestV2.requestingUser
         )
@@ -727,6 +727,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * @param defaultPropertyPermissions the default permissions to be given to the resource's values, if they do not
     *                                   have custom permissions. This is a map of property IRIs to permission strings.
     * @param creationDate               the versionDate to be attached to the resource and its values.
+    * @param resourceArkUrl             the Ark-Url of the resource.
     * @param featureFactoryConfig       the feature factory configuration.
     * @param requestingUser             the user making the request.
     * @return a [[ResourceReadyToCreate]].
@@ -739,7 +740,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                                             defaultResourcePermissions: String,
                                             defaultPropertyPermissions: Map[SmartIri, String],
                                             creationDate: Instant,
-                                            arkURL: IRI,
+                                            resourceArkUrl: IRI,
                                             featureFactoryConfig: FeatureFactoryConfig,
                                             requestingUser: UserADM): Future[ResourceReadyToCreate] = {
     val resourceIDForErrorMsg: String =
@@ -868,7 +869,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           resourceClassIri = internalCreateResource.resourceClassIri.toString,
           resourceLabel = internalCreateResource.label,
           resourceCreationDate = creationDate,
-          resourceArkUrl = arkURL
+          resourceArkUrl = resourceArkUrl
         ),
         values = sparqlForValuesResponse.unverifiedValues,
         hasStandoffLink = sparqlForValuesResponse.hasStandoffLink

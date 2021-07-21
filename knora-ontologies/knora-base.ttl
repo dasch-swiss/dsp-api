@@ -1074,9 +1074,9 @@
 
               :objectDatatypeConstraint xsd:dateTime .
 
-###  http://www.knora.org/ontology/knora-base#hasArkUrl
+###  http://www.knora.org/ontology/knora-base#arkUrl
 
-:hasArkUrl rdf:type owl:DatatypeProperty ;
+:arkUrl rdf:type owl:DatatypeProperty ;
 
            rdfs:subPropertyOf :objectCannotBeMarkedAsDeleted ;
 
@@ -2309,7 +2309,7 @@
                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
                           ] ,
                           [ rdf:type owl:Restriction ;
-                            owl:onProperty :hasArkUrl ;
+                            owl:onProperty :arkUrl ;
                             owl:minCardinality "1"^^xsd:nonNegativeInteger
                           ] ;
 

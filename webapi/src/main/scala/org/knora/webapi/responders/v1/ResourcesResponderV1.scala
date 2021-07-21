@@ -1605,7 +1605,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                 s"Instances of knora-base:Resource cannot be created, only instances of subclasses")
             }
 
-            resourceIri = clientResourceIDsToResourceIris(resourceCreateRequest.clientResourceID)
+            resourceIri: IRI = clientResourceIDsToResourceIris(resourceCreateRequest.clientResourceID)
+            resourceArkUrl: IRI = resourceIri.toSmartIri.fromResourceIriToArkUrl()
 
             // Check every resource to be created with respect of ontology and cardinalities. Links are still
             // represented by LinkToClientIDUpdateV1 instances here.
@@ -1664,7 +1665,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
               sparqlForValues = generateSparqlForValuesResponse.insertSparql,
               resourceClassIri = resourceCreateRequest.resourceTypeIri,
               resourceLabel = resourceCreateRequest.label,
-              resourceCreationDate = creationDate
+              resourceCreationDate = creationDate,
+              resourceArkUrl = resourceArkUrl
             )
       }
 
@@ -2119,6 +2121,9 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       // Make a timestamp for the resource and its values.
       creationDate: Instant = Instant.now
 
+      //Make Ark-Url for the resource.
+      resourceArkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl()
+
       generateSparqlForValuesResponse: GenerateSparqlToCreateMultipleValuesResponseV1 <- generateSparqlForValuesOfNewResource(
         projectIri = projectADM.id,
         resourceIri = resourceIri,
@@ -2140,7 +2145,8 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
           sparqlForValues = generateSparqlForValuesResponse.insertSparql,
           resourceClassIri = resourceClassIri,
           resourceLabel = label,
-          resourceCreationDate = creationDate
+          resourceCreationDate = creationDate,
+          resourceArkUrl = resourceArkUrl
         )
       )
 
@@ -2152,7 +2158,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       )
 
       // Do the update.
-      createResourceResponse <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql))
+      _ <- (storeManager ? SparqlUpdateRequest(createNewResourceSparql))
         .mapTo[SparqlUpdateResponse]
 
       apiResponse <- verifyResourceCreated(

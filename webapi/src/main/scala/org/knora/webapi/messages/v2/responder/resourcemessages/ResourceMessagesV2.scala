@@ -402,6 +402,7 @@ case class ReadResourceV2(resourceIri: IRI,
                           userPermission: EntityPermission,
                           values: Map[SmartIri, Seq[ReadValueV2]],
                           creationDate: Instant,
+                          resourceArkUrl: IRI,
                           lastModificationDate: Option[Instant],
                           versionDate: Option[Instant],
                           deletionInfo: Option[DeletionInfo])

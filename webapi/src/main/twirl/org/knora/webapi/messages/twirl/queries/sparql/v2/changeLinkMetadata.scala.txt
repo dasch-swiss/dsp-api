@@ -22,17 +22,18 @@
 @import org.knora.webapi.exceptions.SparqlGenerationException
 @import org.knora.webapi.messages.twirl.SparqlTemplateLinkUpdate
 @import org.knora.webapi.messages.v1.responder.valuemessages._
+@import org.knora.webapi.messages.StringFormatter
 
 @**
  * Changes the metadata on a LinkValue.
  *
- * @param dataNamedGraph the named graph in which the project stores its data.
- * @param triplestore the name of the triplestore being used.
- * @param linkSourceIri the resource that is the source of the link.
- * @param linkUpdate a [[SparqlTemplateLinkUpdate]] specifying how to update the link value.
- * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
- * @param requestingUser the IRI of the user making the request.
- *
+ * @param dataNamedGraph    the named graph in which the project stores its data.
+ * @param triplestore       the name of the triplestore being used.
+ * @param linkSourceIri     the resource that is the source of the link.
+ * @param linkUpdate        a [[SparqlTemplateLinkUpdate]] specifying how to update the link value.
+ * @param currentTime       an xsd:dateTimeStamp that will be attached to the resources.
+ * @param requestingUser    the IRI of the user making the request.
+ * @param stringFormatter   the [[StringFormatter]] instance.
  * To find out whether the update succeeded, the application must query the deleted link.
  *@
 @(dataNamedGraph: IRI,
@@ -41,7 +42,9 @@
   linkUpdate: SparqlTemplateLinkUpdate,
   maybeComment: Option[String],
   currentTime: Instant,
-  requestingUser: IRI)
+  requestingUser: IRI,
+  stringFormatter: StringFormatter
+  )
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -58,8 +61,6 @@ DELETE {
         @if(linkUpdate.linkValueExists) {
             ?linkSource ?linkValueProperty ?currentLinkValue .
 
-            @* Delete the UUID from the current version of the link value, because the new version will store it. *@
-            ?currentLinkValue knora-base:valueHasUUID ?currentLinkUUID .
         } else {
             @{throw SparqlGenerationException(s"linkUpdate.linkValueExists must be true in this SPARQL template"); ()}
         }
@@ -76,7 +77,7 @@ INSERT {
             knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
             knora-base:valueCreationDate "@currentTime"^^xsd:dateTime ;
             knora-base:previousValue ?currentLinkValue ;
-            knora-base:valueHasUUID ?currentLinkUUID ;
+            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(linkUpdate.newLinkValueUUID)}" ;
             knora-base:isDeleted false ;
             @maybeComment match {
                 case Some(comment) => {

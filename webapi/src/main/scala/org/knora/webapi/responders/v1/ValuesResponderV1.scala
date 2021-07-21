@@ -20,7 +20,6 @@
 package org.knora.webapi.responders.v1
 
 import java.time.Instant
-
 import akka.pattern._
 import org.knora.webapi._
 import org.knora.webapi.exceptions._
@@ -57,6 +56,7 @@ import org.knora.webapi.responders.v2.ResourceUtilV2
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util._
 
+import java.util.UUID
 import scala.annotation.tailrec
 import scala.concurrent.Future
 
@@ -428,6 +428,10 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             val realTargetIri = stringFormatter.toRealStandoffLinkTargetResourceIri(
               iri = targetIri,
               clientResourceIDsToResourceIris = createMultipleValuesRequest.clientResourceIDsToResourceIris)
+            val newLinkValueUUID = UUID.randomUUID
+            val newLinkValueIri =
+              stringFormatter.makeRandomValueIri(createMultipleValuesRequest.resourceIri, Some(newLinkValueUUID))
+            val newLinkValueArkUrl = newLinkValueIri.toSmartIri.fromValueIriToArkUrl(newLinkValueUUID)
 
             SparqlTemplateLinkUpdate(
               linkPropertyIri = OntologyConstants.KnoraBase.HasStandoffLinkTo.toSmartIri,
@@ -436,7 +440,9 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
               deleteDirectLink = false,
               linkValueExists = false,
               linkTargetExists = true, // doesn't matter, the generateInsertStatementsForStandoffLinks template doesn't use it
-              newLinkValueIri = stringFormatter.makeRandomValueIri(createMultipleValuesRequest.resourceIri),
+              newLinkValueIri = newLinkValueIri,
+              newLinkValueUUID = newLinkValueUUID,
+              newLinkValueArkUrl = newLinkValueArkUrl,
               linkTargetIri = realTargetIri,
               currentReferenceCount = 0,
               newReferenceCount = initialReferenceCount,
@@ -501,7 +507,11 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                 valuesToCreate.foldLeft(SparqlGenerationResultForProperty()) {
                   case (propertyAcc: SparqlGenerationResultForProperty, valueToCreate: NumberedValueToCreate) =>
                     val updateValueV1 = valueToCreate.createValueV1WithComment.updateValueV1
-                    val newValueIri = stringFormatter.makeRandomValueIri(createMultipleValuesRequest.resourceIri)
+
+                    val newValueUUID = UUID.randomUUID
+                    val newValueIri =
+                      stringFormatter.makeRandomValueIri(createMultipleValuesRequest.resourceIri, Some(newValueUUID))
+                    val newValueArkUrl = newValueIri.toSmartIri.fromValueIriToArkUrl(newValueUUID)
 
                     // How we generate the SPARQL depends on whether we're creating a link or an ordinary value.
                     val insertSparql: String = valueToCreate.createValueV1WithComment.updateValueV1 match {
@@ -518,6 +528,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                           linkValueExists = false,
                           linkTargetExists = linkUpdateV1.targetExists,
                           newLinkValueIri = newValueIri,
+                          newLinkValueUUID = newValueUUID,
+                          newLinkValueArkUrl = newValueArkUrl,
                           linkTargetIri = linkUpdateV1.targetResourceIri,
                           currentReferenceCount = 0,
                           newReferenceCount = 1,
@@ -578,6 +590,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                             propertyIri = propertyIri,
                             value = valueWithRealStandoffLinkIris,
                             newValueIri = newValueIri,
+                            newValueArkUrl = newValueArkUrl,
+                            newValueUUID = newValueUUID,
                             linkUpdates = Seq.empty[SparqlTemplateLinkUpdate], // This is empty because we have to generate SPARQL for standoff links separately.
                             maybeComment = valueToCreate.createValueV1WithComment.comment,
                             valueCreator = userIri,
@@ -1002,9 +1016,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             )
 
           case _ =>
-            // We're updating an ordinary value. Generate an IRI for the new version of the value.
-            val newValueIri = stringFormatter.makeRandomValueIri(findResourceWithValueResult.resourceIri)
-
             // Give the new version the same permissions as the previous version.
 
             val valuePermissions = currentValueQueryResult.permissionRelevantAssertions
@@ -1021,7 +1032,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
               propertyIri = propertyIri,
               currentValueIri = changeValueRequest.valueIri,
               currentValueV1 = currentValueQueryResult.value,
-              newValueIri = newValueIri,
               updateValueV1 = changeValueRequest.value,
               comment = changeValueRequest.comment,
               valueCreator = userIri,
@@ -2351,8 +2361,14 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                valuePermissions: String,
                                                featureFactoryConfig: FeatureFactoryConfig,
                                                userProfile: UserADM): Future[UnverifiedValueV1] = {
+    // Generate new UUID for the new value
+    val newValueUUID = UUID.randomUUID
     // Generate an IRI for the new value.
-    val newValueIri = stringFormatter.makeRandomValueIri(resourceIri)
+    val newValueIri =
+      stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID))
+    // Genrate an Ark-Url for the new value.
+    val newValueArkUrl = newValueIri.toSmartIri.fromValueIriToArkUrl(newValueUUID)
+
     val creationDate: Instant = Instant.now
 
     for {
@@ -2389,6 +2405,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
           resourceIri = resourceIri,
           propertyIri = propertyIri,
           newValueIri = newValueIri,
+          newValueUUID = newValueUUID,
+          newValueArkUrl = newValueArkUrl,
           valueTypeIri = value.valueTypeIri,
           value = value,
           linkUpdates = standoffLinkUpdates,
@@ -2538,7 +2556,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     * @param propertyIri      the IRI of the property that points to the value.
     * @param currentValueIri  the IRI of the existing value.
     * @param currentValueV1   an [[ApiValueV1]] representing the existing value.
-    * @param newValueIri      the IRI of the new value.
     * @param updateValueV1    an [[UpdateValueV1]] representing the new value.
     * @param comment          an optional comment on the new value.
     * @param valueCreator     the IRI of the new value's owner.
@@ -2551,7 +2568,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                propertyIri: IRI,
                                                currentValueIri: IRI,
                                                currentValueV1: ApiValueV1,
-                                               newValueIri: IRI,
                                                updateValueV1: UpdateValueV1,
                                                comment: Option[String],
                                                valueCreator: IRI,
@@ -2636,6 +2652,13 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       // Make a timestamp to indicate when the value was updated.
       currentTime: String = Instant.now.toString
 
+      // Generate random UUID for it.
+      newValueUUID = UUID.randomUUID
+      // Generate an IRI for the new version of the value.
+      newValueIri = stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID))
+      // Generate an ARK URL for it.
+      newValueArkUrl = newValueIri.toSmartIri.fromValueIriToArkUrl(newValueUUID)
+
       // Generate a SPARQL update.
       sparqlUpdate = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
         .addValueVersion(
@@ -2645,6 +2668,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
           propertyIri = propertyIri,
           currentValueIri = currentValueIri,
           newValueIri = newValueIri,
+          newValueUUID = newValueUUID,
+          newValueArkUrl = newValueArkUrl,
           valueTypeIri = updateValueV1.valueTypeIri,
           value = updateValueV1,
           valueCreator = valueCreator,
@@ -2730,8 +2755,14 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         userProfile = userProfile
       )
 
+      // Generate random UUID for the new LinkValue.
+      newValueUUID = UUID.randomUUID
+
       // Generate an IRI for the new LinkValue.
-      newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri)
+      newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri, Some(newValueUUID))
+
+      // Generate an ARK-URL for the new LinkValue.
+      newValueArkUrl = newLinkValueIri.toSmartIri.fromValueIriToArkUrl(newValueUUID)
 
       linkUpdate = maybeLinkValueQueryResult match {
         case Some(linkValueQueryResult) =>
@@ -2749,6 +2780,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             linkValueExists = true,
             linkTargetExists = true,
             newLinkValueIri = newLinkValueIri,
+            newLinkValueUUID = newValueUUID,
+            newLinkValueArkUrl = newValueArkUrl,
             linkTargetIri = targetResourceIri,
             currentReferenceCount = currentReferenceCount,
             newReferenceCount = newReferenceCount,
@@ -2767,6 +2800,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             linkValueExists = false,
             linkTargetExists = true,
             newLinkValueIri = newLinkValueIri,
+            newLinkValueUUID = newValueUUID,
+            newLinkValueArkUrl = newValueArkUrl,
             linkTargetIri = targetResourceIri,
             currentReferenceCount = 0,
             newReferenceCount = 1,
@@ -2828,8 +2863,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
           // resources should be removed.
           val deleteDirectLink = linkValueQueryResult.directLinkExists && newReferenceCount == 0
 
+          // Generate random UUID for the new LinkValue.
+          val newValueUUID = UUID.randomUUID
           // Generate an IRI for the new LinkValue.
-          val newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri)
+          val newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri, Some(newValueUUID))
+          // Generate an ARK-URL for the new LinkValue.
+          val newValueArkUrl = newLinkValueIri.toSmartIri.fromValueIriToArkUrl(newValueUUID)
 
           SparqlTemplateLinkUpdate(
             linkPropertyIri = linkPropertyIri.toSmartIri,
@@ -2839,6 +2878,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             linkValueExists = true,
             linkTargetExists = true,
             newLinkValueIri = newLinkValueIri,
+            newLinkValueUUID = newValueUUID,
+            newLinkValueArkUrl = newValueArkUrl,
             linkTargetIri = targetResourceIri,
             currentReferenceCount = currentReferenceCount,
             newReferenceCount = newReferenceCount,

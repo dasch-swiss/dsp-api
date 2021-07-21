@@ -53,7 +53,7 @@ INSERT DATA {
                 rdfs:label """@res.resourceLabel""" ;
  				knora-base:hasPermissions "@res.permissions" ;
                 knora-base:creationDate "@res.resourceCreationDate"^^xsd:dateTime ;
-                knora-base:hasArkUrl <@res.resourceArkUrl> .
+                knora-base:arkUrl <@res.resourceArkUrl> .
 
             @res.sparqlForValues
         }

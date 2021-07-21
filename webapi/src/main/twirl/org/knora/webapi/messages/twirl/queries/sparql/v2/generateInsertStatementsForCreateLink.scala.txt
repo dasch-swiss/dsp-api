@@ -30,19 +30,16 @@
  * This template is used in two contexts: when creating a single link in an existing resource, and when creating
  * a new resource with its initial values.
  *
- * @param resourceIri     the IRI of the resource.
- * @param linkUpdate a [[LinkUpdate]] object describing the link to insert.
- * @param creationDate an xsd:dateTimeStamp that will be attached to the link value.
- * @param newValueUUID the UUID to be attached to the value.
- * @param maybeComment an optional comment on the link.
- * @param the knora-base:valueHasOrder of the new value. If not provided, the SPARQL variable ?nextOrder will be used.
- * @param stringFormatter a [[StringFormatter]].
+ * @param resourceIri        the IRI of the resource.
+ * @param linkUpdate         a [[LinkUpdate]] object describing the link to insert.
+ * @param creationDate       an xsd:dateTimeStamp that will be attached to the link value.
+ * @param maybeComment       an optional comment on the link.
+ * @param maybeValueHasOrder the knora-base:valueHasOrder of the new value. If not provided, the SPARQL variable ?nextOrder will be used.
+ * @param stringFormatter    a [[StringFormatter]].
  *@
 @(resourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
   creationDate: Instant,
-  newValueUUID: UUID,
-  arkUrl: IRI,
   maybeComment: Option[String],
   maybeValueHasOrder: Option[Int],
   stringFormatter: StringFormatter)
@@ -81,9 +78,9 @@
                 }
             }
             knora-base:isDeleted false ;
-            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(newValueUUID)}" ;
+            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(linkUpdate.newLinkValueUUID)}" ;
             knora-base:valueCreationDate "@creationDate"^^xsd:dateTime ;
-            knora-base:hasArkUrl <@arkUrl> ;
+            knora-base:arkUrl <@linkUpdate.newLinkValueArkUrl> ;
             knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
             knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions"^^xsd:string .
 

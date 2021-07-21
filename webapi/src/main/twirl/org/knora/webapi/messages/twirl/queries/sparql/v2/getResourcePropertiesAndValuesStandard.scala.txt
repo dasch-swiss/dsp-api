@@ -75,6 +75,7 @@ CONSTRUCT {
         knora-base:attachedToUser ?resourceCreator ;
         knora-base:hasPermissions ?resourcePermissions ;
         knora-base:creationDate ?creationDate ;
+        knora-base:arkUrl       ?arkUrl ;
         knora-base:lastModificationDate ?lastModificationDate .
 
     @*If deleted resources are wanted return deletion info, otherwise just indicated that resource is not deleted. *@
@@ -92,6 +93,7 @@ CONSTRUCT {
 
     ?valueObject ?valueObjectProperty ?valueObjectValue ;
         knora-base:valueHasUUID ?currentValueUUID ;
+        knora-base:arkUrl       ?valueArkUrl ;
         knora-base:hasPermissions ?currentValuePermissions .
 
     @if(maybeStandoffMinStartIndex.nonEmpty) {
@@ -194,6 +196,7 @@ CONSTRUCT {
                     @* In each value's history, find a version that was created on or before the target date. *@
                     ?currentValue knora-base:previousValue* ?valueObject .
                     ?valueObject knora-base:valueCreationDate ?valueObjectCreationDate .
+                    ?valueObject knora-base:arkUrl  ?valueArkUrl .
                     FILTER(?valueObjectCreationDate <= "@versionDate"^^xsd:dateTime)
 
                     @*
@@ -242,6 +245,7 @@ CONSTRUCT {
                     }
 
                     ?valueObject knora-base:hasPermissions ?currentValuePermissions .
+                    ?valueObject knora-base:arkUrl ?valueArkUrl .
                 }
             }
 

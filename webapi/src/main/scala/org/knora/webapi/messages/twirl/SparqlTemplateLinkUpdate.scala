@@ -22,6 +22,8 @@ package org.knora.webapi.messages.twirl
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.SmartIri
 
+import java.util.UUID
+
 /**
   * Contains instructions that can be given to a SPARQL template for updating direct links and `knora-base:LinkValue`
   * objects representing references to resources.
@@ -36,6 +38,8 @@ import org.knora.webapi.messages.SmartIri
   * @param linkTargetExists        `true` if the link target already exists, `false` if is being created in the same
   *                                SPARQL update operation.
   * @param newLinkValueIri         the IRI of the new `LinkValue` to be created.
+  * @param newLinkValueUUID        the UUID of the new `LinkValue` to be created.
+  * @param newLinkValueArkUrl      the ARK URL of the new `LinkValue` to be created.
   * @param linkTargetIri           the IRI of the target resource.
   * @param currentReferenceCount   the current reference count of the existing `LinkValue`, if any. This will be
   *                                0 if (a) there was previously a direct link but it was deleted (`directLinkExists` is
@@ -53,6 +57,8 @@ case class SparqlTemplateLinkUpdate(linkPropertyIri: SmartIri,
                                     linkValueExists: Boolean,
                                     linkTargetExists: Boolean,
                                     newLinkValueIri: IRI,
+                                    newLinkValueUUID: UUID,
+                                    newLinkValueArkUrl: IRI,
                                     linkTargetIri: IRI,
                                     currentReferenceCount: Int,
                                     newReferenceCount: Int,

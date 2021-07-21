@@ -18,6 +18,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
   val expectedReadResourceV2ForReiseInsHeiligelandWrong: ReadResourceV2 = ReadResourceV2(
     label = "Reise ins Heilige Land",
     resourceIri = "http://rdfh.ch/2a6221216701",
+    resourceArkUrl = "http://rdfh.ch/2a6221216701".toSmartIri.fromResourceIriToArkUrl(),
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     userPermission = ChangeRightsPermission,
@@ -37,6 +38,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/e94fa8a09205",
           valueHasUUID = stringFormatter.decodeUuid("e94fa8a09205"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/e94fa8a09205".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("e94fa8a09205")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -56,6 +59,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/7b4a9bf89305",
           valueHasUUID = stringFormatter.decodeUuid("7b4a9bf89305"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/7b4a9bf89305".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("7b4a9bf89305")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -74,6 +79,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/3e74ee319405",
           valueHasUUID = stringFormatter.decodeUuid("3e74ee319405"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/3e74ee319405".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("3e74ee319405")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -92,6 +99,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/019e416b9405",
           valueHasUUID = stringFormatter.decodeUuid("019e416b9405"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/019e416b9405".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("019e416b9405")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -110,6 +119,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/c4c794a49405",
           valueHasUUID = stringFormatter.decodeUuid("c4c794a49405"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/c4c794a49405".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("c4c794a49405")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -128,6 +139,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/87f1e7dd9405",
           valueHasUUID = stringFormatter.decodeUuid("87f1e7dd9405"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/87f1e7dd9405".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("87f1e7dd9405")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -146,6 +159,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/4a1b3b179505",
           valueHasUUID = stringFormatter.decodeUuid("4a1b3b179505"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/4a1b3b179505".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("4a1b3b179505")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -164,6 +179,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/0d458e509505",
           valueHasUUID = stringFormatter.decodeUuid("0d458e509505"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/0d458e509505".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("0d458e509505")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -182,6 +199,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/d06ee1899505",
           valueHasUUID = stringFormatter.decodeUuid("d06ee1899505"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/d06ee1899505".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("d06ee1899505")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -200,6 +219,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/939834c39505",
           valueHasUUID = stringFormatter.decodeUuid("939834c39505"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/939834c39505".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("939834c39505")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -220,6 +241,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/dda85bbb9105",
           valueHasUUID = stringFormatter.decodeUuid("dda85bbb9105"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/dda85bbb9105".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("dda85bbb9105")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -239,6 +262,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/1a7f08829105",
           valueHasUUID = stringFormatter.decodeUuid("1a7f08829105"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/1a7f08829105".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("1a7f08829105")),
           permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser",
           userPermission = ChangeRightsPermission,
           valueCreationDate = Instant.parse("2016-03-02T15:05:20Z"),
@@ -257,6 +282,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/56c287fc9505",
           valueHasUUID = stringFormatter.decodeUuid("56c287fc9505"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/56c287fc9505".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("56c287fc9505")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -277,6 +304,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/f89173afca2704",
           valueHasUUID = stringFormatter.decodeUuid("f89173afca2704"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/f89173afca2704".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("f89173afca2704")),
           permissions =
             "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -296,6 +325,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/ac79fbd99205",
           valueHasUUID = stringFormatter.decodeUuid("ac79fbd99205"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/ac79fbd99205".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("ac79fbd99205")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -314,6 +345,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/6fa34e139305",
           valueHasUUID = stringFormatter.decodeUuid("6fa34e139305"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/6fa34e139305".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("6fa34e139305")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -332,6 +365,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/32cda14c9305",
           valueHasUUID = stringFormatter.decodeUuid("32cda14c9305"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/32cda14c9305".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("32cda14c9305")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -350,6 +385,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/f5f6f4859305",
           valueHasUUID = stringFormatter.decodeUuid("f5f6f4859305"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/f5f6f4859305".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("f5f6f4859305")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -369,6 +406,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/b82048bf9305",
           valueHasUUID = stringFormatter.decodeUuid("b82048bf9305"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/b82048bf9305".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("b82048bf9305")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -389,6 +428,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/262655679205",
           valueHasUUID = stringFormatter.decodeUuid("262655679205"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/262655679205".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("262655679205")),
           permissions =
             "CR knora-admin:Creator|D knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -408,6 +449,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/a0d2aef49105",
           valueHasUUID = stringFormatter.decodeUuid("a0d2aef49105"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/a0d2aef49105".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("a0d2aef49105")),
           permissions =
             "CR knora-admin:Creator|V knora-admin:ProjectMember,knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -429,6 +472,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           ),
           valueIri = "http://rdfh.ch/2a6221216701/values/63fc012e9205",
           valueHasUUID = stringFormatter.decodeUuid("63fc012e9205"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/63fc012e9205".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("63fc012e9205")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -448,6 +493,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/d1010fd69005",
           valueHasUUID = stringFormatter.decodeUuid("d1010fd69005"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/d1010fd69005".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("d1010fd69005")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,
@@ -466,6 +513,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/942b620f9105",
           valueHasUUID = stringFormatter.decodeUuid("942b620f9105"),
+          valueArkUrl = "http://rdfh.ch/2a6221216701/values/942b620f9105".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("942b620f9105")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,

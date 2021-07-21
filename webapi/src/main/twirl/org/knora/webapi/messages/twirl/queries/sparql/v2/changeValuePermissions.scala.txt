@@ -19,7 +19,9 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.messages.SmartIri
+@import java.util.UUID
 @import java.time.Instant
+@import org.knora.webapi.messages.StringFormatter
 
 @**
  * Creates a new version of a value, with identical content except for new permissions.
@@ -40,8 +42,11 @@
   currentValueIri: IRI,
   valueTypeIri: SmartIri,
   newValueIri: IRI,
+  newValueUUID: UUID,
+  newValueArkUrl: IRI,
   newPermissions: String,
-  currentTime: Instant)
+  currentTime: Instant,
+  stringFormatter: StringFormatter)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
@@ -57,9 +62,6 @@ DELETE {
         @* Delete the resource's last modification date so we can update it. *@
         ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
 
-        @* Delete the UUID from the current version of the value, because the new version will store it. *@
-        ?currentValue knora-base:valueHasUUID ?currentValueUUID .
-
         @* Delete the permissions from the current version of the value, because the new version will store them. *@
         ?currentValue knora-base:hasPermissions ?currentValuePermissions .
     }
@@ -69,6 +71,8 @@ DELETE {
         ?newValue ?valuePred ?valueObj ;
             knora-base:previousValue ?currentValue ;
             knora-base:valueCreationDate "@currentTime"^^xsd:dateTime ;
+            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(newValueUUID)}" ;
+            knora-base:arkUrl <@newValueArkUrl> ;
             knora-base:hasPermissions "@newPermissions" .
 
         ?resource ?property ?newValue .
@@ -97,7 +101,6 @@ WHERE {
 
     ?currentValue ?valuePred ?valueObj ;
         knora-base:isDeleted false ;
-        knora-base:valueHasUUID ?currentValueUUID ;
         knora-base:hasPermissions ?currentValuePermissions .
 
     FILTER(!(?valuePred = knora-base:previousValue || ?valuePred = knora-base:valueCreationDate || ?valuePred = knora-base:hasPermissions))

@@ -1467,6 +1467,7 @@ object ConstructResponseUtilV2 {
       resourceWithValueRdfData.requireIriObject(OntologyConstants.KnoraBase.AttachedToProject.toSmartIri)
     val resourcePermissions: String =
       resourceWithValueRdfData.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)
+    val resourceArkUrl: IRI = resourceWithValueRdfData.requireIriObject(OntologyConstants.KnoraBase.ArkUrl.toSmartIri)
     val resourceCreationDate: Instant =
       resourceWithValueRdfData.requireDateTimeObject(OntologyConstants.KnoraBase.CreationDate.toSmartIri)
     val resourceLastModificationDate: Option[Instant] =
@@ -1500,6 +1501,7 @@ object ConstructResponseUtilV2 {
 
                 attachedToUser = valObj.requireIriObject(OntologyConstants.KnoraBase.AttachedToUser.toSmartIri)
                 permissions = valObj.requireStringObject(OntologyConstants.KnoraBase.HasPermissions.toSmartIri)
+                valueArkUrl = valObj.requireIriObject(OntologyConstants.KnoraBase.ArkUrl.toSmartIri)
                 valueCreationDate: Instant = valObj.requireDateTimeObject(
                   OntologyConstants.KnoraBase.ValueCreationDate.toSmartIri)
                 valueDeletionInfo = getDeletionInfo(valObj)
@@ -1521,6 +1523,7 @@ object ConstructResponseUtilV2 {
                       userPermission = valObj.userPermission,
                       valueCreationDate = valueCreationDate,
                       valueHasUUID = valueHasUUID,
+                      valueArkUrl = valueArkUrl,
                       valueContent = linkValueContentV2,
                       valueHasRefCount = valueHasRefCount,
                       previousValueIri = previousValueIri,
@@ -1538,6 +1541,7 @@ object ConstructResponseUtilV2 {
                       userPermission = valObj.userPermission,
                       valueCreationDate = valueCreationDate,
                       valueHasUUID = valueHasUUID,
+                      valueArkUrl = valueArkUrl,
                       valueContent = textValueContentV2,
                       valueHasMaxStandoffStartIndex = maybeValueHasMaxStandoffStartIndex,
                       previousValueIri = previousValueIri,
@@ -1552,6 +1556,7 @@ object ConstructResponseUtilV2 {
                       userPermission = valObj.userPermission,
                       valueCreationDate = valueCreationDate,
                       valueHasUUID = valueHasUUID,
+                      valueArkUrl = valueArkUrl,
                       valueContent = otherValueContentV2,
                       previousValueIri = previousValueIri,
                       deletionInfo = valueDeletionInfo
@@ -1581,6 +1586,7 @@ object ConstructResponseUtilV2 {
         userPermission = resourceWithValueRdfData.userPermission.get,
         values = valueObjects,
         creationDate = resourceCreationDate,
+        resourceArkUrl = resourceArkUrl,
         lastModificationDate = resourceLastModificationDate,
         versionDate = versionDate,
         deletionInfo = resourceDeletionInfo

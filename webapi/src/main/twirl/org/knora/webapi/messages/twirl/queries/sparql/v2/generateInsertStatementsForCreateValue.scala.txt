@@ -48,7 +48,7 @@
   value: ValueContentV2,
   newValueIri: IRI,
   newValueUUID: UUID,
-  arkUrl: IRI,
+  newValueArkUrl: IRI,
   linkUpdates: Seq[SparqlTemplateLinkUpdate],
   valueCreator: IRI,
   valuePermissions: String,
@@ -64,7 +64,7 @@
             knora-base:isDeleted false  ;
             knora-base:valueHasString """@value.valueHasString""" ;
             knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(newValueUUID)}" ;
-            knora-base:hasArkUrl <@arkUrl> .
+            knora-base:arkUrl <@newValueArkUrl> .
 
         @{
             org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForValueContent(value = value,

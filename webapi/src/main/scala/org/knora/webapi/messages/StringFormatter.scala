@@ -2357,7 +2357,7 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
   def xmlImportElementNameToInternalOntologyIriV1(namespace: String,
                                                   elementLabel: String,
                                                   errorFun: => Nothing): IRI = {
-    val ontologyIri = xmlImportNamespaceToInternalOntologyIriV1(namespace, errorFun)
+    val ontologyIri = xmlImportNamespaceToInternalOntologyIriV1(namespace, errorFun).toString
     ontologyIri + "#" + elementLabel
   }
 
@@ -3004,6 +3004,28 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     */
   def decodeUuid(uuidStr: String): UUID = {
     decodeUuidWithErr(uuidStr, throw InconsistentRepositoryDataException(s"Invalid UUID: $uuidStr"))
+  }
+
+  /**
+    * If an IRI ends with a UUID, validates that it is a Base64-encoded UUID. If it is a valid UUID, returns it. Otherwise,
+    * makes a random UUID and returns that.
+    *
+    * @param givenIRI the IRI of an entity.
+    * @return a Base64-encoded UUID.
+    */
+  def getUUIDFromIriOrMakeRandom(givenIRI: IRI): UUID = {
+    val ending: String = givenIRI.split('/').last
+    if (ending.length == Base64UuidLength) {
+      val decodeTry = Try {
+        base64DecodeUuid(ending)
+      }
+      decodeTry match {
+        case Success(_) => base64DecodeUuid(ending)
+        case Failure(_) => UUID.randomUUID
+      }
+    } else {
+      UUID.randomUUID
+    }
   }
 
   /**

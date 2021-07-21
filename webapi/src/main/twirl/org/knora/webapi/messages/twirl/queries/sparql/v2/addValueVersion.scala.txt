@@ -54,6 +54,8 @@
   propertyIri: SmartIri,
   currentValueIri: IRI,
   newValueIri: IRI,
+  newValueUUID: UUID,
+  newValueArkUrl: IRI,
   valueTypeIri: SmartIri,
   value: ValueContentV2,
   valueCreator: IRI,
@@ -78,9 +80,6 @@ DELETE {
         @* Delete the resource's last modification date so we can update it. *@
         ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
 
-        @* Delete the UUID from the current version of the value, because the new version will store it. *@
-        ?currentValue knora-base:valueHasUUID ?currentValueUUID .
-
         @* Delete the permissions from the current version of the value, because the new version will store them. *@
         ?currentValue knora-base:hasPermissions ?currentValuePermissions .
 
@@ -94,9 +93,6 @@ DELETE {
             @if(linkUpdate.linkValueExists) {
                 ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
 
-                @* Delete the UUID from the current version of the link value, because the new version will store it. *@
-                ?linkValue@linkValueIndex knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
-
                 @* Delete the permissions from the current version of the link value, because the new version will store them. *@
                 ?linkValue@linkValueIndex knora-base:hasPermissions ?linkValuePermissions@linkValueIndex .
            }
@@ -108,7 +104,8 @@ DELETE {
         ?newValue rdf:type <@value.valueType> ;
             knora-base:isDeleted false  ;
             knora-base:valueHasString """@value.valueHasString""" ;
-            knora-base:valueHasUUID ?currentValueUUID .
+            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(newValueUUID)}" ;
+            knora-base:arkUrl <@newValueArkUrl> .
 
         @{
             org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForValueContent(value = value,
@@ -167,11 +164,11 @@ DELETE {
 
             *@
             @if(linkUpdate.linkValueExists) {
-                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex ;
-                    knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
-            } else {
-                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" .
+                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex .
             }
+
+            <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(linkUpdate.newLinkValueUUID)}" ;
+                                          knora-base:arkUrl <@linkUpdate.newLinkValueArkUrl> .
 
             @* Attach the new LinkValue to its containing resource. *@
             ?resource <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
@@ -226,7 +223,6 @@ WHERE {
     @* Don't add a new version of a deleted value. *@
 
     ?currentValue knora-base:isDeleted false ;
-        knora-base:valueHasUUID ?currentValueUUID ;
         knora-base:hasPermissions ?currentValuePermissions .
 
     @* If this is a list value, make sure the list node that it points to exists and is a ListNode. *@
@@ -290,7 +286,6 @@ WHERE {
                 rdf:object <@linkUpdate.linkTargetIri> ;
                 knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
                 knora-base:isDeleted false ;
-                knora-base:valueHasUUID ?linkValueUUID@linkValueIndex ;
                 knora-base:hasPermissions ?linkValuePermissions@linkValueIndex .
         } else {
             @* Make sure there is no such knora-base:LinkValue. *@
