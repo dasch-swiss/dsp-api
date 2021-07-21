@@ -90,6 +90,8 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         makeTextFileValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.AudioFileValue =>
         makeAudioFileValue(valueProps, projectShortcode, responderManager, userProfile)
+      case OntologyConstants.KnoraBase.MovingImageFileValue =>
+        makeVideoFileValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.DocumentFileValue =>
         makeDocumentFileValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, responderManager, userProfile)
@@ -140,6 +142,16 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     s"${settings.externalSipiIIIFGetUrl}/${audioFileValue.projectShortcode}/${audioFileValue.internalFilename}/file"
   }
 
+  /**
+    * Creates a URL for accessing a video file via Sipi.
+    *
+    * @param videoFileValue the file value representing the video file.
+    * @return a Sipi URL.
+    */
+  def makeSipiVideoFileGetUrlFromFilename(videoFileValue: MovingImageFileValueV1): String = {
+    s"${settings.externalSipiIIIFGetUrl}/${videoFileValue.projectShortcode}/${videoFileValue.internalFilename}/file"
+  }
+
   // A Map of MIME types to Knora API v1 binary format name.
   private val mimeType2V1Format = new ErrorHandlingMap(
     Map(
@@ -162,13 +174,15 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       "application/xml" -> "XML",
       "text/xml" -> "XML",
       "text/csv" -> "CSV",
+      "text/plain" -> "TEXT",
       "application/zip" -> "ZIP",
       "application/x-compressed-zip" -> "ZIP",
       "audio/mpeg" -> "AUDIO",
       "audio/mp4" -> "AUDIO",
       "audio/wav" -> "AUDIO",
       "audio/x-wav" -> "AUDIO",
-      "audio/vnd.wave" -> "AUDIO"
+      "audio/vnd.wave" -> "AUDIO",
+      "video/mp4" -> "VIDEO"
     ), { key: String =>
       s"Unknown MIME type: $key"
     }
@@ -213,6 +227,13 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
           format_name = mimeType2V1Format(audioFileValue.internalMimeType),
           origname = audioFileValue.originalFilename,
           path = makeSipiAudioFileGetUrlFromFilename(audioFileValue)
+        )
+
+      case videoFileValue: MovingImageFileValueV1 =>
+        LocationV1(
+          format_name = mimeType2V1Format(videoFileValue.internalMimeType),
+          origname = videoFileValue.originalFilename,
+          path = makeSipiVideoFileGetUrlFromFilename(videoFileValue)
         )
 
       case otherType => throw NotImplementedException(s"Type not yet implemented: ${otherType.valueTypeIri}")
@@ -388,6 +409,8 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
 
       case _: AudioFileValueV1 => basicObjectResponse
 
+      case _: MovingImageFileValueV1 => basicObjectResponse
+
       case _: HierarchicalListValueV1 => basicObjectResponse
 
       case _: ColorValueV1 => basicObjectResponse
@@ -409,7 +432,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       case _: UriValueV1 => basicObjectResponse
 
       case other =>
-        throw new Exception(s"Resource creation response format not implemented for value type ${other.valueTypeIri}") // TODO: implement remaining types.
+        throw new Exception(s"Resource creation response format not implemented for value type ${other.valueTypeIri}")
     }
 
     ResourceCreateValueResponseV1(
@@ -878,7 +901,7 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
     * Converts a [[ValueProps]] into a [[AudioFileValueV1]].
     *
     * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
-    * @return a [[DocumentFileValueV1]].
+    * @return a [[AudioFileValueV1]].
     */
   private def makeAudioFileValue(
       valueProps: ValueProps,
@@ -893,6 +916,36 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
         originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
         projectShortcode = projectShortcode,
+        duration = predicates
+          .get(OntologyConstants.KnoraBase.Duration)
+          .map(valueLiterals => BigDecimal(valueLiterals.literals.head))
+      ))
+  }
+
+  /**
+    * Converts a [[ValueProps]] into a [[MovingImageFileValueV1]].
+    *
+    * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+    * @return a [[MovingImageFileValueV1]].
+    */
+  private def makeVideoFileValue(
+      valueProps: ValueProps,
+      projectShortcode: String,
+      responderManager: ActorRef,
+      userProfile: UserADM)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    val predicates = valueProps.literalData
+
+    Future(
+      MovingImageFileValueV1(
+        internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
+        internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
+        originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
+        projectShortcode = projectShortcode,
+        dimX = predicates(OntologyConstants.KnoraBase.DimX).literals.head.toInt,
+        dimY = predicates(OntologyConstants.KnoraBase.DimY).literals.head.toInt,
+        fps = predicates.get(OntologyConstants.KnoraBase.Fps).map { giveLiteralValue =>
+          BigDecimal(giveLiteralValue.literals.head)
+        },
         duration = predicates
           .get(OntologyConstants.KnoraBase.Duration)
           .map(valueLiterals => BigDecimal(valueLiterals.literals.head))

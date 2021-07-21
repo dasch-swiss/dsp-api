@@ -72,6 +72,9 @@ class KnoraSipiIntegrationV2ITSpec
   private val wavResourceIri = new MutableTestIri
   private val wavValueIri = new MutableTestIri
 
+  private val videoResourceIri = new MutableTestIri
+  private val videoValueIri = new MutableTestIri
+
   private val marblesOriginalFilename = "marbles.tif"
   private val pathToMarbles = s"test_data/test_route/images/$marblesOriginalFilename"
   private val marblesWidth = 1419
@@ -119,6 +122,12 @@ class KnoraSipiIntegrationV2ITSpec
   private val testWavOriginalFilename = "test.wav"
   private val pathToTestWav = s"test_data/test_route/files/$testWavOriginalFilename"
 
+  private val testVideoOriginalFilename = "testVideo.mp4"
+  private val pathToTestVideo = s"test_data/test_route/files/$testVideoOriginalFilename"
+
+  private val testVideo2OriginalFilename = "test.wav"
+  private val pathToTestVideo2 = s"test_data/test_route/files/$testVideo2OriginalFilename"
+
   /**
     * Represents the information that Knora returns about an image file value that was created.
     *
@@ -160,6 +169,23 @@ class KnoraSipiIntegrationV2ITSpec
     * @param duration         the duration of the audio in seconds.
     */
   case class SavedAudioFile(internalFilename: String, url: String, duration: Option[BigDecimal])
+
+  /**
+    * Represents the information that Knora returns about a video file value that was created.
+    *
+    * @param internalFilename the file's internal filename.
+    * @param url              the file's URL.
+    * @param width            the video's width in pixels.
+    * @param height           the video's height in pixels.
+    * @param duration         the duration of the video in seconds.
+    * @param fps              the frame rate of the video in seconds.
+    */
+  case class SavedVideoFile(internalFilename: String,
+                            url: String,
+                            dimX: Int,
+                            dimY: Int,
+                            duration: Option[BigDecimal],
+                            fps: Option[BigDecimal])
 
   /**
     * Given a JSON-LD document representing a resource, returns a JSON-LD array containing the values of the specified
@@ -284,10 +310,10 @@ class KnoraSipiIntegrationV2ITSpec
   }
 
   /**
-    * Given a JSON-LD object representing a Knora text file value, returns a [[SavedTextFile]] containing the same information.
+    * Given a JSON-LD object representing a Knora audio file value, returns a [[SavedAudioFile]] containing the same information.
     *
-    * @param savedValue a JSON-LD object representing a Knora document file value.
-    * @return a [[SavedTextFile]] containing the same information.
+    * @param savedValue a JSON-LD object representing a Knora audio file value.
+    * @return a [[SavedAudioFile]] containing the same information.
     */
   private def savedValueToSavedAudioFile(savedValue: JsonLDObject): SavedAudioFile = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
@@ -308,6 +334,46 @@ class KnoraSipiIntegrationV2ITSpec
       internalFilename = internalFilename,
       url = url,
       duration = duration
+    )
+  }
+
+  /**
+    * Given a JSON-LD object representing a Knora video file value, returns a [[SavedVideoFile]] containing the same information.
+    *
+    * @param savedValue a JSON-LD object representing a Knora video file value.
+    * @return a [[SavedVideoFile]] containing the same information.
+    */
+  private def savedValueToSavedVideoFile(savedValue: JsonLDObject): SavedVideoFile = {
+    val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
+
+    val url: String = savedValue.requireDatatypeValueInObject(
+      key = OntologyConstants.KnoraApiV2Complex.FileValueAsUrl,
+      expectedDatatype = OntologyConstants.Xsd.Uri.toSmartIri,
+      validationFun = stringFormatter.toSparqlEncodedString
+    )
+
+    val dimY = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimY)
+    val dimX = savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasDimX)
+
+    val duration: Option[BigDecimal] = savedValue.maybeDatatypeValueInObject(
+      key = OntologyConstants.KnoraApiV2Complex.AudioFileValueHasDuration,
+      expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
+      validationFun = stringFormatter.validateBigDecimal
+    )
+
+    val fps: Option[BigDecimal] = savedValue.maybeDatatypeValueInObject(
+      key = OntologyConstants.KnoraApiV2Complex.MovingImageFileValueHasFps,
+      expectedDatatype = OntologyConstants.Xsd.Decimal.toSmartIri,
+      validationFun = stringFormatter.validateBigDecimal
+    )
+
+    SavedVideoFile(
+      internalFilename = internalFilename,
+      url = url,
+      dimX = dimX,
+      dimY = dimY,
+      duration = duration,
+      fps = fps
     )
   }
 
@@ -1203,6 +1269,130 @@ class KnoraSipiIntegrationV2ITSpec
 
       // Request the permanently stored file from Sipi.
       val sipiGetFileRequest = Get(savedAudioFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
+      checkResponseOK(sipiGetFileRequest)
+    }
+
+    //TODO: activate the following two tests after support of video files is added to sipi
+    "create a resource with a video file" ignore {
+      // Upload the file to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToTestVideo, mimeType = MediaTypes.`video/mp4`))
+      )
+
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.originalFilename should ===(testVideoOriginalFilename)
+
+      // Ask Knora to create the resource.
+
+      val jsonLdEntity =
+        s"""{
+           |  "@type" : "knora-api:MovingImageRepresentation",
+           |  "knora-api:hasMovingImageFileValue" : {
+           |    "@type" : "knora-api:MovingImageFileValue",
+           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
+           |  },
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "rdfs:label" : "test video representation",
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
+
+      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password))
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      videoResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
+
+      // Get the resource from Knora.
+      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(videoResourceIri.get, "UTF-8")}")
+      val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
+      assert(
+        resource.requireTypeAsKnoraTypeIri.toString == "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation")
+
+      // Get the new file value from the resource.
+
+      val savedValues: JsonLDArray = getValuesFromResource(
+        resource = resource,
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasMovingImageFileValue.toSmartIri
+      )
+
+      val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
+        savedValues.value.head
+      } else {
+        throw AssertionException(s"Expected one file value, got ${savedValues.value.size}")
+      }
+
+      val savedValueObj: JsonLDObject = savedValue match {
+        case jsonLDObject: JsonLDObject => jsonLDObject
+        case other                      => throw AssertionException(s"Invalid value object: $other")
+      }
+
+      videoValueIri.set(savedValueObj.requireIDAsKnoraDataIri.toString)
+
+      val savedVideoFile: SavedVideoFile = savedValueToSavedVideoFile(savedValueObj)
+      assert(savedVideoFile.internalFilename == uploadedFile.internalFilename)
+
+      // Request the permanently stored file from Sipi.
+      val sipiGetFileRequest = Get(savedVideoFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
+      checkResponseOK(sipiGetFileRequest)
+    }
+
+    "change a video file value" ignore {
+      // Upload the file to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToTestVideo2, mimeType = MediaTypes.`video/mp4`))
+      )
+
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.originalFilename should ===(testVideo2OriginalFilename)
+
+      // Ask Knora to update the value.
+
+      val jsonLdEntity =
+        s"""{
+           |  "@id" : "${videoResourceIri.get}",
+		   |  "@type" : "knora-api:MovingImageRepresentation",
+           |  "knora-api:hasMovingImageFileValue" : {
+           |    "@type" : "knora-api:MovingImageFileValue",
+		   |    "@id" : "${videoValueIri.get}",
+           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
+           |  },
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
+
+      val request = Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password))
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      videoValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
+
+      // Get the resource from Knora.
+      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(videoResourceIri.get, "UTF-8")}")
+      val resource = getResponseJsonLD(knoraGetRequest)
+
+      // Get the new file value from the resource.
+      val savedValue: JsonLDObject = getValueFromResource(
+        resource = resource,
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasMovingImageFileValue.toSmartIri,
+        expectedValueIri = videoValueIri.get
+      )
+
+      val savedVideoFile: SavedVideoFile = savedValueToSavedVideoFile(savedValue)
+      assert(savedVideoFile.internalFilename == uploadedFile.internalFilename)
+
+      // Request the permanently stored file from Sipi.
+      val sipiGetFileRequest = Get(savedVideoFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
       checkResponseOK(sipiGetFileRequest)
     }
   }

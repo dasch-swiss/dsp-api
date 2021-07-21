@@ -20,10 +20,12 @@
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
 import java.util.UUID
-
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.messages.OntologyConstants
+import org.knora.webapi.messages.OntologyConstants.KnoraAdmin.AdministrativePermissionAbbreviations
+import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi.sharedtestdata._
@@ -113,7 +115,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProject = forProject,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
@@ -130,7 +132,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
             forGroup = groupIri,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
@@ -148,7 +150,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
@@ -158,13 +160,38 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
     }
 
     "return 'BadRequest' if the no permissions supplied for AdministrativePermissionCreateRequestADM" in {
+      val invalidName = "Delete"
+      val hasPermissions = Set(
+        PermissionADM(
+          name = invalidName,
+          additionalInformation = None,
+          permissionCode = None
+        ))
+      val caught = intercept[BadRequestException](
+        AdministrativePermissionCreateRequestADM(
+          createRequest = CreateAdministrativePermissionAPIRequestADM(
+            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
+            hasPermissions = hasPermissions
+          ).prepareHasPermissions,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.imagesUser01,
+          apiRequestID = UUID.randomUUID()
+        )
+      )
+      assert(
+        caught.getMessage === s"Invalid value for name parameter of hasPermissions: $invalidName, it should be one of " +
+          s"${AdministrativePermissionAbbreviations.toString}")
+    }
+
+    "return 'BadRequest' if the a permissions supplied for AdministrativePermissionCreateRequestADM had invalid name" in {
       val caught = intercept[BadRequestException](
         AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
             forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set.empty[PermissionADM]
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
@@ -180,7 +207,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
             forGroup = OntologyConstants.KnoraAdmin.ProjectMember,
             hasPermissions = Set(PermissionADM.ProjectAdminAllPermission)
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesReviewerUser,
           apiRequestID = UUID.randomUUID()
@@ -463,7 +490,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProject = forProject,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
@@ -480,7 +507,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
             forGroup = Some(groupIri),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
@@ -498,7 +525,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
@@ -514,13 +541,134 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set.empty[PermissionADM]
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID()
         )
       )
       assert(caught.getMessage === "Permissions needs to be supplied.")
+    }
+
+    "not create a DefaultObjectAccessPermission for project and property if hasPermissions set contained permission with invalid name" in {
+      val invalidName = "invalid"
+      val hasPermissions = Set(
+        PermissionADM(
+          name = invalidName,
+          additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
+          permissionCode = Some(8)
+        ))
+      val caught = intercept[BadRequestException](
+        DefaultObjectAccessPermissionCreateRequestADM(
+          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
+            hasPermissions = hasPermissions
+          ).prepareHasPermissions,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser,
+          apiRequestID = UUID.randomUUID()
+        ))
+      assert(
+        caught.getMessage ===
+          s"Invalid value for name parameter of hasPermissions: $invalidName, it should be one of " +
+            s"${EntityPermissionAbbreviations.toString}")
+    }
+
+    "not create a DefaultObjectAccessPermission for project and property if hasPermissions set contained permission with invalid code" in {
+      val invalidCode = 10
+      val hasPermissions = Set(
+        PermissionADM(
+          name = OntologyConstants.KnoraBase.ChangeRightsPermission,
+          additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
+          permissionCode = Some(invalidCode)
+        ))
+      val caught = intercept[BadRequestException](
+        DefaultObjectAccessPermissionCreateRequestADM(
+          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
+            hasPermissions = hasPermissions
+          ).prepareHasPermissions,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser,
+          apiRequestID = UUID.randomUUID()
+        ))
+      assert(
+        caught.getMessage ===
+          s"Invalid value for permissionCode parameter of hasPermissions: $invalidCode, it should be one of " +
+            s"${PermissionTypeAndCodes.values.toString}")
+    }
+
+    "not create a DefaultObjectAccessPermission for project and property if hasPermissions set contained permission with inconsistent code and name" in {
+      val code = 2
+      val name = OntologyConstants.KnoraBase.ChangeRightsPermission
+      val hasPermissions = Set(
+        PermissionADM(
+          name = name,
+          additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
+          permissionCode = Some(code)
+        ))
+      val caught = intercept[BadRequestException](
+        DefaultObjectAccessPermissionCreateRequestADM(
+          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
+            hasPermissions = hasPermissions
+          ).prepareHasPermissions,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser,
+          apiRequestID = UUID.randomUUID()
+        ))
+      assert(caught.getMessage === s"Given permission code $code and permission name $name are not consistent.")
+    }
+
+    "not create a DefaultObjectAccessPermission for project and property if hasPermissions set contained permission without any code or name" in {
+
+      val hasPermissions = Set(
+        PermissionADM(
+          name = "",
+          additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
+          permissionCode = None
+        ))
+      val caught = intercept[BadRequestException](
+        DefaultObjectAccessPermissionCreateRequestADM(
+          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
+            hasPermissions = hasPermissions
+          ).prepareHasPermissions,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser,
+          apiRequestID = UUID.randomUUID()
+        ))
+      assert(
+        caught.getMessage ===
+          s"One of permission code or permission name must be provided for a default object access permission.")
+    }
+
+    "not create a DefaultObjectAccessPermission for project and property if hasPermissions set contained permission without additionalInformation parameter" in {
+
+      val hasPermissions = Set(
+        PermissionADM(
+          name = OntologyConstants.KnoraBase.ChangeRightsPermission,
+          additionalInformation = None,
+          permissionCode = Some(8)
+        ))
+      val caught = intercept[BadRequestException](
+        DefaultObjectAccessPermissionCreateRequestADM(
+          createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
+            forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            forProperty = Some(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY),
+            hasPermissions = hasPermissions
+          ).prepareHasPermissions,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser,
+          apiRequestID = UUID.randomUUID()
+        ))
+      assert(
+        caught.getMessage ===
+          s"additionalInformation of a default object access permission type cannot be empty.")
     }
 
     "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionCreateRequestADM is not system or project Admin" in {
@@ -530,7 +678,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProject = SharedTestDataADM.ANYTHING_PROJECT_IRI,
             forGroup = Some(SharedTestDataADM.thingSearcherGroup.id),
             hasPermissions = Set(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingUser2,
           apiRequestID = UUID.randomUUID()
@@ -547,7 +695,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
@@ -564,7 +712,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forGroup = Some(OntologyConstants.KnoraAdmin.ProjectMember),
             forProperty = Some(ANYTHING_HasDate_PROPERTY_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
@@ -580,7 +728,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProject = ANYTHING_PROJECT_IRI,
             forProperty = Some(SharedTestDataADM.customValueIRI),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
@@ -596,7 +744,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
             forProject = ANYTHING_PROJECT_IRI,
             forResourceClass = Some(ANYTHING_THING_RESOURCE_CLASS_LocalHost),
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
@@ -611,7 +759,7 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = ANYTHING_PROJECT_IRI,
             hasPermissions = Set(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectMember))
-          ),
+          ).prepareHasPermissions,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()

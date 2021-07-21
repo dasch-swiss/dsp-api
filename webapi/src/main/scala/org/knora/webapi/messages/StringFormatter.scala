@@ -852,6 +852,8 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
   // RFC 4648.
   private val Base64UrlPattern = "[A-Za-z0-9_-]+"
 
+  private val Base64UrlPatternRegex: Regex = ("^" + Base64UrlPattern + "$").r
+
   // Calculates check digits for resource IDs in ARK URLs.
   private val base64UrlCheckDigit = new Base64UrlCheckDigit
 
@@ -2176,9 +2178,16 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     * @return the same ontology name.
     */
   def validateProjectSpecificOntologyName(ontologyName: String, errorFun: => Nothing): String = {
+    // Check that ontology name matched NCName regex pattern
     ontologyName match {
       case NCNameRegex(_*) => ()
       case _               => errorFun
+    }
+
+    // Check that ontology name is URL safe
+    ontologyName match {
+      case Base64UrlPatternRegex(_*) => ()
+      case _                         => errorFun
     }
 
     val lowerCaseOntologyName = ontologyName.toLowerCase
@@ -2481,8 +2490,14 @@ class StringFormatter private (val maybeSettings: Option[KnoraSettingsImpl] = No
     *                 project shortname.
     * @return the same string.
     */
-  def validateAndEscapeProjectShortname(value: String, errorFun: => Nothing): String = {
-    NCNameRegex.findFirstIn(value) match {
+  def validateAndEscapeProjectShortname(shortname: String, errorFun: => Nothing): String = {
+    // Check that shortname matches NCName pattern
+    val ncNameMatch = NCNameRegex.findFirstIn(shortname) match {
+      case Some(value) => value
+      case None        => errorFun
+    }
+    // Check that shortname is URL safe
+    Base64UrlPatternRegex.findFirstIn(ncNameMatch) match {
       case Some(shortname) => toSparqlEncodedString(shortname, errorFun)
       case None            => errorFun
     }
