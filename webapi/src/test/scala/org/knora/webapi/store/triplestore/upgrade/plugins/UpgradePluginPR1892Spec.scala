@@ -29,7 +29,7 @@ import java.util.UUID
 
 class UpgradePluginPR1892Spec extends UpgradePluginSpec {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private def checkIriNodeObject(model: RdfModel, subj: IriNode, pred: IriNode, expectedObj: IriNode): Unit = {
     model
@@ -58,7 +58,7 @@ class UpgradePluginPR1892Spec extends UpgradePluginSpec {
       // Use the plugin to transform the input.
       val plugin = new UpgradePluginPR1892(defaultFeatureFactoryConfig)
       plugin.transform(model)
-      val resourceIri: IRI = "http://rdfh.ch/0001/thing-with-empty-string"
+      val resourceIri: IRI = "http://rdfh.ch/0001/a-test-thing"
       val resourceArkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl()
 
       // Check that arkUrl is added to the resource
@@ -71,7 +71,7 @@ class UpgradePluginPR1892Spec extends UpgradePluginSpec {
 
       // Check that ark url is added to the value
       val valueUUID: UUID = stringFormatter.base64DecodeUuid("SGXSDj6Oj7A4QAU1Pi957g")
-      val valueIri: IRI = "http://rdfh.ch/0001/thing-with-empty-string/values/SGXSDj6Oj7A4QAU1Pi957g"
+      val valueIri: IRI = "http://rdfh.ch/0001/a-test-thing/values/SGXSDj6Oj7A4QAU1Pi957g"
       val valueArkUrl = valueIri.toSmartIri.fromValueIriToArkUrl(valueUUID)
       checkIriNodeObject(
         model = model,

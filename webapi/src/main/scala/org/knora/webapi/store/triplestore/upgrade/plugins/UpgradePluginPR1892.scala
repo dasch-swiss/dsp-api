@@ -39,9 +39,6 @@ class UpgradePluginPR1892(featureFactoryConfig: FeatureFactoryConfig) extends Up
   private val valueCreationDateIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueCreationDate)
   private val valueHasUUIDIri = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasUUID)
 
-  val resourceIrisDict: collection.mutable.Map[IriNode, IriNode] = collection.mutable.Map.empty
-  val valueIrisDict: collection.mutable.Map[IRI, IRI] = collection.mutable.Map.empty
-
   override def transform(model: RdfModel): Unit = {
 
     val resourceIris: Iterator[IriNode] = collectResourceIris(model)
