@@ -24,7 +24,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
     projectADM = SharedTestDataADM.incunabulaProject,
     creationDate = Instant.parse("2016-03-02T15:05:10Z"),
-    resourceArkUrl = "http://rdfh.ch/0803/c5058f3a".toSmartIri.fromResourceIriToArkUrl(),
+    arkUrl = "http://rdfh.ch/0803/c5058f3a".toSmartIri.fromResourceIriToArkUrl(),
     versionDate = None,
     values = Map(
       "http://www.knora.org/ontology/0803/incunabula#physical_desc".toSmartIri -> Vector(
@@ -272,7 +272,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
     userPermission = ChangeRightsPermission,
     attachedToUser = "http://rdfh.ch/users/91e19f1e01",
     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
-    resourceArkUrl = "http://rdfh.ch/0803/c5058f3a".toSmartIri.fromResourceIriToArkUrl(),
+    arkUrl = "http://rdfh.ch/0803/c5058f3a".toSmartIri.fromResourceIriToArkUrl(),
     projectADM = SharedTestDataADM.incunabulaProject,
     creationDate = Instant.parse("2016-03-02T15:05:10Z"),
     values = Map(),
@@ -291,7 +291,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
     resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
     projectADM = SharedTestDataADM.incunabulaProject,
     creationDate = Instant.parse("2016-03-02T15:05:21Z"),
-    resourceArkUrl = "http://rdfh.ch/0803/2a6221216701".toSmartIri.fromResourceIriToArkUrl(),
+    arkUrl = "http://rdfh.ch/0803/2a6221216701".toSmartIri.fromResourceIriToArkUrl(),
     versionDate = None,
     values = Map(
       "http://www.knora.org/ontology/0803/incunabula#physical_desc".toSmartIri -> Vector(
@@ -821,7 +821,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
     label = "Reise ins Heilige Land",
     creationDate = Instant.parse("2016-03-02T15:05:21Z"),
     resourceIri = "http://rdfh.ch/0803/2a6221216701",
-    resourceArkUrl = "http://rdfh.ch/0803/2a6221216701".toSmartIri.fromResourceIriToArkUrl(),
+    arkUrl = "http://rdfh.ch/0803/2a6221216701".toSmartIri.fromResourceIriToArkUrl(),
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     userPermission = ChangeRightsPermission,
@@ -851,7 +851,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         versionDate = Some(Instant.parse("2019-02-12T08:05:10Z")),
         label = "A thing with version history",
         resourceIri = "http://rdfh.ch/0001/thing-with-history",
-        resourceArkUrl = "http://rdfh.ch/0001/thing-with-history".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0001/thing-with-history".toSmartIri.fromResourceIriToArkUrl(),
         permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
         userPermission = ModifyPermission,
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
@@ -1016,7 +1016,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         versionDate = None,
         label = "A thing with version history",
         resourceIri = "http://rdfh.ch/0001/thing-with-history",
-        resourceArkUrl = "http://rdfh.ch/0001/thing-with-history".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0001/thing-with-history".toSmartIri.fromResourceIriToArkUrl(),
         permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -1054,7 +1054,7 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           versionDate = None,
           label = "A thing with version history",
           resourceIri = "http://rdfh.ch/0001/thing-with-history",
-          resourceArkUrl = "http://rdfh.ch/0001/thing-with-history".toSmartIri.fromResourceIriToArkUrl(),
+          arkUrl = "http://rdfh.ch/0001/thing-with-history".toSmartIri.fromResourceIriToArkUrl(),
           permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
           attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
           resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,

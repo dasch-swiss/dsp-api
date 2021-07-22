@@ -23,7 +23,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "p7v",
         resourceIri = "http://rdfh.ch/0803/00505cf0a803",
-        resourceArkUrl = "http://rdfh.ch/0803/00505cf0a803".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/00505cf0a803".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -60,7 +60,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "d4v",
         resourceIri = "http://rdfh.ch/0803/00c650d23303",
-        resourceArkUrl = "http://rdfh.ch/0803/00c650d23303".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/00c650d23303".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -97,7 +97,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "o5v",
         resourceIri = "http://rdfh.ch/0803/02abe871e903",
-        resourceArkUrl = "http://rdfh.ch/0803/02abe871e903".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/02abe871e903".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -134,7 +134,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "q2v",
         resourceIri = "http://rdfh.ch/0803/04416f64ef03",
-        resourceArkUrl = "http://rdfh.ch/0803/04416f64ef03".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/04416f64ef03".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -171,7 +171,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "g6v",
         resourceIri = "http://rdfh.ch/0803/04f25db73f03",
-        resourceArkUrl = "http://rdfh.ch/0803/04f25db73f03".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/04f25db73f03".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -208,7 +208,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "a1r; Titelblatt, recto",
         resourceIri = "http://rdfh.ch/0803/05c7acceb703",
-        resourceArkUrl = "http://rdfh.ch/0803/05c7acceb703".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/05c7acceb703".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -245,7 +245,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "b6r",
         resourceIri = "http://rdfh.ch/0803/075d33c1bd03",
-        resourceArkUrl = "http://rdfh.ch/0803/075d33c1bd03".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/075d33c1bd03".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -282,7 +282,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "e8r",
         resourceIri = "http://rdfh.ch/0803/0b8940a6c903",
-        resourceArkUrl = "http://rdfh.ch/0803/0b8940a6c903".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/0b8940a6c903".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -319,7 +319,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "g5r",
         resourceIri = "http://rdfh.ch/0803/0d1fc798cf03",
-        resourceArkUrl = "http://rdfh.ch/0803/0d1fc798cf03".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/0d1fc798cf03".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -356,7 +356,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "k4r",
         resourceIri = "http://rdfh.ch/0803/0d5ac1099503",
-        resourceArkUrl = "http://rdfh.ch/0803/0d5ac1099503".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/0d5ac1099503".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -393,7 +393,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "i2r",
         resourceIri = "http://rdfh.ch/0803/0fb54d8bd503",
-        resourceArkUrl = "http://rdfh.ch/0803/0fb54d8bd503".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/0fb54d8bd503".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -430,7 +430,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "m1r",
         resourceIri = "http://rdfh.ch/0803/0ff047fc9a03",
-        resourceArkUrl = "http://rdfh.ch/0803/0ff047fc9a03".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/0ff047fc9a03".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -467,7 +467,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "k7r",
         resourceIri = "http://rdfh.ch/0803/114bd47ddb03",
-        resourceArkUrl = "http://rdfh.ch/0803/114bd47ddb03".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/114bd47ddb03".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -504,7 +504,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "d6v",
         resourceIri = "http://rdfh.ch/0803/14dd8cbc3403",
-        resourceArkUrl = "http://rdfh.ch/0803/14dd8cbc3403".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/14dd8cbc3403".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -541,7 +541,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "f3v",
         resourceIri = "http://rdfh.ch/0803/167313af3a03",
-        resourceArkUrl = "http://rdfh.ch/0803/167313af3a03".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/167313af3a03".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -578,7 +578,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "b8r",
         resourceIri = "http://rdfh.ch/0803/1b746fabbe03",
-        resourceArkUrl = "http://rdfh.ch/0803/1b746fabbe03".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/1b746fabbe03".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -615,7 +615,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "e7r",
         resourceIri = "http://rdfh.ch/0803/1baf691c8403",
-        resourceArkUrl = "http://rdfh.ch/0803/1baf691c8403".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/1baf691c8403".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -652,7 +652,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "d5r",
         resourceIri = "http://rdfh.ch/0803/1d0af69dc403",
-        resourceArkUrl = "http://rdfh.ch/0803/1d0af69dc403".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/1d0af69dc403".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -689,7 +689,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "f2r",
         resourceIri = "http://rdfh.ch/0803/1fa07c90ca03",
-        resourceArkUrl = "http://rdfh.ch/0803/1fa07c90ca03".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/1fa07c90ca03".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -726,7 +726,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "i1r",
         resourceIri = "http://rdfh.ch/0803/1fdb76019003",
-        resourceArkUrl = "http://rdfh.ch/0803/1fdb76019003".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/1fdb76019003".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -763,7 +763,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "g7r",
         resourceIri = "http://rdfh.ch/0803/21360383d003",
-        resourceArkUrl = "http://rdfh.ch/0803/21360383d003".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/21360383d003".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -800,7 +800,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "k6r",
         resourceIri = "http://rdfh.ch/0803/2171fdf39503",
-        resourceArkUrl = "http://rdfh.ch/0803/2171fdf39503".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/2171fdf39503".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -837,7 +837,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "m3r",
         resourceIri = "http://rdfh.ch/0803/230784e69b03",
-        resourceArkUrl = "http://rdfh.ch/0803/230784e69b03".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/230784e69b03".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -874,7 +874,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "q8r",
         resourceIri = "http://rdfh.ch/0803/23427e576103",
-        resourceArkUrl = "http://rdfh.ch/0803/23427e576103".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/23427e576103".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -911,7 +911,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "i4r",
         resourceIri = "http://rdfh.ch/0803/23cc8975d603",
-        resourceArkUrl = "http://rdfh.ch/0803/23cc8975d603".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/23cc8975d603".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -953,7 +953,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "Ein Ding f\u00FCr jemanden, dem die Dinge gefallen",
         resourceIri = "http://rdfh.ch/0001/a-thing-with-text-values",
-        resourceArkUrl = "http://rdfh.ch/0001/a-thing-with-text-values".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0001/a-thing-with-text-values".toSmartIri.fromResourceIriToArkUrl(),
         permissions = "CR knora-admin:Creator|V knora-admin:ProjectMember",
         userPermission = ChangeRightsPermission,
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
@@ -1721,7 +1721,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
         resourceIri = "http://rdfh.ch/0803/c5058f3a",
-        resourceArkUrl = "http://rdfh.ch/0803/c5058f3a".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/c5058f3a".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,
@@ -1757,7 +1757,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ReadResourceV2(
         label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
         resourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
-        resourceArkUrl = "http://rdfh.ch/0803/ff17e5ef9601".toSmartIri.fromResourceIriToArkUrl(),
+        arkUrl = "http://rdfh.ch/0803/ff17e5ef9601".toSmartIri.fromResourceIriToArkUrl(),
         permissions =
           "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = RestrictedViewPermission,

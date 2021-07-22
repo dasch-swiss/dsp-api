@@ -402,7 +402,7 @@ case class ReadResourceV2(resourceIri: IRI,
                           userPermission: EntityPermission,
                           values: Map[SmartIri, Seq[ReadValueV2]],
                           creationDate: Instant,
-                          resourceArkUrl: IRI,
+                          arkUrl: IRI,
                           lastModificationDate: Option[Instant],
                           versionDate: Option[Instant],
                           deletionInfo: Option[DeletionInfo])
@@ -512,7 +512,7 @@ case class ReadResourceV2(resourceIri: IRI,
 
     val arkUrlAsJsonLD: (IRI, JsonLDObject) =
       arkUrlProp -> JsonLDUtil.datatypeValueToJsonLDObject(
-        value = resourceSmartIri.fromResourceIriToArkUrl(),
+        value = arkUrl,
         datatype = OntologyConstants.Xsd.Uri.toSmartIri
       )
 

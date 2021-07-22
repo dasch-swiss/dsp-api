@@ -75,7 +75,7 @@ CONSTRUCT {
         knora-base:attachedToUser ?resourceCreator ;
         knora-base:hasPermissions ?resourcePermissions ;
         knora-base:creationDate ?creationDate ;
-        knora-base:arkUrl       ?arkUrl ;
+        knora-base:arkUrl       ?resourceArkUrl ;
         knora-base:lastModificationDate ?lastModificationDate .
 
     @*If deleted resources are wanted return deletion info, otherwise just indicated that resource is not deleted. *@
@@ -121,6 +121,7 @@ CONSTRUCT {
         knora-base:attachedToUser ?resourceCreator ;
         knora-base:hasPermissions ?resourcePermissions ;
         knora-base:creationDate ?creationDate ;
+        knora-base:arkUrl ?resourceArkUrl ;
         rdfs:label ?label .
 
     @* If deleted resource is not wanted, ignore deleted resources. *@

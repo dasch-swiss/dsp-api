@@ -1586,7 +1586,7 @@ object ConstructResponseUtilV2 {
         userPermission = resourceWithValueRdfData.userPermission.get,
         values = valueObjects,
         creationDate = resourceCreationDate,
-        resourceArkUrl = resourceArkUrl,
+        arkUrl = resourceArkUrl,
         lastModificationDate = resourceLastModificationDate,
         versionDate = versionDate,
         deletionInfo = resourceDeletionInfo

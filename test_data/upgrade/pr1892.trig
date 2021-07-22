@@ -10,30 +10,8 @@
 @prefix standoff: <http://www.knora.org/ontology/standoff#> .
 @prefix anything: <http://www.knora.org/ontology/0001/anything#> .
 
-<http://rdfh.ch/projects/XXXX> rdf:type knora-admin:knoraProject ;
-
-                                knora-admin:projectShortname "testProject"^^xsd:string ;
-
-                                knora-admin:projectShortcode "XXXX"^^xsd:string ;
-
-                                knora-admin:projectLongname "test project"^^xsd:string ;
-
-                                knora-admin:projectDescription ""@en ;
-
-                                knora-admin:projectKeyword "test"^^xsd:string ;
-
-                                knora-admin:projectRestrictedViewSize "!512,512"^^xsd:string ;
-
-                                knora-admin:projectRestrictedViewWatermark "path_to_image"^^xsd:string ;
-
-                                knora-admin:belongsToInstitution <http://rdfh.ch/institutions/dhlab-basel> ;
-
-                                knora-admin:status "true"^^xsd:boolean ;
-
-                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
-
 <http://www.knora.org/data/0001/anything> {
-    <http://rdfh.ch/0001/thing-with-empty-string> a anything:Thing;
+    <http://rdfh.ch/0001/a-test-thing> a anything:Thing;
       knora-base:isDeleted false;
       knora-base:attachedToUser <http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q>;
       knora-base:attachedToProject <http://rdfh.ch/projects/0001>;
@@ -41,11 +19,12 @@
       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
       knora-base:creationDate "2020-11-13T09:55:10Z"^^xsd:dateTime;
       knora-base:lastModificationDate "2020-11-13T09:56:10Z"^^xsd:dateTime;
-      anything:hasText <http://rdfh.ch/0001/thing-with-empty-string/values/1>.
+      anything:hasText <http://rdfh.ch/0001/a-test-thing/values/SGXSDj6Oj7A4QAU1Pi957g>.
 
-    <http://rdfh.ch/0001/thing-with-empty-string/values/1> a knora-base:TextValue;
+    <http://rdfh.ch/0001/a-test-thing/values/SGXSDj6Oj7A4QAU1Pi957g> a knora-base:TextValue;
         knora-base:isDeleted false;
         knora-base:valueCreationDate "2020-11-13T09:56:10Z"^^xsd:dateTime;
+        knora-base:valueHasUUID "SGXSDj6Oj7A4QAU1Pi957g"^^xsd:string;
         knora-base:valueHasOrder 0;
         knora-base:valueHasString "";
         knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";

@@ -18,7 +18,7 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
   val expectedReadResourceV2ForReiseInsHeiligelandWrong: ReadResourceV2 = ReadResourceV2(
     label = "Reise ins Heilige Land",
     resourceIri = "http://rdfh.ch/2a6221216701",
-    resourceArkUrl = "http://rdfh.ch/2a6221216701".toSmartIri.fromResourceIriToArkUrl(),
+    arkUrl = "http://rdfh.ch/2a6221216701".toSmartIri.fromResourceIriToArkUrl(),
     permissions =
       "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
     userPermission = ChangeRightsPermission,
