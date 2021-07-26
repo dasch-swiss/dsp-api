@@ -2742,7 +2742,7 @@
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :arkUrl ;
-                         owl:minCardinality "1"^^xsd:nonNegativeInteger
+                         owl:maxCardinality "2"^^xsd:nonNegativeInteger
                        ] ,
                        [ rdf:type owl:Restriction ;
                          owl:onProperty :valueHasOrder ;

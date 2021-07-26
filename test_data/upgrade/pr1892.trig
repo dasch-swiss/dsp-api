@@ -19,14 +19,23 @@
       knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
       knora-base:creationDate "2020-11-13T09:55:10Z"^^xsd:dateTime;
       knora-base:lastModificationDate "2020-11-13T09:56:10Z"^^xsd:dateTime;
-      anything:hasText <http://rdfh.ch/0001/a-test-thing/values/SGXSDj6Oj7A4QAU1Pi957g>.
+      anything:hasText <http://rdfh.ch/0001/a-test-thing/values/SGXSDj6Oj7A4QAU1Pi957Y>.
 
-    <http://rdfh.ch/0001/a-test-thing/values/SGXSDj6Oj7A4QAU1Pi957g> a knora-base:TextValue;
+    <http://rdfh.ch/0001/a-test-thing/values/pGXSDj6Oj7A4QAU1Pi957g> a knora-base:TextValue;
         knora-base:isDeleted false;
         knora-base:valueCreationDate "2020-11-13T09:56:10Z"^^xsd:dateTime;
-        knora-base:valueHasUUID "SGXSDj6Oj7A4QAU1Pi957g"^^xsd:string;
         knora-base:valueHasOrder 0;
         knora-base:valueHasString "";
         knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser";
         knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> .
+
+    <http://rdfh.ch/0001/a-test-thing/values/SGXSDj6Oj7A4QAU1Pi957Y> a knora-base:TextValue;
+        knora-base:isDeleted false;
+        knora-base:valueCreationDate "2021-11-13T09:56:10Z"^^xsd:dateTime;
+        knora-base:valueHasUUID "SGXSDj6Oj7A4QAU1Pi957Y"^^xsd:string;
+        knora-base:valueHasOrder 0;
+        knora-base:valueHasString "";
+        knora-base:hasPermissions "CR knora-admin:Creator|M knora-admin:ProjectMember";
+        knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ> ;
+        knora-base:previousValue <http://rdfh.ch/0001/a-test-thing/values/pGXSDj6Oj7A4QAU1Pi957g> .
 }

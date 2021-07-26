@@ -61,6 +61,9 @@ DELETE {
         @if(linkUpdate.linkValueExists) {
             ?linkSource ?linkValueProperty ?currentLinkValue .
 
+        @* Delete the UUID from the current version of the link value, because the new version will store it. *@
+        ?currentLinkValue knora-base:valueHasUUID ?currentLinkUUID .
+
         } else {
             @{throw SparqlGenerationException(s"linkUpdate.linkValueExists must be true in this SPARQL template"); ()}
         }
@@ -77,7 +80,7 @@ INSERT {
             knora-base:valueHasRefCount @linkUpdate.newReferenceCount ;
             knora-base:valueCreationDate "@currentTime"^^xsd:dateTime ;
             knora-base:previousValue ?currentLinkValue ;
-            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(linkUpdate.newLinkValueUUID)}" ;
+            knora-base:valueHasUUID ?currentLinkUUID ;
             knora-base:isDeleted false ;
             @maybeComment match {
                 case Some(comment) => {

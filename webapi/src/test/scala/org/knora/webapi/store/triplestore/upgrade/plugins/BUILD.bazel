@@ -132,6 +132,7 @@ scala_test(
     ],
     data = [
         "//knora-ontologies",
+        "//test_data",
         "//test_data/upgrade",
     ],
     jvm_flags = ["-Dconfig.resource=fuseki.conf"],

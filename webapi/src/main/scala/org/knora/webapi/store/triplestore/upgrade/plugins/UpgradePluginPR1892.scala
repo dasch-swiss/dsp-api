@@ -23,10 +23,11 @@ import messages.IriConversions._
 import messages.{OntologyConstants, StringFormatter}
 import messages.util.rdf._
 import feature.FeatureFactoryConfig
-import exceptions.InconsistentRepositoryDataException
+import exceptions.{BadRequestException, InconsistentRepositoryDataException}
 import store.triplestore.upgrade.UpgradePlugin
 
 import java.util.UUID
+import java.io.PrintWriter
 
 /**
   * Transforms a repository for Knora PR 1892.
@@ -38,6 +39,8 @@ class UpgradePluginPR1892(featureFactoryConfig: FeatureFactoryConfig) extends Up
   private val resourceCreationDateIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.CreationDate)
   private val valueCreationDateIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueCreationDate)
   private val valueHasUUIDIri = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueHasUUID)
+
+  private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
 
   override def transform(model: RdfModel): Unit = {
 
@@ -58,27 +61,28 @@ class UpgradePluginPR1892(featureFactoryConfig: FeatureFactoryConfig) extends Up
       val maybeValueUUID: Option[DatatypeLiteral] = getValueUUIDProperty(model, iriNode)
 
       // Does value have a UUID stored?
-      val valueUUID: UUID = maybeValueUUID match {
+      maybeValueUUID match {
         // Yes. decode the stored string value to base64 UUID and return that.
-        case Some(uuidLiteral: DatatypeLiteral) => stringFormatter.base64DecodeUuid(uuidLiteral.value)
-        case None                               =>
-          // No. Value has no uuid. Then try getting the UUID from valueIri, if there is any. Otherwise, make a random one.
-          val valueUUID: UUID = stringFormatter.getUUIDFromIriOrMakeRandom(iriNode.iri)
-          // Add UUID to the value.
+        case Some(uuidLiteral: DatatypeLiteral) =>
+          val foundUUID =
+            stringFormatter.decodeUuidWithErr(uuidLiteral.value,
+                                              throw BadRequestException(s"${uuidLiteral.value} is not a base64 uuid"))
+
+          val valueArkUrl: IRI = iriNode.iri.toSmartIri.fromValueIriToArkUrl(foundUUID)
           model.add(
             subj = iriNode,
-            pred = valueHasUUIDIri,
-            obj = nodeFactory.makeStringLiteral(stringFormatter.base64EncodeUuid(valueUUID))
+            pred = arkUrlIri,
+            obj = nodeFactory.makeIriNode(iri = valueArkUrl)
           )
-          valueUUID
+        case None => Nil
+        // No. don't do anything
       }
 
-      val valueArkUrl: IRI = iriNode.iri.toSmartIri.fromValueIriToArkUrl(valueUUID)
-      model.add(
-        subj = iriNode,
-        pred = arkUrlIri,
-        obj = nodeFactory.makeIriNode(iri = valueArkUrl)
-      )
+    }
+
+    val formatted = rdfFormatUtil.format(rdfModel = model, rdfFormat = Turtle)
+    new PrintWriter("/tmp/anything-data.ttl") {
+      write(formatted); close
     }
   }
 

@@ -82,6 +82,9 @@ DELETE {
         @* Delete the resource's last modification date so we can update it. *@
         ?resource knora-base:lastModificationDate ?resourceLastModificationDate .
 
+        @* Delete the UUID from the current version of the value, because the new version will store it. *@
+        ?currentValue knora-base:valueHasUUID ?currentValueUUID .
+
         @* Delete the permissions from the current version of the value, because the new version will store them. *@
         ?currentValue knora-base:hasPermissions ?currentValuePermissions .
 
@@ -94,6 +97,9 @@ DELETE {
             @* If any LinkValues need to be updated, detach them from the resource. *@
             @if(linkUpdate.linkValueExists) {
                 ?resource <@{linkUpdate.linkPropertyIri}Value> ?linkValue@linkValueIndex .
+
+                @* Delete the UUID from the current version of the link value, because the new version will store it. *@
+                ?linkValue@linkValueIndex knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
 
                 @* Delete the permissions from the current version of the link value, because the new version will store them. *@
                 ?linkValue@linkValueIndex knora-base:hasPermissions ?linkValuePermissions@linkValueIndex .
@@ -419,14 +425,13 @@ DELETE {
 
         @* Insert the value's owner and permissions. *@
         ?newValue knora-base:attachedToUser <@valueCreator> ;
-            knora-base:hasPermissions "@valuePermissions" .
+              knora-base:hasPermissions "@valuePermissions" ;
+              knora-base:valueHasUUID ?currentValueUUID .
 
         @* TODO: in case of a file value, order is not given *@
         ?newValue knora-base:valueHasOrder ?order .
 
         ?newValue knora-base:valueCreationDate "@currentTime"^^xsd:dateTime ;
-                  knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(newValueUUID)}" ;
-                  knora-base:arkUrl <@newValueArkUrl> ;
                   knora-base:previousValue ?currentValue .
 
         @* Insert direct links and LinkValues for resource references. *@
@@ -463,11 +468,14 @@ DELETE {
 
             *@
             @if(linkUpdate.linkValueExists) {
-                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex .
-            }
+                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex ;
+                                    knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
+            } else {
 
-            <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(linkUpdate.newLinkValueUUID)}" ;
-                                          knora-base:arkUrl  <@linkUpdate.newLinkValueArkUrl> .
+                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(linkUpdate.newLinkValueUUID)}" ;
+                                              knora-base:arkUrl  <@linkUpdate.newLinkValueArkUrl> .
+
+            }
 
             @* Attach the new LinkValue to its containing resource. *@
             ?resource <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
@@ -522,7 +530,8 @@ WHERE {
     @* Don't add a new version of a deleted value. *@
 
     ?currentValue knora-base:isDeleted false ;
-        knora-base:hasPermissions ?currentValuePermissions .
+                  knora-base:valueHasUUID ?currentValueUUID ;
+                  knora-base:hasPermissions ?currentValuePermissions .
 
     @*
 

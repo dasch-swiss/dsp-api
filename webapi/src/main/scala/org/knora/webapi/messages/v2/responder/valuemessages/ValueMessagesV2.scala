@@ -209,7 +209,10 @@ case class CreateValueResponseV2(valueIri: IRI,
             value = valueCreationDate.toString,
             datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
           ),
-          OntologyConstants.KnoraApiV2Complex.ArkUrl -> JsonLDString(valueArkUrl)
+          OntologyConstants.KnoraApiV2Complex.ArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+            value = valueArkUrl,
+            datatype = OntologyConstants.Xsd.Uri.toSmartIri
+          )
         )
       ),
       context = JsonLDUtil.makeContext(

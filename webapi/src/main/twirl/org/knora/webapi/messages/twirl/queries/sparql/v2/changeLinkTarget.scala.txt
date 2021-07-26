@@ -72,6 +72,9 @@ DELETE {
         @if(linkUpdateForCurrentLink.linkValueExists) {
             ?linkSource ?linkValueProperty ?currentLinkValueForCurrentLink .
 
+            @* Delete the UUID from the current version of the link value, because the new version will store it. *@
+            ?currentLinkValueForCurrentLink knora-base:valueHasUUID ?currentLinkUUID .
+
             @* Delete the permissions from the current version of the link value, because the new version will store them. *@
             ?currentLinkValueForCurrentLink knora-base:hasPermissions ?currentLinkPermissions .
         } else {
@@ -90,8 +93,7 @@ INSERT {
             knora-base:valueHasRefCount @linkUpdateForCurrentLink.newReferenceCount ;
             knora-base:valueCreationDate "@currentTime"^^xsd:dateTime ;
             knora-base:previousValue ?currentLinkValueForCurrentLink ;
-            knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(linkUpdateForCurrentLink.newLinkValueUUID)}" ;
-            knora-base:arkUrl <@linkUpdateForCurrentLink.newLinkValueArkUrl> ;
+            knora-base:valueHasUUID ?currentLinkUUID ;
             @if(linkUpdateForCurrentLink.newReferenceCount == 0) {
                 knora-base:deleteDate "@currentTime"^^xsd:dateTime ;
                 knora-base:deletedBy <@requestingUser> ;

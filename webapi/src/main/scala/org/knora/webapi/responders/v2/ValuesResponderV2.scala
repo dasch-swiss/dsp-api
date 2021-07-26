@@ -1013,7 +1013,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // Do the update.
 
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
-        newValueUUID: UUID = makeNewValueUUID(updateValuePermissionsV2.newValueVersionIri, None)
+        newValueUUID: UUID = makeNewValueUUID(updateValuePermissionsV2.newValueVersionIri,
+                                              updateValuePermissionsV2.newValueUUID)
         newValueIri: IRI <- checkOrCreateEntityIri(
           updateValuePermissionsV2.newValueVersionIri,
           stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID)))
@@ -2074,16 +2075,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                 valueInTriplestore.valueHasUUID == unverifiedValue.newValueUUID &&
                 valueInTriplestore.permissions == unverifiedValue.permissions &&
                 valueInTriplestore.attachedToUser == requestingUser.id)) {
-        /*
-                import org.knora.webapi.util.MessageUtil
-                println("==============================")
-                println("Submitted value:")
-                println(MessageUtil.toSource(unverifiedValue.valueContent))
-                println
-                println("==============================")
-                println("Saved value:")
-                println(MessageUtil.toSource(valueInTriplestore.valueContent))
-         */
         throw AssertionException(
           s"The value saved as ${unverifiedValue.newValueIri} is not the same as the one that was submitted")
       }
