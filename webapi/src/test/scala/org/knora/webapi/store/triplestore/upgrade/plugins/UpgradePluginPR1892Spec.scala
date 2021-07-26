@@ -55,50 +55,45 @@ class UpgradePluginPR1892Spec extends UpgradePluginSpec {
   "Upgrade plugin PR1892" should {
     "add ark url to the resource and its value" in {
       // Parse the input file.
-//      val model: RdfModel = trigFileToModel("test_data/upgrade/pr1892.trig")
-
-      val fileInputStream =
-        new BufferedInputStream(new FileInputStream("test_data/all_data/anything-data.ttl"))
-      val model: RdfModel = rdfFormatUtil.inputStreamToRdfModel(inputStream = fileInputStream, rdfFormat = Turtle)
-      fileInputStream.close()
+      val model: RdfModel = trigFileToModel("test_data/upgrade/pr1892.trig")
 
       // Use the plugin to transform the input.
       val plugin = new UpgradePluginPR1892(defaultFeatureFactoryConfig)
       plugin.transform(model)
-//      val resourceIri: IRI = "http://rdfh.ch/0001/a-test-thing"
-//      val resourceArkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl()
-//
-//      // Check that arkUrl is added to the resource
-//      checkIriNodeObject(
-//        model = model,
-//        subj = nodeFactory.makeIriNode(resourceIri),
-//        pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ArkUrl),
-//        expectedObj = nodeFactory.makeIriNode(resourceArkUrl)
-//      )
-//
-//      // Check that ark url is added to the value
-//      val valueUUID: UUID = stringFormatter.base64DecodeUuid("SGXSDj6Oj7A4QAU1Pi957Y")
-//      val valueIri: IRI = "http://rdfh.ch/0001/a-test-thing/values/SGXSDj6Oj7A4QAU1Pi957Y"
-//      val valueArkUrl = valueIri.toSmartIri.fromValueIriToArkUrl(valueUUID)
-//      checkIriNodeObject(
-//        model = model,
-//        subj = nodeFactory.makeIriNode(valueIri),
-//        pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ArkUrl),
-//        expectedObj = nodeFactory.makeIriNode(valueArkUrl)
-//      )
-//
-//      //Check that the old version without UUID does not have an ARK-URL.
-//      val oldValueIri: IRI = "http://rdfh.ch/0001/a-test-thing/values/pGXSDj6Oj7A4QAU1Pi957g"
-//      val maybeArkURL: Option[Statement] = model
-//        .find(
-//          subj = Some(nodeFactory.makeIriNode(oldValueIri)),
-//          pred = Some(nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ArkUrl)),
-//          obj = None
-//        )
-//        .toSet
-//        .headOption
-//
-//      assert(maybeArkURL.isEmpty)
+      val resourceIri: IRI = "http://rdfh.ch/0001/a-test-thing"
+      val resourceArkUrl = resourceIri.toSmartIri.fromResourceIriToArkUrl()
+
+      // Check that arkUrl is added to the resource
+      checkIriNodeObject(
+        model = model,
+        subj = nodeFactory.makeIriNode(resourceIri),
+        pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ArkUrl),
+        expectedObj = nodeFactory.makeIriNode(resourceArkUrl)
+      )
+
+      // Check that ark url is added to the value
+      val valueUUID: UUID = stringFormatter.base64DecodeUuid("SGXSDj6Oj7A4QAU1Pi957Y")
+      val valueIri: IRI = "http://rdfh.ch/0001/a-test-thing/values/SGXSDj6Oj7A4QAU1Pi957Y"
+      val valueArkUrl = valueIri.toSmartIri.fromValueIriToArkUrl(valueUUID)
+      checkIriNodeObject(
+        model = model,
+        subj = nodeFactory.makeIriNode(valueIri),
+        pred = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ArkUrl),
+        expectedObj = nodeFactory.makeIriNode(valueArkUrl)
+      )
+
+      //Check that the old version without UUID does not have an ARK-URL.
+      val oldValueIri: IRI = "http://rdfh.ch/0001/a-test-thing/values/pGXSDj6Oj7A4QAU1Pi957g"
+      val maybeArkURL: Option[Statement] = model
+        .find(
+          subj = Some(nodeFactory.makeIriNode(oldValueIri)),
+          pred = Some(nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ArkUrl)),
+          obj = None
+        )
+        .toSet
+        .headOption
+
+      assert(maybeArkURL.isEmpty)
     }
   }
 }

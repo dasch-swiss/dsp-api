@@ -26,9 +26,6 @@ import feature.FeatureFactoryConfig
 import exceptions.{BadRequestException, InconsistentRepositoryDataException}
 import store.triplestore.upgrade.UpgradePlugin
 
-import java.util.UUID
-import java.io.PrintWriter
-
 /**
   * Transforms a repository for Knora PR 1892.
   */
@@ -78,11 +75,6 @@ class UpgradePluginPR1892(featureFactoryConfig: FeatureFactoryConfig) extends Up
         // No. don't do anything
       }
 
-    }
-
-    val formatted = rdfFormatUtil.format(rdfModel = model, rdfFormat = Turtle)
-    new PrintWriter("/tmp/anything-data.ttl") {
-      write(formatted); close
     }
   }
 
