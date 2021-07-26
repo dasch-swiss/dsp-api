@@ -27,22 +27,23 @@
 @**
  * Inserts a new version of an existing value of a resource property.
  *
- * @param dataNamedGraph the named graph to update.
- * @param triplestore the name of the triplestore being used.
- * @param resourceIri the resource to update.
- * @param propertyIri the IRI of the property that points from the resource to the value.
- * @param currentValueIri the most recent existing version of the value.
- * @param newValueIri the new value IRI.
- * @param valueTypeIri the type of the new value.
- * @param permissionRelevantAssertions Permission-relevant assertions, i.e. owner and project plus permissions, in
- *        the form of a list of tuples (predicate, object).
- * @param value the value to insert.
- * @param an optional comment on the new value.
- * @param linkUpdates a list of [[SparqlTemplateLinkUpdate]] objects describing links and LinkValues that need to be
- *        updated for resource references in standoff markup.
- * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
- * @param requestingUser the IRI of the user making the request.
- * @param stringFormatter a [[StringFormatter]].
+ * @param dataNamedGraph                the named graph to update.
+ * @param triplestore                   the name of the triplestore being used.
+ * @param resourceIri                   the resource to update.
+ * @param propertyIri                   the IRI of the property that points from the resource to the value.
+ * @param currentValueIri               the most recent existing version of the value.
+ * @param newValueIri                   the new value IRI.
+  * @param newValueArkUrl               the new value Ark-Url.
+ * @param valueTypeIri                  the type of the new value.
+ * @param permissionRelevantAssertions  Permission-relevant assertions, i.e. owner and project plus permissions, in
+ *                                      the form of a list of tuples (predicate, object).
+ * @param value                         the value to insert.
+ * @param maybeComment                  an optional comment on the new value.
+ * @param linkUpdates                   a list of [[SparqlTemplateLinkUpdate]] objects describing links and LinkValues
+ *                                      that need to be updated for resource references in standoff markup.
+ * @param currentTime                   an xsd:dateTimeStamp that will be attached to the resources.
+ * @param requestingUser                the IRI of the user making the request.
+ * @param stringFormatter               a [[StringFormatter]].
  *
  * This operation will do nothing if `currentValueIri` is not in fact the most recent version, if `valueTypeIri` is
  * the wrong type for the property, or if the resource or the current value are nonexistent or marked as deleted. To
@@ -54,7 +55,6 @@
   propertyIri: SmartIri,
   currentValueIri: IRI,
   newValueIri: IRI,
-  newValueUUID: UUID,
   newValueArkUrl: IRI,
   valueTypeIri: SmartIri,
   value: ValueContentV2,
@@ -111,7 +111,8 @@ DELETE {
         ?newValue rdf:type <@value.valueType> ;
             knora-base:isDeleted false  ;
             knora-base:valueHasString """@value.valueHasString""" ;
-            knora-base:valueHasUUID ?currentValueUUID .
+            knora-base:valueHasUUID ?currentValueUUID ;
+            knora-base:arkUrl <@newValueArkUrl> .
 
         @{
             org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForValueContent(value = value,

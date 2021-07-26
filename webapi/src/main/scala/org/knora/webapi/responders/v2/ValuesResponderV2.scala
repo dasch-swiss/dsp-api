@@ -1315,7 +1315,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         newValueVersionIri,
         stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID)))
 
-      newValueArkUrl = newValueIri.toSmartIri.fromValueIriToArkUrl(newValueUUID)
+      newValueArkUrl = newValueIri.toSmartIri.fromValueIriToArkUrl(currentValue.valueHasUUID)
 
       // If we're updating a text value, update direct links and LinkValues for any resource references in Standoff.
       standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- (currentValue.valueContent, newValueVersion) match {
@@ -1378,7 +1378,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
           propertyIri = propertyIri,
           currentValueIri = currentValue.valueIri,
           newValueIri = newValueIri,
-          newValueUUID = newValueUUID,
           newValueArkUrl = newValueArkUrl,
           valueTypeIri = newValueVersion.valueType,
           value = newValueVersion,

@@ -33,7 +33,6 @@
  * @param propertyIri                   the IRI of the property that points from the resource to the value.
  * @param currentValueIri               the most recent existing version of the value.
  * @param newValueIri                   the new value IRI.
- * @param newValueUUID                  the new value UUID.
  * @param newValueArkUrl                the new value Ark-Url.
  * @param valueTypeIri                  the type of the new value.
  * @param permissionRelevantAssertions  Permission-relevant assertions, i.e. owner and project plus permissions, in
@@ -56,7 +55,6 @@
   propertyIri: IRI,
   currentValueIri: IRI,
   newValueIri: IRI,
-  newValueUUID : UUID,
   newValueArkUrl : IRI,
   valueTypeIri: IRI,
   value: UpdateValueV1,
@@ -426,7 +424,8 @@ DELETE {
         @* Insert the value's owner and permissions. *@
         ?newValue knora-base:attachedToUser <@valueCreator> ;
               knora-base:hasPermissions "@valuePermissions" ;
-              knora-base:valueHasUUID ?currentValueUUID .
+              knora-base:valueHasUUID ?currentValueUUID ;
+              knora-base:arkUrl <@newValueArkUrl> .
 
         @* TODO: in case of a file value, order is not given *@
         ?newValue knora-base:valueHasOrder ?order .

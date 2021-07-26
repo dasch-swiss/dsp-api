@@ -874,7 +874,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             )
         }
 
-        currentValueQueryResult = maybeCurrentValueQueryResult.getOrElse(
+        currentValueQueryResult: ValueQueryResult = maybeCurrentValueQueryResult.getOrElse(
           throw NotFoundException(s"Value ${changeValueRequest.valueIri} not found (it may have been deleted)"))
 
         _ = if (!PermissionUtilADM.impliesPermissionCodeV1(
@@ -1007,6 +1007,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
               resourceIri = findResourceWithValueResult.resourceIri,
               propertyIri = propertyIri,
               currentLinkValueV1 = currentLinkValueQueryResult.value,
+              currentValueUUID = currentValueQueryResult.valueUUID,
               linkUpdateV1 = linkUpdateV1,
               comment = changeValueRequest.comment,
               valueCreator = userIri,
@@ -1031,6 +1032,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
               resourceIri = findResourceWithValueResult.resourceIri,
               propertyIri = propertyIri,
               currentValueIri = changeValueRequest.valueIri,
+              currentValueUUID = currentValueQueryResult.valueUUID,
               currentValueV1 = currentValueQueryResult.value,
               updateValueV1 = changeValueRequest.value,
               comment = changeValueRequest.comment,
@@ -1579,6 +1581,11 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
     def projectIri: IRI
 
     /**
+      * The UUID of the value.
+      */
+    def valueUUID: Option[UUID]
+
+    /**
       * An optional comment describing the value.
       */
     def comment: Option[String]
@@ -1601,6 +1608,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
   case class BasicValueQueryResult(value: ApiValueV1,
                                    creatorIri: IRI,
                                    creationDate: String,
+                                   valueUUID: Option[UUID],
                                    projectIri: IRI,
                                    comment: Option[String],
                                    permissionRelevantAssertions: Seq[(IRI, IRI)],
@@ -1617,6 +1625,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                   linkValueIri: IRI,
                                   creatorIri: IRI,
                                   creationDate: String,
+                                  valueUUID: Option[UUID],
                                   projectIri: IRI,
                                   comment: Option[String],
                                   directLinkExists: Boolean,
@@ -1862,12 +1871,20 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
               s"The resource containing value $valueIri has no knora-base:attachedToProject"))
 
         // Get the value's creation date.
-        creationDate = getValuePredicateObject(
+        creationDate: IRI = getValuePredicateObject(
           predicateIri = OntologyConstants.KnoraBase.ValueCreationDate,
           rows = rows).getOrElse(throw InconsistentRepositoryDataException(s"Value $valueIri has no valueCreationDate"))
 
         // Get the optional comment on the value.
-        comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
+        comment: Option[IRI] = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment,
+                                                       rows = rows)
+
+        // Get the UUID of the value. Since value versions don't have their own UUID, this is optional.
+        uuid: Option[UUID] = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasUUID,
+                                                     rows = rows) match {
+          case Some(valueUUID) => Some(stringFormatter.base64DecodeUuid(valueUUID))
+          case None            => None
+        }
 
         // Get the value's permission-relevant assertions.
         assertions = PermissionUtilADM.filterPermissionRelevantAssertionsFromValueProps(valueProps)
@@ -1909,6 +1926,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             value = value,
             creatorIri = creatorIri,
             creationDate = creationDate,
+            valueUUID = uuid,
             comment = comment,
             projectIri = projectIri,
             permissionRelevantAssertions = assertions,
@@ -1978,6 +1996,12 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // Get the optional comment on the value.
         comment = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasComment, rows = rows)
 
+        // Get the UUID of the value.
+        valueUUID = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasUUID, rows = rows) match {
+          case Some(uuid) => Some(stringFormatter.base64DecodeUuid(uuid))
+          case None       => None
+        }
+
         // Get the value's permission-relevant assertions.
         permissionRelevantAssertions = PermissionUtilADM.filterPermissionRelevantAssertionsFromValueProps(valueProps)
 
@@ -2004,6 +2028,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             creatorIri = creatorIri,
             creationDate = creationDate,
             comment = comment,
+            valueUUID = valueUUID,
             projectIri = projectIri,
             directLinkExists = directLinkExists,
             targetResourceClass = targetResourceClass,
@@ -2456,6 +2481,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                            currentLinkValueV1: LinkValueV1,
                                            linkUpdateV1: LinkUpdateV1,
                                            comment: Option[String],
+                                           currentValueUUID: Option[UUID],
                                            valueCreator: IRI,
                                            valuePermissions: String,
                                            featureFactoryConfig: FeatureFactoryConfig,
@@ -2570,6 +2596,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                                currentValueV1: ApiValueV1,
                                                updateValueV1: UpdateValueV1,
                                                comment: Option[String],
+                                               currentValueUUID: Option[UUID],
                                                valueCreator: IRI,
                                                valuePermissions: String,
                                                featureFactoryConfig: FeatureFactoryConfig,
@@ -2653,7 +2680,11 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       currentTime: String = Instant.now.toString
 
       // Generate random UUID for it.
-      newValueUUID = UUID.randomUUID
+      newValueUUID: UUID = currentValueUUID match {
+        case Some(currentValueUUID: UUID) => currentValueUUID
+        case None                         => UUID.randomUUID
+      }
+
       // Generate an IRI for the new version of the value.
       newValueIri = stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID))
       // Generate an ARK URL for it.
@@ -2668,7 +2699,6 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
           propertyIri = propertyIri,
           currentValueIri = currentValueIri,
           newValueIri = newValueIri,
-          newValueUUID = newValueUUID,
           newValueArkUrl = newValueArkUrl,
           valueTypeIri = updateValueV1.valueTypeIri,
           value = updateValueV1,
@@ -2682,14 +2712,8 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         )
         .toString()
 
-      /*
-            _ = println("================ Update value ================")
-            _ = println(sparqlUpdate)
-            _ = println("==============================================")
-       */
-
       // Do the update.
-      sparqlUpdateResponse <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
+      _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
       // To find out whether the update succeeded, look for the new value in the triplestore.
       verifyUpdateResult <- verifyOrdinaryValueUpdate(
@@ -2842,7 +2866,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                  userProfile: UserADM): Future[SparqlTemplateLinkUpdate] = {
     for {
       // Query the LinkValue to ensure that it exists and to get its contents.
-      maybeLinkValueQueryResult <- findLinkValueByLinkTriple(
+      maybeLinkValueQueryResult: Option[LinkValueQueryResult] <- findLinkValueByLinkTriple(
         subjectIri = sourceResourceIri,
         predicateIri = linkPropertyIri,
         objectIri = targetResourceIri,
@@ -2863,8 +2887,11 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
           // resources should be removed.
           val deleteDirectLink = linkValueQueryResult.directLinkExists && newReferenceCount == 0
 
-          // Generate random UUID for the new LinkValue.
-          val newValueUUID = UUID.randomUUID
+          // Get the current UUID of the link value or generate a random UUID for the new LinkValue.
+          val newValueUUID = linkValueQueryResult.valueUUID match {
+            case Some(currentUUID) => currentUUID
+            case None              => UUID.randomUUID
+          }
           // Generate an IRI for the new LinkValue.
           val newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri, Some(newValueUUID))
           // Generate an ARK-URL for the new LinkValue.
