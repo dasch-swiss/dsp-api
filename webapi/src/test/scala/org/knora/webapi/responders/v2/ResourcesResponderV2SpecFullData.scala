@@ -386,8 +386,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/0803/2a6221216701/values/c4c794a49405",
           valueHasUUID = stringFormatter.decodeUuid("c4c794a49405"),
-          valueArkUrl = "http://rdfh.ch/0803/2a6221216701/values/019e416b9405".toSmartIri
-            .fromValueIriToArkUrl(stringFormatter.decodeUuid("019e416b9405")),
+          valueArkUrl = "http://rdfh.ch/0803/2a6221216701/values/c4c794a49405".toSmartIri
+            .fromValueIriToArkUrl(stringFormatter.decodeUuid("c4c794a49405")),
           permissions =
             "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
           userPermission = ChangeRightsPermission,

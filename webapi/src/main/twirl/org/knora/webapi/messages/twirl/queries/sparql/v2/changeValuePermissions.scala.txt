@@ -42,8 +42,6 @@
   currentValueIri: IRI,
   valueTypeIri: SmartIri,
   newValueIri: IRI,
-  newValueUUID: UUID,
-  newValueArkUrl: IRI,
   newPermissions: String,
   currentTime: Instant,
   stringFormatter: StringFormatter)

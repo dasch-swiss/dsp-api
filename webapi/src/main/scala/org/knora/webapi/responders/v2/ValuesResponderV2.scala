@@ -543,7 +543,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         linkPropertyIri = linkPropertyIri,
         targetResourceIri = linkValueContent.referredResourceIri,
         customNewLinkValueIri = maybeValueIri,
-        customNewLinkValueUUID = maybeValueUUID,
         valueCreator = valueCreator,
         valuePermissions = valuePermissions,
         requestingUser = requestingUser
@@ -1013,12 +1012,12 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         // Do the update.
 
         dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(resourceInfo.projectADM)
-        newValueUUID: UUID = makeNewValueUUID(updateValuePermissionsV2.newValueVersionIri,
-                                              updateValuePermissionsV2.newValueUUID)
-        newValueIri: IRI <- checkOrCreateEntityIri(
-          updateValuePermissionsV2.newValueVersionIri,
-          stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID)))
-        newValueArkUrl = newValueIri.toSmartIri.fromValueIriToArkUrl(newValueUUID)
+
+        newValueIri: IRI <- checkOrCreateEntityIri(updateValuePermissionsV2.newValueVersionIri,
+                                                   stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
+
+        //new version of the value has the same ARK URl as its previous version.
+        newValueArkUrl = newValueIri.toSmartIri.fromValueIriToArkUrl(currentValue.valueHasUUID)
 
         currentTime: Instant = updateValuePermissionsV2.valueCreationDate.getOrElse(Instant.now)
 
@@ -1031,8 +1030,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             currentValueIri = currentValue.valueIri,
             valueTypeIri = currentValue.valueContent.valueType,
             newValueIri = newValueIri,
-            newValueUUID = newValueUUID,
-            newValueArkUrl = newValueArkUrl,
             newPermissions = newValuePermissionLiteral,
             currentTime = currentTime,
             stringFormatter = stringFormatter
@@ -1063,7 +1060,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         UpdateValueResponseV2(
           valueIri = verifiedValue.newValueIri,
           valueType = unverifiedValue.valueContent.valueType,
-          valueUUID = newValueUUID,
+          valueUUID = unverifiedValue.newValueUUID,
           projectADM = resourceInfo.projectADM,
           valueArkUrl = newValueArkUrl
         )
@@ -1211,7 +1208,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
               valuePermissions = newValueVersionPermissionLiteral,
               valueCreationDate = updateValueContentV2.valueCreationDate,
               newValueVersionIri = updateValueContentV2.newValueVersionIri,
-              newValueVersionUUID = updateValueContentV2.newValueUUID,
               requestingUser = updateValueRequest.requestingUser
             )
 
@@ -1226,7 +1222,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
               valuePermissions = newValueVersionPermissionLiteral,
               valueCreationDate = updateValueContentV2.valueCreationDate,
               newValueVersionIri = updateValueContentV2.newValueVersionIri,
-              newValueVersionUUID = updateValueContentV2.newValueUUID,
               requestingUser = updateValueRequest.requestingUser
             )
         }
@@ -1307,13 +1302,11 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                                valuePermissions: String,
                                                valueCreationDate: Option[Instant],
                                                newValueVersionIri: Option[SmartIri],
-                                               newValueVersionUUID: Option[UUID],
                                                requestingUser: UserADM): Future[UnverifiedValueV2] = {
-    val newValueUUID: UUID = makeNewValueUUID(newValueVersionIri, newValueVersionUUID)
+
     for {
-      newValueIri: IRI <- checkOrCreateEntityIri(
-        newValueVersionIri,
-        stringFormatter.makeRandomValueIri(resourceInfo.resourceIri, Some(newValueUUID)))
+      newValueIri: IRI <- checkOrCreateEntityIri(newValueVersionIri,
+                                                 stringFormatter.makeRandomValueIri(resourceInfo.resourceIri))
 
       newValueArkUrl = newValueIri.toSmartIri.fromValueIriToArkUrl(currentValue.valueHasUUID)
 
@@ -1391,19 +1384,13 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         )
         .toString()
 
-      /*
-            _ = println("================ Update value ================")
-            _ = println(sparqlUpdate)
-            _ = println("==============================================")
-       */
-
       // Do the update.
       _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
 
     } yield
       UnverifiedValueV2(
         newValueIri = newValueIri,
-        newValueUUID = newValueUUID,
+        newValueUUID = currentValue.valueHasUUID,
         valueContent = newValueVersion.unescape,
         permissions = valuePermissions,
         creationDate = currentTime,
@@ -1423,7 +1410,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     * @param valuePermissions   the literal that should be used as the object of the new link value's `knora-base:hasPermissions` predicate.
     * @param valueCreationDate  a custom value creation date.
     * @param newValueVersionIri an optional IRI to be used for the new value version.
-    * @param newValueVersionUUID       an optional UUID to be attached to the new value version.
     * @param requestingUser     the user making the request.
     * @return an [[UnverifiedValueV2]].
     */
@@ -1436,7 +1422,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                            valuePermissions: String,
                                            valueCreationDate: Option[Instant],
                                            newValueVersionIri: Option[SmartIri],
-                                           newValueVersionUUID: Option[UUID],
                                            requestingUser: UserADM): Future[UnverifiedValueV2] = {
 
     // Are we changing the link target?
@@ -1458,7 +1443,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
           linkPropertyIri = linkPropertyIri,
           targetResourceIri = newLinkValue.referredResourceIri,
           customNewLinkValueIri = newValueVersionIri,
-          customNewLinkValueUUID = newValueVersionUUID,
           valueCreator = valueCreator,
           valuePermissions = valuePermissions,
           requestingUser = requestingUser
@@ -1484,12 +1468,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             )
             .toString())
 
-        /*
-                _ = println("================ Update link ================")
-                _ = println(sparqlUpdate)
-                _ = println("==============================================")
-         */
-
         _ <- (storeManager ? SparqlUpdateRequest(sparqlUpdate)).mapTo[SparqlUpdateResponse]
       } yield
         UnverifiedValueV2(
@@ -1508,7 +1486,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
           linkPropertyIri = linkPropertyIri,
           targetResourceIri = currentLinkValue.valueContent.referredResourceIri,
           customNewLinkValueIri = newValueVersionIri,
-          customNewLinkValueUUID = newValueVersionUUID,
           valueCreator = valueCreator,
           valuePermissions = valuePermissions,
           requestingUser = requestingUser
@@ -2289,8 +2266,15 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       linkPropertyIri = linkPropertyIri,
       targetResourceIri = targetResourceIri
     )
-    val newLinkValueUUID: UUID = makeNewValueUUID(customNewLinkValueIri, customNewLinkValueUUID)
+    // Does linkValue exist?
+    val newLinkValueUUID: UUID = maybeLinkValueInfo match {
+      //Yes. use its UUID for the new value version; i.e. for new value IRI, for UUID of the value, and its ark url.
+      case Some(linkInfo) => linkInfo.valueHasUUID
+      // No. get the uuid given in custom value IRI, or make a random one and use that for the new version of the value.
+      case None => makeNewValueUUID(customNewLinkValueIri, customNewLinkValueUUID)
+    }
     for {
+
       // Make an IRI for the new LinkValue.
       newLinkValueIri: IRI <- checkOrCreateEntityIri(
         customNewLinkValueIri,
@@ -2438,7 +2422,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
                                       linkPropertyIri: SmartIri,
                                       targetResourceIri: IRI,
                                       customNewLinkValueIri: Option[SmartIri] = None,
-                                      customNewLinkValueUUID: Option[UUID] = None,
                                       valueCreator: IRI,
                                       valuePermissions: String,
                                       requestingUser: UserADM): Future[SparqlTemplateLinkUpdate] = {
@@ -2454,13 +2437,13 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     maybeLinkValueInfo match {
       case Some(linkValueInfo) =>
         // Yes. Make a SparqlTemplateLinkUpdate.
-        // Make a new UUID for the linkValue.
-        val newLinkValueUUID: UUID = makeNewValueUUID(customNewLinkValueIri, customNewLinkValueUUID)
+        // use the uuid of the found link value for new version of the value.
+        val newLinkValueUUID: UUID = linkValueInfo.valueHasUUID
         for {
           // If no custom IRI was provided, generate an IRI for the new LinkValue.
           newLinkValueIri: IRI <- checkOrCreateEntityIri(
             customNewLinkValueIri,
-            stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri, Some(newLinkValueUUID)))
+            stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri))
           // Make an Ark-URL for the new LinkValue version IRI.
           newLinkValueArkUrl = newLinkValueIri.toSmartIri.fromValueIriToArkUrl(newLinkValueUUID)
 

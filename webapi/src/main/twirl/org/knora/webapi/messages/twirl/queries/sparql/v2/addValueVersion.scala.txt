@@ -164,20 +164,17 @@ DELETE {
             <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
                 knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .
 
+            <@linkUpdate.newLinkValueIri> knora-base:arkUrl <@linkUpdate.newLinkValueArkUrl> .
+            <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(linkUpdate.newLinkValueUUID)}" .
+
             @*
 
-               If we're inserting a new version of an existing LinkValue, attach it to the previous version,
-               and use the previous version's UUID. Otherwise, make a random UUID.
-
+               If we're inserting a new version of an existing LinkValue, attach it to the previous version.
             *@
             @if(linkUpdate.linkValueExists) {
-                     <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex ;
-                                    knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
-            } else {
-
-            <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(linkUpdate.newLinkValueUUID)}" ;
-                                          knora-base:arkUrl <@linkUpdate.newLinkValueArkUrl> .
+                     <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex .
             }
+
             @* Attach the new LinkValue to its containing resource. *@
             ?resource <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .
         }
@@ -296,6 +293,7 @@ WHERE {
                 knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
                 knora-base:isDeleted false ;
                 knora-base:valueHasUUID ?linkValueUUID@linkValueIndex ;
+                knora-base:arkUrl       ?linkArkUrl@linkValueIndex ;
                 knora-base:hasPermissions ?linkValuePermissions@linkValueIndex .
         } else {
             @* Make sure there is no such knora-base:LinkValue. *@

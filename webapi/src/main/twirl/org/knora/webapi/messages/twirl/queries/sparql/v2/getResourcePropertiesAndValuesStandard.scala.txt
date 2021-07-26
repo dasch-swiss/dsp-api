@@ -93,7 +93,7 @@ CONSTRUCT {
 
     ?valueObject ?valueObjectProperty ?valueObjectValue ;
         knora-base:valueHasUUID ?currentValueUUID ;
-        knora-base:arkUrl       ?valueArkUrl ;
+        knora-base:arkUrl       ?currentValueArkUrl ;
         knora-base:hasPermissions ?currentValuePermissions .
 
     @if(maybeStandoffMinStartIndex.nonEmpty) {
@@ -182,8 +182,9 @@ CONSTRUCT {
                         }
                     }
 
-                    @* Get the current version's UUID, because we're going to return it with the requested version. *@
+                    @* Get the current version's UUID and ark URL, because we're going to return them with the requested version. *@
                     ?currentValue knora-base:valueHasUUID ?currentValueUUID .
+                    ?currentValue knora-base:arkUrl  ?currentValueArkUrl .
 
                     @* Filter by value UUID if requested. *@
                     @maybeValueUuid match {
@@ -197,7 +198,7 @@ CONSTRUCT {
                     @* In each value's history, find a version that was created on or before the target date. *@
                     ?currentValue knora-base:previousValue* ?valueObject .
                     ?valueObject knora-base:valueCreationDate ?valueObjectCreationDate .
-                    ?valueObject knora-base:arkUrl  ?valueArkUrl .
+
                     FILTER(?valueObjectCreationDate <= "@versionDate"^^xsd:dateTime)
 
                     @*
@@ -246,7 +247,7 @@ CONSTRUCT {
                     }
 
                     ?valueObject knora-base:hasPermissions ?currentValuePermissions .
-                    ?valueObject knora-base:arkUrl ?valueArkUrl .
+                    ?valueObject knora-base:arkUrl ?currentValueArkUrl .
                 }
             }
 

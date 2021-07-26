@@ -311,9 +311,6 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
               )
             }
 
-          // Get the custom value UUID if provided.
-          val maybeCustomUUID: Option[UUID] = jsonLDObject.maybeUUID(OntologyConstants.KnoraApiV2Complex.ValueHasUUID)
-
           // Aside from the value's ID and type and the optional predicates above, does the value object just
           // contain knora-api:hasPermissions?
 
@@ -342,8 +339,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                 valueType = valueType,
                 permissions = permissions,
                 valueCreationDate = maybeValueCreationDate,
-                newValueVersionIri = maybeNewIri,
-                newValueUUID = maybeCustomUUID
+                newValueVersionIri = maybeNewIri
               )
             )
           } else {
@@ -372,8 +368,7 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
                 valueContent = valueContent,
                 permissions = maybePermissions,
                 valueCreationDate = maybeValueCreationDate,
-                newValueVersionIri = maybeNewIri,
-                newValueUUID = maybeCustomUUID
+                newValueVersionIri = maybeNewIri
               )
           }
       }
@@ -1003,7 +998,6 @@ trait UpdateValueV2 {
   *                           the current time will be used.
   * @param newValueVersionIri an optional IRI to be used for the new value version. If not provided, a random IRI
   *                           will be generated.
-  * @param newValueUUID       the new UUID that should be attached to the new version of the value.
   */
 case class UpdateValueContentV2(resourceIri: IRI,
                                 resourceClassIri: SmartIri,
@@ -1012,8 +1006,7 @@ case class UpdateValueContentV2(resourceIri: IRI,
                                 valueContent: ValueContentV2,
                                 permissions: Option[String] = None,
                                 valueCreationDate: Option[Instant] = None,
-                                newValueVersionIri: Option[SmartIri] = None,
-                                newValueUUID: Option[UUID] = None)
+                                newValueVersionIri: Option[SmartIri] = None)
     extends IOValueV2
     with UpdateValueV2
 
@@ -1040,8 +1033,7 @@ case class UpdateValuePermissionsV2(resourceIri: IRI,
                                     valueType: SmartIri,
                                     permissions: String,
                                     valueCreationDate: Option[Instant] = None,
-                                    newValueVersionIri: Option[SmartIri] = None,
-                                    newValueUUID: Option[UUID] = None)
+                                    newValueVersionIri: Option[SmartIri] = None)
     extends UpdateValueV2
 
 /**
