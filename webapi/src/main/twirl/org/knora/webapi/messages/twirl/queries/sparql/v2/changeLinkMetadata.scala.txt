@@ -81,6 +81,7 @@ INSERT {
             knora-base:valueCreationDate "@currentTime"^^xsd:dateTime ;
             knora-base:previousValue ?currentLinkValue ;
             knora-base:valueHasUUID ?currentLinkUUID ;
+            knora-base:arkUrl <@linkUpdate.newLinkValueArkUrl> ;
             knora-base:isDeleted false ;
             @maybeComment match {
                 case Some(comment) => {

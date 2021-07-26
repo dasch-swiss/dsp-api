@@ -125,7 +125,8 @@ DELETE {
 
             @if(linkUpdate.linkValueExists) {
                 <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex ;
-                                               knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
+                                               knora-base:valueHasUUID ?linkValueUUID@linkValueIndex ;
+                                              knora-base:arkUrl <@linkUpdate.newLinkValueArkUrl> .
             } else {
                 @{throw SparqlGenerationException(s"linkUpdate.linkValueExists must be true in this SPARQL template"); ()}
             }
