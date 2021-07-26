@@ -2048,7 +2048,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         .getOrElse(throw UpdateNotPerformedException())
 
       _ = if (!(unverifiedValue.valueContent.wouldDuplicateCurrentVersion(valueInTriplestore.valueContent) &&
-                valueInTriplestore.valueHasUUID == unverifiedValue.newValueUUID &&
                 valueInTriplestore.permissions == unverifiedValue.permissions &&
                 valueInTriplestore.attachedToUser == requestingUser.id)) {
         throw AssertionException(
@@ -2276,9 +2275,8 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     for {
 
       // Make an IRI for the new LinkValue.
-      newLinkValueIri: IRI <- checkOrCreateEntityIri(
-        customNewLinkValueIri,
-        stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri, Some(newLinkValueUUID)))
+      newLinkValueIri: IRI <- checkOrCreateEntityIri(customNewLinkValueIri,
+                                                     stringFormatter.makeRandomValueIri(sourceResourceInfo.resourceIri))
 
       newLinkValueArkUrl: IRI = newLinkValueIri.toSmartIri.fromValueIriToArkUrl(newLinkValueUUID)
 
@@ -2373,13 +2371,13 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
         val deleteDirectLink = newReferenceCount == 0
 
         // Generate a random UUID
-        val newLinkValueUUID = UUID.randomUUID
+        val linkValueUUID = linkValueInfo.valueHasUUID
         for {
 
           // Generate an IRI for the new LinkValue.
           newLinkValueIri: IRI <- makeUnusedValueIri(sourceResourceInfo.resourceIri)
           // Generate an Ark-URL for the new LinkValue.
-          newLinkValueArkUrl = newLinkValueIri.toSmartIri.fromValueIriToArkUrl(newLinkValueUUID)
+          newLinkValueArkUrl = newLinkValueIri.toSmartIri.fromValueIriToArkUrl(linkValueUUID)
         } yield
           SparqlTemplateLinkUpdate(
             linkPropertyIri = linkPropertyIri,
@@ -2389,7 +2387,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             linkValueExists = true,
             linkTargetExists = true,
             newLinkValueIri = newLinkValueIri,
-            newLinkValueUUID = newLinkValueUUID,
+            newLinkValueUUID = linkValueUUID,
             newLinkValueArkUrl = newLinkValueArkUrl,
             linkTargetIri = targetResourceIri,
             currentReferenceCount = linkValueInfo.valueHasRefCount,
