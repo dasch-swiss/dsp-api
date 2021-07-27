@@ -1882,8 +1882,11 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         // Get the UUID of the value. Since value versions don't have their own UUID, this is optional.
         uuid: Option[UUID] = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasUUID,
                                                      rows = rows) match {
-          case Some(valueUUID) => Some(stringFormatter.base64DecodeUuid(valueUUID))
-          case None            => None
+          case Some(valueUUID: String) =>
+            Some(
+              stringFormatter.decodeUuidWithErr(valueUUID,
+                                                throw BadRequestException(s"$valueUUID is not a base64 uuid")))
+          case None => None
         }
 
         // Get the value's permission-relevant assertions.
@@ -1998,8 +2001,11 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
 
         // Get the UUID of the value.
         valueUUID = getValuePredicateObject(predicateIri = OntologyConstants.KnoraBase.ValueHasUUID, rows = rows) match {
-          case Some(uuid) => Some(stringFormatter.base64DecodeUuid(uuid))
-          case None       => None
+          case Some(uuid) =>
+            Some(
+              stringFormatter.decodeUuidWithErr(uuid, throw BadRequestException(s"$uuid is not a base64 uuid"))
+            )
+          case None => None
         }
 
         // Get the value's permission-relevant assertions.
@@ -2686,7 +2692,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
       }
 
       // Generate an IRI for the new version of the value.
-      newValueIri = stringFormatter.makeRandomValueIri(resourceIri, Some(newValueUUID))
+      newValueIri = stringFormatter.makeRandomValueIri(resourceIri)
       // Generate an ARK URL for it.
       newValueArkUrl = newValueIri.toSmartIri.fromValueIriToArkUrl(newValueUUID)
 
@@ -2764,7 +2770,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
                                  userProfile: UserADM): Future[SparqlTemplateLinkUpdate] = {
     for {
       // Check whether a LinkValue already exists for this link.
-      maybeLinkValueQueryResult <- findLinkValueByLinkTriple(
+      maybeLinkValueQueryResult: Option[LinkValueQueryResult] <- findLinkValueByLinkTriple(
         subjectIri = sourceResourceIri,
         predicateIri = linkPropertyIri,
         objectIri = targetResourceIri,
@@ -2779,19 +2785,23 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
         userProfile = userProfile
       )
 
-      // Generate random UUID for the new LinkValue.
-      newValueUUID = UUID.randomUUID
+      // Keep the UUID of the LinkValue.
+      newValueUUID: UUID = maybeLinkValueQueryResult match {
+        case Some(linkValueQueryResult) => linkValueQueryResult.valueUUID.getOrElse(UUID.randomUUID())
+        case None                       => UUID.randomUUID()
+      }
 
       // Generate an IRI for the new LinkValue.
-      newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri, Some(newValueUUID))
+      newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri)
 
       // Generate an ARK-URL for the new LinkValue.
       newValueArkUrl = newLinkValueIri.toSmartIri.fromValueIriToArkUrl(newValueUUID)
 
       linkUpdate = maybeLinkValueQueryResult match {
         case Some(linkValueQueryResult) =>
-          // There's already a LinkValue for links between these two resources. Increment
-          // its reference count.
+          // There's already a LinkValue for links between these two resources.
+
+          // Increment reference count of the LinkValue.
           val currentReferenceCount = linkValueQueryResult.value.referenceCount
           val newReferenceCount = currentReferenceCount + 1
           val insertDirectLink = !linkValueQueryResult.directLinkExists
@@ -2893,7 +2903,7 @@ class ValuesResponderV1(responderData: ResponderData) extends Responder(responde
             case None              => UUID.randomUUID
           }
           // Generate an IRI for the new LinkValue.
-          val newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri, Some(newValueUUID))
+          val newLinkValueIri = stringFormatter.makeRandomValueIri(sourceResourceIri)
           // Generate an ARK-URL for the new LinkValue.
           val newValueArkUrl = newLinkValueIri.toSmartIri.fromValueIriToArkUrl(newValueUUID)
 

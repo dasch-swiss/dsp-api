@@ -63,7 +63,7 @@
         <@newValueIri> rdf:type <@value.valueTypeIri> ;
             knora-base:isDeleted false  ;
             knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(newValueUUID)}" ;
-            knora-base:arkUrl  <@newValueArkUrl>
+            knora-base:arkUrl  <@newValueArkUrl> ;
             knora-base:valueHasString """@value.toString""" .
 
         @value match {

@@ -328,7 +328,7 @@ DELETE {
 
                @videoFileValue.fps match {
                     case Some(definedFps) => {
-                        newValue knora-base:fps """@definedFps""" .
+                        ?newValue knora-base:fps """@definedFps""" .
                         }
 
                     case None => {}
@@ -470,11 +470,10 @@ DELETE {
                 <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex ;
                                     knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
             } else {
-
-                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(linkUpdate.newLinkValueUUID)}" ;
-                                              knora-base:arkUrl  <@linkUpdate.newLinkValueArkUrl> .
-
+                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(linkUpdate.newLinkValueUUID)}" .
             }
+
+            <@linkUpdate.newLinkValueIri> knora-base:arkUrl  <@linkUpdate.newLinkValueArkUrl> .
 
             @* Attach the new LinkValue to its containing resource. *@
             ?resource <@{linkUpdate.linkPropertyIri}Value> <@linkUpdate.newLinkValueIri> .

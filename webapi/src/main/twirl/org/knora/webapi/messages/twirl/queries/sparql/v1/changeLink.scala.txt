@@ -93,6 +93,7 @@ INSERT {
             knora-base:valueCreationDate "@currentTime"^^xsd:dateTime ;
             knora-base:previousValue ?currentLinkValueForCurrentLink ;
             knora-base:valueHasUUID ?currentLinkUUID ;
+            knora-base:arkUrl <@linkUpdateForCurrentLink.newLinkValueArkUrl> ;
             @if(linkUpdateForCurrentLink.newReferenceCount == 0) {
                 knora-base:deleteDate "@currentTime"^^xsd:dateTime ;
                 knora-base:deletedBy <@requestingUser> ;
