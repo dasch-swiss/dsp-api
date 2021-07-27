@@ -1682,7 +1682,7 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
       )
 
       // Do the update.
-      createResourceResponse <- (storeManager ? SparqlUpdateRequest(createMultipleResourcesSparql))
+      _ <- (storeManager ? SparqlUpdateRequest(createMultipleResourcesSparql))
         .mapTo[SparqlUpdateResponse]
 
       // We don't query the newly created resources to verify that they and their values were actually created,
