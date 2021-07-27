@@ -27,8 +27,6 @@ import messages.IriConversions._
 
 import java.util.UUID
 
-import java.io.{BufferedInputStream, FileInputStream}
-
 class UpgradePluginPR1892Spec extends UpgradePluginSpec {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance

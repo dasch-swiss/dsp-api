@@ -820,8 +820,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
       for {
         standoffLinkUpdates: Seq[SparqlTemplateLinkUpdate] <- Future.sequence(standoffLinkUpdatesFutures)
 
-        //Make ARK-URL for the link value
-
         // Generate SPARQL INSERT statements based on those SparqlTemplateLinkUpdates.
         sparqlInsert = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
           .generateInsertStatementsForStandoffLinks(
@@ -1031,8 +1029,7 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
             valueTypeIri = currentValue.valueContent.valueType,
             newValueIri = newValueIri,
             newPermissions = newValuePermissionLiteral,
-            currentTime = currentTime,
-            stringFormatter = stringFormatter
+            currentTime = currentTime
           )
           .toString()
 
@@ -1289,7 +1286,6 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
     * @param valuePermissions   the literal that should be used as the object of the new value's `knora-base:hasPermissions` predicate.
     * @param valueCreationDate  a custom value creation date.
     * @param newValueVersionIri an optional IRI to be used for the new value version.
-    * @param newValueVersionUUID an optional UUID to be attached to the new value version.
     * @param requestingUser     the user making the request.
     * @return an [[UnverifiedValueV2]].
     */

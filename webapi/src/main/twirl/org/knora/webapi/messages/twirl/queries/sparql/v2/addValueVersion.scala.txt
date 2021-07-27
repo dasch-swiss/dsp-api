@@ -33,7 +33,7 @@
  * @param propertyIri                   the IRI of the property that points from the resource to the value.
  * @param currentValueIri               the most recent existing version of the value.
  * @param newValueIri                   the new value IRI.
-  * @param newValueArkUrl               the new value Ark-Url.
+ * @param newValueArkUrl               the new value Ark-Url.
  * @param valueTypeIri                  the type of the new value.
  * @param permissionRelevantAssertions  Permission-relevant assertions, i.e. owner and project plus permissions, in
  *                                      the form of a list of tuples (predicate, object).

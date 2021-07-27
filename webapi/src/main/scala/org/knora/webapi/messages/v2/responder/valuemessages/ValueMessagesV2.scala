@@ -775,7 +775,9 @@ sealed trait ReadValueV2 extends IOValueV2 {
   * @param attachedToUser                the user that created the value.
   * @param permissions                   the permissions that the value grants to user groups.
   * @param userPermission                the permission that the requesting user has on the value.
+  * @param valueCreationDate             the creation date of the value.
   * @param valueHasUUID                  the UUID shared by all the versions of this value.
+  * @param valueArkUrl                   the ARK-URL of the value.
   * @param valueContent                  the content of the value.
   * @param valueHasMaxStandoffStartIndex if this text value has standoff markup, the highest
   *                                      `knora-base:standoffTagHasEndIndex`
@@ -860,7 +862,9 @@ case class ReadTextValueV2(valueIri: IRI,
   * @param attachedToUser   the user that created the value.
   * @param permissions      the permissions that the value grants to user groups.
   * @param userPermission   the permission that the requesting user has on the value.
+  * @param valueCreationDate the creation date of the value.
   * @param valueHasUUID     the UUID shared by all the versions of this value.
+  * @param valueArkUrl      the ARK-URL of the value.
   * @param valueContent     the content of the value.
   * @param valueHasRefCount if this is a link value, its reference count. Not returned in API responses, but needed
   *                         here for testing.
@@ -900,7 +904,9 @@ case class ReadLinkValueV2(valueIri: IRI,
   * @param attachedToUser   the user that created the value.
   * @param permissions      the permissions that the value grants to user groups.
   * @param userPermission   the permission that the requesting user has on the value.
+  * @param valueCreationDate the creation date of the value.
   * @param valueHasUUID     the UUID shared by all the versions of this value.
+  * @param valueArkUrl      the ARK-URL of the value.
   * @param valueContent     the content of the value.
   * @param previousValueIri the IRI of the previous version of this value. Not returned in API responses, but needed
   *                         here for testing.
@@ -1024,7 +1030,6 @@ case class UpdateValueContentV2(resourceIri: IRI,
   *                           the current time will be used.
   * @param newValueVersionIri an optional IRI to be used for the new value version. If not provided, a random IRI
   *                           will be generated.
-  * @param newValueUUID       the new UUID that should be attached to the new version of the value.
   */
 case class UpdateValuePermissionsV2(resourceIri: IRI,
                                     resourceClassIri: SmartIri,
@@ -1044,6 +1049,7 @@ case class UpdateValuePermissionsV2(resourceIri: IRI,
   * @param valueContent the content of the new value (unescaped, as it would be read from the triplestore).
   * @param permissions  the permissions of the new value.
   * @param creationDate the new value's creation date.
+  * @param valueArkUrl  the ARK-URL of the value.
   */
 case class UnverifiedValueV2(newValueIri: IRI,
                              newValueUUID: UUID,

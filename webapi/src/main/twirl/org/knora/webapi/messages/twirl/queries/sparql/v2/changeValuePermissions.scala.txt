@@ -21,7 +21,6 @@
 @import org.knora.webapi.messages.SmartIri
 @import java.util.UUID
 @import java.time.Instant
-@import org.knora.webapi.messages.StringFormatter
 
 @**
  * Creates a new version of a value, with identical content except for new permissions.
@@ -43,8 +42,7 @@
   valueTypeIri: SmartIri,
   newValueIri: IRI,
   newPermissions: String,
-  currentTime: Instant,
-  stringFormatter: StringFormatter)
+  currentTime: Instant)
 
 PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
 PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
