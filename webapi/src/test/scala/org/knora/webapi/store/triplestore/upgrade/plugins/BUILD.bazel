@@ -104,10 +104,10 @@ scala_test(
 )
 
 scala_test(
-    name = "UpgradePluginPR1746Spec",
+    name = "UpgradePluginPR1756Spec",
     size = "small",
     srcs = [
-        "UpgradePluginPR1746Spec.scala",
+        "UpgradePluginPR1756Spec.scala",
         "UpgradePluginSpec.scala",
     ],
     data = [

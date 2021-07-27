@@ -24,7 +24,7 @@ import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.util.rdf._
 
-class UpgradePluginPR1746Spec extends UpgradePluginSpec with LazyLogging {
+class UpgradePluginPR1756Spec extends UpgradePluginSpec with LazyLogging {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
 
   private def checkLiteral(model: RdfModel, subj: IriNode, pred: IriNode, expectedObj: RdfLiteral): Unit = {
@@ -46,13 +46,13 @@ class UpgradePluginPR1746Spec extends UpgradePluginSpec with LazyLogging {
     }
   }
 
-  "Upgrade plugin PR1746" should {
+  "Upgrade plugin PR1756" should {
     "replace empty string with FIXME" in {
       // Parse the input file.
-      val model: RdfModel = trigFileToModel("test_data/upgrade/pr1746.trig")
+      val model: RdfModel = trigFileToModel("test_data/upgrade/pr1756.trig")
 
       // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR1746(defaultFeatureFactoryConfig, logger)
+      val plugin = new UpgradePluginPR1756(defaultFeatureFactoryConfig, logger)
       plugin.transform(model)
 
       // Check that the empty valueHasString is replaced with FIXME.
