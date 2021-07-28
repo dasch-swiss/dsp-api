@@ -364,11 +364,11 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     * Updates a resources metadata.
     *
     * @param updateResourceMetadataRequestV2 the update request.
-    * @return a [[SuccessResponseV2]].
+    * @return a [[UpdateResourceMetadataResponseV2]].
     */
   private def updateResourceMetadataV2(
-      updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2): Future[SuccessResponseV2] = {
-    def makeTaskFuture: Future[SuccessResponseV2] = {
+      updateResourceMetadataRequestV2: UpdateResourceMetadataRequestV2): Future[UpdateResourceMetadataResponseV2] = {
+    def makeTaskFuture: Future[UpdateResourceMetadataResponseV2] = {
       for {
         // Get the metadata of the resource to be updated.
         resourcesSeq: ReadResourcesSequenceV2 <- getResourcePreviewV2(
@@ -487,7 +487,15 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
 
           case None => FastFuture.successful(())
         }
-      } yield SuccessResponseV2("Resource metadata updated")
+      } yield
+        UpdateResourceMetadataResponseV2(
+          resourceIri = updateResourceMetadataRequestV2.resourceIri,
+          resourceClassIri = updateResourceMetadataRequestV2.resourceClassIri,
+          maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
+          maybePermissions = updateResourceMetadataRequestV2.maybePermissions,
+          maybeLastModificationDate = updateResourceMetadataRequestV2.maybeLastModificationDate,
+          featureFactoryConfig = updateResourceMetadataRequestV2.featureFactoryConfig
+        )
     }
 
     for {
