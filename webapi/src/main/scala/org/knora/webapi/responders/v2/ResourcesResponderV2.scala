@@ -493,7 +493,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           resourceClassIri = updateResourceMetadataRequestV2.resourceClassIri,
           maybeLabel = updateResourceMetadataRequestV2.maybeLabel,
           maybePermissions = updateResourceMetadataRequestV2.maybePermissions,
-          maybeLastModificationDate = updateResourceMetadataRequestV2.maybeLastModificationDate,
+          maybeLastModificationDate = updateResourceMetadataRequestV2.maybeNewModificationDate,
           featureFactoryConfig = updateResourceMetadataRequestV2.featureFactoryConfig
         )
     }
