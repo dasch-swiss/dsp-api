@@ -22,7 +22,6 @@ package org.knora.webapi.e2e.v2
 import java.net.URLEncoder
 import java.nio.file.Paths
 import java.time.Instant
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, MediaRange, StatusCodes}
@@ -89,6 +88,27 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#"
            |  }
            |}""".stripMargin
+
+  private def updateResourceMetadataResponse(newLastModificationDate: Instant,
+                                             maybeNewLabel: String,
+                                             resourceIri: String,
+                                             maybeNewPermissions: String): String =
+    s"""{
+       |    "knora-api:lastModificationDate": {
+       |        "@value": "$newLastModificationDate",
+       |        "@type": "xsd:dateTimeStamp"
+       |    },
+       |    "rdfs:label": "$maybeNewLabel",
+       |    "knora-api:resourceIri": "$resourceIri",
+       |    "knora-api:hasPermissions": "$maybeNewPermissions",
+       |    "knora-api:resourceClassIri": "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
+       |    "@context": {
+       |        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+       |        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+       |        "xsd": "http://www.w3.org/2001/XMLSchema#",
+       |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+       |    }
+       |}""".stripMargin
 
   "The resources v2 endpoint" should {
     "perform a resource request for the book 'Reise ins Heilige Land' using the complex schema in JSON-LD" in {
@@ -1512,7 +1532,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
       val updateResponseAsString: String = responseToString(updateResponse)
       assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
-      assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource metadata updated")))
+      assert(
+        JsonParser(updateResponseAsString) == JsonParser(
+          updateResourceMetadataResponse(resourceIri = resourceIri,
+                                         maybeNewLabel = newLabel,
+                                         newLastModificationDate = newModificationDate,
+                                         maybeNewPermissions = newPermissions)))
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -1594,7 +1619,12 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val updateResponse: HttpResponse = singleAwaitingRequest(updateRequest)
       val updateResponseAsString: String = responseToString(updateResponse)
       assert(updateResponse.status == StatusCodes.OK, updateResponseAsString)
-      assert(JsonParser(updateResponseAsString) == JsonParser(successResponse("Resource metadata updated")))
+      assert(
+        JsonParser(updateResponseAsString) == JsonParser(
+          updateResourceMetadataResponse(resourceIri = resourceIri,
+                                         maybeNewLabel = newLabel,
+                                         newLastModificationDate = newModificationDate,
+                                         maybeNewPermissions = newPermissions)))
 
       val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password))
