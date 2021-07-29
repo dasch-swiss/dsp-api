@@ -901,14 +901,14 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
   *
   * @param resourceIri               the IRI of the resource.
   * @param resourceClassIri          the IRI of the resource class.
-  * @param maybeLastModificationDate the resource's last modification date, if any.
+  * @param lastModificationDate      the resource's last modification date.
   * @param maybeLabel                the resource's new `rdfs:label`, if any.
   * @param maybePermissions          the resource's new permissions, if any.
   * @param featureFactoryConfig      the feature factory configuration.
   */
 case class UpdateResourceMetadataResponseV2(resourceIri: IRI,
                                             resourceClassIri: SmartIri,
-                                            maybeLastModificationDate: Option[Instant] = None,
+                                            lastModificationDate: Instant,
                                             maybeLabel: Option[String] = None,
                                             maybePermissions: Option[String] = None,
                                             featureFactoryConfig: FeatureFactoryConfig)
@@ -949,15 +949,12 @@ case class UpdateResourceMetadataResponseV2(resourceIri: IRI,
       case None             => Map.empty[String, JsonLDValue]
     }
 
-    val lastModificationDate_map = maybeLastModificationDate match {
-      case Some(maybeLastModificationDate) =>
-        Map(
-          OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
-            value = maybeLastModificationDate.toString,
-            datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
-          ))
-      case None => Map.empty[String, JsonLDValue]
-    }
+    val lastModificationDate_map =
+      Map(
+        OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+          value = lastModificationDate.toString,
+          datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+        ))
 
     val permissions_map = maybePermissions match {
       case Some(maybePermissions) =>
