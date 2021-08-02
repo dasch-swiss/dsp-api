@@ -277,9 +277,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = imagesUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure =>
-          msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
 
@@ -5506,7 +5505,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgType[ReadResourcesSequenceV2](timeout)
 
-      // Allow removing the (unused) text value cardinality from the class.
+      // Successfully remove the (unused) text value cardinality from the class.
 
       responderManager ! DeleteCardinalitiesFromClassRequestV2(
         classInfoContent = ClassInfoContentV2(
