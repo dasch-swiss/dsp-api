@@ -1,41 +1,44 @@
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 
 import scala.util.matching.Regex
 
 /**
-  * Create a Username value object.
+  * Username value object.
   */
-sealed abstract class Username private (value: String) {
-
-  /**
-    * Returns a decoded string.
-    */
-  def toString(implicit stringFormatter: StringFormatter): String = {
-    stringFormatter.fromSparqlEncodedString(value)
-  }
-}
+sealed abstract class Username private (value: String)
 
 object Username {
+
+  /**
+    * A regex that matches a valid username
+    * - 4 - 50 characters long
+    * - Only contains alphanumeric characters, underscore and dot.
+    * - Underscore and dot can't be at the end or start of a username
+    * - Underscore or dot can't be used multiple times in a row
+    */
   private val UsernameRegex: Regex =
     """^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$""".r
 
   /**
-    * Encodes to a safe for SPARQL string. Throws if \r character is found.
+    * Returns optionally a Username, while also checking that the supplied
+    * string is not containing illegal special characters.
     */
-  def fromString(value: String)(implicit stringFormatter: StringFormatter): Option[Username] = {
-    UsernameRegex.findFirstIn(value) match {
-      case Some(value) =>
-        val encoded = stringFormatter.toSparqlEncodedString(value, throw BadRequestException(s"Invalid string: $value"))
-        Some(new Username(encoded) {})
-      case None => None
+  def fromString(value: String): Option[Username] = {
+    if (value.isEmpty || value.contains("\r")) {
+      None
+    } else {
+      UsernameRegex.findFirstIn(value) match {
+        case Some(value) => Some(new Username(value) {})
+        case None        => None
+      }
     }
+
   }
 
   /**
-    * Decodes, checks, encodes to SPARQL safe string.
+    * Convenience constructor taking a Sparql encoded string.
     */
   def fromSparqlEncodedString(value: String)(implicit stringFormatter: StringFormatter): Option[Username] = {
     val decoded = stringFormatter.fromSparqlEncodedString(value)
@@ -43,24 +46,38 @@ object Username {
   }
 }
 
+/**
+  * Email value object.
+  */
 sealed abstract class Email private (value: String)
 
 object Email {
+
+  private val EmailRegex: Regex = """^.+@.+$""".r
+
   def fromString(value: String): Option[Email] = {
-
-    val EmailRegex: Regex = """^.+@.+$""".r
-
-    EmailRegex.findFirstIn(value) match {
-      case Some(value) => Some(new Email(value) {})
-      case None        => None
+    if (value.isEmpty || value.contains("\r")) {
+      None
+    } else {
+      EmailRegex.findFirstIn(value) match {
+        case Some(value) => Some(new Email(value) {})
+        case None        => None
+      }
     }
   }
 }
 
+/**
+  * GivenName value object.
+  */
 sealed abstract class GivenName private (value: String)
 
 object GivenName {
   def fromString(value: String): Option[GivenName] = {
-    Some(new GivenName(value) {})
+    if (value.isEmpty || value.contains("\r")) {
+      None
+    } else {
+      Some(new GivenName(value) {})
+    }
   }
 }
