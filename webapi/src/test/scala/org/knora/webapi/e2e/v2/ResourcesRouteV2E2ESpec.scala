@@ -1626,6 +1626,17 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
                                          newLastModificationDate = newModificationDate,
                                          maybeNewPermissions = newPermissions)))
 
+      clientTestDataCollector.addFile(
+        TestDataFileContent(
+          filePath = TestDataFilePath(
+            directoryPath = clientTestDataPath,
+            filename = "update-resource-metadata-response-with-last-mod-date",
+            fileExtension = "json"
+          ),
+          text = updateResponseAsString
+        )
+      )
+
       val previewRequest = Get(s"$baseApiUrl/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(
         BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
