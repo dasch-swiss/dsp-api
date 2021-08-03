@@ -55,16 +55,20 @@ object Email {
 
   private val EmailRegex: Regex = """^.+@.+$""".r
 
-  def fromString(value: String): Option[Email] = {
+  def fromString(value: String): Either[String, Email] = {
     if (value.isEmpty || value.contains("\r")) {
-      None
+      Left("invalid")
     } else {
       EmailRegex.findFirstIn(value) match {
-        case Some(value) => Some(new Email(value) {})
-        case None        => None
+        case Some(value) => Right(new Email(value) {})
+        case None        => Left("invalid")
       }
     }
   }
+}
+
+object example {
+  val email: Email = Email.fromString("i@subotic.ch").fold(error => throw new Exception(error), email => email)
 }
 
 /**
