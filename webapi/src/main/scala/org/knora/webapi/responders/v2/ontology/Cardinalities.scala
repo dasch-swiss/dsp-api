@@ -26,34 +26,150 @@ import akka.pattern._
 import akka.util.Timeout
 import org.knora.webapi.InternalSchema
 import org.knora.webapi.exceptions.{BadRequestException, InconsistentRepositoryDataException}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.messages.v2.responder.ontologymessages.{
-  Cardinality,
-  ClassInfoContentV2,
-  DeleteCardinalitiesFromClassRequestV2,
-  ReadClassInfoV2,
-  ReadOntologyV2
-}
-import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.OntologyConstants.KnoraBase
 import org.knora.webapi.messages.store.triplestoremessages.{
   SparqlAskRequest,
   SparqlAskResponse,
-  SparqlSelectRequest,
   SparqlUpdateRequest,
   SparqlUpdateResponse
 }
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
+import org.knora.webapi.messages.v2.responder.CanDoResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
+import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.settings.KnoraSettingsImpl
 
 import java.time.Instant
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
- * Contains methods used for deleting cardinalities from a class
+ * Contains methods used for dealing with cardinalities on a class
  */
-object DeleteCardinalitiesFromClass {
+object Cardinalities {
+
+  /**
+   * @param settings the applications settings.
+   * @param storeManager the store manager actor.
+   * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
+   * @param internalClassIri the Class from which the cardinalities are deleted.
+   * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
+   * @return a [[CanDoResponseV2]] indicating whether a class's cardinalities can be deleted.
+   */
+  def canDeleteCardinalitiesFromClass(
+    settings: KnoraSettingsImpl,
+    storeManager: ActorRef,
+    deleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2,
+    internalClassIri: SmartIri,
+    internalOntologyIri: SmartIri
+  )(implicit ec: ExecutionContext, stringFormatter: StringFormatter, timeout: Timeout): Future[CanDoResponseV2] = {
+    for {
+      cacheData: Cache.OntologyCacheData <- Cache.getCacheData
+      ontology                            = cacheData.ontologies(internalOntologyIri)
+
+      submittedClassDefinition: ClassInfoContentV2 =
+        deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema)
+
+      // Check that the ontology exists and has not been updated by another user since the client last read it.
+      _ <- OntologyHelpers.checkOntologyLastModificationDateBeforeUpdate(
+             settings,
+             storeManager,
+             internalOntologyIri = internalOntologyIri,
+             expectedLastModificationDate = deleteCardinalitiesFromClassRequest.lastModificationDate,
+             featureFactoryConfig = deleteCardinalitiesFromClassRequest.featureFactoryConfig
+           )
+
+      // Check that the class's rdf:type is owl:Class.
+
+      rdfType: SmartIri = submittedClassDefinition.requireIriObject(
+                            OntologyConstants.Rdf.Type.toSmartIri,
+                            throw BadRequestException(s"No rdf:type specified")
+                          )
+
+      _ = if (rdfType != OntologyConstants.Owl.Class.toSmartIri) {
+            throw BadRequestException(s"Invalid rdf:type for property: $rdfType")
+          }
+
+      // Check that cardinalities were submitted.
+
+      _ = if (submittedClassDefinition.directCardinalities.isEmpty) {
+            throw BadRequestException("No cardinalities specified")
+          }
+
+      // Check that only one cardinality was submitted.
+
+      _ = if (submittedClassDefinition.directCardinalities.size > 1) {
+            throw BadRequestException("Only one cardinality is allowed to be submitted.")
+          }
+
+      // Check that the class exists
+      currentClassDefinition: ClassInfoContentV2 <-
+        classExists(
+          cacheData,
+          deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema),
+          internalClassIri,
+          internalOntologyIri
+        )
+
+      // FIXME: This seems not to work or is not needed. Check that it is a subclass of knora-base:Resource
+      // _ <- isKnoraResourceClass(deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema))
+
+      // Check that the submitted cardinality to delete is defined on this class
+
+      cardinalitiesToDelete: Map[SmartIri, Cardinality.KnoraCardinalityInfo] =
+        deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema).directCardinalities
+
+      _ = cardinalitiesToDelete.foreach(p =>
+            isCardinalityDefinedOnClass(cacheData, p._1, p._2, internalClassIri, internalOntologyIri)
+          )
+
+      // Check if property is used in resources
+
+      submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
+      propertyIsUsed: Boolean            <- isPropertyUsedInResources(settings, storeManager, submittedPropertyToDelete)
+      _ = if (propertyIsUsed) {
+            throw BadRequestException("Property is used in data. The cardinality cannot be deleted.")
+          }
+
+      // Make an update class definition in which the cardinality to delete is removed
+
+      newClassDefinitionWithRemovedCardinality =
+        currentClassDefinition.copy(
+          directCardinalities = currentClassDefinition.directCardinalities - submittedPropertyToDelete
+        )
+
+      // FIXME: Refactor. From here on is copy-paste from `changeClassCardinalities`, which I don't fully understand
+
+      // Check that the new cardinalities are valid, and don't add any inherited cardinalities.
+
+      allBaseClassIrisWithoutInternal: Seq[SmartIri] =
+        newClassDefinitionWithRemovedCardinality.subClassOf.toSeq.flatMap { baseClassIri =>
+          cacheData.subClassOfRelations.getOrElse(
+            baseClassIri,
+            Seq.empty[SmartIri]
+          )
+        }
+
+      allBaseClassIris: Seq[SmartIri] = internalClassIri +: allBaseClassIrisWithoutInternal
+
+      (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
+        OntologyHelpers
+          .checkCardinalitiesBeforeAdding(
+            internalClassDef = newClassDefinitionWithRemovedCardinality,
+            allBaseClassIris = allBaseClassIris.toSet,
+            cacheData = cacheData
+          )
+
+      // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
+      _ = Cache.checkOntologyReferencesInClassDef(
+            ontologyCacheData = cacheData,
+            classDef = newInternalClassDefWithLinkValueProps,
+            errorFun = { msg: String =>
+              throw BadRequestException(msg)
+            }
+          )
+    } yield CanDoResponseV2(true)
+  }
 
   /**
    * Deletes the supplied cardinalities from a class, if the referenced properties are not used in instances
@@ -61,11 +177,12 @@ object DeleteCardinalitiesFromClass {
    *
    * @param settings the applications settings.
    * @param storeManager the store manager actor.
+   * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
    * @param internalClassIri the Class from which the cardinalities are deleted.
    * @param internalOntologyIri the Ontology of which the Class and Cardinalities are part of.
    * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
    */
-  def deleteCardinalitiesFromClassTaskFuture(
+  def deleteCardinalitiesFromClass(
     settings: KnoraSettingsImpl,
     storeManager: ActorRef,
     deleteCardinalitiesFromClassRequest: DeleteCardinalitiesFromClassRequestV2,

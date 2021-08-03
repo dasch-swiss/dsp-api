@@ -2925,7 +2925,8 @@ class OntologyV2R2RSpec extends R2RSpec {
       assert(resourceIri.toSmartIri.isKnoraDataIri)
     }
 
-    // Successfully remove the (unused) text value cardinality from the class.
+    // Prepare the JsonLD payload to check if a cardinality can be deleted and
+    // then to also actually delete it.
     val params =
       s"""
          |{
@@ -2957,6 +2958,20 @@ class OntologyV2R2RSpec extends R2RSpec {
          |}
             """.stripMargin
 
+    // Successfully check if the cardinality can be deleted
+    Post(
+      "/v2/ontologies/candeletecardinalities",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, params)
+    ) ~> addCredentials(
+      BasicHttpCredentials(anythingUsername, password)
+    ) ~> ontologiesPath ~> check {
+      val responseStr = responseAs[String]
+      assert(status == StatusCodes.OK, response.toString)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+      assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+    }
+
+    // Successfully remove the (unused) text value cardinality from the class.
     Delete("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
       BasicHttpCredentials(anythingUsername, password)
     ) ~> ontologiesPath ~> check {

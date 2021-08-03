@@ -42,7 +42,7 @@ import org.knora.webapi.messages.v2.responder.{CanDoResponseV2, SuccessResponseV
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.v2.ontology.Cache.ONTOLOGY_CACHE_LOCK_IRI
-import org.knora.webapi.responders.v2.ontology.{Cache, DeleteCardinalitiesFromClass, OntologyHelpers}
+import org.knora.webapi.responders.v2.ontology.{Cache, Cardinalities, OntologyHelpers}
 import org.knora.webapi.responders.{IriLocker, Responder}
 import org.knora.webapi.util._
 import org.knora.webapi._
@@ -113,6 +113,8 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
       canChangeClassCardinalities(canChangeCardinalitiesRequest)
     case changeCardinalitiesRequest: ChangeCardinalitiesRequestV2 =>
       changeClassCardinalities(changeCardinalitiesRequest)
+    case canDeleteCardinalitiesFromClassRequestV2: CanDeleteCardinalitiesFromClassRequestV2 =>
+      canDeleteCardinalitiesFromClass(canDeleteCardinalitiesFromClassRequestV2)
     case deleteCardinalitiesfromClassRequest: DeleteCardinalitiesFromClassRequestV2 =>
       deleteCardinalitiesFromClass(deleteCardinalitiesfromClassRequest)
     case changeGuiOrderRequest: ChangeGuiOrderRequestV2 => changeGuiOrder(changeGuiOrderRequest)
@@ -1793,6 +1795,46 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   }
 
   /**
+   * FIXME: Only works if a single cardinality is supplied.
+   * Checks if cardinalities can be removed from a class.
+   *
+   * @param canDeleteCardinalitiesFromClassRequest the request to remove cardinalities.
+   * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
+   */
+  private def canDeleteCardinalitiesFromClass(
+    canDeleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2
+  ): Future[CanDoResponseV2] =
+    for {
+      requestingUser <- FastFuture.successful(canDeleteCardinalitiesFromClassRequest.requestingUser)
+
+      externalClassIri    = canDeleteCardinalitiesFromClassRequest.classInfoContent.classIri
+      externalOntologyIri = externalClassIri.getOntologyFromEntity
+
+      _ <- OntologyHelpers.checkOntologyAndEntityIrisForUpdate(
+             externalOntologyIri = externalOntologyIri,
+             externalEntityIri = externalClassIri,
+             requestingUser = requestingUser
+           )
+
+      internalClassIri    = externalClassIri.toOntologySchema(InternalSchema)
+      internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
+
+      // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
+      taskResult <- IriLocker.runWithIriLock(
+                      apiRequestID = canDeleteCardinalitiesFromClassRequest.apiRequestID,
+                      iri = ONTOLOGY_CACHE_LOCK_IRI,
+                      task = () =>
+                        Cardinalities.canDeleteCardinalitiesFromClass(
+                          settings,
+                          storeManager,
+                          deleteCardinalitiesFromClassRequest = canDeleteCardinalitiesFromClassRequest,
+                          internalClassIri = internalClassIri,
+                          internalOntologyIri = internalOntologyIri
+                        )
+                    )
+    } yield taskResult
+
+  /**
    * Removes cardinalities (from class to properties) from class if properties are not used inside data.
    *
    * @param deleteCardinalitiesFromClassRequest the request to remove cardinalities.
@@ -1821,7 +1863,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
                       apiRequestID = deleteCardinalitiesFromClassRequest.apiRequestID,
                       iri = ONTOLOGY_CACHE_LOCK_IRI,
                       task = () =>
-                        DeleteCardinalitiesFromClass.deleteCardinalitiesFromClassTaskFuture(
+                        Cardinalities.deleteCardinalitiesFromClass(
                           settings,
                           storeManager,
                           deleteCardinalitiesFromClassRequest = deleteCardinalitiesFromClassRequest,

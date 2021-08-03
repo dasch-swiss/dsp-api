@@ -62,7 +62,8 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       addCardinalities(featureFactoryConfig) ~
       canReplaceCardinalities(featureFactoryConfig) ~
       replaceCardinalities(featureFactoryConfig) ~
-      deleteCardinalities(featureFactoryConfig) ~
+      canDeleteCardinalitiesFromClass(featureFactoryConfig) ~
+      deleteCardinalitiesFromClass(featureFactoryConfig) ~
       changeGuiOrder(featureFactoryConfig) ~
       getClasses(featureFactoryConfig) ~
       canDeleteClass(featureFactoryConfig) ~
@@ -480,9 +481,50 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
       }
     }
 
+  private def canDeleteCardinalitiesFromClass(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(OntologiesBasePath / "candeletecardinalities") {
+      post {
+        entity(as[String]) { jsonRequest => requestContext =>
+          {
+            val requestMessageFuture: Future[CanDeleteCardinalitiesFromClassRequestV2] = for {
+              requestingUser <- getUserADM(
+                                  requestContext = requestContext,
+                                  featureFactoryConfig = featureFactoryConfig
+                                )
+
+              requestDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(jsonRequest)
+
+              requestMessage: CanDeleteCardinalitiesFromClassRequestV2 <-
+                CanDeleteCardinalitiesFromClassRequestV2.fromJsonLD(
+                  jsonLDDocument = requestDoc,
+                  apiRequestID = UUID.randomUUID,
+                  requestingUser = requestingUser,
+                  responderManager = responderManager,
+                  storeManager = storeManager,
+                  featureFactoryConfig = featureFactoryConfig,
+                  settings = settings,
+                  log = log
+                )
+            } yield requestMessage
+
+            RouteUtilV2.runRdfRouteWithFuture(
+              requestMessageF = requestMessageFuture,
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig,
+              settings = settings,
+              responderManager = responderManager,
+              log = log,
+              targetSchema = ApiV2Complex,
+              schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+            )
+          }
+        }
+      }
+    }
+
   // delete a single cardinality from the specified class if the property is
   // not used in resources.
-  private def deleteCardinalities(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def deleteCardinalitiesFromClass(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(OntologiesBasePath / "cardinalities") {
       delete {
         entity(as[String]) { jsonRequest => requestContext =>

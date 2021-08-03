@@ -6,7 +6,7 @@ scala_library(
     name = "ontology",
     srcs = [
         "Cache.scala",
-        "DeleteCardinalitiesFromClass.scala",
+        "Cardinalities.scala",
         "OntologyHelpers.scala",
     ],
     scalacopts = ["-deprecation"],

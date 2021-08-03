@@ -29,7 +29,7 @@ import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.{IntegrationSpec, InternalSchema, TestContainerFuseki}
 
 /**
- * This spec is used to test [[org.knora.webapi.responders.v2.ontology.DeleteCardinalitiesFromClass]].
+ * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cardinalities]].
  * Adding the [[TestContainerFuseki.PortConfig]] config will start the Fuseki container and make it
  * available to the test.
  */
@@ -63,7 +63,7 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
       val internalPropertyIri = FreetestOntologyIri.makeEntityIri("hasText").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = DeleteCardinalitiesFromClass.isPropertyUsedInResources(settings, fusekiActor, internalPropertyIri)
+      val resF = Cardinalities.isPropertyUsedInResources(settings, fusekiActor, internalPropertyIri)
       resF map { res => println(res); assert(res, "property is used in resource (instance of resource class)") }
     }
 
@@ -72,7 +72,7 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
       val internalPropertyIri = FreetestOntologyIri.makeEntityIri("hasDecimal").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = DeleteCardinalitiesFromClass.isPropertyUsedInResources(settings, fusekiActor, internalPropertyIri)
+      val resF = Cardinalities.isPropertyUsedInResources(settings, fusekiActor, internalPropertyIri)
       resF map { res => println(res); assert(res, "property is used in a resource of subclass") }
     }
 
@@ -81,7 +81,7 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
       val internalPropertyIri = FreetestOntologyIri.makeEntityIri("hasInteger").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
-      val resF = DeleteCardinalitiesFromClass.isPropertyUsedInResources(settings, fusekiActor, internalPropertyIri)
+      val resF = Cardinalities.isPropertyUsedInResources(settings, fusekiActor, internalPropertyIri)
       resF map { res => println(res); assert(!res, "property is not used") }
     }
   }
