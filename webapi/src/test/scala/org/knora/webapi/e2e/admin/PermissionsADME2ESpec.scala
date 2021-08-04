@@ -218,7 +218,7 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val customAPIri = "http://rdfh.ch/permissions/0001/u0PRnDl3kgcbrehZnRlEfA"
         val createAdministrativePermissionWithCustomIriRequest: String =
           s"""{
-               |    "id": "$customAPIri,
+               |    "id": "$customAPIri",
                |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
                |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
                |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
