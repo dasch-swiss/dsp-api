@@ -55,8 +55,10 @@ class OntologyV2R2RSpec extends R2RSpec {
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
   // If false, the responses from the server are compared to the contents fo the expected response files.
+  // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   private val writeTestDataFiles = false
 
   override lazy val rdfDataObjects = List(
@@ -64,7 +66,12 @@ class OntologyV2R2RSpec extends R2RSpec {
       path = "test_data/ontologies/example-box.ttl",
       name = "http://www.knora.org/ontology/shared/example-box"
     ),
-    RdfDataObject(path = "test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal")
+    RdfDataObject(path = "test_data/ontologies/minimal-onto.ttl", name = "http://www.knora.org/ontology/0001/minimal"),
+    RdfDataObject(
+      path = "test_data/ontologies/freetest-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/freetest"
+    ),
+    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest")
   )
 
   // Directory path for generated client test data
@@ -2705,6 +2712,8 @@ class OntologyV2R2RSpec extends R2RSpec {
          |  }
          |}""".stripMargin
 
+    println(createClassRequestJson)
+
     Post(
       "/v2/ontologies/classes",
       HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJson)
@@ -2966,6 +2975,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       BasicHttpCredentials(anythingUsername, password)
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
+      println(responseStr)
       assert(status == StatusCodes.OK, response.toString)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
       assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
