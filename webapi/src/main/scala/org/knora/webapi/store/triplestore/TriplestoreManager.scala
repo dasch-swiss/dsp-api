@@ -81,16 +81,16 @@ class TriplestoreManager(
     featureFactoryConfig = defaultFeatureFactoryConfig
   )
 
-  override def preStart() {
+  override def preStart(): Unit = {
     log.debug("TriplestoreManagerActor: start with preStart")
 
     storeActorRef = settings.triplestoreType match {
       case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree | TriplestoreTypes.HttpFuseki =>
         makeActor(
-          FromConfig.props(Props[HttpTriplestoreConnector]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+          FromConfig.props(Props[HttpTriplestoreConnector]()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
           name = HttpTriplestoreActorName
         )
-      case TriplestoreTypes.EmbeddedJenaTdb => makeActor(Props[JenaTDBActor], name = EmbeddedJenaActorName)
+      case TriplestoreTypes.EmbeddedJenaTdb => makeActor(Props[JenaTDBActor](), name = EmbeddedJenaActorName)
       case unknownType                      => throw UnsupportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
     }
 

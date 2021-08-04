@@ -229,7 +229,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     case DropAllTRepositoryContent() => try2Message(sender(), dropAllTriplestoreContent(), log)
     case InsertRepositoryContent(rdfDataObjects: Seq[RdfDataObject]) =>
       try2Message(sender(), insertDataIntoTriplestore(rdfDataObjects), log)
-    case HelloTriplestore(msg: String) if msg == triplestoreType => sender ! HelloTriplestore(triplestoreType)
+    case HelloTriplestore(msg: String) if msg == triplestoreType => sender() ! HelloTriplestore(triplestoreType)
     case CheckTriplestoreRequest()                               => try2Message(sender(), checkTriplestore(), log)
     case SearchIndexUpdateRequest(subjectIri: Option[String]) =>
       try2Message(sender(), updateLuceneIndex(subjectIri), log)
@@ -240,7 +240,7 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       try2Message(sender(), insertDataGraphRequest(graphContent, graphName), log)
     case SimulateTimeoutRequest() => try2Message(sender(), doSimulateTimeout(), log)
     case other =>
-      sender ! Status.Failure(
+      sender() ! Status.Failure(
         UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}")
       )
   }
