@@ -21,7 +21,6 @@ package org.knora.webapi.messages.v2.responder.resourcemessages
 
 import java.time.Instant
 import java.util.UUID
-
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.pattern._
@@ -894,6 +893,86 @@ object UpdateResourceMetadataRequestV2 extends KnoraJsonLDRequestReaderV2[Update
       requestingUser = requestingUser,
       apiRequestID = apiRequestID
     )
+  }
+}
+
+/**
+  * Represents a response after updating a resource's metadata.
+  *
+  * @param resourceIri               the IRI of the resource.
+  * @param resourceClassIri          the IRI of the resource class.
+  * @param lastModificationDate      the resource's last modification date.
+  * @param maybeLabel                the resource's new `rdfs:label`, if any.
+  * @param maybePermissions          the resource's new permissions, if any.
+  * @param featureFactoryConfig      the feature factory configuration.
+  */
+case class UpdateResourceMetadataResponseV2(resourceIri: IRI,
+                                            resourceClassIri: SmartIri,
+                                            lastModificationDate: Instant,
+                                            maybeLabel: Option[String] = None,
+                                            maybePermissions: Option[String] = None,
+                                            featureFactoryConfig: FeatureFactoryConfig)
+    extends KnoraJsonLDResponseV2 {
+
+  /**
+    * Converts the response to a data structure that can be used to generate JSON-LD.
+    *
+    * @param targetSchema the Knora API schema to be used in the JSON-LD document.
+    * @return a [[JsonLDDocument]] representing the response.
+    */
+  override protected def toJsonLDDocument(targetSchema: ApiV2Schema,
+                                          settings: KnoraSettingsImpl,
+                                          schemaOptions: Set[SchemaOption]): JsonLDDocument = {
+
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    // Make the knora-api prefix for the target schema.
+
+    val knoraApiPrefixExpansion: IRI = targetSchema match {
+      case ApiV2Simple  => OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion
+      case ApiV2Complex => OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion
+    }
+
+    // Make the JSON-LD document.
+
+    val context: JsonLDObject = JsonLDUtil.makeContext(
+      fixedPrefixes = Map(
+        "rdf" -> OntologyConstants.Rdf.RdfPrefixExpansion,
+        "rdfs" -> OntologyConstants.Rdfs.RdfsPrefixExpansion,
+        "xsd" -> OntologyConstants.Xsd.XsdPrefixExpansion,
+        OntologyConstants.KnoraApi.KnoraApiOntologyLabel -> knoraApiPrefixExpansion
+      )
+    )
+
+    val label_map = maybeLabel match {
+      case Some(maybeLabel) => Map(OntologyConstants.Rdfs.Label -> JsonLDString(maybeLabel))
+      case None             => Map.empty[String, JsonLDValue]
+    }
+
+    val lastModificationDate_map =
+      Map(
+        OntologyConstants.KnoraApiV2Complex.LastModificationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
+          value = lastModificationDate.toString,
+          datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+        ))
+
+    val permissions_map = maybePermissions match {
+      case Some(maybePermissions) =>
+        Map(OntologyConstants.KnoraApiV2Complex.HasPermissions -> JsonLDString(maybePermissions))
+      case None => Map.empty[String, JsonLDValue]
+    }
+
+    val resourceIri_resourceClassIri_map =
+      Map(
+        OntologyConstants.KnoraApiV2Complex.ResourceIri -> JsonLDString(resourceIri),
+        OntologyConstants.KnoraApiV2Complex.ResourceClassIri -> JsonLDString(resourceClassIri.toString)
+      )
+
+    val body = JsonLDObject(
+      resourceIri_resourceClassIri_map ++ label_map ++ lastModificationDate_map ++ permissions_map)
+
+    JsonLDDocument(body = body, context = context)
+
   }
 }
 

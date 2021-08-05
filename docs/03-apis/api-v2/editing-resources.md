@@ -298,7 +298,7 @@ date, you will get an HTTP 409 (Conflict) error.
 If you submit a `knora-api:newModificationDate` that is earlier than the resource's `knora-api:lastModificationDate`,
 you will get an HTTP 400 (Bad Request) error.
 
-A successful response is an HTTP 200 (OK) status containing a confirmation message.
+A successful response is an HTTP 200 (OK) status containing the resource's metadata.
 
 ## Deleting a Resource
 

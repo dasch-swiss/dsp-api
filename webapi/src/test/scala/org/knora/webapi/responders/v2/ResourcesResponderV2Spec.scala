@@ -1762,7 +1762,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! updateRequest
 
-      expectMsgType[SuccessResponseV2](timeout)
+      expectMsgType[UpdateResourceMetadataResponseV2](timeout)
 
       // Get the resource from the triplestore and check it.
 
@@ -1825,7 +1825,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! updateRequest
 
-      expectMsgType[SuccessResponseV2](timeout)
+      expectMsgType[UpdateResourceMetadataResponseV2](timeout)
 
       // Get the resource from the triplestore and check it.
 
@@ -1869,7 +1869,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! updateRequest
 
-      expectMsgType[SuccessResponseV2](timeout)
+      expectMsgType[UpdateResourceMetadataResponseV2](timeout)
 
       // Get the resource from the triplestore and check it.
 
@@ -2680,7 +2680,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgType[SuccessResponseV2](timeout)
+      expectMsgType[UpdateResourceMetadataResponseV2](timeout)
 
       responderManager ! ResourceHistoryEventsGetRequestV2(
         resourceIri = resourceIri,
