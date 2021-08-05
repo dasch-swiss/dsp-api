@@ -26,7 +26,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
+import org.knora.webapi.messages.v2.responder.{CanDoResponseV2, SuccessResponseV2}
 import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.KnoraCardinalityInfo
 import org.knora.webapi.messages.v2.responder.ontologymessages._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{
@@ -5504,6 +5504,34 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       expectMsgType[ReadResourcesSequenceV2](timeout)
+
+      // Successfully check if the cardinality can be deleted
+
+      responderManager ! CanDeleteCardinalitiesFromClassRequestV2(
+        classInfoContent = ClassInfoContentV2(
+          predicates = Map(
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
+              predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
+              objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
+            )
+          ),
+          classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BlueFreeTestClass".toSmartIri,
+          ontologySchema = ApiV2Complex,
+          directCardinalities = Map(
+            "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBlueTestTextProp".toSmartIri -> KnoraCardinalityInfo(
+              cardinality = Cardinality.MayHaveOne
+            )
+          )
+        ),
+        lastModificationDate = freetestLastModData,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: CanDoResponseV2 =>
+        assert(msg.canDo)
+      }
 
       // Successfully remove the (unused) text value cardinality from the class.
 

@@ -193,7 +193,7 @@ case class SuccessResponseV2(message: String) extends KnoraJsonLDResponseV2 {
  *
  * @param canDo `true` if the operation can be performed.
  */
-case class CanDoResponseV2(canDo: Boolean) extends KnoraJsonLDResponseV2 {
+final case class CanDoResponseV2(canDo: Boolean) extends KnoraJsonLDResponseV2 {
   def toJsonLDDocument(
     targetSchema: ApiV2Schema,
     settings: KnoraSettingsImpl,
