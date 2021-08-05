@@ -1,8 +1,5 @@
 package org.knora.webapi.e2e.v2
 
-import java.nio.file.{Files, Path, Paths}
-import java.net.URLEncoder
-import java.time.Instant
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.{Accept, BasicHttpCredentials}
@@ -21,6 +18,9 @@ import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDat
 import org.knora.webapi.util._
 import spray.json._
 
+import java.net.URLEncoder
+import java.nio.file.{Files, Path, Paths}
+import java.time.Instant
 import scala.concurrent.ExecutionContextExecutor
 
 object OntologyV2R2RSpec {
@@ -2676,43 +2676,15 @@ class OntologyV2R2RSpec extends R2RSpec {
   "create a class with two cardinalities, use one in data, and allow only removal of the cardinality for the property not used in data" in {
     // Create a class with no cardinalities.
 
-    val createClassRequestJson =
-      s"""{
-         |  "@id" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}",
-         |  "@type" : "owl:Ontology",
-         |  "knora-api:lastModificationDate" : {
-         |    "@type" : "xsd:dateTimeStamp",
-         |    "@value" : "$freetestLastModDate"
-         |  },
-         |  "@graph" : [ {
-         |    "@id" : "freetest:BlueFreeTestClass",
-         |    "@type" : "owl:Class",
-         |    "rdfs:label" : {
-         |      "@language" : "en",
-         |      "@value" : "A Blue Free Test class"
-         |    },
-         |    "rdfs:comment" : {
-         |      "@language" : "en",
-         |      "@value" : "A Blue Free Test class used for testing cardinalities"
-         |    },
-         |    "rdfs:subClassOf" : [
-         |      {
-         |        "@id": "knora-api:Resource"
-         |      }
-         |    ]
-         |  } ],
-         |  "@context" : {
-         |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-         |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
-         |    "owl" : "http://www.w3.org/2002/07/owl#",
-         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-         |    "freetest" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}#"
-         |  }
-         |}""".stripMargin
-
-    println(createClassRequestJson)
+    val createClassRequestJson = CreateClassRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "BlueFreeTestClass",
+        label = LangString("en", "A Blue Free Test class"),
+        comment = LangString("en", "A Blue Free Test class used for testing cardinalities")
+      )
+      .value
 
     Post(
       "/v2/ontologies/classes",
@@ -2730,44 +2702,17 @@ class OntologyV2R2RSpec extends R2RSpec {
     // Create a text property.
 
     val createTestTextPropRequestJson =
-      s"""{
-         |  "@id" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}",
-         |  "@type" : "owl:Ontology",
-         |  "knora-api:lastModificationDate" : {
-         |    "@type" : "xsd:dateTimeStamp",
-         |    "@value" : "$freetestLastModDate"
-         |  },
-         |  "@graph" : [ {
-         |      "@id" : "freetest:hasBlueTestTextProp",
-         |      "@type" : "owl:ObjectProperty",
-         |      "knora-api:subjectType" : {
-         |        "@id" : "anything:TestClass"
-         |      },
-         |      "knora-api:objectType" : {
-         |        "@id" : "knora-api:TextValue"
-         |      },
-         |      "rdfs:comment" : {
-         |        "@language" : "en",
-         |        "@value" : "A blue test text property"
-         |      },
-         |      "rdfs:label" : {
-         |        "@language" : "en",
-         |        "@value" : "blue test text property"
-         |      },
-         |      "rdfs:subPropertyOf" : {
-         |        "@id" : "knora-api:hasValue"
-         |      }
-         |  } ],
-         |  "@context" : {
-         |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-         |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
-         |    "owl" : "http://www.w3.org/2002/07/owl#",
-         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-         |    "freetest" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}#"
-         |  }
-         |}""".stripMargin
+      CreatePropertyRequest
+        .make(
+          ontologyName = "freetest",
+          lastModificationDate = freetestLastModDate,
+          propertyName = "hasBlueTestTextProp",
+          subjectClassName = "BlueFreeTestClass",
+          propertyType = PropertyValueType.TextValue,
+          label = LangString("en", "blue test text property"),
+          comment = LangString("en", "A blue test text property")
+        )
+        .value
 
     Post(
       "/v2/ontologies/properties",
@@ -2785,45 +2730,17 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     // Create an integer property.
 
-    val createTestIntegerPropRequestJson =
-      s"""{
-         |  "@id" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}",
-         |  "@type" : "owl:Ontology",
-         |  "knora-api:lastModificationDate" : {
-         |    "@type" : "xsd:dateTimeStamp",
-         |    "@value" : "$freetestLastModDate"
-         |  },
-         |  "@graph" : [ {
-         |      "@id" : "freetest:hasBlueTestIntProp",
-         |      "@type" : "owl:ObjectProperty",
-         |      "knora-api:subjectType" : {
-         |        "@id" : "freetest:BlueFreeTestClass"
-         |      },
-         |      "knora-api:objectType" : {
-         |        "@id" : "knora-api:IntValue"
-         |      },
-         |      "rdfs:comment" : {
-         |        "@language" : "en",
-         |        "@value" : "A blue test integer property"
-         |      },
-         |      "rdfs:label" : {
-         |        "@language" : "en",
-         |        "@value" : "blue test integer property"
-         |      },
-         |      "rdfs:subPropertyOf" : {
-         |        "@id" : "knora-api:hasValue"
-         |      }
-         |  } ],
-         |  "@context" : {
-         |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-         |    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
-         |    "owl" : "http://www.w3.org/2002/07/owl#",
-         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-         |    "freetest" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}#"
-         |  }
-         |}""".stripMargin
+    val createTestIntegerPropRequestJson = CreatePropertyRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        propertyName = "hasBlueTestIntProp",
+        subjectClassName = "BlueFreeTestClass",
+        propertyType = PropertyValueType.IntValue,
+        label = LangString("en", "blue test integer property"),
+        comment = LangString("en", "A blue test integer property")
+      )
+      .value
 
     Post(
       "/v2/ontologies/properties",
@@ -2840,50 +2757,23 @@ class OntologyV2R2RSpec extends R2RSpec {
 
     // Add cardinalities to the class.
 
-    val addCardinalitiesRequestJson =
-      s"""
-         |{
-         |  "@id" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}",
-         |  "@type" : "owl:Ontology",
-         |  "knora-api:lastModificationDate" : {
-         |    "@type" : "xsd:dateTimeStamp",
-         |    "@value" : "$freetestLastModDate"
-         |  },
-         |  "@graph" : [ {
-         |    "@id" : "freetest:BlueFreeTestClass",
-         |    "@type" : "owl:Class",
-         |    "rdfs:subClassOf" : [ {
-         |      "@type": "owl:Restriction",
-         |      "owl:maxCardinality" : 1,
-         |      "owl:onProperty" : {
-         |        "@id" : "anything:testTextProp"
-         |      }
-         |    },
-         |    {
-         |      "@type": "owl:Restriction",
-         |      "owl:maxCardinality" : 1,
-         |      "owl:onProperty" : {
-         |        "@id" : "freetest:hasBlueTestTextProp"
-         |      }
-         |    },
-         |    {
-         |      "@type": "owl:Restriction",
-         |      "owl:maxCardinality" : 1,
-         |      "owl:onProperty" : {
-         |        "@id" : "freetest:hasBlueTestIntProp"
-         |      }
-         |    } ]
-         |  } ],
-         |  "@context" : {
-         |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-         |    "owl" : "http://www.w3.org/2002/07/owl#",
-         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-         |    "freetest" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}#"
-         |  }
-         |}
-            """.stripMargin
+    val addCardinalitiesRequestJson = AddCardinalitiesRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "BlueFreeTestClass",
+        restrictions = List(
+          Restriction(
+            CardinalityRestriction.MaxCardinalityOne,
+            onProperty = Property(ontology = "freetest", property = "hasBlueTestTextProp")
+          ),
+          Restriction(
+            CardinalityRestriction.MaxCardinalityOne,
+            onProperty = Property(ontology = "freetest", property = "hasBlueTestIntProp")
+          )
+        )
+      )
+      .value
 
     Post(
       "/v2/ontologies/cardinalities",
@@ -2975,10 +2865,9 @@ class OntologyV2R2RSpec extends R2RSpec {
       BasicHttpCredentials(anythingUsername, password)
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
-      println(responseStr)
       assert(status == StatusCodes.OK, response.toString)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-      assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+      assert(responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
     }
 
     // Successfully remove the (unused) text value cardinality from the class.

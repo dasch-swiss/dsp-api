@@ -33,3 +33,5 @@ upload-graph ../../test_data/all_data/biblio-data.ttl http://www.knora.org/data/
 upload-graph ../../test_data/all_data/beol-data.ttl http://www.knora.org/data/0801/beol
 upload-graph ../../test_data/ontologies/webern-onto.ttl http://www.knora.org/ontology/0806/webern
 upload-graph ../../test_data/all_data/webern-data.ttl http://www.knora.org/data/0806/webern
+upload-graph ../../test_data/ontologies/freetest-onto.ttl http://www.knora.org/ontology/0001/freetest
+upload-graph ../../test_data/all_data/freetest-data.ttl http://www.knora.org/data/0001/freetest
