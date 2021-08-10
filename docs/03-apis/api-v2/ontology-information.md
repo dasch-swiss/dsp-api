@@ -1541,15 +1541,13 @@ HTTP PUT to http://host/v2/ontologies/cardinalities
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    {
-      "@id" : "CLASS_IRI",
-      "@type" : "owl:Class",
-      "rdfs:subClassOf" : {
-        "@type": "owl:Restriction",
-        "OWL_CARDINALITY_PREDICATE": "OWL_CARDINALITY_VALUE",
-        "owl:onProperty": {
-          "@id" : "PROPERTY_IRI"
-        }
+    "@id" : "CLASS_IRI",
+    "@type" : "owl:Class",
+    "rdfs:subClassOf" : {
+      "@type": "owl:Restriction",
+      "OWL_CARDINALITY_PREDICATE": "OWL_CARDINALITY_VALUE",
+      "owl:onProperty": {
+        "@id" : "PROPERTY_IRI"
       }
     }
   } ],
