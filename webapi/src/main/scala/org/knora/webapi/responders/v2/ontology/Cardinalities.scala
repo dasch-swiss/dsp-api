@@ -236,9 +236,6 @@ object Cardinalities {
           internalOntologyIri
         )
 
-      // FIXME: This seems not to work or is not needed. Check that it is a subclass of knora-base:Resource
-      // _ <- isKnoraResourceClass(deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema))
-
       // Check that the submitted cardinality to delete is defined on this class
 
       cardinalitiesToDelete: Map[SmartIri, Cardinality.KnoraCardinalityInfo] =

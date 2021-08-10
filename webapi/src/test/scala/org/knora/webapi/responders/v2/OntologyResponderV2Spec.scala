@@ -5269,17 +5269,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     "create a class with two cardinalities, use one in data, and allow only removal of the cardinality for the property not used in data" in {
 
-      /**
-       * def prop hasTitle
-       * class Book
-       *  - hasTitle
-       *
-       * def prop hasName extends hasTitle
-       * class PictureBook extends Book
-       *  - hasTitle - implicit?
-       *  - hasName - additional property or does hasName override hasTitle?
-       */
-
       // Create a class with no cardinalities.
 
       responderManager ! CreateClassRequestV2(
