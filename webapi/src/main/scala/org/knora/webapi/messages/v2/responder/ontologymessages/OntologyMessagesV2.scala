@@ -757,7 +757,7 @@ object ChangeCardinalitiesRequestV2 extends KnoraJsonLDRequestReaderV2[ChangeCar
 }
 
 /**
- * FIXME: Can only remove one single cardinality at a time.
+ * FIXME(DSP-1856): Can only remove one single cardinality at a time.
  * Requests a check if the user can remove class's cardinalities. A successful response will be a [[CanDoResponseV2]].
  *
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the cardinalities to be removed.
@@ -817,8 +817,8 @@ object CanDeleteCardinalitiesFromClassRequestV2
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): CanDeleteCardinalitiesFromClassRequestV2 = {
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+    val inputOntology        = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntology)
     val classInfoContent     = classUpdateInfo.classInfoContent
     val lastModificationDate = classUpdateInfo.lastModificationDate
 
@@ -833,7 +833,7 @@ object CanDeleteCardinalitiesFromClassRequestV2
 }
 
 /**
- * FIXME: Can only remove one single cardinality at a time.
+ * FIXME(DSP-1856): Can only remove one single cardinality at a time.
  * Requests the removal of a class's cardinalities. A successful response will be a [[ReadOntologyV2]].
  *
  * @param classInfoContent     a [[ClassInfoContentV2]] containing the cardinalities to be removed.
@@ -892,8 +892,8 @@ object DeleteCardinalitiesFromClassRequestV2 extends KnoraJsonLDRequestReaderV2[
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
   ): DeleteCardinalitiesFromClassRequestV2 = {
-    val inputOntologiesV2    = InputOntologyV2.fromJsonLD(jsonLDDocument)
-    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntologiesV2)
+    val inputOntology        = InputOntologyV2.fromJsonLD(jsonLDDocument)
+    val classUpdateInfo      = OntologyUpdateHelper.getClassDef(inputOntology)
     val classInfoContent     = classUpdateInfo.classInfoContent
     val lastModificationDate = classUpdateInfo.lastModificationDate
 

@@ -49,6 +49,8 @@ import scala.concurrent.{ExecutionContext, Future}
 object Cardinalities {
 
   /**
+   * FIXME(DSP-1856): Only works if a single cardinality is supplied.
+   *
    * @param settings the applications settings.
    * @param storeManager the store manager actor.
    * @param deleteCardinalitiesFromClassRequest the requested cardinalities to be deleted.
@@ -172,6 +174,7 @@ object Cardinalities {
   }
 
   /**
+   * FIXME(DSP-1856): Only works if a single cardinality is supplied.
    * Deletes the supplied cardinalities from a class, if the referenced properties are not used in instances
    * of the class and any subclasses.
    *

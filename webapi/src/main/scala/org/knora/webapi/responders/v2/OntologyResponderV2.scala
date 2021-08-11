@@ -1795,7 +1795,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
   }
 
   /**
-   * FIXME: Only works if a single cardinality is supplied.
+   * FIXME(DSP-1856): Only works if a single cardinality is supplied.
    * Checks if cardinalities can be removed from a class.
    *
    * @param canDeleteCardinalitiesFromClassRequest the request to remove cardinalities.
@@ -1835,6 +1835,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
     } yield taskResult
 
   /**
+   * FIXME(DSP-1856): Only works if a single cardinality is supplied.
    * Removes cardinalities (from class to properties) from class if properties are not used inside data.
    *
    * @param deleteCardinalitiesFromClassRequest the request to remove cardinalities.
