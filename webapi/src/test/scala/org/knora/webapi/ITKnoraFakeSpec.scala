@@ -45,9 +45,9 @@ object ITKnoraFakeSpec {
 }
 
 /**
-  * This class can be used in End-to-End testing. It starts a Fake Knora server and
-  * provides access to settings and logging.
-  */
+ * This class can be used in End-to-End testing. It starts a Fake Knora server and
+ * provides access to settings and logging.
+ */
 class ITKnoraFakeSpec(_system: ActorSystem)
     extends Core
     with KnoraFakeCore
@@ -59,20 +59,25 @@ class ITKnoraFakeSpec(_system: ActorSystem)
 
   /* constructors */
   def this(name: String, config: Config) =
-    this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraFakeSpec.defaultConfig))))
+    this(
+      ActorSystem(name, TestContainersAll.PortConfig.withFallback(config.withFallback(ITKnoraFakeSpec.defaultConfig)))
+    )
   def this(config: Config) =
     this(
-      ActorSystem("IntegrationTests",
-                  TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraFakeSpec.defaultConfig))))
+      ActorSystem(
+        "IntegrationTests",
+        TestContainersAll.PortConfig.withFallback(config.withFallback(ITKnoraFakeSpec.defaultConfig))
+      )
+    )
   def this(name: String) =
-    this(ActorSystem(name, TestContainers.PortConfig.withFallback(ITKnoraFakeSpec.defaultConfig)))
+    this(ActorSystem(name, TestContainersAll.PortConfig.withFallback(ITKnoraFakeSpec.defaultConfig)))
   def this() =
-    this(ActorSystem("IntegrationTests", TestContainers.PortConfig.withFallback(ITKnoraFakeSpec.defaultConfig)))
+    this(ActorSystem("IntegrationTests", TestContainersAll.PortConfig.withFallback(ITKnoraFakeSpec.defaultConfig)))
 
   /* needed by the core trait */
-  implicit lazy val system: ActorSystem = _system
-  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+  implicit lazy val system: ActorSystem           = _system
+  implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
+  implicit val materializer: Materializer         = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   /* Needs to be initialized before any responders */
@@ -81,7 +86,7 @@ class ITKnoraFakeSpec(_system: ActorSystem)
 
   val log: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
-  protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
+  protected val baseApiUrl: String          = settings.internalKnoraApiBaseUrl
   protected val baseInternalSipiUrl: String = settings.internalSipiBaseUrl
   protected val baseExternalSipiUrl: String = settings.externalSipiBaseUrl
 
@@ -103,17 +108,15 @@ class ITKnoraFakeSpec(_system: ActorSystem)
   }
 
   protected def getResponseString(request: HttpRequest): String = {
-    val response = singleAwaitingRequest(request)
+    val response        = singleAwaitingRequest(request)
     val responseBodyStr = Await.result(Unmarshal(response.entity).to[String], 6.seconds)
     assert(response.status === StatusCodes.OK, s",\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
     responseBodyStr
   }
 
-  protected def checkResponseOK(request: HttpRequest): Unit = {
+  protected def checkResponseOK(request: HttpRequest): Unit =
     getResponseString(request)
-  }
 
-  protected def getResponseJson(request: HttpRequest): JsObject = {
+  protected def getResponseJson(request: HttpRequest): JsObject =
     getResponseString(request).parseJson.asJsObject
-  }
 }

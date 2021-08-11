@@ -53,9 +53,9 @@ object ITKnoraLiveSpec {
 }
 
 /**
-  * This class can be used in End-to-End testing. It starts the Knora server and
-  * provides access to settings and logging.
-  */
+ * This class can be used in End-to-End testing. It starts the Knora server and
+ * provides access to settings and logging.
+ */
 class ITKnoraLiveSpec(_system: ActorSystem)
     extends Core
     with StartupUtils
@@ -69,20 +69,25 @@ class ITKnoraLiveSpec(_system: ActorSystem)
 
   /* constructors */
   def this(name: String, config: Config) =
-    this(ActorSystem(name, TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig))))
+    this(
+      ActorSystem(name, TestContainersAll.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig)))
+    )
   def this(config: Config) =
     this(
-      ActorSystem("IntegrationTests",
-                  TestContainers.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig))))
+      ActorSystem(
+        "IntegrationTests",
+        TestContainersAll.PortConfig.withFallback(config.withFallback(ITKnoraLiveSpec.defaultConfig))
+      )
+    )
   def this(name: String) =
-    this(ActorSystem(name, TestContainers.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
+    this(ActorSystem(name, TestContainersAll.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
   def this() =
-    this(ActorSystem("IntegrationTests", TestContainers.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
+    this(ActorSystem("IntegrationTests", TestContainersAll.PortConfig.withFallback(ITKnoraLiveSpec.defaultConfig)))
 
   /* needed by the core trait (represents the KnoraTestCore trait)*/
-  implicit lazy val system: ActorSystem = _system
-  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+  implicit lazy val system: ActorSystem           = _system
+  implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
+  implicit val materializer: Materializer         = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // can be overridden in individual spec
@@ -97,7 +102,7 @@ class ITKnoraLiveSpec(_system: ActorSystem)
   lazy val appActor: ActorRef =
     system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
-  protected val baseApiUrl: String = settings.internalKnoraApiBaseUrl
+  protected val baseApiUrl: String          = settings.internalKnoraApiBaseUrl
   protected val baseInternalSipiUrl: String = settings.internalSipiBaseUrl
   protected val baseExternalSipiUrl: String = settings.externalSipiBaseUrl
 
@@ -119,14 +124,13 @@ class ITKnoraLiveSpec(_system: ActorSystem)
     loadTestData(rdfDataObjects)
   }
 
-  override def afterAll(): Unit = {
+  override def afterAll(): Unit =
     /* Stop the server when everything else has finished */
     appActor ! AppStop()
-  }
 
   protected def checkIfSipiIsRunning(): Unit = {
     // This requires that (1) fileserver.docroot is set in Sipi's config file and (2) it contains a file test.html.
-    val request = Get(baseInternalSipiUrl + "/server/test.html")
+    val request  = Get(baseInternalSipiUrl + "/server/test.html")
     val response = singleAwaitingRequest(request)
     assert(response.status == StatusCodes.OK, s"Sipi is probably not running: ${response.status}")
     if (response.status.isSuccess()) logger.info("Sipi is running.")
@@ -135,8 +139,10 @@ class ITKnoraLiveSpec(_system: ActorSystem)
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
     logger.info("Loading test data started ...")
-    val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent",
-                       HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+    val request = Post(
+      baseApiUrl + "/admin/store/ResetTriplestoreContent",
+      HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint)
+    )
     singleAwaitingRequest(request, 479999.milliseconds)
     logger.info("... loading test data done.")
   }
@@ -150,17 +156,16 @@ class ITKnoraLiveSpec(_system: ActorSystem)
       responseBodyStr
     } else {
       throw AssertionException(
-        s"Got HTTP ${response.status.intValue}\n REQUEST: $request,\n RESPONSE: $responseBodyStr")
+        s"Got HTTP ${response.status.intValue}\n REQUEST: $request,\n RESPONSE: $responseBodyStr"
+      )
     }
   }
 
-  protected def checkResponseOK(request: HttpRequest): Unit = {
+  protected def checkResponseOK(request: HttpRequest): Unit =
     getResponseStringOrThrow(request)
-  }
 
-  protected def getResponseJson(request: HttpRequest): JsObject = {
+  protected def getResponseJson(request: HttpRequest): JsObject =
     getResponseStringOrThrow(request).parseJson.asJsObject
-  }
 
   protected def singleAwaitingRequest(request: HttpRequest, duration: Duration = 15999.milliseconds): HttpResponse = {
     val responseFuture: Future[HttpResponse] = Http().singleRequest(request)
@@ -173,57 +178,60 @@ class ITKnoraLiveSpec(_system: ActorSystem)
   }
 
   /**
-    * Represents a file to be uploaded to Sipi.
-    *
-    * @param path     the path of the file.
-    * @param mimeType the MIME type of the file.
-    */
+   * Represents a file to be uploaded to Sipi.
+   *
+   * @param path     the path of the file.
+   * @param mimeType the MIME type of the file.
+   */
   protected case class FileToUpload(path: String, mimeType: ContentType)
 
   /**
-    * Represents an image file to be uploaded to Sipi.
-    *
-    * @param fileToUpload the file to be uploaded.
-    * @param width        the image's width in pixels.
-    * @param height       the image's height in pixels.
-    */
+   * Represents an image file to be uploaded to Sipi.
+   *
+   * @param fileToUpload the file to be uploaded.
+   * @param width        the image's width in pixels.
+   * @param height       the image's height in pixels.
+   */
   protected case class InputFile(fileToUpload: FileToUpload, width: Int, height: Int)
 
   /**
-    * Represents the information that Sipi returns about each file that has been uploaded.
-    *
-    * @param originalFilename the original filename that was submitted to Sipi.
-    * @param internalFilename Sipi's internal filename for the stored temporary file.
-    * @param temporaryUrl     the URL at which the temporary file can be accessed.
-    * @param fileType         `image`, `text`, or `document`.
-    */
-  protected case class SipiUploadResponseEntry(originalFilename: String,
-                                               internalFilename: String,
-                                               temporaryUrl: String,
-                                               fileType: String)
+   * Represents the information that Sipi returns about each file that has been uploaded.
+   *
+   * @param originalFilename the original filename that was submitted to Sipi.
+   * @param internalFilename Sipi's internal filename for the stored temporary file.
+   * @param temporaryUrl     the URL at which the temporary file can be accessed.
+   * @param fileType         `image`, `text`, or `document`.
+   */
+  protected case class SipiUploadResponseEntry(
+    originalFilename: String,
+    internalFilename: String,
+    temporaryUrl: String,
+    fileType: String
+  )
 
   /**
-    * Represents Sipi's response to a file upload request.
-    *
-    * @param uploadedFiles the information about each file that was uploaded.
-    */
+   * Represents Sipi's response to a file upload request.
+   *
+   * @param uploadedFiles the information about each file that was uploaded.
+   */
   protected case class SipiUploadResponse(uploadedFiles: Seq[SipiUploadResponseEntry])
 
   object SipiUploadResponseJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
     implicit val sipiUploadResponseEntryFormat: RootJsonFormat[SipiUploadResponseEntry] = jsonFormat4(
-      SipiUploadResponseEntry)
+      SipiUploadResponseEntry
+    )
     implicit val sipiUploadResponseFormat: RootJsonFormat[SipiUploadResponse] = jsonFormat1(SipiUploadResponse)
   }
 
   import SipiUploadResponseJsonProtocol._
 
   /**
-    * Uploads a file to Sipi and returns the information in Sipi's response.
-    *
-    * @param loginToken    the login token to be included in the request to Sipi.
-    * @param filesToUpload the files to be uploaded.
-    * @return a [[SipiUploadResponse]] representing Sipi's response.
-    */
+   * Uploads a file to Sipi and returns the information in Sipi's response.
+   *
+   * @param loginToken    the login token to be included in the request to Sipi.
+   * @param filesToUpload the files to be uploaded.
+   * @return a [[SipiUploadResponse]] representing Sipi's response.
+   */
   protected def uploadToSipi(loginToken: String, filesToUpload: Seq[FileToUpload]): SipiUploadResponse = {
     // Make a multipart/form-data request containing the files.
 

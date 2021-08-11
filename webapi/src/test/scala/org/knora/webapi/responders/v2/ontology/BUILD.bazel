@@ -1,0 +1,42 @@
+package(default_visibility = ["//visibility:public"])
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
+load("//third_party:dependencies.bzl", "ALL_WEBAPI_MAIN_DEPENDENCIES", "BASE_TEST_DEPENDENCIES", "BASE_TEST_DEPENDENCIES_WITH_JSON", "BASE_TEST_DEPENDENCIES_WITH_JSON_LD")
+
+scala_test(
+    name = "DeleteCardinalitiesFromClassSpec",
+    size = "small",  # 60s
+    srcs = [
+        "DeleteCardinalitiesFromClassSpec.scala",
+    ],
+    data = [
+        "//knora-ontologies",
+        "//test_data",
+    ],
+    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
+    resources = [
+        "//webapi/scripts:fuseki_repository_config_ttl_template",
+        "//webapi/src/main/resources",
+        "//webapi/src/test/resources",
+    ],
+    scalacopts = ["-deprecation"],
+    unused_dependency_checker_mode = "warn",
+    deps = [
+        "//webapi:test_library",
+        "//webapi/src/main/scala/org/knora/webapi",
+        "//webapi/src/main/scala/org/knora/webapi/instrumentation",
+        "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/responders/v2/ontology",
+        "//webapi/src/main/scala/org/knora/webapi/settings",
+        "//webapi/src/main/scala/org/knora/webapi/store",
+        "@maven//:com_typesafe_akka_akka_actor_2_13",
+        "@maven//:com_typesafe_config",
+        "@maven//:com_typesafe_scala_logging_scala_logging_2_13",
+        "@maven//:org_scalactic_scalactic_2_13",
+        "@maven//:org_scalatest_scalatest_compatible",
+        "@maven//:org_scalatest_scalatest_core_2_13",
+        "@maven//:org_scalatest_scalatest_matchers_core_2_13",
+        "@maven//:org_scalatest_scalatest_shouldmatchers_2_13",
+        "@maven//:org_scalatest_scalatest_wordspec_2_13",
+    ],
+)

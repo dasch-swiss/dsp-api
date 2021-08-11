@@ -36,17 +36,18 @@ import org.knora.webapi.util.ActorUtil._
 import scala.concurrent.ExecutionContext
 
 /**
-  * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured
-  * triple stores.
-  *
-  * @param appActor                    a reference to the main application actor.
-  * @param settings                    the application settings.
-  * @param defaultFeatureFactoryConfig the application's default feature factory configuration.
-  */
-class TriplestoreManager(appActor: ActorRef,
-                         settings: KnoraSettingsImpl,
-                         defaultFeatureFactoryConfig: FeatureFactoryConfig)
-    extends Actor
+ * This actor receives messages representing SPARQL requests, and forwards them to instances of one of the configured
+ * triple stores.
+ *
+ * @param appActor                    a reference to the main application actor.
+ * @param settings                    the application settings.
+ * @param defaultFeatureFactoryConfig the application's default feature factory configuration.
+ */
+class TriplestoreManager(
+  appActor: ActorRef,
+  settings: KnoraSettingsImpl,
+  defaultFeatureFactoryConfig: FeatureFactoryConfig
+) extends Actor
     with ActorLogging {
   this: ActorMaker =>
 
@@ -80,15 +81,16 @@ class TriplestoreManager(appActor: ActorRef,
     featureFactoryConfig = defaultFeatureFactoryConfig
   )
 
-  override def preStart() {
+  override def preStart(): Unit = {
     log.debug("TriplestoreManagerActor: start with preStart")
 
     storeActorRef = settings.triplestoreType match {
       case TriplestoreTypes.HttpGraphDBSE | TriplestoreTypes.HttpGraphDBFree | TriplestoreTypes.HttpFuseki =>
         makeActor(
-          FromConfig.props(Props[HttpTriplestoreConnector]).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-          name = HttpTriplestoreActorName)
-      case TriplestoreTypes.EmbeddedJenaTdb => makeActor(Props[JenaTDBActor], name = EmbeddedJenaActorName)
+          FromConfig.props(Props[HttpTriplestoreConnector]()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+          name = HttpTriplestoreActorName
+        )
+      case TriplestoreTypes.EmbeddedJenaTdb => makeActor(Props[JenaTDBActor](), name = EmbeddedJenaActorName)
       case unknownType                      => throw UnsupportedTriplestoreException(s"Embedded triplestore type $unknownType not supported")
     }
 

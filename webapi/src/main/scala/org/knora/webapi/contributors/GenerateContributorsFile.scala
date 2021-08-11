@@ -31,19 +31,19 @@ import spray.json.{JsArray, JsNull, JsNumber, JsObject, JsString, JsValue, JsonP
 import scala.io.Source
 
 /**
-  * Generates the file Contributors.md, using the GitHub API.
-  */
+ * Generates the file Contributors.md, using the GitHub API.
+ */
 object GenerateContributorsFile extends App {
 
   // Configuration
 
-  val contributorsUrl = "https://api.github.com/repos/dasch-swiss/knora-api/contributors"
+  val contributorsUrl   = "https://api.github.com/repos/dasch-swiss/knora-api/contributors"
   val defaultOutputFile = "Contributors.md"
 
   // Command-line args
 
-  private val conf = new GenerateContributorsFileConf(args)
-  private val token = conf.token.toOption
+  private val conf             = new GenerateContributorsFileConf(args.toIndexedSeq)
+  private val token            = conf.token.toOption
   private val outputFile: Path = Paths.get(conf.output())
 
   // Get the list of contributors.
@@ -89,11 +89,11 @@ object GenerateContributorsFile extends App {
   FileUtil.writeTextFile(file = outputFile, content = contributorsText)
 
   /**
-    * Makes an HTTP GET connection to the GitHub API.
-    *
-    * @param url a GitHub API URL.
-    * @return the response, parsed as JSON.
-    */
+   * Makes an HTTP GET connection to the GitHub API.
+   *
+   * @param url a GitHub API URL.
+   * @return the response, parsed as JSON.
+   */
   private def getFromGitHubApi(url: String): JsValue = {
     val connection: URLConnection = new URL(url).openConnection
 
@@ -112,13 +112,13 @@ object GenerateContributorsFile extends App {
   }
 
   /**
-    * Parses command-line arguments.
-    */
+   * Parses command-line arguments.
+   */
   private class GenerateContributorsFileConf(arguments: Seq[String]) extends ScallopConf(arguments) {
     banner(s"""
-               |Generates a file listing the contributors to Knora.
-               |
-               |Usage: org.knora.webapi.util.GenerateContributorsFile [ -t TOKEN ] [ -o OUTPUT ]
+              |Generates a file listing the contributors to Knora.
+              |
+              |Usage: org.knora.webapi.util.GenerateContributorsFile [ -t TOKEN ] [ -o OUTPUT ]
             """.stripMargin)
 
     val token: ScallopOption[String] = opt[String](descr = "GitHub API token")
