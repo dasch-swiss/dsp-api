@@ -46,7 +46,10 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
       path = "test_data/ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
-    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest")
+    RdfDataObject(
+      path = "test_data/all_data/freetest-data.ttl",
+      name = "http://www.knora.org/data/0001/freetest"
+    )
   )
 
   val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(settings)

@@ -1678,6 +1678,45 @@ class OntologyV2R2RSpec extends R2RSpec {
       }
     }
 
+    "should have added isEditable in newly added link property value" in {
+      val url = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
+      Get(
+        s"/v2/ontologies/allentities/${url}"
+      ) ~> ontologiesPath ~> check {
+        val responseStr: String = responseAs[String]
+        assert(status == StatusCodes.OK, response.toString)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
+        val graph = responseJsonDoc.body.requireArray("@graph").value //.head.asInstanceOf[JsonLDObject]
+
+        val hasBlueThingValue = graph
+          .filter(
+            _.asInstanceOf[JsonLDObject]
+              .value("@id")
+              .asInstanceOf[JsonLDString]
+              .value == "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBlueThingValue"
+          )
+          .head
+          .asInstanceOf[JsonLDObject]
+
+        val iris = hasBlueThingValue.value.keySet
+
+        iris.size should equal(9)
+
+        iris should contain allOf (
+          OntologyConstants.Rdfs.Comment,
+          OntologyConstants.Rdfs.Label,
+          OntologyConstants.Rdfs.SubPropertyOf,
+          OntologyConstants.KnoraApiV2Complex.IsEditable,
+          OntologyConstants.KnoraApiV2Complex.IsLinkValueProperty,
+          OntologyConstants.KnoraApiV2Complex.ObjectType,
+          OntologyConstants.KnoraApiV2Complex.SubjectType,
+          "@id",
+          "@type"
+        )
+      }
+    }
+
     "remove the cardinality for the property anything:hasOtherNothing from the class anything:Nothing" in {
       val params =
         s"""{
