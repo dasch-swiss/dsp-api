@@ -1678,7 +1678,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       }
     }
 
-    "should have added isEditable in newly added link property value" in {
+    "should have added all IRIs to newly created link value property" in {
       val url = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
       Get(
         s"/v2/ontologies/allentities/${url}"
