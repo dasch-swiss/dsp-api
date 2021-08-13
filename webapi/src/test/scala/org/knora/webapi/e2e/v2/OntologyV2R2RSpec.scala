@@ -1678,7 +1678,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       }
     }
 
-    "should have added all IRIs to newly created link value property" in {
+    "add all IRIs to newly created link value property again" in {
       val url = URLEncoder.encode(s"${SharedOntologyTestDataADM.ANYTHING_ONTOLOGY_IRI_LocalHost}", "UTF-8")
       Get(
         s"/v2/ontologies/allentities/${url}"
@@ -1689,7 +1689,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         val graph = responseJsonDoc.body.requireArray("@graph").value //.head.asInstanceOf[JsonLDObject]
 
-        val hasBlueThingValue = graph
+        val iris = graph
           .filter(
             _.asInstanceOf[JsonLDObject]
               .value("@id")
@@ -1698,22 +1698,24 @@ class OntologyV2R2RSpec extends R2RSpec {
           )
           .head
           .asInstanceOf[JsonLDObject]
+          .value
+          .keySet
 
-        val iris = hasBlueThingValue.value.keySet
-
-        iris.size should equal(9)
-
-        iris should contain allOf (
+        // FIXME: should pass!
+        val expectedIris = Set(
           OntologyConstants.Rdfs.Comment,
           OntologyConstants.Rdfs.Label,
           OntologyConstants.Rdfs.SubPropertyOf,
           OntologyConstants.KnoraApiV2Complex.IsEditable,
+          OntologyConstants.KnoraApiV2Complex.IsResourceProperty,
           OntologyConstants.KnoraApiV2Complex.IsLinkValueProperty,
           OntologyConstants.KnoraApiV2Complex.ObjectType,
           OntologyConstants.KnoraApiV2Complex.SubjectType,
           "@id",
           "@type"
         )
+
+        iris should equal(expectedIris)
       }
     }
 
