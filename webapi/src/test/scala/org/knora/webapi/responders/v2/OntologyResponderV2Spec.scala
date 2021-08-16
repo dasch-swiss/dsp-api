@@ -3280,10 +3280,17 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val x = msg.properties.head._2.entityInfoContent.predicates
+          .get(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElementProp)) match {
+          case Some(y) => ??? // y.objects.head.iri has to be internal
+        }
+        println(x)
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val property = externalOntology.properties(propertyIri)
 
+        // TODO: note!
+        // smartIri.getOntologySchema.contains(InternalSchema) // checks if smartIri is internal
         property.entityInfoContent.predicates(
           OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri
         ) should ===(
