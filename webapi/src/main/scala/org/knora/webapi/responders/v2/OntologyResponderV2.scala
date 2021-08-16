@@ -2457,6 +2457,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               }
             )
 
+        // TODO: note!
         // If we're creating a link property, make the definition of the corresponding link value property.
         maybeLinkValuePropertyDef: Option[PropertyInfoContentV2] = if (isLinkProp) {
                                                                      val linkValuePropertyDef = OntologyHelpers
@@ -2640,7 +2641,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           maybeUnescapedNewLinkValuePropertyDef.map { unescapedNewLinkPropertyDef =>
             unescapedNewLinkPropertyDef.propertyIri -> ReadPropertyInfoV2(
               entityInfoContent = unescapedNewLinkPropertyDef,
-              isEditable = true,
+              isEditable = true, // TODO: added this line!
               isResourceProp = true,
               isLinkValueProp = true
             )
