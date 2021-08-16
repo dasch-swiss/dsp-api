@@ -34,7 +34,9 @@ import org.knora.webapi.util.cache.CacheUtil
 import org.knora.webapi.{IntegrationSpec, TestContainerFuseki}
 
 import java.time.Instant
-import scala.concurrent.Future
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration._
+import scala.language.postfixOps
 import scala.util.{Failure, Success}
 
 /**
@@ -102,99 +104,46 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
       assert(true)
     }
 
-    "update cache data correctly" in {
-      val previousCacheData = for {
-        cacheData <- Cache.getCacheData
-      } yield cacheData
+    "update cache data correctly while awaiting futures" in {
+      val iri: SmartIri      = stringFormatter.toSmartIri(additionalTestData.head.name)
+      val hasTextPropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasText")
 
-      val iri: SmartIri = stringFormatter.toSmartIri(additionalTestData.head.name)
-      val previousFreetestFuture = previousCacheData.map { cache =>
-        cache.ontologies.get(iri)
-      }
-      previousFreetestFuture.map(previousFreetestMaybe =>
-        previousFreetestMaybe match {
-          case Some(previousFreetest) => {
-            val hasTextPropertyIri =
-              stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasText")
-//            val textPropertyMaybe = previousFreetest.properties.get(propertyIri)
-//            textPropertyMaybe match {
-//              case Some(textProperty) => {
-//                println(textProperty)
-//              }
-//            }
+      val previousCacheDataFuture = Cache.getCacheData
+      val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
 
-            // copy freetext-onto but remove :hasText property
-            val newFreetest = previousFreetest.copy(
-              ontologyMetadata = previousFreetest.ontologyMetadata.copy(
-                lastModificationDate = Some(Instant.now())
-              ),
-              properties = previousFreetest.properties -- Set(hasTextPropertyIri)
-            )
+      val previousFreetestMaybe = previousCacheData.ontologies.get(iri)
+      previousFreetestMaybe match {
+        case Some(previousFreetest) => {
+          // copy freetext-onto but remove :hasText property
+          val newFreetest = previousFreetest.copy(
+            ontologyMetadata = previousFreetest.ontologyMetadata.copy(
+              lastModificationDate = Some(Instant.now())
+            ),
+            properties = previousFreetest.properties.view.filterKeys(_ != hasTextPropertyIri).toMap
+          )
 
-//            println(newFreetest)
+          // store new ontology to cache
+          val newCacheData = previousCacheData.copy(
+            ontologies = previousCacheData.ontologies + (iri -> newFreetest)
+          )
+          Cache.storeCacheData(newCacheData)
 
-            // cache updated freetext-onto
-//            _ = Cache.storeCacheData(
-            previousCacheData.map { prev =>
-              val newCacheData = prev.copy(
-                ontologies = prev.ontologies + (iri -> newFreetest)
-//                subPropertyOfRelations =
-//                  cacheData.subPropertyOfRelations + (internalPropertyIri -> allKnoraSuperPropertyIris)
-              )
-              Cache.storeCacheData(newCacheData)
+          // read back the cache
+          val newCachedCacheDataFuture = for {
+            cacheData <- Cache.getCacheData
+          } yield cacheData
+          val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
 
-            // TODO: continue here
+          // ensure that the cache updated correctly
+          val newCachedFreetestMaybe = newCachedCacheData.ontologies.get(iri)
+          newCachedFreetestMaybe match {
+            case Some(newCachedFreetest) => {
+              assert(newCachedFreetest.properties.size != previousFreetest.properties.size)
+              assert(newCachedFreetest.properties.size == newFreetest.properties.size)
             }
-            //            )
           }
         }
-      )
-
-//      val updatedOntology: ReadOntologyV2 = ???
-//
-//      val newCacheData = previousCacheData.map { cacheData: Cache.OntologyCacheData =>
-//        cacheData.copy(
-//          ontologies = cacheData.ontologies + (iri -> updatedOntology)
-//        )
-//      }
-      // TODO: stuff
-      assert(true)
+      }
     }
-
-//    "contain stuff" in {
-////      ResponderManager.
-//
-//      val anythingFuture = for {
-//        cached      <- Cache.getCacheData
-//        ontos        = cached.ontologies
-//        anythingOnto = ontos.get(stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/anything"))
-//      } yield anythingOnto
-//
-//      anythingFuture andThen {
-//        case Success(anythingOption) => {
-//          anythingOption match {
-//            case Some(anything: ReadOntologyV2) => {
-//              // got ontology
-//              println(anything)
-//              // do stuff
-////              Cache.storeCacheData(
-////                Cache.OntologyCacheData.
-////              )
-//            }
-//          }
-//        }
-//      }
-////      match {
-////        case Some(ontology) => {}
-////      }
-////      c.onComplete {
-////        case Success(v) => {
-////          val vv = v
-////          println(vv)
-////        }
-////        case Failure(e) => println(e)
-////      }
-//      assert(true)
-//    }
   }
 }
