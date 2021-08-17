@@ -3271,7 +3271,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! ChangePropertyGuiElementRequest(
         propertyIri = propertyIri,
-        newGuiElement = Some("http://api.knora.org/ontology/salsah-gui/v2#SimpleText".toSmartIri),
+        newGuiElement = Some("http://www.knora.org/ontology/salsah-gui#SimpleText".toSmartIri),
         newGuiAttributes = Set("size=80"),
         lastModificationDate = anythingLastModDate,
         apiRequestID = UUID.randomUUID,
@@ -3292,23 +3292,27 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         assert(externalOntology.properties.size == 1)
         val property = externalOntology.properties(propertyIri)
 
-        property.entityInfoContent.predicates(
+        val guiElementPropComplex = property.entityInfoContent.predicates(
           OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri
-        ) should ===(
-          PredicateInfoV2(
-            predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
-            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#SimpleText".toSmartIri))
-          )
         )
 
-        property.entityInfoContent.predicates(
-          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri
-        ) should ===(
-          PredicateInfoV2(
-            predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri,
-            objects = Seq(StringLiteralV2("size=80"))
-          )
+        val guiElementPropComplexExpected = PredicateInfoV2(
+          predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+          objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#SimpleText".toSmartIri))
         )
+
+        guiElementPropComplex should equal(guiElementPropComplexExpected)
+
+        val guiAttributeComplex = property.entityInfoContent.predicates(
+          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri
+        )
+
+        val guiAttributeComplexExpected = PredicateInfoV2(
+          predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute.toSmartIri,
+          objects = Seq(StringLiteralV2("size=80"))
+        )
+
+        guiAttributeComplex should equal(guiAttributeComplexExpected)
 
         val metadata = externalOntology.ontologyMetadata
         val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
