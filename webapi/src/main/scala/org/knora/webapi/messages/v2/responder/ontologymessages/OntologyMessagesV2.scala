@@ -1054,10 +1054,12 @@ object ChangePropertyGuiElementRequest extends KnoraJsonLDRequestReaderV2[Change
 
     val newGuiElement: Option[SmartIri] =
       propertyInfoContent.predicates
-        .get(OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri)
+        .get(
+          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri
+        )
         .map { predicateInfoV2: PredicateInfoV2 =>
           predicateInfoV2.objects.head match {
-            case iriLiteralV2: SmartIriLiteralV2 => iriLiteralV2.value
+            case iriLiteralV2: SmartIriLiteralV2 => iriLiteralV2.value.toOntologySchema(InternalSchema)
             case other =>
               throw BadRequestException(s"Unexpected object for salsah-gui:guiElement: $other")
           }

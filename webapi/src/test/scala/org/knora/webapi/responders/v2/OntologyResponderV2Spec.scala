@@ -3288,6 +3288,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             guiElementTypeFromMessage should equal(guiElementTypeInternal)
         }
 
+        // Check that the salsah-gui:guiElement from the message is as expected
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val property = externalOntology.properties(propertyIri)
