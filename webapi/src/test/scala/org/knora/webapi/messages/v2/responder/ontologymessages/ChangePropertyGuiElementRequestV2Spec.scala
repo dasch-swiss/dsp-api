@@ -23,17 +23,16 @@ import akka.util.Timeout
 import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
 import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.AsyncCoreSpec
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import java.util.UUID
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, Future}
+import scala.concurrent.Future
 
 /**
  * Tests [[ChangePropertyGuiElementRequestV2Spec]].
  */
-class ChangePropertyGuiElementRequestV2Spec extends CoreSpec {
+class ChangePropertyGuiElementRequestV2Spec extends AsyncCoreSpec {
 
   "ChangePropertyGuiElementRequest" should {
     "should parse the request message correctly" in {
@@ -87,16 +86,18 @@ class ChangePropertyGuiElementRequestV2Spec extends CoreSpec {
                                                              )
       } yield requestMessage
 
-      val changePropertyGuiElementRequestMessage = Await.result(requestMessageFuture, 5.seconds)
-      changePropertyGuiElementRequestMessage.propertyIri.toString should equal(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName"
-      )
-      changePropertyGuiElementRequestMessage.newGuiElement.get.toString should equal(
-        "http://www.knora.org/ontology/salsah-gui#Textarea"
-      )
-      changePropertyGuiElementRequestMessage.newGuiAttributes should equal(Set("cols=80", "rows=24"))
-      changePropertyGuiElementRequestMessage.lastModificationDate.toString should equal("2021-08-17T12:04:29.756311Z")
-      changePropertyGuiElementRequestMessage.requestingUser.username should equal("anything.user01")
+      requestMessageFuture map { changePropertyGuiElementRequestMessage =>
+        changePropertyGuiElementRequestMessage.propertyIri.toString should equal(
+          "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName"
+        )
+        changePropertyGuiElementRequestMessage.newGuiElement.get.toString should equal(
+          "http://www.knora.org/ontology/salsah-gui#Textarea"
+        )
+        changePropertyGuiElementRequestMessage.newGuiAttributes should equal(Set("cols=80", "rows=24"))
+        changePropertyGuiElementRequestMessage.lastModificationDate.toString should equal("2021-08-17T12:04:29.756311Z")
+        changePropertyGuiElementRequestMessage.requestingUser.username should equal("anything.user01")
+      }
+
     }
   }
 
