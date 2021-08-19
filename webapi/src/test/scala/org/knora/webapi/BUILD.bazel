@@ -5,6 +5,7 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 filegroup(
     name = "srcs",
     srcs = [
+        "AsyncCoreSpec.scala",
         "CoreSpec.scala",
         "E2ESimSpec.scala",
         "E2ESpec.scala",
