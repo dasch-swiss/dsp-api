@@ -2668,7 +2668,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         // Read the data back from the cache.
         // TODO: remove cached... only for debug purposes
-        cached <- Cache.getCacheData
+        // cached <- Cache.getCacheData
         response <- getPropertyDefinitionsFromOntologyV2(
                       propertyIris = Set(internalPropertyIri),
                       allLanguages = true,

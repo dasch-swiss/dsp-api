@@ -30,20 +30,20 @@
     salsah-gui:guiAttribute           "size=80", "maxlength=255" .
 
 
-:hasPage
-    rdf:type                          owl:ObjectProperty ;
-    rdfs:subPropertyOf                knora-base:hasLinkTo ;
-    rdfs:label                        "Seite im Buch"@de, "Page in the book"@en ;
-    knora-base:subjectClassConstraint :Book ;
-    knora-base:objectClassConstraint  :Page ;
-    salsah-gui:guiElement             salsah-gui:Searchbox .
-
-
-:hasPageValue
-    rdf:type                         owl:ObjectProperty ;
-    rdfs:subPropertyOf               knora-base:hasLinkToValue ;
-    rdfs:label                       "Seite im Buch"@de, "Page in the book"@en ;
-    knora-base:objectClassConstraint knora-base:LinkValue .
+#:hasPage
+#    rdf:type                          owl:ObjectProperty ;
+#    rdfs:subPropertyOf                knora-base:hasLinkTo ;
+#    rdfs:label                        "Seite im Buch"@de, "Page in the book"@en ;
+#    knora-base:subjectClassConstraint :Book ;
+#    knora-base:objectClassConstraint  :Page ;
+#    salsah-gui:guiElement             salsah-gui:Searchbox .
+#
+#
+#:hasPageValue
+#    rdf:type                         owl:ObjectProperty ;
+#    rdfs:subPropertyOf               knora-base:hasLinkToValue ;
+#    rdfs:label                       "Seite im Buch"@de, "Page in the book"@en ;
+#    knora-base:objectClassConstraint knora-base:LinkValue .
 
 
 :Book
