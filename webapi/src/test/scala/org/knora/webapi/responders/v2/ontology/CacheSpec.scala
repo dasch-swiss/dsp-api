@@ -22,16 +22,26 @@ package org.knora.webapi.responders.v2.ontology
 
 import akka.actor.Props
 import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
-import org.knora.webapi.messages.{SmartIri, StringFormatter}
-import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.store.triplestoremessages.{
+  IriLiteralV2,
+  RdfDataObject,
+  SmartIriLiteralV2,
+  StringLiteralV2
+}
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.responder.SuccessResponseV2
-import org.knora.webapi.messages.v2.responder.ontologymessages.ReadOntologyV2
+import org.knora.webapi.messages.v2.responder.ontologymessages.{
+  PredicateInfoV2,
+  PropertyInfoContentV2,
+  ReadOntologyV2,
+  ReadPropertyInfoV2
+}
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.util.cache.CacheUtil
-import org.knora.webapi.{IntegrationSpec, TestContainerFuseki}
+import org.knora.webapi.{IntegrationSpec, InternalSchema, TestContainerFuseki}
 
 import java.time.Instant
 import scala.concurrent.{Await, Future}
@@ -72,11 +82,9 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
     loadTestData(fusekiActor, additionalTestData)
   }
 
-  "The Ontology Cache" should {
+  "The basic functionality of the ontology cache" should {
 
     "successfully load all ontologies" in {
-      // val resFuture = inMemCache.putUserADM(user)
-      // resFuture map { res => res should equal(true) }
       val ontologiesFromCacheFuture: Future[Map[SmartIri, ReadOntologyV2]] = for {
         _ <- Cache.loadOntologies(
                settings,
@@ -101,49 +109,155 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
         ontologies.size should equal(13)
       // TODO: check loaded data for correctness
       }
-      assert(true)
     }
 
-    "update cache data correctly while awaiting futures" in {
-      val iri: SmartIri      = stringFormatter.toSmartIri(additionalTestData.head.name)
-      val hasTextPropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasText")
+  }
 
-      val previousCacheDataFuture = Cache.getCacheData
-      val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
+  "Updating the ontology cache," when {
 
-      val previousFreetestMaybe = previousCacheData.ontologies.get(iri)
-      previousFreetestMaybe match {
-        case Some(previousFreetest) => {
-          // copy freetext-onto but remove :hasText property
-          val newFreetest = previousFreetest.copy(
-            ontologyMetadata = previousFreetest.ontologyMetadata.copy(
-              lastModificationDate = Some(Instant.now())
-            ),
-            properties = previousFreetest.properties.view.filterKeys(_ != hasTextPropertyIri).toMap
-          )
+    "removing a property from an ontology," should {
 
-          // store new ontology to cache
-          val newCacheData = previousCacheData.copy(
-            ontologies = previousCacheData.ontologies + (iri -> newFreetest)
-          )
-          Cache.storeCacheData(newCacheData)
+      "remove the property from the cache." in {
+        val iri: SmartIri      = stringFormatter.toSmartIri(additionalTestData.head.name)
+        val hasTextPropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasText")
 
-          // read back the cache
-          val newCachedCacheDataFuture = for {
-            cacheData <- Cache.getCacheData
-          } yield cacheData
-          val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
+        val previousCacheDataFuture = Cache.getCacheData
+        val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
 
-          // ensure that the cache updated correctly
-          val newCachedFreetestMaybe = newCachedCacheData.ontologies.get(iri)
-          newCachedFreetestMaybe match {
-            case Some(newCachedFreetest) => {
-              assert(newCachedFreetest.properties.size != previousFreetest.properties.size)
-              assert(newCachedFreetest.properties.size == newFreetest.properties.size)
+        val previousFreetestMaybe = previousCacheData.ontologies.get(iri)
+        previousFreetestMaybe match {
+          case Some(previousFreetest) => {
+            // copy freetext-onto but remove :hasText property
+            val newFreetest = previousFreetest.copy(
+              ontologyMetadata = previousFreetest.ontologyMetadata.copy(
+                lastModificationDate = Some(Instant.now())
+              ),
+              properties = previousFreetest.properties.view.filterKeys(_ != hasTextPropertyIri).toMap
+            )
+
+            // store new ontology to cache
+            val newCacheData = previousCacheData.copy(
+              ontologies = previousCacheData.ontologies + (iri -> newFreetest)
+            )
+            Cache.storeCacheData(newCacheData)
+
+            // read back the cache
+            val newCachedCacheDataFuture = for {
+              cacheData <- Cache.getCacheData
+            } yield cacheData
+            val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
+
+            // ensure that the cache updated correctly
+            val newCachedFreetestMaybe = newCachedCacheData.ontologies.get(iri)
+            newCachedFreetestMaybe match {
+              case Some(newCachedFreetest) => {
+                // check length
+                assert(newCachedFreetest.properties.size != previousFreetest.properties.size)
+                assert(newCachedFreetest.properties.size == newFreetest.properties.size)
+
+                // check actual property
+                previousFreetest.properties should contain key (hasTextPropertyIri)
+                newCachedFreetest.properties should not contain key(hasTextPropertyIri)
+              }
             }
           }
         }
       }
     }
+
+    "adding a property to an ontology," should {
+
+      "add the property to the cache." in {
+
+        val iri: SmartIri             = stringFormatter.toSmartIri(additionalTestData.head.name)
+        val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasDescription")
+
+        val previousCacheDataFuture = Cache.getCacheData
+        val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
+
+        val previousFreetestMaybe = previousCacheData.ontologies.get(iri)
+        previousFreetestMaybe match {
+          case Some(previousFreetest) => {
+            // copy freetext-onto but add :hasDescription property
+            val descriptionProp = ReadPropertyInfoV2(
+              entityInfoContent = PropertyInfoContentV2(
+                propertyIri = hasDescriptionPropertyIri,
+                predicates = Map(
+                  stringFormatter.toSmartIri(OntologyConstants.Rdf.Type) -> PredicateInfoV2(
+                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdf.Type),
+                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.Owl.ObjectProperty)))
+                  ),
+                  stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label) -> PredicateInfoV2(
+                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label),
+                    Seq(
+                      StringLiteralV2("A Description", language = Some("en")),
+                      StringLiteralV2("Eine Beschreibung", language = Some("de"))
+                    )
+                  ),
+                  stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint) -> PredicateInfoV2(
+                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint),
+                    Seq(SmartIriLiteralV2(iri))
+                  ),
+                  stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint) -> PredicateInfoV2(
+                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint),
+                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.TextValue)))
+                  ),
+                  stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElementClass) -> PredicateInfoV2(
+                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElementClass),
+                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.SimpleText)))
+                  ),
+                  stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiAttribute) -> PredicateInfoV2(
+                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiAttribute),
+                    Seq(
+                      StringLiteralV2("size=80"),
+                      StringLiteralV2("maxlength=255")
+                    )
+                  )
+                ),
+                subPropertyOf = Set(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasValue)),
+                ontologySchema = InternalSchema
+              ),
+              isResourceProp = true,
+              isEditable = true
+            )
+            val newProps = previousFreetest.properties + (hasDescriptionPropertyIri -> descriptionProp)
+            val newFreetest = previousFreetest.copy(
+              ontologyMetadata = previousFreetest.ontologyMetadata.copy(
+                lastModificationDate = Some(Instant.now())
+              ),
+              properties = newProps
+            )
+
+            // store new ontology to cache
+            val newCacheData = previousCacheData.copy(
+              ontologies = previousCacheData.ontologies + (iri -> newFreetest)
+            )
+            Cache.storeCacheData(newCacheData)
+
+            // read back the cache
+            val newCachedCacheDataFuture = for {
+              cacheData <- Cache.getCacheData
+            } yield cacheData
+            val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
+
+            // ensure that the cache updated correctly
+            val newCachedFreetestMaybe = newCachedCacheData.ontologies.get(iri)
+            newCachedFreetestMaybe match {
+              case Some(newCachedFreetest) => {
+                // check length
+                assert(newCachedFreetest.properties.size != previousFreetest.properties.size)
+                assert(newCachedFreetest.properties.size == newFreetest.properties.size)
+
+                // check actual property
+                previousFreetest.properties should not contain key(hasDescriptionPropertyIri)
+                newCachedFreetest.properties should contain key (hasDescriptionPropertyIri)
+              }
+            }
+          }
+        }
+
+      }
+    }
+
   }
 }

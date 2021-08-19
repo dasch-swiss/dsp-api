@@ -2917,7 +2917,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
              requestingUser = requestingUser
            )
 
-      internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
+      internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema) // TODO: something happening
       internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
