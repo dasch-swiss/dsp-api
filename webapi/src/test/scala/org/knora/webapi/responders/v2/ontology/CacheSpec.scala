@@ -57,6 +57,26 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 //  private implicit val ontologyResponder = ResponderManager.
 
+  val additionalTestDataFreetest = List(
+    RdfDataObject(
+      path = "test_data/ontologies/freetest-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/freetest"
+    ),
+    RdfDataObject(
+      path = "test_data/all_data/freetest-data.ttl",
+      name = "http://www.knora.org/data/0001/freetest"
+    )
+  )
+  val additionalTestDataBooks = List(
+    RdfDataObject(
+      path = "test_data/ontologies/books-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/books"
+    ),
+    RdfDataObject(
+      path = "test_data/all_data/books-data.ttl",
+      name = "http://www.knora.org/data/0001/books"
+    )
+  )
   val additionalTestData = List(
     RdfDataObject(
       path = "test_data/ontologies/freetest-onto.ttl",
@@ -65,6 +85,14 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
     RdfDataObject(
       path = "test_data/all_data/freetest-data.ttl",
       name = "http://www.knora.org/data/0001/freetest"
+    ),
+    RdfDataObject(
+      path = "test_data/ontologies/books-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/books"
+    ),
+    RdfDataObject(
+      path = "test_data/all_data/books-data.ttl",
+      name = "http://www.knora.org/data/0001/books"
     )
   )
 
@@ -80,6 +108,9 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
     CacheUtil.createCaches(settings.caches)
     waitForReadyTriplestore(fusekiActor)
     loadTestData(fusekiActor, additionalTestData)
+
+//    loadTestData(fusekiActor, additionalTestDataBooks)
+//    loadTestData(fusekiActor, additionalTestDataFreetest)
   }
 
   "The basic functionality of the ontology cache" should {
@@ -96,7 +127,7 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
         ontologies: Map[SmartIri, ReadOntologyV2] = cacheData.ontologies
       } yield ontologies
 
-      ontologiesFromCacheFuture map { res: Map[SmartIri, ReadOntologyV2] => res.size should equal(13) }
+      ontologiesFromCacheFuture map { res: Map[SmartIri, ReadOntologyV2] => res.size should equal(14) }
     }
 
     "successfully load back all ontologies from cache" in {
@@ -106,7 +137,7 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
       } yield ontologies
 
       ontologiesFromCacheFuture map { ontologies: Map[SmartIri, ReadOntologyV2] =>
-        ontologies.size should equal(13)
+        ontologies.size should equal(14)
       // TODO: check loaded data for correctness
       }
     }
@@ -167,7 +198,7 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
     "adding a property to an ontology," should {
 
-      "add the property to the cache." in {
+      "add a value property to the cache." in {
 
         val iri: SmartIri             = stringFormatter.toSmartIri(additionalTestData.head.name)
         val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasDescription")
@@ -257,6 +288,97 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
         }
 
       }
+
+//      "add a link property and a link value property to the cache." in {
+//
+//        val iri: SmartIri             = stringFormatter.toSmartIri(additionalTestData.head.name)
+//        val hasDescriptionPropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasDescription")
+//
+//        val previousCacheDataFuture = Cache.getCacheData
+//        val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
+//
+//        val previousFreetestMaybe = previousCacheData.ontologies.get(iri)
+//        previousFreetestMaybe match {
+//          case Some(previousFreetest) => {
+//            // copy freetext-onto but add :hasDescription property
+//            val descriptionProp = ReadPropertyInfoV2(
+//              entityInfoContent = PropertyInfoContentV2(
+//                propertyIri = hasDescriptionPropertyIri,
+//                predicates = Map(
+//                  stringFormatter.toSmartIri(OntologyConstants.Rdf.Type) -> PredicateInfoV2(
+//                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdf.Type),
+//                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.Owl.ObjectProperty)))
+//                  ),
+//                  stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label) -> PredicateInfoV2(
+//                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label),
+//                    Seq(
+//                      StringLiteralV2("A Description", language = Some("en")),
+//                      StringLiteralV2("Eine Beschreibung", language = Some("de"))
+//                    )
+//                  ),
+//                  stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint) -> PredicateInfoV2(
+//                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint),
+//                    Seq(SmartIriLiteralV2(iri))
+//                  ),
+//                  stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint) -> PredicateInfoV2(
+//                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint),
+//                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.TextValue)))
+//                  ),
+//                  stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElementClass) -> PredicateInfoV2(
+//                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElementClass),
+//                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.SimpleText)))
+//                  ),
+//                  stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiAttribute) -> PredicateInfoV2(
+//                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiAttribute),
+//                    Seq(
+//                      StringLiteralV2("size=80"),
+//                      StringLiteralV2("maxlength=255")
+//                    )
+//                  )
+//                ),
+//                subPropertyOf = Set(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasValue)),
+//                ontologySchema = InternalSchema
+//              ),
+//              isResourceProp = true,
+//              isEditable = true
+//            )
+//            val newProps = previousFreetest.properties + (hasDescriptionPropertyIri -> descriptionProp)
+//            val newFreetest = previousFreetest.copy(
+//              ontologyMetadata = previousFreetest.ontologyMetadata.copy(
+//                lastModificationDate = Some(Instant.now())
+//              ),
+//              properties = newProps
+//            )
+//
+//            // store new ontology to cache
+//            val newCacheData = previousCacheData.copy(
+//              ontologies = previousCacheData.ontologies + (iri -> newFreetest)
+//            )
+//            Cache.storeCacheData(newCacheData)
+//
+//            // read back the cache
+//            val newCachedCacheDataFuture = for {
+//              cacheData <- Cache.getCacheData
+//            } yield cacheData
+//            val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
+//
+//            // ensure that the cache updated correctly
+//            val newCachedFreetestMaybe = newCachedCacheData.ontologies.get(iri)
+//            newCachedFreetestMaybe match {
+//              case Some(newCachedFreetest) => {
+//                // check length
+//                assert(newCachedFreetest.properties.size != previousFreetest.properties.size)
+//                assert(newCachedFreetest.properties.size == newFreetest.properties.size)
+//
+//                // check actual property
+//                previousFreetest.properties should not contain key(hasDescriptionPropertyIri)
+//                newCachedFreetest.properties should contain key (hasDescriptionPropertyIri)
+//              }
+//            }
+//          }
+//        }
+//
+//      }
     }
 
   }
