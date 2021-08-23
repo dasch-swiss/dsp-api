@@ -55,37 +55,8 @@ import scala.util.{Failure, Success}
 class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-//  private implicit val ontologyResponder = ResponderManager.
 
-//  val additionalTestDataFreetest = List(
-//    RdfDataObject(
-//      path = "test_data/ontologies/freetest-onto.ttl",
-//      name = "http://www.knora.org/ontology/0001/freetest"
-//    ),
-//    RdfDataObject(
-//      path = "test_data/all_data/freetest-data.ttl",
-//      name = "http://www.knora.org/data/0001/freetest"
-//    )
-//  )
-//  val additionalTestDataBooks = List(
-//    RdfDataObject(
-//      path = "test_data/ontologies/books-onto.ttl",
-//      name = "http://www.knora.org/ontology/0001/books"
-//    ),
-//    RdfDataObject(
-//      path = "test_data/all_data/books-data.ttl",
-//      name = "http://www.knora.org/data/0001/books"
-//    )
-//  )
   val additionalTestData = List(
-    RdfDataObject(
-      path = "test_data/ontologies/freetest-onto.ttl",
-      name = "http://www.knora.org/ontology/0001/freetest"
-    ),
-    RdfDataObject(
-      path = "test_data/all_data/freetest-data.ttl",
-      name = "http://www.knora.org/data/0001/freetest"
-    ),
     RdfDataObject(
       path = "test_data/ontologies/books-onto.ttl",
       name = "http://www.knora.org/ontology/0001/books"
@@ -108,9 +79,6 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
     CacheUtil.createCaches(settings.caches)
     waitForReadyTriplestore(fusekiActor)
     loadTestData(fusekiActor, additionalTestData)
-
-//    loadTestData(fusekiActor, additionalTestDataBooks)
-//    loadTestData(fusekiActor, additionalTestDataFreetest)
   }
 
   "The basic functionality of the ontology cache" should {
@@ -127,7 +95,7 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
         ontologies: Map[SmartIri, ReadOntologyV2] = cacheData.ontologies
       } yield ontologies
 
-      ontologiesFromCacheFuture map { res: Map[SmartIri, ReadOntologyV2] => res.size should equal(14) }
+      ontologiesFromCacheFuture map { res: Map[SmartIri, ReadOntologyV2] => res.size should equal(13) }
     }
 
     "successfully load back all ontologies from cache" in {
@@ -137,7 +105,7 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
       } yield ontologies
 
       ontologiesFromCacheFuture map { ontologies: Map[SmartIri, ReadOntologyV2] =>
-        ontologies.size should equal(14)
+        ontologies.size should equal(13)
       // TODO: check loaded data for correctness
       }
     }
@@ -149,26 +117,26 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
     "removing a property from an ontology," should {
 
       "remove the property from the cache." in {
-        val iri: SmartIri      = stringFormatter.toSmartIri(additionalTestData.head.name)
-        val hasTextPropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasText")
+        val iri: SmartIri       = stringFormatter.toSmartIri(additionalTestData.head.name)
+        val hasTitlePropertyIri = stringFormatter.toSmartIri(s"${additionalTestData.head.name}#hasTitle")
 
         val previousCacheDataFuture = Cache.getCacheData
         val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
 
-        val previousFreetestMaybe = previousCacheData.ontologies.get(iri)
-        previousFreetestMaybe match {
-          case Some(previousFreetest) => {
-            // copy freetext-onto but remove :hasText property
-            val newFreetest = previousFreetest.copy(
-              ontologyMetadata = previousFreetest.ontologyMetadata.copy(
+        val previousBooksMaybe = previousCacheData.ontologies.get(iri)
+        previousBooksMaybe match {
+          case Some(previousBooks) => {
+            // copy books-onto but remove :hasTitle property
+            val newBooks = previousBooks.copy(
+              ontologyMetadata = previousBooks.ontologyMetadata.copy(
                 lastModificationDate = Some(Instant.now())
               ),
-              properties = previousFreetest.properties.view.filterKeys(_ != hasTextPropertyIri).toMap
+              properties = previousBooks.properties.view.filterKeys(_ != hasTitlePropertyIri).toMap
             )
 
             // store new ontology to cache
             val newCacheData = previousCacheData.copy(
-              ontologies = previousCacheData.ontologies + (iri -> newFreetest)
+              ontologies = previousCacheData.ontologies + (iri -> newBooks)
             )
             Cache.storeCacheData(newCacheData)
 
@@ -179,16 +147,16 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
             val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
 
             // ensure that the cache updated correctly
-            val newCachedFreetestMaybe = newCachedCacheData.ontologies.get(iri)
-            newCachedFreetestMaybe match {
-              case Some(newCachedFreetest) => {
+            val newCachedBooksMaybe = newCachedCacheData.ontologies.get(iri)
+            newCachedBooksMaybe match {
+              case Some(newCachedBooks) => {
                 // check length
-                assert(newCachedFreetest.properties.size != previousFreetest.properties.size)
-                assert(newCachedFreetest.properties.size == newFreetest.properties.size)
+                assert(newCachedBooks.properties.size != previousBooks.properties.size)
+                assert(newCachedBooks.properties.size == newBooks.properties.size)
 
                 // check actual property
-                previousFreetest.properties should contain key (hasTextPropertyIri)
-                newCachedFreetest.properties should not contain key(hasTextPropertyIri)
+                previousBooks.properties should contain key (hasTitlePropertyIri)
+                newCachedBooks.properties should not contain key(hasTitlePropertyIri)
               }
             }
           }
@@ -206,10 +174,10 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
         val previousCacheDataFuture = Cache.getCacheData
         val previousCacheData       = Await.result(previousCacheDataFuture, 2 seconds)
 
-        val previousFreetestMaybe = previousCacheData.ontologies.get(iri)
-        previousFreetestMaybe match {
-          case Some(previousFreetest) => {
-            // copy freetext-onto but add :hasDescription property
+        val previousBooksMaybe = previousCacheData.ontologies.get(iri)
+        previousBooksMaybe match {
+          case Some(previousBooks) => {
+            // copy books-onto but add :hasDescription property
             val descriptionProp = ReadPropertyInfoV2(
               entityInfoContent = PropertyInfoContentV2(
                 propertyIri = hasDescriptionPropertyIri,
@@ -251,9 +219,9 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
               isResourceProp = true,
               isEditable = true
             )
-            val newProps = previousFreetest.properties + (hasDescriptionPropertyIri -> descriptionProp)
-            val newFreetest = previousFreetest.copy(
-              ontologyMetadata = previousFreetest.ontologyMetadata.copy(
+            val newProps = previousBooks.properties + (hasDescriptionPropertyIri -> descriptionProp)
+            val newBooks = previousBooks.copy(
+              ontologyMetadata = previousBooks.ontologyMetadata.copy(
                 lastModificationDate = Some(Instant.now())
               ),
               properties = newProps
@@ -261,7 +229,7 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
             // store new ontology to cache
             val newCacheData = previousCacheData.copy(
-              ontologies = previousCacheData.ontologies + (iri -> newFreetest)
+              ontologies = previousCacheData.ontologies + (iri -> newBooks)
             )
             Cache.storeCacheData(newCacheData)
 
@@ -272,16 +240,16 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
             val newCachedCacheData = Await.result(newCachedCacheDataFuture, 2 seconds)
 
             // ensure that the cache updated correctly
-            val newCachedFreetestMaybe = newCachedCacheData.ontologies.get(iri)
-            newCachedFreetestMaybe match {
-              case Some(newCachedFreetest) => {
+            val newCachedBooksMaybe = newCachedCacheData.ontologies.get(iri)
+            newCachedBooksMaybe match {
+              case Some(newCachedBooks) => {
                 // check length
-                assert(newCachedFreetest.properties.size != previousFreetest.properties.size)
-                assert(newCachedFreetest.properties.size == newFreetest.properties.size)
+                assert(newCachedBooks.properties.size != previousBooks.properties.size)
+                assert(newCachedBooks.properties.size == newBooks.properties.size)
 
                 // check actual property
-                previousFreetest.properties should not contain key(hasDescriptionPropertyIri)
-                newCachedFreetest.properties should contain key (hasDescriptionPropertyIri)
+                previousBooks.properties should not contain key(hasDescriptionPropertyIri)
+                newCachedBooks.properties should contain key (hasDescriptionPropertyIri)
               }
             }
           }
