@@ -293,76 +293,56 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
         val ontologyIri        = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books")
         val hasPagePropertyIri = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#hasPage")
-        val bookPropertyIri    = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#Book")
         val pagePropertyIri    = stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#Page")
         val hasPageValuePropertyIri =
           stringFormatter.toSmartIri("http://www.knora.org/ontology/0001/books#hasPageValue")
         val bookIri = stringFormatter.toSmartIri("http://rdfh.ch/0001/book-instance-01")
-        val pageIri = stringFormatter.toSmartIri("http://rdfh.ch/0001/page-instance-01")
 
         val previousCacheData = Await.result(Cache.getCacheData, 2 seconds)
         previousCacheData.ontologies.get(ontologyIri) match {
           case Some(previousBooks) => {
             // copy books-ontology but add link from book to page
-            val hasPageProperties = ReadPropertyInfoV2(
-              entityInfoContent = PropertyInfoContentV2(
-                propertyIri = hasPagePropertyIri,
-                predicates = Map(
-                  stringFormatter.toSmartIri(OntologyConstants.Rdf.Type) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdf.Type),
-                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.Owl.ObjectProperty)))
-                  ),
-                  stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label),
-                    Seq(
-                      StringLiteralV2("Seite im Buch", language = Some("de")),
-                      StringLiteralV2("Page in the book", language = Some("en"))
-                    )
-                  ),
-                  stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint),
-                    Seq(SmartIriLiteralV2(bookIri))
-                  ),
-                  stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint),
-                    Seq(SmartIriLiteralV2(pagePropertyIri))
-                  ),
-                  stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElementClass) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElementClass),
-                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.Searchbox)))
+            val linkPropertyInfoContent = PropertyInfoContentV2(
+              propertyIri = hasPagePropertyIri,
+              predicates = Map(
+                stringFormatter.toSmartIri(OntologyConstants.Rdf.Type) -> PredicateInfoV2(
+                  predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdf.Type),
+                  Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.Owl.ObjectProperty)))
+                ),
+                stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label) -> PredicateInfoV2(
+                  predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label),
+                  Seq(
+                    StringLiteralV2("Seite im Buch", language = Some("de")),
+                    StringLiteralV2("Page in the book", language = Some("en"))
                   )
                 ),
-                subPropertyOf = Set(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasLinkTo)),
-                ontologySchema = InternalSchema
+                stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint) -> PredicateInfoV2(
+                  predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.SubjectClassConstraint),
+                  Seq(SmartIriLiteralV2(bookIri))
+                ),
+                stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint) -> PredicateInfoV2(
+                  predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint),
+                  Seq(SmartIriLiteralV2(pagePropertyIri))
+                ),
+                stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElementClass) -> PredicateInfoV2(
+                  predicateIri = stringFormatter.toSmartIri(OntologyConstants.SalsahGui.GuiElementClass),
+                  Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.SalsahGui.Searchbox)))
+                )
               ),
+              subPropertyOf = Set(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasLinkTo)),
+              ontologySchema = InternalSchema
+            )
+            val hasPageProperties = ReadPropertyInfoV2(
+              entityInfoContent = linkPropertyInfoContent,
               isResourceProp = true,
-              isEditable = true
+              isEditable = true,
+              isLinkProp = true
             )
             val hasPageValueProperties = ReadPropertyInfoV2(
-              entityInfoContent = PropertyInfoContentV2(
-                propertyIri = hasPageValuePropertyIri,
-                predicates = Map(
-                  stringFormatter.toSmartIri(OntologyConstants.Rdf.Type) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdf.Type),
-                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.Owl.ObjectProperty)))
-                  ),
-                  stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.Rdfs.Label),
-                    Seq(
-                      StringLiteralV2("Seite im Buch", language = Some("de")),
-                      StringLiteralV2("Page in the book", language = Some("en"))
-                    )
-                  ),
-                  stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint) -> PredicateInfoV2(
-                    predicateIri = stringFormatter.toSmartIri(OntologyConstants.KnoraBase.ObjectClassConstraint),
-                    Seq(SmartIriLiteralV2(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.LinkValue)))
-                  )
-                ),
-                subPropertyOf = Set(stringFormatter.toSmartIri(OntologyConstants.KnoraBase.HasLinkToValue)),
-                ontologySchema = InternalSchema
-              ),
+              entityInfoContent = OntologyHelpers.linkPropertyDefToLinkValuePropertyDef(linkPropertyInfoContent),
               isResourceProp = true,
-              isEditable = true
+              isEditable = true,
+              isLinkValueProp = true
             )
             val newProps = previousBooks.properties +
               (hasPagePropertyIri      -> hasPageProperties) +
@@ -395,6 +375,16 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
                 previousBooks.properties should not contain key(hasPageValuePropertyIri)
                 newCachedBooks.properties should contain key (hasPagePropertyIri)
                 newCachedBooks.properties should contain key (hasPageValuePropertyIri)
+
+                // check isEditable == true
+                val newHasPageValuePropertyMaybe = newCachedBooks.properties.get(hasPageValuePropertyIri)
+                newHasPageValuePropertyMaybe should not equal (None)
+                newHasPageValuePropertyMaybe match {
+                  case Some(newHasPageValueProperty) => {
+                    assert(newHasPageValueProperty.isEditable)
+                    assert(newHasPageValueProperty.isLinkValueProp)
+                  }
+                }
 
                 newCachedBooks should equal(newBooks)
               }
