@@ -2666,8 +2666,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             )
 
         // Read the data back from the cache.
-        // TODO: remove cached... only for debug purposes
-        // cached <- Cache.getCacheData
         response <- getPropertyDefinitionsFromOntologyV2(
                       propertyIris = Set(internalPropertyIri),
                       allLanguages = true,
@@ -2916,7 +2914,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
              requestingUser = requestingUser
            )
 
-      internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema) // TODO: something happening
+      internalPropertyIri = externalPropertyIri.toOntologySchema(InternalSchema)
       internalOntologyIri = externalOntologyIri.toOntologySchema(InternalSchema)
 
       // Do the remaining pre-update checks and the update while holding a global ontology cache lock.
