@@ -95,18 +95,8 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
         ontologies: Map[SmartIri, ReadOntologyV2] = cacheData.ontologies
       } yield ontologies
 
-      ontologiesFromCacheFuture map { res: Map[SmartIri, ReadOntologyV2] => res.size should equal(13) }
-    }
-
-    "successfully load back all ontologies from cache" in {
-      val ontologiesFromCacheFuture: Future[Map[SmartIri, ReadOntologyV2]] = for {
-        cacheData: Cache.OntologyCacheData       <- Cache.getCacheData
-        ontologies: Map[SmartIri, ReadOntologyV2] = cacheData.ontologies
-      } yield ontologies
-
-      ontologiesFromCacheFuture map { ontologies: Map[SmartIri, ReadOntologyV2] =>
-        ontologies.size should equal(13)
-      // TODO: check loaded data for correctness
+      ontologiesFromCacheFuture map { res: Map[SmartIri, ReadOntologyV2] =>
+        res.size should equal(13)
       }
     }
 
