@@ -25,9 +25,3 @@
         rdfs:label                      "The free test ontology" ;
         knora-api:attachedToProject     <http://rdfh.ch/projects/0001> ;
         knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .
-
-<http://0.0.0.0:3333/ontology/0001/books/v2>
-        a                               owl:Ontology ;
-        rdfs:label                      "The books test ontology" ;
-        knora-api:attachedToProject     <http://rdfh.ch/projects/0001> ;
-        knora-api:lastModificationDate  "2012-12-12T12:12:12.120Z"^^xsd:dateTimeStamp .
