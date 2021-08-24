@@ -26,7 +26,9 @@
                 <xsl:text>#ref</xsl:text>
                 <xsl:number level="any" count="ref" format="1"/>
             </xsl:attribute>
-            <sup><xsl:number level="any" count="ref" format="1"/></sup>
+            <sup>
+                <xsl:number level="any" count="ref" format="1"/>
+            </sup>
         </a>
     </xsl:template>
 
@@ -43,46 +45,63 @@
     </xsl:template>
 
     <xsl:template match="i">
-        <em><xsl:apply-templates/></em>
+        <em>
+            <xsl:apply-templates/>
+        </em>
     </xsl:template>
 
     <xsl:template match="b">
-        <strong><xsl:apply-templates/></strong>
+        <strong>
+            <xsl:apply-templates/>
+        </strong>
     </xsl:template>
 
     <xsl:template match="u">
-        <span style="text-decoration: underline;"><xsl:apply-templates/></span>
+        <span style="text-decoration: underline;">
+            <xsl:apply-templates/>
+        </span>
     </xsl:template>
 
     <xsl:template match="sub">
-        <sub><xsl:apply-templates/></sub>
+        <sub>
+            <xsl:apply-templates/>
+        </sub>
     </xsl:template>
 
     <xsl:template match="sup">
-        <sup><xsl:apply-templates/></sup>
+        <sup>
+            <xsl:apply-templates/>
+        </sup>
     </xsl:template>
 
     <xsl:template match="math">
-        <span class="math">\(<xsl:apply-templates/>\)</span>
+        <span class="math">\(<xsl:apply-templates/>\)
+        </span>
     </xsl:template>
 
     <xsl:template match="facsimile|figure">
         <a class="facsimile salsah-link">
-            <xsl:attribute name="href"><xsl:value-of select="@src" /></xsl:attribute>
+            <xsl:attribute name="href">
+                <xsl:value-of select="@src"/>
+            </xsl:attribute>
             <xsl:apply-templates/>
         </a>
     </xsl:template>
 
     <xsl:template match="entity">
         <a class="salsah-link">
-            <xsl:attribute name="href"><xsl:value-of select="@ref" /></xsl:attribute>
+            <xsl:attribute name="href">
+                <xsl:value-of select="@ref"/>
+            </xsl:attribute>
             <xsl:apply-templates/>
         </a>
     </xsl:template>
 
     <xsl:template match="a">
         <a class="external_link">
-            <xsl:attribute name="href"><xsl:value-of select="@href" /></xsl:attribute>
+            <xsl:attribute name="href">
+                <xsl:value-of select="@href"/>
+            </xsl:attribute>
             <xsl:apply-templates/>
         </a>
     </xsl:template>
@@ -96,7 +115,9 @@
     </xsl:template>
 
     <xsl:template match="p">
-        <p><xsl:apply-templates/></p>
+        <p>
+            <xsl:apply-templates/>
+        </p>
     </xsl:template>
 
     <xsl:template match="hr">
@@ -114,11 +135,14 @@
     <xsl:template match="table/tr">
         <tr>
             <xsl:apply-templates/>
-        </tr></xsl:template>
+        </tr>
+    </xsl:template>
 
     <!-- cell: get all attributes: border and align -->
     <xsl:template match="table/tr/td">
-        <td><xsl:apply-templates/></td>
+        <td>
+            <xsl:apply-templates/>
+        </td>
     </xsl:template>
 
 </xsl:transform>

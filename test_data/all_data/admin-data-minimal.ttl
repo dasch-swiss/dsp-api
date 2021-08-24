@@ -1,9 +1,9 @@
-@prefix xml: <http://www.w3.org/XML/1998/namespace> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix xml:         <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd:         <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf:         <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:        <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:         <http://www.w3.org/2002/07/owl#> .
+@prefix foaf:        <http://xmlns.com/foaf/0.1/> .
 @prefix knora-admin: <http://www.knora.org/ontology/knora-admin#> .
 
 
@@ -14,86 +14,53 @@
 ##########################################################
 
 
-<http://rdfh.ch/users/root> rdf:type knora-admin:User ;
-
-                                   knora-admin:username "root"^^xsd:string ;
-
-                                   knora-admin:email "root@example.com"^^xsd:string ;
-
-                                   knora-admin:givenName "System"^^xsd:string ;
-
-                                   knora-admin:familyName "Administrator"^^xsd:string ;
-
-                                   knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-
-                                   knora-admin:phone "123456"^^xsd:string ;
-
-                                   knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                   knora-admin:status "true"^^xsd:boolean ;
-
-                                   knora-admin:isInSystemAdminGroup "true"^^xsd:boolean .
+<http://rdfh.ch/users/root>
+    rdf:type                         knora-admin:User ;
+    knora-admin:username             "root"^^xsd:string ;
+    knora-admin:email                "root@example.com"^^xsd:string ;
+    knora-admin:givenName            "System"^^xsd:string ;
+    knora-admin:familyName           "Administrator"^^xsd:string ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:phone                "123456"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "true"^^xsd:boolean ;
+    knora-admin:isInSystemAdminGroup "true"^^xsd:boolean .
 
 
-<http://rdfh.ch/users/superuser> rdf:type knora-admin:User ;
-
-                                        knora-admin:username "superuser"^^xsd:string ;
-
-                                        knora-admin:email "super.user@example.com"^^xsd:string ;
-
-                                        knora-admin:givenName "Super"^^xsd:string ;
-
-                                        knora-admin:familyName "User"^^xsd:string ;
-
-                                        knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-
-                                        knora-admin:phone "123456"^^xsd:string ;
-
-                                        knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                        knora-admin:status "true"^^xsd:boolean ;
-
-                                        knora-admin:isInSystemAdminGroup "true"^^xsd:boolean .
+<http://rdfh.ch/users/superuser>
+    rdf:type                         knora-admin:User ;
+    knora-admin:username             "superuser"^^xsd:string ;
+    knora-admin:email                "super.user@example.com"^^xsd:string ;
+    knora-admin:givenName            "Super"^^xsd:string ;
+    knora-admin:familyName           "User"^^xsd:string ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:phone                "123456"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "true"^^xsd:boolean ;
+    knora-admin:isInSystemAdminGroup "true"^^xsd:boolean .
 
 
-<http://rdfh.ch/users/normaluser> rdf:type knora-admin:User ;
-
-                                         knora-admin:username "normaluser"^^xsd:string ;
-
-                                         knora-admin:email "normal.user@example.com"^^xsd:string ;
-
-                                         knora-admin:givenName "Normal"^^xsd:string ;
-
-                                         knora-admin:familyName "User"^^xsd:string ;
-
-                                         knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-
-                                         knora-admin:phone "123456"^^xsd:string ;
-
-                                         knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                         knora-admin:status "true"^^xsd:boolean ;
-
-                                         knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
+<http://rdfh.ch/users/normaluser>
+    rdf:type                         knora-admin:User ;
+    knora-admin:username             "normaluser"^^xsd:string ;
+    knora-admin:email                "normal.user@example.com"^^xsd:string ;
+    knora-admin:givenName            "Normal"^^xsd:string ;
+    knora-admin:familyName           "User"^^xsd:string ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:phone                "123456"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "true"^^xsd:boolean ;
+    knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
 
 
-<http://rdfh.ch/users/inactiveuser> rdf:type knora-admin:User ;
-
-
-                                           knora-admin:username "inactiveuser"^^xsd:string ;
-
-                                           knora-admin:email "inactive.user@example.com"^^xsd:string ;
-
-                                           knora-admin:givenName "Inactive"^^xsd:string ;
-
-                                           knora-admin:familyName "User"^^xsd:string ;
-
-                                           knora-admin:password "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
-
-                                           knora-admin:phone "123456"^^xsd:string ;
-
-                                           knora-admin:preferredLanguage "de"^^xsd:string ;
-
-                                           knora-admin:status "false"^^xsd:boolean ;
-
-                                           knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .
+<http://rdfh.ch/users/inactiveuser>
+    rdf:type                         knora-admin:User ;
+    knora-admin:username             "inactiveuser"^^xsd:string ;
+    knora-admin:email                "inactive.user@example.com"^^xsd:string ;
+    knora-admin:givenName            "Inactive"^^xsd:string ;
+    knora-admin:familyName           "User"^^xsd:string ;
+    knora-admin:password             "$2a$12$7XEBehimXN1rbhmVgQsyve08.vtDmKK7VMin4AdgCEtE4DWgfQbTK"^^xsd:string ;
+    knora-admin:phone                "123456"^^xsd:string ;
+    knora-admin:preferredLanguage    "de"^^xsd:string ;
+    knora-admin:status               "false"^^xsd:boolean ;
+    knora-admin:isInSystemAdminGroup "false"^^xsd:boolean .

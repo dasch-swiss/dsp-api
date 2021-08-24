@@ -126,7 +126,8 @@ a TEI/XML header. This stylesheet assumes that the input consists only of
     </xsl:function>
 
     <xsl:template match="//rdf:RDF">
-        <xsl:variable name="resourceIri" select="//rdf:Description[./rdf:type/@rdf:resource='http://0.0.0.0:3333/ontology/0801/beol/v2#letter']/@rdf:about"/>
+        <xsl:variable name="resourceIri"
+                      select="//rdf:Description[./rdf:type/@rdf:resource='http://0.0.0.0:3333/ontology/0801/beol/v2#letter']/@rdf:about"/>
         <xsl:variable name="label" select="//rdf:Description[@rdf:about=$resourceIri]/rdfs1:label/text()"/>
 
         <teiHeader>
@@ -160,7 +161,8 @@ a TEI/XML header. This stylesheet assumes that the input consists only of
 
     <xsl:template match="//rdf:Description/beol:hasAuthorValue">
         <xsl:variable name="authorValueIri" select="@rdf:resource"/>
-        <xsl:variable name="authorIri" select="//rdf:Description[@rdf:about=$authorValueIri]//knora-api:linkValueHasTarget/@rdf:resource"/>
+        <xsl:variable name="authorIri"
+                      select="//rdf:Description[@rdf:about=$authorValueIri]//knora-api:linkValueHasTarget/@rdf:resource"/>
 
         <xsl:variable name="authorIAFValue"
                       select="//rdf:Description[@rdf:about=$authorIri]//beol:hasIAFIdentifier/@rdf:resource"/>
@@ -199,7 +201,8 @@ a TEI/XML header. This stylesheet assumes that the input consists only of
 
     <xsl:template match="//rdf:Description/beol:hasRecipientValue">
         <xsl:variable name="recipientValueIri" select="@rdf:resource"/>
-        <xsl:variable name="recipientIri" select="//rdf:Description[@rdf:about=$recipientValueIri]//knora-api:linkValueHasTarget/@rdf:resource"/>
+        <xsl:variable name="recipientIri"
+                      select="//rdf:Description[@rdf:about=$recipientValueIri]//knora-api:linkValueHasTarget/@rdf:resource"/>
 
         <xsl:variable name="recipientIAFValue"
                       select="//rdf:Description[@rdf:about=$recipientIri]//beol:hasIAFIdentifier/@rdf:resource"/>

@@ -1,4 +1,5 @@
-<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../../src/main/resources/mappingXMLToStandoff.xsd">
+<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="../../../../src/main/resources/mappingXMLToStandoff.xsd">
     <defaultXSLTransformation>toBeDefined</defaultXSLTransformation>
     <mappingElement>
         <tag>
@@ -74,7 +75,7 @@
         </standoffClass>
     </mappingElement>
 
-    
+
     <mappingElement>
         <tag>
             <name>ref</name>
@@ -306,7 +307,8 @@
                 <attribute>
                     <attributeName>valign</attributeName>
                     <namespace>noNamespace</namespace>
-                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasVerticalAlignment</propertyIri>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasVerticalAlignment
+                    </propertyIri>
                 </attribute>
                 <attribute>
                     <attributeName>rowspan</attributeName>
@@ -569,10 +571,6 @@
             </attributes>
         </standoffClass>
     </mappingElement>
-
-
-
-
 
 
 </mapping>

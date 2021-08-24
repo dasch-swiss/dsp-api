@@ -282,7 +282,8 @@
                 <attribute>
                     <attributeName>valign</attributeName>
                     <namespace>noNamespace</namespace>
-                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasVerticalAlignment</propertyIri>
+                    <propertyIri>http://www.knora.org/ontology/0801/beol#standoffTableCellTagHasVerticalAlignment
+                    </propertyIri>
                 </attribute>
                 <attribute>
                     <attributeName>rowspan</attributeName>
