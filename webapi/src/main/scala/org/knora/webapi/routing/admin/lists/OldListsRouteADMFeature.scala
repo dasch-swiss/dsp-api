@@ -38,10 +38,10 @@ object OldListsRouteADMFeature {
 }
 
 /**
-  * A [[Feature]] that provides the old list admin API route.
-  *
-  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
-  */
+ * A [[Feature]] that provides the old list admin API route.
+ *
+ * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
+ */
 @Api(value = "lists (old endpoint)", produces = "application/json")
 @Path("/admin/lists")
 class OldListsRouteADMFeature(routeData: KnoraRouteData)
@@ -66,27 +66,29 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   @ApiResponses(
     Array(
       new ApiResponse(code = 500, message = "Internal server error")
-    ))
+    )
+  )
   /* return all lists optionally filtered by project */
   private def getLists(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
     get {
       /* return all lists */
       parameters("projectIri".?) { maybeProjectIri: Option[IRI] => requestContext =>
         val projectIri =
-          stringFormatter.toOptionalIri(maybeProjectIri,
-                                        throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri"))
+          stringFormatter.toOptionalIri(
+            maybeProjectIri,
+            throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri")
+          )
 
         val requestMessage: Future[ListsGetRequestADM] = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
-        } yield
-          ListsGetRequestADM(
-            projectIri = projectIri,
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = requestingUser
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
+        } yield ListsGetRequestADM(
+          projectIri = projectIri,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
+        )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
@@ -101,38 +103,43 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   }
 
   /* create a new list (root node) */
-  @ApiOperation(value = "Add new list",
-                nickname = "addList",
-                httpMethod = "POST",
-                response = classOf[ListGetResponseADM])
+  @ApiOperation(
+    value = "Add new list",
+    nickname = "addList",
+    httpMethod = "POST",
+    response = classOf[ListGetResponseADM]
+  )
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "body",
-                           value = "\"list\" to create",
-                           required = true,
-                           dataTypeClass = classOf[CreateListApiRequestADM],
-                           paramType = "body")
-    ))
+      new ApiImplicitParam(
+        name = "body",
+        value = "\"list\" to create",
+        required = true,
+        dataTypeClass = classOf[CreateListApiRequestADM],
+        paramType = "body"
+      )
+    )
+  )
   @ApiResponses(
     Array(
       new ApiResponse(code = 500, message = "Internal server error")
-    ))
+    )
+  )
   private def createList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
     post {
       /* create a list */
       entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
         val requestMessage: Future[ListCreateRequestADM] = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
-        } yield
-          ListCreateRequestADM(
-            createRootNode = apiRequest.escape,
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
+        } yield ListCreateRequestADM(
+          createRootNode = apiRequest.escape,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser,
+          apiRequestID = UUID.randomUUID()
+        )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
@@ -152,7 +159,8 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   @ApiResponses(
     Array(
       new ApiResponse(code = 500, message = "Internal server error")
-    ))
+    )
+  )
   private def getListOrNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
     get {
       /* return a list (a graph with all list nodes) */
@@ -162,15 +170,14 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListGetRequestADM] = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
-        } yield
-          ListGetRequestADM(
-            iri = listIri,
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = requestingUser
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
+        } yield ListGetRequestADM(
+          iri = listIri,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
+        )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
@@ -184,25 +191,31 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   }
 
   /**
-    * update list
-    */
+   * update list
+   */
   @Path("/{IRI}")
-  @ApiOperation(value = "Update basic list information",
-                nickname = "putList",
-                httpMethod = "PUT",
-                response = classOf[RootNodeInfoGetResponseADM])
+  @ApiOperation(
+    value = "Update basic list information",
+    nickname = "putList",
+    httpMethod = "PUT",
+    response = classOf[RootNodeInfoGetResponseADM]
+  )
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "body",
-                           value = "\"list\" to update",
-                           required = true,
-                           dataTypeClass = classOf[ChangeNodeInfoApiRequestADM],
-                           paramType = "body")
-    ))
+      new ApiImplicitParam(
+        name = "body",
+        value = "\"list\" to update",
+        required = true,
+        dataTypeClass = classOf[ChangeNodeInfoApiRequestADM],
+        paramType = "body"
+      )
+    )
+  )
   @ApiResponses(
     Array(
       new ApiResponse(code = 500, message = "Internal server error")
-    ))
+    )
+  )
   private def updateList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
     put {
       /* update existing list node (either root or child) */
@@ -211,14 +224,13 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
         val requestMessage: Future[NodeInfoChangeRequestADM] = for {
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
-        } yield
-          NodeInfoChangeRequestADM(
-            listIri = listIri,
-            changeNodeRequest = apiRequest,
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
+        } yield NodeInfoChangeRequestADM(
+          listIri = listIri,
+          changeNodeRequest = apiRequest,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser,
+          apiRequestID = UUID.randomUUID()
+        )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
@@ -233,25 +245,31 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   }
 
   /**
-    * create a new child node
-    */
+   * create a new child node
+   */
   @Path("/{IRI}")
-  @ApiOperation(value = "Add new node",
-                nickname = "addListNode",
-                httpMethod = "POST",
-                response = classOf[ChildNodeInfoGetResponseADM])
+  @ApiOperation(
+    value = "Add new node",
+    nickname = "addListNode",
+    httpMethod = "POST",
+    response = classOf[ChildNodeInfoGetResponseADM]
+  )
   @ApiImplicitParams(
     Array(
-      new ApiImplicitParam(name = "body",
-                           value = "\"node\" to create",
-                           required = true,
-                           dataTypeClass = classOf[CreateNodeApiRequestADM],
-                           paramType = "body")
-    ))
+      new ApiImplicitParam(
+        name = "body",
+        value = "\"node\" to create",
+        required = true,
+        dataTypeClass = classOf[CreateNodeApiRequestADM],
+        paramType = "body"
+      )
+    )
+  )
   @ApiResponses(
     Array(
       new ApiResponse(code = 500, message = "Internal server error")
-    ))
+    )
+  )
   private def createListChildNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) {
     iri =>
       post {
@@ -261,16 +279,15 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
           val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          } yield
-            ListChildNodeCreateRequestADM(
-              createChildNodeRequest = apiRequest.escape,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser,
-              apiRequestID = UUID.randomUUID()
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
+          } yield ListChildNodeCreateRequestADM(
+            createChildNodeRequest = apiRequest.escape,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
@@ -293,10 +310,11 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
           val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
             requestingUser <- getUserADM(requestContext, featureFactoryConfig)
-          } yield
-            ListNodeInfoGetRequestADM(iri = listIri,
-                                      featureFactoryConfig = featureFactoryConfig,
-                                      requestingUser = requestingUser)
+          } yield ListNodeInfoGetRequestADM(
+            iri = listIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
 
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
@@ -319,15 +337,14 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
           val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          } yield
-            ListNodeInfoGetRequestADM(
-              iri = listIri,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
+          } yield ListNodeInfoGetRequestADM(
+            iri = listIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
 
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
