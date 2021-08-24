@@ -1,13 +1,13 @@
 package org.knora.webapi.util
 
 /**
-  * Contains methods useful for debugging
-  */
+ * Contains methods useful for debugging
+ */
 object Debug {
 
   /**
-    * prints out the classpath
-    */
+   * prints out the classpath
+   */
   def printClasspath(): Unit = {
     // debug classpath
     def urls(cl: ClassLoader): Array[java.net.URL] = Option(cl) match {
@@ -21,10 +21,10 @@ object Debug {
   }
 
   /**
-    * Prints out the file paths for the resources
-    *
-    * @param resources a sequence of resource.
-    */
+   * Prints out the file paths for the resources
+   *
+   * @param resources a sequence of resource.
+   */
   def printResources(resources: Seq[String]): Unit = {
     println(s"printing resources: $resources")
     resources.foreach { res =>

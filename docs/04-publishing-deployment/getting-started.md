@@ -19,8 +19,8 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Getting Started with DSP-API
 
-Running DSP-API locally or on a server requires [Docker](https://www.docker.com), which
-can be freely downloaded. Please follow the instructions for installing
+Running DSP-API locally or on a server requires [Docker](https://www.docker.com), which can be freely downloaded. Please
+follow the instructions for installing
 [Docker Desktop](https://www.docker.com/products/docker-desktop).
 
 Additional software:
@@ -55,19 +55,15 @@ export JAVA_HOME=`/usr/libexec/java_home -v 11`
 ## Choosing a Triplestore
 
 DSP-API requires a standards-compliant
-[RDF](https://www.w3.org/TR/rdf11-primer/) triplestore. A number of
-triplestore implementations are available, including [free
-software](http://www.gnu.org/philosophy/free-sw.en.html) as well as
-proprietary options.
+[RDF](https://www.w3.org/TR/rdf11-primer/) triplestore. A number of triplestore implementations are available,
+including [free software](http://www.gnu.org/philosophy/free-sw.en.html) as well as proprietary options.
 
-DSP-API is designed to work with any standards-compliant
-triplestore. It is primarily tested with
+DSP-API is designed to work with any standards-compliant triplestore. It is primarily tested with
 [Apache Jena Fuseki](https://jena.apache.org), an open source triplestore.
 
 Built-in support and configuration for a high-performance, proprietary
-triplestore [Ontotext GraphDB](http://ontotext.com/products/graphdb/) is
-provided but unmaintained (GraphDB must be licensed separately by the user).
-Other triplestores are planned.
+triplestore [Ontotext GraphDB](http://ontotext.com/products/graphdb/) is provided but unmaintained (GraphDB must be
+licensed separately by the user). Other triplestores are planned.
 
 ## Running the DSP-Stack
 
@@ -75,10 +71,8 @@ Use `git` to clone the DSP-API repository from [Github](https://github.com/dasch
 
 The following environment variables are **optional**:
 
-- `KNORA_DB_HOME`: sets the path to the folder where the triplestore will store
-the database files
-- `KNORA_DB_IMPORT`: sets the path to the import directory accessible from
-inside the docker image
+- `KNORA_DB_HOME`: sets the path to the folder where the triplestore will store the database files
+- `KNORA_DB_IMPORT`: sets the path to the import directory accessible from inside the docker image
 
 ```bash
 $ export KNORA_DB_IMPORT=/path/to/some/folder
@@ -99,18 +93,16 @@ To create a test repository called `knora-test` and load test data, run:
 $ make init-db-test
 ```
 
-The scripts called by `make` can be found under `webapi/scripts`. You can
-create your own scripts based on these scripts, to create new
-repositories and optionally to load existing DSP-compliant RDF data
-into them.
+The scripts called by `make` can be found under `webapi/scripts`. You can create your own scripts based on these
+scripts, to create new repositories and optionally to load existing DSP-compliant RDF data into them.
 
-If you need to reload the test data, you need to stop and **delete** the
-running Apache Fuseki instance. **Make sure you don't delete important data.**
+If you need to reload the test data, you need to stop and **delete** the running Apache Fuseki instance. **Make sure you
+don't delete important data.**
 To stop the instance and delete the repository, run the following command:
 
 ```
 $ make stack-down-delete-volumes
 ```
 
-after which you can start the stack again with `make stack-up`, recreate
-the repository and load the data with `make init-db-test`.
+after which you can start the stack again with `make stack-up`, recreate the repository and load the data
+with `make init-db-test`.

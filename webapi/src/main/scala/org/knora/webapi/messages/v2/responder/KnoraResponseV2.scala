@@ -19,21 +19,13 @@
 
 package org.knora.webapi.messages.v2.responder
 
-import org.knora.webapi.{
-  ApiV2Complex,
-  ApiV2Schema,
-  ApiV2Simple,
-  InternalSchema,
-  OntologySchema,
-  SchemaOption,
-  SchemaOptions
-}
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.OntologyConstants
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.settings.KnoraSettingsImpl
+import org.knora.webapi._
 
 /**
  * A trait for Knora API V2 response messages.

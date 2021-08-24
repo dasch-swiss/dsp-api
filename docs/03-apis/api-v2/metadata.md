@@ -21,27 +21,28 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 ## Endpoint Overview
 
-The metadata of a project contains information about its scope, content, contributors, funding, etc. modeled according to
-to the [dsp-ontologies](https://github.com/dasch-swiss/dsp-ontologies) data model. Metadata information must be available for 
-any [DaSCH](http://dasch.swiss/) project so that researchers can go through the projects and get an idea about every project.
+The metadata of a project contains information about its scope, content, contributors, funding, etc. modeled according
+to to the [dsp-ontologies](https://github.com/dasch-swiss/dsp-ontologies) data model. Metadata information must be
+available for any [DaSCH](http://dasch.swiss/) project so that researchers can go through the projects and get an idea
+about every project.
 
 ## Creating and Updating Project Metadata
 
 Project metadata must correspond to the [dsp-ontologies](https://github.com/dasch-swiss/dsp-ontologies).
 
-To create or update project metadata for a project, submit it in a `PUT` request, specifying the project
-IRI in the URL path:
+To create or update project metadata for a project, submit it in a `PUT` request, specifying the project IRI in the URL
+path:
 
 ```
 PUT http://host/v2/metadata/PROJECT_IRI
 ```
 
-Currently, all the metadata for a project must be submitted in a single request. The submitted metadata
-replaces any metadata that has already been stored for the project. Only an administrator of the project,
-or a system administrator, can create or update project metadata.
+Currently, all the metadata for a project must be submitted in a single request. The submitted metadata replaces any
+metadata that has already been stored for the project. Only an administrator of the project, or a system administrator,
+can create or update project metadata.
 
-The metadata can be submitted in  **Turtle**, **JSON-LD**, or **RDF/XML** format. The request must
-include a `Content-Type` header with one of the following values:
+The metadata can be submitted in  **Turtle**, **JSON-LD**, or **RDF/XML** format. The request must include
+a `Content-Type` header with one of the following values:
 
 | Format  | MIME Type             |
 |---------|-----------------------|
@@ -78,8 +79,8 @@ Any user can retrieve the metadata information for a project by providing its IR
 GET http://host/v2/metadata/PROJECT_IRI
 ```
 
-The metadata can be returned in any of the formats listed in the previous section. By default, JSON-LD
-is returned. To request another format, specify it in the `Accept` header of the request.
+The metadata can be returned in any of the formats listed in the previous section. By default, JSON-LD is returned. To
+request another format, specify it in the `Accept` header of the request.
 
 An example response in JSON-LD format:
 

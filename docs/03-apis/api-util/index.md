@@ -19,7 +19,7 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Knora Util API
 
-The Knora Util API allows retrieving information about the Knora-stack itself.
-It consists of the following elements:
+The Knora Util API allows retrieving information about the Knora-stack itself. It consists of the following elements:
+
 * [Health](health.md): Knora health state
 * [Version](version.md): Versions of used stack components

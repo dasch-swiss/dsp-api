@@ -137,7 +137,7 @@
 
     <!-- maps an attribute to a property -->
     <xs:element name="attribute">
-        <xs:complexType >
+        <xs:complexType>
             <xs:sequence>
                 <!-- the name of the XML attribute -->
                 <xs:element name="attributeName">

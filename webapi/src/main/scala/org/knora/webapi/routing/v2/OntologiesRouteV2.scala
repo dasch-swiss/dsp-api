@@ -20,16 +20,15 @@
 package org.knora.webapi
 package routing.v2
 
-import exceptions.BadRequestException
-import feature.FeatureFactoryConfig
-import messages.IriConversions._
-import messages.util.rdf.{JsonLDDocument, JsonLDUtil}
-import messages.v2.responder.ontologymessages._
-import messages.{OntologyConstants, SmartIri}
-import routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
-
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.rdf.{JsonLDDocument, JsonLDUtil}
+import org.knora.webapi.messages.v2.responder.ontologymessages._
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
+import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV2}
 
 import java.util.UUID
 import scala.concurrent.Future

@@ -23,7 +23,7 @@ server.print("<head><title>LUA TEST-1</title></head>")
 server.print("<body><h1>LUA TEST-1</h1>")
 server.print("<table>")
 server.print("<tr><th>Field</th><th>Value</th></tr>")
-for k,v in pairs(server.header) do
+for k, v in pairs(server.header) do
     server.print("<tr><td>", k, "</td><td>", v, "</td></tr>")
 end
 server.print("</table>")

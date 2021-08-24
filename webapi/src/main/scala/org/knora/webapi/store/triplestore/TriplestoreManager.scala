@@ -53,8 +53,13 @@ class TriplestoreManager(
 
   protected implicit val executionContext: ExecutionContext =
     context.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
-
-  private var storeActorRef: ActorRef = _
+  // A RepositoryUpdater for processing requests to update the repository.
+  private val repositoryUpdater: RepositoryUpdater = new RepositoryUpdater(
+    system = context.system,
+    appActor = appActor,
+    settings = settings,
+    featureFactoryConfig = defaultFeatureFactoryConfig
+  )
 
   // TODO: run the fake triple store as an actor (the fake triple store will not be needed anymore, once the embedded triple store is implemented)
   FakeTriplestore.init(settings.fakeTriplestoreDataDir)
@@ -72,14 +77,7 @@ class TriplestoreManager(
   }
 
   log.debug(settings.triplestoreType)
-
-  // A RepositoryUpdater for processing requests to update the repository.
-  private val repositoryUpdater: RepositoryUpdater = new RepositoryUpdater(
-    system = context.system,
-    appActor = appActor,
-    settings = settings,
-    featureFactoryConfig = defaultFeatureFactoryConfig
-  )
+  private var storeActorRef: ActorRef = _
 
   override def preStart(): Unit = {
     log.debug("TriplestoreManagerActor: start with preStart")

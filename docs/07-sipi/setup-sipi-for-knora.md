@@ -21,11 +21,10 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 ## Setup and Execution
 
-In order to serve files to the client application like the Salsah GUI,
-Sipi must be set up and running. Sipi can be downloaded from its own
-GitHub repository: <https://github.com/dhlab-basel/Sipi> (which requires
-building from source), or the published [docker image](https://hub.docker.com/r/daschswiss/sipi/).
-can be used. To start Sipi, run the following command from inside the `sipi/`
+In order to serve files to the client application like the Salsah GUI, Sipi must be set up and running. Sipi can be
+downloaded from its own GitHub repository: <https://github.com/dhlab-basel/Sipi> (which requires building from source),
+or the published [docker image](https://hub.docker.com/r/daschswiss/sipi/). can be used. To start Sipi, run the
+following command from inside the `sipi/`
 folder:
 
 ```
@@ -41,32 +40,26 @@ using sipi for integration testing). Please see `sipi.knora-docker-config.lua` f
 etc. These settings need to be set accordingly in Knora's `application.conf`. If you use the default settings both in
 Sipi and Knora, there is no need to change these settings.
 
-Whenever a file is requested from Sipi (e.g. a browser trying to
-dereference an image link served by Knora), a preflight function is
-called. This function is defined in `sipi.init-knora.lua` present in the
-Sipi root directory. It takes three parameters: `prefix`, `identifier`
-(the name of the requested file), and `cookie`. The prefix is the shortcode
-of the project that the resource containing the file value belongs to.
+Whenever a file is requested from Sipi (e.g. a browser trying to dereference an image link served by Knora), a preflight
+function is called. This function is defined in `sipi.init-knora.lua` present in the Sipi root directory. It takes three
+parameters: `prefix`, `identifier`
+(the name of the requested file), and `cookie`. The prefix is the shortcode of the project that the resource containing
+the file value belongs to.
 
-Given this information, Sipi asks Knora about the current's users
-permissions on the given file. The cookie contains the current user's
-Knora session id, so Knora can match Sipi's request with a given user
-profile and determine the permissions this user has on the file. If the
-Knora response grants sufficient permissions, the file is served in the
-requested quality. If the suer has preview rights, Sipi serves a reduced
-quality or integrates a watermark. If the user has no permissions, Sipi
-refuses to serve the file. However, all of this behaviour is defined in
-the preflight function in Sipi and not controlled by Knora. Knora only
-provides the permission code.
+Given this information, Sipi asks Knora about the current's users permissions on the given file. The cookie contains the
+current user's Knora session id, so Knora can match Sipi's request with a given user profile and determine the
+permissions this user has on the file. If the Knora response grants sufficient permissions, the file is served in the
+requested quality. If the suer has preview rights, Sipi serves a reduced quality or integrates a watermark. If the user
+has no permissions, Sipi refuses to serve the file. However, all of this behaviour is defined in the preflight function
+in Sipi and not controlled by Knora. Knora only provides the permission code.
 
-See [Authentication of Users with Sipi](sipi-and-knora.md#authentication-of-users-with-sipi) for more
-information about sharing the session ID.
+See [Authentication of Users with Sipi](sipi-and-knora.md#authentication-of-users-with-sipi) for more information about
+sharing the session ID.
 
 ## Using Sipi in Test Mode
 
-If you just want to test Sipi with Knora without serving the actual
-files (e.g. when executing browser tests), you can simply start Sipi
-like this:
+If you just want to test Sipi with Knora without serving the actual files (e.g. when executing browser tests), you can
+simply start Sipi like this:
 
 ```
 $ export DOCKERHOST=LOCAL_IP_ADDRESS
@@ -74,8 +67,8 @@ $ docker image rm --force daschswiss/sipi:main // deletes cached image and needs
 $ docker run --rm -it --add-host webapihost:$DOCKERHOST -v $PWD/config:/sipi/config -v $PWD/scripts:/sipi/scripts -v /tmp:/tmp -v $HOME:$HOME -p 1024:1024 daschswiss/sipi:main --config=/sipi/config/sipi.knora-docker-test-config.lua
 ```
 
-Then always the same test file will be served which is included in Sipi. In test mode, Sipi will
-not ask Knora about the user's permission on the requested file.
+Then always the same test file will be served which is included in Sipi. In test mode, Sipi will not ask Knora about the
+user's permission on the requested file.
 
 ## Additional Sipi Environment Variables
 

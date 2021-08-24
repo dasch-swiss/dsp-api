@@ -23,6 +23,5 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 * [The Knora Base Ontology](knora-base.md)
 * [The SALSAH GUI Ontology](salsah-gui.md)
 
-The DSP ontologies provide a generic framework for describing humanities
-research data, allowing data from different projects to be combined, augmented,
-and reused.
+The DSP ontologies provide a generic framework for describing humanities research data, allowing data from different
+projects to be combined, augmented, and reused.

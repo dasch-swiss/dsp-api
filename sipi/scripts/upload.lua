@@ -55,12 +55,14 @@ end
 local tmpFolder = config.imgroot .. '/tmp/'
 local exists
 success, exists = server.fs.exists(tmpFolder)
-if not success then -- tests server.fs.exists
+if not success then
+    -- tests server.fs.exists
     -- fs.exist was not run successful. This does not mean, that the tmp folder is not there.
     send_error(500, "server.fs.exists() failed: " .. exists)
     return
 end
-if not exists then -- checks the response of server.fs.exists
+if not exists then
+    -- checks the response of server.fs.exists
     -- tmp folder does not exist
     server.log("temp folder missing: " .. tmpFolder, server.loglevel.LOG_ERR)
     success, error_msg = server.fs.mkdir(tmpFolder, 511)
@@ -165,7 +167,7 @@ for file_index, file_params in pairs(server.uploads) do
         -- internal in-memory representation independent of the original image format.
         --
         local uploaded_image
-        success, uploaded_image = SipiImage.new(file_index, {original = original_filename, hash = "sha256"})
+        success, uploaded_image = SipiImage.new(file_index, { original = original_filename, hash = "sha256" })
         if not success then
             send_error(500, "SipiImage.new() failed: " .. tostring(uploaded_image))
             return

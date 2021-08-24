@@ -19,7 +19,6 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # HTTP Module
 
-The http module holds only a convenience method for adding CORS support
-to api routes. The CORS implementation uses the
+The http module holds only a convenience method for adding CORS support to api routes. The CORS implementation uses the
 [akka-http-cors](https://github.com/lomigmegard/akka-http-cors)
 directives implementation.

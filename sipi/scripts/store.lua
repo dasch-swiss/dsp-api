@@ -32,8 +32,8 @@ function get_file_name(path)
 
     -- Get file name + extension until first forward slash (/) and then break
     for i = str:len(), 1, -1 do
-        if str:sub(i,i) ~= "/" then
-            temp = temp..str:sub(i,i)
+        if str:sub(i, i) ~= "/" then
+            temp = temp .. str:sub(i, i)
         else
             break
         end
@@ -41,7 +41,7 @@ function get_file_name(path)
 
     -- Reverse order of full file name
     for j = temp:len(), 1, -1 do
-        result = result..temp:sub(j,j)
+        result = result .. temp:sub(j, j)
     end
 
     return result
@@ -57,8 +57,8 @@ function get_file_extension(path)
     local result = ""
 
     for i = str:len(), 1, -1 do
-        if str:sub(i,i) ~= "." then
-            temp = temp..str:sub(i,i)
+        if str:sub(i, i) ~= "." then
+            temp = temp .. str:sub(i, i)
         else
             break
         end
@@ -66,7 +66,7 @@ function get_file_extension(path)
 
     -- Reverse order of full file name
     for j = temp:len(), 1, -1 do
-        result = result..temp:sub(j,j)
+        result = result .. temp:sub(j, j)
     end
 
     return result
@@ -83,8 +83,10 @@ function get_file_basename(path)
     local pfound = false
 
     for i = str:len(), 1, -1 do
-        if str:sub(i,i) ~= "." then
-            if pfound then temp = temp..str:sub(i,i) end
+        if str:sub(i, i) ~= "." then
+            if pfound then
+                temp = temp .. str:sub(i, i)
+            end
         else
             pfound = true
         end
@@ -93,7 +95,7 @@ function get_file_basename(path)
     if pfound then
         -- Reverse order of full file name
         for j = temp:len(), 1, -1 do
-            result = result..temp:sub(j,j)
+            result = result .. temp:sub(j, j)
         end
     else
         result = str
@@ -250,7 +252,7 @@ if not success then
     send_error(500, msg)
     return
 end
-local hashed_sidecar =  get_file_basename(hashed_filename) .. ".info"
+local hashed_sidecar = get_file_basename(hashed_filename) .. ".info"
 local source_sidecar = config.imgroot .. "/tmp/" .. hashed_sidecar
 success, readable = server.fs.is_readable(source_sidecar)
 if not success then
@@ -294,7 +296,6 @@ if readable then
     end
 
 end
-
 
 server.log("store.lua: moved " .. source_path .. " to " .. destination_path, server.loglevel.LOG_DEBUG)
 

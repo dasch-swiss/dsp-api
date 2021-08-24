@@ -24,101 +24,30 @@ import org.knora.webapi.exceptions.GravsearchException
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.util.ErrorHandlingMap
 import org.knora.webapi.messages.util.rdf.{SparqlSelectResult, VariableResultsRow}
+import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.prequery.{
   AbstractPrequeryGenerator,
   NonTriplestoreSpecificGravsearchToPrequeryTransformer
 }
-import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 
 object GravsearchMainQueryGenerator {
 
   /**
-    * Constants used in the processing of Gravsearch queries.
-    *
-    * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
-    */
-  private object GravsearchConstants {
-
-    // SPARQL variable representing the main resource and its properties
-    val mainResourceVar: QueryVariable = QueryVariable("mainResourceVar")
-
-    // SPARQL variable representing main and dependent resources
-    val mainAndDependentResourceVar: QueryVariable = QueryVariable("mainAndDependentResource")
-
-    // SPARQL variable representing the predicates of the main and dependent resources
-    val mainAndDependentResourcePropVar: QueryVariable = QueryVariable("mainAndDependentResourceProp")
-
-    // SPARQL variable representing the objects of the main and dependent resources
-    val mainAndDependentResourceObjectVar: QueryVariable = QueryVariable("mainAndDependentResourceObj")
-
-    // SPARQL variable representing the value objects of the main and dependent resources
-    val mainAndDependentResourceValueObject: QueryVariable = QueryVariable("mainAndDependentResourceValueObject")
-
-    // SPARQL variable representing the properties pointing to value objects from the main and dependent resources
-    val mainAndDependentResourceValueProp: QueryVariable = QueryVariable("mainAndDependentResourceValueProp")
-
-    // SPARQL variable representing the predicates of value objects of the main and dependent resources
-    val mainAndDependentResourceValueObjectProp: QueryVariable = QueryVariable(
-      "mainAndDependentResourceValueObjectProp")
-
-    // SPARQL variable representing the objects of value objects of the main and dependent resources
-    val mainAndDependentResourceValueObjectObj: QueryVariable = QueryVariable("mainAndDependentResourceValueObjectObj")
-
-    // SPARQL variable representing the standoff nodes of a (text) value object
-    val standoffNodeVar: QueryVariable = QueryVariable("standoffNode")
-
-    // SPARQL variable representing the predicates of a standoff node of a (text) value object
-    val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
-
-    // SPARQL variable representing the objects of a standoff node of a (text) value object
-    val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
-
-    // SPARQL variable representing the start index of a standoff node.
-    val standoffStartIndexVar: QueryVariable = QueryVariable("startIndex")
-
-    // SPARQL variable representing the standoff tag that is the target of an internal reference.
-    val targetStandoffTagVar: QueryVariable = QueryVariable("targetStandoffTag")
-
-    // SPARQL variable representing the original XML ID in a standoff tag that is the target of an internal reference.
-    val targetOriginalXMLIDVar: QueryVariable = QueryVariable("targetOriginalXMLID")
-
-    // SPARQL variable representing a list node pointed to by a (list) value object
-    val listNode: QueryVariable = QueryVariable("listNode")
-
-    // SPARQL variable representing the label of a list node pointed to by a (list) value object
-    val listNodeLabel: QueryVariable = QueryVariable("listNodeLabel")
-
-  }
-
-  /**
-    * Represents dependent resources organized by main resource.
-    *
-    * @param dependentResourcesPerMainResource a set of dependent resource Iris organized by main resource.
-    */
-  case class DependentResourcesPerMainResource(dependentResourcesPerMainResource: Map[IRI, Set[IRI]])
-
-  /**
-    * Represents value object variables and value object Iris organized by main resource.
-    *
-    * @param valueObjectVariablesAndValueObjectIris a set of value object Iris organized by value object variable and main resource.
-    */
-  case class ValueObjectVariablesAndValueObjectIris(
-      valueObjectVariablesAndValueObjectIris: Map[IRI, Map[QueryVariable, Set[IRI]]])
-
-  /**
-    * Collects the Iris of dependent resources per main resource from the results returned by the prequery.
-    * Dependent resource Iris are grouped by main resource.
-    *
-    * @param prequeryResponse the results returned by the prequery.
-    * @param transformer      the transformer that was used to turn the Gravsearch query into the prequery.
-    * @param mainResourceVar  the variable representing the main resource.
-    * @return a [[DependentResourcesPerMainResource]].
-    */
-  def getDependentResourceIrisPerMainResource(prequeryResponse: SparqlSelectResult,
-                                              transformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer,
-                                              mainResourceVar: QueryVariable): DependentResourcesPerMainResource = {
+   * Collects the Iris of dependent resources per main resource from the results returned by the prequery.
+   * Dependent resource Iris are grouped by main resource.
+   *
+   * @param prequeryResponse the results returned by the prequery.
+   * @param transformer      the transformer that was used to turn the Gravsearch query into the prequery.
+   * @param mainResourceVar  the variable representing the main resource.
+   * @return a [[DependentResourcesPerMainResource]].
+   */
+  def getDependentResourceIrisPerMainResource(
+    prequeryResponse: SparqlSelectResult,
+    transformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer,
+    mainResourceVar: QueryVariable
+  ): DependentResourcesPerMainResource = {
 
     // variables representing dependent resources
     val dependentResourceVariablesGroupConcat: Set[QueryVariable] = transformer.dependentResourceVariablesGroupConcat
@@ -156,24 +85,28 @@ object GravsearchMainQueryGenerator {
         acc + (mainResIri -> dependentResIris)
     }
 
-    DependentResourcesPerMainResource(new ErrorHandlingMap(dependentResourcesPerMainRes, { key =>
-      throw GravsearchException(s"main resource not found: $key")
-    }))
+    DependentResourcesPerMainResource(
+      new ErrorHandlingMap(
+        dependentResourcesPerMainRes,
+        key => throw GravsearchException(s"main resource not found: $key")
+      )
+    )
   }
 
   /**
-    * Collects object variables and their values per main resource from the results returned by the prequery.
-    * Value objects variables and their Iris are grouped by main resource.
-    *
-    * @param prequeryResponse the results returned by the prequery.
-    * @param transformer      the transformer that was used to turn the Gravsearch query into the prequery.
-    * @param mainResourceVar  the variable representing the main resource.
-    * @return [[ValueObjectVariablesAndValueObjectIris]].
-    */
+   * Collects object variables and their values per main resource from the results returned by the prequery.
+   * Value objects variables and their Iris are grouped by main resource.
+   *
+   * @param prequeryResponse the results returned by the prequery.
+   * @param transformer      the transformer that was used to turn the Gravsearch query into the prequery.
+   * @param mainResourceVar  the variable representing the main resource.
+   * @return [[ValueObjectVariablesAndValueObjectIris]].
+   */
   def getValueObjectVarsAndIrisPerMainResource(
-      prequeryResponse: SparqlSelectResult,
-      transformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer,
-      mainResourceVar: QueryVariable): ValueObjectVariablesAndValueObjectIris = {
+    prequeryResponse: SparqlSelectResult,
+    transformer: NonTriplestoreSpecificGravsearchToPrequeryTransformer,
+    mainResourceVar: QueryVariable
+  ): ValueObjectVariablesAndValueObjectIris = {
 
     // value objects variables present in the prequery's WHERE clause
     val valueObjectVariablesConcat = transformer.valueObjectVariablesGroupConcat
@@ -208,44 +141,54 @@ object GravsearchMainQueryGenerator {
               valueObjVarConcat -> valueObjIris
           }.toMap
 
-          val valueObjVarToIrisErrorHandlingMap = new ErrorHandlingMap(valueObjVarToIris, { key: QueryVariable =>
-            throw GravsearchException(s"variable not found: $key")
-          })
+          val valueObjVarToIrisErrorHandlingMap = new ErrorHandlingMap(
+            valueObjVarToIris,
+            { key: QueryVariable =>
+              throw GravsearchException(s"variable not found: $key")
+            }
+          )
           acc + (mainResIri -> valueObjVarToIrisErrorHandlingMap)
       }
 
-    ValueObjectVariablesAndValueObjectIris(new ErrorHandlingMap(valueObjVarsAndIris, { key =>
-      throw GravsearchException(s"main resource not found: $key")
-    }))
+    ValueObjectVariablesAndValueObjectIris(
+      new ErrorHandlingMap(valueObjVarsAndIris, key => throw GravsearchException(s"main resource not found: $key"))
+    )
   }
 
   /**
-    * Creates the main query to be sent to the triplestore.
-    * Requests two sets of information: about the main resources and the dependent resources.
-    *
-    * @param mainResourceIris      IRIs of main resources to be queried.
-    * @param dependentResourceIris IRIs of dependent resources to be queried.
-    * @param valueObjectIris       IRIs of value objects to be queried (for both main and dependent resources)
-    * @param targetSchema          the target API schema.
-    * @param schemaOptions         the schema options submitted with the request.
-    * @return the main [[ConstructQuery]] query to be executed.
-    */
-  def createMainQuery(mainResourceIris: Set[IriRef],
-                      dependentResourceIris: Set[IriRef],
-                      valueObjectIris: Set[IRI],
-                      targetSchema: ApiV2Schema,
-                      schemaOptions: Set[SchemaOption],
-                      settings: KnoraSettingsImpl): ConstructQuery = {
+   * Creates the main query to be sent to the triplestore.
+   * Requests two sets of information: about the main resources and the dependent resources.
+   *
+   * @param mainResourceIris      IRIs of main resources to be queried.
+   * @param dependentResourceIris IRIs of dependent resources to be queried.
+   * @param valueObjectIris       IRIs of value objects to be queried (for both main and dependent resources)
+   * @param targetSchema          the target API schema.
+   * @param schemaOptions         the schema options submitted with the request.
+   * @return the main [[ConstructQuery]] query to be executed.
+   */
+  def createMainQuery(
+    mainResourceIris: Set[IriRef],
+    dependentResourceIris: Set[IriRef],
+    valueObjectIris: Set[IRI],
+    targetSchema: ApiV2Schema,
+    schemaOptions: Set[SchemaOption],
+    settings: KnoraSettingsImpl
+  ): ConstructQuery = {
     import GravsearchConstants._
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     // WHERE patterns for the main resource variable: check that main resource is a knora-base:Resource and that it is not marked as deleted
     val wherePatternsForMainResource = Seq(
-      ValuesPattern(mainResourceVar, mainResourceIris), // a ValuePattern that binds the main resources' IRIs to the main resource variable
-      StatementPattern.makeInferred(subj = mainResourceVar,
-                                    pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-                                    obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)),
+      ValuesPattern(
+        mainResourceVar,
+        mainResourceIris
+      ), // a ValuePattern that binds the main resources' IRIs to the main resource variable
+      StatementPattern.makeInferred(
+        subj = mainResourceVar,
+        pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)
+      ),
       StatementPattern.makeExplicit(
         subj = mainResourceVar,
         pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
@@ -266,28 +209,39 @@ object GravsearchMainQueryGenerator {
 
     // WHERE patterns for direct statements about the main resource and dependent resources
     val wherePatternsForMainAndDependentResources = Seq(
-      ValuesPattern(mainAndDependentResourceVar, mainResourceIris ++ dependentResourceIris), // a ValuePattern that binds the main and dependent resources' IRIs to a variable
-      StatementPattern.makeInferred(subj = mainAndDependentResourceVar,
-                                    pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-                                    obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)),
+      ValuesPattern(
+        mainAndDependentResourceVar,
+        mainResourceIris ++ dependentResourceIris
+      ), // a ValuePattern that binds the main and dependent resources' IRIs to a variable
+      StatementPattern.makeInferred(
+        subj = mainAndDependentResourceVar,
+        pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)
+      ),
       StatementPattern.makeExplicit(
         subj = mainAndDependentResourceVar,
         pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
         obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
       ),
-      StatementPattern.makeExplicit(subj = mainAndDependentResourceVar,
-                                    pred = mainAndDependentResourcePropVar,
-                                    obj = mainAndDependentResourceObjectVar)
+      StatementPattern.makeExplicit(
+        subj = mainAndDependentResourceVar,
+        pred = mainAndDependentResourcePropVar,
+        obj = mainAndDependentResourceObjectVar
+      )
     )
 
     // mark main and dependent resources as a knora-base:Resource in CONSTRUCT clause and return direct assertions about all resources
     val constructPatternsForMainAndDependentResources = Seq(
-      StatementPattern(subj = mainAndDependentResourceVar,
-                       pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
-                       obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)),
-      StatementPattern(subj = mainAndDependentResourceVar,
-                       pred = mainAndDependentResourcePropVar,
-                       obj = mainAndDependentResourceObjectVar)
+      StatementPattern(
+        subj = mainAndDependentResourceVar,
+        pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
+        obj = IriRef(OntologyConstants.KnoraBase.Resource.toSmartIri)
+      ),
+      StatementPattern(
+        subj = mainAndDependentResourceVar,
+        pred = mainAndDependentResourcePropVar,
+        obj = mainAndDependentResourceObjectVar
+      )
     )
 
     if (valueObjectIris.nonEmpty) {
@@ -300,20 +254,26 @@ object GravsearchMainQueryGenerator {
       // not including standoff markup in text values
       val wherePatternsForMainAndDependentResourcesValues = Seq(
         mainAndDependentResourcesValueObjectsValuePattern,
-        StatementPattern.makeInferred(subj = mainAndDependentResourceVar,
-                                      pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri),
-                                      obj = mainAndDependentResourceValueObject),
-        StatementPattern.makeExplicit(subj = mainAndDependentResourceVar,
-                                      pred = mainAndDependentResourceValueProp,
-                                      obj = mainAndDependentResourceValueObject),
+        StatementPattern.makeInferred(
+          subj = mainAndDependentResourceVar,
+          pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri),
+          obj = mainAndDependentResourceValueObject
+        ),
+        StatementPattern.makeExplicit(
+          subj = mainAndDependentResourceVar,
+          pred = mainAndDependentResourceValueProp,
+          obj = mainAndDependentResourceValueObject
+        ),
         StatementPattern.makeExplicit(
           subj = mainAndDependentResourceValueObject,
           pred = IriRef(OntologyConstants.KnoraBase.IsDeleted.toSmartIri),
           obj = XsdLiteral(value = "false", datatype = OntologyConstants.Xsd.Boolean.toSmartIri)
         ),
-        StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject,
-                                      pred = mainAndDependentResourceValueObjectProp,
-                                      obj = mainAndDependentResourceValueObjectObj),
+        StatementPattern.makeExplicit(
+          subj = mainAndDependentResourceValueObject,
+          pred = mainAndDependentResourceValueObjectProp,
+          obj = mainAndDependentResourceValueObjectObj
+        ),
         FilterPattern(
           CompareExpression(
             leftArg = mainAndDependentResourceValueObjectProp,
@@ -325,15 +285,21 @@ object GravsearchMainQueryGenerator {
 
       // return assertions about the main and dependent resources' values in CONSTRUCT clause
       val constructPatternsForMainAndDependentResourcesValues = Seq(
-        StatementPattern(subj = mainAndDependentResourceVar,
-                         pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri),
-                         obj = mainAndDependentResourceValueObject),
-        StatementPattern(subj = mainAndDependentResourceVar,
-                         pred = mainAndDependentResourceValueProp,
-                         obj = mainAndDependentResourceValueObject),
-        StatementPattern(subj = mainAndDependentResourceValueObject,
-                         pred = mainAndDependentResourceValueObjectProp,
-                         obj = mainAndDependentResourceValueObjectObj)
+        StatementPattern(
+          subj = mainAndDependentResourceVar,
+          pred = IriRef(OntologyConstants.KnoraBase.HasValue.toSmartIri),
+          obj = mainAndDependentResourceValueObject
+        ),
+        StatementPattern(
+          subj = mainAndDependentResourceVar,
+          pred = mainAndDependentResourceValueProp,
+          obj = mainAndDependentResourceValueObject
+        ),
+        StatementPattern(
+          subj = mainAndDependentResourceValueObject,
+          pred = mainAndDependentResourceValueObjectProp,
+          obj = mainAndDependentResourceValueObjectObj
+        )
       )
 
       // Check whether the response should include standoff.
@@ -343,23 +309,29 @@ object GravsearchMainQueryGenerator {
       val wherePatternsForStandoff: Seq[QueryPattern] = if (queryStandoff) {
         Seq(
           mainAndDependentResourcesValueObjectsValuePattern,
-          StatementPattern.makeExplicit(subj = mainAndDependentResourceValueObject,
-                                        pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri),
-                                        obj = standoffNodeVar),
+          StatementPattern.makeExplicit(
+            subj = mainAndDependentResourceValueObject,
+            pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri),
+            obj = standoffNodeVar
+          ),
           StatementPattern.makeExplicit(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
-          StatementPattern.makeExplicit(subj = standoffNodeVar,
-                                        pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartIndex.toSmartIri),
-                                        obj = standoffStartIndexVar),
+          StatementPattern.makeExplicit(
+            subj = standoffNodeVar,
+            pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasStartIndex.toSmartIri),
+            obj = standoffStartIndexVar
+          ),
           OptionalPattern(
             Seq(
               StatementPattern.makeExplicit(
                 subj = standoffNodeVar,
                 pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasInternalReference.toSmartIri),
-                obj = targetStandoffTagVar),
+                obj = targetStandoffTagVar
+              ),
               StatementPattern.makeExplicit(
                 subj = targetStandoffTagVar,
                 pred = IriRef(OntologyConstants.KnoraBase.StandoffTagHasOriginalXMLID.toSmartIri),
-                obj = targetOriginalXMLIDVar)
+                obj = targetOriginalXMLIDVar
+              )
             )
           ),
           FilterPattern(
@@ -372,8 +344,10 @@ object GravsearchMainQueryGenerator {
               rightArg = CompareExpression(
                 leftArg = standoffStartIndexVar,
                 operator = CompareExpressionOperator.LESS_THAN_OR_EQUAL_TO,
-                rightArg = XsdLiteral(value = (settings.standoffPerPage - 1).toString,
-                                      datatype = OntologyConstants.Xsd.Integer.toSmartIri)
+                rightArg = XsdLiteral(
+                  value = (settings.standoffPerPage - 1).toString,
+                  datatype = OntologyConstants.Xsd.Integer.toSmartIri
+                )
               )
             )
           )
@@ -385,13 +359,17 @@ object GravsearchMainQueryGenerator {
       // return standoff assertions
       val constructPatternsForStandoff: Seq[StatementPattern] = if (queryStandoff) {
         Seq(
-          StatementPattern(subj = mainAndDependentResourceValueObject,
-                           pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri),
-                           obj = standoffNodeVar),
+          StatementPattern(
+            subj = mainAndDependentResourceValueObject,
+            pred = IriRef(OntologyConstants.KnoraBase.ValueHasStandoff.toSmartIri),
+            obj = standoffNodeVar
+          ),
           StatementPattern(subj = standoffNodeVar, pred = standoffPropVar, obj = standoffValueVar),
-          StatementPattern(subj = standoffNodeVar,
-                           pred = IriRef(OntologyConstants.KnoraBase.TargetHasOriginalXMLID.toSmartIri),
-                           obj = targetOriginalXMLIDVar)
+          StatementPattern(
+            subj = standoffNodeVar,
+            pred = IriRef(OntologyConstants.KnoraBase.TargetHasOriginalXMLID.toSmartIri),
+            obj = targetOriginalXMLIDVar
+          )
         )
       } else {
         Seq.empty[StatementPattern]
@@ -399,15 +377,18 @@ object GravsearchMainQueryGenerator {
 
       ConstructQuery(
         constructClause = ConstructClause(
-          statements = constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff
+          statements =
+            constructPatternsForMainResource ++ constructPatternsForMainAndDependentResources ++ constructPatternsForMainAndDependentResourcesValues ++ constructPatternsForStandoff
         ),
         whereClause = WhereClause(
           Seq(
             UnionPattern(
-              Seq(wherePatternsForMainResource,
-                  wherePatternsForMainAndDependentResources,
-                  wherePatternsForMainAndDependentResourcesValues,
-                  wherePatternsForStandoff).filter(_.nonEmpty)
+              Seq(
+                wherePatternsForMainResource,
+                wherePatternsForMainAndDependentResources,
+                wherePatternsForMainAndDependentResourcesValues,
+                wherePatternsForStandoff
+              ).filter(_.nonEmpty)
             )
           )
         )
@@ -429,5 +410,80 @@ object GravsearchMainQueryGenerator {
         )
       )
     }
+  }
+
+  /**
+   * Represents dependent resources organized by main resource.
+   *
+   * @param dependentResourcesPerMainResource a set of dependent resource Iris organized by main resource.
+   */
+  case class DependentResourcesPerMainResource(dependentResourcesPerMainResource: Map[IRI, Set[IRI]])
+
+  /**
+   * Represents value object variables and value object Iris organized by main resource.
+   *
+   * @param valueObjectVariablesAndValueObjectIris a set of value object Iris organized by value object variable and main resource.
+   */
+  case class ValueObjectVariablesAndValueObjectIris(
+    valueObjectVariablesAndValueObjectIris: Map[IRI, Map[QueryVariable, Set[IRI]]]
+  )
+
+  /**
+   * Constants used in the processing of Gravsearch queries.
+   *
+   * These constants are used to create SPARQL CONSTRUCT queries to be executed by the triplestore and to process the results that are returned.
+   */
+  private object GravsearchConstants {
+
+    // SPARQL variable representing the main resource and its properties
+    val mainResourceVar: QueryVariable = QueryVariable("mainResourceVar")
+
+    // SPARQL variable representing main and dependent resources
+    val mainAndDependentResourceVar: QueryVariable = QueryVariable("mainAndDependentResource")
+
+    // SPARQL variable representing the predicates of the main and dependent resources
+    val mainAndDependentResourcePropVar: QueryVariable = QueryVariable("mainAndDependentResourceProp")
+
+    // SPARQL variable representing the objects of the main and dependent resources
+    val mainAndDependentResourceObjectVar: QueryVariable = QueryVariable("mainAndDependentResourceObj")
+
+    // SPARQL variable representing the value objects of the main and dependent resources
+    val mainAndDependentResourceValueObject: QueryVariable = QueryVariable("mainAndDependentResourceValueObject")
+
+    // SPARQL variable representing the properties pointing to value objects from the main and dependent resources
+    val mainAndDependentResourceValueProp: QueryVariable = QueryVariable("mainAndDependentResourceValueProp")
+
+    // SPARQL variable representing the predicates of value objects of the main and dependent resources
+    val mainAndDependentResourceValueObjectProp: QueryVariable = QueryVariable(
+      "mainAndDependentResourceValueObjectProp"
+    )
+
+    // SPARQL variable representing the objects of value objects of the main and dependent resources
+    val mainAndDependentResourceValueObjectObj: QueryVariable = QueryVariable("mainAndDependentResourceValueObjectObj")
+
+    // SPARQL variable representing the standoff nodes of a (text) value object
+    val standoffNodeVar: QueryVariable = QueryVariable("standoffNode")
+
+    // SPARQL variable representing the predicates of a standoff node of a (text) value object
+    val standoffPropVar: QueryVariable = QueryVariable("standoffProp")
+
+    // SPARQL variable representing the objects of a standoff node of a (text) value object
+    val standoffValueVar: QueryVariable = QueryVariable("standoffValue")
+
+    // SPARQL variable representing the start index of a standoff node.
+    val standoffStartIndexVar: QueryVariable = QueryVariable("startIndex")
+
+    // SPARQL variable representing the standoff tag that is the target of an internal reference.
+    val targetStandoffTagVar: QueryVariable = QueryVariable("targetStandoffTag")
+
+    // SPARQL variable representing the original XML ID in a standoff tag that is the target of an internal reference.
+    val targetOriginalXMLIDVar: QueryVariable = QueryVariable("targetOriginalXMLID")
+
+    // SPARQL variable representing a list node pointed to by a (list) value object
+    val listNode: QueryVariable = QueryVariable("listNode")
+
+    // SPARQL variable representing the label of a list node pointed to by a (list) value object
+    val listNodeLabel: QueryVariable = QueryVariable("listNodeLabel")
+
   }
 }

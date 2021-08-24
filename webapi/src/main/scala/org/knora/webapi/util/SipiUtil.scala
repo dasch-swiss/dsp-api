@@ -24,17 +24,17 @@ import spray.json._
 import scala.util.{Failure, Success, Try}
 
 /**
-  * Utility functions for communicating with Sipi.
-  */
+ * Utility functions for communicating with Sipi.
+ */
 object SipiUtil {
 
   /**
-    * Tries to extract an error message from a Sipi HTTP response.
-    *
-    * @param sipiResponseStr the response received from Sipi.
-    * @return the error message contained in the response, or the same string if it could not be parsed.
-    */
-  def getSipiErrorMessage(sipiResponseStr: String): String = {
+   * Tries to extract an error message from a Sipi HTTP response.
+   *
+   * @param sipiResponseStr the response received from Sipi.
+   * @return the error message contained in the response, or the same string if it could not be parsed.
+   */
+  def getSipiErrorMessage(sipiResponseStr: String): String =
     if (sipiResponseStr.isEmpty) {
       sipiResponseStr
     } else {
@@ -53,5 +53,4 @@ object SipiUtil {
         case Failure(_) => sipiResponseStr
       }
     }
-  }
 }

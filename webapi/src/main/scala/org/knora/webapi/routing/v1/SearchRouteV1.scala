@@ -38,22 +38,69 @@ import scala.language.postfixOps
 // slash after path without following segment
 
 /**
-  * Provides a spray-routing function for API routes that deal with search.
-  */
+ * Provides a spray-routing function for API routes that deal with search.
+ */
 class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   /**
-    * The default number of rows to show in search results.
-    */
+   * The default number of rows to show in search results.
+   */
   private val defaultShowNRows = 25
 
-  def makeExtendedSearchRequestMessage(userADM: UserADM,
-                                       reverseParams: Map[String, Seq[String]]): ExtendedSearchGetRequestV1 = {
+  /**
+   * Returns the route.
+   */
+  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path("v1" / "search" /) {
+      // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
+      get { requestContext =>
+        val requestMessage = for {
+          userADM <- getUserADM(
+                       requestContext = requestContext,
+                       featureFactoryConfig = featureFactoryConfig
+                     )
+          params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
+        } yield makeExtendedSearchRequestMessage(userADM, params)
+
+        RouteUtilV1.runJsonRouteWithFuture(
+          requestMessage,
+          requestContext,
+          settings,
+          responderManager,
+          log
+        )
+      }
+    } ~
+      path("v1" / "search" / Segment) {
+        searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
+          get { requestContext =>
+            val requestMessage = for {
+              userADM <- getUserADM(
+                           requestContext = requestContext,
+                           featureFactoryConfig = featureFactoryConfig
+                         )
+              params: Map[String, String] = requestContext.request.uri.query().toMap
+            } yield makeFulltextSearchRequestMessage(userADM, searchval, params)
+
+            RouteUtilV1.runJsonRouteWithFuture(
+              requestMessage,
+              requestContext,
+              settings,
+              responderManager,
+              log
+            )
+          }
+      }
+
+  def makeExtendedSearchRequestMessage(
+    userADM: UserADM,
+    reverseParams: Map[String, Seq[String]]
+  ): ExtendedSearchGetRequestV1 = {
     val stringFormatter = StringFormatter.getGeneralInstance
 
     // Spray returns the parameters in reverse order, so reverse them before processing, because the JavaScript GUI expects the order to be preserved.
-    val params = reverseParams.map {
-      case (key, value) => key -> value.reverse
+    val params = reverseParams.map { case (key, value) =>
+      key -> value.reverse
     }
 
     //println(params)
@@ -70,8 +117,10 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           stringFormatter.validateAndEscapeIri(
             restype,
             throw BadRequestException(
-              s"Value for param 'filter_by_restype' for extended search $restype is not a valid IRI. Please make sure that it was correctly URL encoded.")
-          ))
+              s"Value for param 'filter_by_restype' for extended search $restype is not a valid IRI. Please make sure that it was correctly URL encoded."
+            )
+          )
+        )
       case other => None
     }
 
@@ -82,8 +131,10 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           stringFormatter.validateAndEscapeIri(
             project,
             throw BadRequestException(
-              s"Value for param 'filter_by_project' for extended search $project is not a valid IRI. Please make sure that it was correctly URL encoded.")
-          ))
+              s"Value for param 'filter_by_project' for extended search $project is not a valid IRI. Please make sure that it was correctly URL encoded."
+            )
+          )
+        )
       case other => None
     }
 
@@ -94,20 +145,22 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           stringFormatter.validateAndEscapeIri(
             owner,
             throw BadRequestException(
-              s"Value for param 'filter_by_owner' for extended search $owner is not a valid IRI. Please make sure that it was correctly URL encoded.")
-          ))
+              s"Value for param 'filter_by_owner' for extended search $owner is not a valid IRI. Please make sure that it was correctly URL encoded."
+            )
+          )
+        )
       case other => None
     }
 
     // here, also multiple values can be given
     val propertyIri: Seq[IRI] = params.get("property_id") match {
       case Some(propertyList: Seq[IRI]) =>
-        propertyList.map(
-          prop =>
-            stringFormatter.validateAndEscapeIri(
-              prop,
-              throw BadRequestException(
-                s"Value for param 'property_id' for extended search $prop is not a valid IRI. Please make sure that it was correctly URL encoded.")
+        propertyList.map(prop =>
+          stringFormatter.validateAndEscapeIri(
+            prop,
+            throw BadRequestException(
+              s"Value for param 'property_id' for extended search $prop is not a valid IRI. Please make sure that it was correctly URL encoded."
+            )
           )
         )
       case other => Nil
@@ -117,11 +170,9 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     // convert string to enum (SearchComparisonOperatorV1), throw error if unknown
     val compop: Seq[SearchComparisonOperatorV1.Value] = params.get("compop") match {
       case Some(compopList: Seq[String]) =>
-        compopList.map(
-          (compop: String) => {
-            SearchComparisonOperatorV1.lookup(compop)
-          }
-        )
+        compopList.map { (compop: String) =>
+          SearchComparisonOperatorV1.lookup(compop)
+        }
       case other => Nil
     }
 
@@ -144,7 +195,9 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         val showNRowsVal = stringFormatter.validateInt(
           showNRowsStrList.head,
           throw BadRequestException(
-            s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStrList"))
+            s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStrList"
+          )
+        )
         showNRowsVal match {
           case -1 => defaultShowNRows
           case _  => showNRowsVal
@@ -156,7 +209,8 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       case Some(startAtStrList: Seq[String]) =>
         stringFormatter.validateInt(
           startAtStrList.head,
-          throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStrList"))
+          throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStrList")
+        )
       case None => 0
     }
 
@@ -173,9 +227,11 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     )
   }
 
-  def makeFulltextSearchRequestMessage(userADM: UserADM,
-                                       searchval: String,
-                                       params: Map[String, String]): FulltextSearchGetRequestV1 = {
+  def makeFulltextSearchRequestMessage(
+    userADM: UserADM,
+    searchval: String,
+    params: Map[String, String]
+  ): FulltextSearchGetRequestV1 = {
     val stringFormatter = StringFormatter.getGeneralInstance
 
     params.get("searchtype") match {
@@ -188,7 +244,9 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         Some(
           stringFormatter.validateAndEscapeIri(
             restype,
-            throw BadRequestException(s"Unexpected param 'filter_by_restype' for extended search: $restype")))
+            throw BadRequestException(s"Unexpected param 'filter_by_restype' for extended search: $restype")
+          )
+        )
       case other => None
     }
     val projectIri: Option[IRI] = params.get("filter_by_project") match {
@@ -196,19 +254,23 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         Some(
           stringFormatter.validateAndEscapeIri(
             project,
-            throw BadRequestException(s"Unexpected param 'filter_by_project' for extended search: $project")))
+            throw BadRequestException(s"Unexpected param 'filter_by_project' for extended search: $project")
+          )
+        )
       case other => None
     }
 
     val searchString = stringFormatter.toSparqlEncodedString(
       searchval,
-      throw BadRequestException(s"Invalid search string: '$searchval'"))
+      throw BadRequestException(s"Invalid search string: '$searchval'")
+    )
 
     val showNRows: Int = params.get("show_nrows") match {
       case Some(showNRowsStr) =>
         val showNRowsVal = stringFormatter.validateInt(
           showNRowsStr,
-          throw BadRequestException(s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStr"))
+          throw BadRequestException(s"Can't parse integer parameter 'show_nrows' for extended search: $showNRowsStr")
+        )
         showNRowsVal match {
           case -1 => defaultShowNRows
           case _  => showNRowsVal
@@ -220,7 +282,8 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       case Some(startAtStr) =>
         stringFormatter.validateInt(
           startAtStr,
-          throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStr"))
+          throw BadRequestException(s"Can't parse integer parameter 'start_at' for extended search: $startAtStr")
+        )
       case None => 0
     }
 
@@ -232,55 +295,5 @@ class SearchRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       showNRows = showNRows,
       startAt = startAt
     )
-  }
-
-  /**
-    * Returns the route.
-    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
-
-    path("v1" / "search" /) {
-      // in the original API, there is a slash after "search": "http://www.salsah.org/api/search/?searchtype=extended"
-      get { requestContext =>
-        {
-          val requestMessage = for {
-            userADM <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-            params: Map[String, Seq[String]] = requestContext.request.uri.query().toMultiMap
-          } yield makeExtendedSearchRequestMessage(userADM, params)
-
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessage,
-            requestContext,
-            settings,
-            responderManager,
-            log
-          )
-        }
-      }
-    } ~
-      path("v1" / "search" / Segment) { searchval => // TODO: if a space is encoded as a "+", this is not converted back to a space
-        get { requestContext =>
-          {
-            val requestMessage = for {
-              userADM <- getUserADM(
-                requestContext = requestContext,
-                featureFactoryConfig = featureFactoryConfig
-              )
-              params: Map[String, String] = requestContext.request.uri.query().toMap
-            } yield makeFulltextSearchRequestMessage(userADM, searchval, params)
-
-            RouteUtilV1.runJsonRouteWithFuture(
-              requestMessage,
-              requestContext,
-              settings,
-              responderManager,
-              log
-            )
-          }
-        }
-      }
   }
 }

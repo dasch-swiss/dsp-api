@@ -19,8 +19,8 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Version
 
-The version endpoint provides the versions of the used components in the Knora-stack.
-The response has the type `application/json` and contains the following information:
+The version endpoint provides the versions of the used components in the Knora-stack. The response has the
+type `application/json` and contains the following information:
 
 1. name: has the value "version"
 
@@ -33,12 +33,12 @@ The response has the type `application/json` and contains the following informat
     - sipi
     - webapi
 
-
 ## Example request
+
 `GET /version`
 
-
 ## Example response
+
 ```
 {
     "akkaHttp": "10.1.7",

@@ -19,22 +19,22 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Configuration
 
-All configuration for Knora is done in `application.conf`. Besides the Knora application
-specific configuration, there we can also find configuration for the underlying Akka library.
+All configuration for Knora is done in `application.conf`. Besides the Knora application specific configuration, there
+we can also find configuration for the underlying Akka library.
 
-For optimal performance it is important to tune the configuration to the hardware used, mainly
-to the number of CPUs and cores per CPU.
+For optimal performance it is important to tune the configuration to the hardware used, mainly to the number of CPUs and
+cores per CPU.
 
 The relevant sections for tuning are:
 
- - `akka.actor.deployment`
- - `knora-actor-dispatcher`
- - `knora-blocking-dispatcher`
+- `akka.actor.deployment`
+- `knora-actor-dispatcher`
+- `knora-blocking-dispatcher`
 
 ## System Environment Variables
- 
+
 A number of core settings is additionally configurable through system environment variables. These are:
- 
+
 | key in application.conf                                     | environment variable                                            | default value        |
 |-------------------------------------------------------------|-----------------------------------------------------------------|----------------------|
 | akka.log-config-on-start                                    | KNORA_AKKA_LOG_CONFIG_ON_START                                  | off                  |
@@ -81,19 +81,17 @@ A number of core settings is additionally configurable through system environmen
 
 ## Selectively Disabling Routes
 
-In `application.conf` the setting `app.routes-to-reject` contains a list
-of strings, representing routes which should be rejected.
+In `application.conf` the setting `app.routes-to-reject` contains a list of strings, representing routes which should be
+rejected.
 
-For Example, the string `"v1/users"` would lead to rejection of any
-route which contains this string.
+For Example, the string `"v1/users"` would lead to rejection of any route which contains this string.
 
 ## Startup Flags
 
-There is a number of flags that can be set on startup, they will
-override any value set in the application configuration file:
+There is a number of flags that can be set on startup, they will override any value set in the application configuration
+file:
 
-  - `loadDemoData`, `--loadDemoData`, `-d`: Loads the demo data.
-  - `allowReloadOverHTTP`, `--allow-reload-over-http`, `-r`: Allows
-    reloading of data over HTTP.
-  - `-c`: Print the configuration at startup.
-  - `--help`: Shows the help message with all startup flags.
+- `loadDemoData`, `--loadDemoData`, `-d`: Loads the demo data.
+- `allowReloadOverHTTP`, `--allow-reload-over-http`, `-r`: Allows reloading of data over HTTP.
+- `-c`: Print the configuration at startup.
+- `--help`: Shows the help message with all startup flags.

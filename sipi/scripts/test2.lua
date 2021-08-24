@@ -15,7 +15,7 @@
 -- You should have received a copy of the GNU Affero General Public
 -- License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 --
-local img = SipiImage.new(config.imgroot .. "/Leaves8.tif", {region="full", reduce=4})
+local img = SipiImage.new(config.imgroot .. "/Leaves8.tif", { region = "full", reduce = 4 })
 local dim = SipiImage.dims(img)
 
 server.sendHeader("Content-Type", "image/jpeg")

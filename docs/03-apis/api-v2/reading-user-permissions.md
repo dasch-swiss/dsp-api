@@ -19,11 +19,10 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Reading the User's Permissions on Resources and Values
 
-In the [complex API schema](introduction.md#api-schema), each
-resource and value is returned with the predicate `knora-api:userHasPermission`.
-The object of this predicate is a string containing a permission code, which
-indicates the requesting user's maximum permission on the resource or value.
-These are the possible permission codes, in ascending order:
+In the [complex API schema](introduction.md#api-schema), each resource and value is returned with the
+predicate `knora-api:userHasPermission`. The object of this predicate is a string containing a permission code, which
+indicates the requesting user's maximum permission on the resource or value. These are the possible permission codes, in
+ascending order:
 
 - `RV`: restricted view permission (least privileged)
 - `V`: view permission

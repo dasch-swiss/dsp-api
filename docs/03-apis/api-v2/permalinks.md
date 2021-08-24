@@ -19,18 +19,15 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Permalinks
 
-Knora provides a permanent, citable URL for each resource and value.
-These URLs use [Archival Resource Key (ARK) Identifiers](http://n2t.net/e/ark_ids.html),
-and are designed to remain valid even if the resource itself is moved
-from one Knora repository to another.
+Knora provides a permanent, citable URL for each resource and value. These URLs
+use [Archival Resource Key (ARK) Identifiers](http://n2t.net/e/ark_ids.html), and are designed to remain valid even if
+the resource itself is moved from one Knora repository to another.
 
 ## Obtaining ARK URLs
 
-In the [complex schema](introduction.md#api-schema), a resource or value
-is always returned with two ARK URLs: one that will always refer
-to the latest version of the resource or value (`knora-api:arkUrl`), and one that refers
-specifically to the version being returned (`knora-api:versionArkUrl`).
-For example:
+In the [complex schema](introduction.md#api-schema), a resource or value is always returned with two ARK URLs: one that
+will always refer to the latest version of the resource or value (`knora-api:arkUrl`), and one that refers specifically
+to the version being returned (`knora-api:versionArkUrl`). For example:
 
 ```jsonld
 {
@@ -90,9 +87,8 @@ For example:
 }
 ```
 
-In the [simple schema](introduction.md#api-schema), resources are returned
-with ARK URLs, but values are returned as literals, so ARK URLs are not provided
-for values.
+In the [simple schema](introduction.md#api-schema), resources are returned with ARK URLs, but values are returned as
+literals, so ARK URLs are not provided for values.
 
 For more information on getting past versions of resources and values, see:
 
@@ -118,11 +114,11 @@ http://HOST/ark:/NAAN/VERSION/PROJECT
 
 `NAAN` is a
 [Name Assigning Authority Number](https://tools.ietf.org/html/draft-kunze-ark-22#section-2.3),
-`VERSION` is the version number of the Knora ARK URL format (currently always 1),
-and `PROJECT` is the project's [short-code](knora-iris.md#project-short-codes).
+`VERSION` is the version number of the Knora ARK URL format (currently always 1), and `PROJECT` is the
+project's [short-code](knora-iris.md#project-short-codes).
 
-For example, given a project with ID `0001`, and using the DaSCH's ARK resolver
-hostname and NAAN, the ARK URL for the project itself is:
+For example, given a project with ID `0001`, and using the DaSCH's ARK resolver hostname and NAAN, the ARK URL for the
+project itself is:
 
 ```
 http://ark.dasch.swiss/ark:/72163/1/0001
@@ -141,12 +137,11 @@ http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID[.TIMESTAMP]
 `NAAN` is a
 [Name Assigning Authority Number](https://tools.ietf.org/html/draft-kunze-ark-22#section-2.3),
 `VERSION` is the version number of the Knora ARK URL format (currently always 1),
-`PROJECT` is the project's [short-code](knora-iris.md#project-short-codes),
-and `RESOURCE_UUID` is the resource's [UUID](knora-iris.md#iris-for-data).
+`PROJECT` is the project's [short-code](knora-iris.md#project-short-codes), and `RESOURCE_UUID` is the
+resource's [UUID](knora-iris.md#iris-for-data).
 
-For example, given the Knora resource IRI `http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`,
-and using the DaSCH's ARK resolver hostname and NAAN, the corresponding
-ARK URL without a timestamp is:
+For example, given the Knora resource IRI `http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`, and using the DaSCH's ARK
+resolver hostname and NAAN, the corresponding ARK URL without a timestamp is:
 
 ```
 http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY
@@ -158,8 +153,8 @@ The same ARK URL with an optional timestamp is:
 http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY.20180604T085622513Z
 ```
 
-Without a timestamp, a Knora resource ARK URL refers to the latest version of the
-resource at the time when the URL is resolved.
+Without a timestamp, a Knora resource ARK URL refers to the latest version of the resource at the time when the URL is
+resolved.
 
 ### ARK URLs for Values
 
@@ -177,8 +172,8 @@ http://HOST/ark:/NAAN/VERSION/PROJECT/RESOURCE_UUID/VALUE_UUID[.TIMESTAMP]
 is the value's `knora-api:valueHasUUID`.
 
 For example, given a value with `knora-api:valueHasUUID "4OOf3qJUTnCDXlPNnygSzQ"` in the resource
-`http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`, and using the DaSCH's ARK resolver
-hostname and NAAN, the corresponding ARK URL without a timestamp is:
+`http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ`, and using the DaSCH's ARK resolver hostname and NAAN, the corresponding
+ARK URL without a timestamp is:
 
 ```
 http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY/4OOf3qJUTnCDXlPNnygSzQX
@@ -190,5 +185,5 @@ The same ARK URL with an optional timestamp is:
 http://ark.dasch.swiss/ark:/72163/1/0001/0C=0L1kORryKzJAJxxRyRQY/4OOf3qJUTnCDXlPNnygSzQX.20180604T085622513Z
 ```
 
-Without a timestamp, a Knora value ARK URL refers to the latest version of the
-value at the time when the URL is resolved.
+Without a timestamp, a Knora value ARK URL refers to the latest version of the value at the time when the URL is
+resolved.

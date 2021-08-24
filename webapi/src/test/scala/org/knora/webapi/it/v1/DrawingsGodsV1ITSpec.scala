@@ -19,8 +19,6 @@
 
 package org.knora.webapi.it.v1
 
-import java.net.URLEncoder
-
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
@@ -31,6 +29,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Tripl
 import org.knora.webapi.messages.v2.routing.authenticationmessages.{AuthenticationV2JsonProtocol, LoginResponse}
 import spray.json._
 
+import java.net.URLEncoder
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -42,43 +41,51 @@ object DrawingsGodsV1ITSpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for additional testing of permissions.
-  */
+ * End-to-End (E2E) test specification for additional testing of permissions.
+ */
 class DrawingsGodsV1ITSpec
     extends ITKnoraLiveSpec(DrawingsGodsV1ITSpec.config)
     with AuthenticationV2JsonProtocol
     with TriplestoreJsonProtocol {
 
   override lazy val rdfDataObjects: List[RdfDataObject] = List(
-    RdfDataObject(path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl",
-                  name = "http://www.knora.org/data/admin"),
-    RdfDataObject(path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions-data.ttl",
-                  name = "http://www.knora.org/data/permissions"),
-    RdfDataObject(path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology.ttl",
-                  name = "http://www.knora.org/ontology/0105/drawings-gods"),
-    RdfDataObject(path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl",
-                  name = "http://www.knora.org/data/0105/drawings-gods")
+    RdfDataObject(
+      path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_admin-data.ttl",
+      name = "http://www.knora.org/data/admin"
+    ),
+    RdfDataObject(
+      path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_permissions-data.ttl",
+      name = "http://www.knora.org/data/permissions"
+    ),
+    RdfDataObject(
+      path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_ontology.ttl",
+      name = "http://www.knora.org/ontology/0105/drawings-gods"
+    ),
+    RdfDataObject(
+      path = "test_data/other.v1.DrawingsGodsV1Spec/drawings-gods_data.ttl",
+      name = "http://www.knora.org/data/0105/drawings-gods"
+    )
   )
 
   "issue: https://github.com/dhlab-basel/Knora/issues/408" should {
 
     val drawingsOfGodsUserEmail = "ddd1@unil.ch"
-    val testPass = "test"
-    val pathToChlaus = "test_data/test_route/images/Chlaus.jpg"
-    var loginToken: String = ""
+    val testPass                = "test"
+    val pathToChlaus            = "test_data/test_route/images/Chlaus.jpg"
+    var loginToken: String      = ""
 
     "log in as a Knora user" in {
       /* Correct username and correct password */
 
       val params =
         s"""
-                   |{
-                   |    "email": "$drawingsOfGodsUserEmail",
-                   |    "password": "$testPass"
-                   |}
+           |{
+           |    "email": "$drawingsOfGodsUserEmail",
+           |    "password": "$testPass"
+           |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
@@ -99,35 +106,38 @@ class DrawingsGodsV1ITSpec
 
       val params =
         s"""
-                   |{
-                   |    "restype_id":"http://www.knora.org/ontology/0105/drawings-gods#Verso",
-                   |    "properties":{
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasVersoTranslatorEn":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-TranslatorList-PYB"}],
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasCommentOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-LanguageList-Buriat"}],
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasDescriptionOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-LanguageList-Buriat"}],
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasDescriptionAuthor":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-DescriptionAuthorList-child"}],
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasInstructionRestitutionOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-LanguageList-Buriat"}],
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasVersoTranslatorFr":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-TranslatorList-PYB"}],
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasCommentAuthor":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-CommentAuthorList-child"}],
-                   |        "http://www.knora.org/ontology/0105/drawings-gods#hasCodeVerso":[{"richtext_value":{"utf8str":"dayyad"}}]
-                   |    },
-                   |    "file": "${uploadedFile.internalFilename}",
-                   |    "project_id":"http://rdfh.ch/projects/0105",
-                   |    "label":"dayyad"
-                   |}
+           |{
+           |    "restype_id":"http://www.knora.org/ontology/0105/drawings-gods#Verso",
+           |    "properties":{
+           |        "http://www.knora.org/ontology/0105/drawings-gods#hasVersoTranslatorEn":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-TranslatorList-PYB"}],
+           |        "http://www.knora.org/ontology/0105/drawings-gods#hasCommentOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-LanguageList-Buriat"}],
+           |        "http://www.knora.org/ontology/0105/drawings-gods#hasDescriptionOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-LanguageList-Buriat"}],
+           |        "http://www.knora.org/ontology/0105/drawings-gods#hasDescriptionAuthor":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-DescriptionAuthorList-child"}],
+           |        "http://www.knora.org/ontology/0105/drawings-gods#hasInstructionRestitutionOriginalLanguage":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-LanguageList-Buriat"}],
+           |        "http://www.knora.org/ontology/0105/drawings-gods#hasVersoTranslatorFr":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-TranslatorList-PYB"}],
+           |        "http://www.knora.org/ontology/0105/drawings-gods#hasCommentAuthor":[{"hlist_value":"http://rdfh.ch/lists/0105/drawings-gods-2016-list-CommentAuthorList-child"}],
+           |        "http://www.knora.org/ontology/0105/drawings-gods#hasCodeVerso":[{"richtext_value":{"utf8str":"dayyad"}}]
+           |    },
+           |    "file": "${uploadedFile.internalFilename}",
+           |    "project_id":"http://rdfh.ch/projects/0105",
+           |    "label":"dayyad"
+           |}
              """.stripMargin
 
       // Send the JSON in a POST request to the Knora API server.
-      val knoraPostRequest = Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-        BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
+      val knoraPostRequest =
+        Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+          BasicHttpCredentials(drawingsOfGodsUserEmail, testPass)
+        )
       val knoraPostResponseJson = getResponseJson(knoraPostRequest)
 
       // Get the IRI of the newly created resource.
       val resourceIri: String = knoraPostResponseJson.fields("res_id").asInstanceOf[JsString].value
 
       // Request the resource from the Knora API server.
-      val knoraRequestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
+      val knoraRequestNewResource = Get(
+        baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")
+      ) ~> addCredentials(BasicHttpCredentials(drawingsOfGodsUserEmail, testPass))
       val knoraNewResourceJson = getResponseJson(knoraRequestNewResource)
 
       // Get the URL of the image that was uploaded.

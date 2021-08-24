@@ -33,7 +33,7 @@ require "get_knora_session"
 --       'deny' : no access!
 --    filepath: server-path where the master file is located
 -------------------------------------------------------------------------------
-function pre_flight(prefix,identifier,cookie)
+function pre_flight(prefix, identifier, cookie)
     server.log("pre_flight called in sipi.init-knora-no-auth.lua", server.loglevel.LOG_DEBUG)
 
     --
@@ -42,9 +42,9 @@ function pre_flight(prefix,identifier,cookie)
     --
 
     filepath = config.imgroot .. '/knora/Leaves.jp2'
-    
+
     server.log("Returning test file " .. filepath, server.loglevel.LOG_INFO)
-    
+
     return 'allow', filepath
 
 end

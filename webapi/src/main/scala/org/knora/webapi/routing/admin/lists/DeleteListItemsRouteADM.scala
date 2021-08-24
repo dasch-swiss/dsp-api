@@ -19,8 +19,6 @@
 
 package org.knora.webapi.routing.admin.lists
 
-import java.util.UUID
-
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import org.knora.webapi.exceptions.BadRequestException
@@ -28,6 +26,7 @@ import org.knora.webapi.feature.{Feature, FeatureFactoryConfig}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
+import java.util.UUID
 import scala.concurrent.Future
 
 object DeleteListItemsRouteADM {
@@ -35,10 +34,10 @@ object DeleteListItemsRouteADM {
 }
 
 /**
-  * A [[Feature]] that provides routes to delete list items.
-  *
-  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
-  */
+ * A [[Feature]] that provides routes to delete list items.
+ *
+ * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
+ */
 class DeleteListItemsRouteADM(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
     with Feature
@@ -60,11 +59,12 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListItemDeleteRequestADM] = for {
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
-        } yield
-          ListItemDeleteRequestADM(nodeIri = nodeIri,
-                                   featureFactoryConfig = featureFactoryConfig,
-                                   requestingUser = requestingUser,
-                                   apiRequestID = UUID.randomUUID())
+        } yield ListItemDeleteRequestADM(
+          nodeIri = nodeIri,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser,
+          apiRequestID = UUID.randomUUID()
+        )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,

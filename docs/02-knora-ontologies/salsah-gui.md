@@ -21,38 +21,31 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 ## Overview
 
-The SALSAH GUI ontology provides entities that can be used in
-user-created ontologies to indicate to SALSAH (or to another GUI)
+The SALSAH GUI ontology provides entities that can be used in user-created ontologies to indicate to SALSAH (or to
+another GUI)
 how data should be entered and displayed.
 
 The SALSAH GUI ontology is identified by the IRI
-`http://www.knora.org/ontology/salsah-gui`. In the Knora documentation
-in general, it is identified by the prefix `salsah-gui`, but for
-brevity, we omit the prefix in this document.
+`http://www.knora.org/ontology/salsah-gui`. In the Knora documentation in general, it is identified by the
+prefix `salsah-gui`, but for brevity, we omit the prefix in this document.
 
 ## Properties
 
 `guiOrder`
 
-:   Can be attached to an `owl:Restriction` representing a cardinality
-    in a resource class, to indicate the order in which properties
-    should be displayed in the GUI. The object is a non-negative
-    integer. For example, a property with `guiOrder` 0 would be
-    displayed first, followed by a property with `guiOrder` 1, and so
-    on.
+:   Can be attached to an `owl:Restriction` representing a cardinality in a resource class, to indicate the order in
+which properties should be displayed in the GUI. The object is a non-negative integer. For example, a property
+with `guiOrder` 0 would be displayed first, followed by a property with `guiOrder` 1, and so on.
 
 `guiElement`
 
-:   Can be attached to a property definition to indicate which SALSAH
-    GUI element should be used to enter data for the property. This
-    should be one of the individuals of class `Guielement` described
-    below.
+:   Can be attached to a property definition to indicate which SALSAH GUI element should be used to enter data for the
+property. This should be one of the individuals of class `Guielement` described below.
 
 `guiAttribute`
 
-:   Can be attached to a property definition to provide attributes for
-    the GUI element specified in `guiElement`. The objects of this
-    predicate are written in a DSL with the following syntax:
+:   Can be attached to a property definition to provide attributes for the GUI element specified in `guiElement`. The
+objects of this predicate are written in a DSL with the following syntax:
 
 ```ebnf
 object = attribute name, "=", attribute value ;
@@ -73,11 +66,9 @@ The attributes used with each GUI element are described below under
 
 `guiAttributeDefinition`
 
-:   Used only in the `salsah-gui` ontology itself, as a predicate
-    attached to instances of `Guielement` (see [Individuals](#individuals)),
-    to specify the attributes that can be given as objects of `guiAttribute` when a given
-    `Guielement`. is used. The objects of this predicate are written in
-    a DSL with the following syntax:
+:   Used only in the `salsah-gui` ontology itself, as a predicate attached to instances of `Guielement` (
+see [Individuals](#individuals)), to specify the attributes that can be given as objects of `guiAttribute` when a given
+`Guielement`. is used. The objects of this predicate are written in a DSL with the following syntax:
 
 ```ebnf
 object = attribute name, [ "(required)" ], ":", attribute type, [ enumerated values ] ;
@@ -101,17 +92,15 @@ identifier = letter , { letter } ;
 
 `Guielement`
 
-:   The instances of this class are individuals representing SALSAH GUI
-    elements for data entry.
+:   The instances of this class are individuals representing SALSAH GUI elements for data entry.
 
 ## Individuals
 
 `Colorpicker`
 
-:   A GUI element for selecting a color. A property definition that uses
-    this element may also contain a `guiAttribute` predicate whose
-    object is a string in the form `"ncolors=N"`, where `N` is an
-    integer specifying the number of colors to display.
+:   A GUI element for selecting a color. A property definition that uses this element may also contain a `guiAttribute`
+predicate whose object is a string in the form `"ncolors=N"`, where `N` is an integer specifying the number of colors to
+display.
 
 `Date`
 
@@ -119,24 +108,22 @@ identifier = letter , { letter } ;
 
 `Geometry`
 
-:   A GUI element for selecting the geometry of a two-dimensional
-    region.
+:   A GUI element for selecting the geometry of a two-dimensional region.
 
 `Geonames`
 
 :   A GUI element for selecting a [Geonames](http://www.geonames.org/)
-    identifier.
+identifier.
 
 `Interval`
 
-:   A GUI element for selecting a time interval in an audio or video
-    recording.
+:   A GUI element for selecting a time interval in an audio or video recording.
 
 `List`
 
 :   A GUI element for selecting an item in a hierarchical list (see
-    [ListValue](knora-base.md#listvalue)). A property definition that
-    uses this element must also contain this `guiAttribute` predicate:
+[ListValue](knora-base.md#listvalue)). A property definition that uses this element must also contain
+this `guiAttribute` predicate:
 
     -   `"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
         `knora-base:ListNode` that is the root node of a hierarchical list.
@@ -144,9 +131,9 @@ identifier = letter , { letter } ;
 `Pulldown`
 
 :   A GUI element for selecting an item in a flat list (see
-    [ListValue](knora-base.md#listvalue)) using a pull-down menu. A
-    property definition that uses this element must also contain this
-    `guiAttribute` predicate:
+[ListValue](knora-base.md#listvalue)) using a pull-down menu. A property definition that uses this element must also
+contain this
+`guiAttribute` predicate:
 
     -   `"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
         `knora-base:ListNode` that is the root node of a hierarchical list.
@@ -154,9 +141,9 @@ identifier = letter , { letter } ;
 `Radio`
 
 :   A GUI element for selecting an item in a flat list (see
-    [ListValue](knora-base.md#listvalue)) using radio buttons. A property
-    definition that uses this element must also contain this
-    `guiAttribute` predicate:
+[ListValue](knora-base.md#listvalue)) using radio buttons. A property definition that uses this element must also
+contain this
+`guiAttribute` predicate:
 
     -   `"hlist=<LIST_IRI>"`, where `LIST_IRI` is the IRI of a
         `knora-base:ListNode` that is the root node of a hierarchical list.
@@ -168,8 +155,8 @@ identifier = letter , { letter } ;
 `Searchbox`
 
 :   A GUI element for searching for a resource by matching text in its
-    `rdfs:label`. For DSP-API v1, a property definition that uses this
-    element may also contain this `guiAttribute` predicate:
+`rdfs:label`. For DSP-API v1, a property definition that uses this element may also contain this `guiAttribute`
+predicate:
 
     -   `"numprops=N"`, where `N` is an integer specifying the number of
         describing properties to be returned for each found resource.
@@ -178,9 +165,9 @@ identifier = letter , { letter } ;
 
 `SimpleText`
 
-:   A GUI element for editing a single line of unformatted text. A
-    property definition that uses this element may also contain a
-    `guiAttribute` predicate with one or both of the following objects:
+:   A GUI element for editing a single line of unformatted text. A property definition that uses this element may also
+contain a
+`guiAttribute` predicate with one or both of the following objects:
 
     -   `"size=N"`, where `N` is an integer specifying the size of the
         text field.
@@ -189,9 +176,9 @@ identifier = letter , { letter } ;
 
 `Slider`
 
-:   A GUI element for choosing numerical values using a slider. A
-    property definition that uses this element must also contain a
-    `guiAttribute` predicate with both of the following objects:
+:   A GUI element for choosing numerical values using a slider. A property definition that uses this element must also
+contain a
+`guiAttribute` predicate with both of the following objects:
 
     -   `"min=N"`, where `N` is an integer specifying the minimum value
         of the input.
@@ -200,9 +187,9 @@ identifier = letter , { letter } ;
 
 `Spinbox`
 
-:   A GUI element for choosing numerical values using a spinbox. A
-    property definition that uses this element may also contain a
-    `guiAttribute` predicate with one or both of the following objects:
+:   A GUI element for choosing numerical values using a spinbox. A property definition that uses this element may also
+contain a
+`guiAttribute` predicate with one or both of the following objects:
 
     -   `"min=N"`, where `N` is an integer specifying the minimum value
         of the input.
@@ -211,9 +198,9 @@ identifier = letter , { letter } ;
 
 `Textarea`
 
-:   A GUI element for editing multi-line unformatted text. A property
-    definition that uses this element may also contain a `guiAttribute`
-    predicate with one or more of the following objects:
+:   A GUI element for editing multi-line unformatted text. A property definition that uses this element may also contain
+a `guiAttribute`
+predicate with one or more of the following objects:
 
     -   `"width=N"`, where `N` is a percentage of the window width (an
         integer followed by `%`).

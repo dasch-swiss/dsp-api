@@ -19,24 +19,24 @@
 
 package org.knora.webapi.messages.util.rdf
 
+import org.knora.webapi.exceptions.AssertionException
+
 import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 
-import org.knora.webapi.exceptions.AssertionException
-
 /**
-  * An abstract base class for classes that validate RDF models using SHACL shapes.
-  *
-  * @param baseDir       the base directory that SHACL graphs are loaded from.
-  * @param rdfFormatUtil an [[RdfFormatUtil]].
-  * @tparam ShaclGraphT an implementation-specific representation of a graph of SHACL shapes.
-  */
+ * An abstract base class for classes that validate RDF models using SHACL shapes.
+ *
+ * @param baseDir       the base directory that SHACL graphs are loaded from.
+ * @param rdfFormatUtil an [[RdfFormatUtil]].
+ * @tparam ShaclGraphT an implementation-specific representation of a graph of SHACL shapes.
+ */
 abstract class AbstractShaclValidator[ShaclGraphT](baseDir: Path, private val rdfFormatUtil: RdfFormatUtil)
     extends ShaclValidator {
 
   /**
-    * A map of relative paths to objects representing graphs of SHACL shapes.
-    */
+   * A map of relative paths to objects representing graphs of SHACL shapes.
+   */
   private val shaclGraphs: Map[Path, ShaclGraphT] = if (Files.exists(baseDir)) {
     val fileVisitor = new ShaclGraphCollectingFileVisitor
     Files.walkFileTree(baseDir, fileVisitor)
@@ -45,16 +45,32 @@ abstract class AbstractShaclValidator[ShaclGraphT](baseDir: Path, private val rd
     Map.empty
   }
 
-  def validate(rdfModel: RdfModel, shaclPath: Path): ShaclValidationResult = {
+  def validate(rdfModel: RdfModel, shaclPath: Path): ShaclValidationResult =
     validateWithShaclGraph(
       rdfModel = rdfModel,
       shaclGraph = shaclGraphs.getOrElse(shaclPath, throw AssertionException(s"SHACL graph $shaclPath not found"))
     )
-  }
 
   /**
-    * A [[FileVisitor]] that loads graphs of SHACL shapes while walking a file tree.
-    */
+   * Validates the default graph of an [[RdfModel]] using a graph of SHACL shapes.
+   *
+   * @param rdfModel   the [[RdfModel]] to be validated.
+   * @param shaclGraph a graph of SHACL shapes.
+   * @return the validation result.
+   */
+  protected def validateWithShaclGraph(rdfModel: RdfModel, shaclGraph: ShaclGraphT): ShaclValidationResult
+
+  /**
+   * Converts the default graph of an [[RdfModel]] to a [[ShaclGraphT]].
+   *
+   * @param rdfModel an [[RdfModel]] whose default graph contains SHACL shapes.
+   * @return a [[ShaclGraphT]] representing the SHACL shapes.
+   */
+  protected def rdfModelToShaclGraph(rdfModel: RdfModel): ShaclGraphT
+
+  /**
+   * A [[FileVisitor]] that loads graphs of SHACL shapes while walking a file tree.
+   */
   private class ShaclGraphCollectingFileVisitor extends SimpleFileVisitor[Path] {
     // A collection of the graphs that have been loaded so far.
     val visitedShaclGraphs: collection.mutable.Map[Path, ShaclGraphT] = collection.mutable.Map.empty
@@ -78,21 +94,4 @@ abstract class AbstractShaclValidator[ShaclGraphT](baseDir: Path, private val rd
       FileVisitResult.CONTINUE
     }
   }
-
-  /**
-    * Validates the default graph of an [[RdfModel]] using a graph of SHACL shapes.
-    *
-    * @param rdfModel   the [[RdfModel]] to be validated.
-    * @param shaclGraph a graph of SHACL shapes.
-    * @return the validation result.
-    */
-  protected def validateWithShaclGraph(rdfModel: RdfModel, shaclGraph: ShaclGraphT): ShaclValidationResult
-
-  /**
-    * Converts the default graph of an [[RdfModel]] to a [[ShaclGraphT]].
-    *
-    * @param rdfModel an [[RdfModel]] whose default graph contains SHACL shapes.
-    * @return a [[ShaclGraphT]] representing the SHACL shapes.
-    */
-  protected def rdfModelToShaclGraph(rdfModel: RdfModel): ShaclGraphT
 }

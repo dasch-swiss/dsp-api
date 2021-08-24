@@ -143,7 +143,6 @@ sipi = {
     --            12345678901234567890123456789012
 }
 
-
 fileserver = {
     --
     -- directory where the documents for the normal webserver are located

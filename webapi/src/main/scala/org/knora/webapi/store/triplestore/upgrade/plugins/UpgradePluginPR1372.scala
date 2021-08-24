@@ -26,17 +26,17 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
-  * Transforms a repository for Knora PR 1372.
-  */
+ * Transforms a repository for Knora PR 1372.
+ */
 class UpgradePluginPR1372(featureFactoryConfig: FeatureFactoryConfig) extends UpgradePlugin {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
 
   // IRI objects representing the IRIs used in this transformation.
   private val ValueCreationDateIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.ValueCreationDate)
-  private val PreviousValueIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.PreviousValue)
-  private val HasPermissionsIri: IriNode = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.HasPermissions)
+  private val PreviousValueIri: IriNode     = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.PreviousValue)
+  private val HasPermissionsIri: IriNode    = nodeFactory.makeIriNode(OntologyConstants.KnoraBase.HasPermissions)
 
-  override def transform(model: RdfModel): Unit = {
+  override def transform(model: RdfModel): Unit =
     // Remove knora-base:hasPermissions from all past value versions.
     for (valueIri: IriNode <- collectPastValueIris(model)) {
       model.remove(
@@ -45,12 +45,11 @@ class UpgradePluginPR1372(featureFactoryConfig: FeatureFactoryConfig) extends Up
         obj = None
       )
     }
-  }
 
   /**
-    * Collects the IRIs of all values that are past value versions.
-    */
-  private def collectPastValueIris(model: RdfModel): Iterator[IriNode] = {
+   * Collects the IRIs of all values that are past value versions.
+   */
+  private def collectPastValueIris(model: RdfModel): Iterator[IriNode] =
     model
       .find(None, Some(ValueCreationDateIri), None)
       .map(_.subj)
@@ -67,5 +66,4 @@ class UpgradePluginPR1372(featureFactoryConfig: FeatureFactoryConfig) extends Up
         case iriNode: IriNode => iriNode
         case other            => throw InconsistentRepositoryDataException(s"Unexpected subject for $ValueCreationDateIri: $other")
       }
-  }
 }

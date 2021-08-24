@@ -19,16 +19,14 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Overview
 
-Developing for DSP-API requires a complete local
-installation of Knora. The different parts are:
+Developing for DSP-API requires a complete local installation of Knora. The different parts are:
 
-1. The cloned [DSP-API](https://github.com/dasch-swiss/dsp-api) Github
-   repository
+1. The cloned [DSP-API](https://github.com/dasch-swiss/dsp-api) Github repository
 1. One of the supplied triplestores in the DSP-API Github repository
-    (GraphDB-SE 8 or Fuseki 3).
+   (GraphDB-SE 8 or Fuseki 3).
 1. Sipi by building from
-    [source](https://github.com/dasch-swiss/sipi) or using the docker
-    [image](https://hub.docker.com/r/daschswiss/sipi/)
+   [source](https://github.com/dasch-swiss/sipi) or using the docker
+   [image](https://hub.docker.com/r/daschswiss/sipi/)
 
 ## Knora Github Repository
 
@@ -36,19 +34,15 @@ installation of Knora. The different parts are:
 
 ## Triplestore
 
-A number of triplestore implementations are available, including [free
-software](http://www.gnu.org/philosophy/free-sw.en.html) as well as
-proprietary options. DSP-API is designed to work with any
-standards-compliant triplestore. It is primarily tested with [Ontotext
-GraphDB](http://ontotext.com/products/graphdb/), a high-performance,
-proprietary triplestore. We recommend GraphDB Standard Edition, but
-GraphDB Free (which is proprietary but available free of charge) also
-works.
+A number of triplestore implementations are available,
+including [free software](http://www.gnu.org/philosophy/free-sw.en.html) as well as proprietary options. DSP-API is
+designed to work with any standards-compliant triplestore. It is primarily tested
+with [Ontotext GraphDB](http://ontotext.com/products/graphdb/), a high-performance, proprietary triplestore. We
+recommend GraphDB Standard Edition, but GraphDB Free (which is proprietary but available free of charge) also works.
 
-DSP-API includes support for [Apache Jena](https://jena.apache.org/),
-which is [free software](http://www.gnu.org/philosophy/free-sw.en.html),
-but use of Jena is deprecated, and support for it will probably be
-removed in the future.
+DSP-API includes support for [Apache Jena](https://jena.apache.org/), which
+is [free software](http://www.gnu.org/philosophy/free-sw.en.html), but use of Jena is deprecated, and support for it
+will probably be removed in the future.
 
 Built-in support and configuration for other triplestores is planned.
 
@@ -58,11 +52,9 @@ See the chapter on [Starting GraphDB](graphdb.md) for more details.
 
 ### Build Sipi Docker Image
 
-The Sipi docker image needs to be build by hand, as it requires the
-Kakadu distribution.
+The Sipi docker image needs to be build by hand, as it requires the Kakadu distribution.
 
-To build the image, and push it to the docker hub, follow the following
-steps:
+To build the image, and push it to the docker hub, follow the following steps:
 
 ```
 $ git clone https://github.com/dhlab-basel/docker-sipi
@@ -74,29 +66,26 @@ $ docker push daschswiss/sipi
 ```
 
 Pushing the image to the docker hub requires prior authentication with
-`$ docker login`. The user needs to be registered on `hub.docker.com`.
-Also, the user needs to be allowed to push to the `dblabbasel`
+`$ docker login`. The user needs to be registered on `hub.docker.com`. Also, the user needs to be allowed to push to
+the `dblabbasel`
 organisation.
 
 ### Running Sipi
 
-To use the docker image stored locally or on the docker hub repository
-type:
+To use the docker image stored locally or on the docker hub repository type:
 
 ```
 $ docker run --name sipi -d -p 1024:1024 daschswiss/sipi
 ```
 
 This will create and start a docker container with the `daschswiss/sipi`
-image in the background. The default behaviour is to start Sipi by
-calling the following command:
+image in the background. The default behaviour is to start Sipi by calling the following command:
 
 ```
 $ /sipi/local/bin/sipi -config /sipi/config/sipi.knora-test-config.lua
 ```
 
-To override this default behaviour, start the container by supplying
-another config file:
+To override this default behaviour, start the container by supplying another config file:
 
 ```
 $ docker run --name sipi \
@@ -106,8 +95,8 @@ $ docker run --name sipi \
              /sipi/local/bin/sipi -config /sipi/config/sipi.config.lua
 ```
 
-You can also mount a directory (the local directory in this example),
-and use a config file that is outside of the docker container:
+You can also mount a directory (the local directory in this example), and use a config file that is outside of the
+docker container:
 
 ```
 $ docker run --name sipi \

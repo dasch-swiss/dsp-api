@@ -80,7 +80,7 @@ result = {}
 for i, test_data_item in ipairs(mediatype_test_data) do
     local file_info = get_file_info(test_data_item.filename, test_data_item.received)
     local success = false
-    
+
     if file_info == nil then
         if test_data_item.expected == nil then
             success = true
@@ -92,7 +92,7 @@ for i, test_data_item in ipairs(mediatype_test_data) do
     else
         send_error(500, "Could not determine correct mediatype for " .. test_data_item.received .. ", got " .. file_info["media_type"])
     end
-        
+
     if success then
         table.insert(result, { test_data_item, "OK" })
     else

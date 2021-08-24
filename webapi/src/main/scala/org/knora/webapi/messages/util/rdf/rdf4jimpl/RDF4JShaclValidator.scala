@@ -19,20 +19,19 @@
 
 package org.knora.webapi.messages.util.rdf.rdf4jimpl
 
-import java.nio.file.Path
-
 import org.eclipse.rdf4j
 import org.knora.webapi.messages.util.rdf._
 
+import java.nio.file.Path
 import scala.util.{Failure, Success, Try}
 
 /**
-  * Performs SHACL validation using RDF4J.
-  *
-  * @param baseDir       the base directory that SHACL graphs are loaded from.
-  * @param rdfFormatUtil an [[RdfFormatUtil]].
-  * @param nodeFactory   an [[RDF4JNodeFactory]].
-  */
+ * Performs SHACL validation using RDF4J.
+ *
+ * @param baseDir       the base directory that SHACL graphs are loaded from.
+ * @param rdfFormatUtil an [[RdfFormatUtil]].
+ * @param nodeFactory   an [[RDF4JNodeFactory]].
+ */
 class RDF4JShaclValidator(baseDir: Path, rdfFormatUtil: RDF4JFormatUtil, private val nodeFactory: RDF4JNodeFactory)
     extends AbstractShaclValidator[rdf4j.model.Model](baseDir, rdfFormatUtil) {
 
@@ -40,7 +39,7 @@ class RDF4JShaclValidator(baseDir: Path, rdfFormatUtil: RDF4JFormatUtil, private
 
   override def validateWithShaclGraph(rdfModel: RdfModel, shaclGraph: rdf4j.model.Model): ShaclValidationResult = {
     // Make a SailRepository repository that supports SHACL validation.
-    val shaclSail = new rdf4j.sail.shacl.ShaclSail(new rdf4j.sail.memory.MemoryStore())
+    val shaclSail  = new rdf4j.sail.shacl.ShaclSail(new rdf4j.sail.memory.MemoryStore())
     val repository = new rdf4j.repository.sail.SailRepository(shaclSail)
 
     // Open a connection to the repository and begin a transaction.
@@ -98,7 +97,6 @@ class RDF4JShaclValidator(baseDir: Path, rdfFormatUtil: RDF4JFormatUtil, private
     validationResultTry.get
   }
 
-  override protected def rdfModelToShaclGraph(rdfModel: RdfModel): rdf4j.model.Model = {
+  override protected def rdfModelToShaclGraph(rdfModel: RdfModel): rdf4j.model.Model =
     rdfModel.asRDF4JModel
-  }
 }

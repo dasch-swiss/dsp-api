@@ -29,49 +29,49 @@ import spray.json.{JsObject, JsString}
 
 import scala.concurrent.duration._
 
-case class VersionCheckResult(name: String,
-                              webapi: String,
-                              scala: String,
-                              akkaHttp: String,
-                              sipi: String,
-                              fuseki: String)
+case class VersionCheckResult(
+  name: String,
+  webapi: String,
+  scala: String,
+  akkaHttp: String,
+  sipi: String,
+  fuseki: String
+)
 
 /**
-  * Provides version check logic
-  */
+ * Provides version check logic
+ */
 trait VersionCheck {
   this: VersionRoute =>
 
   override implicit val timeout: Timeout = 1.second
 
-  protected def versionCheck: HttpResponse = {
+  protected def versionCheck: HttpResponse =
     createResponse(getVersion)
-  }
 
-  protected def createResponse(result: VersionCheckResult): HttpResponse = {
+  protected def createResponse(result: VersionCheckResult): HttpResponse =
     HttpResponse(
       status = StatusCodes.OK,
       entity = HttpEntity(
         ContentTypes.`application/json`,
         JsObject(
-          "name" -> JsString(result.name),
-          "webapi" -> JsString(result.webapi),
-          "scala" -> JsString(result.scala),
+          "name"     -> JsString(result.name),
+          "webapi"   -> JsString(result.webapi),
+          "scala"    -> JsString(result.scala),
           "akkaHttp" -> JsString(result.akkaHttp),
-          "sipi" -> JsString(result.sipi),
-          "fuseki" -> JsString(result.fuseki),
+          "sipi"     -> JsString(result.sipi),
+          "fuseki"   -> JsString(result.fuseki)
         ).compactPrint
       )
     )
-  }
 
   private def getVersion: VersionCheckResult = {
     var sipiVersion = VersionInfo.sipiVersion
-    val sipiIndex = sipiVersion.indexOf(':')
+    val sipiIndex   = sipiVersion.indexOf(':')
     sipiVersion = if (sipiIndex > 0) sipiVersion.substring(sipiIndex + 1) else sipiVersion
 
     var fusekiVersion = VersionInfo.jenaFusekiVersion
-    val fusekiIndex = fusekiVersion.indexOf(':')
+    val fusekiIndex   = fusekiVersion.indexOf(':')
     fusekiVersion = if (fusekiIndex > 0) fusekiVersion.substring(fusekiIndex + 1) else fusekiVersion
 
     VersionCheckResult(
@@ -86,18 +86,17 @@ trait VersionCheck {
 }
 
 /**
-  * Provides the '/version' endpoint serving the components versions.
-  */
+ * Provides the '/version' endpoint serving the components versions.
+ */
 class VersionRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with VersionCheck {
 
   /**
-    * Returns the route.
-    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
+   * Returns the route.
+   */
+  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     path("version") {
       get { requestContext =>
         requestContext.complete(versionCheck)
       }
     }
-  }
 }

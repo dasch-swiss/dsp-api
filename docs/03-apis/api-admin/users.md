@@ -35,7 +35,8 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 - `GET: /admin/users/iri/<userIri>/project-memberships` : get user's project memberships
 - `POST: /admin/users/iri/<userIri>/project-memberships/<projectIri>` : add user to project (to ProjectMember group)
-- `DELETE: /admin/users/iri/<userIri>/project-memberships/<projectIri>` : remove user from project (to ProjectMember group)
+- `DELETE: /admin/users/iri/<userIri>/project-memberships/<projectIri>` : remove user from project (to ProjectMember
+  group)
 
 **User's group membership operations**
 
@@ -53,31 +54,30 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 ### Get users
 
-  - Required permission: SystemAdmin
-  - GET: `/admin/users`
+- Required permission: SystemAdmin
+- GET: `/admin/users`
 
 ### Get user
 
-  - Required permission:
+- Required permission:
     - SystemAdmin / self: for getting all properties
     - All other users: for getting only the public properties (`givenName` and `familyName`)
-  - GET:`/admin/users/[iri | email | username ]/<identifier>`
+- GET:`/admin/users/[iri | email | username ]/<identifier>`
 
 ### Create user
 
-  - Required permission: none, self-registration is allowed
-  - Required information: email (unique), given name, family name,
-    password, status, systemAdmin
-  - Username restrictions:
+- Required permission: none, self-registration is allowed
+- Required information: email (unique), given name, family name, password, status, systemAdmin
+- Username restrictions:
     - 4 - 50 characters long
     - Only contains alphanumeric characters, underscore and dot.
     - Underscore and dot can't be at the end or start of a username
     - Underscore or dot can't be used multiple times in a row
-  - Returns information about the newly created user
-  - TypeScript Docs: userFormats - `CreateUserApiRequestV1`
-  - POST: `/admin/users`
-  - BODY:
-  
+- Returns information about the newly created user
+- TypeScript Docs: userFormats - `CreateUserApiRequestV1`
+- POST: `/admin/users`
+- BODY:
+
 ```json
     {
       "email": "donald.duck@example.org",
@@ -90,8 +90,8 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
       "systemAdmin": false
     }
 ```
-    
-Additionally, each user can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) 
+
+Additionally, each user can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form)
 specified by the `id` in the request body as below:
 
 ```json
@@ -107,15 +107,14 @@ specified by the `id` in the request body as below:
       "systemAdmin": false
     }
 ```
-     
+
 ### Update basic user information**
 
-  - Required permission: SystemAdmin / self
-  - Changeable information: email, given name, family name,
-    password, status, SystemAdmin membership 
-  - TypeScript Docs: userFormats - ChangeUserApiRequestADM
-  - PUT: `/admin/users/iri/<userIri>/BasicUserInformation`
-  - BODY:
+- Required permission: SystemAdmin / self
+- Changeable information: email, given name, family name, password, status, SystemAdmin membership
+- TypeScript Docs: userFormats - ChangeUserApiRequestADM
+- PUT: `/admin/users/iri/<userIri>/BasicUserInformation`
+- BODY:
 
 ```json
     {
@@ -129,11 +128,11 @@ specified by the `id` in the request body as below:
 
 ### Update user's password
 
-  - Required permission: SystemAdmin / self
-  - Changeable information: password
-  - PUT: `/admin/users/iri/<userIri>/Password`
-  - BODY:
-  
+- Required permission: SystemAdmin / self
+- Changeable information: password
+- PUT: `/admin/users/iri/<userIri>/Password`
+- BODY:
+
 ```json
     {
       "requesterPassword": "test",
@@ -143,12 +142,12 @@ specified by the `id` in the request body as below:
 
 ### Delete user
 
-  - Required permission: SystemAdmin / self
-  - Remark: The same as updating a user and changing `status` to
-    `false`. To un-delete, set `status` to `true`.
-  - PUT: `/admin/users/iri/<userIri>/Status`
-  - BODY:
-  
+- Required permission: SystemAdmin / self
+- Remark: The same as updating a user and changing `status` to
+  `false`. To un-delete, set `status` to `true`.
+- PUT: `/admin/users/iri/<userIri>/Status`
+- BODY:
+
 ```
     {
       "status": false // true or false
@@ -157,65 +156,62 @@ specified by the `id` in the request body as below:
 
 ### Delete user (-\update user)**
 
-  - Required permission: SystemAdmin / self
-  - Remark: The same as updating a user and changing `status` to
-    `false`. To un-delete, set `status` to `true`.
-  - DELETE: `/admin/users/iri/<userIri>`
-  - BODY: empty
-
+- Required permission: SystemAdmin / self
+- Remark: The same as updating a user and changing `status` to
+  `false`. To un-delete, set `status` to `true`.
+- DELETE: `/admin/users/iri/<userIri>`
+- BODY: empty
 
 ## User's project membership operations
 
 ### Get user's project memberships
 
-  - GET: `/admin/users/iri/<userIri>/project-memberships`
+- GET: `/admin/users/iri/<userIri>/project-memberships`
 
 ### Add/remove user to/from project
 
-  - Required permission: SystemAdmin / ProjectAdmin / self (if
-    project self-assignment is enabled)
-  - Required information: project IRI, user IRI
-  - Effects: `knora-base:isInProject` user property
-  - POST / DELETE: `/admin/users/iri/<userIri>/project-memberships/<projectIri>`
-  - BODY: empty
+- Required permission: SystemAdmin / ProjectAdmin / self (if project self-assignment is enabled)
+- Required information: project IRI, user IRI
+- Effects: `knora-base:isInProject` user property
+- POST / DELETE: `/admin/users/iri/<userIri>/project-memberships/<projectIri>`
+- BODY: empty
 
 ## User's group membership operations
 
 ### Get user's project admin memberships
 
-  - GET: `/admin/users/iri/<userIri>/project-admin-memberships`
+- GET: `/admin/users/iri/<userIri>/project-admin-memberships`
 
 ### Add/remove user to/from project admin group
 
-  - Required permission: SystemAdmin / ProjectAdmin
-  - Required information: project IRI, user IRI
-  - Effects: `knora-base:isInProjectAdminGroup` user property
-  - POST / DELETE: `/admin/users/iri/<userIri>/project-admin-memberships/<projectIri>`
-  - BODY: empty
+- Required permission: SystemAdmin / ProjectAdmin
+- Required information: project IRI, user IRI
+- Effects: `knora-base:isInProjectAdminGroup` user property
+- POST / DELETE: `/admin/users/iri/<userIri>/project-admin-memberships/<projectIri>`
+- BODY: empty
 
 ### Get user's group memberships**
 
-  - GET: `/admin/users/iri/<userIri>/group-memberships`
+- GET: `/admin/users/iri/<userIri>/group-memberships`
 
 ### Add/remove user to/from 'normal' group** (not *SystemAdmin* or *ProjectAdmin*)
 
-  - Required permission: SystemAdmin / hasProjectAllAdminPermission
-    / hasProjectAllGroupAdminPermission /
-    hasProjectRestrictedGroupAdminPermission (for this group) / User
-    (if group self-assignment is enabled)
-  - Required information: group IRI, user IRI
-  - Effects: `knora-base:isInGroup`
-  - POST / DELETE: `/admin/users/iri/<userIri>/group-memberships/<groupIri>`
-  - BODY: empty
+- Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission /
+  hasProjectRestrictedGroupAdminPermission (for this group) / User
+  (if group self-assignment is enabled)
+- Required information: group IRI, user IRI
+- Effects: `knora-base:isInGroup`
+- POST / DELETE: `/admin/users/iri/<userIri>/group-memberships/<groupIri>`
+- BODY: empty
 
 ### Add/remove user to/from system admin group
 
-  - Required permission: SystemAdmin / self
-  - Effects property: `knora-base:isInSystemAdminGroup` with value
-    `true` or `false`
-  - PUT: `/admin/users/iri/<userIri>/SystemAdmin`
-  - BODY:
-  
+- Required permission: SystemAdmin / self
+- Effects property: `knora-base:isInSystemAdminGroup` with value
+  `true` or `false`
+- PUT: `/admin/users/iri/<userIri>/SystemAdmin`
+- BODY:
+
 ```
     {
       "systemAdmin": false

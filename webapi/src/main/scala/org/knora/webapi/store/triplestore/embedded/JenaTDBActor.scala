@@ -19,8 +19,6 @@
 
 package org.knora.webapi.store.triplestore.embedded
 
-import java.nio.file.{Files, Paths}
-
 import akka.actor.{Actor, ActorLogging, Status}
 import org.apache.commons.io.FileUtils
 import org.apache.jena.graph.Node
@@ -48,25 +46,24 @@ import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.store.triplestore.RdfDataObjectFactory
 import org.knora.webapi.util.ActorUtil._
 
-import scala.jdk.CollectionConverters._
+import java.nio.file.{Files, Paths}
 import scala.concurrent.{ExecutionContextExecutor, Future}
+import scala.jdk.CollectionConverters._
 
 /**
  * Performs SPARQL queries and updates using an embedded Jena TDB triplestore.
  */
 class JenaTDBActor extends Actor with ActorLogging {
-
-  private val system                                              = context.system
+  // Jena prefers to have 1 global dataset
+  lazy val dataset: Dataset                                       = getDataset
   private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
+  private val system                                              = context.system
   private val settings                                            = KnoraSettings(system)
-
-  private val persist          = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.persisted")
-  private val loadExistingData = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.loadExistingData")
-  private val storagePath      = Paths.get(settings.tripleStoreConfig.getString("embedded-jena-tdb.storage-path"))
-  private val tdbStoragePath   = Paths.get(storagePath.toString + "/db")
-
-  private val tsType = settings.triplestoreType
-
+  private val persist                                             = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.persisted")
+  private val loadExistingData                                    = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.loadExistingData")
+  private val storagePath                                         = Paths.get(settings.tripleStoreConfig.getString("embedded-jena-tdb.storage-path"))
+  private val tdbStoragePath                                      = Paths.get(storagePath.toString + "/db")
+  private val tsType                                              = settings.triplestoreType
   private val reloadDataOnStart = if (settings.tripleStoreConfig.getBoolean("reload-on-start")) {
     true
   } else if (tsType == "fake-triplestore") {
@@ -75,10 +72,6 @@ class JenaTDBActor extends Actor with ActorLogging {
   } else {
     false
   }
-
-  // Jena prefers to have 1 global dataset
-  lazy val dataset: Dataset = getDataset
-
   var initialized: Boolean = false
 
   /**

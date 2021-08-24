@@ -55,7 +55,6 @@ local APPLICATION_ISO = "application/x-iso9660-image"
 local APPLICATION_GZIP = "application/gzip"
 local VIDEO_MP4 = "video/mp4"
 
-
 local image_mime_types = {
     IMAGE_JP2,
     IMAGE_TIFF,
@@ -186,7 +185,7 @@ end
 function get_file_info(filename, mimetype)
 
     local extension = filename:match("^.+%.([^.]+)$")
-    
+
     if extension == nil then
         return nil
     elseif table.contains(image_mime_types, mimetype) then

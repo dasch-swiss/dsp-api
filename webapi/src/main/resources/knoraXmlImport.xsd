@@ -17,9 +17,9 @@
  * You should have received a copy of the GNU Affero General Public
  * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
 -->
-<xs:schema elementFormDefault="qualified" targetNamespace="http://api.knora.org/ontology/knoraXmlImport/v1#"
-    xmlns="http://api.knora.org/ontology/knoraXmlImport/v1#" xmlns:xs="http://www.w3.org/2001/XMLSchema"
-    vc:minVersion="1.0" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           elementFormDefault="qualified" targetNamespace="http://api.knora.org/ontology/knoraXmlImport/v1#"
+           xmlns="http://api.knora.org/ontology/knoraXmlImport/v1#" vc:minVersion="1.0">
     <!-- Resource types -->
 
     <xs:complexType name="resourceType">
@@ -115,7 +115,7 @@
     <xs:simpleType name="dateType">
         <xs:restriction base="xs:string">
             <xs:pattern
-                value="(GREGORIAN|JULIAN|ISLAMIC):\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?)?"
+                    value="(GREGORIAN|JULIAN|ISLAMIC):\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?(:\d{1,4}(-\d{1,2}(-\d{1,2})?)?( BC| AD| BCE| CE)?)?"
             />
         </xs:restriction>
     </xs:simpleType>

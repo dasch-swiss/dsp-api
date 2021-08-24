@@ -19,7 +19,8 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Knora Admin API
 
-The Knora admin API makes it possible to administer Knora projects, users, user groups, permissions, and hierarchical lists.
+The Knora admin API makes it possible to administer Knora projects, users, user groups, permissions, and hierarchical
+lists.
 
 - [Introduction](introduction.md)
 - [Overview](overview.md)

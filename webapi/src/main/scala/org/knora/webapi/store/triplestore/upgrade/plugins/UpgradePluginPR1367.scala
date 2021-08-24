@@ -25,8 +25,8 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
-  * Transforms a repository for Knora PR 1367.
-  */
+ * Transforms a repository for Knora PR 1367.
+ */
 class UpgradePluginPR1367(featureFactoryConfig: FeatureFactoryConfig) extends UpgradePlugin {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
 
@@ -34,7 +34,7 @@ class UpgradePluginPR1367(featureFactoryConfig: FeatureFactoryConfig) extends Up
     // Fix the datatypes of decimal literals.
 
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
-    val statementsToAdd: collection.mutable.Set[Statement] = collection.mutable.Set.empty
+    val statementsToAdd: collection.mutable.Set[Statement]    = collection.mutable.Set.empty
 
     for (statement: Statement <- model) {
       statement.obj match {

@@ -24,12 +24,14 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 
 /**
-  * Data needed to be passed to each responder.
-  *
-  * @param system   the actor system.
-  * @param appActor the main application actor.
-  */
-case class ResponderData(system: ActorSystem,
-                         appActor: ActorRef,
-                         knoraSettings: KnoraSettingsImpl,
-                         cacheServiceSettings: CacheServiceSettings)
+ * Data needed to be passed to each responder.
+ *
+ * @param system   the actor system.
+ * @param appActor the main application actor.
+ */
+case class ResponderData(
+  system: ActorSystem,
+  appActor: ActorRef,
+  knoraSettings: KnoraSettingsImpl,
+  cacheServiceSettings: CacheServiceSettings
+)

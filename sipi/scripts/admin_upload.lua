@@ -27,7 +27,7 @@ end
 files = {}
 newfilename = {}
 
-for findex,fparam in pairs(server.uploads) do
+for findex, fparam in pairs(server.uploads) do
 
     --
     -- check if admin directory is available under server root, if not, create it
@@ -52,7 +52,7 @@ for findex,fparam in pairs(server.uploads) do
     success, uuid62 = server.uuid62()
     origname = fparam["origname"]:gsub("%s+", "-")
 
-    adminpath =  admindir .. uuid62 .. '-' .. origname
+    adminpath = admindir .. uuid62 .. '-' .. origname
     local errmsg
     success, errmsg = server.copyTmpfile(findex, adminpath)
     if not success then

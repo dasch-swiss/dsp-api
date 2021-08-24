@@ -21,7 +21,7 @@ require "send_response"
 
 server.setBuffer()
 
-for imgindex,imgparam in pairs(server.uploads) do
+for imgindex, imgparam in pairs(server.uploads) do
 
 end
 

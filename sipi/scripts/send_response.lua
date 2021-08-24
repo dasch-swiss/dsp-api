@@ -39,10 +39,10 @@ function send_error(status, msg)
 
     if type(status) == "number" then
         http_status = status
-    else        
+    else
         http_status = 500
     end
-    
+
     if type(msg) == "string" then
         msg_str = msg
     else
@@ -58,7 +58,7 @@ function send_error(status, msg)
     result = {
         message = msg_str
     }
-    
+
     success, error_msg = server.sendHeader("Content-Type", "application/json")
     if not success then
         server.log(error_msg, server.loglevel.LOG_ERR)

@@ -19,15 +19,15 @@
 
 package org.knora.webapi.routing.admin.permissions
 
-import java.util.UUID
-
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
-import javax.ws.rs.Path
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+
+import java.util.UUID
+import javax.ws.rs.Path
 
 object GetPermissionsRouteADM {
   val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
@@ -43,8 +43,8 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
   import GetPermissionsRouteADM._
 
   /**
-    * Returns the route.
-    */
+   * Returns the route.
+   */
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     getAdministrativePermissionForProjectGroup(featureFactoryConfig) ~
       getAdministrativePermissionsForProject(featureFactoryConfig) ~
@@ -56,9 +56,9 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
       get { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
         } yield AdministrativePermissionForProjectGroupGetRequestADM(projectIri, groupIri, requestingUser)
 
         RouteUtilADM.runJsonRoute(
@@ -77,15 +77,14 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
       get { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
-        } yield
-          AdministrativePermissionsForProjectGetRequestADM(
-            projectIri = projectIri,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
+        } yield AdministrativePermissionsForProjectGetRequestADM(
+          projectIri = projectIri,
+          requestingUser = requestingUser,
+          apiRequestID = UUID.randomUUID()
+        )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
@@ -103,15 +102,14 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
       get { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
-        } yield
-          DefaultObjectAccessPermissionsForProjectGetRequestADM(
-            projectIri = projectIri,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
+        } yield DefaultObjectAccessPermissionsForProjectGetRequestADM(
+          projectIri = projectIri,
+          requestingUser = requestingUser,
+          apiRequestID = UUID.randomUUID()
+        )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
@@ -129,16 +127,15 @@ class GetPermissionsRouteADM(routeData: KnoraRouteData)
       get { requestContext =>
         val requestMessage = for {
           requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
-        } yield
-          PermissionsForProjectGetRequestADM(
-            projectIri = projectIri,
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
+                              requestContext = requestContext,
+                              featureFactoryConfig = featureFactoryConfig
+                            )
+        } yield PermissionsForProjectGetRequestADM(
+          projectIri = projectIri,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser,
+          apiRequestID = UUID.randomUUID()
+        )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,

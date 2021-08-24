@@ -19,12 +19,10 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Data Formats in DSP-API
 
-As explained in [What Is DSP and DSP-API (previous Knora)?](what-is-knora.md), the DSP stores data
-in a small number of formats that are suitable for long-term preservation while
-facilitating data reuse.
+As explained in [What Is DSP and DSP-API (previous Knora)?](what-is-knora.md), the DSP stores data in a small number of
+formats that are suitable for long-term preservation while facilitating data reuse.
 
-The following is a non-exhaustive list of data formats and how their content
-can be stored and managed by DSP-API:
+The following is a non-exhaustive list of data formats and how their content can be stored and managed by DSP-API:
 
 | Original Format                              | Format in DSP                                                                                                              |
 |----------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|

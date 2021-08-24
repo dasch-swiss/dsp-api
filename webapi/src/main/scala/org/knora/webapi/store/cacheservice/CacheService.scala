@@ -27,8 +27,8 @@ import org.knora.webapi.messages.store.cacheservicemessages.{CacheServiceFlushDB
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Cache Service Interface
-  */
+ * Cache Service Interface
+ */
 trait CacheService {
   def putUserADM(value: UserADM)(implicit ec: ExecutionContext): Future[Boolean]
   def getUserADM(identifier: UserIdentifierADM)(implicit ec: ExecutionContext): Future[Option[UserADM]]

@@ -19,7 +19,8 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 # Profiling Knora
 
-To run Knora with profiling, we first need to build the application. Please run the following from the top `knora` folder:
+To run Knora with profiling, we first need to build the application. Please run the following from the top `knora`
+folder:
 
 ```
 $ sbt webapi/stage
@@ -32,6 +33,5 @@ Start `webapi` from the `knora/webapi/target/universal/stage` directory with the
 ```
 $ ./bin/webapi -J-agentpath:/Applications/YourKit-Java-Profiler-2018.04.app/Contents/Resources/bin/mac/libyjpagent.jnilib -J-Xms1G -J-Xmx1G
 ```
-
 
 Now start the YourKit Profiler and connect to the `Main` process.

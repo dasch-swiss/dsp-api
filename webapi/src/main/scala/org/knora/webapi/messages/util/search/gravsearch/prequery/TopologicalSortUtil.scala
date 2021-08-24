@@ -22,40 +22,38 @@ package org.knora.webapi.messages.util.search.gravsearch.prequery
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiHyperEdge
 
-import scala.collection.mutable
-
 /**
-  * A utility for finding all topological orders of a graph.
-  * Based on [[https://github.com/scala-graph/scala-graph/issues/129#issuecomment-485398400]].
-  */
+ * A utility for finding all topological orders of a graph.
+ * Based on [[https://github.com/scala-graph/scala-graph/issues/129#issuecomment-485398400]].
+ */
 object TopologicalSortUtil {
 
   /**
-    * Finds all possible topological order permutations of a graph. If the graph is cyclical, returns an empty set.
-    *
-    * @param graph the graph to be sorted.
-    * @tparam T the type of the nodes in the graph.
-    */
+   * Finds all possible topological order permutations of a graph. If the graph is cyclical, returns an empty set.
+   *
+   * @param graph the graph to be sorted.
+   * @tparam T the type of the nodes in the graph.
+   */
   def findAllTopologicalOrderPermutations[T](graph: Graph[T, DiHyperEdge]): Set[Vector[Graph[T, DiHyperEdge]#NodeT]] = {
     type NodeT = Graph[T, DiHyperEdge]#NodeT
 
     /**
-      * Finds all possible topological order permutations of a graph using layer information. This method considers all
-      * permutations of the topological order regarding the leaf nodes.
-      *
-      * First, for each permutation of leaf nodes, find the correct order of parent nodes w.r.t incoming edges.
-      * For example, consider a graph that its topological order has 3 layers; i.e. layer 0 contains root nodes, and layer 2 contains leaf nodes.
-      * Permutations of leaf nodes consist the possible topological orders. Iterate over these set of ordered nodes to
-      * add nodes of lower layers to each set by considering the edges. That means for nodes of each layer, e.g. layer 1,
-      * find the outgoing edges to layer 2. If there is an edge for node n in layer 1 to node m in layer 2, then add this
-      * node to the set of order. After adding these nodes that are origins of edges, add the remaining nodes of layer 1
-      * to the set of order. Proceed to layer 0 and add nodes of it to the order in the same manner.
-      *
-      * @param layeredOrder the topological order of the graph with layer information i.e. (layer number, layer nodes).
-      * @return a list of all permutations of topological order.
-      */
+     * Finds all possible topological order permutations of a graph using layer information. This method considers all
+     * permutations of the topological order regarding the leaf nodes.
+     *
+     * First, for each permutation of leaf nodes, find the correct order of parent nodes w.r.t incoming edges.
+     * For example, consider a graph that its topological order has 3 layers; i.e. layer 0 contains root nodes, and layer 2 contains leaf nodes.
+     * Permutations of leaf nodes consist the possible topological orders. Iterate over these set of ordered nodes to
+     * add nodes of lower layers to each set by considering the edges. That means for nodes of each layer, e.g. layer 1,
+     * find the outgoing edges to layer 2. If there is an edge for node n in layer 1 to node m in layer 2, then add this
+     * node to the set of order. After adding these nodes that are origins of edges, add the remaining nodes of layer 1
+     * to the set of order. Proceed to layer 0 and add nodes of it to the order in the same manner.
+     *
+     * @param layeredOrder the topological order of the graph with layer information i.e. (layer number, layer nodes).
+     * @return a list of all permutations of topological order.
+     */
     def findPermutations(layeredOrder: graph.LayeredTopologicalOrder[NodeT]): List[Vector[NodeT]] = {
-      val lastLayerNodes: Vector[NodeT] = layeredOrder.last._2.toVector
+      val lastLayerNodes: Vector[NodeT]                    = layeredOrder.last._2.toVector
       val allLowerLayers: Iterable[(Int, Iterable[NodeT])] = layeredOrder.dropRight(1)
 
       // Find all permutations of last layer nodes; i.e leaf nodes.

@@ -33,7 +33,7 @@ require "get_knora_session"
 --       'deny' : no access!
 --    filepath: server-path where the master file is located
 -------------------------------------------------------------------------------
-function pre_flight(prefix,identifier,cookie)
+function pre_flight(prefix, identifier, cookie)
     server.log("pre_flight called in sipi.init-knora-test.lua", server.loglevel.LOG_DEBUG)
 
 
@@ -61,7 +61,7 @@ function pre_flight(prefix,identifier,cookie)
 
     knora_cookie_header = nil
 
-    if cookie ~='' then
+    if cookie ~= '' then
 
         -- tries to extract the Knora session id from the cookie:
         -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)

@@ -19,16 +19,14 @@ License along with Knora.  If not, see <http://www.gnu.org/licenses/.
 
 # Admin Endpoint
 
-For the management of *users*, *projects*, and *groups*, the DSP-API
-following a resource centric approach, provides three endpoints
-corresponding to the three classes of objects that they have an effect
-on, namely:
+For the management of *users*, *projects*, and *groups*, the DSP-API following a resource centric approach, provides
+three endpoints corresponding to the three classes of objects that they have an effect on, namely:
 
-  - Users Endpoint: `http://server:port/admin/users` - `knora-base:User`
-  - Projects Endpoint: `http://server:port/admin/projects` -
-    `knora-base:knoraProject`
-  - Groups Endpoint: `http://server:port/admin/groups` -
-    `knora-base:UserGroup`
+- Users Endpoint: `http://server:port/admin/users` - `knora-base:User`
+- Projects Endpoint: `http://server:port/admin/projects` -
+  `knora-base:knoraProject`
+- Groups Endpoint: `http://server:port/admin/groups` -
+  `knora-base:UserGroup`
 
 All information regarding users, projects and groups is stored in the
 `http://www.knora.org/admin` named graph.

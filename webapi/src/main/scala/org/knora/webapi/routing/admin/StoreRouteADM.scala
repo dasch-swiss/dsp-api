@@ -22,7 +22,6 @@ package org.knora.webapi.routing.admin
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import io.swagger.annotations.Api
-import javax.ws.rs.Path
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.storesmessages.{
   ResetTriplestoreContentRequestADM,
@@ -31,12 +30,13 @@ import org.knora.webapi.messages.admin.responder.storesmessages.{
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
+import javax.ws.rs.Path
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
-  * A route used to send requests which can directly affect the data stored inside the triplestore.
-  */
+ * A route used to send requests which can directly affect the data stored inside the triplestore.
+ */
 
 @Api(value = "store", produces = "application/json")
 @Path("/admin/store")
@@ -46,14 +46,15 @@ class StoreRouteADM(routeData: KnoraRouteData)
     with StoresADMJsonProtocol {
 
   /**
-    * Returns the route.
-    */
+   * Returns the route.
+   */
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = Route {
     path("admin" / "store") {
       get { requestContext =>
-        /** Maybe return some statistics about the store, e.g., what triplestore, number of triples in
-          * each named graph and in total, etc.
-          */
+        /**
+         * Maybe return some statistics about the store, e.g., what triplestore, number of triples in
+         * each named graph and in total, etc.
+         */
         // TODO: Implement some simple return
         requestContext.complete("Hello World")
       }

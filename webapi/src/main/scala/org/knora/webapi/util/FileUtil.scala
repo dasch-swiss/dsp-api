@@ -19,39 +19,46 @@
 
 package org.knora.webapi.util
 
-import java.io.ByteArrayOutputStream
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path, Paths}
-import java.util.zip.{ZipEntry, ZipOutputStream}
-
 import com.typesafe.scalalogging.Logger
 import org.knora.webapi.exceptions.{FileWriteException, NotFoundException}
 import org.knora.webapi.settings.KnoraSettingsImpl
 
+import java.io.ByteArrayOutputStream
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path, Paths}
+import java.util.zip.{ZipEntry, ZipOutputStream}
 import scala.io.{BufferedSource, Codec, Source}
 import scala.util.{Failure, Success, Try}
 
 /**
-  * Functions for reading and writing files.
-  */
+ * Functions for reading and writing files.
+ */
 object FileUtil {
 
   /**
-    * Writes a string to a file.
-    *
-    * @param file    the destination file.
-    * @param content the string to write.
-    */
-  def writeTextFile(file: Path, content: String): Unit = {
+   * Writes a string to a file.
+   *
+   * @param file    the destination file.
+   * @param content the string to write.
+   */
+  def writeTextFile(file: Path, content: String): Unit =
     writeBinaryFile(file, content.getBytes(StandardCharsets.UTF_8))
-  }
 
   /**
-    * Reads a text file into a string.
-    *
-    * @param file the source file.
-    * @return the contents of the file.
-    */
+   * Writes a byte array to a file.
+   *
+   * @param file    the destination file.
+   * @param content the binary data to write.
+   */
+  def writeBinaryFile(file: Path, content: Array[Byte]): Unit =
+    Files.write(file, content)
+
+  /**
+   * Reads a text file into a string.
+   *
+   * @param file the source file.
+   * @return the contents of the file.
+   */
   def readTextFile(file: Path): String = {
     // TODO: provide apt error handling
 
@@ -65,11 +72,11 @@ object FileUtil {
   }
 
   /**
-    * Reads a file from the classpath into a string.
-    *
-    * @param filename the name of the file.
-    * @return the contents of the file.
-    */
+   * Reads a file from the classpath into a string.
+   *
+   * @param filename the name of the file.
+   * @return the contents of the file.
+   */
   def readTextResource(filename: String): String = {
     // https://alvinalexander.com/scala/scala-exception-handling-try-catch-finally#toc_0
 
@@ -95,33 +102,22 @@ object FileUtil {
   }
 
   /**
-    * Writes a byte array to a file.
-    *
-    * @param file    the destination file.
-    * @param content the binary data to write.
-    */
-  def writeBinaryFile(file: Path, content: Array[Byte]): Unit = {
-    Files.write(file, content)
-  }
-
-  /**
-    * Generates a byte array representing a Zip file containing the specified data. The Zip file data is
-    * generated in memory only; no disk access is performed.
-    *
-    * @param contents a map of file names to byte arrays representing file contents.
-    * @return a byte array containing the Zip file data.
-    */
+   * Generates a byte array representing a Zip file containing the specified data. The Zip file data is
+   * generated in memory only; no disk access is performed.
+   *
+   * @param contents a map of file names to byte arrays representing file contents.
+   * @return a byte array containing the Zip file data.
+   */
   def createZipFileBytes(contents: Map[String, Array[Byte]]): Array[Byte] = {
     val byteArrayOutputStream = new ByteArrayOutputStream()
-    val zipOutputStream = new ZipOutputStream(byteArrayOutputStream)
+    val zipOutputStream       = new ZipOutputStream(byteArrayOutputStream)
 
     val bytesTry = Try {
-      contents.foreach {
-        case (filename: String, content: Array[Byte]) =>
-          val entry: ZipEntry = new ZipEntry(filename)
-          zipOutputStream.putNextEntry(entry)
-          zipOutputStream.write(content)
-          zipOutputStream.closeEntry()
+      contents.foreach { case (filename: String, content: Array[Byte]) =>
+        val entry: ZipEntry = new ZipEntry(filename)
+        zipOutputStream.putNextEntry(entry)
+        zipOutputStream.write(content)
+        zipOutputStream.closeEntry()
       }
     }
 
@@ -134,12 +130,12 @@ object FileUtil {
   }
 
   /**
-    * Saves data to a temporary file.
-    *
-    * @param settings   Knora application settings.
-    * @param binaryData the binary file data to be saved.
-    * @return the location where the file has been written to.
-    */
+   * Saves data to a temporary file.
+   *
+   * @param settings   Knora application settings.
+   * @param binaryData the binary file data to be saved.
+   * @return the location where the file has been written to.
+   */
   def saveFileToTmpLocation(settings: KnoraSettingsImpl, binaryData: Array[Byte]): Path = {
     val file = createTempFile(settings)
     Files.write(file, binaryData)
@@ -147,12 +143,12 @@ object FileUtil {
   }
 
   /**
-    * Creates an empty file in the default temporary-file directory specified in Knora's application settings.
-    *
-    * @param settings      Knora's application settings.
-    * @param fileExtension the extension to be used for the temporary file name, if any,
-    * @return the location where the file has been written to.
-    */
+   * Creates an empty file in the default temporary-file directory specified in Knora's application settings.
+   *
+   * @param settings      Knora's application settings.
+   * @param fileExtension the extension to be used for the temporary file name, if any,
+   * @return the location where the file has been written to.
+   */
   def createTempFile(settings: KnoraSettingsImpl, fileExtension: Option[String] = None): Path = {
     val tempDataDir = Paths.get(settings.tmpDataDir)
 
@@ -173,12 +169,12 @@ object FileUtil {
   }
 
   /**
-    * Deletes a temporary file.
-    *
-    * @param file the file to be deleted.
-    * @param log      a logging adapter.
-    * @return `true` if the file was deleted by this method.
-    */
+   * Deletes a temporary file.
+   *
+   * @param file the file to be deleted.
+   * @param log      a logging adapter.
+   * @return `true` if the file was deleted by this method.
+   */
   def deleteFileFromTmpLocation(file: Path, log: Logger): Boolean = {
 
     if (!Files.isWritable(file)) {

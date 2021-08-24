@@ -80,8 +80,8 @@ trait LiveManagers extends Managers {
   this: Actor =>
 
   /**
-    * The actor that forwards messages to actors that deal with persistent storage.
-    */
+   * The actor that forwards messages to actors that deal with persistent storage.
+   */
   lazy val storeManager: ActorRef = context.actorOf(
     Props(new StoreManager(appActor = self, cs = CacheServiceInMemImpl) with LiveActorMaker)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
@@ -89,30 +89,33 @@ trait LiveManagers extends Managers {
   )
 
   /**
-    * The actor that forwards messages to responder actors to handle API requests.
-    */
+   * The actor that forwards messages to responder actors to handle API requests.
+   */
   lazy val responderManager: ActorRef = context.actorOf(
     Props(
       new ResponderManager(
         appActor = self,
-        responderData = ResponderData(system = context.system,
-                                      appActor = self,
-                                      knoraSettings = KnoraSettings(system),
-                                      cacheServiceSettings = new CacheServiceSettings(system.settings.config))
-      ) with LiveActorMaker)
+        responderData = ResponderData(
+          system = context.system,
+          appActor = self,
+          knoraSettings = KnoraSettings(system),
+          cacheServiceSettings = new CacheServiceSettings(system.settings.config)
+        )
+      ) with LiveActorMaker
+    )
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = RESPONDER_MANAGER_ACTOR_NAME
   )
 }
 
 /**
-  * This is the first actor in the application. All other actors are children
-  * of this actor and thus it takes also the role of the supervisor actor.
-  * It accepts messages for starting and stopping the Knora-API, holds the
-  * current state of the application, and is responsible for coordination of
-  * the startup and shutdown sequence. Further, it forwards any messages meant
-  * for responders or the store to the respective actor.
-  */
+ * This is the first actor in the application. All other actors are children
+ * of this actor and thus it takes also the role of the supervisor actor.
+ * It accepts messages for starting and stopping the Knora-API, holds the
+ * current state of the application, and is responsible for coordination of
+ * the startup and shutdown sequence. Further, it forwards any messages meant
+ * for responders or the store to the respective actor.
+ */
 class ApplicationActor extends Actor with Stash with LazyLogging with AroundDirectives with Timers {
   this: Managers =>
 
@@ -121,47 +124,19 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
   implicit val system: ActorSystem = context.system
 
   /**
-    * The application's configuration.
-    */
+   * The application's configuration.
+   */
   implicit val knoraSettings: KnoraSettingsImpl = KnoraSettings(system)
 
   /**
-    * The Cache Service's configuration.
-    */
+   * The Cache Service's configuration.
+   */
   implicit val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(system.settings.config)
 
   /**
-    * The default feature factory configuration, which is used during startup.
-    */
-  val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(knoraSettings)
-
-  /**
-    * Provides the actor materializer (akka-http)
-    */
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
-
-  /**
-    * Provides the default global execution context
-    */
-  implicit val executionContext: ExecutionContext = context.dispatcher
-
-  /**
-    * Timeout definition
-    */
-  implicit protected val timeout: Timeout = knoraSettings.defaultTimeout
-
-  /**
-    * Route data.
-    */
-  private val routeData = KnoraRouteData(
-    system = system,
-    appActor = self
-  )
-
-  /**
-    * This actor acts as the supervisor for its child actors.
-    * Here we can override the default supervisor strategy.
-    */
+   * This actor acts as the supervisor for its child actors.
+   * Here we can override the default supervisor strategy.
+   */
   override val supervisorStrategy: OneForOneStrategy =
     OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1.minute) {
       case _: ArithmeticException      => Resume
@@ -179,23 +154,97 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
       case _: Exception => Escalate
     }
 
-  private var appState: AppState = AppStates.Stopped
-  private var allowReloadOverHTTPState = false
-  private var printConfigState = false
-  private var ignoreRepository = true
-  private var withIIIFService = true
+  /**
+   * Provides the actor materializer (akka-http)
+   */
+  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+
+  /**
+   * Provides the default global execution context
+   */
+  implicit val executionContext: ExecutionContext = context.dispatcher
+
+  /**
+   * Timeout definition
+   */
+  implicit protected val timeout: Timeout = knoraSettings.defaultTimeout
+
+  /**
+   * The default feature factory configuration, which is used during startup.
+   */
+  val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(knoraSettings)
+
+  /**
+   * Route data.
+   */
+  private val routeData = KnoraRouteData(
+    system = system,
+    appActor = self
+  )
   private val withCacheService = cacheServiceSettings.cacheServiceEnabled
 
   /**
-    * Startup of the ApplicationActor is a two step process:
-    * 1. Step: Start the http server and bind to ip and port. This is done with
-    * the "initializing" behaviour
-    * - Success: After a successful bind, go to step 2.
-    * - Failure: If bind fails, then retry up to 5 times before exiting.
-    *
-    * 2. Step:
-    *
-    */
+   * All routes composed together and CORS activated based on the
+   * the configuration in application.conf (akka-http-cors).
+   *
+   * ALL requests go through each of the routes in ORDER.
+   * The FIRST matching route is used for handling a request.
+   */
+  private val apiRoutes: Route = logDuration {
+    ServerVersion.addServerHeader {
+      DSPApiDirectives.handleErrors(system) {
+        CorsDirectives.cors(CorsSettings(system)) {
+          DSPApiDirectives.handleErrors(system) {
+            new HealthRoute(routeData).knoraApiPath ~
+              new VersionRoute(routeData).knoraApiPath ~
+              new RejectingRoute(routeData).knoraApiPath ~
+              new ResourcesRouteV1(routeData).knoraApiPath ~
+              new ValuesRouteV1(routeData).knoraApiPath ~
+              new StandoffRouteV1(routeData).knoraApiPath ~
+              new ListsRouteV1(routeData).knoraApiPath ~
+              new ResourceTypesRouteV1(routeData).knoraApiPath ~
+              new SearchRouteV1(routeData).knoraApiPath ~
+              new AuthenticationRouteV1(routeData).knoraApiPath ~
+              new AssetsRouteV1(routeData).knoraApiPath ~
+              new CkanRouteV1(routeData).knoraApiPath ~
+              new UsersRouteV1(routeData).knoraApiPath ~
+              new ProjectsRouteV1(routeData).knoraApiPath ~
+              new OntologiesRouteV2(routeData).knoraApiPath ~
+              new SearchRouteV2(routeData).knoraApiPath ~
+              new ResourcesRouteV2(routeData).knoraApiPath ~
+              new ValuesRouteV2(routeData).knoraApiPath ~
+              new StandoffRouteV2(routeData).knoraApiPath ~
+              new ListsRouteV2(routeData).knoraApiPath ~
+              new MetadataRouteV2(routeData).knoraApiPath ~
+              new AuthenticationRouteV2(routeData).knoraApiPath ~
+              new GroupsRouteADM(routeData).knoraApiPath ~
+              new ListsRouteADM(routeData).knoraApiPath ~
+              new PermissionsRouteADM(routeData).knoraApiPath ~
+              new ProjectsRouteADM(routeData).knoraApiPath ~
+              new StoreRouteADM(routeData).knoraApiPath ~
+              new UsersRouteADM(routeData).knoraApiPath ~
+              new SipiRouteADM(routeData).knoraApiPath ~
+              new SwaggerApiDocsRoute(routeData).knoraApiPath
+          }
+        }
+      }
+    }
+  }
+  private var appState: AppState       = AppStates.Stopped
+  private var allowReloadOverHTTPState = false
+  private var printConfigState         = false
+  private var ignoreRepository         = true
+  private var withIIIFService          = true
+
+  /**
+   * Startup of the ApplicationActor is a two step process:
+   * 1. Step: Start the http server and bind to ip and port. This is done with
+   * the "initializing" behaviour
+   * - Success: After a successful bind, go to step 2.
+   * - Failure: If bind fails, then retry up to 5 times before exiting.
+   *
+   * 2. Step:
+   */
   def receive: Receive = initializing()
 
   def initializing(): Receive = {
@@ -420,64 +469,66 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
     case other =>
       throw UnexpectedMessageException(
-        s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}")
+        s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}"
+      )
   }
 
   /**
-    * All routes composed together and CORS activated based on the
-    * the configuration in application.conf (akka-http-cors).
-    *
-    * ALL requests go through each of the routes in ORDER.
-    * The FIRST matching route is used for handling a request.
-    */
-  private val apiRoutes: Route = logDuration {
-    ServerVersion.addServerHeader {
-      DSPApiDirectives.handleErrors(system) {
-        CorsDirectives.cors(CorsSettings(system)) {
-          DSPApiDirectives.handleErrors(system) {
-            new HealthRoute(routeData).knoraApiPath ~
-              new VersionRoute(routeData).knoraApiPath ~
-              new RejectingRoute(routeData).knoraApiPath ~
-              new ResourcesRouteV1(routeData).knoraApiPath ~
-              new ValuesRouteV1(routeData).knoraApiPath ~
-              new StandoffRouteV1(routeData).knoraApiPath ~
-              new ListsRouteV1(routeData).knoraApiPath ~
-              new ResourceTypesRouteV1(routeData).knoraApiPath ~
-              new SearchRouteV1(routeData).knoraApiPath ~
-              new AuthenticationRouteV1(routeData).knoraApiPath ~
-              new AssetsRouteV1(routeData).knoraApiPath ~
-              new CkanRouteV1(routeData).knoraApiPath ~
-              new UsersRouteV1(routeData).knoraApiPath ~
-              new ProjectsRouteV1(routeData).knoraApiPath ~
-              new OntologiesRouteV2(routeData).knoraApiPath ~
-              new SearchRouteV2(routeData).knoraApiPath ~
-              new ResourcesRouteV2(routeData).knoraApiPath ~
-              new ValuesRouteV2(routeData).knoraApiPath ~
-              new StandoffRouteV2(routeData).knoraApiPath ~
-              new ListsRouteV2(routeData).knoraApiPath ~
-              new MetadataRouteV2(routeData).knoraApiPath ~
-              new AuthenticationRouteV2(routeData).knoraApiPath ~
-              new GroupsRouteADM(routeData).knoraApiPath ~
-              new ListsRouteADM(routeData).knoraApiPath ~
-              new PermissionsRouteADM(routeData).knoraApiPath ~
-              new ProjectsRouteADM(routeData).knoraApiPath ~
-              new StoreRouteADM(routeData).knoraApiPath ~
-              new UsersRouteADM(routeData).knoraApiPath ~
-              new SipiRouteADM(routeData).knoraApiPath ~
-              new SwaggerApiDocsRoute(routeData).knoraApiPath
-          }
-        }
-      }
+   * Prints the welcome message
+   */
+  private def printBanner(): Unit = {
+
+    var msg =
+      """
+        |  ____  ____  ____         _    ____ ___
+        | |  _ \/ ___||  _ \       / \  |  _ \_ _|
+        | | | | \___ \| |_) |____ / _ \ | |_) | |
+        | | |_| |___) |  __/_____/ ___ \|  __/| |
+        | |____/|____/|_|       /_/   \_\_|  |___|
+            """.stripMargin
+
+    msg += "\n"
+    msg += s"DSP-API Server started: http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}\n"
+    msg += "------------------------------------------------\n"
+
+    defaultFeatureFactoryConfig.makeToggleSettingsString match {
+      case Some(toggleSettingsString) => msg += s"Default feature toggle settings: $toggleSettingsString\n"
+      case None                       => ()
     }
+
+    if (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP) {
+      msg += "WARNING: Resetting DB over HTTP is turned ON.\n"
+      msg += "------------------------------------------------\n"
+    }
+
+    // which repository are we using
+    msg += s"DB-Name:   ${knoraSettings.triplestoreDatabaseName}\t DB-Type: ${knoraSettings.triplestoreType}\n"
+    msg += s"DB-Server: ${knoraSettings.triplestoreHost}\t\t DB Port: ${knoraSettings.triplestorePort}\n"
+
+    if (printConfigState | knoraSettings.printExtendedConfig) {
+
+      msg += s"DB User: ${knoraSettings.triplestoreUsername}\n"
+      msg += s"DB Password: ${knoraSettings.triplestorePassword}\n"
+
+      msg += s"Swagger Json: ${knoraSettings.externalKnoraApiBaseUrl}/api-docs/swagger.json\n"
+      msg += s"Webapi internal URL: ${knoraSettings.internalKnoraApiBaseUrl}\n"
+      msg += s"Webapi external URL: ${knoraSettings.externalKnoraApiBaseUrl}\n"
+      msg += s"Sipi internal URL: ${knoraSettings.internalSipiBaseUrl}\n"
+      msg += s"Sipi external URL: ${knoraSettings.externalSipiBaseUrl}\n"
+    }
+
+    msg += "================================================\n"
+
+    println(msg)
   }
 
   /**
-    * Starts the Knora-API server.
-    *
-    * @param ignoreRepository    if `true`, don't read anything from the repository on startup.
-    * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
-    * @param retryCnt            how many times was this command tried
-    */
+   * Starts the Knora-API server.
+   *
+   * @param ignoreRepository    if `true`, don't read anything from the repository on startup.
+   * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
+   * @param retryCnt            how many times was this command tried
+   */
   def appStart(ignoreRepository: Boolean, requiresIIIFService: Boolean, retryCnt: Int): Unit = {
 
     val bindingFuture: Future[Http.ServerBinding] = Http()
@@ -524,8 +575,8 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
   }
 
   /**
-    * Stops Knora-API.
-    */
+   * Stops Knora-API.
+   */
   def appStop(): Unit = {
     logger.info("ApplicationActor - initiating shutdown ...")
     context.stop(self)
@@ -543,54 +594,5 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
     CacheUtil.removeAllCaches()
 
     Http().shutdownAllConnectionPools() andThen { case _ => system.terminate() }
-  }
-
-  /**
-    * Prints the welcome message
-    */
-  private def printBanner(): Unit = {
-
-    var msg =
-      """
-              |  ____  ____  ____         _    ____ ___
-              | |  _ \/ ___||  _ \       / \  |  _ \_ _|
-              | | | | \___ \| |_) |____ / _ \ | |_) | |
-              | | |_| |___) |  __/_____/ ___ \|  __/| |
-              | |____/|____/|_|       /_/   \_\_|  |___|
-            """.stripMargin
-
-    msg += "\n"
-    msg += s"DSP-API Server started: http://${knoraSettings.internalKnoraApiHost}:${knoraSettings.internalKnoraApiPort}\n"
-    msg += "------------------------------------------------\n"
-
-    defaultFeatureFactoryConfig.makeToggleSettingsString match {
-      case Some(toggleSettingsString) => msg += s"Default feature toggle settings: $toggleSettingsString\n"
-      case None                       => ()
-    }
-
-    if (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP) {
-      msg += "WARNING: Resetting DB over HTTP is turned ON.\n"
-      msg += "------------------------------------------------\n"
-    }
-
-    // which repository are we using
-    msg += s"DB-Name:   ${knoraSettings.triplestoreDatabaseName}\t DB-Type: ${knoraSettings.triplestoreType}\n"
-    msg += s"DB-Server: ${knoraSettings.triplestoreHost}\t\t DB Port: ${knoraSettings.triplestorePort}\n"
-
-    if (printConfigState | knoraSettings.printExtendedConfig) {
-
-      msg += s"DB User: ${knoraSettings.triplestoreUsername}\n"
-      msg += s"DB Password: ${knoraSettings.triplestorePassword}\n"
-
-      msg += s"Swagger Json: ${knoraSettings.externalKnoraApiBaseUrl}/api-docs/swagger.json\n"
-      msg += s"Webapi internal URL: ${knoraSettings.internalKnoraApiBaseUrl}\n"
-      msg += s"Webapi external URL: ${knoraSettings.externalKnoraApiBaseUrl}\n"
-      msg += s"Sipi internal URL: ${knoraSettings.internalSipiBaseUrl}\n"
-      msg += s"Sipi external URL: ${knoraSettings.externalSipiBaseUrl}\n"
-    }
-
-    msg += "================================================\n"
-
-    println(msg)
   }
 }

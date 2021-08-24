@@ -24,8 +24,8 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 **List Item Operations:**
 
 - `GET: /admin/lists[?projectIri=<projectIri>]` : return all lists optionally filtered by project
-- `GET: /admin/lists/<listItemIri>` : return complete list with all children if IRI of the list (i.e. root node) is given. 
-If IRI of the child node is given, return the node with its immediate children. 
+- `GET: /admin/lists/<listItemIri>` : return complete list with all children if IRI of the list (i.e. root node) is
+  given. If IRI of the child node is given, return the node with its immediate children.
 - `GET: /admin/lists/infos/<listIri>` : return list information (without children)
 - `GET: /admin/lists/nodes/<nodeIri>` : return list node information (without children)
 
@@ -36,33 +36,32 @@ If IRI of the child node is given, return the node with its immediate children.
 - `PUT: /admin/lists/<listItemIri>/name` : update the name of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/labels` : update labels of the node (root or child).
 - `PUT: /admin/lists/<listItemIri>/comments` : update comments of the node (root or child).
-- `PUT: /admin/lists/<nodeIri>/position` : update position of a child node within its current parent or by changing its 
-parent node.
+- `PUT: /admin/lists/<nodeIri>/position` : update position of a child node within its current parent or by changing its
+  parent node.
 
-- `DELETE: /admin/lists/<listItemIri>` : delete a list (i.e. root node) or a child node and 
-all its children, if not used
+- `DELETE: /admin/lists/<listItemIri>` : delete a list (i.e. root node) or a child node and all its children, if not
+  used
 
 ## List Item Operations
 
 ### Get lists
 
- - Required permission: none
- - Return all lists optionally filtered by project
- - GET: `/admin/lists[?projectIri=<projectIri>]`
+- Required permission: none
+- Return all lists optionally filtered by project
+- GET: `/admin/lists[?projectIri=<projectIri>]`
 
 ### Get list
 
- - Required permission: none
- - Return complete `list` including basic information of the list, `listinfo`, and all its children.
- - GET: `/admin/lists/<listIri>`
-
+- Required permission: none
+- Return complete `list` including basic information of the list, `listinfo`, and all its children.
+- GET: `/admin/lists/<listIri>`
 
 ### Create new list
 
-  - Required permission: SystemAdmin / ProjectAdmin
-  - POST: `/admin/lists`
-  - BODY:
-  
+- Required permission: SystemAdmin / ProjectAdmin
+- POST: `/admin/lists`
+- BODY:
+
 ```json
     {
         "projectIri": "someprojectiri",
@@ -71,7 +70,8 @@ all its children, if not used
     } 
 ```
 
-Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
+Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form)
+specified by the `id` in the request body as below:
 
 ```json
   {
@@ -84,6 +84,7 @@ Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v
 ```
 
 The response will contain the basic information of the list, `listinfo` and an empty list of its children, as below:
+
 ```json
 {
     "list": {
@@ -104,22 +105,24 @@ The response will contain the basic information of the list, `listinfo` and an e
     }
 }
 ```
+
 ### Get list's information
 
- - Required permission: none
- - Return list information, `listinfo` (without children).
- - GET: `/admin/lists/infos/<listIri>`
- 
-### Update list's information
-The basic information of a list such as its labels, comments, name, or all of them can be updated. The parameters that 
-must be updated together with the new value must be given in the JSON body of the request together with the IRI of the 
-list and the IRI of the project it belongs to. 
+- Required permission: none
+- Return list information, `listinfo` (without children).
+- GET: `/admin/lists/infos/<listIri>`
 
- - Required permission: SystemAdmin / ProjectAdmin
- - Update list information
- - PUT: `/admin/lists/<listIri>`
- - BODY:
- 
+### Update list's information
+
+The basic information of a list such as its labels, comments, name, or all of them can be updated. The parameters that
+must be updated together with the new value must be given in the JSON body of the request together with the IRI of the
+list and the IRI of the project it belongs to.
+
+- Required permission: SystemAdmin / ProjectAdmin
+- Update list information
+- PUT: `/admin/lists/<listIri>`
+- BODY:
+
 ```json
  {   "listIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
       "projectIri": "http://rdfh.ch/projects/0001",
@@ -130,6 +133,7 @@ list and the IRI of the project it belongs to.
 ```
 
 The response will contain the basic information of the list, `listinfo`, without its children, as below:
+
 ```json
 {
     "listinfo": {
@@ -152,6 +156,7 @@ The response will contain the basic information of the list, `listinfo`, without
     }
 }
 ```
+
 If only name of the list must be updated, it can be given as below in the body of the request:
 
 ```json
@@ -162,74 +167,78 @@ If only name of the list must be updated, it can be given as below in the body o
   }
 ```
 
-Alternatively, basic information `name`, `labels`, or `comments` of the root node (i.e. list) can be updated individually 
-as explained below.
+Alternatively, basic information `name`, `labels`, or `comments` of the root node (i.e. list) can be updated
+individually as explained below.
 
 ### Update list or node's name
 
- - Required permission: SystemAdmin / ProjectAdmin
- - Update name of the list (i.e. root node) or a child node whose IRI is specified by `<listItemIri>`.
- - PUT: `/admin/lists/<listItemIri>/name`
- - BODY:
- The new name of the node must be given in the body of the request as shown below:
+- Required permission: SystemAdmin / ProjectAdmin
+- Update name of the list (i.e. root node) or a child node whose IRI is specified by `<listItemIri>`.
+- PUT: `/admin/lists/<listItemIri>/name`
+- BODY:
+  The new name of the node must be given in the body of the request as shown below:
+
  ```json
 {
     "name": "a new name"
 }
 ```
+
 There is no need to specify the project IRI because it is automatically extracted using the given `<listItemIRI>`.
 
 ### Update list or node's labels
 
- - Required permission: SystemAdmin / ProjectAdmin
- - Update labels of the list (i.e. root node) or a child node whose IRI is specified by `<listItemIri>`.
- - PUT: `/admin/lists/<listItemIri>/labels`
- - BODY:
- The new set of labels of the node must be given in the body of the request as shown below:
+- Required permission: SystemAdmin / ProjectAdmin
+- Update labels of the list (i.e. root node) or a child node whose IRI is specified by `<listItemIri>`.
+- PUT: `/admin/lists/<listItemIri>/labels`
+- BODY:
+  The new set of labels of the node must be given in the body of the request as shown below:
+
  ```json
 {
     "labels": [{"language": "se", "value": "nya märkningen"}]
 }
 ```
+
 There is no need to specify the project IRI because it is automatically extracted using the given `<listItemIRI>`.
 
 ### Update list or node's comments
 
- - Required permission: SystemAdmin / ProjectAdmin
- - Update comments of the list (i.e. root node) or a child node whose IRI is specified by `<listItemIri>`.
- - PUT: `/admin/lists/<listItemIri>/labels`
- - BODY:
- The new set of comments of the node must be given in the body of the request as shown below:
+- Required permission: SystemAdmin / ProjectAdmin
+- Update comments of the list (i.e. root node) or a child node whose IRI is specified by `<listItemIri>`.
+- PUT: `/admin/lists/<listItemIri>/labels`
+- BODY:
+  The new set of comments of the node must be given in the body of the request as shown below:
+
  ```json
 {
     "comments": [{"language": "se", "value": "nya kommentarer"}]
 }
 ```
+
 There is no need to specify the project IRI because it is automatically extracted using the given `<listItemIRI>`.
 
 ### Get node
 
- - Required permission: none
- - Return complete `node` including basic information of the list, `nodeinfo`, and all its immediate children.
- - GET: `/admin/lists/<nodeIri>`
+- Required permission: none
+- Return complete `node` including basic information of the list, `nodeinfo`, and all its immediate children.
+- GET: `/admin/lists/<nodeIri>`
 
 ### Get List Node Information
 
- - Required permission: none
- - Return node information, `nodeinfo`, (without children).
- - GET: `/admin/lists/nodes/<nodeIri>`
-
+- Required permission: none
+- Return node information, `nodeinfo`, (without children).
+- GET: `/admin/lists/nodes/<nodeIri>`
 
 ### Create new child node
 
-  - Required permission: SystemAdmin / ProjectAdmin
-  - Appends a new child node under the supplied nodeIri. If the supplied nodeIri
-    is the listIri, then a new child node is appended to the top level. If a position is given
-     for the new child node, the node will be created and inserted in the specified position, otherwise 
-     the node is appended to the end of parent's children.
-  - POST: `/admin/lists/<parentNodeIri>`
-  - BODY:
-  
+- Required permission: SystemAdmin / ProjectAdmin
+- Appends a new child node under the supplied nodeIri. If the supplied nodeIri is the listIri, then a new child node is
+  appended to the top level. If a position is given for the new child node, the node will be created and inserted in the
+  specified position, otherwise the node is appended to the end of parent's children.
+- POST: `/admin/lists/<parentNodeIri>`
+- BODY:
+
 ```json
      {   
          "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
@@ -240,7 +249,8 @@ There is no need to specify the project IRI because it is automatically extracte
     }
 ```
 
-Additionally, each child node can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
+Additionally, each child node can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data)
+form) specified by the `id` in the request body as below:
 
 ```json
 {    "id": "http://rdfh.ch/lists/0001/8u37MxBVMbX3XQ8-d31x6w",
@@ -253,6 +263,7 @@ Additionally, each child node can have an optional custom IRI (of [Knora IRI](..
 ```
 
 The response will contain the basic information of the node, `nodeinfo`, as below:
+
 ```json
 {
     "nodeinfo": {
@@ -270,9 +281,10 @@ The response will contain the basic information of the node, `nodeinfo`, as belo
     }
 }
 ```
-The new node can be created and inserted in a specific position which must be given in the payload as shown below. If necessary, 
-according to the given position, the sibling nodes will be shifted. Note that `position` cannot have a value higher than the
-number of existing children.
+
+The new node can be created and inserted in a specific position which must be given in the payload as shown below. If
+necessary, according to the given position, the sibling nodes will be shifted. Note that `position` cannot have a value
+higher than the number of existing children.
 
 ```json
 {   "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
@@ -284,19 +296,20 @@ number of existing children.
 }
 ```
 
-In case the new node should be appended to the list of current children, either `position: -1` must be given in the 
-payload or the `position` parameter must be left out of the payload. 
+In case the new node should be appended to the list of current children, either `position: -1` must be given in the
+payload or the `position` parameter must be left out of the payload.
 
 ### Update node's information
-The basic information of a node such as its labels, comments, name, or all of them can be updated. The parameters that 
-must be updated together with the new value must be given in the JSON body of the request together with the IRI of the 
-node and the IRI of the project it belongs to. 
 
- - Required permission: SystemAdmin / ProjectAdmin
- - Update node information
- - PUT: `/admin/lists/<nodeIri>`
- - BODY:
- 
+The basic information of a node such as its labels, comments, name, or all of them can be updated. The parameters that
+must be updated together with the new value must be given in the JSON body of the request together with the IRI of the
+node and the IRI of the project it belongs to.
+
+- Required permission: SystemAdmin / ProjectAdmin
+- Update node information
+- PUT: `/admin/lists/<nodeIri>`
+- BODY:
+
 ```json
   {   "listIri": "http://rdfh.ch/lists/0001/8u37MxBVMbX3XQ8-d31x6w",
        "projectIri": "http://rdfh.ch/projects/0001",
@@ -341,21 +354,22 @@ If only name of the node must be updated, it can be given as below in the body o
   }
 ```
 
-Alternatively, basic information of the child node can be updated individually as explained above (See 
-[update node name](#update-list-or-nodes-name), [update node labels](#update-list-or-nodes-labels), and 
+Alternatively, basic information of the child node can be updated individually as explained above (See
+[update node name](#update-list-or-nodes-name), [update node labels](#update-list-or-nodes-labels), and
 [update node comments](#update-list-or-nodes-comments)).
 
 ### Repositioning a child node
 
-The position of an existing child node can be updated. The child node can be either repositioned within its 
-current parent node, or can be added to another parent node in a specific position. The IRI of the parent node 
-and the new position of the child node must be given in the request body. 
+The position of an existing child node can be updated. The child node can be either repositioned within its current
+parent node, or can be added to another parent node in a specific position. The IRI of the parent node and the new
+position of the child node must be given in the request body.
 
 If a node is supposed to be repositioned to the end of a parent node's children, give `position: -1`.
 
-Suppose a parent node `parentNode1` has five children in positions 0-4, to change the position of its child node 
-`childNode4` from its original position 3 to position 1 the request body should specify the IRI of its parent node 
-and the new position as below:
+Suppose a parent node `parentNode1` has five children in positions 0-4, to change the position of its child node
+`childNode4` from its original position 3 to position 1 the request body should specify the IRI of its parent node and
+the new position as below:
+
 ```json
    {
       "parentNodeIri": "<parentNode1-IRI>",
@@ -363,14 +377,14 @@ and the new position as below:
   }
 ```
 
-Then the node `childNode4` will be put in position 1, and its siblings will be shifted accordingly. The new position given 
-in the request body cannot be the same as the child node's original position. If `position: -1` is given, the node will 
-be moved to the end of children list, and its siblings will be shifted to left. In case of repositioning the node 
-within its current parent, the maximum permitted position is the length of its children list, i.e. in this example the 
+Then the node `childNode4` will be put in position 1, and its siblings will be shifted accordingly. The new position
+given in the request body cannot be the same as the child node's original position. If `position: -1` is given, the node
+will be moved to the end of children list, and its siblings will be shifted to left. In case of repositioning the node
+within its current parent, the maximum permitted position is the length of its children list, i.e. in this example the
 highest allowed position is 4.
 
-To reposition a child node `childNode4` to another parent node `parentNode2` in a specific position, for 
-example `position: 3`, the IRI of the new parent node and the position the node must be placed within children of 
+To reposition a child node `childNode4` to another parent node `parentNode2` in a specific position, for
+example `position: 3`, the IRI of the new parent node and the position the node must be placed within children of
 `parentNode2` must be given as:
 
 ```json
@@ -380,33 +394,35 @@ example `position: 3`, the IRI of the new parent node and the position the node 
   }
 ```
 
-In this case, the `childNode4` is removed from the list of children of its old parent `parentNode1` and its old 
-siblings are shifted accordingly. Then the node `childNode4` is added to the specified new parent, i.e. `parentNode2`, in 
-the given position. The new siblings are shifted accordingly.
+In this case, the `childNode4` is removed from the list of children of its old parent `parentNode1` and its old siblings
+are shifted accordingly. Then the node `childNode4` is added to the specified new parent, i.e. `parentNode2`, in the
+given position. The new siblings are shifted accordingly.
 
-Note that, the furthest the node can be placed is at the end of the list of the children of `parentNode2`. That means 
-if `parentNode2` had 3 children with positions 0-2, then `childNode4` can be placed in position 0-3 within children 
-of its new parent node. If the `position: -1` is given, the node will be appended to the end of new parent's children, 
-and new siblings will not be shifted. 
+Note that, the furthest the node can be placed is at the end of the list of the children of `parentNode2`. That means
+if `parentNode2` had 3 children with positions 0-2, then `childNode4` can be placed in position 0-3 within children of
+its new parent node. If the `position: -1` is given, the node will be appended to the end of new parent's children, and
+new siblings will not be shifted.
 
 Values less than -1 are not permitted for parameter `position`.
- 
+
 - Required permission: SystemAdmin / ProjectAdmin
 - Response: returns the updated parent node with all its children.
 - Put `/admin/lists/<nodeIri>/position`
 
 ### Delete a list or a node
-An entire list or a single node of it can be completely deleted, if not in use. Before deleting an entire list 
-(i.e. root node), the data and ontologies are checked for any usage of the list or its children. If not in use, the list 
+
+An entire list or a single node of it can be completely deleted, if not in use. Before deleting an entire list
+(i.e. root node), the data and ontologies are checked for any usage of the list or its children. If not in use, the list
 and all its children are deleted.
 
-Similarily, before deleting a single node of a list, it is verified that the node itself and none of its children are used.
-If not in use, the node and all its children are deleted. Once a node is deleted, its parent node is updated by shifting the 
-remaining child nodes with respect to the position of the deleted node. 
+Similarily, before deleting a single node of a list, it is verified that the node itself and none of its children are
+used. If not in use, the node and all its children are deleted. Once a node is deleted, its parent node is updated by
+shifting the remaining child nodes with respect to the position of the deleted node.
 
 - Required permission: SystemAdmin / ProjectAdmin
 - Response:
-    - If the IRI of the list (i.e. root node) is given, the `iri` of the deleted list with a flag `deleted: true` is returned.
+    - If the IRI of the list (i.e. root node) is given, the `iri` of the deleted list with a flag `deleted: true` is
+      returned.
     - If the IRI of a child node is given, the updated parent node is returned.
 
 - Delete `/admin/lists/<listItemIri>`

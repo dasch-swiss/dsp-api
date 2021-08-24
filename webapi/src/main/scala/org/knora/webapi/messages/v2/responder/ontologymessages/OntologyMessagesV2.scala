@@ -20,27 +20,26 @@
 package org.knora.webapi
 package messages.v2.responder.ontologymessages
 
-import exceptions.{
+import akka.actor.ActorRef
+import akka.event.LoggingAdapter
+import akka.util.Timeout
+import org.apache.commons.lang3.builder.HashCodeBuilder
+import org.knora.webapi.exceptions.{
   AssertionException,
   BadRequestException,
   DataConversionException,
   InconsistentRepositoryDataException
 }
-import feature.FeatureFactoryConfig
-import messages.IriConversions._
-import messages.admin.responder.usersmessages.UserADM
-import messages.store.triplestoremessages._
-import messages.util.rdf._
-import messages.v2.responder._
-import messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
-import messages.v2.responder.standoffmessages.StandoffDataTypeClasses
-import messages.{OntologyConstants, SmartIri, StringFormatter}
-import settings.KnoraSettingsImpl
-
-import akka.actor.ActorRef
-import akka.event.LoggingAdapter
-import akka.util.Timeout
-import org.apache.commons.lang3.builder.HashCodeBuilder
+import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.util.rdf._
+import org.knora.webapi.messages.v2.responder._
+import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality.{KnoraCardinalityInfo, OwlCardinalityInfo}
+import org.knora.webapi.messages.v2.responder.standoffmessages.StandoffDataTypeClasses
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.settings.KnoraSettingsImpl
 
 import java.time.Instant
 import java.util.UUID
@@ -211,18 +210,10 @@ case class ClassUpdateInfo(classInfoContent: ClassInfoContentV2, lastModificatio
  */
 object OntologyUpdateHelper {
 
-  /**
-   * Gets the ontology's last modification date from the request.
-   *
-   * @param inputOntologyV2 an [[InputOntologyV2]] representing the ontology to be updated.
-   * @return the ontology's last modification date.
-   */
-  def getOntologyLastModificationDate(inputOntologyV2: InputOntologyV2): Instant =
-    inputOntologyV2.ontologyMetadata.lastModificationDate.getOrElse(
-      throw BadRequestException(
-        s"An ontology update request must include the ontology's knora-api:lastModificationDate"
-      )
-    )
+  private val LabelAndCommentPredicates = Set(
+    OntologyConstants.Rdfs.Label,
+    OntologyConstants.Rdfs.Comment
+  )
 
   /**
    * Gets a class definition from the request.
@@ -350,10 +341,18 @@ object OntologyUpdateHelper {
     )
   }
 
-  private val LabelAndCommentPredicates = Set(
-    OntologyConstants.Rdfs.Label,
-    OntologyConstants.Rdfs.Comment
-  )
+  /**
+   * Gets the ontology's last modification date from the request.
+   *
+   * @param inputOntologyV2 an [[InputOntologyV2]] representing the ontology to be updated.
+   * @return the ontology's last modification date.
+   */
+  def getOntologyLastModificationDate(inputOntologyV2: InputOntologyV2): Instant =
+    inputOntologyV2.ontologyMetadata.lastModificationDate.getOrElse(
+      throw BadRequestException(
+        s"An ontology update request must include the ontology's knora-api:lastModificationDate"
+      )
+    )
 
   /**
    * Gets the values of `rdfs:label` or `rdfs:comment` from a request to update them.
@@ -1613,6 +1612,13 @@ case class ReadOntologyV2(
     with KnoraReadV2[ReadOntologyV2] {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+  override def toJsonLDDocument(
+    targetSchema: ApiV2Schema,
+    settings: KnoraSettingsImpl,
+    schemaOptions: Set[SchemaOption]
+  ): JsonLDDocument =
+    toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
+
   /**
    * Converts this [[ReadOntologyV2]] to the specified Knora API v2 schema.
    *
@@ -1705,13 +1711,6 @@ case class ReadOntologyV2(
       individuals = individualsInTargetSchema
     )
   }
-
-  override def toJsonLDDocument(
-    targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
-    schemaOptions: Set[SchemaOption]
-  ): JsonLDDocument =
-    toOntologySchema(targetSchema).generateJsonLD(targetSchema, settings)
 
   private def generateJsonLD(targetSchema: ApiV2Schema, settings: KnoraSettingsImpl): JsonLDDocument = {
     // Get the ontologies of all Knora entities mentioned in class definitions.
@@ -2033,6 +2032,13 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2])
     extends KnoraJsonLDResponseV2
     with KnoraReadV2[ReadOntologyMetadataV2] {
 
+  def toJsonLDDocument(
+    targetSchema: ApiV2Schema,
+    settings: KnoraSettingsImpl,
+    schemaOptions: Set[SchemaOption]
+  ): JsonLDDocument =
+    toOntologySchema(targetSchema).generateJsonLD(targetSchema)
+
   override def toOntologySchema(targetSchema: ApiV2Schema): ReadOntologyMetadataV2 = {
     // We may have metadata for knora-api in more than one schema. Just return the one for the target schema.
 
@@ -2072,13 +2078,6 @@ case class ReadOntologyMetadataV2(ontologies: Set[OntologyMetadataV2])
 
     JsonLDDocument(body = body, context = context, isFlat = true)
   }
-
-  def toJsonLDDocument(
-    targetSchema: ApiV2Schema,
-    settings: KnoraSettingsImpl,
-    schemaOptions: Set[SchemaOption]
-  ): JsonLDDocument =
-    toOntologySchema(targetSchema).generateJsonLD(targetSchema)
 }
 
 /**
@@ -2171,53 +2170,11 @@ case class PredicateInfoV2(predicateIri: SmartIri, objects: Seq[OntologyLiteralV
  */
 object Cardinality extends Enumeration {
 
-  /**
-   * Represents information about an OWL cardinality.
-   *
-   * @param owlCardinalityIri   the IRI of the OWL cardinality, which must be a member of the set
-   *                            [[OntologyConstants.Owl.cardinalityOWLRestrictions]].
-   * @param owlCardinalityValue the value of the OWL cardinality, which must be 0 or 1.
-   * @param guiOrder            the SALSAH GUI order.
-   * @return a [[Value]].
-   */
-  case class OwlCardinalityInfo(owlCardinalityIri: IRI, owlCardinalityValue: Int, guiOrder: Option[Int] = None) {
-    if (!OntologyConstants.Owl.cardinalityOWLRestrictions.contains(owlCardinalityIri)) {
-      throw InconsistentRepositoryDataException(s"Invalid OWL cardinality property: $owlCardinalityIri")
-    }
-
-    if (!(owlCardinalityValue == 0 || owlCardinalityValue == 1)) {
-      throw InconsistentRepositoryDataException(s"Invalid OWL cardinality value: $owlCardinalityValue")
-    }
-
-    override def toString: String = s"<$owlCardinalityIri> $owlCardinalityValue"
-
-    def equalsWithoutGuiOrder(that: OwlCardinalityInfo): Boolean =
-      owlCardinalityIri == that.owlCardinalityIri && owlCardinalityValue == that.owlCardinalityValue
-  }
-
-  /**
-   * Represents a Knora cardinality with an optional SALSAH GUI order.
-   *
-   * @param cardinality the Knora cardinality.
-   * @param guiOrder    the SALSAH GUI order.
-   */
-  case class KnoraCardinalityInfo(cardinality: Value, guiOrder: Option[Int] = None) {
-    override def toString: String = guiOrder match {
-      case Some(definedGuiOrder) => s"$cardinality (guiOrder $definedGuiOrder)"
-      case None                  => cardinality.toString
-    }
-
-    def equalsWithoutGuiOrder(that: KnoraCardinalityInfo): Boolean =
-      that.cardinality == cardinality
-  }
-
   type Cardinality = Value
-
-  val MayHaveOne: Value   = Value(0, "0-1")
-  val MayHaveMany: Value  = Value(1, "0-n")
-  val MustHaveOne: Value  = Value(2, "1")
-  val MustHaveSome: Value = Value(3, "1-n")
-
+  val MayHaveOne: Value            = Value(0, "0-1")
+  val MayHaveMany: Value           = Value(1, "0-n")
+  val MustHaveOne: Value           = Value(2, "1")
+  val MustHaveSome: Value          = Value(3, "1-n")
   val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
   /**
@@ -2235,7 +2192,6 @@ object Cardinality extends Enumeration {
       owlCardinalityValue = 1
     )
   )
-
   private val owlCardinality2KnoraCardinalityMap: Map[OwlCardinalityInfo, Value] =
     knoraCardinality2OwlCardinalityMap.map { case (knoraC, owlC) =>
       (owlC, knoraC)
@@ -2302,6 +2258,46 @@ object Cardinality extends Enumeration {
         case MustHaveSome => directCardinality == MustHaveOne
       }
     }
+
+  /**
+   * Represents information about an OWL cardinality.
+   *
+   * @param owlCardinalityIri   the IRI of the OWL cardinality, which must be a member of the set
+   *                            [[OntologyConstants.Owl.cardinalityOWLRestrictions]].
+   * @param owlCardinalityValue the value of the OWL cardinality, which must be 0 or 1.
+   * @param guiOrder            the SALSAH GUI order.
+   * @return a [[Value]].
+   */
+  case class OwlCardinalityInfo(owlCardinalityIri: IRI, owlCardinalityValue: Int, guiOrder: Option[Int] = None) {
+    if (!OntologyConstants.Owl.cardinalityOWLRestrictions.contains(owlCardinalityIri)) {
+      throw InconsistentRepositoryDataException(s"Invalid OWL cardinality property: $owlCardinalityIri")
+    }
+
+    if (!(owlCardinalityValue == 0 || owlCardinalityValue == 1)) {
+      throw InconsistentRepositoryDataException(s"Invalid OWL cardinality value: $owlCardinalityValue")
+    }
+
+    override def toString: String = s"<$owlCardinalityIri> $owlCardinalityValue"
+
+    def equalsWithoutGuiOrder(that: OwlCardinalityInfo): Boolean =
+      owlCardinalityIri == that.owlCardinalityIri && owlCardinalityValue == that.owlCardinalityValue
+  }
+
+  /**
+   * Represents a Knora cardinality with an optional SALSAH GUI order.
+   *
+   * @param cardinality the Knora cardinality.
+   * @param guiOrder    the SALSAH GUI order.
+   */
+  case class KnoraCardinalityInfo(cardinality: Value, guiOrder: Option[Int] = None) {
+    override def toString: String = guiOrder match {
+      case Some(definedGuiOrder) => s"$cardinality (guiOrder $definedGuiOrder)"
+      case None                  => cardinality.toString
+    }
+
+    def equalsWithoutGuiOrder(that: KnoraCardinalityInfo): Boolean =
+      that.cardinality == cardinality
+  }
 }
 
 /**
@@ -2353,18 +2349,6 @@ sealed trait EntityInfoContentV2 {
    * @return all the values of `rdf:type` for this entity, sorted for determinism.
    */
   def getRdfTypes: Seq[SmartIri]
-
-  /**
-   * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
-   * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
-   * read back from the triplestore (in which predicate objects are not escaped).
-   *
-   * @return the predicates of this [[EntityInfoContentV2]], with their objects unescaped.
-   */
-  protected def unescapePredicateObjects: Map[SmartIri, PredicateInfoV2] =
-    predicates.map { case (predicateIri, predicateInfo) =>
-      predicateIri -> predicateInfo.unescape
-    }
 
   /**
    * Gets a predicate and its object from an entity in a specific language.
@@ -2440,22 +2424,6 @@ sealed trait EntityInfoContentV2 {
     }
 
   /**
-   * Returns all the IRI objects specified for a given predicate.
-   *
-   * @param predicateIri the IRI of the predicate.
-   * @return the predicate's IRI objects, or an empty set if this entity doesn't have the specified predicate.
-   */
-  def getPredicateIriObjects(predicateIri: SmartIri): Seq[SmartIri] =
-    predicates.get(predicateIri) match {
-      case Some(predicateInfo) =>
-        predicateInfo.objects.collect { case SmartIriLiteralV2(iri) =>
-          iri
-        }
-
-      case None => Seq.empty[SmartIri]
-    }
-
-  /**
    * Returns the first object specified as a boolean value for the given predicate, or `false` if the
    * entity doesn't have that predicate.
    *
@@ -2488,6 +2456,22 @@ sealed trait EntityInfoContentV2 {
   def getPredicateIriObject(predicateIri: SmartIri): Option[SmartIri] = getPredicateIriObjects(predicateIri).headOption
 
   /**
+   * Returns all the IRI objects specified for a given predicate.
+   *
+   * @param predicateIri the IRI of the predicate.
+   * @return the predicate's IRI objects, or an empty set if this entity doesn't have the specified predicate.
+   */
+  def getPredicateIriObjects(predicateIri: SmartIri): Seq[SmartIri] =
+    predicates.get(predicateIri) match {
+      case Some(predicateInfo) =>
+        predicateInfo.objects.collect { case SmartIriLiteralV2(iri) =>
+          iri
+        }
+
+      case None => Seq.empty[SmartIri]
+    }
+
+  /**
    * Returns all the objects specified for a given predicate, along with the language tag of each object.
    *
    * @param predicateIri the IRI of the predicate.
@@ -2502,19 +2486,24 @@ sealed trait EntityInfoContentV2 {
 
       case None => Map.empty[String, String]
     }
+
+  /**
+   * Undoes the SPARQL-escaping of predicate objects. This method is meant to be used after an update, when the
+   * input (whose predicate objects have been escaped for use in SPARQL) needs to be compared with the updated data
+   * read back from the triplestore (in which predicate objects are not escaped).
+   *
+   * @return the predicates of this [[EntityInfoContentV2]], with their objects unescaped.
+   */
+  protected def unescapePredicateObjects: Map[SmartIri, PredicateInfoV2] =
+    predicates.map { case (predicateIri, predicateInfo) =>
+      predicateIri -> predicateInfo.unescape
+    }
 }
 
 /**
  * Processes predicates from a JSON-LD class or property definition.
  */
 object EntityInfoContentV2 {
-  private def stringToLiteral(str: String): StringLiteralV2 = {
-    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-    StringLiteralV2(
-      stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid predicate object: $str"))
-    )
-  }
 
   /**
    * Processes predicates from a JSON-LD class or property definition. Converts `@type` to `rdf:type`. Ignores
@@ -2622,6 +2611,14 @@ object EntityInfoContentV2 {
       predicateIri -> predicateInfo
     } + rdfType
   }
+
+  private def stringToLiteral(str: String): StringLiteralV2 = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    StringLiteralV2(
+      stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid predicate object: $str"))
+    )
+  }
 }
 
 /**
@@ -2635,13 +2632,6 @@ sealed trait ReadEntityInfoV2 {
   val entityInfoContent: EntityInfoContentV2
 
   protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
-  /**
-   * Returns the contents of a JSON-LD object containing non-language-specific information about the entity.
-   *
-   * @param targetSchema the API v2 schema in which the response will be returned.
-   */
-  protected def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue]
 
   /**
    * Returns a JSON-LD object representing the entity, with language-specific information provided in a single language.
@@ -2699,6 +2689,13 @@ sealed trait ReadEntityInfoV2 {
 
     JsonLDObject(getNonLanguageSpecific(targetSchema) ++ labels ++ comments)
   }
+
+  /**
+   * Returns the contents of a JSON-LD object containing non-language-specific information about the entity.
+   *
+   * @param targetSchema the API v2 schema in which the response will be returned.
+   */
+  protected def getNonLanguageSpecific(targetSchema: ApiV2Schema): Map[IRI, JsonLDValue]
 }
 
 /**

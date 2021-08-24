@@ -19,16 +19,16 @@
 
 package org.knora.webapi.routing.admin.permissions
 
-import java.util.UUID
-
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
-import javax.ws.rs.Path
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+
+import java.util.UUID
+import javax.ws.rs.Path
 
 object UpdatePermissionRouteADM {
   val PermissionsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "permissions")
@@ -44,8 +44,8 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
   import UpdatePermissionRouteADM._
 
   /**
-    * Returns the route.
-    */
+   * Returns the route.
+   */
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     updatePermissionGroup(featureFactoryConfig) ~
       updatePermissionHasPermissions(featureFactoryConfig) ~
@@ -53,8 +53,8 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
       updatePermissionProperty(featureFactoryConfig)
 
   /**
-    * Update a permission's group
-    */
+   * Update a permission's group
+   */
   private def updatePermissionGroup(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(PermissionsBasePath / Segment / "group") { iri =>
       put {
@@ -64,16 +64,15 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
 
           val requestMessage = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          } yield
-            PermissionChangeGroupRequestADM(
-              permissionIri = permissionIri,
-              changePermissionGroupRequest = apiRequest,
-              requestingUser = requestingUser,
-              apiRequestID = UUID.randomUUID()
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
+          } yield PermissionChangeGroupRequestADM(
+            permissionIri = permissionIri,
+            changePermissionGroupRequest = apiRequest,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
@@ -88,8 +87,8 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-    * Update a permission's set of hasPermissions.
-    */
+   * Update a permission's set of hasPermissions.
+   */
   private def updatePermissionHasPermissions(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(PermissionsBasePath / Segment / "hasPermissions") { iri =>
       put {
@@ -99,16 +98,15 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
 
           val requestMessage = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          } yield
-            PermissionChangeHasPermissionsRequestADM(
-              permissionIri = permissionIri,
-              changePermissionHasPermissionsRequest = apiRequest,
-              requestingUser = requestingUser,
-              apiRequestID = UUID.randomUUID()
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
+          } yield PermissionChangeHasPermissionsRequestADM(
+            permissionIri = permissionIri,
+            changePermissionHasPermissionsRequest = apiRequest,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
@@ -123,8 +121,8 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-    * Update a doap permission by setting it for a new resource class
-    */
+   * Update a doap permission by setting it for a new resource class
+   */
   private def updatePermissionResourceClass(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(PermissionsBasePath / Segment / "resourceClass") { iri =>
       put {
@@ -134,16 +132,15 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
 
           val requestMessage = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          } yield
-            PermissionChangeResourceClassRequestADM(
-              permissionIri = permissionIri,
-              changePermissionResourceClassRequest = apiRequest,
-              requestingUser = requestingUser,
-              apiRequestID = UUID.randomUUID()
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
+          } yield PermissionChangeResourceClassRequestADM(
+            permissionIri = permissionIri,
+            changePermissionResourceClassRequest = apiRequest,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
@@ -158,8 +155,8 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-    * Update a doap permission by setting it for a new property class
-    */
+   * Update a doap permission by setting it for a new property class
+   */
   private def updatePermissionProperty(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(PermissionsBasePath / Segment / "property") { iri =>
       put {
@@ -169,16 +166,15 @@ class UpdatePermissionRouteADM(routeData: KnoraRouteData)
 
           val requestMessage = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          } yield
-            PermissionChangePropertyRequestADM(
-              permissionIri = permissionIri,
-              changePermissionPropertyRequest = apiRequest,
-              requestingUser = requestingUser,
-              apiRequestID = UUID.randomUUID()
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
+          } yield PermissionChangePropertyRequestADM(
+            permissionIri = permissionIri,
+            changePermissionPropertyRequest = apiRequest,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,

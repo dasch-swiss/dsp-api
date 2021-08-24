@@ -25,21 +25,21 @@ Knora is published as a set of [Docker](https://www.docker.com) images under the
 The following Docker images are published:
 
 - Knora-API:
-  - https://hub.docker.com/r/daschswiss/knora-api
+    - https://hub.docker.com/r/daschswiss/knora-api
 - Jena Fuseki:
-  - https://hub.docker.com/r/daschswiss/knora-jena-fuseki
+    - https://hub.docker.com/r/daschswiss/knora-jena-fuseki
 - Sipi (includes Knora's Sipi scripts):
-  - https://hub.docker.com/r/daschswiss/knora-sipi
+    - https://hub.docker.com/r/daschswiss/knora-sipi
 - Salsah 1:
-  - https://hub.docker.com/r/daschswiss/knora-salsah1
+    - https://hub.docker.com/r/daschswiss/knora-salsah1
 - Salsah 2:
-  - https://hub.docker.com/r/daschswiss/knora-app-web
+    - https://hub.docker.com/r/daschswiss/knora-app-web
 
-Knora's Docker images are published automatically through Github CI each time a
-pull-request is merged into the `main` branch.
+Knora's Docker images are published automatically through Github CI each time a pull-request is merged into the `main`
+branch.
 
-Each image is tagged with a version number, where the version is derived by
-using the result of `git describe`. The describe version is built from the
+Each image is tagged with a version number, where the version is derived by using the result of `git describe`. The
+describe version is built from the
 `last tag + number of commits since tag + short hash`, e.g., `8.0.0-7-ga7827e9`.
 
 The images can be published locally by running:

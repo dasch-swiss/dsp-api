@@ -57,16 +57,6 @@ class StoreManager(appActor: ActorRef, cs: CacheService) extends Actor with Acto
     system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   /**
-   * The Knora settings.
-   */
-  protected val settings: KnoraSettingsImpl = KnoraSettings(system)
-
-  /**
-   * The default feature factory configuration.
-   */
-  protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(settings)
-
-  /**
    * Starts the Triplestore Manager Actor
    */
   protected lazy val triplestoreManager: ActorRef = makeActor(
@@ -95,6 +85,16 @@ class StoreManager(appActor: ActorRef, cs: CacheService) extends Actor with Acto
     Props(new CacheServiceManager(cs)).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     RedisManagerActorName
   )
+
+  /**
+   * The Knora settings.
+   */
+  protected val settings: KnoraSettingsImpl = KnoraSettings(system)
+
+  /**
+   * The default feature factory configuration.
+   */
+  protected val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(settings)
 
   def receive: Receive = LoggingReceive {
     case tripleStoreMessage: TriplestoreRequest    => triplestoreManager forward tripleStoreMessage

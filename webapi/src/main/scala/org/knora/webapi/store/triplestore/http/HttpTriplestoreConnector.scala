@@ -19,12 +19,6 @@
 
 package org.knora.webapi.store.triplestore.http
 
-import java.io.BufferedInputStream
-import java.net.URI
-import java.nio.file.{Files, Path, Paths, StandardCopyOption}
-import java.nio.charset.StandardCharsets
-import java.util
-
 import akka.actor.{Actor, ActorLogging, ActorSystem, Status}
 import akka.event.LoggingAdapter
 import org.apache.commons.lang3.StringUtils
@@ -55,9 +49,14 @@ import org.knora.webapi.util.ActorUtil._
 import org.knora.webapi.util.FileUtil
 import spray.json._
 
-import scala.jdk.CollectionConverters._
+import java.io.BufferedInputStream
+import java.net.URI
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path, Paths, StandardCopyOption}
+import java.util
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
+import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -65,20 +64,18 @@ import scala.util.{Failure, Success, Try}
  * `application.conf`.
  */
 class HttpTriplestoreConnector extends Actor with ActorLogging with InstrumentationSupport {
-
+  override val log: LoggingAdapter = akka.event.Logging(system, this.getClass.getName)
   // MIME type constants.
   private val mimeTypeApplicationJson              = "application/json"
   private val mimeTypeApplicationSparqlResultsJson = "application/sparql-results+json"
   private val mimeTypeTextTurtle                   = "text/turtle"
   private val mimeTypeApplicationSparqlUpdate      = "application/sparql-update"
-  private val mimeTypeApplicationNQuads            = "application/n-quads"
 
   private implicit val system: ActorSystem        = context.system
-  private val settings                            = KnoraSettings(system)
+  private val mimeTypeApplicationNQuads           = "application/n-quads"
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
-  override val log: LoggingAdapter                = akka.event.Logging(system, this.getClass.getName)
-
-  private val triplestoreType = settings.triplestoreType
+  private val settings                            = KnoraSettings(system)
+  private val triplestoreType                     = settings.triplestoreType
 
   private val targetHost: HttpHost = new HttpHost(settings.triplestoreHost, settings.triplestorePort, "http")
 
@@ -244,6 +241,121 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
         UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}")
       )
   }
+
+  /**
+   * Performs a SPARQL ASK query.
+   *
+   * @param sparql the SPARQL ASK query.
+   * @return a [[SparqlAskResponse]].
+   */
+  def sparqlHttpAsk(sparql: String): Try[SparqlAskResponse] =
+    for {
+      resultString <- getSparqlHttpResponse(sparql, isUpdate = false)
+      _             = log.debug("sparqlHttpAsk - resultString: {}", resultString)
+
+      result: Boolean = resultString.parseJson.asJsObject.getFields("boolean").head.convertTo[Boolean]
+    } yield SparqlAskResponse(result)
+
+  def returnResponseAsString(response: CloseableHttpResponse): String =
+    Option(response.getEntity) match {
+      case None => ""
+
+      case Some(responseEntity) =>
+        EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)
+    }
+
+  def returnGraphDataAsTurtle(graphIri: IRI)(response: CloseableHttpResponse): NamedGraphDataResponse =
+    Option(response.getEntity) match {
+      case None =>
+        log.error(s"Triplestore returned no content for graph $graphIri")
+        throw TriplestoreResponseException(s"Triplestore returned no content for graph $graphIri")
+
+      case Some(responseEntity: HttpEntity) =>
+        NamedGraphDataResponse(
+          turtle = EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)
+        )
+    }
+
+  def returnUploadResponse: CloseableHttpResponse => RepositoryUploadedResponse = { _ =>
+    RepositoryUploadedResponse()
+  }
+
+  def returnInsertGraphDataResponse(
+    graphName: String
+  )(response: CloseableHttpResponse): InsertGraphDataContentResponse =
+    Option(response.getEntity) match {
+      case None =>
+        log.error(s"$graphName could not be inserted into Triplestore.")
+        throw TriplestoreResponseException(s"$graphName could not be inserted into Triplestore.")
+
+      case Some(_) =>
+        InsertGraphDataContentResponse()
+    }
+
+  /**
+   * Writes an HTTP response to a file.
+   *
+   * @param outputFile             the output file.
+   * @param featureFactoryConfig   the feature factory configuration.
+   * @param maybeGraphIriAndFormat a graph IRI and quad format for the output file. If defined, the response
+   *                               is parsed as Turtle and converted to the output format, with the graph IRI
+   *                               added to each statement. Otherwise, the response is written as-is to the
+   *                               output file.
+   * @param response               the response to be read.
+   * @return a [[FileWrittenResponse]].
+   */
+  def writeResponseFile(
+    outputFile: Path,
+    featureFactoryConfig: FeatureFactoryConfig,
+    maybeGraphIriAndFormat: Option[GraphIriAndFormat] = None
+  )(response: CloseableHttpResponse): FileWrittenResponse =
+    Option(response.getEntity) match {
+      case Some(responseEntity: HttpEntity) =>
+        // Are we converting the response to a quad format?
+        maybeGraphIriAndFormat match {
+          case Some(GraphIriAndFormat(graphIri, quadFormat)) =>
+            // Yes. Stream the HTTP entity to a temporary Turtle file.
+            val turtleFile = Paths.get(outputFile.toString + ".ttl")
+            Files.copy(responseEntity.getContent, turtleFile, StandardCopyOption.REPLACE_EXISTING)
+
+            // Convert the Turtle to the output format.
+
+            val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
+
+            val processFileTry: Try[Unit] = Try {
+              rdfFormatUtil.turtleToQuadsFile(
+                rdfSource = RdfInputStreamSource(new BufferedInputStream(Files.newInputStream(turtleFile))),
+                graphIri = graphIri,
+                outputFile = outputFile,
+                outputFormat = quadFormat
+              )
+            }
+
+            Files.delete(turtleFile)
+
+            processFileTry match {
+              case Success(_)  => ()
+              case Failure(ex) => throw ex
+            }
+
+          case None =>
+            // No. Stream the HTTP entity directly to the output file.
+            Files.copy(responseEntity.getContent, outputFile)
+        }
+
+        FileWrittenResponse()
+
+      case None =>
+        maybeGraphIriAndFormat match {
+          case Some(GraphIriAndFormat(graphIri, _)) =>
+            log.error(s"Triplestore returned no content for graph $graphIri")
+            throw TriplestoreResponseException(s"Triplestore returned no content for graph $graphIri")
+
+          case None =>
+            log.error(s"Triplestore returned no content for repository dump")
+            throw TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
+        }
+    }
 
   /**
    * Simulates a read timeout.
@@ -464,20 +576,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
       // If we're using GraphDB, update the full-text search index.
       _ = updateLuceneIndex()
     } yield SparqlUpdateResponse()
-
-  /**
-   * Performs a SPARQL ASK query.
-   *
-   * @param sparql the SPARQL ASK query.
-   * @return a [[SparqlAskResponse]].
-   */
-  def sparqlHttpAsk(sparql: String): Try[SparqlAskResponse] =
-    for {
-      resultString <- getSparqlHttpResponse(sparql, isUpdate = false)
-      _             = log.debug("sparqlHttpAsk - resultString: {}", resultString)
-
-      result: Boolean = resultString.parseJson.asJsObject.getFields("boolean").head.convertTo[Boolean]
-    } yield SparqlAskResponse(result)
 
   private def resetTripleStoreContent(
     rdfDataObjects: Seq[RdfDataObject],
@@ -1122,42 +1220,6 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
     }
   }
 
-  def returnResponseAsString(response: CloseableHttpResponse): String =
-    Option(response.getEntity) match {
-      case None => ""
-
-      case Some(responseEntity) =>
-        EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)
-    }
-
-  def returnGraphDataAsTurtle(graphIri: IRI)(response: CloseableHttpResponse): NamedGraphDataResponse =
-    Option(response.getEntity) match {
-      case None =>
-        log.error(s"Triplestore returned no content for graph $graphIri")
-        throw TriplestoreResponseException(s"Triplestore returned no content for graph $graphIri")
-
-      case Some(responseEntity: HttpEntity) =>
-        NamedGraphDataResponse(
-          turtle = EntityUtils.toString(responseEntity, StandardCharsets.UTF_8)
-        )
-    }
-
-  def returnUploadResponse: CloseableHttpResponse => RepositoryUploadedResponse = { _ =>
-    RepositoryUploadedResponse()
-  }
-
-  def returnInsertGraphDataResponse(
-    graphName: String
-  )(response: CloseableHttpResponse): InsertGraphDataContentResponse =
-    Option(response.getEntity) match {
-      case None =>
-        log.error(s"$graphName could not be inserted into Triplestore.")
-        throw TriplestoreResponseException(s"$graphName could not be inserted into Triplestore.")
-
-      case Some(_) =>
-        InsertGraphDataContentResponse()
-    }
-
   /**
    * Represents a named graph IRI and the file format that the graph should be written in.
    *
@@ -1165,69 +1227,4 @@ class HttpTriplestoreConnector extends Actor with ActorLogging with Instrumentat
    * @param quadFormat the file format.
    */
   case class GraphIriAndFormat(graphIri: IRI, quadFormat: QuadFormat)
-
-  /**
-   * Writes an HTTP response to a file.
-   *
-   * @param outputFile             the output file.
-   * @param featureFactoryConfig   the feature factory configuration.
-   * @param maybeGraphIriAndFormat a graph IRI and quad format for the output file. If defined, the response
-   *                               is parsed as Turtle and converted to the output format, with the graph IRI
-   *                               added to each statement. Otherwise, the response is written as-is to the
-   *                               output file.
-   * @param response               the response to be read.
-   * @return a [[FileWrittenResponse]].
-   */
-  def writeResponseFile(
-    outputFile: Path,
-    featureFactoryConfig: FeatureFactoryConfig,
-    maybeGraphIriAndFormat: Option[GraphIriAndFormat] = None
-  )(response: CloseableHttpResponse): FileWrittenResponse =
-    Option(response.getEntity) match {
-      case Some(responseEntity: HttpEntity) =>
-        // Are we converting the response to a quad format?
-        maybeGraphIriAndFormat match {
-          case Some(GraphIriAndFormat(graphIri, quadFormat)) =>
-            // Yes. Stream the HTTP entity to a temporary Turtle file.
-            val turtleFile = Paths.get(outputFile.toString + ".ttl")
-            Files.copy(responseEntity.getContent, turtleFile, StandardCopyOption.REPLACE_EXISTING)
-
-            // Convert the Turtle to the output format.
-
-            val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
-
-            val processFileTry: Try[Unit] = Try {
-              rdfFormatUtil.turtleToQuadsFile(
-                rdfSource = RdfInputStreamSource(new BufferedInputStream(Files.newInputStream(turtleFile))),
-                graphIri = graphIri,
-                outputFile = outputFile,
-                outputFormat = quadFormat
-              )
-            }
-
-            Files.delete(turtleFile)
-
-            processFileTry match {
-              case Success(_)  => ()
-              case Failure(ex) => throw ex
-            }
-
-          case None =>
-            // No. Stream the HTTP entity directly to the output file.
-            Files.copy(responseEntity.getContent, outputFile)
-        }
-
-        FileWrittenResponse()
-
-      case None =>
-        maybeGraphIriAndFormat match {
-          case Some(GraphIriAndFormat(graphIri, _)) =>
-            log.error(s"Triplestore returned no content for graph $graphIri")
-            throw TriplestoreResponseException(s"Triplestore returned no content for graph $graphIri")
-
-          case None =>
-            log.error(s"Triplestore returned no content for repository dump")
-            throw TriplestoreResponseException(s"Triplestore returned no content for for repository dump")
-        }
-    }
 }

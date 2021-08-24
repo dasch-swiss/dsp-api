@@ -19,15 +19,14 @@
 
 package org.knora.webapi.contributors
 
-import java.net.{URL, URLConnection}
-import java.nio.file.{Path, Paths}
-
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.twirl.Contributor
 import org.knora.webapi.util.FileUtil
 import org.rogach.scallop.{ScallopConf, ScallopOption}
 import spray.json.{JsArray, JsNull, JsNumber, JsObject, JsString, JsValue, JsonParser}
 
+import java.net.{URL, URLConnection}
+import java.nio.file.{Path, Paths}
 import scala.io.Source
 
 /**
@@ -41,15 +40,7 @@ object GenerateContributorsFile extends App {
   val defaultOutputFile = "Contributors.md"
 
   // Command-line args
-
-  private val conf             = new GenerateContributorsFileConf(args.toIndexedSeq)
-  private val token            = conf.token.toOption
-  private val outputFile: Path = Paths.get(conf.output())
-
-  // Get the list of contributors.
-
   val contributorsJson = getFromGitHubApi(contributorsUrl)
-
   val contributors: Vector[Contributor] = contributorsJson.asInstanceOf[JsArray].elements.map {
     case elem: JsObject =>
       Contributor(
@@ -61,9 +52,6 @@ object GenerateContributorsFile extends App {
 
     case other => throw AssertionException(s"Expected JsObject, got $other")
   }
-
-  // Get the names of the contributors.
-
   val contributorsWithNames: Seq[Contributor] = contributors.map { contributor =>
     val userJson = getFromGitHubApi(contributor.apiUrl)
 
@@ -78,12 +66,17 @@ object GenerateContributorsFile extends App {
     )
   }
 
+  // Get the list of contributors.
   // Sort them by number of contributions.
   val contributorsSorted = contributorsWithNames.sortBy(_.contributions).reverse
-
   // Generate Markdown.
   val contributorsText: String =
     org.knora.webapi.messages.twirl.queries.util.txt.generateContributorsMarkdown(contributorsSorted).toString
+
+  // Get the names of the contributors.
+  private val conf             = new GenerateContributorsFileConf(args.toIndexedSeq)
+  private val token            = conf.token.toOption
+  private val outputFile: Path = Paths.get(conf.output())
 
   // Write Contributors.md.
   FileUtil.writeTextFile(file = outputFile, content = contributorsText)

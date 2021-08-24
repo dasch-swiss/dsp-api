@@ -24,8 +24,8 @@ $ ../../Sipi/build/sipi --config config/sipi.knora-local-config.lua
 
 ### Starting Sipi with `no-auth` configuration
 
-The `no-auth` configuration omits authorization callbacks to Knora, thus allowing to serve images for
-which there is no corresponding resource inside Knora. 
+The `no-auth` configuration omits authorization callbacks to Knora, thus allowing to serve images for which there is no
+corresponding resource inside Knora.
 
 ```
 $ export DOCKERHOST=LOCAL_IP_ADDRESS

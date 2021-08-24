@@ -19,19 +19,19 @@
 
 package org.knora.webapi.messages.util.rdf.jenaimpl
 
-import java.nio.file.Path
-
 import org.apache.jena
 import org.apache.jena.query.DatasetFactory
 import org.knora.webapi.messages.util.rdf._
 
+import java.nio.file.Path
+
 /**
-  * Performs SHACL validation using Jena.
-  *
-  * @param baseDir       the base directory that SHACL graphs are loaded from.
-  * @param rdfFormatUtil an [[JenaFormatUtil]].
-  * @param nodeFactory   a [[JenaNodeFactory]].
-  */
+ * Performs SHACL validation using Jena.
+ *
+ * @param baseDir       the base directory that SHACL graphs are loaded from.
+ * @param rdfFormatUtil an [[JenaFormatUtil]].
+ * @param nodeFactory   a [[JenaNodeFactory]].
+ */
 class JenaShaclValidator(baseDir: Path, rdfFormatUtil: JenaFormatUtil, private val nodeFactory: JenaNodeFactory)
     extends AbstractShaclValidator[jena.shacl.Shapes](baseDir, rdfFormatUtil) {
 
@@ -61,7 +61,6 @@ class JenaShaclValidator(baseDir: Path, rdfFormatUtil: JenaFormatUtil, private v
     }
   }
 
-  override def rdfModelToShaclGraph(rdfModel: RdfModel): jena.shacl.Shapes = {
+  override def rdfModelToShaclGraph(rdfModel: RdfModel): jena.shacl.Shapes =
     jena.shacl.Shapes.parse(rdfModel.asJenaDataset.asDatasetGraph.getDefaultGraph)
-  }
 }

@@ -34,13 +34,11 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 
 - `GET: /admin/groups/<groupIri>/members` : return all group members
 
-
 ## Group Operations
 
 ### Create Group
 
-- Required permission: SystemAdmin / hasProjectAllAdminPermission
-/ hasProjectAllGroupAdminPermission
+- Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission
 - Required information: name (unique inside project), project IRI
 - Optional information: group description
 - Returns information about the newly created group
@@ -58,7 +56,8 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
     }
 ```
 
-Additionally, each group can have an optional custom IRI (of @ref:[Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) 
+Additionally, each group can have an optional custom IRI (of @ref:[Knora IRI](../api-v2/knora-iris.md#iris-for-data)
+form)
 specified by the `id` in the request body as below:
 
 ```json
@@ -74,9 +73,8 @@ specified by the `id` in the request body as below:
 
 ### Update group information
 
-- Required permission: SystemAdmin / hasProjectAllAdminPermission
-/ hasProjectAllGroupAdminPermission /
-hasProjectRestrictedGroupAdminPermission (for this group)
+- Required permission: SystemAdmin / hasProjectAllAdminPermission / hasProjectAllGroupAdminPermission /
+  hasProjectRestrictedGroupAdminPermission (for this group)
 - Changeable information: `name`, `description`, `selfjoin`
 - TypeScript Docs: groupFormats - ChangeGroupApiRequestADM
 - PUT: `/admin/groups/<groupIri>`
@@ -108,7 +106,7 @@ hasProjectRestrictedGroupAdminPermission (for this group)
 
 - Required permission: SystemAdmin / hasProjectAllAdminPermission
 - Remark: The same as changing the groups `status` to
-`false`. To un-delete, set `status` to `true`.
+  `false`. To un-delete, set `status` to `true`.
 - DELETE: `/admin/groups/<groupIri>`
 
 Example Group Information stored in admin named graph: :

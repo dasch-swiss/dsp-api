@@ -54,7 +54,7 @@ function pre_flight(prefix, identifier, cookie)
 
     knora_cookie_header = nil
 
-    if cookie ~='' then
+    if cookie ~= '' then
 
         -- tries to extract the Knora session id from the cookie:
         -- gets the digits between "sid=" and the closing ";" (only given in case of several key value pairs)
@@ -88,7 +88,7 @@ function pre_flight(prefix, identifier, cookie)
     end
     server.log("webapi_port: " .. webapi_port, server.loglevel.LOG_DEBUG)
 
-    knora_url = 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' ..  identifier
+    knora_url = 'http://' .. webapi_hostname .. ':' .. webapi_port .. '/admin/files/' .. prefix .. '/' .. identifier
 
     -- print("knora_url: " .. knora_url)
     server.log("pre_flight - knora_url: " .. knora_url, server.loglevel.LOG_DEBUG)

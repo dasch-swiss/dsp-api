@@ -34,15 +34,6 @@ class IIIFManager extends Actor with ActorLogging {
   this: ActorMaker =>
 
   /**
-   * Constructs the [[SipiConnector]] actor (pool).
-   */
-  protected final def makeDefaultSipiConnector: ActorRef =
-    makeActor(
-      FromConfig.props(Props[SipiConnector]()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-      SipiConnectorActorName
-    )
-
-  /**
    * Subclasses can override this member to substitute a custom actor instead of the default SipiConnector.
    */
   protected lazy val sipiConnector: ActorRef = makeDefaultSipiConnector
@@ -52,5 +43,14 @@ class IIIFManager extends Actor with ActorLogging {
     case other =>
       sender() ! Status.Failure(UnexpectedMessageException(s"SipiManager received an unexpected message: $other"))
   }
+
+  /**
+   * Constructs the [[SipiConnector]] actor (pool).
+   */
+  protected final def makeDefaultSipiConnector: ActorRef =
+    makeActor(
+      FromConfig.props(Props[SipiConnector]()).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
+      SipiConnectorActorName
+    )
 
 }
