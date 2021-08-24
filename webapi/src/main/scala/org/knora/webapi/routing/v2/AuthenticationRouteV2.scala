@@ -31,28 +31,25 @@ import org.knora.webapi.messages.v2.routing.authenticationmessages.{
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData}
 
 /**
-  * A route providing API v2 authentication support. It allows the creation of "sessions", which are used in the SALSAH app.
-  */
+ * A route providing API v2 authentication support. It allows the creation of "sessions", which are used in the SALSAH app.
+ */
 class AuthenticationRouteV2(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
     with Authenticator
     with AuthenticationV2JsonProtocol {
 
   /**
-    * Returns the route.
-    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
-
+   * Returns the route.
+   */
+  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     path("v2" / "authentication") {
       get { // authenticate credentials
         requestContext =>
-          {
-            requestContext.complete {
-              doAuthenticateV2(
-                requestContext = requestContext,
-                featureFactoryConfig = featureFactoryConfig
-              )
-            }
+          requestContext.complete {
+            doAuthenticateV2(
+              requestContext = requestContext,
+              featureFactoryConfig = featureFactoryConfig
+            )
           }
       } ~
         post { // login
@@ -95,10 +92,8 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
       path("v2" / "login") {
         get { // html login interface (necessary for IIIF Authentication API support)
           requestContext =>
-            {
-              requestContext.complete {
-                presentLoginFormV2(requestContext)
-              }
+            requestContext.complete {
+              presentLoginFormV2(requestContext)
             }
         } ~
           post { // called by html login interface (necessary for IIIF Authentication API support)
@@ -119,5 +114,4 @@ class AuthenticationRouteV2(routeData: KnoraRouteData)
             }
           }
       }
-  }
 }

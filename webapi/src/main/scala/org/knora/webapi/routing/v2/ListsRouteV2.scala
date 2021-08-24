@@ -30,13 +30,13 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 import scala.concurrent.Future
 
 /**
-  * Provides a function for API routes that deal with lists and nodes.
-  */
+ * Provides a function for API routes that deal with lists and nodes.
+ */
 class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   /**
-    * Returns the route.
-    */
+   * Returns the route.
+   */
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     getList(featureFactoryConfig) ~
       getNode(featureFactoryConfig)
@@ -48,17 +48,16 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
         requestContext =>
           val requestMessage: Future[ListGetRequestV2] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-            listIri: IRI = stringFormatter.validateAndEscapeIri(lIri,
-                                                                throw BadRequestException(s"Invalid list IRI: '$lIri'"))
-          } yield
-            ListGetRequestV2(
-              listIri = listIri,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
+            listIri: IRI =
+              stringFormatter.validateAndEscapeIri(lIri, throw BadRequestException(s"Invalid list IRI: '$lIri'"))
+          } yield ListGetRequestV2(
+            listIri = listIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
 
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessage,
@@ -80,17 +79,16 @@ class ListsRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
         requestContext =>
           val requestMessage: Future[NodeGetRequestV2] = for {
             requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-            nodeIri: IRI = stringFormatter.validateAndEscapeIri(nIri,
-                                                                throw BadRequestException(s"Invalid list IRI: '$nIri'"))
-          } yield
-            NodeGetRequestV2(
-              nodeIri = nodeIri,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser
-            )
+                                requestContext = requestContext,
+                                featureFactoryConfig = featureFactoryConfig
+                              )
+            nodeIri: IRI =
+              stringFormatter.validateAndEscapeIri(nIri, throw BadRequestException(s"Invalid list IRI: '$nIri'"))
+          } yield NodeGetRequestV2(
+            nodeIri = nodeIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
 
           RouteUtilV2.runRdfRouteWithFuture(
             requestMessageF = requestMessage,
