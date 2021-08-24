@@ -30,9 +30,8 @@ printf "\n\n${GREEN}${DELIMITER}Creating Lucene index${NO_COLOUR}\n\n"
 
 STATUS=$(curl -s -w '%{http_code}' -S -X POST -H "Content-Type:text/turtle" --data-binary @./graphdb-free-knora-test-index-config.ttl $GRAPHDB/repositories/knora-test/statements)
 
-if [ "$STATUS" == "204" ]
-then
-    printf "${GREEN}Lucene index built.${NO_COLOUR}\n\n"
+if [ "$STATUS" == "204" ]; then
+  printf "${GREEN}Lucene index built.${NO_COLOUR}\n\n"
 else
-    printf "${RED}Building of Lucene index failed: ${STATUS}${NO_COLOUR}\n\n"
+  printf "${RED}Building of Lucene index failed: ${STATUS}${NO_COLOUR}\n\n"
 fi

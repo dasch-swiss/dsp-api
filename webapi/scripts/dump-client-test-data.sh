@@ -3,15 +3,14 @@
 # Downloads client test data from Redis into a Zip file.
 
 # A pushd that produces no output.
-pushd () {
-    command pushd "$@" > /dev/null
+pushd() {
+  command pushd "$@" >/dev/null
 }
 
 # A popd that produces no output.
-popd () {
-    command popd "$@" > /dev/null
+popd() {
+  command popd "$@" >/dev/null
 }
-
 
 # The name of the Redis hash in which client test data has been collected.
 hash_name=client-test-data
@@ -36,10 +35,8 @@ mkdir -p $top_dir_path
 rm -f $zip_file_name
 
 # Iterate over the keys in the Redis hash.
-redis-cli hkeys $hash_name | while read relative_file_path
-do
-  if [ -n "$relative_file_path" ]
-  then
+redis-cli hkeys $hash_name | while read relative_file_path; do
+  if [ -n "$relative_file_path" ]; then
     # The absolute path of the file to be downloaded.
     abs_file_path="$top_dir_path/$relative_file_path"
 
@@ -48,7 +45,7 @@ do
     mkdir -p "$relative_dirs_to_create"
 
     # Download the file from Redis.
-    redis-cli hget $hash_name "$relative_file_path" > "$abs_file_path"
+    redis-cli hget $hash_name "$relative_file_path" >"$abs_file_path"
   fi
 done
 
@@ -64,16 +61,16 @@ mv $temp_dir/$zip_file_name .
 rm -rf $temp_dir
 
 # Remove the hash from Redis.
-redis-cli del $hash_name > /dev/null
+redis-cli del $hash_name >/dev/null
 
 # Make a temporary file to hold the file paths in the Zip file.
 temp_contents=$(mktemp)
 
 # Get the file paths from the Zip file.
-zipinfo -1 $zip_file_name | sort > $temp_contents
+zipinfo -1 $zip_file_name | sort >$temp_contents
 
 # Compare them to the expected file paths.
-diff -q $expected_contents_file $temp_contents > /dev/null
+diff -q $expected_contents_file $temp_contents >/dev/null
 diff_result=$?
 
 # Return an error if they're different.

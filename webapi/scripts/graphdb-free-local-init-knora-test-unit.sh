@@ -16,7 +16,7 @@ cat graphdb-drop-knora-test-unit-repository.ttl | $CONSOLE
 
 printf "\n${GREEN}${DELIMITER}Creating repository${NO_COLOUR}\n\n"
 
-sed -e 's@PIE_FILE@'"$PWD/KnoraRules.pie"'@' graphdb-free-knora-test-unit-repository-config.ttl.tmpl > graphdb-free-knora-test-unit-repository-config.ttl
+sed -e 's@PIE_FILE@'"$PWD/KnoraRules.pie"'@' graphdb-free-knora-test-unit-repository-config.ttl.tmpl >graphdb-free-knora-test-unit-repository-config.ttl
 
 curl -X POST -H "Content-Type:text/turtle" -T graphdb-free-knora-test-unit-repository-config.ttl "$GRAPHDB/repositories/SYSTEM/rdf-graphs/service?graph=http://www.knora.org/config-test-unit"
 
@@ -26,9 +26,8 @@ printf "${GREEN}Repository created.\n\n${DELIMITER}Creating Lucene Index${NO_COL
 
 STATUS=$(curl -s -w '%{http_code}' -S -X POST --data-urlencode 'update@./graphdb-knora-index-create.rq' $GRAPHDB/repositories/knora-test-unit/statements)
 
-if [ "$STATUS" == "204" ]
-then
-    printf "${GREEN}Lucene index built.${NO_COLOUR}\n\n"
+if [ "$STATUS" == "204" ]; then
+  printf "${GREEN}Lucene index built.${NO_COLOUR}\n\n"
 else
-    printf "${RED}Building of Lucene index failed: ${STATUS}${NO_COLOUR}\n\n"
+  printf "${RED}Building of Lucene index failed: ${STATUS}${NO_COLOUR}\n\n"
 fi

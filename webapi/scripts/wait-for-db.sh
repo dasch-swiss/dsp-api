@@ -20,7 +20,7 @@ while [[ $# -gt 0 ]]; do
     shift # past value
     ;;
 
-   -u | --username)
+  -u | --username)
     USER_NAME="$2"
     shift # past argument
     shift # past value

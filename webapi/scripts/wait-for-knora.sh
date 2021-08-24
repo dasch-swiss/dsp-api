@@ -3,59 +3,58 @@
 #set -x
 
 POSITIONAL=()
-while [[ $# -gt 0 ]]
-do
-key="$1"
+while [[ $# -gt 0 ]]; do
+  key="$1"
 
-case $key in
+  case $key in
 
-    -h|--host)
-      HOST="$2"
-      shift # past argument
-      shift # past value
-      ;;
+  -h | --host)
+    HOST="$2"
+    shift # past argument
+    shift # past value
+    ;;
 
-    -t|--timeout)
-      TIMEOUT="$2"
-      shift # past argument
-      shift # past value
-      ;;
+  -t | --timeout)
+    TIMEOUT="$2"
+    shift # past argument
+    shift # past value
+    ;;
 
-    *) # unknown option
-      POSITIONAL+=("$1") # save it in an array for later
-      shift # past argument
-      ;;
-esac
+  *) # unknown option
+    POSITIONAL+=("$1") # save it in an array for later
+    shift              # past argument
+    ;;
+  esac
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
 if [[ -z "${HOST}" ]]; then
-    HOST="localhost:3333"
+  HOST="localhost:3333"
 fi
 
 if [[ -z "${TIMEOUT}" ]]; then
-    TIMEOUT=360
+  TIMEOUT=360
 fi
 
 poll-knora() {
-    STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://${HOST}/health)
+  STATUS=$(curl -s -o /dev/null -w '%{http_code}' http://${HOST}/health)
 
-    if [ "${STATUS}" -eq 200 ]; then
-        echo "Knora started"
-        return 0
-    else
-        return 1
-    fi
+  if [ "${STATUS}" -eq 200 ]; then
+    echo "Knora started"
+    return 0
+  else
+    return 1
+  fi
 }
 
 attempt_counter=0
 
 until poll-knora; do
-    if [ ${attempt_counter} -eq ${TIMEOUT} ]; then
-      echo "Timed out waiting for Knora to start"
-      exit 1
-    fi
+  if [ ${attempt_counter} -eq ${TIMEOUT} ]; then
+    echo "Timed out waiting for Knora to start"
+    exit 1
+  fi
 
-    attempt_counter=$((attempt_counter+1))
-    sleep 1
+  attempt_counter=$((attempt_counter + 1))
+  sleep 1
 done

@@ -11,7 +11,7 @@ hash_name=client-test-data
 zip_file_name=client-test-data.zip
 
 # Remove the hash from Redis.
-redis-cli del $hash_name > /dev/null
+redis-cli del $hash_name >/dev/null
 
 # Remove any existing client test data Zip file.
 rm -f $zip_file_name
