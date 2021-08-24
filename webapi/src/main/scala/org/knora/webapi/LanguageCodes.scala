@@ -20,8 +20,8 @@
 package org.knora.webapi
 
 /**
-  * Constants for language codes.
-  */
+ * Constants for language codes.
+ */
 object LanguageCodes {
   val DE: String = "de"
   val EN: String = "en"

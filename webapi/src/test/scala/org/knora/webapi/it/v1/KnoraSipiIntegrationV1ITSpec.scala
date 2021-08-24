@@ -19,9 +19,6 @@
 
 package org.knora.webapi.it.v1
 
-import java.net.URLEncoder
-import java.nio.file.{Files, Paths, StandardCopyOption}
-
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.http.scaladsl.unmarshalling.Unmarshal
@@ -36,6 +33,8 @@ import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 import spray.json._
 
+import java.net.URLEncoder
+import java.nio.file.{Files, Paths, StandardCopyOption}
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 import scala.xml._
@@ -43,14 +42,14 @@ import scala.xml.transform.{RewriteRule, RuleTransformer}
 
 object KnoraSipiIntegrationV1ITSpec {
   val config: Config = ConfigFactory.parseString("""
-          |akka.loglevel = "DEBUG"
-          |akka.stdout-loglevel = "DEBUG"
+                                                   |akka.loglevel = "DEBUG"
+                                                   |akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
 
 /**
-  * End-to-End (E2E) test specification for testing Knora-Sipi integration.
-  */
+ * End-to-End (E2E) test specification for testing Knora-Sipi integration.
+ */
 class KnoraSipiIntegrationV1ITSpec
     extends ITKnoraLiveSpec(KnoraSipiIntegrationV1ITSpec.config)
     with AuthenticationV2JsonProtocol
@@ -61,80 +60,78 @@ class KnoraSipiIntegrationV1ITSpec
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
-  private val userEmail = SharedTestDataADM.rootUser.email
-  private val password = SharedTestDataADM.testPass
-  private val pathToChlaus = "test_data/test_route/images/Chlaus.jpg"
-  private val pathToMarbles = "test_data/test_route/images/marbles.tif"
+  private val userEmail               = SharedTestDataADM.rootUser.email
+  private val password                = SharedTestDataADM.testPass
+  private val pathToChlaus            = "test_data/test_route/images/Chlaus.jpg"
+  private val pathToMarbles           = "test_data/test_route/images/marbles.tif"
   private val pathToXSLTransformation = "test_data/test_route/texts/letterToHtml.xsl"
-  private val pathToMappingWithXSLT = "test_data/test_route/texts/mappingForLetterWithXSLTransformation.xml"
-  private val secondPageIri = new MutableTestIri
+  private val pathToMappingWithXSLT   = "test_data/test_route/texts/mappingForLetterWithXSLTransformation.xml"
+  private val secondPageIri           = new MutableTestIri
 
-  private val pathToBEOLBodyXSLTransformation = "test_data/test_route/texts/beol/standoffToTEI.xsl"
-  private val pathToBEOLStandoffTEIMapping = "test_data/test_route/texts/beol/BEOLTEIMapping.xml"
+  private val pathToBEOLBodyXSLTransformation   = "test_data/test_route/texts/beol/standoffToTEI.xsl"
+  private val pathToBEOLStandoffTEIMapping      = "test_data/test_route/texts/beol/BEOLTEIMapping.xml"
   private val pathToBEOLHeaderXSLTransformation = "test_data/test_route/texts/beol/header.xsl"
-  private val pathToBEOLGravsearchTemplate = "test_data/test_route/texts/beol/gravsearch.txt"
-  private val pathToBEOLLetterMapping = "test_data/test_route/texts/beol/testLetter/beolMapping.xml"
-  private val pathToBEOLBulkXML = "test_data/test_route/texts/beol/testLetter/bulk.xml"
-  private val letterIri = new MutableTestIri
-  private val gravsearchTemplateIri = new MutableTestIri
+  private val pathToBEOLGravsearchTemplate      = "test_data/test_route/texts/beol/gravsearch.txt"
+  private val pathToBEOLLetterMapping           = "test_data/test_route/texts/beol/testLetter/beolMapping.xml"
+  private val pathToBEOLBulkXML                 = "test_data/test_route/texts/beol/testLetter/bulk.xml"
+  private val letterIri                         = new MutableTestIri
+  private val gravsearchTemplateIri             = new MutableTestIri
 
-  private val pdfResourceIri = new MutableTestIri
-  private val zipResourceIri = new MutableTestIri
-  private val wavResourceIri = new MutableTestIri
+  private val pdfResourceIri   = new MutableTestIri
+  private val zipResourceIri   = new MutableTestIri
+  private val wavResourceIri   = new MutableTestIri
   private val videoResourceIri = new MutableTestIri
 
   private val minimalPdfOriginalFilename = "minimal.pdf"
-  private val pathToMinimalPdf = s"test_data/test_route/files/$minimalPdfOriginalFilename"
-  private val minimalPdfWidth = 1250
-  private val minimalPdfHeight = 600
+  private val pathToMinimalPdf           = s"test_data/test_route/files/$minimalPdfOriginalFilename"
+  private val minimalPdfWidth            = 1250
+  private val minimalPdfHeight           = 600
 
   private val testPdfOriginalFilename = "test.pdf"
-  private val pathToTestPdf = s"test_data/test_route/files/$testPdfOriginalFilename"
-  private val testPdfWidth = 2480
-  private val testPdfHeight = 3508
+  private val pathToTestPdf           = s"test_data/test_route/files/$testPdfOriginalFilename"
+  private val testPdfWidth            = 2480
+  private val testPdfHeight           = 3508
 
   private val minimalZipOriginalFilename = "minimal.zip"
-  private val pathToMinimalZip = s"test_data/test_route/files/$minimalZipOriginalFilename"
+  private val pathToMinimalZip           = s"test_data/test_route/files/$minimalZipOriginalFilename"
 
   private val testZipOriginalFilename = "test.zip"
-  private val pathToTestZip = s"test_data/test_route/files/$testZipOriginalFilename"
+  private val pathToTestZip           = s"test_data/test_route/files/$testZipOriginalFilename"
 
   private val minimalWavOriginalFilename = "minimal.wav"
-  private val pathToMinimalWav = s"test_data/test_route/files/$minimalWavOriginalFilename"
+  private val pathToMinimalWav           = s"test_data/test_route/files/$minimalWavOriginalFilename"
 
   private val testWavOriginalFilename = "test.wav"
-  private val pathToTestWav = s"test_data/test_route/files/$testWavOriginalFilename"
+  private val pathToTestWav           = s"test_data/test_route/files/$testWavOriginalFilename"
 
   private val testVideoOriginalFilename = "testVideo.mp4"
-  private val pathToTestVideo = s"test_data/test_route/files/$testVideoOriginalFilename"
+  private val pathToTestVideo           = s"test_data/test_route/files/$testVideoOriginalFilename"
 
   private val testVideo2OriginalFilename = "testVideo2.mp4"
-  private val pathToTestVideo2 = s"test_data/test_route/files/$testVideoOriginalFilename"
+  private val pathToTestVideo2           = s"test_data/test_route/files/$testVideoOriginalFilename"
 
   /**
-    * Adds the IRI of a XSL transformation to the given mapping.
-    *
-    * @param mapping the mapping to be updated.
-    * @param xsltIri the Iri of the XSLT to be added.
-    * @return the updated mapping.
-    */
+   * Adds the IRI of a XSL transformation to the given mapping.
+   *
+   * @param mapping the mapping to be updated.
+   * @param xsltIri the Iri of the XSLT to be added.
+   * @return the updated mapping.
+   */
   private def addXSLTIriToMapping(mapping: String, xsltIri: String): String = {
 
     val mappingXML: Elem = XML.loadString(mapping)
 
     // add the XSL transformation's Iri to the mapping XML (replacing the string 'toBeDefined')
     val rule: RewriteRule = new RewriteRule() {
-      override def transform(node: Node): Node = {
-
+      override def transform(node: Node): Node =
         node match {
           case e: Elem if e.label == "defaultXSLTransformation" =>
-            e.copy(child = e.child collect {
-              case Text(_) => Text(xsltIri)
+            e.copy(child = e.child collect { case Text(_) =>
+              Text(xsltIri)
             })
           case other => other
         }
 
-      }
     }
 
     val transformer = new RuleTransformer(rule)
@@ -151,12 +148,12 @@ class KnoraSipiIntegrationV1ITSpec
   }
 
   /**
-    * Given the id originally provided by the client, gets the generated IRI from a bulk import response.
-    *
-    * @param bulkResponse the response from the bulk import route.
-    * @param clientID     the client id to look for.
-    * @return the Knora IRI of the resource.
-    */
+   * Given the id originally provided by the client, gets the generated IRI from a bulk import response.
+   *
+   * @param bulkResponse the response from the bulk import route.
+   * @param clientID     the client id to look for.
+   * @return the Knora IRI of the resource.
+   */
   private def getResourceIriFromBulkResponse(bulkResponse: JsObject, clientID: String): String = {
     val resIriOption: Option[JsValue] = bulkResponse.fields.get("createdResources") match {
       case Some(createdResources: JsArray) =>
@@ -197,13 +194,13 @@ class KnoraSipiIntegrationV1ITSpec
 
       val params =
         s"""
-                   |{
-                   |    "email": "$userEmail",
-                   |    "password": "$password"
-                   |}
+           |{
+           |    "email": "$userEmail",
+           |    "password": "$password"
+           |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
+      val request                = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK)
 
@@ -224,30 +221,31 @@ class KnoraSipiIntegrationV1ITSpec
 
       val knoraParams =
         s"""
-                   |{
-                   |    "restype_id": "http://www.knora.org/ontology/0803/incunabula#page",
-                   |    "properties": {
-                   |        "http://www.knora.org/ontology/0803/incunabula#pagenum": [
-                   |            {"richtext_value": {"utf8str": "test page"}}
-                   |        ],
-                   |        "http://www.knora.org/ontology/0803/incunabula#origname": [
-                   |            {"richtext_value": {"utf8str": "Chlaus"}}
-                   |        ],
-                   |        "http://www.knora.org/ontology/0803/incunabula#partOf": [
-                   |            {"link_value": "http://rdfh.ch/0803/5e77e98d2603"}
-                   |        ],
-                   |        "http://www.knora.org/ontology/0803/incunabula#seqnum": [{"int_value": 99999999}]
-                   |    },
-                   |    "file": "${uploadedFile.internalFilename}",
-                   |    "label": "test page",
-                   |    "project_id": "http://rdfh.ch/projects/0803"
-                   |}
+           |{
+           |    "restype_id": "http://www.knora.org/ontology/0803/incunabula#page",
+           |    "properties": {
+           |        "http://www.knora.org/ontology/0803/incunabula#pagenum": [
+           |            {"richtext_value": {"utf8str": "test page"}}
+           |        ],
+           |        "http://www.knora.org/ontology/0803/incunabula#origname": [
+           |            {"richtext_value": {"utf8str": "Chlaus"}}
+           |        ],
+           |        "http://www.knora.org/ontology/0803/incunabula#partOf": [
+           |            {"link_value": "http://rdfh.ch/0803/5e77e98d2603"}
+           |        ],
+           |        "http://www.knora.org/ontology/0803/incunabula#seqnum": [{"int_value": 99999999}]
+           |    },
+           |    "file": "${uploadedFile.internalFilename}",
+           |    "label": "test page",
+           |    "project_id": "http://rdfh.ch/projects/0803"
+           |}
                 """.stripMargin
 
       // Send the JSON in a POST request to the Knora API server.
-      val knoraPostRequest = Post(baseApiUrl + "/v1/resources",
-                                  HttpEntity(ContentTypes.`application/json`, knoraParams)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val knoraPostRequest =
+        Post(baseApiUrl + "/v1/resources", HttpEntity(ContentTypes.`application/json`, knoraParams)) ~> addCredentials(
+          BasicHttpCredentials(userEmail, password)
+        )
       val knoraPostResponseJson = getResponseJson(knoraPostRequest)
 
       // Get the IRI of the newly created resource.
@@ -255,8 +253,9 @@ class KnoraSipiIntegrationV1ITSpec
       secondPageIri.set(resourceIri)
 
       // Request the resource from the Knora API server.
-      val knoraRequestNewResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val knoraRequestNewResource = Get(
+        baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
       checkResponseOK(knoraRequestNewResource)
     }
 
@@ -279,23 +278,23 @@ class KnoraSipiIntegrationV1ITSpec
       // Send the JSON in a PUT request to the Knora API server.
       val knoraPutRequest = Put(
         baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(secondPageIri.get, "UTF-8"),
-        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
       checkResponseOK(knoraPutRequest)
     }
 
     "create an 'anything:thing'" in {
       val standoffXml =
         """<?xml version="1.0" encoding="UTF-8"?>
-                  |<text>
-                  |    <u><strong>Wild thing</strong></u>, <u>you make my</u> <a class="salsah-link" href="http://rdfh.ch/0803/9935159f67">heart</a> sing
-                  |</text>
+          |<text>
+          |    <u><strong>Wild thing</strong></u>, <u>you make my</u> <a class="salsah-link" href="http://rdfh.ch/0803/9935159f67">heart</a> sing
+          |</text>
                 """.stripMargin
 
       val knoraParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#Thing"),
-          "label" -> JsString("Wild thing"),
+          "label"      -> JsString("Wild thing"),
           "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(
             Map(
@@ -303,7 +302,7 @@ class KnoraSipiIntegrationV1ITSpec
                 JsObject(
                   Map(
                     "richtext_value" -> JsObject(
-                      "xml" -> JsString(standoffXml),
+                      "xml"        -> JsString(standoffXml),
                       "mapping_id" -> JsString("http://rdfh.ch/standoff/mappings/StandardMapping")
                     )
                   )
@@ -324,8 +323,8 @@ class KnoraSipiIntegrationV1ITSpec
       // Send the JSON in a POST request to the Knora API server.
       val knoraPostRequest = Post(
         baseApiUrl + "/v1/resources",
-        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
       checkResponseOK(knoraPostRequest)
     }
 
@@ -347,34 +346,34 @@ class KnoraSipiIntegrationV1ITSpec
 
       val knoraParams =
         s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0803/incunabula/xml-import/v1#"
-                   |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                   |    xsi:schemaLocation="http://api.knora.org/ontology/0803/incunabula/xml-import/v1# p0803-incunabula.xsd"
-                   |    xmlns:p0803-incunabula="http://api.knora.org/ontology/0803/incunabula/xml-import/v1#"
-                   |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
-                   |    <p0803-incunabula:book id="test_book">
-                   |        <knoraXmlImport:label>a book with one page</knoraXmlImport:label>
-                   |        <p0803-incunabula:title knoraType="richtext_value">the title of a book with one page</p0803-incunabula:title>
-                   |    </p0803-incunabula:book>
-                   |    <p0803-incunabula:page id="test_page">
-                   |        <knoraXmlImport:label>a page with an image</knoraXmlImport:label>
-                   |        <knoraXmlImport:file filename="${uploadedFile.internalFilename}"/>
-                   |        <p0803-incunabula:origname knoraType="richtext_value">Chlaus</p0803-incunabula:origname>
-                   |        <p0803-incunabula:pagenum knoraType="richtext_value">1a</p0803-incunabula:pagenum>
-                   |        <p0803-incunabula:partOf>
-                   |            <p0803-incunabula:book knoraType="link_value" linkType="ref" target="test_book"/>
-                   |        </p0803-incunabula:partOf>
-                   |        <p0803-incunabula:seqnum knoraType="int_value">1</p0803-incunabula:seqnum>
-                   |    </p0803-incunabula:page>
-                   |</knoraXmlImport:resources>""".stripMargin
+           |<knoraXmlImport:resources xmlns="http://api.knora.org/ontology/0803/incunabula/xml-import/v1#"
+           |    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           |    xsi:schemaLocation="http://api.knora.org/ontology/0803/incunabula/xml-import/v1# p0803-incunabula.xsd"
+           |    xmlns:p0803-incunabula="http://api.knora.org/ontology/0803/incunabula/xml-import/v1#"
+           |    xmlns:knoraXmlImport="http://api.knora.org/ontology/knoraXmlImport/v1#">
+           |    <p0803-incunabula:book id="test_book">
+           |        <knoraXmlImport:label>a book with one page</knoraXmlImport:label>
+           |        <p0803-incunabula:title knoraType="richtext_value">the title of a book with one page</p0803-incunabula:title>
+           |    </p0803-incunabula:book>
+           |    <p0803-incunabula:page id="test_page">
+           |        <knoraXmlImport:label>a page with an image</knoraXmlImport:label>
+           |        <knoraXmlImport:file filename="${uploadedFile.internalFilename}"/>
+           |        <p0803-incunabula:origname knoraType="richtext_value">Chlaus</p0803-incunabula:origname>
+           |        <p0803-incunabula:pagenum knoraType="richtext_value">1a</p0803-incunabula:pagenum>
+           |        <p0803-incunabula:partOf>
+           |            <p0803-incunabula:book knoraType="link_value" linkType="ref" target="test_book"/>
+           |        </p0803-incunabula:partOf>
+           |        <p0803-incunabula:seqnum knoraType="int_value">1</p0803-incunabula:seqnum>
+           |    </p0803-incunabula:page>
+           |</knoraXmlImport:resources>""".stripMargin
 
       val projectIri = URLEncoder.encode("http://rdfh.ch/projects/0803", "UTF-8")
 
       // Send the JSON in a POST request to the Knora API server.
       val knoraPostRequest: HttpRequest = Post(
         baseApiUrl + s"/v1/resources/xmlimport/$projectIri",
-        HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), knoraParams)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+        HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), knoraParams)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
       val knoraPostResponseJson: JsObject = getResponseJson(knoraPostRequest)
 
       val createdResources = knoraPostResponseJson.fields("createdResources").asInstanceOf[JsArray].elements
@@ -384,16 +383,18 @@ class KnoraSipiIntegrationV1ITSpec
       val pageResourceIri = createdResources(1).asJsObject.fields("resourceIri").asInstanceOf[JsString].value
 
       // Request the book resource from the Knora API server.
-      val knoraRequestNewBookResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(bookResourceIri, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val knoraRequestNewBookResource = Get(
+        baseApiUrl + "/v1/resources/" + URLEncoder.encode(bookResourceIri, "UTF-8")
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
       checkResponseOK(knoraRequestNewBookResource)
 
       // Request the page resource from the Knora API server.
-      val knoraRequestNewPageResource = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(pageResourceIri, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val knoraRequestNewPageResource = Get(
+        baseApiUrl + "/v1/resources/" + URLEncoder.encode(pageResourceIri, "UTF-8")
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
       val pageJson: JsObject = getResponseJson(knoraRequestNewPageResource)
-      val locdata = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject
-      val origname = locdata.fields("origname").asInstanceOf[JsString].value
+      val locdata            = pageJson.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val origname           = locdata.fields("origname").asInstanceOf[JsString].value
       val imageUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
       assert(origname == dest.getFileName.toString)
@@ -408,8 +409,11 @@ class KnoraSipiIntegrationV1ITSpec
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
         filesToUpload = Seq(
-          FileToUpload(path = pathToXSLTransformation,
-                       mimeType = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)))
+          FileToUpload(
+            path = pathToXSLTransformation,
+            mimeType = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)
+          )
+        )
       )
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
@@ -418,18 +422,18 @@ class KnoraSipiIntegrationV1ITSpec
       val knoraParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
-          "label" -> JsString("XSLT"),
+          "label"      -> JsString("XSLT"),
           "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedFile.internalFilename)
+          "file"       -> JsString(uploadedFile.internalFilename)
         )
       )
 
       // Send the JSON in a POST request to the Knora API server.
       val knoraPostRequest: HttpRequest = Post(
         baseApiUrl + "/v1/resources",
-        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
       val responseJson: JsObject = getResponseJson(knoraPostRequest)
 
       // get the Iri of the XSL transformation
@@ -446,11 +450,11 @@ class KnoraSipiIntegrationV1ITSpec
 
       val paramsCreateLetterMappingFromXML =
         s"""
-                   |{
-                   |  "project_id": "http://rdfh.ch/projects/0001",
-                   |  "label": "mapping for letters with XSLT",
-                   |  "mappingName": "LetterMappingXSLT"
-                   |}
+           |{
+           |  "project_id": "http://rdfh.ch/projects/0001",
+           |  "label": "mapping for letters with XSLT",
+           |  "mappingName": "LetterMappingXSLT"
+           |}
              """.stripMargin
 
       // create a mapping referring to the XSL transformation
@@ -467,8 +471,8 @@ class KnoraSipiIntegrationV1ITSpec
       )
 
       // send mapping xml to route
-      val knoraPostRequest2 = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val knoraPostRequest2 =
+        Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       checkResponseOK(knoraPostRequest2)
 
@@ -479,11 +483,11 @@ class KnoraSipiIntegrationV1ITSpec
 
       val paramsForMapping =
         s"""
-                   |{
-                   |  "project_id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF",
-                   |  "label": "mapping for BEOL letter",
-                   |  "mappingName": "BEOLMapping"
-                   |}
+           |{
+           |  "project_id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF",
+           |  "label": "mapping for BEOL letter",
+           |  "mappingName": "BEOLMapping"
+           |}
              """.stripMargin
 
       // create a mapping referring to the XSL transformation
@@ -500,8 +504,8 @@ class KnoraSipiIntegrationV1ITSpec
       )
 
       // send mapping xml to route
-      val knoraPostRequest = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val knoraPostRequest =
+        Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       getResponseJson(knoraPostRequest)
 
@@ -510,8 +514,8 @@ class KnoraSipiIntegrationV1ITSpec
       val bulkXML = FileUtil.readTextFile(Paths.get(pathToBEOLBulkXML))
 
       val bulkRequest = Post(
-        baseApiUrl + "/v1/resources/xmlimport/" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF",
-                                                                    "UTF-8"),
+        baseApiUrl + "/v1/resources/xmlimport/" + URLEncoder
+          .encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF", "UTF-8"),
         HttpEntity(ContentType(MediaTypes.`application/xml`, HttpCharsets.`UTF-8`), bulkXML)
       ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
@@ -526,8 +530,11 @@ class KnoraSipiIntegrationV1ITSpec
       val bodyXsltUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
         filesToUpload = Seq(
-          FileToUpload(path = pathToBEOLBodyXSLTransformation,
-                       mimeType = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)))
+          FileToUpload(
+            path = pathToBEOLBodyXSLTransformation,
+            mimeType = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)
+          )
+        )
       )
 
       val uploadedBodyXsltFile: SipiUploadResponseEntry = bodyXsltUploadResponse.uploadedFiles.head
@@ -536,18 +543,18 @@ class KnoraSipiIntegrationV1ITSpec
       val bodyXsltParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
-          "label" -> JsString("XSLT"),
+          "label"      -> JsString("XSLT"),
           "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedBodyXsltFile.internalFilename)
+          "file"       -> JsString(uploadedBodyXsltFile.internalFilename)
         )
       )
 
       // Send the JSON in a POST request to the Knora API server.
       val bodyXSLTRequest: HttpRequest = Post(
         baseApiUrl + "/v1/resources",
-        HttpEntity(ContentTypes.`application/json`, bodyXsltParams.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+        HttpEntity(ContentTypes.`application/json`, bodyXsltParams.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
       val bodyXSLTJson: JsObject = getResponseJson(bodyXSLTRequest)
 
       // get the Iri of the body XSL transformation
@@ -564,11 +571,11 @@ class KnoraSipiIntegrationV1ITSpec
 
       val paramsCreateLetterMappingFromXML =
         s"""
-                   |{
-                   |  "project_id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF",
-                   |  "label": "mapping for BEOL to TEI",
-                   |  "mappingName": "BEOLToTEI"
-                   |}
+           |{
+           |  "project_id": "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF",
+           |  "label": "mapping for BEOL to TEI",
+           |  "mappingName": "BEOLToTEI"
+           |}
              """.stripMargin
 
       // create a mapping referring to the XSL transformation
@@ -585,8 +592,8 @@ class KnoraSipiIntegrationV1ITSpec
       )
 
       // send mapping xml to route
-      val mappingRequest = Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val mappingRequest =
+        Post(baseApiUrl + "/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       getResponseJson(mappingRequest)
 
@@ -594,8 +601,11 @@ class KnoraSipiIntegrationV1ITSpec
       val gravsearchTemplateUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
         filesToUpload = Seq(
-          FileToUpload(path = pathToBEOLGravsearchTemplate,
-                       mimeType = MediaTypes.`text/plain`.toContentType(HttpCharsets.`UTF-8`)))
+          FileToUpload(
+            path = pathToBEOLGravsearchTemplate,
+            mimeType = MediaTypes.`text/plain`.toContentType(HttpCharsets.`UTF-8`)
+          )
+        )
       )
 
       val uploadedGravsearchTemplateFile: SipiUploadResponseEntry = gravsearchTemplateUploadResponse.uploadedFiles.head
@@ -603,18 +613,18 @@ class KnoraSipiIntegrationV1ITSpec
       val gravsearchTemplateParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#TextRepresentation"),
-          "label" -> JsString("BEOL Gravsearch template"),
+          "label"      -> JsString("BEOL Gravsearch template"),
           "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedGravsearchTemplateFile.internalFilename)
+          "file"       -> JsString(uploadedGravsearchTemplateFile.internalFilename)
         )
       )
 
       // Send the JSON in a POST request to the Knora API server.
       val gravsearchTemplateRequest: HttpRequest = Post(
         baseApiUrl + "/v1/resources",
-        HttpEntity(ContentTypes.`application/json`, gravsearchTemplateParams.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+        HttpEntity(ContentTypes.`application/json`, gravsearchTemplateParams.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
       val gravsearchTemplateJSON: JsObject = getResponseJson(gravsearchTemplateRequest)
 
       gravsearchTemplateIri.set(gravsearchTemplateJSON.fields.get("res_id") match {
@@ -626,8 +636,11 @@ class KnoraSipiIntegrationV1ITSpec
       val headerXsltUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
         filesToUpload = Seq(
-          FileToUpload(path = pathToBEOLHeaderXSLTransformation,
-                       mimeType = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)))
+          FileToUpload(
+            path = pathToBEOLHeaderXSLTransformation,
+            mimeType = MediaTypes.`application/xml`.toContentType(HttpCharsets.`UTF-8`)
+          )
+        )
       )
 
       val uploadedHeaderXsltFile: SipiUploadResponseEntry = headerXsltUploadResponse.uploadedFiles.head
@@ -635,18 +648,18 @@ class KnoraSipiIntegrationV1ITSpec
       val headerXsltParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#XSLTransformation"),
-          "label" -> JsString("BEOL header XSLT"),
+          "label"      -> JsString("BEOL header XSLT"),
           "project_id" -> JsString("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedHeaderXsltFile.internalFilename)
+          "file"       -> JsString(uploadedHeaderXsltFile.internalFilename)
         )
       )
 
       // Send the JSON in a POST request to the Knora API server.
-      val headerXSLTRequest: HttpRequest = Post(baseApiUrl + "/v1/resources",
-                                                HttpEntity(ContentTypes.`application/json`,
-                                                           headerXsltParams.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val headerXSLTRequest: HttpRequest = Post(
+        baseApiUrl + "/v1/resources",
+        HttpEntity(ContentTypes.`application/json`, headerXsltParams.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
       val headerXSLTJson = getResponseJson(headerXSLTRequest)
 
       val headerXSLTIri: IRI = headerXSLTJson.fields.get("res_id") match {
@@ -659,10 +672,13 @@ class KnoraSipiIntegrationV1ITSpec
       val letterTEIRequest: HttpRequest = Get(
         baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +
           "?textProperty=" + URLEncoder.encode("http://0.0.0.0:3333/ontology/0801/beol/v2#hasText", "UTF-8") +
-          "&mappingIri=" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLToTEI",
-                                             "UTF-8") +
+          "&mappingIri=" + URLEncoder.encode(
+            "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLToTEI",
+            "UTF-8"
+          ) +
           "&gravsearchTemplateIri=" + URLEncoder.encode(gravsearchTemplateIri.get, "UTF-8") +
-          "&teiHeaderXSLTIri=" + URLEncoder.encode(headerXSLTIri, "UTF-8"))
+          "&teiHeaderXSLTIri=" + URLEncoder.encode(headerXSLTIri, "UTF-8")
+      )
 
       val letterTEIResponse: HttpResponse = singleAwaitingRequest(letterTEIRequest)
       val letterResponseBodyFuture: Future[String] =
@@ -671,47 +687,47 @@ class KnoraSipiIntegrationV1ITSpec
 
       val xmlExpected =
         s"""<?xml version="1.0" encoding="UTF-8"?>
-                   |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
-                   |<teiHeader>
-                   |   <fileDesc>
-                   |      <titleStmt>
-                   |         <title>Testletter</title>
-                   |      </titleStmt>
-                   |      <publicationStmt>
-                   |         <p>This is the TEI/XML representation of the resource identified by the Iri
-                   |                        ${letterIri.get}.
-                   |                    </p>
-                   |      </publicationStmt>
-                   |      <sourceDesc>
-                   |         <p>Representation of the resource's text as TEI/XML</p>
-                   |      </sourceDesc>
-                   |   </fileDesc>
-                   |   <profileDesc>
-                   |      <correspDesc ref="${letterIri.get}">
-                   |         <correspAction type="sent">
-                   |            <persName ref="http://d-nb.info/gnd/118607308">Scheuchzer,
-                   |                Johann Jacob</persName>
-                   |            <date when="1703-06-10"/>
-                   |         </correspAction>
-                   |         <correspAction type="received">
-                   |            <persName ref="http://d-nb.info/gnd/119112450">Hermann,
-                   |                Jacob</persName>
-                   |         </correspAction>
-                   |      </correspDesc>
-                   |   </profileDesc>
-                   |</teiHeader>
-                   |
-                   |<text><body>
-                   |                <p>[...] Viro Clarissimo.</p>
-                   |                <p>Dn. Jacobo Hermanno S. S. M. C. </p>
-                   |                <p>et Ph. M.</p>
-                   |                <p>S. P. D. </p>
-                   |                <p>J. J. Sch.</p>
-                   |                <p>En quae desideras, vir Erud.<hi rend="sup">e</hi> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<note>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</note> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>
-                   |                <p>d. [10] Jun. 1703.<note>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</note>
-                   |                </p>
-                   |            </body></text>
-                   |</TEI>
+           |<TEI version="3.3.0" xmlns="http://www.tei-c.org/ns/1.0">
+           |<teiHeader>
+           |   <fileDesc>
+           |      <titleStmt>
+           |         <title>Testletter</title>
+           |      </titleStmt>
+           |      <publicationStmt>
+           |         <p>This is the TEI/XML representation of the resource identified by the Iri
+           |                        ${letterIri.get}.
+           |                    </p>
+           |      </publicationStmt>
+           |      <sourceDesc>
+           |         <p>Representation of the resource's text as TEI/XML</p>
+           |      </sourceDesc>
+           |   </fileDesc>
+           |   <profileDesc>
+           |      <correspDesc ref="${letterIri.get}">
+           |         <correspAction type="sent">
+           |            <persName ref="http://d-nb.info/gnd/118607308">Scheuchzer,
+           |                Johann Jacob</persName>
+           |            <date when="1703-06-10"/>
+           |         </correspAction>
+           |         <correspAction type="received">
+           |            <persName ref="http://d-nb.info/gnd/119112450">Hermann,
+           |                Jacob</persName>
+           |         </correspAction>
+           |      </correspDesc>
+           |   </profileDesc>
+           |</teiHeader>
+           |
+           |<text><body>
+           |                <p>[...] Viro Clarissimo.</p>
+           |                <p>Dn. Jacobo Hermanno S. S. M. C. </p>
+           |                <p>et Ph. M.</p>
+           |                <p>S. P. D. </p>
+           |                <p>J. J. Sch.</p>
+           |                <p>En quae desideras, vir Erud.<hi rend="sup">e</hi> κεχαρισμένω θυμῷ Actorum Lipsiensium fragmenta<note>Gemeint sind die im Brief Hermanns von 1703.06.05 erbetenen Exemplare AE Aprilis 1703 und AE Suppl., tom. III, 1702.</note> animi mei erga te prope[n]sissimi tenuia indicia. Dudum est, ex quo Tibi innotescere, et tuam ambire amicitiam decrevi, dudum, ex quo Ingenij Tui acumen suspexi, immo non potui quin admirarer pro eo, quod summam Demonstrationem Tuam de Iride communicare dignatus fueris summas ago grates; quamvis in hoc studij genere, non alias [siquid] μετρικώτατος, propter aliorum negotiorum continuam seriem non altos possim scandere gradus. Perge Vir Clariss. Erudito orbi propalare Ingenij Tui fructum; sed et me amare. </p>
+           |                <p>d. [10] Jun. 1703.<note>Der Tag ist im Manuskript unleserlich. Da der Entwurf in Scheuchzers "Copiae epistolarum" zwischen zwei Einträgen vom 10. Juni 1703 steht, ist der Brief wohl auf den gleichen Tag zu datieren.</note>
+           |                </p>
+           |            </body></text>
+           |</TEI>
                 """.stripMargin
 
       val xmlDiff: Diff =
@@ -725,10 +741,13 @@ class KnoraSipiIntegrationV1ITSpec
       val letterTEIRequest: HttpRequest = Get(
         baseApiUrl + "/v2/tei/" + URLEncoder.encode(letterIri.get, "UTF-8") +
           "?textProperty=" + URLEncoder.encode("http://0.0.0.0:3333/ontology/0801/beol/v2#hasText", "UTF-8") +
-          "&mappingIri=" + URLEncoder.encode("http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLToTEI",
-                                             "UTF-8") +
+          "&mappingIri=" + URLEncoder.encode(
+            "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF/mappings/BEOLToTEI",
+            "UTF-8"
+          ) +
           "&gravsearchTemplateIri=" + URLEncoder.encode(gravsearchTemplateIri.get, "UTF-8") +
-          "&teiHeaderXSLTIri=" + URLEncoder.encode(missingHeaderXSLTIri, "UTF-8"))
+          "&teiHeaderXSLTIri=" + URLEncoder.encode(missingHeaderXSLTIri, "UTF-8")
+      )
 
       val response: HttpResponse = singleAwaitingRequest(letterTEIRequest)
       assert(response.status.intValue == 500)
@@ -753,18 +772,18 @@ class KnoraSipiIntegrationV1ITSpec
       val createDocumentResourceParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#ThingDocument"),
-          "label" -> JsString("PDF file"),
+          "label"      -> JsString("PDF file"),
           "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedPdfFile.internalFilename)
+          "file"       -> JsString(uploadedPdfFile.internalFilename)
         )
       )
 
       // Send the JSON in a POST request to the Knora API server.
       val createDocumentResourceRequest: HttpRequest = Post(
         baseApiUrl + "/v1/resources",
-        HttpEntity(ContentTypes.`application/json`, createDocumentResourceParams.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+        HttpEntity(ContentTypes.`application/json`, createDocumentResourceParams.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val createDocumentResourceResponseJson: JsObject = getResponseJson(createDocumentResourceRequest)
 
@@ -777,13 +796,14 @@ class KnoraSipiIntegrationV1ITSpec
       pdfResourceIri.set(resourceIri)
 
       // Request the document resource from the Knora API server.
-      val documentResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val documentResourceRequest = Get(
+        baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
-      val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
-      val nx = locdata.fields("nx").asInstanceOf[JsNumber].value.toInt
-      val ny = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
+      val locdata                            = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val nx                                 = locdata.fields("nx").asInstanceOf[JsNumber].value.toInt
+      val ny                                 = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
       val pdfUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
       assert(nx == minimalPdfWidth)
@@ -814,19 +834,20 @@ class KnoraSipiIntegrationV1ITSpec
       // Send the JSON in a PUT request to the Knora API server.
       val knoraPutRequest = Put(
         baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(pdfResourceIri.get, "UTF-8"),
-        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       checkResponseOK(knoraPutRequest)
 
       // Request the document resource from the Knora API server.
-      val documentResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(pdfResourceIri.get, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val documentResourceRequest = Get(
+        baseApiUrl + "/v1/resources/" + URLEncoder.encode(pdfResourceIri.get, "UTF-8")
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
-      val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
-      val nx = locdata.fields("nx").asInstanceOf[JsNumber].value.toInt
-      val ny = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
+      val locdata                            = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val nx                                 = locdata.fields("nx").asInstanceOf[JsNumber].value.toInt
+      val ny                                 = locdata.fields("ny").asInstanceOf[JsNumber].value.toInt
       assert(nx == testPdfWidth)
       assert(ny == testPdfHeight)
     }
@@ -845,18 +866,18 @@ class KnoraSipiIntegrationV1ITSpec
       val createDocumentResourceParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#ThingDocument"),
-          "label" -> JsString("Zip file"),
+          "label"      -> JsString("Zip file"),
           "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedZipFile.internalFilename)
+          "file"       -> JsString(uploadedZipFile.internalFilename)
         )
       )
 
       // Send the JSON in a POST request to the Knora API server.
       val createDocumentResourceRequest: HttpRequest = Post(
         baseApiUrl + "/v1/resources",
-        HttpEntity(ContentTypes.`application/json`, createDocumentResourceParams.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+        HttpEntity(ContentTypes.`application/json`, createDocumentResourceParams.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val createDocumentResourceResponseJson: JsObject = getResponseJson(createDocumentResourceRequest)
 
@@ -869,11 +890,12 @@ class KnoraSipiIntegrationV1ITSpec
       zipResourceIri.set(resourceIri)
 
       // Request the document resource from the Knora API server.
-      val documentResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val documentResourceRequest = Get(
+        baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
-      val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val locdata                            = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val zipUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
 
@@ -902,17 +924,18 @@ class KnoraSipiIntegrationV1ITSpec
       // Send the JSON in a PUT request to the Knora API server.
       val knoraPutRequest = Put(
         baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(zipResourceIri.get, "UTF-8"),
-        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       checkResponseOK(knoraPutRequest)
 
       // Request the document resource from the Knora API server.
-      val documentResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(zipResourceIri.get, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val documentResourceRequest = Get(
+        baseApiUrl + "/v1/resources/" + URLEncoder.encode(zipResourceIri.get, "UTF-8")
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val documentResourceResponse: JsObject = getResponseJson(documentResourceRequest)
-      val locdata = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val locdata                            = documentResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val zipUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
 
@@ -935,18 +958,18 @@ class KnoraSipiIntegrationV1ITSpec
       val createAudioResourceParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#AudioRepresentation"),
-          "label" -> JsString("Wav file"),
+          "label"      -> JsString("Wav file"),
           "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedWavFile.internalFilename)
+          "file"       -> JsString(uploadedWavFile.internalFilename)
         )
       )
 
       // Send the JSON in a POST request to the Knora API server.
       val createAudioResourceRequest: HttpRequest = Post(
         baseApiUrl + "/v1/resources",
-        HttpEntity(ContentTypes.`application/json`, createAudioResourceParams.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+        HttpEntity(ContentTypes.`application/json`, createAudioResourceParams.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val createAudioResourceResponseJson: JsObject = getResponseJson(createAudioResourceRequest)
 
@@ -959,11 +982,12 @@ class KnoraSipiIntegrationV1ITSpec
       wavResourceIri.set(resourceIri)
 
       // Request the audio file resource from the Knora API server.
-      val audioResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val audioResourceRequest = Get(
+        baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val audioResourceResponse: JsObject = getResponseJson(audioResourceRequest)
-      val locdata = audioResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val locdata                         = audioResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val zipUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
 
@@ -992,17 +1016,18 @@ class KnoraSipiIntegrationV1ITSpec
       // Send the JSON in a PUT request to the Knora API server.
       val knoraPutRequest = Put(
         baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(wavResourceIri.get, "UTF-8"),
-        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       checkResponseOK(knoraPutRequest)
 
       // Request the document resource from the Knora API server.
-      val audioResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(wavResourceIri.get, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val audioResourceRequest = Get(
+        baseApiUrl + "/v1/resources/" + URLEncoder.encode(wavResourceIri.get, "UTF-8")
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val audioResourceResponse: JsObject = getResponseJson(audioResourceRequest)
-      val locdata = audioResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val locdata                         = audioResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val wavUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
 
@@ -1026,18 +1051,18 @@ class KnoraSipiIntegrationV1ITSpec
       val createVideoResourceParams = JsObject(
         Map(
           "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#MovingImageRepresentation"),
-          "label" -> JsString("Wav file"),
+          "label"      -> JsString("Wav file"),
           "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
-          "file" -> JsString(uploadedVideoFile.internalFilename)
+          "file"       -> JsString(uploadedVideoFile.internalFilename)
         )
       )
 
       // Send the JSON in a POST request to the Knora API server.
       val createVideoResourceRequest: HttpRequest = Post(
         baseApiUrl + "/v1/resources",
-        HttpEntity(ContentTypes.`application/json`, createVideoResourceParams.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+        HttpEntity(ContentTypes.`application/json`, createVideoResourceParams.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val createVideoResourceResponseJson: JsObject = getResponseJson(createVideoResourceRequest)
 
@@ -1050,11 +1075,12 @@ class KnoraSipiIntegrationV1ITSpec
       videoResourceIri.set(resourceIri)
 
       // Request the video file resource from the Knora API server.
-      val videoResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val videoResourceRequest = Get(
+        baseApiUrl + "/v1/resources/" + URLEncoder.encode(resourceIri, "UTF-8")
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val videoResourceResponse: JsObject = getResponseJson(videoResourceRequest)
-      val locdata = videoResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val locdata                         = videoResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val videoUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
 
@@ -1083,17 +1109,18 @@ class KnoraSipiIntegrationV1ITSpec
       // Send the JSON in a PUT request to the Knora API server.
       val knoraPutRequest = Put(
         baseApiUrl + "/v1/filevalue/" + URLEncoder.encode(wavResourceIri.get, "UTF-8"),
-        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+        HttpEntity(ContentTypes.`application/json`, knoraParams.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       checkResponseOK(knoraPutRequest)
 
       // Request the document resource from the Knora API server.
-      val videoResourceRequest = Get(baseApiUrl + "/v1/resources/" + URLEncoder.encode(videoResourceIri.get, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(userEmail, password))
+      val videoResourceRequest = Get(
+        baseApiUrl + "/v1/resources/" + URLEncoder.encode(videoResourceIri.get, "UTF-8")
+      ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val videoResourceResponse: JsObject = getResponseJson(videoResourceRequest)
-      val locdata = videoResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
+      val locdata                         = videoResourceResponse.fields("resinfo").asJsObject.fields("locdata").asJsObject
       val videoUrl =
         locdata.fields("path").asInstanceOf[JsString].value.replace("http://0.0.0.0:1024", baseInternalSipiUrl)
 

@@ -14,7 +14,8 @@
 * GNU Affero General Public License for more details.
 *
 * You should have received a copy of the GNU Affero General Public
-* License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+* License along with Knora.  If not, see
+<http://www.gnu.org/licenses/>.
 *@
 
 @(properties: Map[String, String], imgpath: String)
@@ -22,11 +23,11 @@
 <table>
 
     @if(imgpath.nonEmpty) {
-        <tr>
-            <td style="border: none">preview</td>
-            <td style="border: none">:</td>
-            <td style="border: none"><img src="@imgpath" style="max-width: 128px; max-height: 128px;"></td>
-        </tr>
+    <tr>
+        <td style="border: none">preview</td>
+        <td style="border: none">:</td>
+        <td style="border: none"><img src="@imgpath" style="max-width: 128px; max-height: 128px;"></td>
+    </tr>
     }
 
     @for((k, v) <- properties) {

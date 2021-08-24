@@ -119,7 +119,7 @@ package object settings {
   val TriplestoreManagerActorPath: String = StoreManagerActorPath + "/" + TriplestoreManagerActorName
 
   val HttpTriplestoreActorName: String = "httpTriplestoreRouter"
-  val EmbeddedJenaActorName: String = "embeddedJenaTDB"
+  val EmbeddedJenaActorName: String    = "embeddedJenaTDB"
   val EmbeddedGraphDBActorNAme: String = "embeddedJenaGraphDB"
   val FakeTriplestoreActorName: String = "fakeTriplestore"
 
