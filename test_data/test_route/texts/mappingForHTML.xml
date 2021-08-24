@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../src/main/resources/mappingXMLToStandoff.xsd">
+<mapping xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="../../../src/main/resources/mappingXMLToStandoff.xsd">
     <mappingElement>
-        <tag><name>text</name>
+        <tag>
+            <name>text</name>
             <class>noClass</class>
             <namespace>noNamespace</namespace>
-            <separatesWords>false</separatesWords></tag>
+            <separatesWords>false</separatesWords>
+        </tag>
         <standoffClass>
             <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
             <attributes>
@@ -181,7 +184,12 @@
         <standoffClass>
             <classIri>http://www.knora.org/ontology/0001/anything#StandoffEventTag</classIri>
             <attributes>
-                <attribute><attributeName>data-description</attributeName><namespace>noNamespace</namespace><propertyIri>http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription</propertyIri></attribute>
+                <attribute>
+                    <attributeName>data-description</attributeName>
+                    <namespace>noNamespace</namespace>
+                    <propertyIri>http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription
+                    </propertyIri>
+                </attribute>
             </attributes>
             <datatype>
                 <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>

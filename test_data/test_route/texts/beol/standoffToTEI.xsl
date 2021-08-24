@@ -33,7 +33,7 @@
     <xsl:template match="text">
         <text>
             <body>
-            <xsl:apply-templates/>
+                <xsl:apply-templates/>
             </body>
         </text>
     </xsl:template>
@@ -47,7 +47,9 @@
     -->
     <xsl:template match="entity|entity2">
         <ref>
-            <xsl:attribute name="target"><xsl:value-of select="@ref"/></xsl:attribute>
+            <xsl:attribute name="target">
+                <xsl:value-of select="@ref"/>
+            </xsl:attribute>
             <xsl:apply-templates/>
         </ref>
     </xsl:template>
@@ -60,7 +62,9 @@
     -->
     <xsl:template match="ref">
         <ref>
-            <xsl:attribute name="target"><xsl:value-of select="@target"/></xsl:attribute>
+            <xsl:attribute name="target">
+                <xsl:value-of select="@target"/>
+            </xsl:attribute>
             <xsl:apply-templates/>
         </ref>
     </xsl:template>
@@ -74,7 +78,9 @@
     -->
     <xsl:template match="a">
         <ref>
-            <xsl:attribute name="target"><xsl:value-of select="@href"/></xsl:attribute>
+            <xsl:attribute name="target">
+                <xsl:value-of select="@href"/>
+            </xsl:attribute>
             <xsl:apply-templates/>
         </ref>
     </xsl:template>
@@ -442,7 +448,9 @@
     -->
     <xsl:template match="facsimile|figure">
         <ref>
-            <xsl:attribute name="target"><xsl:value-of select="@src"/></xsl:attribute>
+            <xsl:attribute name="target">
+                <xsl:value-of select="@src"/>
+            </xsl:attribute>
             <xsl:apply-templates/>
         </ref>
     </xsl:template>
@@ -467,7 +475,7 @@
 
     -->
     <xsl:template match="hr">
-            <xsl:apply-templates/>
+        <xsl:apply-templates/>
     </xsl:template>
 
     <!--
