@@ -19,8 +19,6 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import java.util.UUID
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, InconsistentRepositoryDataException}
@@ -34,6 +32,8 @@ import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import spray.json._
+
+import java.util.UUID
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -61,19 +61,7 @@ case class CreateUserApiRequestADM(id: Option[IRI] = None,
                                    lang: String,
                                    systemAdmin: Boolean) {
 
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
   def toJsValue: JsValue = UsersADMJsonProtocol.createUserApiRequestADMFormat.write(this)
-
-  // check for required information
-  if (username.isEmpty) throw BadRequestException("Username cannot be empty")
-  if (email.isEmpty) throw BadRequestException("Email cannot be empty")
-  if (password.isEmpty) throw BadRequestException("Password cannot be empty")
-  if (givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
-  if (familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
-
-  //check the custom Iri
-  stringFormatter.validateOptionalUserIri(id, throw BadRequestException(s"Invalid user IRI"))
 }
 
 /**
@@ -215,7 +203,8 @@ case class UserGetRequestADM(identifier: UserIdentifierADM,
   * @param requestingUser       the user creating the new user.
   * @param apiRequestID         the ID of the API request.
   */
-case class UserCreateRequestADM(createRequest: CreateUserApiRequestADM,
+case class UserCreateRequestADM( //createRequest: CreateUserApiRequestADM,
+                                userEntity: UserEntity,
                                 featureFactoryConfig: FeatureFactoryConfig,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID)
@@ -476,6 +465,15 @@ case class UserOperationResponseADM(user: UserADM) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userOperationResponseADMFormat.write(this)
 }
 
+/**
+  * Represents an answer to a user creating operation.
+  *
+  * @param user the new user profile of the created user.
+  */
+//case class UserCreationResponseADM(user: ) extends KnoraResponseADM {
+//  def toJsValue: JsValue = UsersADMJsonProtocol.userCreationResponseADMFormat.write(this)
+//}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
 
@@ -649,8 +647,6 @@ case class UserADM(id: IRI,
 
   def isSystemUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.SystemUser)
 
-  def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
-
   def fullname: String = givenName + " " + familyName
 
   def getDigest: String = {
@@ -713,6 +709,8 @@ case class UserADM(id: IRI,
       )
     }
   }
+
+  def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
 
   def asUserDataV1: UserDataV1 = {
     UserDataV1(
@@ -996,6 +994,9 @@ object UsersADMJsonProtocol
     with PermissionsADMJsonProtocol {
 
   implicit val userADMFormat: JsonFormat[UserADM] = jsonFormat13(UserADM)
+  //implicit val userFormat: JsonFormat[User] = jsonFormat9(User)
+//  implicit val userFormat: RootJsonFormat[User] =
+//    jsonFormat(User, "id", "username", "email", "givenName", "familyName", "password", "status", "lang", "systemAdmin")
   implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat(
     CreateUserApiRequestADM,
     "id",
@@ -1028,4 +1029,6 @@ object UsersADMJsonProtocol
     jsonFormat1(UserGroupMembershipsGetResponseADM)
   implicit val userOperationResponseADMFormat: RootJsonFormat[UserOperationResponseADM] = jsonFormat1(
     UserOperationResponseADM)
+//  implicit val userCreationResponseADMFormat: RootJsonFormat[UserCreationResponseADM] =
+//    jsonFormat1(UserCreationResponseADM)
 }

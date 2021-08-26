@@ -121,6 +121,28 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   def addUser(featureFactoryConfig: FeatureFactoryConfig): Route = path(UsersBasePath) {
     post {
       entity(as[CreateUserApiRequestADM]) { apiRequest => requestContext =>
+        // get all values from request and make value objects from it
+        val id = apiRequest.id
+        stringFormatter.validateOptionalUserIri(id, throw BadRequestException(s"Invalid user IRI"))
+        val username: Username =
+          Username.fromString(apiRequest.username).fold(error => throw error, value => value)
+        val email: Email =
+          Email.fromString(apiRequest.email).fold(error => throw error, value => value)
+        val givenName: GivenName =
+          GivenName.fromString(apiRequest.givenName).fold(error => throw error, value => value)
+        val familyName: FamilyName =
+          FamilyName.fromString(apiRequest.familyName).fold(error => throw error, value => value)
+        val password: Password =
+          Password.fromString(apiRequest.password).fold(error => throw error, value => value)
+        val status: Status = Status.fromBoolean(apiRequest.status)
+        val lang: LanguageCode =
+          LanguageCode.fromString(apiRequest.lang).fold(error => throw error, value => value)
+        val systemAdmin: SystemAdmin = SystemAdmin.fromBoolean(apiRequest.systemAdmin)
+
+        //TODO use UserADMEntity (= UserADM with value objects) instead of our UserEntity
+        val user: UserEntity =
+          UserEntity(id, username, email, givenName, familyName, password, status, lang, systemAdmin)
+
         val requestMessage: Future[UserCreateRequestADM] = for {
           requestingUser <- getUserADM(
             requestContext = requestContext,
@@ -128,7 +150,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           )
         } yield
           UserCreateRequestADM(
-            createRequest = apiRequest,
+            userEntity = user,
             featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()
@@ -141,7 +163,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           settings = settings,
           responderManager = responderManager,
           log = log
-        )
+      )
       }
     }
   }

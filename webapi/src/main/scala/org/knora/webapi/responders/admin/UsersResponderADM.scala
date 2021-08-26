@@ -20,7 +20,6 @@
 package org.knora.webapi.responders.admin
 
 import java.util.UUID
-
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi.exceptions._
@@ -31,7 +30,7 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, Group
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePayloadADM, _}
+import org.knora.webapi.messages.admin.responder.usersmessages.{Password, UserUpdatePayloadADM, _}
 import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceGetUserADM,
   CacheServicePutUserADM,
@@ -69,8 +68,10 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       getSingleUserADM(identifier, userInformationTypeADM, featureFactoryConfig, requestingUser)
     case UserGetRequestADM(identifier, userInformationTypeADM, featureFactoryConfig, requestingUser) =>
       getSingleUserADMRequest(identifier, userInformationTypeADM, featureFactoryConfig, requestingUser)
-    case UserCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
-      createNewUserADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID)
+//    case UserCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
+//      createNewUserADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID)
+    case UserCreateRequestADM(userEntity, featureFactoryConfig, requestingUser, apiRequestID) =>
+      createNewUserADM(userEntity, featureFactoryConfig, requestingUser, apiRequestID)
     case UserChangeBasicUserInformationRequestADM(userIri,
                                                   changeUserRequest,
                                                   featureFactoryConfig,
@@ -1517,43 +1518,28 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @param requestingUser       a [[UserADM]] object containing information about the requesting user.
     * @return a future containing the [[UserOperationResponseADM]].
     */
-  private def createNewUserADM(createRequest: CreateUserApiRequestADM,
+  private def createNewUserADM( //createRequest: CreateUserApiRequestADM,
+                               userEntity: UserEntity,
                                featureFactoryConfig: FeatureFactoryConfig,
                                requestingUser: UserADM,
                                apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-    log.debug("createNewUserADM - createRequest: {}", createRequest)
+    //log.debug("createNewUserADM - createRequest: {}", createRequest)
 
     /**
       * The actual task run with an IRI lock.
       */
-    def createNewUserTask(createRequest: CreateUserApiRequestADM, requestingUser: UserADM, apiRequestID: UUID) =
+    def createNewUserTask(createRequest: UserEntity, requestingUser: UserADM, apiRequestID: UUID) = {
       for {
-        // check username
-        _ <- Future(if (createRequest.username.isEmpty) throw BadRequestException("Username cannot be empty"))
-        _ = stringFormatter.validateUsername(
-          createRequest.username,
-          throw BadRequestException(s"The username '${createRequest.username}' contains invalid characters"))
-
-        // check email
-        _ = if (createRequest.email.isEmpty) throw BadRequestException("Email cannot be empty")
-        _ = stringFormatter.validateEmailAndThrow(
-          createRequest.email,
-          throw BadRequestException(s"The email '${createRequest.email}' is invalid"))
-
-        // check other
-        _ = if (createRequest.password.isEmpty) throw BadRequestException("Password cannot be empty")
-        _ = if (createRequest.givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
-        _ = if (createRequest.familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
-
-        usernameTaken: Boolean <- userByUsernameExists(Some(createRequest.username))
+        usernameTaken: Boolean <- userByUsernameExists(Some(Username.toString(createRequest.username)))
         _ = if (usernameTaken) {
-          throw DuplicateValueException(s"User with the username '${createRequest.username}' already exists")
+          throw DuplicateValueException(
+            s"User with the username '${Username.toString(createRequest.username)}' already exists")
         }
 
-        emailTaken: Boolean <- userByEmailExists(Some(createRequest.email))
+        emailTaken: Boolean <- userByEmailExists(Some(Email.toString(createRequest.email)))
         _ = if (emailTaken) {
-          throw DuplicateValueException(s"User with the email '${createRequest.email}' already exists")
+          throw DuplicateValueException(s"User with the email '${Email.toString(createRequest.email)}' already exists")
         }
 
         // check the custom IRI; if not given, create an unused IRI
@@ -1561,7 +1547,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         userIri: IRI <- checkOrCreateEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
 
         encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
-        hashedPassword = encoder.encode(createRequest.password)
+        hashedPassword = encoder.encode(Password.toString(userEntity.password))
 
         // Create the new user.
         createNewUserSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -1570,19 +1556,38 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             triplestore = settings.triplestoreType,
             userIri = userIri,
             userClassIri = OntologyConstants.KnoraAdmin.User,
-            username = stringFormatter.validateAndEscapeUsername(
-              createRequest.username,
-              throw BadRequestException(s"The username '${createRequest.username}' contains invalid characters")),
-            email = createRequest.email,
+            username = stringFormatter.toSparqlEncodedString(
+              Username.toString(userEntity.username),
+              errorFun = throw BadRequestException(
+                s"The supplied username: '${Username.toString(createRequest.username)}' is not valid.")
+            ),
+            email = stringFormatter.toSparqlEncodedString(
+              Email.toString(userEntity.email),
+              errorFun = throw BadRequestException(
+                s"The supplied email: '${Email.toString(createRequest.email)}' is not valid.")),
             password = hashedPassword,
-            givenName = createRequest.givenName,
-            familyName = createRequest.familyName,
-            status = createRequest.status,
-            preferredLanguage = createRequest.lang,
-            systemAdmin = createRequest.systemAdmin
+            givenName = stringFormatter.toSparqlEncodedString(
+              GivenName.toString(userEntity.givenName),
+              errorFun = throw BadRequestException(
+                s"The supplied given name: '${GivenName.toString(createRequest.givenName)}' is not valid.")
+            ),
+            familyName = stringFormatter.toSparqlEncodedString(
+              FamilyName.toString(userEntity.familyName),
+              errorFun = throw BadRequestException(
+                s"The supplied family name: '${FamilyName.toString(createRequest.familyName)}' is not valid.")
+            ),
+            status = Status.toBoolean(userEntity.status),
+            preferredLanguage = stringFormatter.toSparqlEncodedString(
+              LanguageCode.toString(userEntity.lang),
+              errorFun = throw BadRequestException(
+                s"The supplied language: '${LanguageCode.toString(createRequest.lang)}' is not valid.")
+            ),
+            systemAdmin = SystemAdmin.toBoolean(userEntity.systemAdmin)
           )
           .toString
-        // _ = log.debug(s"createNewUser: $createNewUserSparqlString")
+
+        _ = log.debug(s"createNewUser: $createNewUserSparqlString")
+
         createNewUserResponse <- (storeManager ? SparqlUpdateRequest(createNewUserSparqlString))
           .mapTo[SparqlUpdateResponse]
 
@@ -1605,13 +1610,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         userOperationResponseADM = UserOperationResponseADM(newUserADM.ofType(UserInformationTypeADM.RESTRICTED))
 
       } yield userOperationResponseADM
-
+    }
     for {
       // run user creation with an global IRI lock
       taskResult <- IriLocker.runWithIriLock(
         apiRequestID,
         USERS_GLOBAL_LOCK_IRI,
-        () => createNewUserTask(createRequest, requestingUser, apiRequestID)
+        () => createNewUserTask(userEntity, requestingUser, apiRequestID)
       )
     } yield taskResult
   }
