@@ -235,16 +235,16 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         responderManager ! UserCreateRequestADM(
           userEntity = UserEntity(
             id = None,
-            username = Username.fromString("donald.duck").fold(error => throw error, value => value),
+            username = Username.create("donald.duck").fold(error => throw error, value => value),
             email = Email
-              .fromString("donald.duck@example.com")
+              .create("donald.duck@example.com")
               .fold(error => throw error, value => value),
-            givenName = GivenName.fromString("Donald").fold(error => throw error, value => value),
-            familyName = FamilyName.fromString("Duck").fold(error => throw error, value => value),
-            password = Password.fromString("test").fold(error => throw error, value => value),
-            status = Status.fromBoolean(true),
-            lang = LanguageCode.fromString("en").fold(error => throw error, value => value),
-            systemAdmin = SystemAdmin.fromBoolean(false)
+            givenName = GivenName.create("Donald").fold(error => throw error, value => value),
+            familyName = FamilyName.create("Duck").fold(error => throw error, value => value),
+            password = Password.create("test").fold(error => throw error, value => value),
+            status = Status.create(true).fold(error => throw error, value => value),
+            lang = LanguageCode.create("en").fold(error => throw error, value => value),
+            systemAdmin = SystemAdmin.create(false).fold(error => throw error, value => value),
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anonymousUser,
@@ -263,16 +263,16 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         responderManager ! UserCreateRequestADM(
           userEntity = UserEntity(
             id = None,
-            username = Username.fromString("root").fold(error => throw error, value => value),
+            username = Username.create("root").fold(error => throw error, value => value),
             email = Email
-              .fromString("root2@example.com")
+              .create("root2@example.com")
               .fold(error => throw error, value => value),
-            givenName = GivenName.fromString("Donald").fold(error => throw error, value => value),
-            familyName = FamilyName.fromString("Duck").fold(error => throw error, value => value),
-            password = Password.fromString("test").fold(error => throw error, value => value),
-            status = Status.fromBoolean(true),
-            lang = LanguageCode.fromString("en").fold(error => throw error, value => value),
-            systemAdmin = SystemAdmin.fromBoolean(false)
+            givenName = GivenName.create("Donald").fold(error => throw error, value => value),
+            familyName = FamilyName.create("Duck").fold(error => throw error, value => value),
+            password = Password.create("test").fold(error => throw error, value => value),
+            status = Status.create(true).fold(error => throw error, value => value),
+            lang = LanguageCode.create("en").fold(error => throw error, value => value),
+            systemAdmin = SystemAdmin.create(false).fold(error => throw error, value => value),
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.anonymousUser,
@@ -285,16 +285,16 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         responderManager ! UserCreateRequestADM(
           userEntity = UserEntity(
             id = None,
-            username = Username.fromString("root2").fold(error => throw error, value => value),
+            username = Username.create("root2").fold(error => throw error, value => value),
             email = Email
-              .fromString("root@example.com")
+              .create("root@example.com")
               .fold(error => throw error, value => value),
-            givenName = GivenName.fromString("Donald").fold(error => throw error, value => value),
-            familyName = FamilyName.fromString("Duck").fold(error => throw error, value => value),
-            password = Password.fromString("test").fold(error => throw error, value => value),
-            status = Status.fromBoolean(true),
-            lang = LanguageCode.fromString("en").fold(error => throw error, value => value),
-            systemAdmin = SystemAdmin.fromBoolean(false)
+            givenName = GivenName.create("Donald").fold(error => throw error, value => value),
+            familyName = FamilyName.create("Duck").fold(error => throw error, value => value),
+            password = Password.create("test").fold(error => throw error, value => value),
+            status = Status.create(true).fold(error => throw error, value => value),
+            lang = LanguageCode.create("en").fold(error => throw error, value => value),
+            systemAdmin = SystemAdmin.create(false).fold(error => throw error, value => value),
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.anonymousUser,

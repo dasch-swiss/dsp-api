@@ -125,19 +125,20 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         val id = apiRequest.id
         stringFormatter.validateOptionalUserIri(id, throw BadRequestException(s"Invalid user IRI"))
         val username: Username =
-          Username.fromString(apiRequest.username).fold(error => throw error, value => value)
+          Username.create(apiRequest.username).fold(error => throw error, value => value)
         val email: Email =
-          Email.fromString(apiRequest.email).fold(error => throw error, value => value)
+          Email.create(apiRequest.email).fold(error => throw error, value => value)
         val givenName: GivenName =
-          GivenName.fromString(apiRequest.givenName).fold(error => throw error, value => value)
+          GivenName.create(apiRequest.givenName).fold(error => throw error, value => value)
         val familyName: FamilyName =
-          FamilyName.fromString(apiRequest.familyName).fold(error => throw error, value => value)
+          FamilyName.create(apiRequest.familyName).fold(error => throw error, value => value)
         val password: Password =
-          Password.fromString(apiRequest.password).fold(error => throw error, value => value)
-        val status: Status = Status.fromBoolean(apiRequest.status)
+          Password.create(apiRequest.password).fold(error => throw error, value => value)
+        val status: Status = Status.create(apiRequest.status).fold(error => throw error, value => value)
         val lang: LanguageCode =
-          LanguageCode.fromString(apiRequest.lang).fold(error => throw error, value => value)
-        val systemAdmin: SystemAdmin = SystemAdmin.fromBoolean(apiRequest.systemAdmin)
+          LanguageCode.create(apiRequest.lang).fold(error => throw error, value => value)
+        val systemAdmin: SystemAdmin =
+          SystemAdmin.create(apiRequest.systemAdmin).fold(error => throw error, value => value)
 
         //TODO use UserADMEntity (= UserADM with value objects) instead of our UserEntity
         val user: UserEntity =

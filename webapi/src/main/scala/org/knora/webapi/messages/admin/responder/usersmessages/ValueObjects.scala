@@ -2,16 +2,19 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 
 import org.knora.webapi.LanguageCodes
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.StringFormatter
 
 import scala.util.matching.Regex
+
+trait ValueObject[T, K] {
+  def create(value: K): Either[Throwable, T]
+}
 
 /**
   * Username value object.
   */
-sealed abstract case class Username private (value: String)
+sealed abstract case class Username(value: String)
 
-object Username {
+object Username extends ValueObject[Username, String] {
 
   /**
     * A regex that matches a valid username
@@ -23,19 +26,7 @@ object Username {
   private val UsernameRegex: Regex =
     """^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$""".r
 
-  /**
-    * Convenience constructor taking a Sparql encoded string.
-    */
-  def fromSparqlEncodedString(value: String)(implicit stringFormatter: StringFormatter): Either[Throwable, Username] = {
-    val decoded = stringFormatter.fromSparqlEncodedString(value)
-    fromString(decoded)
-  }
-
-  /**
-    * Returns optionally a Username, while also checking that the supplied
-    * string is not containing illegal special characters.
-    */
-  def fromString(value: String): Either[Throwable, Username] = {
+  override def create(value: String): Either[Throwable, Username] = {
     if (value.isEmpty || value.contains("\r")) {
       Left(BadRequestException("Invalid username"))
     } else {
@@ -46,22 +37,18 @@ object Username {
       }
     }
   }
-
-  def toString(username: Username): String = {
-    username.value
-  }
 }
 
 /**
   * Email value object.
   */
-sealed abstract case class Email private (value: String)
+sealed abstract case class Email(value: String)
 
-object Email {
+object Email extends ValueObject[Email, String] {
 
   private val EmailRegex: Regex = """^.+@.+$""".r
 
-  def fromString(value: String): Either[Throwable, Email] = {
+  override def create(value: String): Either[Throwable, Email] = {
     if (value.isEmpty || value.contains("\r")) {
       Left(BadRequestException("Invalid email"))
     } else {
@@ -71,22 +58,18 @@ object Email {
       }
     }
   }
-
-  def toString(email: Email): String = {
-    email.value
-  }
 }
 
 /**
   * Password value object.
   */
-sealed abstract case class Password private (value: String)
+sealed abstract case class Password(value: String)
 
-object Password {
+object Password extends ValueObject[Password, String] {
 
   private val PasswordRegex: Regex = """^[\s\S]*$""".r //TODO: add password validation
 
-  def fromString(value: String): Either[Throwable, Password] = {
+  override def create(value: String): Either[Throwable, Password] = {
     if (value.isEmpty || value.contains("\r")) {
       Left(BadRequestException("Invalid password"))
     } else {
@@ -96,92 +79,71 @@ object Password {
       }
     }
   }
-
-  def toString(password: Password): String = {
-    password.value
-  }
 }
 
 /**
   * GivenName value object.
   */
-sealed abstract case class GivenName private (value: String)
+sealed abstract case class GivenName(value: String)
 
-object GivenName {
-  def fromString(value: String): Either[Throwable, GivenName] = {
+object GivenName extends ValueObject[GivenName, String] {
+  override def create(value: String): Either[Throwable, GivenName] = {
     if (value.isEmpty || value.contains("\r")) {
       Left(BadRequestException("Invalid given name"))
     } else {
       Right(new GivenName(value) {})
     }
   }
-
-  def toString(givenName: GivenName): String = {
-    givenName.value
-  }
 }
 
 /**
   * FamilyName value object.
   */
-sealed abstract case class FamilyName private (value: String)
+sealed abstract case class FamilyName(value: String)
 
-object FamilyName {
-  def fromString(value: String): Either[Throwable, FamilyName] = {
+object FamilyName extends ValueObject[FamilyName, String] {
+  override def create(value: String): Either[Throwable, FamilyName] = {
     if (value.isEmpty || value.contains("\r")) {
       Left(BadRequestException("Invalid family name"))
     } else {
       Right(new FamilyName(value) {})
     }
   }
-
-  def toString(familyName: FamilyName): String = {
-    familyName.value
-  }
 }
 
 /**
   * LanguageCode value object.
   */
-sealed abstract case class LanguageCode private (value: String)
+sealed abstract case class LanguageCode(value: String)
 
-object LanguageCode {
-
-  def fromString(value: String): Either[Throwable, LanguageCode] = {
+object LanguageCode extends ValueObject[LanguageCode, String] {
+  override def create(value: String): Either[Throwable, LanguageCode] = {
     if (value.isEmpty || !LanguageCodes.SupportedLanguageCodes.contains(value)) {
       Left(BadRequestException("Invalid language code"))
     } else {
       Right(new LanguageCode(value) {})
     }
   }
-
-  def toString(languageCode: LanguageCode): String = {
-    languageCode.value
-  }
 }
 
 /**
   * Status value object.
   */
-case class Status private (value: Boolean)
+sealed abstract case class Status(value: Boolean)
 
-object Status {
-  def fromBoolean(value: Boolean): Status =
-    Status(value)
-
-  def toBoolean(status: Status): Boolean =
-    status.value
+object Status extends ValueObject[Status, Boolean] {
+  override def create(value: Boolean): Either[Throwable, Status] = {
+    Right(new Status(value) {})
+  }
 }
 
 /**
   * SystemAdmin value object.
   */
-case class SystemAdmin private (value: Boolean)
+sealed abstract case class SystemAdmin(value: Boolean)
 
-object SystemAdmin {
-  def fromBoolean(value: Boolean): SystemAdmin =
-    SystemAdmin(value)
-
-  def toBoolean(systemAdmin: SystemAdmin): Boolean =
-    systemAdmin.value
+object SystemAdmin extends ValueObject[SystemAdmin, Boolean] {
+  override def create(value: Boolean): Either[Throwable, SystemAdmin] = {
+    Right(new SystemAdmin(value) {})
+  }
 }

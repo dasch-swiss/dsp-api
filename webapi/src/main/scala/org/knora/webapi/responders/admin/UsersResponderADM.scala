@@ -1531,23 +1531,25 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       */
     def createNewUserTask(createRequest: UserEntity, requestingUser: UserADM, apiRequestID: UUID) = {
       for {
-        usernameTaken: Boolean <- userByUsernameExists(Some(Username.toString(createRequest.username)))
+        // check if username is unique
+        usernameTaken: Boolean <- userByUsernameExists(Some(createRequest.username.value))
         _ = if (usernameTaken) {
-          throw DuplicateValueException(
-            s"User with the username '${Username.toString(createRequest.username)}' already exists")
+          throw DuplicateValueException(s"User with the username '${createRequest.username.value}' already exists")
         }
 
-        emailTaken: Boolean <- userByEmailExists(Some(Email.toString(createRequest.email)))
+        // check if email is unique
+        emailTaken: Boolean <- userByEmailExists(Some(createRequest.email.value))
         _ = if (emailTaken) {
-          throw DuplicateValueException(s"User with the email '${Email.toString(createRequest.email)}' already exists")
+          throw DuplicateValueException(s"User with the email '${createRequest.email.value}' already exists")
         }
 
         // check the custom IRI; if not given, create an unused IRI
         customUserIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
         userIri: IRI <- checkOrCreateEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
 
+        // hash password
         encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
-        hashedPassword = encoder.encode(Password.toString(userEntity.password))
+        hashedPassword = encoder.encode(userEntity.password.value)
 
         // Create the new user.
         createNewUserSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -1557,32 +1559,33 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             userIri = userIri,
             userClassIri = OntologyConstants.KnoraAdmin.User,
             username = stringFormatter.toSparqlEncodedString(
-              Username.toString(userEntity.username),
-              errorFun = throw BadRequestException(
-                s"The supplied username: '${Username.toString(createRequest.username)}' is not valid.")
+              userEntity.username.value,
+              errorFun =
+                throw BadRequestException(s"The supplied username: '${createRequest.username.value}' is not valid.")
             ),
-            email = stringFormatter.toSparqlEncodedString(
-              Email.toString(userEntity.email),
-              errorFun = throw BadRequestException(
-                s"The supplied email: '${Email.toString(createRequest.email)}' is not valid.")),
+            email =
+              stringFormatter.toSparqlEncodedString(
+                userEntity.email.value,
+                errorFun =
+                  throw BadRequestException(s"The supplied email: '${createRequest.email.value}' is not valid.")),
             password = hashedPassword,
             givenName = stringFormatter.toSparqlEncodedString(
-              GivenName.toString(userEntity.givenName),
-              errorFun = throw BadRequestException(
-                s"The supplied given name: '${GivenName.toString(createRequest.givenName)}' is not valid.")
+              userEntity.givenName.value,
+              errorFun =
+                throw BadRequestException(s"The supplied given name: '${createRequest.givenName.value}' is not valid.")
             ),
             familyName = stringFormatter.toSparqlEncodedString(
-              FamilyName.toString(userEntity.familyName),
+              userEntity.familyName.value,
               errorFun = throw BadRequestException(
-                s"The supplied family name: '${FamilyName.toString(createRequest.familyName)}' is not valid.")
+                s"The supplied family name: '${createRequest.familyName.value}' is not valid.")
             ),
-            status = Status.toBoolean(userEntity.status),
+            status = userEntity.status.value,
             preferredLanguage = stringFormatter.toSparqlEncodedString(
-              LanguageCode.toString(userEntity.lang),
-              errorFun = throw BadRequestException(
-                s"The supplied language: '${LanguageCode.toString(createRequest.lang)}' is not valid.")
+              userEntity.lang.value,
+              errorFun =
+                throw BadRequestException(s"The supplied language: '${createRequest.lang.value}' is not valid.")
             ),
-            systemAdmin = SystemAdmin.toBoolean(userEntity.systemAdmin)
+            systemAdmin = userEntity.systemAdmin.value
           )
           .toString
 
