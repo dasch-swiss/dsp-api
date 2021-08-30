@@ -1523,7 +1523,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                requestingUser: UserADM,
                                apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-    //log.debug("createNewUserADM - createRequest: {}", createRequest)
+    log.debug("createNewUserADM - userEntity: {}", userEntity)
 
     /**
       * The actual task run with an IRI lock.

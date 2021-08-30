@@ -10,7 +10,7 @@ case object InvalidPassword extends ValidationError
 case object InvalidLanguageCode extends ValidationError
 
 /**
-  * User entity representing the payload for the create user request
+  * User entity representing the payload for the create and update user request
   */
 sealed case class UserEntity(id: Option[IRI],
                              username: Username,

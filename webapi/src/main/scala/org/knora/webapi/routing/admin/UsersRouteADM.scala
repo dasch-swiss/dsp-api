@@ -19,12 +19,9 @@
 
 package org.knora.webapi.routing.admin
 
-import java.util.UUID
-
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
-import javax.ws.rs.Path
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
@@ -33,6 +30,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
+import java.util.UUID
+import javax.ws.rs.Path
 import scala.concurrent.Future
 
 object UsersRouteADM {
@@ -61,7 +60,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       changeUserPassword(featureFactoryConfig) ~
       changeUserStatus(featureFactoryConfig) ~
       deleteUser(featureFactoryConfig) ~
-      changeUserSytemAdminMembership(featureFactoryConfig) ~
+      changeUserSystemAdminMembership(featureFactoryConfig) ~
       getUsersProjectMemberships(featureFactoryConfig) ~
       addUserToProjectMembership(featureFactoryConfig) ~
       removeUserFromProjectMembership(featureFactoryConfig) ~
@@ -122,7 +121,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     post {
       entity(as[CreateUserApiRequestADM]) { apiRequest => requestContext =>
         // get all values from request and make value objects from it
-        //TODO use UserADMEntity (= UserADM with value objects) instead of our UserEntity
+        //TODO use UserADMEntity (= UserADM with value objects) instead of UserEntity
         val user: UserEntity =
           UserEntity(
             id = stringFormatter.validateOptionalUserIri(apiRequest.id, throw BadRequestException(s"Invalid user IRI")),
@@ -430,7 +429,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     * API MAY CHANGE: Change user's SystemAdmin membership.
     */
   @ApiMayChange
-  private def changeUserSytemAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def changeUserSystemAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(UsersBasePath / "iri" / Segment / "SystemAdmin") { value =>
       put {
         entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
