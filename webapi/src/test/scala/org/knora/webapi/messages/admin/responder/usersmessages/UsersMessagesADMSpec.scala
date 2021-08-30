@@ -19,7 +19,7 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
@@ -29,7 +29,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 object UsersMessagesADMSpec {
-  val config = ConfigFactory.parseString("""
+  val config: Config = ConfigFactory.parseString("""
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
@@ -172,24 +172,23 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
   }
 
   "The CreateUserApiRequestADM case class" should {
-//TODO: these tests should be done in the context of the creation of value objects
+    //TODO: these tests should be done in the context of the creation of value objects
+    "throw 'BadRequestException' if 'username'is missing" in {
 
-//    "throw 'BadRequestException' if 'username'is missing" in {
-//
-//      assertThrows[BadRequestException](
-//        CreateUserApiRequestADM(
-//          username = "",
-//          email = "ddd@example.com",
-//          givenName = "Donald",
-//          familyName = "Duck",
-//          password = "test",
-//          status = true,
-//          lang = "en",
-//          systemAdmin = false
-//        )
-//      )
-//    }
-//
+      assertThrows[BadRequestException](
+        CreateUserApiRequestADM(
+          username = "",
+          email = "ddd@example.com",
+          givenName = "Donald",
+          familyName = "Duck",
+          password = "test",
+          status = true,
+          lang = "en",
+          systemAdmin = false
+        )
+      )
+    }
+
 //    "throw 'BadRequestException' if 'email' is missing" in {
 //
 //      assertThrows[BadRequestException](

@@ -61,7 +61,7 @@ case class CreateUserApiRequestADM(id: Option[IRI] = None,
                                    lang: String,
                                    systemAdmin: Boolean) {
 
-  def toJsValue: JsValue = UsersADMJsonProtocol.createUserApiRequestADMFormat.write(this)
+  //def toJsValue: JsValue = UsersADMJsonProtocol.createUserApiRequestADMFormat.write(this)
 }
 
 /**
@@ -203,8 +203,7 @@ case class UserGetRequestADM(identifier: UserIdentifierADM,
   * @param requestingUser       the user creating the new user.
   * @param apiRequestID         the ID of the API request.
   */
-case class UserCreateRequestADM( //createRequest: CreateUserApiRequestADM,
-                                userEntity: UserEntity,
+case class UserCreateRequestADM(userEntity: UserEntity,
                                 featureFactoryConfig: FeatureFactoryConfig,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID)

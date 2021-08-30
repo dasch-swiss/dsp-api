@@ -122,27 +122,19 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     post {
       entity(as[CreateUserApiRequestADM]) { apiRequest => requestContext =>
         // get all values from request and make value objects from it
-        val id = apiRequest.id
-        stringFormatter.validateOptionalUserIri(id, throw BadRequestException(s"Invalid user IRI"))
-        val username: Username =
-          Username.create(apiRequest.username).fold(error => throw error, value => value)
-        val email: Email =
-          Email.create(apiRequest.email).fold(error => throw error, value => value)
-        val givenName: GivenName =
-          GivenName.create(apiRequest.givenName).fold(error => throw error, value => value)
-        val familyName: FamilyName =
-          FamilyName.create(apiRequest.familyName).fold(error => throw error, value => value)
-        val password: Password =
-          Password.create(apiRequest.password).fold(error => throw error, value => value)
-        val status: Status = Status.create(apiRequest.status).fold(error => throw error, value => value)
-        val lang: LanguageCode =
-          LanguageCode.create(apiRequest.lang).fold(error => throw error, value => value)
-        val systemAdmin: SystemAdmin =
-          SystemAdmin.create(apiRequest.systemAdmin).fold(error => throw error, value => value)
-
         //TODO use UserADMEntity (= UserADM with value objects) instead of our UserEntity
         val user: UserEntity =
-          UserEntity(id, username, email, givenName, familyName, password, status, lang, systemAdmin)
+          UserEntity(
+            id = stringFormatter.validateOptionalUserIri(apiRequest.id, throw BadRequestException(s"Invalid user IRI")),
+            username = Username.create(apiRequest.username).fold(error => throw error, value => value),
+            email = Email.create(apiRequest.email).fold(error => throw error, value => value),
+            givenName = GivenName.create(apiRequest.givenName).fold(error => throw error, value => value),
+            familyName = FamilyName.create(apiRequest.familyName).fold(error => throw error, value => value),
+            password = Password.create(apiRequest.password).fold(error => throw error, value => value),
+            status = Status.create(apiRequest.status).fold(error => throw error, value => value),
+            lang = LanguageCode.create(apiRequest.lang).fold(error => throw error, value => value),
+            systemAdmin = SystemAdmin.create(apiRequest.systemAdmin).fold(error => throw error, value => value)
+          )
 
         val requestMessage: Future[UserCreateRequestADM] = for {
           requestingUser <- getUserADM(
