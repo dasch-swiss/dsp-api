@@ -1513,13 +1513,12 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     *                     - https://crackstation.net/hashing-security.htm
     *                     - http://blog.ircmaxell.com/2012/12/seven-ways-to-screw-up-bcrypt.html
     *
-    * @param createRequest        a [[CreateUserApiRequestADM]] object containing information about the new user to be created.
+    * @param userEntity           a [[UserEntity]] object containing information about the new user to be created.
     * @param featureFactoryConfig the feature factory configuration.
     * @param requestingUser       a [[UserADM]] object containing information about the requesting user.
     * @return a future containing the [[UserOperationResponseADM]].
     */
-  private def createNewUserADM( //createRequest: CreateUserApiRequestADM,
-                               userEntity: UserEntity,
+  private def createNewUserADM(userEntity: UserEntity,
                                featureFactoryConfig: FeatureFactoryConfig,
                                requestingUser: UserADM,
                                apiRequestID: UUID): Future[UserOperationResponseADM] = {
@@ -1529,22 +1528,22 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     /**
       * The actual task run with an IRI lock.
       */
-    def createNewUserTask(createRequest: UserEntity, requestingUser: UserADM, apiRequestID: UUID) = {
+    def createNewUserTask(userEntity: UserEntity) = {
       for {
         // check if username is unique
-        usernameTaken: Boolean <- userByUsernameExists(Some(createRequest.username.value))
+        usernameTaken: Boolean <- userByUsernameExists(Some(userEntity.username.value))
         _ = if (usernameTaken) {
-          throw DuplicateValueException(s"User with the username '${createRequest.username.value}' already exists")
+          throw DuplicateValueException(s"User with the username '${userEntity.username.value}' already exists")
         }
 
         // check if email is unique
-        emailTaken: Boolean <- userByEmailExists(Some(createRequest.email.value))
+        emailTaken: Boolean <- userByEmailExists(Some(userEntity.email.value))
         _ = if (emailTaken) {
-          throw DuplicateValueException(s"User with the email '${createRequest.email.value}' already exists")
+          throw DuplicateValueException(s"User with the email '${userEntity.email.value}' already exists")
         }
 
         // check the custom IRI; if not given, create an unused IRI
-        customUserIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
+        customUserIri: Option[SmartIri] = userEntity.id.map(iri => iri.toSmartIri)
         userIri: IRI <- checkOrCreateEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
 
         // hash password
@@ -1561,29 +1560,26 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             username = stringFormatter.toSparqlEncodedString(
               userEntity.username.value,
               errorFun =
-                throw BadRequestException(s"The supplied username: '${createRequest.username.value}' is not valid.")
+                throw BadRequestException(s"The supplied username: '${userEntity.username.value}' is not valid.")
             ),
-            email =
-              stringFormatter.toSparqlEncodedString(
-                userEntity.email.value,
-                errorFun =
-                  throw BadRequestException(s"The supplied email: '${createRequest.email.value}' is not valid.")),
+            email = stringFormatter.toSparqlEncodedString(
+              userEntity.email.value,
+              errorFun = throw BadRequestException(s"The supplied email: '${userEntity.email.value}' is not valid.")),
             password = hashedPassword,
             givenName = stringFormatter.toSparqlEncodedString(
               userEntity.givenName.value,
               errorFun =
-                throw BadRequestException(s"The supplied given name: '${createRequest.givenName.value}' is not valid.")
+                throw BadRequestException(s"The supplied given name: '${userEntity.givenName.value}' is not valid.")
             ),
             familyName = stringFormatter.toSparqlEncodedString(
               userEntity.familyName.value,
-              errorFun = throw BadRequestException(
-                s"The supplied family name: '${createRequest.familyName.value}' is not valid.")
+              errorFun =
+                throw BadRequestException(s"The supplied family name: '${userEntity.familyName.value}' is not valid.")
             ),
             status = userEntity.status.value,
             preferredLanguage = stringFormatter.toSparqlEncodedString(
               userEntity.lang.value,
-              errorFun =
-                throw BadRequestException(s"The supplied language: '${createRequest.lang.value}' is not valid.")
+              errorFun = throw BadRequestException(s"The supplied language: '${userEntity.lang.value}' is not valid.")
             ),
             systemAdmin = userEntity.systemAdmin.value
           )
@@ -1619,7 +1615,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       taskResult <- IriLocker.runWithIriLock(
         apiRequestID,
         USERS_GLOBAL_LOCK_IRI,
-        () => createNewUserTask(userEntity, requestingUser, apiRequestID)
+        () => createNewUserTask(userEntity)
       )
     } yield taskResult
   }
