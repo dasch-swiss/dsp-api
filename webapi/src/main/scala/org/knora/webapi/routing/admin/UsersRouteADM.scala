@@ -134,7 +134,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             lang = LanguageCode.create(apiRequest.lang).fold(error => throw error, value => value),
             systemAdmin = SystemAdmin.create(apiRequest.systemAdmin).fold(error => throw error, value => value)
           )
-
         val requestMessage: Future[UserCreateRequestADM] = for {
           requestingUser <- getUserADM(
             requestContext = requestContext,

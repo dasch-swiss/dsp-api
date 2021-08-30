@@ -47,7 +47,7 @@ sealed abstract case class Email(value: String)
 
 object Email extends ValueObject[Email, String] {
 
-  private val EmailRegex: Regex = """^.+@.+$""".r
+  private val EmailRegex: Regex = """^.+@.+$""".r // TODO use proper validation
 
   override def create(value: String): Either[Throwable, Email] = {
     if (value.isEmpty) {
@@ -88,6 +88,7 @@ object Password extends ValueObject[Password, String] {
 sealed abstract case class GivenName(value: String)
 
 object GivenName extends ValueObject[GivenName, String] {
+  // TODO use proper validation for value
   override def create(value: String): Either[Throwable, GivenName] = {
     if (value.isEmpty) {
       Left(BadRequestException("Missing given name"))
@@ -103,6 +104,7 @@ object GivenName extends ValueObject[GivenName, String] {
 sealed abstract case class FamilyName(value: String)
 
 object FamilyName extends ValueObject[FamilyName, String] {
+  // TODO use proper validation for value
   override def create(value: String): Either[Throwable, FamilyName] = {
     if (value.isEmpty) {
       Left(BadRequestException("Missing family name"))

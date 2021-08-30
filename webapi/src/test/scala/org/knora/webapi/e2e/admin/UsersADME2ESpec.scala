@@ -407,6 +407,38 @@ class UsersADME2ESpec
       }
     }
 
+    "dealing with special characters" should {
+      "escape the special characters when creating the user" in {
+        val createUserWithApostropheRequest: String =
+          s"""{
+             |    "username": "userWithApostrophe",
+             |    "email": "userWithApostrophe@example.org",
+             |    "givenName": "M\\"Given 'Name",
+             |    "familyName": "M\\tFamily Name",
+             |    "password": "test",
+             |    "status": true,
+             |    "lang": "en",
+             |    "systemAdmin": false
+             |}""".stripMargin
+
+        val request = Post(baseApiUrl + s"/admin/users",
+                           HttpEntity(ContentTypes.`application/json`, createUserWithApostropheRequest))
+        val response: HttpResponse = singleAwaitingRequest(request)
+
+        response.status should be(StatusCodes.OK)
+
+        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+
+        //check that the special characters were escaped correctly
+        result.givenName should equal("M\"Given 'Name")
+        result.familyName should equal("M\tFamily Name")
+
+      }
+      "escape the special characters when updating the user" in {} //TODO continue here
+      "escape the special characters when getting the user" in {} //TODO continue here
+      //TODO deleting user?
+    }
+
     "used to modify user information" should {
 
       val donaldIri = new MutableTestIri
