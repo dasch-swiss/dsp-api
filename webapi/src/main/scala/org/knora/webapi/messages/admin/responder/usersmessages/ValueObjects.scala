@@ -27,8 +27,8 @@ object Username extends ValueObject[Username, String] {
     """^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$""".r
 
   override def create(value: String): Either[Throwable, Username] = {
-    if (value.isEmpty || value.contains("\r")) {
-      Left(BadRequestException("Invalid username"))
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing username"))
     } else {
       UsernameRegex.findFirstIn(value) match {
         case Some(value) =>
@@ -37,6 +37,7 @@ object Username extends ValueObject[Username, String] {
       }
     }
   }
+
 }
 
 /**
@@ -49,8 +50,8 @@ object Email extends ValueObject[Email, String] {
   private val EmailRegex: Regex = """^.+@.+$""".r
 
   override def create(value: String): Either[Throwable, Email] = {
-    if (value.isEmpty || value.contains("\r")) {
-      Left(BadRequestException("Invalid email"))
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing email"))
     } else {
       EmailRegex.findFirstIn(value) match {
         case Some(value) => Right(new Email(value) {})
@@ -70,8 +71,8 @@ object Password extends ValueObject[Password, String] {
   private val PasswordRegex: Regex = """^[\s\S]*$""".r //TODO: add password validation
 
   override def create(value: String): Either[Throwable, Password] = {
-    if (value.isEmpty || value.contains("\r")) {
-      Left(BadRequestException("Invalid password"))
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing password"))
     } else {
       PasswordRegex.findFirstIn(value) match {
         case Some(value) => Right(new Password(value) {})
@@ -88,8 +89,8 @@ sealed abstract case class GivenName(value: String)
 
 object GivenName extends ValueObject[GivenName, String] {
   override def create(value: String): Either[Throwable, GivenName] = {
-    if (value.isEmpty || value.contains("\r")) {
-      Left(BadRequestException("Invalid given name"))
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing given name"))
     } else {
       Right(new GivenName(value) {})
     }
@@ -103,8 +104,8 @@ sealed abstract case class FamilyName(value: String)
 
 object FamilyName extends ValueObject[FamilyName, String] {
   override def create(value: String): Either[Throwable, FamilyName] = {
-    if (value.isEmpty || value.contains("\r")) {
-      Left(BadRequestException("Invalid family name"))
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing family name"))
     } else {
       Right(new FamilyName(value) {})
     }
@@ -118,7 +119,9 @@ sealed abstract case class LanguageCode(value: String)
 
 object LanguageCode extends ValueObject[LanguageCode, String] {
   override def create(value: String): Either[Throwable, LanguageCode] = {
-    if (value.isEmpty || !LanguageCodes.SupportedLanguageCodes.contains(value)) {
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing language code"))
+    } else if (!LanguageCodes.SupportedLanguageCodes.contains(value)) {
       Left(BadRequestException("Invalid language code"))
     } else {
       Right(new LanguageCode(value) {})
