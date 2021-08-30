@@ -19,10 +19,10 @@
 
 package org.knora.webapi.messages.admin.responder.valueObjects
 
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.{IRI, UnitSpec}
 import org.scalatest.enablers.Messaging.messagingNatureOfThrowable
 
@@ -40,6 +40,12 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
+  /**
+   * Convenience method returning the UserEntity from the [[CreateUserApiRequestADM]] object
+   *
+   * @param createUserApiRequestADM the [[CreateUserApiRequestADM]] object
+   * @return                        a [[UserEntity]]
+   */
   private def createUserEntity(createUserApiRequestADM: CreateUserApiRequestADM): UserEntity = {
     UserEntity(
       id = stringFormatter.validateOptionalUserIri(createUserApiRequestADM.id,
@@ -55,6 +61,20 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     )
   }
 
+  /**
+   * Convenience method returning the [[CreateUserApiRequestADM]] object
+   *
+   * @param id          the optional IRI of the user to be created (unique).
+   * @param username    the username of the user to be created (unique).
+   * @param email       the email of the user to be created (unique).
+   * @param givenName   the given name of the user to be created.
+   * @param familyName  the family name of the user to be created
+   * @param password    the password of the user to be created.
+   * @param status      the status of the user to be created (active = true, inactive = false).
+   * @param lang        the default language of the user to be created.
+   * @param systemAdmin the system admin membership.
+   * @return            a [[UserEntity]]
+   */
   private def createUserApiRequestADM(
       id: Option[IRI] = None,
       username: String = "donald.duck",
