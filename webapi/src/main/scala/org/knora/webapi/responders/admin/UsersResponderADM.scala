@@ -57,7 +57,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private val USERS_GLOBAL_LOCK_IRI = "http://rdfh.ch/users"
 
   /**
-    * Receives a message extending [[UsersResponderRequestV1]], and returns an appropriate message.
+    * Receives a message extending [[UsersResponderRequestADM]], and returns an appropriate message.
     */
   def receive(msg: UsersResponderRequestADM) = msg match {
     case UsersGetADM(userInformationTypeADM, featureFactoryConfig, requestingUser) =>
@@ -68,64 +68,62 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       getSingleUserADM(identifier, userInformationTypeADM, featureFactoryConfig, requestingUser)
     case UserGetRequestADM(identifier, userInformationTypeADM, featureFactoryConfig, requestingUser) =>
       getSingleUserADMRequest(identifier, userInformationTypeADM, featureFactoryConfig, requestingUser)
-//    case UserCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
-//      createNewUserADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID)
     case UserCreateRequestADM(userEntity, featureFactoryConfig, requestingUser, apiRequestID) =>
       createNewUserADM(userEntity, featureFactoryConfig, requestingUser, apiRequestID)
     case UserChangeBasicUserInformationRequestADM(userIri,
-                                                  changeUserRequest,
+                                                  userUpdatePayload,
                                                   featureFactoryConfig,
                                                   requestingUser,
                                                   apiRequestID) =>
-      changeBasicUserInformationADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID)
-    case UserChangePasswordRequestADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
-      changePasswordADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID)
-    case UserChangeStatusRequestADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
-      changeUserStatusADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID)
-    case UserChangeSystemAdminMembershipStatusRequestADM(userIri,
-                                                         changeSystemAdminMembershipStatusRequest,
-                                                         featureFactoryConfig,
-                                                         requestingUser,
-                                                         apiRequestID) =>
-      changeUserSystemAdminMembershipStatusADM(userIri,
-                                               changeSystemAdminMembershipStatusRequest,
-                                               featureFactoryConfig,
-                                               requestingUser,
-                                               apiRequestID)
+      changeBasicUserInformationADM(userIri, userUpdatePayload, featureFactoryConfig, requestingUser, apiRequestID)
+//    case UserChangePasswordRequestADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
+//      changePasswordADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID)
+//    case UserChangeStatusRequestADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
+//      changeUserStatusADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID)
+//    case UserChangeSystemAdminMembershipStatusRequestADM(userIri,
+//                                                         changeSystemAdminMembershipStatusRequest,
+//                                                         featureFactoryConfig,
+//                                                         requestingUser,
+//                                                         apiRequestID) =>
+//      changeUserSystemAdminMembershipStatusADM(userIri,
+//                                               changeSystemAdminMembershipStatusRequest,
+//                                               featureFactoryConfig,
+//                                               requestingUser,
+//                                               apiRequestID)
     case UserProjectMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser) =>
       userProjectMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser)
-    case UserProjectMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID) =>
-      userProjectMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
-    case UserProjectMembershipRemoveRequestADM(userIri,
-                                               projectIri,
-                                               featureFactoryConfig,
-                                               requestingUser,
-                                               apiRequestID) =>
-      userProjectMembershipRemoveRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
-    case UserProjectAdminMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser, apiRequestID) =>
-      userProjectAdminMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser, apiRequestID)
-    case UserProjectAdminMembershipAddRequestADM(userIri,
-                                                 projectIri,
-                                                 featureFactoryConfig,
-                                                 requestingUser,
-                                                 apiRequestID) =>
-      userProjectAdminMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
-    case UserProjectAdminMembershipRemoveRequestADM(userIri,
-                                                    projectIri,
-                                                    featureFactoryConfig,
-                                                    requestingUser,
-                                                    apiRequestID) =>
-      userProjectAdminMembershipRemoveRequestADM(userIri,
-                                                 projectIri,
-                                                 featureFactoryConfig,
-                                                 requestingUser,
-                                                 apiRequestID)
+//    case UserProjectMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID) =>
+//      userProjectMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
+//    case UserProjectMembershipRemoveRequestADM(userIri,
+//                                               projectIri,
+//                                               featureFactoryConfig,
+//                                               requestingUser,
+//                                               apiRequestID) =>
+//      userProjectMembershipRemoveRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
+//    case UserProjectAdminMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser, apiRequestID) =>
+//      userProjectAdminMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser, apiRequestID)
+//    case UserProjectAdminMembershipAddRequestADM(userIri,
+//                                                 projectIri,
+//                                                 featureFactoryConfig,
+//                                                 requestingUser,
+//                                                 apiRequestID) =>
+//      userProjectAdminMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
+//    case UserProjectAdminMembershipRemoveRequestADM(userIri,
+//                                                    projectIri,
+//                                                    featureFactoryConfig,
+//                                                    requestingUser,
+//                                                    apiRequestID) =>
+//      userProjectAdminMembershipRemoveRequestADM(userIri,
+//                                                 projectIri,
+//                                                 featureFactoryConfig,
+//                                                 requestingUser,
+//                                                 apiRequestID)
     case UserGroupMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser) =>
       userGroupMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser)
-    case UserGroupMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID) =>
-      userGroupMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
-    case UserGroupMembershipRemoveRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID) =>
-      userGroupMembershipRemoveRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
+//    case UserGroupMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID) =>
+//      userGroupMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
+//    case UserGroupMembershipRemoveRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID) =>
+//      userGroupMembershipRemoveRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -333,7 +331,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * can be changed. For changing the password or user status, use the separate methods.
     *
     * @param userIri              the IRI of the existing user that we want to update.
-    * @param changeUserRequest    the updated information.
+    * @param userUpdateEntity     the updated information.
     * @param featureFactoryConfig the feature factory configuration.
     * @param requestingUser       the requesting user.
     * @param apiRequestID         the unique api request ID.
@@ -342,18 +340,18 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
     */
   private def changeBasicUserInformationADM(userIri: IRI,
-                                            changeUserRequest: ChangeUserApiRequestADM,
+                                            userUpdatePayload: UserUpdatePayloadADM,
                                             featureFactoryConfig: FeatureFactoryConfig,
                                             requestingUser: UserADM,
                                             apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-    //log.debug(s"changeBasicUserDataV1: changeUserRequest: {}", changeUserRequest)
+    log.debug(s"changeBasicUserInformationADM: changeUserRequest: {}", userUpdatePayload)
 
     /**
       * The actual change basic user data task run with an IRI lock.
       */
     def changeBasicUserDataTask(userIri: IRI,
-                                changeUserRequest: ChangeUserApiRequestADM,
+                                userUpdatePayload: UserUpdatePayloadADM,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
@@ -362,7 +360,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         _ <- Future(
           if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
             // not the user or a system admin
-            //log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
             throw ForbiddenException(
               "User information can only be changed by the user itself or a system administrator")
           }
@@ -371,11 +368,11 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // check if necessary information is present
         _ = if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
 
-        parametersCount = List(changeUserRequest.username,
-                               changeUserRequest.email,
-                               changeUserRequest.givenName,
-                               changeUserRequest.familyName,
-                               changeUserRequest.lang).flatten.size
+        parametersCount = List(userUpdatePayload.username,
+                               userUpdatePayload.email,
+                               userUpdatePayload.givenName,
+                               userUpdatePayload.familyName,
+                               userUpdatePayload.lang).flatten.size
         _ = if (parametersCount == 0)
           throw BadRequestException(
             "At least one parameter needs to be supplied. No data would be changed. Aborting request for changing of basic user data.")
@@ -390,29 +387,25 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
         // check if user exists
         _ = if (currentUserInformation.isEmpty) {
-          throw BadRequestException(s"User ${userIri} does not exist")
+          throw BadRequestException(s"User $userIri does not exist")
         }
 
         // check if we want to change the email
-        emailTaken: Boolean <- userByEmailExists(changeUserRequest.email, Some(currentUserInformation.get.email))
-        _ = if (emailTaken) {
-          throw DuplicateValueException(s"User with the email '${changeUserRequest.email.get}' already exists")
-        }
+//        emailTaken: Boolean <- userByEmailExists(Some(userUpdateEntity.email.get.value),
+//                                                 Some(currentUserInformation.get.email))
+//        _ = if (emailTaken) {
+//          throw DuplicateValueException(s"User with the email '${userUpdateEntity.email.get.value}' already exists")
+//        }
+//
+//        // check if we want to change the username
+//        usernameTaken: Boolean <- userByUsernameExists(Some(userUpdateEntity.username.get.value),
+//                                                       Some(currentUserInformation.get.username))
+//        _ = if (usernameTaken) {
+//          throw DuplicateValueException(
+//            s"User with the username '${userUpdateEntity.username.get.value}' already exists")
+//        }
 
-        // check if we want to change the username
-        usernameTaken: Boolean <- userByUsernameExists(changeUserRequest.username,
-                                                       Some(currentUserInformation.get.username))
-        _ = if (usernameTaken) {
-          throw DuplicateValueException(s"User with the username '${changeUserRequest.username.get}' already exists")
-        }
-
-        userUpdatePayload = UserUpdatePayloadADM(
-          username = changeUserRequest.username,
-          email = changeUserRequest.email,
-          givenName = changeUserRequest.givenName,
-          familyName = changeUserRequest.familyName,
-          lang = changeUserRequest.lang
-        )
+        //userUpdatePayload = UserUpdatePayloadADM(userUpdateEntity)
 
         // send change request as SystemUser
         result <- updateUserADM(
@@ -429,7 +422,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       taskResult <- IriLocker.runWithIriLock(
         apiRequestID,
         USERS_GLOBAL_LOCK_IRI,
-        () => changeBasicUserDataTask(userIri, changeUserRequest, requestingUser, apiRequestID)
+        () => changeBasicUserDataTask(userIri, userUpdatePayload, requestingUser, apiRequestID)
       )
     } yield taskResult
   }
@@ -448,67 +441,67 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @throws ForbiddenException  if the supplied old password doesn't match with the user's current password.
     * @throws NotFoundException   if the user is not found.
     */
-  private def changePasswordADM(userIri: IRI,
-                                changeUserRequest: ChangeUserApiRequestADM,
-                                featureFactoryConfig: FeatureFactoryConfig,
-                                requestingUser: UserADM,
-                                apiRequestID: UUID): Future[UserOperationResponseADM] = {
-
-    log.debug(s"changePasswordADM - userIri: {}", userIri)
-    log.debug(s"changePasswordADM - changeUserRequest: {}", changeUserRequest)
-    log.debug(s"changePasswordADM - requestingUser: {}", requestingUser)
-
-    /**
-      * The actual change password task run with an IRI lock.
-      */
-    def changePasswordTask(userIri: IRI,
-                           changeUserRequest: ChangeUserApiRequestADM,
-                           requestingUser: UserADM,
-                           apiRequestID: UUID): Future[UserOperationResponseADM] =
-      for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
-        _ = if (changeUserRequest.requesterPassword.isEmpty || changeUserRequest.newPassword.isEmpty)
-          throw BadRequestException("The user's old and new password need to be both supplied")
-
-        // check if the requesting user is allowed to perform password change. it needs to be either the user himself, or a system admin
-        _ = if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not the user or system admin
-          throw ForbiddenException("User's password can only be changed by the user itself or a system admin.")
-        }
-
-        // check if supplied password matches requesting user's password
-        _ = log.debug(s"changePasswordADM - requesterPassword: {}", changeUserRequest.requesterPassword.get)
-        _ = if (!requestingUser.passwordMatch(changeUserRequest.requesterPassword.get)) {
-          throw ForbiddenException("The supplied password does not match the requesting user's password.")
-        }
-
-        // create the update request
-        encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
-        newHashedPassword = encoder.encode(changeUserRequest.newPassword.get)
-        userUpdatePayload = UserUpdatePayloadADM(password = Some(newHashedPassword))
-
-        // update the users password as SystemUser
-        result <- updateUserADM(
-          userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
-          apiRequestID = apiRequestID
-        )
-
-      } yield result
-
-    for {
-      // run the change password task with an IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        userIri,
-        () => changePasswordTask(userIri, changeUserRequest, requestingUser, apiRequestID)
-      )
-    } yield taskResult
-  }
+//  private def changePasswordADM(userIri: IRI,
+//                                changeUserRequest: ChangeUserApiRequestADM,
+//                                featureFactoryConfig: FeatureFactoryConfig,
+//                                requestingUser: UserADM,
+//                                apiRequestID: UUID): Future[UserOperationResponseADM] = {
+//
+//    log.debug(s"changePasswordADM - userIri: {}", userIri)
+//    log.debug(s"changePasswordADM - changeUserRequest: {}", changeUserRequest)
+//    log.debug(s"changePasswordADM - requestingUser: {}", requestingUser)
+//
+//    /**
+//      * The actual change password task run with an IRI lock.
+//      */
+//    def changePasswordTask(userIri: IRI,
+//                           changeUserRequest: ChangeUserApiRequestADM,
+//                           requestingUser: UserADM,
+//                           apiRequestID: UUID): Future[UserOperationResponseADM] =
+//      for {
+//
+//        // check if necessary information is present
+//        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
+//        _ = if (changeUserRequest.requesterPassword.isEmpty || changeUserRequest.newPassword.isEmpty)
+//          throw BadRequestException("The user's old and new password need to be both supplied")
+//
+//        // check if the requesting user is allowed to perform password change. it needs to be either the user himself, or a system admin
+//        _ = if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+//          // not the user or system admin
+//          throw ForbiddenException("User's password can only be changed by the user itself or a system admin.")
+//        }
+//
+//        // check if supplied password matches requesting user's password
+//        _ = log.debug(s"changePasswordADM - requesterPassword: {}", changeUserRequest.requesterPassword.get)
+//        _ = if (!requestingUser.passwordMatch(changeUserRequest.requesterPassword.get)) {
+//          throw ForbiddenException("The supplied password does not match the requesting user's password.")
+//        }
+//
+//        // create the update request
+//        encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
+//        newHashedPassword = encoder.encode(changeUserRequest.newPassword.get)
+//        userUpdatePayload = UserUpdatePayloadADM(password = Some(newHashedPassword))
+//
+//        // update the users password as SystemUser
+//        result <- updateUserADM(
+//          userIri = userIri,
+//          userEntity = userUpdatePayload.toUserEntity,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser,
+//          apiRequestID = apiRequestID
+//        )
+//
+//      } yield result
+//
+//    for {
+//      // run the change password task with an IRI lock
+//      taskResult <- IriLocker.runWithIriLock(
+//        apiRequestID,
+//        userIri,
+//        () => changePasswordTask(userIri, changeUserRequest, requestingUser, apiRequestID)
+//      )
+//    } yield taskResult
+//  }
 
   /**
     * Change the user's status (active / inactive).
@@ -522,58 +515,58 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @throws BadRequestException if necessary parameters are not supplied.
     * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
     */
-  private def changeUserStatusADM(userIri: IRI,
-                                  changeUserRequest: ChangeUserApiRequestADM,
-                                  featureFactoryConfig: FeatureFactoryConfig,
-                                  requestingUser: UserADM,
-                                  apiRequestID: UUID): Future[UserOperationResponseADM] = {
-
-    log.debug(s"changeUserStatusADM - changeUserRequest: {}", changeUserRequest)
-
-    /**
-      * The actual change user status task run with an IRI lock.
-      */
-    def changeUserStatusTask(userIri: IRI,
-                             changeUserRequest: ChangeUserApiRequestADM,
-                             requestingUser: UserADM,
-                             apiRequestID: UUID): Future[UserOperationResponseADM] =
-      for {
-
-        _ <- Future(
-          // check if necessary information is present
-          if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-        )
-        _ = if (changeUserRequest.status.isEmpty) throw BadRequestException("New user status cannot be empty")
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not the user or a system admin
-          // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
-          throw ForbiddenException("User's status can only be changed by the user itself or a system administrator")
-        }
-
-        // create the update request
-        userUpdatePayload = UserUpdatePayloadADM(status = changeUserRequest.status)
-
-        result <- updateUserADM(
-          userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
-          apiRequestID = apiRequestID
-        )
-
-      } yield result
-
-    for {
-      // run the change status task with an IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        userIri,
-        () => changeUserStatusTask(userIri, changeUserRequest, requestingUser, apiRequestID)
-      )
-    } yield taskResult
-  }
+//  private def changeUserStatusADM(userIri: IRI,
+//                                  changeUserRequest: ChangeUserApiRequestADM,
+//                                  featureFactoryConfig: FeatureFactoryConfig,
+//                                  requestingUser: UserADM,
+//                                  apiRequestID: UUID): Future[UserOperationResponseADM] = {
+//
+//    log.debug(s"changeUserStatusADM - changeUserRequest: {}", changeUserRequest)
+//
+//    /**
+//      * The actual change user status task run with an IRI lock.
+//      */
+//    def changeUserStatusTask(userIri: IRI,
+//                             changeUserRequest: ChangeUserApiRequestADM,
+//                             requestingUser: UserADM,
+//                             apiRequestID: UUID): Future[UserOperationResponseADM] =
+//      for {
+//
+//        _ <- Future(
+//          // check if necessary information is present
+//          if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
+//        )
+//        _ = if (changeUserRequest.status.isEmpty) throw BadRequestException("New user status cannot be empty")
+//
+//        // check if the requesting user is allowed to perform updates
+//        _ = if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+//          // not the user or a system admin
+//          // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
+//          throw ForbiddenException("User's status can only be changed by the user itself or a system administrator")
+//        }
+//
+//        // create the update request
+//        userUpdatePayload = UserUpdatePayloadADM(status = changeUserRequest.status)
+//
+//        result <- updateUserADM(
+//          userIri = userIri,
+//          userEntity = userUpdatePayload.toUserEntity,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser,
+//          apiRequestID = apiRequestID
+//        )
+//
+//      } yield result
+//
+//    for {
+//      // run the change status task with an IRI lock
+//      taskResult <- IriLocker.runWithIriLock(
+//        apiRequestID,
+//        userIri,
+//        () => changeUserStatusTask(userIri, changeUserRequest, requestingUser, apiRequestID)
+//      )
+//    } yield taskResult
+//  }
 
   /**
     * Change the user's system admin membership status (active / inactive).
@@ -587,57 +580,57 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @throws BadRequestException if necessary parameters are not supplied.
     * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
     */
-  private def changeUserSystemAdminMembershipStatusADM(userIri: IRI,
-                                                       changeUserRequest: ChangeUserApiRequestADM,
-                                                       featureFactoryConfig: FeatureFactoryConfig,
-                                                       requestingUser: UserADM,
-                                                       apiRequestID: UUID): Future[UserOperationResponseADM] = {
-
-    //log.debug(s"changeUserSystemAdminMembershipStatusV1: changeUserRequest: {}", changeUserRequest)
-
-    /**
-      * The actual change user status task run with an IRI lock.
-      */
-    def changeUserSystemAdminMembershipStatusTask(userIri: IRI,
-                                                  changeUserRequest: ChangeUserApiRequestADM,
-                                                  requestingUser: UserADM,
-                                                  apiRequestID: UUID): Future[UserOperationResponseADM] =
-      for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
-        _ = if (changeUserRequest.systemAdmin.isEmpty)
-          throw BadRequestException("New user system admin membership status cannot be empty")
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isSystemAdmin) {
-          // not a system admin
-          // log.debug("system admin: {}", userProfile.permissionData.isSystemAdmin)
-          throw ForbiddenException("User's system admin membership can only be changed by a system administrator")
-        }
-
-        // create the update request
-        userUpdatePayload = UserUpdatePayloadADM(systemAdmin = changeUserRequest.systemAdmin)
-
-        result <- updateUserADM(
-          userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
-          apiRequestID = apiRequestID
-        )
-
-      } yield result
-
-    for {
-      // run the change status task with an IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        userIri,
-        () => changeUserSystemAdminMembershipStatusTask(userIri, changeUserRequest, requestingUser, apiRequestID)
-      )
-    } yield taskResult
-  }
+//  private def changeUserSystemAdminMembershipStatusADM(userIri: IRI,
+//                                                       changeUserRequest: ChangeUserApiRequestADM,
+//                                                       featureFactoryConfig: FeatureFactoryConfig,
+//                                                       requestingUser: UserADM,
+//                                                       apiRequestID: UUID): Future[UserOperationResponseADM] = {
+//
+//    //log.debug(s"changeUserSystemAdminMembershipStatusV1: changeUserRequest: {}", changeUserRequest)
+//
+//    /**
+//      * The actual change user status task run with an IRI lock.
+//      */
+//    def changeUserSystemAdminMembershipStatusTask(userIri: IRI,
+//                                                  changeUserRequest: ChangeUserApiRequestADM,
+//                                                  requestingUser: UserADM,
+//                                                  apiRequestID: UUID): Future[UserOperationResponseADM] =
+//      for {
+//
+//        // check if necessary information is present
+//        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
+//        _ = if (changeUserRequest.systemAdmin.isEmpty)
+//          throw BadRequestException("New user system admin membership status cannot be empty")
+//
+//        // check if the requesting user is allowed to perform updates
+//        _ = if (!requestingUser.permissions.isSystemAdmin) {
+//          // not a system admin
+//          // log.debug("system admin: {}", userProfile.permissionData.isSystemAdmin)
+//          throw ForbiddenException("User's system admin membership can only be changed by a system administrator")
+//        }
+//
+//        // create the update request
+//        userUpdatePayload = UserUpdatePayloadADM(systemAdmin = changeUserRequest.systemAdmin)
+//
+//        result <- updateUserADM(
+//          userIri = userIri,
+//          userEntity = userUpdatePayload.toUserEntity,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser,
+//          apiRequestID = apiRequestID
+//        )
+//
+//      } yield result
+//
+//    for {
+//      // run the change status task with an IRI lock
+//      taskResult <- IriLocker.runWithIriLock(
+//        apiRequestID,
+//        userIri,
+//        () => changeUserSystemAdminMembershipStatusTask(userIri, changeUserRequest, requestingUser, apiRequestID)
+//      )
+//    } yield taskResult
+//  }
 
   /**
     * Returns user's project memberships as a sequence of [[ProjectADM]].
@@ -704,80 +697,80 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @param apiRequestID         the unique api request ID.
     * @return
     */
-  private def userProjectMembershipAddRequestADM(userIri: IRI,
-                                                 projectIri: IRI,
-                                                 featureFactoryConfig: FeatureFactoryConfig,
-                                                 requestingUser: UserADM,
-                                                 apiRequestID: UUID): Future[UserOperationResponseADM] = {
-
-    log.debug(s"userProjectMembershipAddRequestADM: userIri: {}, projectIri: {}", userIri, projectIri)
-
-    /**
-      * The actual task run with an IRI lock.
-      */
-    def userProjectMembershipAddRequestTask(userIri: IRI,
-                                            projectIri: IRI,
-                                            requestingUser: UserADM,
-                                            apiRequestID: UUID): Future[UserOperationResponseADM] =
-      for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-        _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not a project or system admin
-          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-          throw ForbiddenException("User's project membership can only be changed by a project or system administrator")
-        }
-
-        // check if user exists
-        userExists <- userExists(userIri)
-        _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
-
-        // check if project exists
-        projectExists <- projectExists(projectIri)
-        _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
-
-        // get users current project membership list
-        currentProjectMemberships <- userProjectMembershipsGetRequestADM(
-          userIri = userIri,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
-
-        currentProjectMembershipIris: Seq[IRI] = currentProjectMemberships.projects.map(_.id)
-
-        // check if user is already member and if not then append to list
-        updatedProjectMembershipIris = if (!currentProjectMembershipIris.contains(projectIri)) {
-          currentProjectMembershipIris :+ projectIri
-        } else {
-          throw BadRequestException(s"User $userIri is already member of project $projectIri.")
-        }
-
-        // create the update request
-        userUpdatePayload = UserUpdatePayloadADM(projects = Some(updatedProjectMembershipIris))
-
-        result <- updateUserADM(
-          userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = requestingUser,
-          apiRequestID = apiRequestID
-        )
-      } yield result
-
-    for {
-      // run the task with an IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        userIri,
-        () => userProjectMembershipAddRequestTask(userIri, projectIri, requestingUser, apiRequestID)
-      )
-    } yield taskResult
-
-  }
+//  private def userProjectMembershipAddRequestADM(userIri: IRI,
+//                                                 projectIri: IRI,
+//                                                 featureFactoryConfig: FeatureFactoryConfig,
+//                                                 requestingUser: UserADM,
+//                                                 apiRequestID: UUID): Future[UserOperationResponseADM] = {
+//
+//    log.debug(s"userProjectMembershipAddRequestADM: userIri: {}, projectIri: {}", userIri, projectIri)
+//
+//    /**
+//      * The actual task run with an IRI lock.
+//      */
+//    def userProjectMembershipAddRequestTask(userIri: IRI,
+//                                            projectIri: IRI,
+//                                            requestingUser: UserADM,
+//                                            apiRequestID: UUID): Future[UserOperationResponseADM] =
+//      for {
+//
+//        // check if necessary information is present
+//        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
+//        _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
+//
+//        // check if the requesting user is allowed to perform updates
+//        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+//          // not a project or system admin
+//          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
+//          throw ForbiddenException("User's project membership can only be changed by a project or system administrator")
+//        }
+//
+//        // check if user exists
+//        userExists <- userExists(userIri)
+//        _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
+//
+//        // check if project exists
+//        projectExists <- projectExists(projectIri)
+//        _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
+//
+//        // get users current project membership list
+//        currentProjectMemberships <- userProjectMembershipsGetRequestADM(
+//          userIri = userIri,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser
+//        )
+//
+//        currentProjectMembershipIris: Seq[IRI] = currentProjectMemberships.projects.map(_.id)
+//
+//        // check if user is already member and if not then append to list
+//        updatedProjectMembershipIris = if (!currentProjectMembershipIris.contains(projectIri)) {
+//          currentProjectMembershipIris :+ projectIri
+//        } else {
+//          throw BadRequestException(s"User $userIri is already member of project $projectIri.")
+//        }
+//
+//        // create the update request
+//        userUpdatePayload = UserUpdatePayloadADM(projects = Some(updatedProjectMembershipIris))
+//
+//        result <- updateUserADM(
+//          userIri = userIri,
+//          userEntity = userUpdatePayload.toUserEntity,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = requestingUser,
+//          apiRequestID = apiRequestID
+//        )
+//      } yield result
+//
+//    for {
+//      // run the task with an IRI lock
+//      taskResult <- IriLocker.runWithIriLock(
+//        apiRequestID,
+//        userIri,
+//        () => userProjectMembershipAddRequestTask(userIri, projectIri, requestingUser, apiRequestID)
+//      )
+//    } yield taskResult
+//
+//  }
 
   /**
     * Removes a user from a project.
@@ -789,78 +782,78 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @param apiRequestID         the unique api request ID.
     * @return
     */
-  private def userProjectMembershipRemoveRequestADM(userIri: IRI,
-                                                    projectIri: IRI,
-                                                    featureFactoryConfig: FeatureFactoryConfig,
-                                                    requestingUser: UserADM,
-                                                    apiRequestID: UUID): Future[UserOperationResponseADM] = {
-
-    // log.debug(s"userProjectMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
-
-    /**
-      * The actual task run with an IRI lock.
-      */
-    def userProjectMembershipRemoveRequestTask(userIri: IRI,
-                                               projectIri: IRI,
-                                               requestingUser: UserADM,
-                                               apiRequestID: UUID): Future[UserOperationResponseADM] =
-      for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-        _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not a project or system admin
-          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-          throw ForbiddenException("User's project membership can only be changed by a project or system administrator")
-        }
-
-        // check if user exists
-        userExists <- userExists(userIri)
-        _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
-
-        // check if project exists
-        projectExists <- projectExists(projectIri)
-        _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
-
-        // get users current project membership list
-        currentProjectMemberships <- userProjectMembershipsGetADM(
-          userIri = userIri,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
-        currentProjectMembershipIris = currentProjectMemberships.map(_.id)
-
-        // check if user is not already a member and if he is then remove the project from to list
-        updatedProjectMembershipIris = if (currentProjectMembershipIris.contains(projectIri)) {
-          currentProjectMembershipIris diff Seq(projectIri)
-        } else {
-          throw BadRequestException(s"User $userIri is not member of project $projectIri.")
-        }
-
-        // create the update request by using the SystemUser
-        userUpdatePayload = UserUpdatePayloadADM(projects = Some(updatedProjectMembershipIris))
-
-        result <- updateUserADM(
-          userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
-          apiRequestID = apiRequestID
-        )
-      } yield result
-
-    for {
-      // run the task with an IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        userIri,
-        () => userProjectMembershipRemoveRequestTask(userIri, projectIri, requestingUser, apiRequestID)
-      )
-    } yield taskResult
-  }
+//  private def userProjectMembershipRemoveRequestADM(userIri: IRI,
+//                                                    projectIri: IRI,
+//                                                    featureFactoryConfig: FeatureFactoryConfig,
+//                                                    requestingUser: UserADM,
+//                                                    apiRequestID: UUID): Future[UserOperationResponseADM] = {
+//
+//    // log.debug(s"userProjectMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
+//
+//    /**
+//      * The actual task run with an IRI lock.
+//      */
+//    def userProjectMembershipRemoveRequestTask(userIri: IRI,
+//                                               projectIri: IRI,
+//                                               requestingUser: UserADM,
+//                                               apiRequestID: UUID): Future[UserOperationResponseADM] =
+//      for {
+//
+//        // check if necessary information is present
+//        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
+//        _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
+//
+//        // check if the requesting user is allowed to perform updates
+//        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+//          // not a project or system admin
+//          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
+//          throw ForbiddenException("User's project membership can only be changed by a project or system administrator")
+//        }
+//
+//        // check if user exists
+//        userExists <- userExists(userIri)
+//        _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
+//
+//        // check if project exists
+//        projectExists <- projectExists(projectIri)
+//        _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
+//
+//        // get users current project membership list
+//        currentProjectMemberships <- userProjectMembershipsGetADM(
+//          userIri = userIri,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser
+//        )
+//        currentProjectMembershipIris = currentProjectMemberships.map(_.id)
+//
+//        // check if user is not already a member and if he is then remove the project from to list
+//        updatedProjectMembershipIris = if (currentProjectMembershipIris.contains(projectIri)) {
+//          currentProjectMembershipIris diff Seq(projectIri)
+//        } else {
+//          throw BadRequestException(s"User $userIri is not member of project $projectIri.")
+//        }
+//
+//        // create the update request by using the SystemUser
+//        userUpdatePayload = UserUpdatePayloadADM(projects = Some(updatedProjectMembershipIris))
+//
+//        result <- updateUserADM(
+//          userIri = userIri,
+//          userEntity = userUpdatePayload.toUserEntity,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser,
+//          apiRequestID = apiRequestID
+//        )
+//      } yield result
+//
+//    for {
+//      // run the task with an IRI lock
+//      taskResult <- IriLocker.runWithIriLock(
+//        apiRequestID,
+//        userIri,
+//        () => userProjectMembershipRemoveRequestTask(userIri, projectIri, requestingUser, apiRequestID)
+//      )
+//    } yield taskResult
+//  }
 
   /**
     * Returns the user's project admin group memberships as a sequence of [[IRI]]
@@ -871,50 +864,50 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @param apiRequestID         the unique api request ID.
     * @return a [[UserProjectMembershipsGetResponseV1]].
     */
-  private def userProjectAdminMembershipsGetADM(userIri: IRI,
-                                                featureFactoryConfig: FeatureFactoryConfig,
-                                                requestingUser: UserADM,
-                                                apiRequestID: UUID): Future[Seq[ProjectADM]] = {
-
-    // ToDo: only allow system user
-    // ToDo: this is a bit of a hack since the ProjectAdmin group doesn't really exist.
-
-    for {
-      sparqlQueryString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
-          .getUserByIri(
-            triplestore = settings.triplestoreType,
-            userIri = userIri
-          )
-          .toString())
-
-      //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
-
-      userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
-
-      groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-        case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
-      }
-
-      /* the projects the user is member of */
-      projectIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup) match {
-        case Some(projects) => projects
-        case None           => Seq.empty[IRI]
-      }
-
-      maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map { projectIri =>
-        (responderManager ? ProjectGetADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )).mapTo[Option[ProjectADM]]
-      }
-      maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
-      projects: Seq[ProjectADM] = maybeProjects.flatten
-
-      // _ = log.debug("userProjectAdminMembershipsGetRequestV1 - userIri: {}, projectIris: {}", userIri, projectIris)
-    } yield projects
-  }
+//  private def userProjectAdminMembershipsGetADM(userIri: IRI,
+//                                                featureFactoryConfig: FeatureFactoryConfig,
+//                                                requestingUser: UserADM,
+//                                                apiRequestID: UUID): Future[Seq[ProjectADM]] = {
+//
+//    // ToDo: only allow system user
+//    // ToDo: this is a bit of a hack since the ProjectAdmin group doesn't really exist.
+//
+//    for {
+//      sparqlQueryString <- Future(
+//        org.knora.webapi.messages.twirl.queries.sparql.v1.txt
+//          .getUserByIri(
+//            triplestore = settings.triplestoreType,
+//            userIri = userIri
+//          )
+//          .toString())
+//
+//      //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
+//
+//      userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
+//
+//      groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
+//        case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+//      }
+//
+//      /* the projects the user is member of */
+//      projectIris: Seq[IRI] = groupedUserData.get(OntologyConstants.KnoraAdmin.IsInProjectAdminGroup) match {
+//        case Some(projects) => projects
+//        case None           => Seq.empty[IRI]
+//      }
+//
+//      maybeProjectFutures: Seq[Future[Option[ProjectADM]]] = projectIris.map { projectIri =>
+//        (responderManager ? ProjectGetADM(
+//          identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser
+//        )).mapTo[Option[ProjectADM]]
+//      }
+//      maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
+//      projects: Seq[ProjectADM] = maybeProjects.flatten
+//
+//      // _ = log.debug("userProjectAdminMembershipsGetRequestV1 - userIri: {}, projectIris: {}", userIri, projectIris)
+//    } yield projects
+//  }
 
   /**
     * Returns the user's project admin group memberships, where the result contains the IRIs of the projects the user
@@ -926,29 +919,29 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @param apiRequestID         the unique api request ID.
     * @return a [[UserProjectMembershipsGetResponseV1]].
     */
-  private def userProjectAdminMembershipsGetRequestADM(
-      userIri: IRI,
-      featureFactoryConfig: FeatureFactoryConfig,
-      requestingUser: UserADM,
-      apiRequestID: UUID): Future[UserProjectAdminMembershipsGetResponseADM] = {
-
-    // ToDo: which user is allowed to do this operation?
-    // ToDo: check permissions
-
-    for {
-      userExists <- userExists(userIri)
-      _ = if (!userExists) {
-        throw BadRequestException(s"User $userIri does not exist.")
-      }
-
-      projects: Seq[ProjectADM] <- userProjectAdminMembershipsGetADM(
-        userIri = userIri,
-        featureFactoryConfig = featureFactoryConfig,
-        requestingUser = KnoraSystemInstances.Users.SystemUser,
-        apiRequestID = apiRequestID
-      )
-    } yield UserProjectAdminMembershipsGetResponseADM(projects = projects)
-  }
+//  private def userProjectAdminMembershipsGetRequestADM(
+//      userIri: IRI,
+//      featureFactoryConfig: FeatureFactoryConfig,
+//      requestingUser: UserADM,
+//      apiRequestID: UUID): Future[UserProjectAdminMembershipsGetResponseADM] = {
+//
+//    // ToDo: which user is allowed to do this operation?
+//    // ToDo: check permissions
+//
+//    for {
+//      userExists <- userExists(userIri)
+//      _ = if (!userExists) {
+//        throw BadRequestException(s"User $userIri does not exist.")
+//      }
+//
+//      projects: Seq[ProjectADM] <- userProjectAdminMembershipsGetADM(
+//        userIri = userIri,
+//        featureFactoryConfig = featureFactoryConfig,
+//        requestingUser = KnoraSystemInstances.Users.SystemUser,
+//        apiRequestID = apiRequestID
+//      )
+//    } yield UserProjectAdminMembershipsGetResponseADM(projects = projects)
+//  }
 
   /**
     * Adds a user to the project admin group of a project.
@@ -960,82 +953,82 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @param apiRequestID         the unique api request ID.
     * @return
     */
-  private def userProjectAdminMembershipAddRequestADM(userIri: IRI,
-                                                      projectIri: IRI,
-                                                      featureFactoryConfig: FeatureFactoryConfig,
-                                                      requestingUser: UserADM,
-                                                      apiRequestID: UUID): Future[UserOperationResponseADM] = {
-
-    // log.debug(s"userProjectAdminMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
-
-    /**
-      * The actual task run with an IRI lock.
-      */
-    def userProjectAdminMembershipAddRequestTask(userIri: IRI,
-                                                 projectIri: IRI,
-                                                 requestingUser: UserADM,
-                                                 apiRequestID: UUID): Future[UserOperationResponseADM] =
-      for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-        _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not a project or system admin
-          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-          throw ForbiddenException(
-            "User's project admin membership can only be changed by a project or system administrator")
-        }
-
-        // check if user exists
-        userExists <- userExists(userIri)
-        _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
-
-        // check if project exists
-        projectExists <- projectExists(projectIri)
-        _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
-
-        // get users current project membership list
-        currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
-          userIri = userIri,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
-          apiRequestID = apiRequestID
-        )
-
-        currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
-
-        // check if user is already member and if not then append to list
-        updatedProjectAdminMembershipIris = if (!currentProjectAdminMembershipIris.contains(projectIri)) {
-          currentProjectAdminMembershipIris :+ projectIri
-        } else {
-          throw BadRequestException(s"User $userIri is already a project admin for project $projectIri.")
-        }
-
-        // create the update request
-        userUpdatePayload = UserUpdatePayloadADM(projectsAdmin = Some(updatedProjectAdminMembershipIris))
-
-        result <- updateUserADM(
-          userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
-          apiRequestID = apiRequestID
-        )
-      } yield result
-
-    for {
-      // run the task with an IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        userIri,
-        () => userProjectAdminMembershipAddRequestTask(userIri, projectIri, requestingUser, apiRequestID)
-      )
-    } yield taskResult
-
-  }
+//  private def userProjectAdminMembershipAddRequestADM(userIri: IRI,
+//                                                      projectIri: IRI,
+//                                                      featureFactoryConfig: FeatureFactoryConfig,
+//                                                      requestingUser: UserADM,
+//                                                      apiRequestID: UUID): Future[UserOperationResponseADM] = {
+//
+//    // log.debug(s"userProjectAdminMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
+//
+//    /**
+//      * The actual task run with an IRI lock.
+//      */
+//    def userProjectAdminMembershipAddRequestTask(userIri: IRI,
+//                                                 projectIri: IRI,
+//                                                 requestingUser: UserADM,
+//                                                 apiRequestID: UUID): Future[UserOperationResponseADM] =
+//      for {
+//
+//        // check if necessary information is present
+//        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
+//        _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
+//
+//        // check if the requesting user is allowed to perform updates
+//        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+//          // not a project or system admin
+//          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
+//          throw ForbiddenException(
+//            "User's project admin membership can only be changed by a project or system administrator")
+//        }
+//
+//        // check if user exists
+//        userExists <- userExists(userIri)
+//        _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
+//
+//        // check if project exists
+//        projectExists <- projectExists(projectIri)
+//        _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
+//
+//        // get users current project membership list
+//        currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
+//          userIri = userIri,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser,
+//          apiRequestID = apiRequestID
+//        )
+//
+//        currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
+//
+//        // check if user is already member and if not then append to list
+//        updatedProjectAdminMembershipIris = if (!currentProjectAdminMembershipIris.contains(projectIri)) {
+//          currentProjectAdminMembershipIris :+ projectIri
+//        } else {
+//          throw BadRequestException(s"User $userIri is already a project admin for project $projectIri.")
+//        }
+//
+//        // create the update request
+//        userUpdatePayload = UserUpdatePayloadADM(projectsAdmin = Some(updatedProjectAdminMembershipIris))
+//
+//        result <- updateUserADM(
+//          userIri = userIri,
+//          userEntity = userUpdatePayload.toUserEntity,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser,
+//          apiRequestID = apiRequestID
+//        )
+//      } yield result
+//
+//    for {
+//      // run the task with an IRI lock
+//      taskResult <- IriLocker.runWithIriLock(
+//        apiRequestID,
+//        userIri,
+//        () => userProjectAdminMembershipAddRequestTask(userIri, projectIri, requestingUser, apiRequestID)
+//      )
+//    } yield taskResult
+//
+//  }
 
   /**
     * Removes a user from project admin group of a project.
@@ -1047,81 +1040,81 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @param apiRequestID         the unique api request ID.
     * @return
     */
-  private def userProjectAdminMembershipRemoveRequestADM(userIri: IRI,
-                                                         projectIri: IRI,
-                                                         featureFactoryConfig: FeatureFactoryConfig,
-                                                         requestingUser: UserADM,
-                                                         apiRequestID: UUID): Future[UserOperationResponseADM] = {
-
-    // log.debug(s"userProjectAdminMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
-
-    /**
-      * The actual task run with an IRI lock.
-      */
-    def userProjectAdminMembershipRemoveRequestTask(userIri: IRI,
-                                                    projectIri: IRI,
-                                                    requestingUser: UserADM,
-                                                    apiRequestID: UUID): Future[UserOperationResponseADM] =
-      for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-        _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not a project or system admin
-          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-          throw ForbiddenException(
-            "User's project admin membership can only be changed by a project or system administrator")
-        }
-
-        // check if user exists
-        userExists <- userExists(userIri)
-        _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
-
-        // check if project exists
-        projectExists <- projectExists(projectIri)
-        _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
-
-        // get users current project membership list
-        currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
-          userIri = userIri,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
-          apiRequestID = apiRequestID
-        )
-
-        currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
-
-        // check if user is not already a member and if he is then remove the project from to list
-        updatedProjectAdminMembershipIris = if (currentProjectAdminMembershipIris.contains(projectIri)) {
-          currentProjectAdminMembershipIris diff Seq(projectIri)
-        } else {
-          throw BadRequestException(s"User $userIri is not a project admin of project $projectIri.")
-        }
-
-        // create the update request
-        userUpdatePayload = UserUpdatePayloadADM(projectsAdmin = Some(updatedProjectAdminMembershipIris))
-
-        result <- updateUserADM(
-          userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
-          apiRequestID = apiRequestID
-        )
-      } yield result
-
-    for {
-      // run the task with an IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        userIri,
-        () => userProjectAdminMembershipRemoveRequestTask(userIri, projectIri, requestingUser, apiRequestID)
-      )
-    } yield taskResult
-  }
+//  private def userProjectAdminMembershipRemoveRequestADM(userIri: IRI,
+//                                                         projectIri: IRI,
+//                                                         featureFactoryConfig: FeatureFactoryConfig,
+//                                                         requestingUser: UserADM,
+//                                                         apiRequestID: UUID): Future[UserOperationResponseADM] = {
+//
+//    // log.debug(s"userProjectAdminMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
+//
+//    /**
+//      * The actual task run with an IRI lock.
+//      */
+//    def userProjectAdminMembershipRemoveRequestTask(userIri: IRI,
+//                                                    projectIri: IRI,
+//                                                    requestingUser: UserADM,
+//                                                    apiRequestID: UUID): Future[UserOperationResponseADM] =
+//      for {
+//
+//        // check if necessary information is present
+//        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
+//        _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
+//
+//        // check if the requesting user is allowed to perform updates
+//        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+//          // not a project or system admin
+//          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
+//          throw ForbiddenException(
+//            "User's project admin membership can only be changed by a project or system administrator")
+//        }
+//
+//        // check if user exists
+//        userExists <- userExists(userIri)
+//        _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
+//
+//        // check if project exists
+//        projectExists <- projectExists(projectIri)
+//        _ = if (!projectExists) throw NotFoundException(s"The project $projectIri does not exist.")
+//
+//        // get users current project membership list
+//        currentProjectAdminMemberships <- userProjectAdminMembershipsGetADM(
+//          userIri = userIri,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser,
+//          apiRequestID = apiRequestID
+//        )
+//
+//        currentProjectAdminMembershipIris: Seq[IRI] = currentProjectAdminMemberships.map(_.id)
+//
+//        // check if user is not already a member and if he is then remove the project from to list
+//        updatedProjectAdminMembershipIris = if (currentProjectAdminMembershipIris.contains(projectIri)) {
+//          currentProjectAdminMembershipIris diff Seq(projectIri)
+//        } else {
+//          throw BadRequestException(s"User $userIri is not a project admin of project $projectIri.")
+//        }
+//
+//        // create the update request
+//        userUpdatePayload = UserUpdatePayloadADM(projectsAdmin = Some(updatedProjectAdminMembershipIris))
+//
+//        result <- updateUserADM(
+//          userIri = userIri,
+//          userEntity = userUpdatePayload.toUserEntity,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser,
+//          apiRequestID = apiRequestID
+//        )
+//      } yield result
+//
+//    for {
+//      // run the task with an IRI lock
+//      taskResult <- IriLocker.runWithIriLock(
+//        apiRequestID,
+//        userIri,
+//        () => userProjectAdminMembershipRemoveRequestTask(userIri, projectIri, requestingUser, apiRequestID)
+//      )
+//    } yield taskResult
+//  }
 
   /**
     * Returns the user's group memberships as a sequence of [[GroupADM]]
@@ -1187,199 +1180,199 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @param apiRequestID         the unique api request ID.
     * @return a [[UserOperationResponseADM]].
     */
-  private def userGroupMembershipAddRequestADM(userIri: IRI,
-                                               groupIri: IRI,
-                                               featureFactoryConfig: FeatureFactoryConfig,
-                                               requestingUser: UserADM,
-                                               apiRequestID: UUID): Future[UserOperationResponseADM] = {
+//  private def userGroupMembershipAddRequestADM(userIri: IRI,
+//                                               groupIri: IRI,
+//                                               featureFactoryConfig: FeatureFactoryConfig,
+//                                               requestingUser: UserADM,
+//                                               apiRequestID: UUID): Future[UserOperationResponseADM] = {
+//
+//    log.debug(s"userGroupMembershipAddRequestADM - userIri: {}, groupIri: {}", userIri, groupIri)
+//
+//    /**
+//      * The actual task run with an IRI lock.
+//      */
+//    def userGroupMembershipAddRequestTask(userIri: IRI,
+//                                          groupIri: IRI,
+//                                          requestingUser: UserADM,
+//                                          apiRequestID: UUID): Future[UserOperationResponseADM] =
+//      for {
+//
+//        // check if necessary information is present
+//        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
+//        _ = if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
+//
+//        // check if user exists
+//        maybeUser <- getSingleUserADM(
+//          UserIdentifierADM(maybeIri = Some(userIri)),
+//          UserInformationTypeADM.FULL,
+//          featureFactoryConfig = featureFactoryConfig,
+//          KnoraSystemInstances.Users.SystemUser,
+//          skipCache = true
+//        )
+//
+//        userToChange: UserADM = maybeUser match {
+//          case Some(user) => user
+//          case None       => throw NotFoundException(s"The user $userIri does not exist.")
+//        }
+//
+//        // check if group exists
+//        groupExists <- groupExists(groupIri)
+//        _ = if (!groupExists) throw NotFoundException(s"The group $groupIri does not exist.")
+//
+//        // get group's info. we need the project IRI.
+//        maybeGroupADM <- (responderManager ? GroupGetADM(
+//          groupIri = groupIri,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser
+//        )).mapTo[Option[GroupADM]]
+//        projectIri = maybeGroupADM
+//          .getOrElse(throw InconsistentRepositoryDataException(s"Group $groupIri does not exist"))
+//          .project
+//          .id
+//
+//        // check if the requesting user is allowed to perform updates
+//        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+//          // not a project or system admin
+//          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
+//          throw ForbiddenException("User's group membership can only be changed by a project or system administrator")
+//        }
+//
+//        // get users current group membership list
+//        currentGroupMemberships = userToChange.groups
+//
+//        currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.map(_.id)
+//
+//        _ = log.debug("userGroupMembershipAddRequestADM - currentGroupMembershipIris: {}", currentGroupMembershipIris)
+//
+//        // check if user is already member and if not then append to list
+//        updatedGroupMembershipIris = if (!currentGroupMembershipIris.contains(groupIri)) {
+//          currentGroupMembershipIris :+ groupIri
+//        } else {
+//          throw BadRequestException(s"User $userIri is already member of group $groupIri.")
+//        }
+//
+//        _ = log.debug("userGroupMembershipAddRequestADM - updatedGroupMembershipIris: {}", updatedGroupMembershipIris)
+//
+//        // create the update request
+//        userUpdatePayload = UserUpdatePayloadADM(groups = Some(updatedGroupMembershipIris))
+//
+//        result <- updateUserADM(
+//          userIri = userIri,
+//          userEntity = userUpdatePayload.toUserEntity,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser,
+//          apiRequestID = apiRequestID
+//        )
+//      } yield result
+//
+//    for {
+//      // run the task with an IRI lock
+//      taskResult <- IriLocker.runWithIriLock(
+//        apiRequestID,
+//        userIri,
+//        () => userGroupMembershipAddRequestTask(userIri, groupIri, requestingUser, apiRequestID)
+//      )
+//    } yield taskResult
+//
+//  }
 
-    log.debug(s"userGroupMembershipAddRequestADM - userIri: {}, groupIri: {}", userIri, groupIri)
-
-    /**
-      * The actual task run with an IRI lock.
-      */
-    def userGroupMembershipAddRequestTask(userIri: IRI,
-                                          groupIri: IRI,
-                                          requestingUser: UserADM,
-                                          apiRequestID: UUID): Future[UserOperationResponseADM] =
-      for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-        _ = if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
-
-        // check if user exists
-        maybeUser <- getSingleUserADM(
-          UserIdentifierADM(maybeIri = Some(userIri)),
-          UserInformationTypeADM.FULL,
-          featureFactoryConfig = featureFactoryConfig,
-          KnoraSystemInstances.Users.SystemUser,
-          skipCache = true
-        )
-
-        userToChange: UserADM = maybeUser match {
-          case Some(user) => user
-          case None       => throw NotFoundException(s"The user $userIri does not exist.")
-        }
-
-        // check if group exists
-        groupExists <- groupExists(groupIri)
-        _ = if (!groupExists) throw NotFoundException(s"The group $groupIri does not exist.")
-
-        // get group's info. we need the project IRI.
-        maybeGroupADM <- (responderManager ? GroupGetADM(
-          groupIri = groupIri,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )).mapTo[Option[GroupADM]]
-        projectIri = maybeGroupADM
-          .getOrElse(throw InconsistentRepositoryDataException(s"Group $groupIri does not exist"))
-          .project
-          .id
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not a project or system admin
-          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-          throw ForbiddenException("User's group membership can only be changed by a project or system administrator")
-        }
-
-        // get users current group membership list
-        currentGroupMemberships = userToChange.groups
-
-        currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.map(_.id)
-
-        _ = log.debug("userGroupMembershipAddRequestADM - currentGroupMembershipIris: {}", currentGroupMembershipIris)
-
-        // check if user is already member and if not then append to list
-        updatedGroupMembershipIris = if (!currentGroupMembershipIris.contains(groupIri)) {
-          currentGroupMembershipIris :+ groupIri
-        } else {
-          throw BadRequestException(s"User $userIri is already member of group $groupIri.")
-        }
-
-        _ = log.debug("userGroupMembershipAddRequestADM - updatedGroupMembershipIris: {}", updatedGroupMembershipIris)
-
-        // create the update request
-        userUpdatePayload = UserUpdatePayloadADM(groups = Some(updatedGroupMembershipIris))
-
-        result <- updateUserADM(
-          userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser,
-          apiRequestID = apiRequestID
-        )
-      } yield result
-
-    for {
-      // run the task with an IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        userIri,
-        () => userGroupMembershipAddRequestTask(userIri, groupIri, requestingUser, apiRequestID)
-      )
-    } yield taskResult
-
-  }
-
-  private def userGroupMembershipRemoveRequestADM(userIri: IRI,
-                                                  groupIri: IRI,
-                                                  featureFactoryConfig: FeatureFactoryConfig,
-                                                  requestingUser: UserADM,
-                                                  apiRequestID: UUID): Future[UserOperationResponseADM] = {
-
-    log.debug(s"userGroupMembershipRemoveRequestADM - userIri: {}, groupIri: {}", userIri, groupIri)
-
-    /**
-      * The actual task run with an IRI lock.
-      */
-    def userGroupMembershipRemoveRequestTask(userIri: IRI,
-                                             groupIri: IRI,
-                                             requestingUser: UserADM,
-                                             apiRequestID: UUID): Future[UserOperationResponseADM] =
-      for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-        _ = if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
-
-        // check if user exists
-        userExists <- userExists(userIri)
-        _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
-
-        // check if group exists
-        projectExists <- groupExists(groupIri)
-        _ = if (!projectExists) throw NotFoundException(s"The group $groupIri does not exist.")
-
-        // get group's info. we need the project IRI.
-        maybeGroupADM <- (responderManager ? GroupGetADM(
-          groupIri = groupIri,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )).mapTo[Option[GroupADM]]
-
-        projectIri = maybeGroupADM
-          .getOrElse(throw exceptions.InconsistentRepositoryDataException(s"Group $groupIri does not exist"))
-          .project
-          .id
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser) {
-          // not a project or system admin
-          //log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-          throw ForbiddenException("User's group membership can only be changed by a project or system administrator")
-        }
-
-        // get users current project membership list
-        currentGroupMemberships <- userGroupMembershipsGetRequestADM(
-          userIri = userIri,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = KnoraSystemInstances.Users.SystemUser
-        )
-
-        currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.groups.map(_.id)
-
-        _ = log.debug("userGroupMembershipRemoveRequestADM - currentGroupMembershipIris: {}",
-                      currentGroupMembershipIris)
-
-        // check if user is not already a member and if he is then remove the project from to list
-        updatedGroupMembershipIris = if (currentGroupMembershipIris.contains(groupIri)) {
-          currentGroupMembershipIris diff Seq(groupIri)
-        } else {
-          throw BadRequestException(s"User $userIri is not member of group $groupIri.")
-        }
-
-        _ = log.debug("userGroupMembershipRemoveRequestADM - updatedGroupMembershipIris: {}",
-                      updatedGroupMembershipIris)
-
-        // create the update request
-        userUpdatePayload = UserUpdatePayloadADM(groups = Some(updatedGroupMembershipIris))
-
-        result <- updateUserADM(
-          userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = requestingUser,
-          apiRequestID = apiRequestID
-        )
-      } yield result
-
-    for {
-      // run the task with an IRI lock
-      taskResult <- IriLocker.runWithIriLock(
-        apiRequestID,
-        userIri,
-        () => userGroupMembershipRemoveRequestTask(userIri, groupIri, requestingUser, apiRequestID)
-      )
-    } yield taskResult
-  }
+//  private def userGroupMembershipRemoveRequestADM(userIri: IRI,
+//                                                  groupIri: IRI,
+//                                                  featureFactoryConfig: FeatureFactoryConfig,
+//                                                  requestingUser: UserADM,
+//                                                  apiRequestID: UUID): Future[UserOperationResponseADM] = {
+//
+//    log.debug(s"userGroupMembershipRemoveRequestADM - userIri: {}, groupIri: {}", userIri, groupIri)
+//
+//    /**
+//      * The actual task run with an IRI lock.
+//      */
+//    def userGroupMembershipRemoveRequestTask(userIri: IRI,
+//                                             groupIri: IRI,
+//                                             requestingUser: UserADM,
+//                                             apiRequestID: UUID): Future[UserOperationResponseADM] =
+//      for {
+//
+//        // check if necessary information is present
+//        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
+//        _ = if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
+//
+//        // check if user exists
+//        userExists <- userExists(userIri)
+//        _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
+//
+//        // check if group exists
+//        projectExists <- groupExists(groupIri)
+//        _ = if (!projectExists) throw NotFoundException(s"The group $groupIri does not exist.")
+//
+//        // get group's info. we need the project IRI.
+//        maybeGroupADM <- (responderManager ? GroupGetADM(
+//          groupIri = groupIri,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser
+//        )).mapTo[Option[GroupADM]]
+//
+//        projectIri = maybeGroupADM
+//          .getOrElse(throw exceptions.InconsistentRepositoryDataException(s"Group $groupIri does not exist"))
+//          .project
+//          .id
+//
+//        // check if the requesting user is allowed to perform updates
+//        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser) {
+//          // not a project or system admin
+//          //log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
+//          throw ForbiddenException("User's group membership can only be changed by a project or system administrator")
+//        }
+//
+//        // get users current project membership list
+//        currentGroupMemberships <- userGroupMembershipsGetRequestADM(
+//          userIri = userIri,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = KnoraSystemInstances.Users.SystemUser
+//        )
+//
+//        currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.groups.map(_.id)
+//
+//        _ = log.debug("userGroupMembershipRemoveRequestADM - currentGroupMembershipIris: {}",
+//                      currentGroupMembershipIris)
+//
+//        // check if user is not already a member and if he is then remove the project from to list
+//        updatedGroupMembershipIris = if (currentGroupMembershipIris.contains(groupIri)) {
+//          currentGroupMembershipIris diff Seq(groupIri)
+//        } else {
+//          throw BadRequestException(s"User $userIri is not member of group $groupIri.")
+//        }
+//
+//        _ = log.debug("userGroupMembershipRemoveRequestADM - updatedGroupMembershipIris: {}",
+//                      updatedGroupMembershipIris)
+//
+//        // create the update request
+//        userUpdatePayload = UserUpdatePayloadADM(groups = Some(updatedGroupMembershipIris))
+//
+//        result <- updateUserADM(
+//          userIri = userIri,
+//          userEntity = userUpdatePayload.toUserEntity,
+//          featureFactoryConfig = featureFactoryConfig,
+//          requestingUser = requestingUser,
+//          apiRequestID = apiRequestID
+//        )
+//      } yield result
+//
+//    for {
+//      // run the task with an IRI lock
+//      taskResult <- IriLocker.runWithIriLock(
+//        apiRequestID,
+//        userIri,
+//        () => userGroupMembershipRemoveRequestTask(userIri, groupIri, requestingUser, apiRequestID)
+//      )
+//    } yield taskResult
+//  }
 
   /**
     * Updates an existing user. Should not be directly used from the receive method.
     *
     * @param userIri              the IRI of the existing user that we want to update.
-    * @param userUpdatePayload    the updated information.
+    * @param userEntity    the updated information.
     * @param featureFactoryConfig the feature factory configuration.
     * @param requestingUser       the requesting user.
     * @param apiRequestID         the unique api request ID.
@@ -1418,23 +1411,59 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       _ = invalidateCachedUserADM(maybeCurrentUser)
 
       /* Update the user */
+      maybeChangedUsername = userUpdatePayload.username match {
+        case Some(username) => Some(username.value)
+        case None           => None
+      }
+      maybeChangedEmail = userUpdatePayload.email match {
+        case Some(email) => Some(email.value)
+        case None        => None
+      }
+      maybeChangedGivenName = userUpdatePayload.givenName match {
+        case Some(givenName) =>
+          Some(
+            stringFormatter.toSparqlEncodedString(
+              givenName.value,
+              throw BadRequestException(s"The supplied given name: '${givenName.value}' is not valid.")))
+        case None => None
+      }
+      maybeChangedFamilyName = userUpdatePayload.familyName match {
+        case Some(familyName) =>
+          Some(
+            stringFormatter.toSparqlEncodedString(
+              familyName.value,
+              throw BadRequestException(s"The supplied family name: '${familyName.value}' is not valid.")))
+        case None => None
+      }
+      maybeChangedStatus = userUpdatePayload.status match {
+        case Some(status) => Some(status.value)
+        case None         => None
+      }
+      maybeChangedLang = userUpdatePayload.lang match {
+        case Some(lang) => Some(lang.value)
+        case None       => None
+      }
+      maybeChangedSystemAdmin = userUpdatePayload.systemAdmin match {
+        case Some(systemAdmin) => Some(systemAdmin.value)
+        case None              => None
+      }
       updateUserSparqlString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .updateUser(
             adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
             triplestore = settings.triplestoreType,
             userIri = userIri,
-            maybeUsername = userUpdatePayload.username,
-            maybeEmail = userUpdatePayload.email,
-            maybeGivenName = userUpdatePayload.givenName,
-            maybeFamilyName = userUpdatePayload.familyName,
-            maybePassword = userUpdatePayload.password,
-            maybeStatus = userUpdatePayload.status,
-            maybeLang = userUpdatePayload.lang,
-            maybeProjects = userUpdatePayload.projects,
-            maybeProjectsAdmin = userUpdatePayload.projectsAdmin,
-            maybeGroups = userUpdatePayload.groups,
-            maybeSystemAdmin = userUpdatePayload.systemAdmin
+            maybeUsername = maybeChangedUsername,
+            maybeEmail = maybeChangedEmail,
+            maybeGivenName = maybeChangedGivenName,
+            maybeFamilyName = maybeChangedFamilyName,
+            maybePassword = None,
+            maybeStatus = maybeChangedStatus,
+            maybeLang = maybeChangedLang,
+            maybeProjects = None,
+            maybeProjectsAdmin = None,
+            maybeGroups = None,
+            maybeSystemAdmin = maybeChangedSystemAdmin
           )
           .toString)
       // _ = log.debug(s"updateUserV1 - query: $updateUserSparqlString")
@@ -1455,52 +1484,47 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       // _ = log.debug(s"===>>> apiUpdateRequest: $userUpdatePayload /  updatedUserADM: $updatedUserADM")
 
       _ = if (userUpdatePayload.username.isDefined) {
-        if (updatedUserADM.username != userUpdatePayload.username.get)
+        if (updatedUserADM.username != userUpdatePayload.username.get.value)
           throw UpdateNotPerformedException("User's 'username' was not updated. Please report this as a possible bug.")
       }
 
       _ = if (userUpdatePayload.email.isDefined) {
-        if (updatedUserADM.email != userUpdatePayload.email.get)
+        if (updatedUserADM.email != userUpdatePayload.email.get.value)
           throw UpdateNotPerformedException("User's 'email' was not updated. Please report this as a possible bug.")
       }
 
       _ = if (userUpdatePayload.givenName.isDefined) {
-        if (updatedUserADM.givenName != userUpdatePayload.givenName.get)
+        if (updatedUserADM.givenName != userUpdatePayload.givenName.get.value)
           throw UpdateNotPerformedException("User's 'givenName' was not updated. Please report this as a possible bug.")
       }
 
       _ = if (userUpdatePayload.familyName.isDefined) {
-        if (updatedUserADM.familyName != userUpdatePayload.familyName.get)
+        if (updatedUserADM.familyName != userUpdatePayload.familyName.get.value)
           throw UpdateNotPerformedException(
             "User's 'familyName' was not updated. Please report this as a possible bug.")
       }
 
-      _ = if (userUpdatePayload.password.isDefined) {
-        if (updatedUserADM.password != userUpdatePayload.password)
-          throw UpdateNotPerformedException("User's 'password' was not updated. Please report this as a possible bug.")
-      }
-
       _ = if (userUpdatePayload.status.isDefined) {
-        if (updatedUserADM.status != userUpdatePayload.status.get)
+        if (updatedUserADM.status != userUpdatePayload.status.get.value)
           throw UpdateNotPerformedException("User's 'status' was not updated. Please report this as a possible bug.")
       }
 
       _ = if (userUpdatePayload.lang.isDefined) {
-        if (updatedUserADM.lang != userUpdatePayload.lang.get)
+        if (updatedUserADM.lang != userUpdatePayload.lang.get.value)
           throw UpdateNotPerformedException("User's 'lang' was not updated. Please report this as a possible bug.")
       }
 
       _ = if (userUpdatePayload.systemAdmin.isDefined) {
-        if (updatedUserADM.permissions.isSystemAdmin != userUpdatePayload.systemAdmin.get)
+        if (updatedUserADM.permissions.isSystemAdmin != userUpdatePayload.systemAdmin.get.value)
           throw UpdateNotPerformedException(
             "User's 'isInSystemAdminGroup' status was not updated. Please report this as a possible bug.")
       }
 
-      _ = if (userUpdatePayload.groups.isDefined) {
-        if (updatedUserADM.groups.map(_.id) != userUpdatePayload.groups.get)
-          throw UpdateNotPerformedException(
-            "User's 'group' memberships where not updated. Please report this as a possible bug.")
-      }
+//      _ = if (userUpdatePayload.groups.isDefined) {
+//        if (updatedUserADM.groups.map(_.id) != userUpdatePayload.groups.get)
+//          throw UpdateNotPerformedException(
+//            "User's 'group' memberships where not updated. Please report this as a possible bug.")
+//      }
 
     } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.RESTRICTED))
   }
@@ -1531,15 +1555,15 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     def createNewUserTask(userEntity: UserEntity) = {
       for {
         // check if username is unique
-        usernameTaken: Boolean <- userByUsernameExists(Some(userEntity.username.value))
+        usernameTaken: Boolean <- userByUsernameExists(Some(userEntity.username.get.value))
         _ = if (usernameTaken) {
-          throw DuplicateValueException(s"User with the username '${userEntity.username.value}' already exists")
+          throw DuplicateValueException(s"User with the username '${userEntity.username.get.value}' already exists")
         }
 
         // check if email is unique
-        emailTaken: Boolean <- userByEmailExists(Some(userEntity.email.value))
+        emailTaken: Boolean <- userByEmailExists(Some(userEntity.email.get.value))
         _ = if (emailTaken) {
-          throw DuplicateValueException(s"User with the email '${userEntity.email.value}' already exists")
+          throw DuplicateValueException(s"User with the email '${userEntity.email.get.value}' already exists")
         }
 
         // check the custom IRI; if not given, create an unused IRI
@@ -1548,7 +1572,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
         // hash password
         encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
-        hashedPassword = encoder.encode(userEntity.password.value)
+        hashedPassword = encoder.encode(userEntity.password.get.value)
 
         // Create the new user.
         createNewUserSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -1558,30 +1582,33 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             userIri = userIri,
             userClassIri = OntologyConstants.KnoraAdmin.User,
             username = stringFormatter.toSparqlEncodedString(
-              userEntity.username.value,
+              userEntity.username.get.value,
               errorFun =
-                throw BadRequestException(s"The supplied username: '${userEntity.username.value}' is not valid.")
+                throw BadRequestException(s"The supplied username: '${userEntity.username.get.value}' is not valid.")
             ),
-            email = stringFormatter.toSparqlEncodedString(
-              userEntity.email.value,
-              errorFun = throw BadRequestException(s"The supplied email: '${userEntity.email.value}' is not valid.")),
+            email =
+              stringFormatter.toSparqlEncodedString(
+                userEntity.email.get.value,
+                errorFun =
+                  throw BadRequestException(s"The supplied email: '${userEntity.email.get.value}' is not valid.")),
             password = hashedPassword,
             givenName = stringFormatter.toSparqlEncodedString(
-              userEntity.givenName.value,
+              userEntity.givenName.get.value,
               errorFun =
-                throw BadRequestException(s"The supplied given name: '${userEntity.givenName.value}' is not valid.")
+                throw BadRequestException(s"The supplied given name: '${userEntity.givenName.get.value}' is not valid.")
             ),
             familyName = stringFormatter.toSparqlEncodedString(
-              userEntity.familyName.value,
-              errorFun =
-                throw BadRequestException(s"The supplied family name: '${userEntity.familyName.value}' is not valid.")
+              userEntity.familyName.get.value,
+              errorFun = throw BadRequestException(
+                s"The supplied family name: '${userEntity.familyName.get.value}' is not valid.")
             ),
-            status = userEntity.status.value,
+            status = userEntity.status.get.value,
             preferredLanguage = stringFormatter.toSparqlEncodedString(
-              userEntity.lang.value,
-              errorFun = throw BadRequestException(s"The supplied language: '${userEntity.lang.value}' is not valid.")
+              userEntity.lang.get.value,
+              errorFun =
+                throw BadRequestException(s"The supplied language: '${userEntity.lang.get.value}' is not valid.")
             ),
-            systemAdmin = userEntity.systemAdmin.value
+            systemAdmin = userEntity.systemAdmin.get.value
           )
           .toString
 

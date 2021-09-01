@@ -84,8 +84,6 @@ case class ChangeUserApiRequestADM(username: Option[String] = None,
                                    givenName: Option[String] = None,
                                    familyName: Option[String] = None,
                                    lang: Option[String] = None,
-                                   requesterPassword: Option[String] = None,
-                                   newPassword: Option[String] = None,
                                    status: Option[Boolean] = None,
                                    systemAdmin: Option[Boolean] = None) {
 
@@ -95,8 +93,6 @@ case class ChangeUserApiRequestADM(username: Option[String] = None,
     givenName,
     familyName,
     lang,
-    requesterPassword,
-    newPassword,
     status,
     systemAdmin
   ).flatten.size
@@ -109,13 +105,13 @@ case class ChangeUserApiRequestADM(username: Option[String] = None,
   /* check that only allowed information for the 4 cases is send and not more. */
 
   // change password case
-  if (requesterPassword.isDefined || newPassword.isDefined) {
-    if (parametersCount > 2) {
-      throw BadRequestException("Too many parameters sent for password change.")
-    } else if (parametersCount < 2) {
-      throw BadRequestException("Too few parameters sent for password change.")
-    }
-  }
+//  if (requesterPassword.isDefined || newPassword.isDefined) {
+//    if (parametersCount > 2) {
+//      throw BadRequestException("Too many parameters sent for password change.")
+//    } else if (parametersCount < 2) {
+//      throw BadRequestException("Too few parameters sent for password change.")
+//    }
+//  }
 
   // change status case
   if (status.isDefined) {
@@ -219,7 +215,7 @@ case class UserCreateRequestADM(userEntity: UserEntity,
   * @param apiRequestID         the ID of the API request.
   */
 case class UserChangeBasicUserInformationRequestADM(userIri: IRI,
-                                                    changeUserRequest: ChangeUserApiRequestADM,
+                                                    userUpdatePayload: UserUpdatePayloadADM,
                                                     featureFactoryConfig: FeatureFactoryConfig,
                                                     requestingUser: UserADM,
                                                     apiRequestID: UUID)
@@ -463,15 +459,6 @@ case class UserGroupMembershipsGetResponseADM(groups: Seq[GroupADM]) extends Kno
 case class UserOperationResponseADM(user: UserADM) extends KnoraResponseADM {
   def toJsValue: JsValue = UsersADMJsonProtocol.userOperationResponseADMFormat.write(this)
 }
-
-/**
-  * Represents an answer to a user creating operation.
-  *
-  * @param user the new user profile of the created user.
-  */
-//case class UserCreationResponseADM(user: ) extends KnoraResponseADM {
-//  def toJsValue: JsValue = UsersADMJsonProtocol.userCreationResponseADMFormat.write(this)
-//}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Components of messages
@@ -910,28 +897,21 @@ class UserIdentifierADM private (maybeIri: Option[IRI] = None,
   * @param groups        the new group memberships list.
   * @param systemAdmin   the new system admin membership
   */
-case class UserUpdatePayloadADM(username: Option[String] = None,
-                                email: Option[String] = None,
-                                givenName: Option[String] = None,
-                                familyName: Option[String] = None,
-                                password: Option[String] = None,
-                                status: Option[Boolean] = None,
-                                lang: Option[String] = None,
-                                projects: Option[Seq[IRI]] = None,
-                                projectsAdmin: Option[Seq[IRI]] = None,
-                                groups: Option[Seq[IRI]] = None,
-                                systemAdmin: Option[Boolean] = None) {
+case class UserUpdatePayloadADM(username: Option[Username] = None,
+                                email: Option[Email] = None,
+                                givenName: Option[GivenName] = None,
+                                familyName: Option[FamilyName] = None,
+                                status: Option[Status] = None,
+                                lang: Option[LanguageCode] = None,
+                                systemAdmin: Option[SystemAdmin] = None) {
 
   val parametersCount: Int = List(
+    username,
     email,
     givenName,
     familyName,
-    password,
     status,
     lang,
-    projects,
-    projectsAdmin,
-    groups,
     systemAdmin
   ).flatten.size
 
@@ -943,9 +923,9 @@ case class UserUpdatePayloadADM(username: Option[String] = None,
   /* check that only allowed information for the 4 cases is send and not more. */
 
   // change password case
-  if (password.isDefined && parametersCount > 1) {
-    throw BadRequestException("Too many parameters sent for password change.")
-  }
+//  if (password.isDefined && parametersCount > 1) {
+//    throw BadRequestException("Too many parameters sent for password change.")
+//  }
 
   // change status case
   if (status.isDefined && parametersCount > 1) {
@@ -958,24 +938,38 @@ case class UserUpdatePayloadADM(username: Option[String] = None,
   }
 
   // change project memberships
-  if (projects.isDefined && parametersCount > 1) {
-    throw BadRequestException("Too many parameters sent for project membership change.")
-  }
+//  if (projects.isDefined && parametersCount > 1) {
+//    throw BadRequestException("Too many parameters sent for project membership change.")
+//  }
 
   // change projectAdmin memberships
-  if (projectsAdmin.isDefined && parametersCount > 1) {
-    throw BadRequestException("Too many parameters sent for projectAdmin membership change.")
-  }
+//  if (userUpdateEntity.projectsAdmin.isDefined && parametersCount > 1) {
+//    throw BadRequestException("Too many parameters sent for projectAdmin membership change.")
+//  }
 
   // change group memberships
-  if (groups.isDefined && parametersCount > 1) {
-    throw BadRequestException("Too many parameters sent for group membership change.")
-  }
+//  if (userUpdateEntity.groups.isDefined && parametersCount > 1) {
+//    throw BadRequestException("Too many parameters sent for group membership change.")
+//  }
 
   // change basic user information case
-  if (parametersCount > 4) {
+  if (parametersCount > 5) {
     throw BadRequestException("Too many parameters sent for basic user information change.")
   }
+
+//  def toUserEntity: UserEntity = {
+//    UserEntity.create(
+//      None,
+//      Username.create(username.get).fold(error => throw error, value => value),
+//      Email.create(email.get).fold(error => throw error, value => value),
+//      GivenName.create(givenName.get).fold(error => throw error, value => value),
+//      FamilyName.create(familyName.get).fold(error => throw error, value => value),
+//      Password.create(password.get).fold(error => throw error, value => value),
+//      Status.create(status.get).fold(error => throw error, value => value),
+//      LanguageCode.create(lang.get).fold(error => throw error, value => value),
+//      SystemAdmin.create(systemAdmin.get).fold(error => throw error, value => value)
+//    )
+//  }
 
 }
 
@@ -993,9 +987,6 @@ object UsersADMJsonProtocol
     with PermissionsADMJsonProtocol {
 
   implicit val userADMFormat: JsonFormat[UserADM] = jsonFormat13(UserADM)
-  //implicit val userFormat: JsonFormat[User] = jsonFormat9(User)
-//  implicit val userFormat: RootJsonFormat[User] =
-//    jsonFormat(User, "id", "username", "email", "givenName", "familyName", "password", "status", "lang", "systemAdmin")
   implicit val createUserApiRequestADMFormat: RootJsonFormat[CreateUserApiRequestADM] = jsonFormat(
     CreateUserApiRequestADM,
     "id",
@@ -1014,8 +1005,8 @@ object UsersADMJsonProtocol
     "givenName",
     "familyName",
     "lang",
-    "requesterPassword",
-    "newPassword",
+//    "requesterPassword",
+//    "newPassword",
     "status",
     "systemAdmin")
   implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
@@ -1028,6 +1019,4 @@ object UsersADMJsonProtocol
     jsonFormat1(UserGroupMembershipsGetResponseADM)
   implicit val userOperationResponseADMFormat: RootJsonFormat[UserOperationResponseADM] = jsonFormat1(
     UserOperationResponseADM)
-//  implicit val userCreationResponseADMFormat: RootJsonFormat[UserCreationResponseADM] =
-//    jsonFormat1(UserCreationResponseADM)
 }

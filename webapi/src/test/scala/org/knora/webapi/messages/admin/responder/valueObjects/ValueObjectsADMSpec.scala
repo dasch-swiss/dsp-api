@@ -47,7 +47,7 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
    * @return                        a [[UserEntity]]
    */
   private def createUserEntity(createUserApiRequestADM: CreateUserApiRequestADM): UserEntity = {
-    UserEntity(
+    UserEntity.create(
       id = stringFormatter.validateOptionalUserIri(createUserApiRequestADM.id,
                                                    throw BadRequestException(s"Invalid user IRI")),
       username = Username.create(createUserApiRequestADM.username).fold(error => throw error, value => value),
@@ -107,14 +107,14 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       val userEntity = createUserEntity(request)
 
       userEntity.id should equal(request.id)
-      userEntity.username.value should equal(request.username)
-      userEntity.email.value should equal(request.email)
-      userEntity.password.value should equal(request.password)
-      userEntity.givenName.value should equal(request.givenName)
-      userEntity.familyName.value should equal(request.familyName)
-      userEntity.status.value should equal(request.status)
-      userEntity.lang.value should equal(request.lang)
-      userEntity.systemAdmin.value should equal(request.systemAdmin)
+      userEntity.username.get.value should equal(request.username)
+      userEntity.email.get.value should equal(request.email)
+      userEntity.password.get.value should equal(request.password)
+      userEntity.givenName.get.value should equal(request.givenName)
+      userEntity.familyName.get.value should equal(request.familyName)
+      userEntity.status.get.value should equal(request.status)
+      userEntity.lang.get.value should equal(request.lang)
+      userEntity.systemAdmin.get.value should equal(request.systemAdmin)
 
       val otherRequest = createUserApiRequestADM(
         id = Some("http://rdfh.ch/users/notdonald"),
@@ -131,24 +131,24 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       val otherUserEntity = createUserEntity(otherRequest)
 
       otherUserEntity.id should equal(otherRequest.id)
-      otherUserEntity.username.value should equal(otherRequest.username)
-      otherUserEntity.email.value should equal(otherRequest.email)
-      otherUserEntity.password.value should equal(otherRequest.password)
-      otherUserEntity.givenName.value should equal(otherRequest.givenName)
-      otherUserEntity.familyName.value should equal(otherRequest.familyName)
-      otherUserEntity.status.value should equal(otherRequest.status)
-      otherUserEntity.lang.value should equal(otherRequest.lang)
-      otherUserEntity.systemAdmin.value should equal(otherRequest.systemAdmin)
+      otherUserEntity.username.get.value should equal(otherRequest.username)
+      otherUserEntity.email.get.value should equal(otherRequest.email)
+      otherUserEntity.password.get.value should equal(otherRequest.password)
+      otherUserEntity.givenName.get.value should equal(otherRequest.givenName)
+      otherUserEntity.familyName.get.value should equal(otherRequest.familyName)
+      otherUserEntity.status.get.value should equal(otherRequest.status)
+      otherUserEntity.lang.get.value should equal(otherRequest.lang)
+      otherUserEntity.systemAdmin.get.value should equal(otherRequest.systemAdmin)
 
       otherUserEntity.id should not equal request.id
-      otherUserEntity.username.value should not equal request.username
-      otherUserEntity.email.value should not equal request.email
-      otherUserEntity.password.value should not equal request.password
-      otherUserEntity.givenName.value should not equal request.givenName
-      otherUserEntity.familyName.value should not equal request.familyName
-      otherUserEntity.status.value should not equal request.status
-      otherUserEntity.lang.value should not equal request.lang
-      otherUserEntity.systemAdmin.value should not equal request.systemAdmin
+      otherUserEntity.username.get.value should not equal request.username
+      otherUserEntity.email.get.value should not equal request.email
+      otherUserEntity.password.get.value should not equal request.password
+      otherUserEntity.givenName.get.value should not equal request.givenName
+      otherUserEntity.familyName.get.value should not equal request.familyName
+      otherUserEntity.status.get.value should not equal request.status
+      otherUserEntity.lang.get.value should not equal request.lang
+      otherUserEntity.systemAdmin.get.value should not equal request.systemAdmin
     }
 
     "throw 'BadRequestException' if 'username' is missing" in {

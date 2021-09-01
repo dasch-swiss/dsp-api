@@ -123,7 +123,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         // get all values from request and make value objects from it
         //TODO use UserADMEntity (= UserADM with value objects) instead of UserEntity
         val user: UserEntity =
-          UserEntity(
+          UserEntity.create(
             id = stringFormatter.validateOptionalUserIri(apiRequest.id, throw BadRequestException(s"Invalid user IRI")),
             username = Username.create(apiRequest.username).fold(error => throw error, value => value),
             email = Email.create(apiRequest.email).fold(error => throw error, value => value),
@@ -265,8 +265,47 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             throw BadRequestException("Changes to built-in users are not allowed.")
           }
 
-          /* the api request is already checked at time of creation. see case class. */
+          val maybeChangedUsername = apiRequest.username match {
+            case Some(username) => Some(Username.create(username).fold(error => throw error, value => value))
+            case None           => None
+          }
+          val maybeChangedEmail = apiRequest.email match {
+            case Some(email) => Some(Email.create(email).fold(error => throw error, value => value))
+            case None        => None
+          }
+          val maybeChangedGivenName = apiRequest.givenName match {
+            case Some(givenName) => Some(GivenName.create(givenName).fold(error => throw error, value => value))
+            case None            => None
+          }
+          val maybeChangedFamilyName = apiRequest.familyName match {
+            case Some(familyName) => Some(FamilyName.create(familyName).fold(error => throw error, value => value))
+            case None             => None
+          }
+          val maybeChangedStatus = apiRequest.status match {
+            case Some(status) => Some(Status.create(status).fold(error => throw error, value => value))
+            case None         => None
+          }
+          val maybeChangedLang = apiRequest.lang match {
+            case Some(lang) => Some(LanguageCode.create(lang).fold(error => throw error, value => value))
+            case None       => None
+          }
+          val maybeChangedSystemAdmin = apiRequest.systemAdmin match {
+            case Some(systemAdmin) => Some(SystemAdmin.create(systemAdmin).fold(error => throw error, value => value))
+            case None              => None
+          }
 
+          val userUpdatePayload: UserUpdatePayloadADM =
+            UserUpdatePayloadADM(
+              username = maybeChangedUsername,
+              email = maybeChangedEmail,
+              givenName = maybeChangedGivenName,
+              familyName = maybeChangedFamilyName,
+              status = maybeChangedStatus,
+              lang = maybeChangedLang,
+              systemAdmin = maybeChangedSystemAdmin
+            )
+
+          /* the api request is already checked at time of creation. see case class. */
           val requestMessage: Future[UsersResponderRequestADM] = for {
             requestingUser <- getUserADM(
               requestContext = requestContext,
@@ -275,7 +314,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           } yield
             UserChangeBasicUserInformationRequestADM(
               userIri = userIri,
-              changeUserRequest = apiRequest,
+              userUpdatePayload = userUpdatePayload,
               featureFactoryConfig = featureFactoryConfig,
               requestingUser = requestingUser,
               apiRequestID = UUID.randomUUID()
@@ -617,37 +656,35 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   @ApiMayChange
   private def addUserToProjectAdminMembership(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(UsersBasePath / "iri" / Segment / "project-admin-memberships" / Segment) { (userIri, projectIri) =>
-      post {
-        /*  */
-        requestContext =>
-          val checkedUserIri =
-            stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
-          val checkedProjectIri =
-            stringFormatter.validateAndEscapeProjectIri(projectIri,
-                                                        throw BadRequestException(s"Invalid project IRI $projectIri"))
+      post { requestContext =>
+        val checkedUserIri =
+          stringFormatter.validateAndEscapeUserIri(userIri, throw BadRequestException(s"Invalid user IRI $userIri"))
+        val checkedProjectIri =
+          stringFormatter.validateAndEscapeProjectIri(projectIri,
+                                                      throw BadRequestException(s"Invalid project IRI $projectIri"))
 
-          val requestMessage: Future[UserProjectAdminMembershipAddRequestADM] = for {
-            requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          } yield
-            UserProjectAdminMembershipAddRequestADM(
-              userIri = checkedUserIri,
-              projectIri = checkedProjectIri,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser,
-              apiRequestID = UUID.randomUUID()
-            )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
+        val requestMessage: Future[UserProjectAdminMembershipAddRequestADM] = for {
+          requestingUser <- getUserADM(
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            responderManager = responderManager,
-            log = log
+            featureFactoryConfig = featureFactoryConfig
           )
+        } yield
+          UserProjectAdminMembershipAddRequestADM(
+            userIri = checkedUserIri,
+            projectIri = checkedProjectIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
+
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
       }
     }
 
