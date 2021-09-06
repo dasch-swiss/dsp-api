@@ -83,16 +83,16 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       changePasswordADM(userIri, userUpdatePasswordPayload, featureFactoryConfig, requestingUser, apiRequestID)
     case UserChangeStatusRequestADM(userIri, status, featureFactoryConfig, requestingUser, apiRequestID) =>
       changeUserStatusADM(userIri, status, featureFactoryConfig, requestingUser, apiRequestID)
-//    case UserChangeSystemAdminMembershipStatusRequestADM(userIri,
-//                                                         changeSystemAdminMembershipStatusRequest,
-//                                                         featureFactoryConfig,
-//                                                         requestingUser,
-//                                                         apiRequestID) =>
-//      changeUserSystemAdminMembershipStatusADM(userIri,
-//                                               changeSystemAdminMembershipStatusRequest,
-//                                               featureFactoryConfig,
-//                                               requestingUser,
-//                                               apiRequestID)
+    case UserChangeSystemAdminMembershipStatusRequestADM(userIri,
+                                                         changeSystemAdminMembershipStatusRequest,
+                                                         featureFactoryConfig,
+                                                         requestingUser,
+                                                         apiRequestID) =>
+      changeUserSystemAdminMembershipStatusADM(userIri,
+                                               changeSystemAdminMembershipStatusRequest,
+                                               featureFactoryConfig,
+                                               requestingUser,
+                                               apiRequestID)
     case UserProjectMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser) =>
       userProjectMembershipsGetRequestADM(userIri, featureFactoryConfig, requestingUser)
 //    case UserProjectMembershipAddRequestADM(userIri, projectIri, featureFactoryConfig, requestingUser, apiRequestID) =>
@@ -548,11 +548,10 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         // create the update request
-        userUpdatePayload = UserUpdatePayloadADM(status = Some(status))
 
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
+          userUpdatePayload = UserUpdatePayloadADM(status = Some(status)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
           apiRequestID = apiRequestID
@@ -574,7 +573,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * Change the user's system admin membership status (active / inactive).
     *
     * @param userIri              the IRI of the existing user that we want to update.
-    * @param changeUserRequest    the new status.
+    * @param systemAdmin    the new status.
     * @param featureFactoryConfig the feature factory configuration.
     * @param requestingUser       the user profile of the requesting user.
     * @param apiRequestID         the unique api request ID.
@@ -582,57 +581,53 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @throws BadRequestException if necessary parameters are not supplied.
     * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
     */
-//  private def changeUserSystemAdminMembershipStatusADM(userIri: IRI,
-//                                                       changeUserRequest: ChangeUserApiRequestADM,
-//                                                       featureFactoryConfig: FeatureFactoryConfig,
-//                                                       requestingUser: UserADM,
-//                                                       apiRequestID: UUID): Future[UserOperationResponseADM] = {
-//
-//    //log.debug(s"changeUserSystemAdminMembershipStatusV1: changeUserRequest: {}", changeUserRequest)
-//
-//    /**
-//      * The actual change user status task run with an IRI lock.
-//      */
-//    def changeUserSystemAdminMembershipStatusTask(userIri: IRI,
-//                                                  changeUserRequest: ChangeUserApiRequestADM,
-//                                                  requestingUser: UserADM,
-//                                                  apiRequestID: UUID): Future[UserOperationResponseADM] =
-//      for {
-//
-//        // check if necessary information is present
-//        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
+  private def changeUserSystemAdminMembershipStatusADM(userIri: IRI,
+                                                       systemAdmin: SystemAdmin,
+                                                       featureFactoryConfig: FeatureFactoryConfig,
+                                                       requestingUser: UserADM,
+                                                       apiRequestID: UUID): Future[UserOperationResponseADM] = {
+
+    /**
+      * The actual change user status task run with an IRI lock.
+      */
+    def changeUserSystemAdminMembershipStatusTask(userIri: IRI,
+                                                  systemAdmin: SystemAdmin,
+                                                  requestingUser: UserADM,
+                                                  apiRequestID: UUID): Future[UserOperationResponseADM] =
+      for {
+
+        // check if necessary information is present
+        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
 //        _ = if (changeUserRequest.systemAdmin.isEmpty)
 //          throw BadRequestException("New user system admin membership status cannot be empty")
-//
-//        // check if the requesting user is allowed to perform updates
-//        _ = if (!requestingUser.permissions.isSystemAdmin) {
-//          // not a system admin
-//          // log.debug("system admin: {}", userProfile.permissionData.isSystemAdmin)
-//          throw ForbiddenException("User's system admin membership can only be changed by a system administrator")
-//        }
-//
-//        // create the update request
-//        userUpdatePayload = UserUpdatePayloadADM(systemAdmin = changeUserRequest.systemAdmin)
-//
-//        result <- updateUserADM(
-//          userIri = userIri,
-//          userEntity = userUpdatePayload.toUserEntity,
-//          featureFactoryConfig = featureFactoryConfig,
-//          requestingUser = KnoraSystemInstances.Users.SystemUser,
-//          apiRequestID = apiRequestID
-//        )
-//
-//      } yield result
-//
-//    for {
-//      // run the change status task with an IRI lock
-//      taskResult <- IriLocker.runWithIriLock(
-//        apiRequestID,
-//        userIri,
-//        () => changeUserSystemAdminMembershipStatusTask(userIri, changeUserRequest, requestingUser, apiRequestID)
-//      )
-//    } yield taskResult
-//  }
+
+        // check if the requesting user is allowed to perform updates
+        _ = if (!requestingUser.permissions.isSystemAdmin) {
+          // not a system admin
+          // log.debug("system admin: {}", userProfile.permissionData.isSystemAdmin)
+          throw ForbiddenException("User's system admin membership can only be changed by a system administrator")
+        }
+
+        // create the update request
+        result <- updateUserADM(
+          userIri = userIri,
+          userUpdatePayload = UserUpdatePayloadADM(systemAdmin = Some(systemAdmin)),
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = KnoraSystemInstances.Users.SystemUser,
+          apiRequestID = apiRequestID
+        )
+
+      } yield result
+
+    for {
+      // run the change status task with an IRI lock
+      taskResult <- IriLocker.runWithIriLock(
+        apiRequestID,
+        userIri,
+        () => changeUserSystemAdminMembershipStatusTask(userIri, systemAdmin, requestingUser, apiRequestID)
+      )
+    } yield taskResult
+  }
 
   /**
     * Returns user's project memberships as a sequence of [[ProjectADM]].

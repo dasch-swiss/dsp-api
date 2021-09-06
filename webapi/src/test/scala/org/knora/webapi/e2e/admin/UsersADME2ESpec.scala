@@ -788,49 +788,49 @@ class UsersADME2ESpec
         )
       }
 
-//      "update the user's system admin membership status" in {
-//        val changeUserSystemAdminMembershipRequest: String =
-//          s"""{
-//                       |    "systemAdmin": true
-//                       |}""".stripMargin
-//
-//        clientTestDataCollector.addFile(
-//          TestDataFileContent(
-//            filePath = TestDataFilePath(
-//              directoryPath = clientTestDataPath,
-//              filename = "update-user-system-admin-membership-request",
-//              fileExtension = "json"
-//            ),
-//            text = changeUserSystemAdminMembershipRequest
-//          )
-//        )
-//        val donaldIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
-//        val request = Put(
-//          baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/SystemAdmin",
-//          HttpEntity(ContentTypes.`application/json`, changeUserSystemAdminMembershipRequest)) ~> addCredentials(
-//          BasicHttpCredentials(rootCreds.email, rootCreds.password))
-//        val response: HttpResponse = singleAwaitingRequest(request)
-//        // log.debug(s"response: ${response.toString}")
-//        response.status should be(StatusCodes.OK)
-//
-//        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
-//        result.permissions.groupsPerProject
-//          .get("http://www.knora.org/ontology/knora-admin#SystemProject")
-//          .head should equal(List("http://www.knora.org/ontology/knora-admin#SystemAdmin"))
-//        // log.debug(jsonResult)
-//
-//        clientTestDataCollector.addFile(
-//          TestDataFileContent(
-//            filePath = TestDataFilePath(
-//              directoryPath = clientTestDataPath,
-//              filename = "update-user-system-admin-membership-response",
-//              fileExtension = "json"
-//            ),
-//            text = responseToString(response)
-//          )
-//        )
-//
-//      }
+      "update the user's system admin membership status" in {
+        val changeUserSystemAdminMembershipRequest: String =
+          s"""{
+                       |    "systemAdmin": true
+                       |}""".stripMargin
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-user-system-admin-membership-request",
+              fileExtension = "json"
+            ),
+            text = changeUserSystemAdminMembershipRequest
+          )
+        )
+        val donaldIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
+        val request = Put(
+          baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/SystemAdmin",
+          HttpEntity(ContentTypes.`application/json`, changeUserSystemAdminMembershipRequest)) ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        response.status should be(StatusCodes.OK)
+
+        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+        result.permissions.groupsPerProject
+          .get("http://www.knora.org/ontology/knora-admin#SystemProject")
+          .head should equal(List("http://www.knora.org/ontology/knora-admin#SystemAdmin"))
+        // log.debug(jsonResult)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-user-system-admin-membership-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+
+      }
 
       "not allow changing the system user" in {
 

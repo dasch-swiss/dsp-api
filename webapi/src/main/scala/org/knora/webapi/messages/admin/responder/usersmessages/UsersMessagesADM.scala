@@ -256,14 +256,13 @@ case class UserChangeStatusRequestADM(userIri: IRI,
   * Request updating the users system admin status ('knora-base:isInSystemAdminGroup' property)
   *
   * @param userIri              the IRI of the user to be updated.
-  * @param changeUserRequest    the [[ChangeUserApiRequestADM]] containing
-  *                             the new system admin membership status (true / false).
+  * @param systemAdmin          the SystemAdmin value object containing the new system admin membership status (true / false).
   * @param featureFactoryConfig the feature factory configuration.
   * @param requestingUser       the user initiating the request.
   * @param apiRequestID         the ID of the API request.
   */
 case class UserChangeSystemAdminMembershipStatusRequestADM(userIri: IRI,
-                                                           changeUserRequest: ChangeUserApiRequestADM,
+                                                           systemAdmin: SystemAdmin,
                                                            featureFactoryConfig: FeatureFactoryConfig,
                                                            requestingUser: UserADM,
                                                            apiRequestID: UUID)

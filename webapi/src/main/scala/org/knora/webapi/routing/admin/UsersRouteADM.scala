@@ -497,6 +497,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             throw BadRequestException("Changes to built-in users are not allowed.")
           }
 
+          val newSystemAdmin = apiRequest.systemAdmin match {
+            case Some(systemAdmin) => SystemAdmin.create(systemAdmin).fold(error => throw error, value => value)
+            case None              => throw BadRequestException("The systemAdmin is missing.")
+          }
+
           /* the api request is already checked at time of creation. see case class. */
 
           val requestMessage: Future[UsersResponderRequestADM] = for {
@@ -507,7 +512,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           } yield
             UserChangeSystemAdminMembershipStatusRequestADM(
               userIri = userIri,
-              changeUserRequest = apiRequest,
+              systemAdmin = newSystemAdmin,
               featureFactoryConfig = featureFactoryConfig,
               requestingUser = requestingUser,
               apiRequestID = UUID.randomUUID()
