@@ -74,8 +74,6 @@ case class CreateUserApiRequestADM(id: Option[IRI] = None,
   * @param givenName         the new given name.
   * @param familyName        the new family name.
   * @param lang              the new ISO 639-1 code of the new preferred language.
-  * @param requesterPassword the password of the user making the request.
-  * @param newPassword       the new password.
   * @param status            the new user status (active = true, inactive = false).
   * @param systemAdmin       the new system admin membership status.
   */
@@ -97,22 +95,10 @@ case class ChangeUserApiRequestADM(username: Option[String] = None,
     systemAdmin
   ).flatten.size
 
-  // println(requesterPassword + " " + newPassword)
-
   // something needs to be sent, i.e. everything 'None' is not allowed
   if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
 
-  /* check that only allowed information for the 4 cases is send and not more. */
-
-  // change password case
-//  if (requesterPassword.isDefined || newPassword.isDefined) {
-//    if (parametersCount > 2) {
-//      throw BadRequestException("Too many parameters sent for password change.")
-//    } else if (parametersCount < 2) {
-//      throw BadRequestException("Too few parameters sent for password change.")
-//    }
-//  }
-
+  /* check that only allowed information for the 4 cases is send and not more. */ //why 4 cases???
   // change status case
   if (status.isDefined) {
     if (parametersCount > 1) throw BadRequestException("Too many parameters sent for user status change.")
@@ -127,6 +113,19 @@ case class ChangeUserApiRequestADM(username: Option[String] = None,
   if (parametersCount > 5) throw BadRequestException("Too many parameters sent for basic user information change.")
 
   def toJsValue: JsValue = UsersADMJsonProtocol.changeUserApiRequestADMFormat.write(this)
+}
+
+case class ChangeUserPasswordApiRequestADM(requesterPassword: Option[String], newPassword: Option[String]) {
+  val parametersCount: Int = List(
+    requesterPassword,
+    newPassword
+  ).flatten.size
+  if (requesterPassword.isDefined || newPassword.isDefined) {
+    if (parametersCount < 2) {
+      throw BadRequestException("Too few parameters sent for password change.")
+    }
+  }
+  def toJsValue: JsValue = UsersADMJsonProtocol.changeUserPasswordApiRequestADMFormat.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -225,13 +224,13 @@ case class UserChangeBasicUserInformationRequestADM(userIri: IRI,
   * Request updating the users password.
   *
   * @param userIri              the IRI of the user to be updated.
-  * @param changeUserRequest    the [[ChangeUserApiRequestADM]] object containing the old and new password.
+  * @param userUpdatePasswordPayload    the [[UserUpdatePasswordPayloadADM]] object containing the old and new password.
   * @param featureFactoryConfig the feature factory configuration.
   * @param requestingUser       the user initiating the request.
   * @param apiRequestID         the ID of the API request.
   */
 case class UserChangePasswordRequestADM(userIri: IRI,
-                                        changeUserRequest: ChangeUserApiRequestADM,
+                                        userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
                                         featureFactoryConfig: FeatureFactoryConfig,
                                         requestingUser: UserADM,
                                         apiRequestID: UUID)
@@ -696,8 +695,6 @@ case class UserADM(id: IRI,
     }
   }
 
-  def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
-
   def asUserDataV1: UserDataV1 = {
     UserDataV1(
       user_id = if (this.isAnonymousUser) {
@@ -714,6 +711,8 @@ case class UserADM(id: IRI,
       lang = lang
     )
   }
+
+  def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
 }
 
 /**
@@ -956,22 +955,9 @@ case class UserUpdatePayloadADM(username: Option[Username] = None,
   if (parametersCount > 5) {
     throw BadRequestException("Too many parameters sent for basic user information change.")
   }
-
-//  def toUserEntity: UserEntity = {
-//    UserEntity.create(
-//      None,
-//      Username.create(username.get).fold(error => throw error, value => value),
-//      Email.create(email.get).fold(error => throw error, value => value),
-//      GivenName.create(givenName.get).fold(error => throw error, value => value),
-//      FamilyName.create(familyName.get).fold(error => throw error, value => value),
-//      Password.create(password.get).fold(error => throw error, value => value),
-//      Status.create(status.get).fold(error => throw error, value => value),
-//      LanguageCode.create(lang.get).fold(error => throw error, value => value),
-//      SystemAdmin.create(systemAdmin.get).fold(error => throw error, value => value)
-//    )
-//  }
-
 }
+
+case class UserUpdatePasswordPayloadADM(requesterPassword: Password, newPassword: Password) {}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -998,17 +984,13 @@ object UsersADMJsonProtocol
     "status",
     "lang",
     "systemAdmin")
-  implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] = jsonFormat(
-    ChangeUserApiRequestADM,
-    "username",
-    "email",
-    "givenName",
-    "familyName",
-    "lang",
-//    "requesterPassword",
-//    "newPassword",
-    "status",
-    "systemAdmin")
+  implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] =
+    jsonFormat(ChangeUserApiRequestADM, "username", "email", "givenName", "familyName", "lang", "status", "systemAdmin")
+  implicit val changeUserPasswordApiRequestADMFormat: RootJsonFormat[ChangeUserPasswordApiRequestADM] = jsonFormat(
+    ChangeUserPasswordApiRequestADM,
+    "requesterPassword",
+    "newPassword"
+  )
   implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
   implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM] = jsonFormat1(UserResponseADM)
   implicit val userProjectMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectMembershipsGetResponseADM] =

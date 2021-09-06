@@ -594,74 +594,74 @@ class UsersADME2ESpec
         )
       }
 
-//      "update the user's password (by himself)" in {
-//
-//        val changeUserPasswordRequest: String =
-//          s"""{
-//                       |    "requesterPassword": "test",
-//                       |    "newPassword": "test123456"
-//                       |}""".stripMargin
-//
-//        clientTestDataCollector.addFile(
-//          TestDataFileContent(
-//            filePath = TestDataFilePath(
-//              directoryPath = clientTestDataPath,
-//              filename = "update-user-password-request",
-//              fileExtension = "json"
-//            ),
-//            text = changeUserPasswordRequest
-//          )
-//        )
-//
-//        val request1 = Put(baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/Password",
-//                           HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)) ~> addCredentials(
-//          BasicHttpCredentials(normalUserCreds.email, "test")) // requester's password
-//        val response1: HttpResponse = singleAwaitingRequest(request1)
-//        logger.debug(s"response: ${response1.toString}")
-//        response1.status should be(StatusCodes.OK)
-//
-//        clientTestDataCollector.addFile(
-//          TestDataFileContent(
-//            filePath = TestDataFilePath(
-//              directoryPath = clientTestDataPath,
-//              filename = "update-user-password-response",
-//              fileExtension = "json"
-//            ),
-//            text = responseToString(response1)
-//          )
-//        )
-//
-//        // check if the password was changed, i.e. if the new one is accepted
-//        val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
-//          BasicHttpCredentials(normalUserCreds.email, "test123456")) // new password
-//        val response2: HttpResponse = singleAwaitingRequest(request2)
-//        response2.status should be(StatusCodes.OK)
-//
-//      }
-//
-//      "update the user's password (by a system admin)" in {
-//
-//        val params01 =
-//          s"""
-//                    {
-//                        "requesterPassword": "test",
-//                        "newPassword": "test654321"
-//                    }
-//                    """.stripMargin
-//
-//        val request1 = Put(baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/Password",
-//                           HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(
-//          BasicHttpCredentials(rootCreds.email, "test")) // requester's password
-//        val response1: HttpResponse = singleAwaitingRequest(request1)
-//        logger.debug(s"response: ${response1.toString}")
-//        response1.status should be(StatusCodes.OK)
-//
-//        // check if the password was changed, i.e. if the new one is accepted
-//        val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
-//          BasicHttpCredentials(normalUserCreds.email, "test654321")) // new password
-//        val response2: HttpResponse = singleAwaitingRequest(request2)
-//        response2.status should be(StatusCodes.OK)
-//      }
+      "update the user's password (by himself)" in {
+
+        val changeUserPasswordRequest: String =
+          s"""{
+                       |    "requesterPassword": "test",
+                       |    "newPassword": "test123456"
+                       |}""".stripMargin
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-user-password-request",
+              fileExtension = "json"
+            ),
+            text = changeUserPasswordRequest
+          )
+        )
+
+        val request1 = Put(baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/Password",
+                           HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)) ~> addCredentials(
+          BasicHttpCredentials(normalUserCreds.email, "test")) // requester's password
+        val response1: HttpResponse = singleAwaitingRequest(request1)
+        logger.debug(s"response: ${response1.toString}")
+        response1.status should be(StatusCodes.OK)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-user-password-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response1)
+          )
+        )
+
+        // check if the password was changed, i.e. if the new one is accepted
+        val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
+          BasicHttpCredentials(normalUserCreds.email, "test123456")) // new password
+        val response2: HttpResponse = singleAwaitingRequest(request2)
+        response2.status should be(StatusCodes.OK)
+
+      }
+
+      "update the user's password (by a system admin)" in {
+
+        val params01 =
+          s"""
+                    {
+                        "requesterPassword": "test",
+                        "newPassword": "test654321"
+                    }
+                    """.stripMargin
+
+        val request1 = Put(baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/Password",
+                           HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, "test")) // requester's password
+        val response1: HttpResponse = singleAwaitingRequest(request1)
+        logger.debug(s"response: ${response1.toString}")
+        response1.status should be(StatusCodes.OK)
+
+        // check if the password was changed, i.e. if the new one is accepted
+        val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
+          BasicHttpCredentials(normalUserCreds.email, "test654321")) // new password
+        val response2: HttpResponse = singleAwaitingRequest(request2)
+        response2.status should be(StatusCodes.OK)
+      }
 //
 //      "change user's status" in {
 //        val changeUserStatusRequest: String =

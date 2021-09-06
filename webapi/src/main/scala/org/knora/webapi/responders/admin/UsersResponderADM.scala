@@ -19,9 +19,9 @@
 
 package org.knora.webapi.responders.admin
 
-import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
+import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
@@ -37,15 +37,14 @@ import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceRemoveValues
 }
 import org.knora.webapi.messages.store.triplestoremessages._
-import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.{exceptions, _}
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 
+import java.util.UUID
 import scala.concurrent.Future
 
 /**
@@ -76,8 +75,12 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                                   requestingUser,
                                                   apiRequestID) =>
       changeBasicUserInformationADM(userIri, userUpdatePayload, featureFactoryConfig, requestingUser, apiRequestID)
-//    case UserChangePasswordRequestADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
-//      changePasswordADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID)
+    case UserChangePasswordRequestADM(userIri,
+                                      userUpdatePasswordPayload,
+                                      featureFactoryConfig,
+                                      requestingUser,
+                                      apiRequestID) =>
+      changePasswordADM(userIri, userUpdatePasswordPayload, featureFactoryConfig, requestingUser, apiRequestID)
 //    case UserChangeStatusRequestADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
 //      changeUserStatusADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID)
 //    case UserChangeSystemAdminMembershipStatusRequestADM(userIri,
@@ -441,67 +444,66 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @throws ForbiddenException  if the supplied old password doesn't match with the user's current password.
     * @throws NotFoundException   if the user is not found.
     */
-//  private def changePasswordADM(userIri: IRI,
-//                                changeUserRequest: ChangeUserApiRequestADM,
-//                                featureFactoryConfig: FeatureFactoryConfig,
-//                                requestingUser: UserADM,
-//                                apiRequestID: UUID): Future[UserOperationResponseADM] = {
-//
-//    log.debug(s"changePasswordADM - userIri: {}", userIri)
-//    log.debug(s"changePasswordADM - changeUserRequest: {}", changeUserRequest)
-//    log.debug(s"changePasswordADM - requestingUser: {}", requestingUser)
-//
-//    /**
-//      * The actual change password task run with an IRI lock.
-//      */
-//    def changePasswordTask(userIri: IRI,
-//                           changeUserRequest: ChangeUserApiRequestADM,
-//                           requestingUser: UserADM,
-//                           apiRequestID: UUID): Future[UserOperationResponseADM] =
-//      for {
-//
-//        // check if necessary information is present
-//        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
-//        _ = if (changeUserRequest.requesterPassword.isEmpty || changeUserRequest.newPassword.isEmpty)
-//          throw BadRequestException("The user's old and new password need to be both supplied")
-//
-//        // check if the requesting user is allowed to perform password change. it needs to be either the user himself, or a system admin
-//        _ = if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-//          // not the user or system admin
-//          throw ForbiddenException("User's password can only be changed by the user itself or a system admin.")
-//        }
-//
-//        // check if supplied password matches requesting user's password
-//        _ = log.debug(s"changePasswordADM - requesterPassword: {}", changeUserRequest.requesterPassword.get)
-//        _ = if (!requestingUser.passwordMatch(changeUserRequest.requesterPassword.get)) {
-//          throw ForbiddenException("The supplied password does not match the requesting user's password.")
-//        }
-//
-//        // create the update request
-//        encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
-//        newHashedPassword = encoder.encode(changeUserRequest.newPassword.get)
-//        userUpdatePayload = UserUpdatePayloadADM(password = Some(newHashedPassword))
-//
-//        // update the users password as SystemUser
-//        result <- updateUserADM(
-//          userIri = userIri,
-//          userEntity = userUpdatePayload.toUserEntity,
-//          featureFactoryConfig = featureFactoryConfig,
-//          requestingUser = KnoraSystemInstances.Users.SystemUser,
-//          apiRequestID = apiRequestID
-//        )
-//
-//      } yield result
-//
-//    for {
-//      // run the change password task with an IRI lock
-//      taskResult <- IriLocker.runWithIriLock(
-//        apiRequestID,
-//        userIri,
-//        () => changePasswordTask(userIri, changeUserRequest, requestingUser, apiRequestID)
-//      )
-//    } yield taskResult
-//  }
+  private def changePasswordADM(userIri: IRI,
+                                userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
+                                featureFactoryConfig: FeatureFactoryConfig,
+                                requestingUser: UserADM,
+                                apiRequestID: UUID): Future[UserOperationResponseADM] = {
+
+    log.debug(s"changePasswordADM - userIri: {}", userIri)
+    log.debug(s"changePasswordADM - changeUserRequest: {}", userUpdatePasswordPayload)
+    log.debug(s"changePasswordADM - requestingUser: {}", requestingUser)
+
+    /**
+      * The actual change password task run with an IRI lock.
+      */
+    def changePasswordTask(userIri: IRI,
+                           userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
+                           requestingUser: UserADM,
+                           apiRequestID: UUID): Future[UserOperationResponseADM] =
+      for {
+
+        // check if necessary information is present
+        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
+
+        // check if the requesting user is allowed to perform password change. it needs to be either the user himself, or a system admin
+        _ = if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+          // not the user or system admin
+          throw ForbiddenException("User's password can only be changed by the user itself or a system admin.")
+        }
+
+        // check if supplied password matches requesting user's password
+        _ = log.debug(s"changePasswordADM - requesterPassword: {}", userUpdatePasswordPayload.requesterPassword.value)
+        _ = if (!requestingUser.passwordMatch(userUpdatePasswordPayload.requesterPassword.value)) {
+          throw ForbiddenException("The supplied password does not match the requesting user's password.")
+        }
+
+        // hash the password
+        encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
+        newHashedPassword = Password
+          .create(encoder.encode(userUpdatePasswordPayload.newPassword.value))
+          .fold(error => throw error, value => value)
+
+        // update the users password as SystemUser
+        result <- updateUserPasswordADM(
+          userIri = userIri,
+          password = newHashedPassword,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = KnoraSystemInstances.Users.SystemUser,
+          apiRequestID = apiRequestID
+        )
+
+      } yield result
+
+    for {
+      // run the change password task with an IRI lock
+      taskResult <- IriLocker.runWithIriLock(
+        apiRequestID,
+        userIri,
+        () => changePasswordTask(userIri, userUpdatePasswordPayload, requestingUser, apiRequestID)
+      )
+    } yield taskResult
+  }
 
   /**
     * Change the user's status (active / inactive).
@@ -1372,7 +1374,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * Updates an existing user. Should not be directly used from the receive method.
     *
     * @param userIri              the IRI of the existing user that we want to update.
-    * @param userEntity    the updated information.
+    * @param userUpdatePayload    the updated information.
     * @param featureFactoryConfig the feature factory configuration.
     * @param requestingUser       the requesting user.
     * @param apiRequestID         the unique api request ID.
@@ -1525,6 +1527,79 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 //          throw UpdateNotPerformedException(
 //            "User's 'group' memberships where not updated. Please report this as a possible bug.")
 //      }
+
+    } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.RESTRICTED))
+  }
+
+  /**
+    * Updates an existing user. Should not be directly used from the receive method.
+    *
+    * @param userIri              the IRI of the existing user that we want to update.
+    * @param password    the updated password.
+    * @param featureFactoryConfig the feature factory configuration.
+    * @param requestingUser       the requesting user.
+    * @param apiRequestID         the unique api request ID.
+    * @return a future containing a [[UserOperationResponseADM]].
+    * @throws BadRequestException         if necessary parameters are not supplied.
+    * @throws UpdateNotPerformedException if the update was not performed.
+    */
+  private def updateUserPasswordADM(userIri: IRI,
+                                    password: Password,
+                                    featureFactoryConfig: FeatureFactoryConfig,
+                                    requestingUser: UserADM,
+                                    apiRequestID: UUID): Future[UserOperationResponseADM] = {
+
+    log.debug("updateUserPasswordADM - password: {}", password.value)
+
+    /* Remember: some checks on UserUpdatePayloadV1 are implemented in the case class */
+
+    if (userIri.contains(KnoraSystemInstances.Users.SystemUser.id) || userIri.contains(
+          KnoraSystemInstances.Users.AnonymousUser.id)) {
+      throw BadRequestException("Changes to built-in users are not allowed.")
+    }
+
+    for {
+      maybeCurrentUser <- getSingleUserADM(
+        identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser,
+        userInformationType = UserInformationTypeADM.FULL,
+        skipCache = true
+      )
+
+      _ = if (maybeCurrentUser.isEmpty) {
+        throw NotFoundException(s"User '$userIri' not found. Aborting update request.")
+      }
+      // we are changing the user, so lets get rid of the cached copy
+      _ = invalidateCachedUserADM(maybeCurrentUser)
+
+      // update the password
+      updateUserSparqlString <- Future(
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          .updateUserPassword(
+            adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
+            triplestore = settings.triplestoreType,
+            userIri = userIri,
+            newPassword = password.value
+          )
+          .toString)
+
+      updateResult <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
+
+      /* Verify that the user was updated. */
+      maybeUpdatedUserADM <- getSingleUserADM(
+        identifier = UserIdentifierADM(maybeIri = Some(userIri)),
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser,
+        userInformationType = UserInformationTypeADM.FULL,
+        skipCache = true
+      )
+
+      updatedUserADM: UserADM = maybeUpdatedUserADM.getOrElse(
+        throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
+
+      _ = if (updatedUserADM.password.get != password.value)
+        throw UpdateNotPerformedException("User's password was not updated. Please report this as a possible bug.")
 
     } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.RESTRICTED))
   }

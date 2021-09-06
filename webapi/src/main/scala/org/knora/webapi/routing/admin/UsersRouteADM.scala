@@ -26,7 +26,7 @@ import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
-import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePasswordPayloadADM, _}
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
@@ -339,7 +339,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   private def changeUserPassword(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(UsersBasePath / "iri" / Segment / "Password") { value =>
       put {
-        entity(as[ChangeUserApiRequestADM]) { apiRequest => requestContext =>
+        entity(as[ChangeUserPasswordApiRequestADM]) { apiRequest => requestContext =>
           val userIri =
             stringFormatter.validateAndEscapeUserIri(value, throw BadRequestException(s"Invalid user IRI $value"))
 
@@ -347,6 +347,17 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
                 KnoraSystemInstances.Users.AnonymousUser.id)) {
             throw BadRequestException("Changes to built-in users are not allowed.")
           }
+
+          val requesterPassword = apiRequest.requesterPassword match {
+            case Some(password) => Password.create(password).fold(error => throw error, value => value)
+            case None           => throw BadRequestException("The requester's password is missing.")
+          }
+          val changedPassword = apiRequest.newPassword match {
+            case Some(password) => Password.create(password).fold(error => throw error, value => value)
+            case None           => throw BadRequestException("The new password is missing.")
+          }
+
+          val userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(requesterPassword, changedPassword)
 
           /* the api request is already checked at time of creation. see case class. */
 
@@ -358,7 +369,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           } yield
             UserChangePasswordRequestADM(
               userIri = userIri,
-              changeUserRequest = apiRequest,
+              userUpdatePasswordPayload = userUpdatePasswordPayload,
               featureFactoryConfig = featureFactoryConfig,
               requestingUser = requestingUser,
               apiRequestID = UUID.randomUUID()
