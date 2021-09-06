@@ -81,8 +81,8 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                       requestingUser,
                                       apiRequestID) =>
       changePasswordADM(userIri, userUpdatePasswordPayload, featureFactoryConfig, requestingUser, apiRequestID)
-//    case UserChangeStatusRequestADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
-//      changeUserStatusADM(userIri, changeUserRequest, featureFactoryConfig, requestingUser, apiRequestID)
+    case UserChangeStatusRequestADM(userIri, status, featureFactoryConfig, requestingUser, apiRequestID) =>
+      changeUserStatusADM(userIri, status, featureFactoryConfig, requestingUser, apiRequestID)
 //    case UserChangeSystemAdminMembershipStatusRequestADM(userIri,
 //                                                         changeSystemAdminMembershipStatusRequest,
 //                                                         featureFactoryConfig,
@@ -434,7 +434,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * Change the users password. The old password needs to be supplied for security purposes.
     *
     * @param userIri              the IRI of the existing user that we want to update.
-    * @param changeUserRequest    the current password of the requesting user and the new password.
+    * @param userUpdatePasswordPayload    the current password of the requesting user and the new password.
     * @param featureFactoryConfig the feature factory configuration.
     * @param requestingUser       the requesting user.
     * @param apiRequestID         the unique api request ID.
@@ -509,7 +509,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * Change the user's status (active / inactive).
     *
     * @param userIri              the IRI of the existing user that we want to update.
-    * @param changeUserRequest    the new status.
+    * @param status               the new status.
     * @param featureFactoryConfig the feature factory configuration.
     * @param requestingUser       the requesting user.
     * @param apiRequestID         the unique api request ID.
@@ -517,58 +517,58 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @throws BadRequestException if necessary parameters are not supplied.
     * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
     */
-//  private def changeUserStatusADM(userIri: IRI,
-//                                  changeUserRequest: ChangeUserApiRequestADM,
-//                                  featureFactoryConfig: FeatureFactoryConfig,
-//                                  requestingUser: UserADM,
-//                                  apiRequestID: UUID): Future[UserOperationResponseADM] = {
-//
-//    log.debug(s"changeUserStatusADM - changeUserRequest: {}", changeUserRequest)
-//
-//    /**
-//      * The actual change user status task run with an IRI lock.
-//      */
-//    def changeUserStatusTask(userIri: IRI,
-//                             changeUserRequest: ChangeUserApiRequestADM,
-//                             requestingUser: UserADM,
-//                             apiRequestID: UUID): Future[UserOperationResponseADM] =
-//      for {
-//
-//        _ <- Future(
-//          // check if necessary information is present
-//          if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-//        )
-//        _ = if (changeUserRequest.status.isEmpty) throw BadRequestException("New user status cannot be empty")
-//
-//        // check if the requesting user is allowed to perform updates
-//        _ = if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-//          // not the user or a system admin
-//          // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
-//          throw ForbiddenException("User's status can only be changed by the user itself or a system administrator")
-//        }
-//
-//        // create the update request
-//        userUpdatePayload = UserUpdatePayloadADM(status = changeUserRequest.status)
-//
-//        result <- updateUserADM(
-//          userIri = userIri,
-//          userEntity = userUpdatePayload.toUserEntity,
-//          featureFactoryConfig = featureFactoryConfig,
-//          requestingUser = KnoraSystemInstances.Users.SystemUser,
-//          apiRequestID = apiRequestID
-//        )
-//
-//      } yield result
-//
-//    for {
-//      // run the change status task with an IRI lock
-//      taskResult <- IriLocker.runWithIriLock(
-//        apiRequestID,
-//        userIri,
-//        () => changeUserStatusTask(userIri, changeUserRequest, requestingUser, apiRequestID)
-//      )
-//    } yield taskResult
-//  }
+  private def changeUserStatusADM(userIri: IRI,
+                                  status: Status,
+                                  featureFactoryConfig: FeatureFactoryConfig,
+                                  requestingUser: UserADM,
+                                  apiRequestID: UUID): Future[UserOperationResponseADM] = {
+
+    log.debug(s"changeUserStatusADM - new status: {}", status)
+
+    /**
+      * The actual change user status task run with an IRI lock.
+      */
+    def changeUserStatusTask(userIri: IRI,
+                             status: Status,
+                             requestingUser: UserADM,
+                             apiRequestID: UUID): Future[UserOperationResponseADM] =
+      for {
+
+        _ <- Future(
+          // check if necessary information is present
+          if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
+        )
+        //_ = if (changeUserRequest.status.isEmpty) throw BadRequestException("New user status cannot be empty")
+
+        // check if the requesting user is allowed to perform updates
+        _ = if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+          // not the user or a system admin
+          // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
+          throw ForbiddenException("User's status can only be changed by the user itself or a system administrator")
+        }
+
+        // create the update request
+        userUpdatePayload = UserUpdatePayloadADM(status = Some(status))
+
+        result <- updateUserADM(
+          userIri = userIri,
+          userUpdatePayload = userUpdatePayload,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = KnoraSystemInstances.Users.SystemUser,
+          apiRequestID = apiRequestID
+        )
+
+      } yield result
+
+    for {
+      // run the change status task with an IRI lock
+      taskResult <- IriLocker.runWithIriLock(
+        apiRequestID,
+        userIri,
+        () => changeUserStatusTask(userIri, status, requestingUser, apiRequestID)
+      )
+    } yield taskResult
+  }
 
   /**
     * Change the user's system admin membership status (active / inactive).
@@ -1459,7 +1459,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             maybeEmail = maybeChangedEmail,
             maybeGivenName = maybeChangedGivenName,
             maybeFamilyName = maybeChangedFamilyName,
-            maybePassword = None,
             maybeStatus = maybeChangedStatus,
             maybeLang = maybeChangedLang,
             maybeProjects = None,
@@ -1532,10 +1531,10 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   }
 
   /**
-    * Updates an existing user. Should not be directly used from the receive method.
+    * Updates the password for a user.
     *
     * @param userIri              the IRI of the existing user that we want to update.
-    * @param password    the updated password.
+    * @param password             the new password.
     * @param featureFactoryConfig the feature factory configuration.
     * @param requestingUser       the requesting user.
     * @param apiRequestID         the unique api request ID.
@@ -1549,10 +1548,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                     requestingUser: UserADM,
                                     apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-    log.debug("updateUserPasswordADM - password: {}", password.value)
+    log.debug("updateUserPasswordADM - new password: {}", password.value)
 
-    /* Remember: some checks on UserUpdatePayloadV1 are implemented in the case class */
-
+    // check if it is a request for a built-in user
     if (userIri.contains(KnoraSystemInstances.Users.SystemUser.id) || userIri.contains(
           KnoraSystemInstances.Users.AnonymousUser.id)) {
       throw BadRequestException("Changes to built-in users are not allowed.")

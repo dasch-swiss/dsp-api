@@ -27,7 +27,6 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
-import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -458,6 +457,7 @@ class UsersADME2ESpec
         result.givenName should be("Updated\tGivenName")
         result.familyName should be("Updated\"FamilyName")
       }
+
       "escape the special characters when getting the user" in {} //TODO continue here
       //TODO deleting user?
     }
@@ -664,7 +664,7 @@ class UsersADME2ESpec
         response2.status should be(StatusCodes.OK)
       }
 
-      "throw an exception if new password in change password request is missing" in {
+      "return 'BadRequest' if new password in change password request is missing" in {
 
         val changeUserPasswordRequest: String =
           s"""{
@@ -707,11 +707,11 @@ class UsersADME2ESpec
         response2.status should be(StatusCodes.OK)
       }
 
-      "throw an exception if requester's password in change password request is missing" in {
+      "return 'BadRequest' if requester's password in change password request is missing" in {
 
         val changeUserPasswordRequest: String =
           s"""{
-             |    "newPassword": "test654321"
+             |    "newPassword": "testABC"
              |}""".stripMargin
 
         clientTestDataCollector.addFile(
@@ -745,49 +745,49 @@ class UsersADME2ESpec
 
         // check that the password was not changed, i.e. the old one is still accepted
         val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
-          BasicHttpCredentials(normalUserCreds.email, "test654321")) // old password (taken from previous test)
+          BasicHttpCredentials(normalUserCreds.email, "test654321")) // old password
         val response2: HttpResponse = singleAwaitingRequest(request2)
         response2.status should be(StatusCodes.OK)
       }
-//
-//      "change user's status" in {
-//        val changeUserStatusRequest: String =
-//          s"""{
-//                       |    "status": false
-//                       |}""".stripMargin
-//
-//        clientTestDataCollector.addFile(
-//          TestDataFileContent(
-//            filePath = TestDataFilePath(
-//              directoryPath = clientTestDataPath,
-//              filename = "update-user-status-request",
-//              fileExtension = "json"
-//            ),
-//            text = changeUserStatusRequest
-//          )
-//        )
-//        val donaldIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
-//        val request = Put(baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/Status",
-//                          HttpEntity(ContentTypes.`application/json`, changeUserStatusRequest)) ~> addCredentials(
-//          BasicHttpCredentials(rootCreds.email, rootCreds.password))
-//        val response: HttpResponse = singleAwaitingRequest(request)
-//        // log.debug(s"response: ${response.toString}")
-//        response.status should be(StatusCodes.OK)
-//
-//        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
-//        result.status should be(false)
-//        clientTestDataCollector.addFile(
-//          TestDataFileContent(
-//            filePath = TestDataFilePath(
-//              directoryPath = clientTestDataPath,
-//              filename = "update-user-status-response",
-//              fileExtension = "json"
-//            ),
-//            text = responseToString(response)
-//          )
-//        )
-//      }
-//
+
+      "change user's status" in {
+        val changeUserStatusRequest: String =
+          s"""{
+                       |    "status": false
+                       |}""".stripMargin
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-user-status-request",
+              fileExtension = "json"
+            ),
+            text = changeUserStatusRequest
+          )
+        )
+        val donaldIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
+        val request = Put(baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/Status",
+                          HttpEntity(ContentTypes.`application/json`, changeUserStatusRequest)) ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        response.status should be(StatusCodes.OK)
+
+        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+        result.status should be(false)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-user-status-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
 //      "update the user's system admin membership status" in {
 //        val changeUserSystemAdminMembershipRequest: String =
 //          s"""{
@@ -868,24 +868,24 @@ class UsersADME2ESpec
         response.status should be(StatusCodes.BadRequest)
       }
 
-//      "delete a user" in {
-//        val userIriEncoded = java.net.URLEncoder.encode(customUserIri, "utf-8")
-//        val request = Delete(baseApiUrl + s"/admin/users/iri/$userIriEncoded") ~> addCredentials(
-//          BasicHttpCredentials(rootCreds.email, rootCreds.password))
-//        val response: HttpResponse = singleAwaitingRequest(request)
-//        response.status should be(StatusCodes.OK)
-//
-//        clientTestDataCollector.addFile(
-//          TestDataFileContent(
-//            filePath = TestDataFilePath(
-//              directoryPath = clientTestDataPath,
-//              filename = "delete-user-response",
-//              fileExtension = "json"
-//            ),
-//            text = responseToString(response)
-//          )
-//        )
-//      }
+      "delete a user" in {
+        val userIriEncoded = java.net.URLEncoder.encode(customUserIri, "utf-8")
+        val request = Delete(baseApiUrl + s"/admin/users/iri/$userIriEncoded") ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "delete-user-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
 
       "not allow deleting the system user" in {
         val systemUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.SystemUser.id, "utf-8")

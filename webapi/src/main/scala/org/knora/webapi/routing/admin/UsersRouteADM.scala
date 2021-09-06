@@ -403,6 +403,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             throw BadRequestException("Changes to built-in users are not allowed.")
           }
 
+          val newStatus = apiRequest.status match {
+            case Some(status) => Status.create(status).fold(error => throw error, value => value)
+            case None         => throw BadRequestException("The status is missing.")
+          }
+
           /* the api request is already checked at time of creation. see case class. */
 
           val requestMessage: Future[UsersResponderRequestADM] = for {
@@ -413,7 +418,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           } yield
             UserChangeStatusRequestADM(
               userIri = userIri,
-              changeUserRequest = apiRequest,
+              status = newStatus,
               featureFactoryConfig = featureFactoryConfig,
               requestingUser = requestingUser,
               apiRequestID = UUID.randomUUID()
@@ -448,6 +453,8 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           }
 
           /* update existing user's status to false */
+          val status = Status.create(false).fold(error => throw error, value => value)
+
           val requestMessage: Future[UserChangeStatusRequestADM] = for {
             requestingUser <- getUserADM(
               requestContext = requestContext,
@@ -456,7 +463,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           } yield
             UserChangeStatusRequestADM(
               userIri = userIri,
-              changeUserRequest = ChangeUserApiRequestADM(status = Some(false)),
+              status = status,
               featureFactoryConfig = featureFactoryConfig,
               requestingUser = requestingUser,
               apiRequestID = UUID.randomUUID()

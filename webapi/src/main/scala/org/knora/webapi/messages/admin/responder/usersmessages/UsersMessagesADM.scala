@@ -240,13 +240,13 @@ case class UserChangePasswordRequestADM(userIri: IRI,
   * Request updating the users status ('knora-base:isActiveUser' property)
   *
   * @param userIri              the IRI of the user to be updated.
-  * @param changeUserRequest    the [[ChangeUserApiRequestADM]] containing the new status (true / false).
+  * @param status    the [[ChangeUserApiRequestADM]] containing the new status (true / false).
   * @param featureFactoryConfig the feature factory configuration.
   * @param requestingUser       the user initiating the request.
   * @param apiRequestID         the ID of the API request.
   */
 case class UserChangeStatusRequestADM(userIri: IRI,
-                                      changeUserRequest: ChangeUserApiRequestADM,
+                                      status: Status,
                                       featureFactoryConfig: FeatureFactoryConfig,
                                       requestingUser: UserADM,
                                       apiRequestID: UUID)
@@ -888,7 +888,6 @@ class UserIdentifierADM private (maybeIri: Option[IRI] = None,
   * @param username      the new username.
   * @param givenName     the new given name.
   * @param familyName    the new family name.
-  * @param password      the new password.
   * @param status        the new status.
   * @param lang          the new language.
   * @param projects      the new project memberships list.
@@ -918,13 +917,6 @@ case class UserUpdatePayloadADM(username: Option[Username] = None,
   if (parametersCount == 0) {
     throw BadRequestException("No data sent in API request.")
   }
-
-  /* check that only allowed information for the 4 cases is send and not more. */
-
-  // change password case
-//  if (password.isDefined && parametersCount > 1) {
-//    throw BadRequestException("Too many parameters sent for password change.")
-//  }
 
   // change status case
   if (status.isDefined && parametersCount > 1) {
