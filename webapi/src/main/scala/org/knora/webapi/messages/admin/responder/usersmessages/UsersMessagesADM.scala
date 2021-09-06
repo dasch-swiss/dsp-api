@@ -208,7 +208,7 @@ case class UserCreateRequestADM(userEntity: UserEntity,
   * Request updating of an existing user.
   *
   * @param userIri              the IRI of the user to be updated.
-  * @param changeUserRequest    the data which needs to be update.
+  * @param userUpdatePayload    the data which needs to be updated.
   * @param featureFactoryConfig the feature factory configuration.
   * @param requestingUser       the user initiating the request.
   * @param apiRequestID         the ID of the API request.

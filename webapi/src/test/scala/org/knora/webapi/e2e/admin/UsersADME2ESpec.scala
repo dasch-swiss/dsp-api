@@ -27,6 +27,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
@@ -659,6 +660,92 @@ class UsersADME2ESpec
         // check if the password was changed, i.e. if the new one is accepted
         val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
           BasicHttpCredentials(normalUserCreds.email, "test654321")) // new password
+        val response2: HttpResponse = singleAwaitingRequest(request2)
+        response2.status should be(StatusCodes.OK)
+      }
+
+      "throw an exception if new password in change password request is missing" in {
+
+        val changeUserPasswordRequest: String =
+          s"""{
+             |    "requesterPassword": "test"
+             |}""".stripMargin
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "incomplete-update-user-password-request",
+              fileExtension = "json"
+            ),
+            text = changeUserPasswordRequest
+          )
+        )
+
+        val request1 = Put(baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/Password",
+                           HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)) ~> addCredentials(
+          BasicHttpCredentials(normalUserCreds.email, "test")) // requester's password
+        val response1: HttpResponse = singleAwaitingRequest(request1)
+
+        response1.status should be(StatusCodes.BadRequest)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "incomplete-update-user-password-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response1)
+          )
+        )
+
+        // check that the password was not changed, i.e. the old one is still accepted
+        val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
+          BasicHttpCredentials(normalUserCreds.email, "test654321")) // old password (taken from previous test)
+        val response2: HttpResponse = singleAwaitingRequest(request2)
+        response2.status should be(StatusCodes.OK)
+      }
+
+      "throw an exception if requester's password in change password request is missing" in {
+
+        val changeUserPasswordRequest: String =
+          s"""{
+             |    "newPassword": "test654321"
+             |}""".stripMargin
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "incomplete-update-user-password-request-2",
+              fileExtension = "json"
+            ),
+            text = changeUserPasswordRequest
+          )
+        )
+
+        val request1 = Put(baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/Password",
+                           HttpEntity(ContentTypes.`application/json`, changeUserPasswordRequest)) ~> addCredentials(
+          BasicHttpCredentials(normalUserCreds.email, "test")) // requester's password
+        val response1: HttpResponse = singleAwaitingRequest(request1)
+
+        response1.status should be(StatusCodes.BadRequest)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "incomplete-update-user-password-response-2",
+              fileExtension = "json"
+            ),
+            text = responseToString(response1)
+          )
+        )
+
+        // check that the password was not changed, i.e. the old one is still accepted
+        val request2 = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
+          BasicHttpCredentials(normalUserCreds.email, "test654321")) // old password (taken from previous test)
         val response2: HttpResponse = singleAwaitingRequest(request2)
         response2.status should be(StatusCodes.OK)
       }
