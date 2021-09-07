@@ -327,6 +327,7 @@ class UsersADME2ESpec
     }
 
     "given a custom Iri" should {
+
       "create a user with the provided custom IRI " in {
         val createUserWithCustomIriRequest: String =
           s"""{
@@ -397,9 +398,11 @@ class UsersADME2ESpec
           errorMessage.contains(s"IRI: '$customUserIri' already exists, try another one.")
         invalidIri should be(true)
       }
+
     }
 
     "dealing with special characters" should {
+
       "escape the special characters when creating the user" in {
         val createUserWithApostropheRequest: String =
           s"""{
@@ -450,7 +453,7 @@ class UsersADME2ESpec
       }
 
       "escape the special characters when getting the user" in {} //TODO continue here
-      //TODO deleting user?
+
     }
 
     "used to modify user information" should {
@@ -921,6 +924,7 @@ class UsersADME2ESpec
     }
 
     "used to modify project membership" should {
+
       "add user to project" in {
         val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
         membershipsBeforeUpdate should equal(Seq())
@@ -999,6 +1003,7 @@ class UsersADME2ESpec
           )
         )
       }
+
     }
 
     "used to query project admin group memberships" should {
@@ -1028,6 +1033,7 @@ class UsersADME2ESpec
           )
         )
       }
+
     }
 
     "used to modify project admin group membership" should {
@@ -1117,6 +1123,7 @@ class UsersADME2ESpec
           )
         )
       }
+
     }
 
     "used to modify group membership" should {
@@ -1174,6 +1181,8 @@ class UsersADME2ESpec
           )
         )
       }
+
     }
+
   }
 }
