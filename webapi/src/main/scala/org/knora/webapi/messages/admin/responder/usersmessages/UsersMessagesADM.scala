@@ -66,7 +66,7 @@ case class CreateUserApiRequestADM(id: Option[IRI] = None,
 
 /**
   * Represents an API request payload that asks the Knora API server to update an existing user. Information that can
-  * be changed include the user's email, given name, family name, language, password, user status, and system admin
+  * be changed include the user's email, given name, family name, language, user status, and system admin
   * membership.
   *
   * @param username          the new username. Needs to be unique on the server.
@@ -110,7 +110,7 @@ case class ChangeUserApiRequestADM(username: Option[String] = None,
   }
 
   // change basic user information case
-  if (parametersCount > 5) throw BadRequestException("Too many parameters sent for basic user information change.")
+  if (parametersCount > 7) throw BadRequestException("Too many parameters sent for basic user information change.")
 
   def toJsValue: JsValue = UsersADMJsonProtocol.changeUserApiRequestADMFormat.write(this)
 }
@@ -900,6 +900,9 @@ case class UserUpdatePayloadADM(username: Option[Username] = None,
                                 familyName: Option[FamilyName] = None,
                                 status: Option[Status] = None,
                                 lang: Option[LanguageCode] = None,
+                                projects: Option[Seq[IRI]] = None,
+                                projectsAdmin: Option[Seq[IRI]] = None,
+                                groups: Option[Seq[IRI]] = None,
                                 systemAdmin: Option[SystemAdmin] = None) {
 
   val parametersCount: Int = List(
@@ -909,6 +912,9 @@ case class UserUpdatePayloadADM(username: Option[Username] = None,
     familyName,
     status,
     lang,
+    projects,
+    projectsAdmin,
+    groups,
     systemAdmin
   ).flatten.size
 
@@ -928,19 +934,19 @@ case class UserUpdatePayloadADM(username: Option[Username] = None,
   }
 
   // change project memberships
-//  if (projects.isDefined && parametersCount > 1) {
-//    throw BadRequestException("Too many parameters sent for project membership change.")
-//  }
+  if (projects.isDefined && parametersCount > 1) {
+    throw BadRequestException("Too many parameters sent for project membership change.")
+  }
 
   // change projectAdmin memberships
-//  if (userUpdateEntity.projectsAdmin.isDefined && parametersCount > 1) {
-//    throw BadRequestException("Too many parameters sent for projectAdmin membership change.")
-//  }
+  if (projectsAdmin.isDefined && parametersCount > 1) {
+    throw BadRequestException("Too many parameters sent for projectAdmin membership change.")
+  }
 
   // change group memberships
-//  if (userUpdateEntity.groups.isDefined && parametersCount > 1) {
-//    throw BadRequestException("Too many parameters sent for group membership change.")
-//  }
+  if (groups.isDefined && parametersCount > 1) {
+    throw BadRequestException("Too many parameters sent for group membership change.")
+  }
 
   // change basic user information case
   if (parametersCount > 5) {

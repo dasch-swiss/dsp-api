@@ -907,121 +907,147 @@ class UsersADME2ESpec
 
     }
 
-//    "used to query project memberships" should {
-//
-//      "return all projects the user is a member of" in {
-//        val request = Get(baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/project-memberships") ~> addCredentials(
-//          BasicHttpCredentials(rootCreds.email, rootCreds.password))
-//        val response: HttpResponse = singleAwaitingRequest(request)
-//        // log.debug(s"response: ${response.toString}")
-//        assert(response.status === StatusCodes.OK)
-//
-//        val projects: Seq[ProjectADM] =
-//          AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[ProjectADM]]
-//        projects should contain allElementsOf Seq(SharedTestDataADM.imagesProject,
-//                                                  SharedTestDataADM.incunabulaProject,
-//                                                  SharedTestDataADM.anythingProject)
-//
-//        // testing getUserProjectMemberships method, which should return the same result
-//        projects should contain allElementsOf getUserProjectMemberships(multiUserIri, rootCreds)
-//        clientTestDataCollector.addFile(
-//          TestDataFileContent(
-//            filePath = TestDataFilePath(
-//              directoryPath = clientTestDataPath,
-//              filename = "get-user-project-memberships-response",
-//              fileExtension = "json"
-//            ),
-//            text = responseToString(response)
-//          )
-//        )
-//      }
-//    }
-//
-//    "used to modify project membership" should {
-//      "add user to project" in {
-//        val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
-//        membershipsBeforeUpdate should equal(Seq())
-//
-//        val request = Post(
-//          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-memberships/$imagesProjectIriEnc") ~> addCredentials(
-//          BasicHttpCredentials(rootCreds.email, rootCreds.password))
-//        val response: HttpResponse = singleAwaitingRequest(request)
-//        // log.debug(s"response: ${response.toString}")
-//        assert(response.status === StatusCodes.OK)
-//
-//        val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
-//        membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProject))
-//
-//        clientTestDataCollector.addFile(
-//          TestDataFileContent(
-//            filePath = TestDataFilePath(
-//              directoryPath = clientTestDataPath,
-//              filename = "add-user-to-project-response",
-//              fileExtension = "json"
-//            ),
-//            text = responseToString(response)
-//          )
-//        )
-//      }
-//
-//      "remove user from project" in {
-//
-//        val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
-//        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProject))
-//
-//        val request = Delete(
-//          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-memberships/$imagesProjectIriEnc") ~> addCredentials(
-//          BasicHttpCredentials(rootCreds.email, rootCreds.password))
-//        val response: HttpResponse = singleAwaitingRequest(request)
-//        // log.debug(s"response: ${response.toString}")
-//        assert(response.status === StatusCodes.OK)
-//
-//        val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
-//        membershipsAfterUpdate should equal(Seq.empty[ProjectADM])
-//
-//        clientTestDataCollector.addFile(
-//          TestDataFileContent(
-//            filePath = TestDataFilePath(
-//              directoryPath = clientTestDataPath,
-//              filename = "remove-user-from-project-response",
-//              fileExtension = "json"
-//            ),
-//            text = responseToString(response)
-//          )
-//        )
-//      }
-//    }
-//
-//    "used to query project admin group memberships" should {
-//
-//      "return all projects the user is a member of the project admin group" in {
-//        val request = Get(baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/project-admin-memberships") ~> addCredentials(
-//          BasicHttpCredentials(rootCreds.email, rootCreds.password))
-//        val response: HttpResponse = singleAwaitingRequest(request)
-//        // log.debug(s"response: ${response.toString}")
-//        assert(response.status === StatusCodes.OK)
-//
-//        val projects: Seq[ProjectADM] =
-//          AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
-//        projects should contain allElementsOf Seq(SharedTestDataADM.imagesProject,
-//                                                  SharedTestDataADM.incunabulaProject,
-//                                                  SharedTestDataADM.anythingProject)
-//
-//        // explicitly testing 'getUserProjectsAdminMemberships' method, which should return the same result
-//        projects should contain allElementsOf getUserProjectAdminMemberships(multiUserIri, rootCreds)
-//        clientTestDataCollector.addFile(
-//          TestDataFileContent(
-//            filePath = TestDataFilePath(
-//              directoryPath = clientTestDataPath,
-//              filename = "get-user-project-admin-group-memberships-response",
-//              fileExtension = "json"
-//            ),
-//            text = responseToString(response)
-//          )
-//        )
-//      }
-//    }
-//
+    "used to query project memberships" should {
+
+      "return all projects the user is a member of" in {
+        val request = Get(baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/project-memberships") ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        assert(response.status === StatusCodes.OK)
+
+        val projects: Seq[ProjectADM] =
+          AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[List[ProjectADM]]
+        projects should contain allElementsOf Seq(SharedTestDataADM.imagesProject,
+                                                  SharedTestDataADM.incunabulaProject,
+                                                  SharedTestDataADM.anythingProject)
+
+        // testing getUserProjectMemberships method, which should return the same result
+        projects should contain allElementsOf getUserProjectMemberships(multiUserIri, rootCreds)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-user-project-memberships-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+    }
+
+    "used to modify project membership" should {
+      "add user to project" in {
+        val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
+        membershipsBeforeUpdate should equal(Seq())
+
+        val request = Post(
+          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-memberships/$imagesProjectIriEnc") ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        assert(response.status === StatusCodes.OK)
+
+        val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
+        membershipsAfterUpdate should equal(Seq(SharedTestDataADM.imagesProject))
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "add-user-to-project-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "don't add user to project if user is already a member" in {
+        val membershipsBeforeTryUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
+
+        val request = Post(
+          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-memberships/$imagesProjectIriEnc") ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+
+        assert(response.status === StatusCodes.BadRequest)
+
+        // verify that users's project memberships weren't changed
+        val membershipsAfterTryUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
+        membershipsAfterTryUpdate should equal(membershipsBeforeTryUpdate)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "user-already-member-of-project-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "remove user from project" in {
+
+        val membershipsBeforeUpdate = getUserProjectMemberships(normalUserCreds.userIri, rootCreds)
+        membershipsBeforeUpdate should equal(Seq(SharedTestDataADM.imagesProject))
+
+        val request = Delete(
+          baseApiUrl + s"/admin/users/iri/${normalUserCreds.urlEncodedIri}/project-memberships/$imagesProjectIriEnc") ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        assert(response.status === StatusCodes.OK)
+
+        val membershipsAfterUpdate = getUserProjectMemberships(normalUserIri, rootCreds)
+        membershipsAfterUpdate should equal(Seq.empty[ProjectADM])
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "remove-user-from-project-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+    }
+
+    "used to query project admin group memberships" should {
+
+      "return all projects the user is a member of the project admin group" in {
+        val request = Get(baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/project-admin-memberships") ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        assert(response.status === StatusCodes.OK)
+
+        val projects: Seq[ProjectADM] =
+          AkkaHttpUtils.httpResponseToJson(response).fields("projects").convertTo[Seq[ProjectADM]]
+        projects should contain allElementsOf Seq(SharedTestDataADM.imagesProject,
+                                                  SharedTestDataADM.incunabulaProject,
+                                                  SharedTestDataADM.anythingProject)
+
+        // explicitly testing 'getUserProjectsAdminMemberships' method, which should return the same result
+        projects should contain allElementsOf getUserProjectAdminMemberships(multiUserIri, rootCreds)
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-user-project-admin-group-memberships-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+    }
+
 //    "used to modify project admin group membership" should {
 //
 //      "add user to project admin group" in {
@@ -1082,36 +1108,36 @@ class UsersADME2ESpec
 //      }
 //
 //    }
-//
-//    "used to query group memberships" should {
-//
-//      "return all groups the user is a member of" in {
-//        val request = Get(baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/group-memberships") ~> addCredentials(
-//          BasicHttpCredentials(rootCreds.email, rootCreds.password))
-//        val response: HttpResponse = singleAwaitingRequest(request)
-//        // log.debug(s"response: ${response.toString}")
-//        assert(response.status === StatusCodes.OK)
-//
-//        val groups: Seq[GroupADM] =
-//          AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[List[GroupADM]]
-//        groups should contain allElementsOf Seq(SharedTestDataADM.imagesReviewerGroup)
-//
-//        // testing getUserGroupMemberships method, which should return the same result
-//        groups should contain allElementsOf getUserGroupMemberships(multiUserIri, rootCreds)
-//
-//        clientTestDataCollector.addFile(
-//          TestDataFileContent(
-//            filePath = TestDataFilePath(
-//              directoryPath = clientTestDataPath,
-//              filename = "get-user-group-memberships-response",
-//              fileExtension = "json"
-//            ),
-//            text = responseToString(response)
-//          )
-//        )
-//      }
-//    }
-//
+
+    "used to query group memberships" should {
+
+      "return all groups the user is a member of" in {
+        val request = Get(baseApiUrl + s"/admin/users/iri/$multiUserIriEnc/group-memberships") ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        assert(response.status === StatusCodes.OK)
+
+        val groups: Seq[GroupADM] =
+          AkkaHttpUtils.httpResponseToJson(response).fields("groups").convertTo[List[GroupADM]]
+        groups should contain allElementsOf Seq(SharedTestDataADM.imagesReviewerGroup)
+
+        // testing getUserGroupMemberships method, which should return the same result
+        groups should contain allElementsOf getUserGroupMemberships(multiUserIri, rootCreds)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-user-group-memberships-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+    }
+
 //    "used to modify group membership" should {
 //
 //      "add user to group" in {
