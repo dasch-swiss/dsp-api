@@ -90,14 +90,17 @@ class UsersADME2ESpec
   private val imagesReviewerGroupIri = SharedTestDataADM.imagesReviewerGroup.id
   private val imagesReviewerGroupIriEnc = java.net.URLEncoder.encode(imagesReviewerGroupIri, "utf-8")
 
+  private val customUserIri = "http://rdfh.ch/users/prWbAoyJA7fECqhKwhSUtQ"
+  private val otherCustomUserIri = "http://rdfh.ch/users/prWbAoyJA7fECqhKohSUtQ"
+
+  private val donaldIri = new MutableTestIri
+  private val systemUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.SystemUser.id, "utf-8")
+
   // Directory path for generated client test data
   private val clientTestDataPath: Seq[String] = Seq("admin", "users")
 
   // Collects client test data
   private val clientTestDataCollector = new ClientTestDataCollector(settings)
-
-  private val customUserIri = "http://rdfh.ch/users/prWbAoyJA7fECqhKwhSUtQ"
-  private val otherCustomUserIri = "http://rdfh.ch/users/prWbAoyJA7fECqhKohSUtQ"
 
   /**
     * Convenience method returning the users project memberships.
@@ -403,7 +406,7 @@ class UsersADME2ESpec
 
     "dealing with special characters" should {
 
-      "escape the special characters when creating the user" in {
+      "escape special characters when creating the user" in {
         val createUserWithApostropheRequest: String =
           s"""{
              |    "id": "$otherCustomUserIri",
@@ -432,7 +435,7 @@ class UsersADME2ESpec
 
       }
 
-      "escape the special characters when updating the user" in {
+      "escape special characters when updating the user" in {
         val updateUserRequest: String =
           s"""{
              |    "givenName": "Updated\\tGivenName",
@@ -452,27 +455,25 @@ class UsersADME2ESpec
         result.familyName should be("Updated\"FamilyName")
       }
 
-      "escape the special characters when getting the user" in {} //TODO continue here
+      "escape special characters when getting the user" in {} //TODO continue here
 
     }
 
-    "used to modify user information" should {
+    "used to create a user" should {
 
-      val donaldIri = new MutableTestIri
-
-      "create the user if the supplied email is unique " in {
+      "create the user if the supplied email and username are unique " in {
 
         val createUserRequest: String =
           s"""{
-                       |    "username": "donald.duck",
-                       |    "email": "donald.duck@example.org",
-                       |    "givenName": "Donald",
-                       |    "familyName": "Duck",
-                       |    "password": "test",
-                       |    "status": true,
-                       |    "lang": "en",
-                       |    "systemAdmin": false
-                       |}""".stripMargin
+             |    "username": "donald.duck",
+             |    "email": "donald.duck@example.org",
+             |    "givenName": "Donald",
+             |    "familyName": "Duck",
+             |    "password": "test",
+             |    "status": true,
+             |    "lang": "en",
+             |    "systemAdmin": false
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -511,6 +512,88 @@ class UsersADME2ESpec
         )
       }
 
+      "return a 'BadRequest' if the supplied username is not unique " in {
+
+        val createUserRequest: String =
+          s"""{
+             |    "username": "donald.duck",
+             |    "email": "new.donald.duck@example.org",
+             |    "givenName": "NewDonald",
+             |    "familyName": "NewDuck",
+             |    "password": "test",
+             |    "status": true,
+             |    "lang": "en",
+             |    "systemAdmin": false
+             |}""".stripMargin
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-user-request-duplicate-username",
+              fileExtension = "json"
+            ),
+            text = createUserRequest
+          )
+        )
+        val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, createUserRequest))
+        val response: HttpResponse = singleAwaitingRequest(request)
+
+        response.status should be(StatusCodes.BadRequest)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-user-response-duplicate-username",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "return a 'BadRequest' if the supplied email is not unique " in {
+
+        val createUserRequest: String =
+          s"""{
+             |    "username": "new.donald.duck",
+             |    "email": "donald.duck@example.org",
+             |    "givenName": "NewDonald",
+             |    "familyName": "NewDuck",
+             |    "password": "test",
+             |    "status": true,
+             |    "lang": "en",
+             |    "systemAdmin": false
+             |}""".stripMargin
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-user-request-duplicate-email",
+              fileExtension = "json"
+            ),
+            text = createUserRequest
+          )
+        )
+        val request = Post(baseApiUrl + s"/admin/users", HttpEntity(ContentTypes.`application/json`, createUserRequest))
+        val response: HttpResponse = singleAwaitingRequest(request)
+
+        response.status should be(StatusCodes.BadRequest)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "create-user-response-duplicate-email",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
       "authenticate the newly created user using HttpBasicAuth" in {
 
         val request = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
@@ -535,6 +618,10 @@ class UsersADME2ESpec
 
         response.status should be(StatusCodes.OK)
       }
+
+    }
+
+    "used to modify user information" should {
 
       "update the user's basic information" in {
 
@@ -874,12 +961,30 @@ class UsersADME2ESpec
           )
         )
 
+        // Throw BadRequest exception if user is built-in user
+        val badRequest = Put(
+          baseApiUrl + s"/admin/users/iri/$systemUserIriEncoded/SystemAdmin",
+          HttpEntity(ContentTypes.`application/json`, changeUserSystemAdminMembershipRequest)) ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val badResponse: HttpResponse = singleAwaitingRequest(badRequest)
+        badResponse.status should be(StatusCodes.BadRequest)
       }
 
-      "not allow changing the system user" in {
+      "not allow updating the system user's system admin membership status" in {
+        val changeUserSystemAdminMembershipRequest: String =
+          s"""{
+             |    "systemAdmin": true
+             |}""".stripMargin
 
-        val systemUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.SystemUser.id, "utf-8")
+        val request = Put(
+          baseApiUrl + s"/admin/users/iri/$systemUserIriEncoded/SystemAdmin",
+          HttpEntity(ContentTypes.`application/json`, changeUserSystemAdminMembershipRequest)) ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.BadRequest)
+      }
 
+      "not allow changing the system user's status" in {
         val params =
           s"""
                     {
@@ -894,7 +999,7 @@ class UsersADME2ESpec
         response.status should be(StatusCodes.BadRequest)
       }
 
-      "not allow changing the anonymous user" in {
+      "not allow changing the anonymous user's status" in {
 
         val anonymousUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.AnonymousUser.id, "utf-8")
 
@@ -932,8 +1037,6 @@ class UsersADME2ESpec
       }
 
       "not allow deleting the system user" in {
-        val systemUserIriEncoded = java.net.URLEncoder.encode(KnoraSystemInstances.Users.SystemUser.id, "utf-8")
-
         val request = Delete(baseApiUrl + s"/admin/users/iri/$systemUserIriEncoded") ~> addCredentials(
           BasicHttpCredentials(rootCreds.email, rootCreds.password))
         val response: HttpResponse = singleAwaitingRequest(request)
