@@ -584,6 +584,64 @@ class UsersADME2ESpec
         )
       }
 
+      "return 'BadRequest' if user IRI is None and 'NotFound' if user IRI is '' in update user request" in {
+
+        val updateUserRequest: String =
+          s"""{
+             |    "username": "donald.without.iri.duck"
+             |}""".stripMargin
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-user-request-without-iri",
+              fileExtension = "json"
+            ),
+            text = updateUserRequest
+          )
+        )
+
+        val missingUserIri = ""
+        val request = Put(baseApiUrl + s"/admin/users/iri/$missingUserIri/BasicUserInformation",
+                          HttpEntity(ContentTypes.`application/json`, updateUserRequest)) ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+
+        response.status should be(StatusCodes.NotFound)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-user-response-without-iri-1",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+
+        val missingUserIriNone = None
+        val request2 = Put(baseApiUrl + s"/admin/users/iri/$missingUserIriNone/BasicUserInformation",
+                           HttpEntity(ContentTypes.`application/json`, updateUserRequest)) ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response2: HttpResponse = singleAwaitingRequest(request2)
+
+        response2.status should be(StatusCodes.BadRequest)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-user-response-without-iri-2",
+              fileExtension = "json"
+            ),
+            text = responseToString(response2)
+          )
+        )
+
+      }
+
       "update the user's password (by himself)" in {
 
         val changeUserPasswordRequest: String =

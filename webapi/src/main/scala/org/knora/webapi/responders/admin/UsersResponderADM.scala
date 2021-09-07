@@ -143,8 +143,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                             featureFactoryConfig: FeatureFactoryConfig,
                             requestingUser: UserADM): Future[Seq[UserADM]] = {
 
-    //log.debug("getAllUserADM")
-
     for {
       _ <- Future(
         if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions
@@ -169,8 +167,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       )).mapTo[SparqlExtendedConstructResponse]
 
       statements = usersResponse.statements.toList
-
-      // _ = log.debug("getAllUserADM - statements: {}", statements)
 
       users: Seq[UserADM] = statements.map {
         case (userIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
@@ -335,7 +331,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * can be changed. For changing the password or user status, use the separate methods.
     *
     * @param userIri              the IRI of the existing user that we want to update.
-    * @param userUpdateEntity     the updated information.
+    * @param userUpdatePayload    the updated information.
     * @param featureFactoryConfig the feature factory configuration.
     * @param requestingUser       the requesting user.
     * @param apiRequestID         the unique api request ID.
@@ -359,27 +355,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                 requestingUser: UserADM,
                                 apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-
-        // check if the requesting user is allowed to perform updates
+        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
         _ <- Future(
           if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-            // not the user or a system admin
             throw ForbiddenException(
               "User information can only be changed by the user itself or a system administrator")
           }
         )
-
-        // check if necessary information is present
-        _ = if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
-
-        parametersCount = List(userUpdatePayload.username,
-                               userUpdatePayload.email,
-                               userUpdatePayload.givenName,
-                               userUpdatePayload.familyName,
-                               userUpdatePayload.lang).flatten.size
-        _ = if (parametersCount == 0)
-          throw BadRequestException(
-            "At least one parameter needs to be supplied. No data would be changed. Aborting request for changing of basic user data.")
 
         // get current user information
         currentUserInformation: Option[UserADM] <- getSingleUserADM(
@@ -394,22 +376,19 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           throw BadRequestException(s"User $userIri does not exist")
         }
 
-        // check if we want to change the email
-//        emailTaken: Boolean <- userByEmailExists(Some(userUpdateEntity.email.get.value),
-//                                                 Some(currentUserInformation.get.email))
-//        _ = if (emailTaken) {
-//          throw DuplicateValueException(s"User with the email '${userUpdateEntity.email.get.value}' already exists")
-//        }
-//
-//        // check if we want to change the username
-//        usernameTaken: Boolean <- userByUsernameExists(Some(userUpdateEntity.username.get.value),
-//                                                       Some(currentUserInformation.get.username))
-//        _ = if (usernameTaken) {
-//          throw DuplicateValueException(
-//            s"User with the username '${userUpdateEntity.username.get.value}' already exists")
-//        }
+        // check if email is unique in case of a change email request
+        emailTaken: Boolean <- userByEmailExists(userUpdatePayload.email, Some(currentUserInformation.get.email))
+        _ = if (emailTaken) {
+          throw DuplicateValueException(s"User with the email '${userUpdatePayload.email.get.value}' already exists")
+        }
 
-        //userUpdatePayload = UserUpdatePayloadADM(userUpdateEntity)
+        // check if username is unique in case of a change username request
+        usernameTaken: Boolean <- userByUsernameExists(userUpdatePayload.username,
+                                                       Some(currentUserInformation.get.username))
+        _ = if (usernameTaken) {
+          throw DuplicateValueException(
+            s"User with the username '${userUpdatePayload.username.get.value}' already exists")
+        }
 
         // send change request as SystemUser
         result <- updateUserADM(
@@ -422,7 +401,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       } yield result
 
     for {
-      // run the user update with an global IRI lock
+      // run the user update with a global IRI lock
       taskResult <- IriLocker.runWithIriLock(
         apiRequestID,
         USERS_GLOBAL_LOCK_IRI,
@@ -451,10 +430,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                 requestingUser: UserADM,
                                 apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-    log.debug(s"changePasswordADM - userIri: {}", userIri)
-    log.debug(s"changePasswordADM - changeUserRequest: {}", userUpdatePasswordPayload)
-    log.debug(s"changePasswordADM - requestingUser: {}", requestingUser)
-
     /**
       * The actual change password task run with an IRI lock.
       */
@@ -463,23 +438,20 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                            requestingUser: UserADM,
                            apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
-
-        // check if the requesting user is allowed to perform password change. it needs to be either the user himself, or a system admin
-        _ = if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not the user or system admin
-          throw ForbiddenException("User's password can only be changed by the user itself or a system admin.")
-        }
+        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
+        _ <- Future(
+          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+            throw ForbiddenException(
+              "User information can only be changed by the user itself or a system administrator")
+          }
+        )
 
         // check if supplied password matches requesting user's password
-        _ = log.debug(s"changePasswordADM - requesterPassword: {}", userUpdatePasswordPayload.requesterPassword.value)
         _ = if (!requestingUser.passwordMatch(userUpdatePasswordPayload.requesterPassword.value)) {
           throw ForbiddenException("The supplied password does not match the requesting user's password.")
         }
 
-        // hash the password
+        // hash the new password
         encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
         newHashedPassword = Password
           .create(encoder.encode(userUpdatePasswordPayload.newPassword.value))
@@ -534,22 +506,15 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                              requestingUser: UserADM,
                              apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-
+        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
         _ <- Future(
-          // check if necessary information is present
-          if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty")
+          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+            throw ForbiddenException(
+              "User information can only be changed by the user itself or a system administrator")
+          }
         )
-        //_ = if (changeUserRequest.status.isEmpty) throw BadRequestException("New user status cannot be empty")
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not the user or a system admin
-          // log.debug("same user: {}, system admin: {}", userProfile.userData.user_id.contains(userIri), userProfile.permissionData.isSystemAdmin)
-          throw ForbiddenException("User's status can only be changed by the user itself or a system administrator")
-        }
 
         // create the update request
-
         result <- updateUserADM(
           userIri = userIri,
           userUpdatePayload = UserUpdatePayloadADM(status = Some(status)),
@@ -596,18 +561,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                                   requestingUser: UserADM,
                                                   apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty"))
-//        _ = if (changeUserRequest.systemAdmin.isEmpty)
-//          throw BadRequestException("New user system admin membership status cannot be empty")
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isSystemAdmin) {
-          // not a system admin
-          // log.debug("system admin: {}", userProfile.permissionData.isSystemAdmin)
-          throw ForbiddenException("User's system admin membership can only be changed by a system administrator")
-        }
+        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
+        _ <- Future(
+          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+            throw ForbiddenException(
+              "User information can only be changed by the user itself or a system administrator")
+          }
+        )
 
         // create the update request
         result <- updateUserADM(
@@ -653,7 +613,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         case None          => Seq.empty[ProjectADM]
       }
 
-      // _ = log.debug("userProjectMembershipsGetADM - userIri: {}, projects: {}", userIri, result)
     } yield result
   }
 
@@ -711,17 +670,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                             requestingUser: UserADM,
                                             apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-        _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not a project or system admin
-          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-          throw ForbiddenException("User's project membership can only be changed by a project or system administrator")
-        }
+        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
+        _ <- Future(
+          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+            throw ForbiddenException(
+              "User information can only be changed by the user itself or a system administrator")
+          }
+        )
 
         // check if user exists
         userExists <- userExists(userIri)
@@ -748,7 +703,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         // create the update request
-
         result <- updateUserADM(
           userIri = userIri,
           userUpdatePayload = UserUpdatePayloadADM(projects = Some(updatedProjectMembershipIris)),
@@ -785,8 +739,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                                     requestingUser: UserADM,
                                                     apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-    // log.debug(s"userProjectMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
-
     /**
       * The actual task run with an IRI lock.
       */
@@ -795,17 +747,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                                requestingUser: UserADM,
                                                apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-        _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not a project or system admin
-          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-          throw ForbiddenException("User's project membership can only be changed by a project or system administrator")
-        }
+        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
+        _ <- Future(
+          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+            throw ForbiddenException(
+              "User information can only be changed by the user itself or a system administrator")
+          }
+        )
 
         // check if user exists
         userExists <- userExists(userIri)
@@ -831,11 +779,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         // create the update request by using the SystemUser
-        userUpdatePayload = UserUpdatePayloadADM(projects = Some(updatedProjectMembershipIris))
-
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
+          userUpdatePayload = UserUpdatePayloadADM(projects = Some(updatedProjectMembershipIris)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
           apiRequestID = apiRequestID
@@ -878,8 +824,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           )
           .toString())
 
-      //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
-
       userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
       groupedUserData: Map[String, Seq[String]] = userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
@@ -902,7 +846,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       maybeProjects: Seq[Option[ProjectADM]] <- Future.sequence(maybeProjectFutures)
       projects: Seq[ProjectADM] = maybeProjects.flatten
 
-      // _ = log.debug("userProjectAdminMembershipsGetRequestV1 - userIri: {}, projectIris: {}", userIri, projectIris)
     } yield projects
   }
 
@@ -956,8 +899,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                                       requestingUser: UserADM,
                                                       apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-    // log.debug(s"userProjectAdminMembershipAddRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
-
     /**
       * The actual task run with an IRI lock.
       */
@@ -966,18 +907,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                                  requestingUser: UserADM,
                                                  apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-        _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not a project or system admin
-          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-          throw ForbiddenException(
-            "User's project admin membership can only be changed by a project or system administrator")
-        }
+        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
+        _ <- Future(
+          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+            throw ForbiddenException(
+              "User information can only be changed by the user itself or a system administrator")
+          }
+        )
 
         // check if user exists
         userExists <- userExists(userIri)
@@ -1005,11 +941,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         // create the update request
-        userUpdatePayload = UserUpdatePayloadADM(projectsAdmin = Some(updatedProjectAdminMembershipIris))
-
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
+          userUpdatePayload = UserUpdatePayloadADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
           apiRequestID = apiRequestID
@@ -1043,8 +977,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                                          requestingUser: UserADM,
                                                          apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-    // log.debug(s"userProjectAdminMembershipRemoveRequestV1: userIri: {}, projectIri: {}", userIri, projectIri)
-
     /**
       * The actual task run with an IRI lock.
       */
@@ -1053,18 +985,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                                     requestingUser: UserADM,
                                                     apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-        _ = if (projectIri.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not a project or system admin
-          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-          throw ForbiddenException(
-            "User's project admin membership can only be changed by a project or system administrator")
-        }
+        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
+        _ <- Future(
+          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+            throw ForbiddenException(
+              "User information can only be changed by the user itself or a system administrator")
+          }
+        )
 
         // check if user exists
         userExists <- userExists(userIri)
@@ -1092,11 +1019,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         // create the update request
-        userUpdatePayload = UserUpdatePayloadADM(projectsAdmin = Some(updatedProjectAdminMembershipIris))
-
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
+          userUpdatePayload = UserUpdatePayloadADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
           apiRequestID = apiRequestID
@@ -1183,8 +1108,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                                requestingUser: UserADM,
                                                apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-    log.debug(s"userGroupMembershipAddRequestADM - userIri: {}, groupIri: {}", userIri, groupIri)
-
     /**
       * The actual task run with an IRI lock.
       */
@@ -1193,10 +1116,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                           requestingUser: UserADM,
                                           apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-        _ = if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
+        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
+        _ <- Future(
+          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+            throw ForbiddenException(
+              "User information can only be changed by the user itself or a system administrator")
+          }
+        )
 
         // check if user exists
         maybeUser <- getSingleUserADM(
@@ -1222,24 +1148,16 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )).mapTo[Option[GroupADM]]
+
         projectIri = maybeGroupADM
           .getOrElse(throw InconsistentRepositoryDataException(s"Group $groupIri does not exist"))
           .project
           .id
 
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
-          // not a project or system admin
-          // log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-          throw ForbiddenException("User's group membership can only be changed by a project or system administrator")
-        }
-
         // get users current group membership list
         currentGroupMemberships = userToChange.groups
 
         currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.map(_.id)
-
-        _ = log.debug("userGroupMembershipAddRequestADM - currentGroupMembershipIris: {}", currentGroupMembershipIris)
 
         // check if user is already member and if not then append to list
         updatedGroupMembershipIris = if (!currentGroupMembershipIris.contains(groupIri)) {
@@ -1248,14 +1166,10 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           throw BadRequestException(s"User $userIri is already member of group $groupIri.")
         }
 
-        _ = log.debug("userGroupMembershipAddRequestADM - updatedGroupMembershipIris: {}", updatedGroupMembershipIris)
-
         // create the update request
-        userUpdatePayload = UserUpdatePayloadADM(groups = Some(updatedGroupMembershipIris))
-
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
+          userUpdatePayload = UserUpdatePayloadADM(groups = Some(updatedGroupMembershipIris)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
           apiRequestID = apiRequestID
@@ -1279,8 +1193,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                                   requestingUser: UserADM,
                                                   apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-    log.debug(s"userGroupMembershipRemoveRequestADM - userIri: {}, groupIri: {}", userIri, groupIri)
-
     /**
       * The actual task run with an IRI lock.
       */
@@ -1289,10 +1201,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                              requestingUser: UserADM,
                                              apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-
-        // check if necessary information is present
-        _ <- Future(if (userIri.isEmpty) throw BadRequestException("User IRI cannot be empty."))
-        _ = if (groupIri.isEmpty) throw BadRequestException("Group IRI cannot be empty")
+        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
+        _ <- Future(
+          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+            throw ForbiddenException(
+              "User information can only be changed by the user itself or a system administrator")
+          }
+        )
 
         // check if user exists
         userExists <- userExists(userIri)
@@ -1314,13 +1229,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           .project
           .id
 
-        // check if the requesting user is allowed to perform updates
-        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser) {
-          // not a project or system admin
-          //log.debug("project admin: {}, system admin: {}", userProfileV1.permissionData.isProjectAdmin(projectIri), userProfileV1.permissionData.isSystemAdmin)
-          throw ForbiddenException("User's group membership can only be changed by a project or system administrator")
-        }
-
         // get users current project membership list
         currentGroupMemberships <- userGroupMembershipsGetRequestADM(
           userIri = userIri,
@@ -1330,9 +1238,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
         currentGroupMembershipIris: Seq[IRI] = currentGroupMemberships.groups.map(_.id)
 
-        _ = log.debug("userGroupMembershipRemoveRequestADM - currentGroupMembershipIris: {}",
-                      currentGroupMembershipIris)
-
         // check if user is not already a member and if he is then remove the project from to list
         updatedGroupMembershipIris = if (currentGroupMembershipIris.contains(groupIri)) {
           currentGroupMembershipIris diff Seq(groupIri)
@@ -1340,15 +1245,10 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           throw BadRequestException(s"User $userIri is not member of group $groupIri.")
         }
 
-        _ = log.debug("userGroupMembershipRemoveRequestADM - updatedGroupMembershipIris: {}",
-                      updatedGroupMembershipIris)
-
         // create the update request
-        userUpdatePayload = UserUpdatePayloadADM(groups = Some(updatedGroupMembershipIris))
-
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
+          userUpdatePayload = UserUpdatePayloadADM(groups = Some(updatedGroupMembershipIris)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = apiRequestID
@@ -1385,8 +1285,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
     log.debug("updateUserADM - userUpdatePayload: {}", userUpdatePayload)
 
-    /* Remember: some checks on UserUpdatePayloadV1 are implemented in the case class */
-
+    // check if it is a request for a built-in user
     if (userIri.contains(KnoraSystemInstances.Users.SystemUser.id) || userIri.contains(
           KnoraSystemInstances.Users.AnonymousUser.id)) {
       throw BadRequestException("Changes to built-in users are not allowed.")
@@ -1404,6 +1303,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       _ = if (maybeCurrentUser.isEmpty) {
         throw NotFoundException(s"User '$userIri' not found. Aborting update request.")
       }
+
       // we are changing the user, so lets get rid of the cached copy
       _ = invalidateCachedUserADM(maybeCurrentUser)
 
@@ -1474,7 +1374,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             maybeSystemAdmin = maybeChangedSystemAdmin
           )
           .toString)
-      // _ = log.debug(s"updateUserV1 - query: $updateUserSparqlString")
+
       updateResult <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
 
       /* Verify that the user was updated. */
@@ -1488,8 +1388,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
       updatedUserADM: UserADM = maybeUpdatedUserADM.getOrElse(
         throw UpdateNotPerformedException("User was not updated. Please report this as a possible bug."))
-
-      // _ = log.debug(s"===>>> apiUpdateRequest: $userUpdatePayload /  updatedUserADM: $updatedUserADM")
 
       _ = if (userUpdatePayload.username.isDefined) {
         if (updatedUserADM.username != userUpdatePayload.username.get.value)
@@ -1597,7 +1495,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
       updateResult <- (storeManager ? SparqlUpdateRequest(updateUserSparqlString)).mapTo[SparqlUpdateResponse]
 
-      /* Verify that the user was updated. */
+      /* Verify that the password was updated. */
       maybeUpdatedUserADM <- getSingleUserADM(
         identifier = UserIdentifierADM(maybeIri = Some(userIri)),
         featureFactoryConfig = featureFactoryConfig,
@@ -1641,13 +1539,13 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     def createNewUserTask(userEntity: UserEntity) = {
       for {
         // check if username is unique
-        usernameTaken: Boolean <- userByUsernameExists(Some(userEntity.username.get.value))
+        usernameTaken: Boolean <- userByUsernameExists(userEntity.username)
         _ = if (usernameTaken) {
           throw DuplicateValueException(s"User with the username '${userEntity.username.get.value}' already exists")
         }
 
         // check if email is unique
-        emailTaken: Boolean <- userByEmailExists(Some(userEntity.email.get.value))
+        emailTaken: Boolean <- userByEmailExists(userEntity.email)
         _ = if (emailTaken) {
           throw DuplicateValueException(s"User with the email '${userEntity.email.get.value}' already exists")
         }
@@ -1971,21 +1869,21 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @param maybeCurrent  the current username of the user.
     * @return a [[Boolean]].
     */
-  private def userByUsernameExists(maybeUsername: Option[String],
+  private def userByUsernameExists(maybeUsername: Option[Username],
                                    maybeCurrent: Option[String] = None): Future[Boolean] = {
     maybeUsername match {
       case Some(username) =>
-        if (maybeCurrent.contains(username)) {
+        if (maybeCurrent.contains(username.value)) {
           FastFuture.successful(true)
         } else {
           stringFormatter.validateUsername(
-            username,
-            throw BadRequestException(s"The username '$username' contains invalid characters"))
+            username.value,
+            throw BadRequestException(s"The username '${username.value}' contains invalid characters"))
 
           for {
             askString <- Future(
               org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-                .checkUserExistsByUsername(username = username)
+                .checkUserExistsByUsername(username = username.value)
                 .toString)
             // _ = log.debug("userExists - query: {}", askString)
 
@@ -2004,18 +1902,21 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @param maybeCurrent the current email of the user.
     * @return a [[Boolean]].
     */
-  private def userByEmailExists(maybeEmail: Option[String], maybeCurrent: Option[String] = None): Future[Boolean] = {
+  private def userByEmailExists(maybeEmail: Option[Email], maybeCurrent: Option[String] = None): Future[Boolean] = {
     maybeEmail match {
       case Some(email) =>
-        if (maybeCurrent.contains(email)) {
+        if (maybeCurrent.contains(email.value)) {
           FastFuture.successful(true)
         } else {
-          stringFormatter.validateEmailAndThrow(email,
-                                                throw BadRequestException(s"The email address '$email' is invalid"))
+          stringFormatter.validateEmailAndThrow(
+            email.value,
+            throw BadRequestException(s"The email address '${email.value}' is invalid"))
 
           for {
             askString <- Future(
-              org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkUserExistsByEmail(email = email).toString)
+              org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+                .checkUserExistsByEmail(email = email.value)
+                .toString)
             // _ = log.debug("userExists - query: {}", askString)
 
             checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
