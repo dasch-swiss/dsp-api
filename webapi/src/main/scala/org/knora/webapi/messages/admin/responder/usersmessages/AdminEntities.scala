@@ -19,14 +19,6 @@ trait UserEntityTrait {
              status: Status,
              lang: LanguageCode,
              systemAdmin: SystemAdmin): UserEntity
-//
-//  def update(username: Option[Username],
-//             email: Option[Email],
-//             givenName: Option[GivenName],
-//             familyName: Option[FamilyName],
-//             status: Option[Status],
-//             lang: Option[LanguageCode],
-//             systemAdmin: Option[SystemAdmin]): UserEntity
 }
 
 /**

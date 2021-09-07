@@ -61,12 +61,12 @@ case class CreateUserApiRequestADM(id: Option[IRI] = None,
                                    lang: String,
                                    systemAdmin: Boolean) {
 
-  //def toJsValue: JsValue = UsersADMJsonProtocol.createUserApiRequestADMFormat.write(this)
+  def toJsValue: JsValue = UsersADMJsonProtocol.createUserApiRequestADMFormat.write(this)
 }
 
 /**
   * Represents an API request payload that asks the Knora API server to update an existing user. Information that can
-  * be changed include the user's email, given name, family name, language, user status, and system admin
+  * be changed are: user's username, email, given name, family name, language, user status, and system admin
   * membership.
   *
   * @param username          the new username. Needs to be unique on the server.
@@ -110,21 +110,12 @@ case class ChangeUserApiRequestADM(username: Option[String] = None,
   }
 
   // change basic user information case
-  if (parametersCount > 7) throw BadRequestException("Too many parameters sent for basic user information change.")
+  if (parametersCount > 5) throw BadRequestException("Too many parameters sent for basic user information change.")
 
   def toJsValue: JsValue = UsersADMJsonProtocol.changeUserApiRequestADMFormat.write(this)
 }
 
 case class ChangeUserPasswordApiRequestADM(requesterPassword: Option[String], newPassword: Option[String]) {
-  val parametersCount: Int = List(
-    requesterPassword,
-    newPassword
-  ).flatten.size
-  if (requesterPassword.isDefined || newPassword.isDefined) {
-    if (parametersCount < 2) {
-      throw BadRequestException("Too few parameters sent for password change.")
-    }
-  }
   def toJsValue: JsValue = UsersADMJsonProtocol.changeUserPasswordApiRequestADMFormat.write(this)
 }
 
@@ -132,7 +123,7 @@ case class ChangeUserPasswordApiRequestADM(requesterPassword: Option[String], ne
 // Messages
 
 /**
-  * An abstract trait representing message that can be sent to `UsersResponderV1`.
+  * An abstract trait representing message that can be sent to `UsersResponderADM`.
   */
 sealed trait UsersResponderRequestADM extends KnoraRequestADM
 
@@ -150,7 +141,7 @@ case class UsersGetADM(userInformationTypeADM: UserInformationTypeADM = UserInfo
     extends UsersResponderRequestADM
 
 /**
-  * Get all information about all users in form of [[UsersGetResponseV1]]. The UsersGetRequestV1 returns either
+  * Get all information about all users in form of [[UsersGetResponseADM]]. The UsersResponderRequestADM returns either
   * something or a NotFound exception if there are no users found. Administration permission checking is performed.
   *
   * @param userInformationTypeADM the extent of the information returned.
@@ -193,7 +184,7 @@ case class UserGetRequestADM(identifier: UserIdentifierADM,
 /**
   * Requests the creation of a new user.
   *
-  * @param createRequest        the [[CreateUserApiRequestADM]] information used for creating the new user.
+  * @param userEntity        the [[UserEntity]] information used for creating the new user.
   * @param featureFactoryConfig the feature factory configuration.
   * @param requestingUser       the user creating the new user.
   * @param apiRequestID         the ID of the API request.
@@ -208,7 +199,7 @@ case class UserCreateRequestADM(userEntity: UserEntity,
   * Request updating of an existing user.
   *
   * @param userIri              the IRI of the user to be updated.
-  * @param userUpdatePayload    the data which needs to be updated.
+  * @param userUpdatePayload    the [[UserUpdatePayloadADM]] object containing the data to be updated.
   * @param featureFactoryConfig the feature factory configuration.
   * @param requestingUser       the user initiating the request.
   * @param apiRequestID         the ID of the API request.
@@ -240,7 +231,7 @@ case class UserChangePasswordRequestADM(userIri: IRI,
   * Request updating the users status ('knora-base:isActiveUser' property)
   *
   * @param userIri              the IRI of the user to be updated.
-  * @param status    the [[ChangeUserApiRequestADM]] containing the new status (true / false).
+  * @param status               the [[Status]] containing the new status (true / false).
   * @param featureFactoryConfig the feature factory configuration.
   * @param requestingUser       the user initiating the request.
   * @param apiRequestID         the ID of the API request.
@@ -256,7 +247,7 @@ case class UserChangeStatusRequestADM(userIri: IRI,
   * Request updating the users system admin status ('knora-base:isInSystemAdminGroup' property)
   *
   * @param userIri              the IRI of the user to be updated.
-  * @param systemAdmin          the SystemAdmin value object containing the new system admin membership status (true / false).
+  * @param systemAdmin          the [[SystemAdmin]] value object containing the new system admin membership status (true / false).
   * @param featureFactoryConfig the feature factory configuration.
   * @param requestingUser       the user initiating the request.
   * @param apiRequestID         the ID of the API request.
@@ -410,7 +401,7 @@ case class UserGroupMembershipRemoveRequestADM(userIri: IRI,
   * @param users a sequence of user profiles of the requested type.
   */
 case class UsersGetResponseADM(users: Seq[UserADM]) extends KnoraResponseADM {
-  def toJsValue = UsersADMJsonProtocol.usersGetResponseADMFormat.write(this)
+  def toJsValue: JsValue = UsersADMJsonProtocol.usersGetResponseADMFormat.write(this)
 }
 
 /**

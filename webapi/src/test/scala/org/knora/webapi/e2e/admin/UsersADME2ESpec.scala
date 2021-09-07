@@ -921,6 +921,23 @@ class UsersADME2ESpec
         )
       }
 
+      "return 'BadRequest' if more than 1 parameter is provided in update status request" in {
+
+        val updateUserRequest: String =
+          s"""{
+             |    "status": false,
+             |    "username": "parameterDuck"
+             |}""".stripMargin
+
+        val donaldIriEncoded = java.net.URLEncoder.encode(donaldIri.get, "utf-8")
+        val request = Put(baseApiUrl + s"/admin/users/iri/$donaldIriEncoded/Status",
+                          HttpEntity(ContentTypes.`application/json`, updateUserRequest)) ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.BadRequest)
+
+      }
+
       "update the user's system admin membership status" in {
         val changeUserSystemAdminMembershipRequest: String =
           s"""{
