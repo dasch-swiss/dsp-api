@@ -89,7 +89,7 @@ case class ChangeGroupApiRequestADM(name: Option[String] = None,
   if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
 
   /**
-    * check that only allowed information for the 2 cases is send and not more.
+    * check that only allowed information for the 2 cases is sent and not more.
     */
   // change status case
   if (status.isDefined) {

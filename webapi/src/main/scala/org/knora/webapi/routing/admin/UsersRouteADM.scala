@@ -23,7 +23,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
 import org.knora.webapi.annotation.ApiMayChange
-import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
+import org.knora.webapi.exceptions.{BadRequestException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePasswordPayloadADM, _}
@@ -283,28 +283,18 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             case Some(familyName) => Some(FamilyName.create(familyName).fold(error => throw error, value => value))
             case None             => None
           }
-          val maybeChangedStatus = apiRequest.status match {
-            case Some(status) => Some(Status.create(status).fold(error => throw error, value => value))
-            case None         => None
-          }
           val maybeChangedLang = apiRequest.lang match {
             case Some(lang) => Some(LanguageCode.create(lang).fold(error => throw error, value => value))
             case None       => None
           }
-          val maybeChangedSystemAdmin = apiRequest.systemAdmin match {
-            case Some(systemAdmin) => Some(SystemAdmin.create(systemAdmin).fold(error => throw error, value => value))
-            case None              => None
-          }
 
-          val userUpdatePayload: UserUpdatePayloadADM =
-            UserUpdatePayloadADM(
+          val userUpdatePayload: UserUpdateBasicInformationPayloadADM =
+            UserUpdateBasicInformationPayloadADM(
               username = maybeChangedUsername,
               email = maybeChangedEmail,
               givenName = maybeChangedGivenName,
               familyName = maybeChangedFamilyName,
-              status = maybeChangedStatus,
-              lang = maybeChangedLang,
-              systemAdmin = maybeChangedSystemAdmin
+              lang = maybeChangedLang
             )
 
           /* the api request is already checked at time of creation. see case class. */
@@ -314,9 +304,9 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
               featureFactoryConfig = featureFactoryConfig
             )
           } yield
-            UserChangeBasicUserInformationRequestADM(
+            UserChangeBasicInformationRequestADM(
               userIri = checkedUserIri,
-              userUpdatePayload = userUpdatePayload,
+              userUpdateBasicInformationPayload = userUpdatePayload,
               featureFactoryConfig = featureFactoryConfig,
               requestingUser = requestingUser,
               apiRequestID = UUID.randomUUID()

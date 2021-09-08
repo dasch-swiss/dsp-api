@@ -98,19 +98,20 @@ case class ChangeUserApiRequestADM(username: Option[String] = None,
   // something needs to be sent, i.e. everything 'None' is not allowed
   if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
 
-  /* check that only allowed information for the 4 cases is send and not more. */ //why 4 cases???
+  /* check that only allowed information for the 3 cases (changing status, systemAdmin and basic information) is sent and not more. */
+
   // change status case
   if (status.isDefined) {
-    if (parametersCount > 1) throw BadRequestException("Too many parameters sent for user status change.")
+    if (parametersCount > 1) throw BadRequestException("Too many parameters sent for change request.")
   }
 
   // change system admin membership case
   if (systemAdmin.isDefined) {
-    if (parametersCount > 1) throw BadRequestException("Too many parameters sent for system admin membership change.")
+    if (parametersCount > 1) throw BadRequestException("Too many parameters sent for change request.")
   }
 
   // change basic user information case
-  if (parametersCount > 5) throw BadRequestException("Too many parameters sent for basic user information change.")
+  if (parametersCount > 5) throw BadRequestException("Too many parameters sent for change request.")
 
   def toJsValue: JsValue = UsersADMJsonProtocol.changeUserApiRequestADMFormat.write(this)
 }
@@ -199,16 +200,16 @@ case class UserCreateRequestADM(userEntity: UserEntity,
   * Request updating of an existing user.
   *
   * @param userIri              the IRI of the user to be updated.
-  * @param userUpdatePayload    the [[UserUpdatePayloadADM]] object containing the data to be updated.
+  * @param userUpdateBasicInformationPayload    the [[UserUpdateBasicInformationPayloadADM]] object containing the data to be updated.
   * @param featureFactoryConfig the feature factory configuration.
   * @param requestingUser       the user initiating the request.
   * @param apiRequestID         the ID of the API request.
   */
-case class UserChangeBasicUserInformationRequestADM(userIri: IRI,
-                                                    userUpdatePayload: UserUpdatePayloadADM,
-                                                    featureFactoryConfig: FeatureFactoryConfig,
-                                                    requestingUser: UserADM,
-                                                    apiRequestID: UUID)
+case class UserChangeBasicInformationRequestADM(userIri: IRI,
+                                                userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
+                                                featureFactoryConfig: FeatureFactoryConfig,
+                                                requestingUser: UserADM,
+                                                apiRequestID: UUID)
     extends UsersResponderRequestADM
 
 /**
@@ -503,12 +504,12 @@ case class UserADM(id: IRI,
         // SCrypt
         import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
         val encoder = new SCryptPasswordEncoder()
-        encoder.matches(password, hashedPassword.toString)
+        encoder.matches(password, hashedPassword)
       } else if (hashedPassword.startsWith("$2a$")) {
         // BCrypt
         import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
         val encoder = new BCryptPasswordEncoder()
-        encoder.matches(password, hashedPassword.toString)
+        encoder.matches(password, hashedPassword)
       } else {
         // SHA-1
         val md = java.security.MessageDigest.getInstance("SHA-1")
@@ -525,7 +526,7 @@ case class UserADM(id: IRI,
   def ofType(userTemplateType: UserInformationTypeADM): UserADM = {
 
     userTemplateType match {
-      case UserInformationTypeADM.PUBLIC => {
+      case UserInformationTypeADM.PUBLIC =>
         UserADM(
           id = id,
           username = "",
@@ -541,9 +542,7 @@ case class UserADM(id: IRI,
           sessionId = None,
           permissions = PermissionsDataADM()
         )
-      }
-      case UserInformationTypeADM.SHORT => {
-
+      case UserInformationTypeADM.SHORT =>
         UserADM(
           id = id,
           username = username,
@@ -559,9 +558,7 @@ case class UserADM(id: IRI,
           sessionId = None,
           permissions = PermissionsDataADM()
         )
-      }
-      case UserInformationTypeADM.RESTRICTED => {
-
+      case UserInformationTypeADM.RESTRICTED =>
         UserADM(
           id = id,
           username = username,
@@ -577,8 +574,7 @@ case class UserADM(id: IRI,
           sessionId = None,
           permissions = permissions
         )
-      }
-      case UserInformationTypeADM.FULL => {
+      case UserInformationTypeADM.FULL =>
         UserADM(
           id = id,
           username = username,
@@ -594,7 +590,6 @@ case class UserADM(id: IRI,
           sessionId = sessionId,
           permissions = permissions
         )
-      }
       case _ => throw BadRequestException(s"The requested userTemplateType: $userTemplateType is invalid.")
     }
   }
@@ -722,10 +717,10 @@ object UserInformationTypeADM extends Enumeration {
 
   type UserInformationTypeADM = Value
 
-  val PUBLIC = Value(0, "public") // a temporary type which only returns firstname and lastname
-  val SHORT = Value(1, "short") // only basic user information (restricted and additionally without groups
-  val RESTRICTED = Value(2, "restricted") // without sensitive information
-  val FULL = Value(3, "full") // everything, including sensitive information
+  val PUBLIC: Value = Value(0, "public") // a temporary type which only returns firstname and lastname
+  val SHORT: Value = Value(1, "short") // only basic user information (restricted and additionally without groups
+  val RESTRICTED: Value = Value(2, "restricted") // without sensitive information
+  val FULL: Value = Value(3, "full") // everything, including sensitive information
 
   val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
@@ -751,9 +746,9 @@ object UserIdentifierType extends Enumeration {
 
   type UserIdentifierType
 
-  val IRI = Value(0, "iri")
-  val EMAIL = Value(1, "email")
-  val USERNAME = Value(3, "username")
+  val IRI: Value = Value(0, "iri")
+  val EMAIL: Value = Value(1, "email")
+  val USERNAME: Value = Value(3, "username")
 }
 
 /**
@@ -874,8 +869,8 @@ class UserIdentifierADM private (maybeIri: Option[IRI] = None,
 /**
   * Payload used for updating of an existing user.
   *
-  * @param email         the new email address. Needs to be unique on the server.
   * @param username      the new username.
+  * @param email         the new email address. Needs to be unique on the server.
   * @param givenName     the new given name.
   * @param familyName    the new family name.
   * @param status        the new status.
@@ -885,7 +880,7 @@ class UserIdentifierADM private (maybeIri: Option[IRI] = None,
   * @param groups        the new group memberships list.
   * @param systemAdmin   the new system admin membership
   */
-case class UserUpdatePayloadADM(username: Option[Username] = None,
+case class UserChangeRequestADM(username: Option[Username] = None,
                                 email: Option[Email] = None,
                                 givenName: Option[GivenName] = None,
                                 familyName: Option[FamilyName] = None,
@@ -942,6 +937,35 @@ case class UserUpdatePayloadADM(username: Option[Username] = None,
   // change basic user information case
   if (parametersCount > 5) {
     throw BadRequestException("Too many parameters sent for basic user information change.")
+  }
+}
+
+/**
+  * Payload used for updating basic information of an existing user.
+  *
+  * @param username      the new username.
+  * @param email         the new email address. Needs to be unique on the server.
+  * @param givenName     the new given name.
+  * @param familyName    the new family name.
+  * @param lang          the new language.
+  */
+case class UserUpdateBasicInformationPayloadADM(username: Option[Username] = None,
+                                                email: Option[Email] = None,
+                                                givenName: Option[GivenName] = None,
+                                                familyName: Option[FamilyName] = None,
+                                                lang: Option[LanguageCode] = None) {
+
+  val parametersCount: Int = List(
+    username,
+    email,
+    givenName,
+    familyName,
+    lang
+  ).flatten.size
+
+  // something needs to be sent, i.e. everything 'None' is not allowed
+  if (parametersCount == 0) {
+    throw BadRequestException("No data sent in API request.")
   }
 }
 

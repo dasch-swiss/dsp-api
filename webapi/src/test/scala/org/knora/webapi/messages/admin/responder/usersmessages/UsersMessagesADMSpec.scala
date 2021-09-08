@@ -232,4 +232,64 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
     }
 
   }
+
+  "The ChangeUserApiRequestADM case class" should {
+
+    "throw a BadRequestException if number of parameters is wrong" in {
+
+      // all parameters are None
+      assertThrows[BadRequestException](
+        ChangeUserApiRequestADM()
+      )
+
+      val errorNoParameters = the[BadRequestException] thrownBy ChangeUserApiRequestADM()
+      errorNoParameters.getMessage should equal("No data sent in API request.")
+
+      // more than one parameter for status update
+      assertThrows[BadRequestException](
+        ChangeUserApiRequestADM(status = Some(true), systemAdmin = Some(true))
+      )
+
+      val errorTooManyParametersStatusUpdate = the[BadRequestException] thrownBy ChangeUserApiRequestADM(status =
+                                                                                                           Some(true),
+                                                                                                         systemAdmin =
+                                                                                                           Some(true))
+      errorTooManyParametersStatusUpdate.getMessage should equal("Too many parameters sent for change request.")
+
+      // more than one parameter for systemAdmin update
+      assertThrows[BadRequestException](
+        ChangeUserApiRequestADM(systemAdmin = Some(true), status = Some(true))
+      )
+
+      val errorTooManyParametersSystemAdminUpdate = the[BadRequestException] thrownBy ChangeUserApiRequestADM(
+        systemAdmin = Some(true),
+        status = Some(true))
+      errorTooManyParametersSystemAdminUpdate.getMessage should equal("Too many parameters sent for change request.")
+
+      // more than 5 parameters for basic user information update
+      assertThrows[BadRequestException](
+        ChangeUserApiRequestADM(
+          username = Some("newUsername"),
+          email = Some("newEmail@email.com"),
+          givenName = Some("newGivenName"),
+          familyName = Some("familyName"),
+          lang = Some("en"),
+          status = Some(true),
+          systemAdmin = Some(false)
+        )
+      )
+
+      val errorTooManyParametersBasicInformationUpdate = the[BadRequestException] thrownBy ChangeUserApiRequestADM(
+        username = Some("newUsername"),
+        email = Some("newEmail@email.com"),
+        givenName = Some("newGivenName"),
+        familyName = Some("familyName"),
+        lang = Some("en"),
+        status = Some(true),
+        systemAdmin = Some(false)
+      )
+      errorTooManyParametersBasicInformationUpdate.getMessage should equal(
+        "Too many parameters sent for change request.")
+    }
+  }
 }

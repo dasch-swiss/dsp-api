@@ -28,7 +28,7 @@ import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupMembersGetRequestADM, GroupMembersGetResponseADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePayloadADM, _}
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserChangeRequestADM, _}
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator
@@ -298,76 +298,6 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         )
         expectMsg(Failure(DuplicateValueException(s"User with the email 'root@example.com' already exists")))
       }
-
-      //TODO Should be tested in value object creation
-//      "return a 'BadRequestException' if the supplied 'username' contains invalid characters (@)" in {
-//        responderManager ! UserCreateRequestADM(
-//          userEntity = UserEntity(
-//            id = None,
-//            username = Username.fromString("donald.duck2@example.com").fold(error => throw error, value => value),
-//            email = Email
-//              .fromString("donald.duck2@example.com")
-//              .fold(error => throw error, value => value),
-//            givenName = GivenName.fromString("Donald").fold(error => throw error, value => value),
-//            familyName = FamilyName.fromString("Duck").fold(error => throw error, value => value),
-//            password = Password.fromString("test").fold(error => throw error, value => value),
-//            status = Status.fromBoolean(true),
-//            lang = LanguageCode.fromString("en").fold(error => throw error, value => value),
-//            systemAdmin = SystemAdmin.fromBoolean(false)
-//          ),
-//          featureFactoryConfig = defaultFeatureFactoryConfig,
-//          SharedTestDataADM.anonymousUser,
-//          UUID.randomUUID
-//        )
-//        expectMsg(Failure(BadRequestException(s"The username 'donald.duck2@example.com' contains invalid characters")))
-//      }
-
-      //TODO Should be tested in value object creation
-//      "return a 'BadRequestException' if the supplied 'username' contains invalid characters (-)" in {
-//        responderManager ! UserCreateRequestADM(
-//          userEntity = UserEntity(
-//            id = None,
-//            username = Username.fromString("donald-duck").fold(error => throw error, value => value),
-//            email = Email
-//              .fromString("donald.duck2@example.com")
-//              .fold(error => throw error, value => value),
-//            givenName = GivenName.fromString("Donald").fold(error => throw error, value => value),
-//            familyName = FamilyName.fromString("Duck").fold(error => throw error, value => value),
-//            password = Password.fromString("test").fold(error => throw error, value => value),
-//            status = Status.fromBoolean(true),
-//            lang = LanguageCode.fromString("en").fold(error => throw error, value => value),
-//            systemAdmin = SystemAdmin.fromBoolean(false)
-//          ),
-//          featureFactoryConfig = defaultFeatureFactoryConfig,
-//          SharedTestDataADM.anonymousUser,
-//          UUID.randomUUID
-//        )
-//        expectMsg(Failure(BadRequestException(s"The username 'donald-duck' contains invalid characters")))
-//      }
-
-      //TODO Should be tested in value object creation
-//      "return a 'BadRequestException' if the supplied 'email' is invalid" in {
-//        responderManager ! UserCreateRequestADM(
-//          userEntity = UserEntity(
-//            id = None,
-//            username = Username.fromString("root3").fold(error => throw error, value => value),
-//            email = Email
-//              .fromString("root3")
-//              .fold(error => throw error, value => value),
-//            givenName = GivenName.fromString("Donald").fold(error => throw error, value => value),
-//            familyName = FamilyName.fromString("Duck").fold(error => throw error, value => value),
-//            password = Password.fromString("test").fold(error => throw error, value => value),
-//            status = Status.fromBoolean(true),
-//            lang = LanguageCode.fromString("en").fold(error => throw error, value => value),
-//            systemAdmin = SystemAdmin.fromBoolean(false)
-//          ),
-//          featureFactoryConfig = defaultFeatureFactoryConfig,
-//          SharedTestDataADM.anonymousUser,
-//          UUID.randomUUID
-//        )
-//        expectMsg(Failure(BadRequestException(s"The email 'root3' is invalid")))
-//      }
-
     }
 
     "asked to update a user" should {
@@ -375,9 +305,9 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
       "UPDATE the user's basic information" in {
 
         /* User information is updated by the user */
-        responderManager ! UserChangeBasicUserInformationRequestADM(
+        responderManager ! UserChangeBasicInformationRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
-          userUpdatePayload = UserUpdatePayloadADM(
+          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
             givenName = Some(GivenName.create("Donald").fold(error => throw error, value => value))
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -389,9 +319,9 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         response1.user.givenName should equal("Donald")
 
         /* User information is updated by a system admin */
-        responderManager ! UserChangeBasicUserInformationRequestADM(
+        responderManager ! UserChangeBasicInformationRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
-          userUpdatePayload = UserUpdatePayloadADM(
+          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
             familyName = Some(FamilyName.create("Duck").fold(error => throw error, value => value))
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -403,9 +333,9 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         response2.user.familyName should equal("Duck")
 
         /* User information is updated by a system admin */
-        responderManager ! UserChangeBasicUserInformationRequestADM(
+        responderManager ! UserChangeBasicInformationRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
-          userUpdatePayload = UserUpdatePayloadADM(
+          userUpdateBasicInformationPayload = UserUpdateBasicInformationPayloadADM(
             givenName =
               Some(GivenName.create(SharedTestDataADM.normalUser.givenName).fold(error => throw error, value => value)),
             familyName = Some(

@@ -30,7 +30,7 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, Group
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
-import org.knora.webapi.messages.admin.responder.usersmessages.{Password, UserUpdatePayloadADM, _}
+import org.knora.webapi.messages.admin.responder.usersmessages.{Password, UserChangeRequestADM, _}
 import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceGetUserADM,
   CacheServicePutUserADM,
@@ -70,12 +70,16 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       getSingleUserADMRequest(identifier, userInformationTypeADM, featureFactoryConfig, requestingUser)
     case UserCreateRequestADM(userEntity, featureFactoryConfig, requestingUser, apiRequestID) =>
       createNewUserADM(userEntity, featureFactoryConfig, requestingUser, apiRequestID)
-    case UserChangeBasicUserInformationRequestADM(userIri,
-                                                  userUpdatePayload,
-                                                  featureFactoryConfig,
-                                                  requestingUser,
-                                                  apiRequestID) =>
-      changeBasicUserInformationADM(userIri, userUpdatePayload, featureFactoryConfig, requestingUser, apiRequestID)
+    case UserChangeBasicInformationRequestADM(userIri,
+                                              userUpdateBasicInformationPayload,
+                                              featureFactoryConfig,
+                                              requestingUser,
+                                              apiRequestID) =>
+      changeBasicUserInformationADM(userIri,
+                                    userUpdateBasicInformationPayload,
+                                    featureFactoryConfig,
+                                    requestingUser,
+                                    apiRequestID)
     case UserChangePasswordRequestADM(userIri,
                                       userUpdatePasswordPayload,
                                       featureFactoryConfig,
@@ -331,7 +335,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * can be changed. For changing the password or user status, use the separate methods.
     *
     * @param userIri              the IRI of the existing user that we want to update.
-    * @param userUpdatePayload    the updated information.
+    * @param userUpdateBasicInformationPayload    the updated information stored as [[UserUpdateBasicInformationPayloadADM]].
     * @param featureFactoryConfig the feature factory configuration.
     * @param requestingUser       the requesting user.
     * @param apiRequestID         the unique api request ID.
@@ -340,18 +344,18 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @throws ForbiddenException  if the user doesn't hold the necessary permission for the operation.
     */
   private def changeBasicUserInformationADM(userIri: IRI,
-                                            userUpdatePayload: UserUpdatePayloadADM,
+                                            userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
                                             featureFactoryConfig: FeatureFactoryConfig,
                                             requestingUser: UserADM,
                                             apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-    log.debug(s"changeBasicUserInformationADM: changeUserRequest: {}", userUpdatePayload)
+    log.debug(s"changeBasicUserInformationADM: changeUserRequest: {}", userUpdateBasicInformationPayload)
 
     /**
       * The actual change basic user data task run with an IRI lock.
       */
     def changeBasicUserDataTask(userIri: IRI,
-                                userUpdatePayload: UserUpdatePayloadADM,
+                                userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
                                 requestingUser: UserADM,
                                 apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
@@ -371,29 +375,32 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
 
-        // check if user exists
-        _ = if (currentUserInformation.isEmpty) {
-          throw BadRequestException(s"User $userIri does not exist")
-        }
-
         // check if email is unique in case of a change email request
-        emailTaken: Boolean <- userByEmailExists(userUpdatePayload.email, Some(currentUserInformation.get.email))
+        emailTaken: Boolean <- userByEmailExists(userUpdateBasicInformationPayload.email,
+                                                 Some(currentUserInformation.get.email))
         _ = if (emailTaken) {
-          throw DuplicateValueException(s"User with the email '${userUpdatePayload.email.get.value}' already exists")
+          throw DuplicateValueException(
+            s"User with the email '${userUpdateBasicInformationPayload.email.get.value}' already exists")
         }
 
         // check if username is unique in case of a change username request
-        usernameTaken: Boolean <- userByUsernameExists(userUpdatePayload.username,
+        usernameTaken: Boolean <- userByUsernameExists(userUpdateBasicInformationPayload.username,
                                                        Some(currentUserInformation.get.username))
         _ = if (usernameTaken) {
           throw DuplicateValueException(
-            s"User with the username '${userUpdatePayload.username.get.value}' already exists")
+            s"User with the username '${userUpdateBasicInformationPayload.username.get.value}' already exists")
         }
 
         // send change request as SystemUser
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = userUpdatePayload,
+          userUpdatePayload = UserChangeRequestADM(
+            username = userUpdateBasicInformationPayload.username,
+            email = userUpdateBasicInformationPayload.email,
+            givenName = userUpdateBasicInformationPayload.givenName,
+            familyName = userUpdateBasicInformationPayload.familyName,
+            lang = userUpdateBasicInformationPayload.lang
+          ),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
           apiRequestID = apiRequestID
@@ -405,7 +412,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       taskResult <- IriLocker.runWithIriLock(
         apiRequestID,
         USERS_GLOBAL_LOCK_IRI,
-        () => changeBasicUserDataTask(userIri, userUpdatePayload, requestingUser, apiRequestID)
+        () => changeBasicUserDataTask(userIri, userUpdateBasicInformationPayload, requestingUser, apiRequestID)
       )
     } yield taskResult
   }
@@ -517,7 +524,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // create the update request
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = UserUpdatePayloadADM(status = Some(status)),
+          userUpdatePayload = UserChangeRequestADM(status = Some(status)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
           apiRequestID = apiRequestID
@@ -572,7 +579,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // create the update request
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = UserUpdatePayloadADM(systemAdmin = Some(systemAdmin)),
+          userUpdatePayload = UserChangeRequestADM(systemAdmin = Some(systemAdmin)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
           apiRequestID = apiRequestID
@@ -705,7 +712,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // create the update request
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = UserUpdatePayloadADM(projects = Some(updatedProjectMembershipIris)),
+          userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = apiRequestID
@@ -781,7 +788,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // create the update request by using the SystemUser
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = UserUpdatePayloadADM(projects = Some(updatedProjectMembershipIris)),
+          userUpdatePayload = UserChangeRequestADM(projects = Some(updatedProjectMembershipIris)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
           apiRequestID = apiRequestID
@@ -943,7 +950,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // create the update request
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = UserUpdatePayloadADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
+          userUpdatePayload = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
           apiRequestID = apiRequestID
@@ -1021,7 +1028,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // create the update request
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = UserUpdatePayloadADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
+          userUpdatePayload = UserChangeRequestADM(projectsAdmin = Some(updatedProjectAdminMembershipIris)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
           apiRequestID = apiRequestID
@@ -1116,14 +1123,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                           requestingUser: UserADM,
                                           apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
-        _ <- Future(
-          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-            throw ForbiddenException(
-              "User information can only be changed by the user itself or a system administrator")
-          }
-        )
-
         // check if user exists
         maybeUser <- getSingleUserADM(
           UserIdentifierADM(maybeIri = Some(userIri)),
@@ -1169,7 +1168,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // create the update request
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = UserUpdatePayloadADM(groups = Some(updatedGroupMembershipIris)),
+          userUpdatePayload = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
           apiRequestID = apiRequestID
@@ -1201,14 +1200,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                              requestingUser: UserADM,
                                              apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
-        _ <- Future(
-          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-            throw ForbiddenException(
-              "User information can only be changed by the user itself or a system administrator")
-          }
-        )
-
         // check if user exists
         userExists <- userExists(userIri)
         _ = if (!userExists) throw NotFoundException(s"The user $userIri does not exist.")
@@ -1248,7 +1239,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // create the update request
         result <- updateUserADM(
           userIri = userIri,
-          userUpdatePayload = UserUpdatePayloadADM(groups = Some(updatedGroupMembershipIris)),
+          userUpdatePayload = UserChangeRequestADM(groups = Some(updatedGroupMembershipIris)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = apiRequestID
@@ -1278,7 +1269,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     * @throws UpdateNotPerformedException if the update was not performed.
     */
   private def updateUserADM(userIri: IRI,
-                            userUpdatePayload: UserUpdatePayloadADM,
+                            userUpdatePayload: UserChangeRequestADM,
                             featureFactoryConfig: FeatureFactoryConfig,
                             requestingUser: UserADM,
                             apiRequestID: UUID): Future[UserOperationResponseADM] = {
