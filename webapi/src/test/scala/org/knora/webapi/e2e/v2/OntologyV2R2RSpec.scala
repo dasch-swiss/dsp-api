@@ -2871,7 +2871,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     // Successfully remove the (unused) text value cardinality from the class.
-    Delete("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
+    Patch("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
       BasicHttpCredentials(anythingUsername, password)
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
