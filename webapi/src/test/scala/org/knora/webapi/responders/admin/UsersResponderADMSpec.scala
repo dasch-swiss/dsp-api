@@ -523,7 +523,8 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         )
         expectMsg(
           timeout,
-          Failure(ForbiddenException("User's password can only be changed by the user itself or a system admin.")))
+          Failure(
+            ForbiddenException("User's password can only be changed by the user itself or a system administrator")))
 
         /* Status is updated by other normal user */
         responderManager ! UserChangeStatusRequestADM(

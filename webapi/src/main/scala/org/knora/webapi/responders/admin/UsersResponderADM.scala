@@ -448,8 +448,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
         _ <- Future(
           if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-            throw ForbiddenException(
-              "User information can only be changed by the user itself or a system administrator")
+            throw ForbiddenException("User's password can only be changed by the user itself or a system administrator")
           }
         )
 
@@ -516,8 +515,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
         _ <- Future(
           if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-            throw ForbiddenException(
-              "User information can only be changed by the user itself or a system administrator")
+            throw ForbiddenException("User's status can only be changed by the user itself or a system administrator")
           }
         )
 
@@ -568,11 +566,10 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                                   requestingUser: UserADM,
                                                   apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
+        // check if the requesting user is allowed to perform updates (i.e. system admin)
         _ <- Future(
-          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
-            throw ForbiddenException(
-              "User information can only be changed by the user itself or a system administrator")
+          if (!requestingUser.permissions.isSystemAdmin) {
+            throw ForbiddenException("User's system admin membership can only be changed by a system administrator")
           }
         )
 
@@ -677,11 +674,11 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                             requestingUser: UserADM,
                                             apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
+        // check if the requesting user is allowed to perform updates (i.e. is project or system admin)
         _ <- Future(
-          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+          if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
             throw ForbiddenException(
-              "User information can only be changed by the user itself or a system administrator")
+              "User's project membership can only be changed by a project or system administrator")
           }
         )
 
@@ -754,11 +751,11 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                                requestingUser: UserADM,
                                                apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
+        // check if the requesting user is allowed to perform updates (i.e. is project or system admin)
         _ <- Future(
-          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+          if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
             throw ForbiddenException(
-              "User information can only be changed by the user itself or a system administrator")
+              "User's project membership can only be changed by a project or system administrator")
           }
         )
 
@@ -914,11 +911,11 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                                  requestingUser: UserADM,
                                                  apiRequestID: UUID): Future[UserOperationResponseADM] =
       for {
-        // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
+        // check if the requesting user is allowed to perform updates (i.e. project admin or system admin)
         _ <- Future(
-          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+          if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
             throw ForbiddenException(
-              "User information can only be changed by the user itself or a system administrator")
+              "User's project admin membership can only be changed by a project or system administrator")
           }
         )
 
@@ -994,9 +991,9 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       for {
         // check if the requesting user is allowed to perform updates (i.e. requesting updates own information or is system admin)
         _ <- Future(
-          if (!requestingUser.id.equalsIgnoreCase(userIri) && !requestingUser.permissions.isSystemAdmin) {
+          if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
             throw ForbiddenException(
-              "User information can only be changed by the user itself or a system administrator")
+              "User's project admin membership can only be changed by a project or system administrator")
           }
         )
 
@@ -1153,6 +1150,11 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           .project
           .id
 
+        // check if the requesting user is allowed to perform updates (i.e. project or system administrator)
+        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+          throw ForbiddenException("User's group membership can only be changed by a project or system administrator")
+        }
+
         // get users current group membership list
         currentGroupMemberships = userToChange.groups
 
@@ -1219,6 +1221,11 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           .getOrElse(throw InconsistentRepositoryDataException(s"Group $groupIri does not exist"))
           .project
           .id
+
+        // check if the requesting user is allowed to perform updates (i.e. is project or system admin)
+        _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser) {
+          throw ForbiddenException("User's group membership can only be changed by a project or system administrator")
+        }
 
         // get users current project membership list
         currentGroupMemberships <- userGroupMembershipsGetRequestADM(
