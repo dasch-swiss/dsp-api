@@ -1457,8 +1457,6 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                                     requestingUser: UserADM,
                                     apiRequestID: UUID): Future[UserOperationResponseADM] = {
 
-    log.debug("updateUserPasswordADM - new password: {}", password.value)
-
     // check if it is a request for a built-in user
     if (userIri.contains(KnoraSystemInstances.Users.SystemUser.id) || userIri.contains(
           KnoraSystemInstances.Users.AnonymousUser.id)) {
