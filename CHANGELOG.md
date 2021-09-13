@@ -1,5 +1,12 @@
 # Changelog
 
+### [14.1.1](https://www.github.com/dasch-swiss/dsp-api/compare/v14.1.0...v14.1.1) (2021-09-13)
+
+
+### Documentation
+
+* add username to changeable attributes (DSP-1895) ([#1904](https://www.github.com/dasch-swiss/dsp-api/issues/1904)) ([719cd0d](https://www.github.com/dasch-swiss/dsp-api/commit/719cd0dbfc60aae1c80d3b0e4e4ae09febe37791))
+
 ## [14.1.0](https://www.github.com/dasch-swiss/dsp-api/compare/v14.0.1...v14.1.0) (2021-08-19)
 
 
