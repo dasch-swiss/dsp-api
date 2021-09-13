@@ -455,7 +455,19 @@ class UsersADME2ESpec
         result.familyName should be("Updated\"FamilyName")
       }
 
-      "escape special characters when getting the user" in {} //TODO continue here
+      "return the special characters correctly when getting a user with special characters in givenName and familyName" in {
+        val userIriEncoded = java.net.URLEncoder.encode(otherCustomUserIri, "utf-8")
+
+        val request = Get(baseApiUrl + s"/admin/users/iri/$userIriEncoded") ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val response: HttpResponse = singleAwaitingRequest(request)
+
+        response.status should be(StatusCodes.OK)
+
+        val result: UserADM = AkkaHttpUtils.httpResponseToJson(response).fields("user").convertTo[UserADM]
+        result.givenName should be("Updated\tGivenName")
+        result.familyName should be("Updated\"FamilyName")
+      }
 
     }
 
