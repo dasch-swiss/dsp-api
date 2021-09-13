@@ -1,0 +1,143 @@
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+@prefix knora-base: <http://www.knora.org/ontology/knora-base#> .
+@prefix salsah-gui: <http://www.knora.org/ontology/salsah-gui#> .
+@base <http://www.knora.org/ontology/0001/freetest#> .
+
+# A trivial ontology, used only for testing Knora.
+
+@prefix : <http://www.knora.org/ontology/0001/freetest#> .
+<http://www.knora.org/ontology/0001/freetest> rdf:type owl:Ontology ;
+    rdfs:label "The free test ontology" ;
+    knora-base:attachedToProject <http://rdfh.ch/projects/0001> ;
+    knora-base:lastModificationDate "2012-12-12T12:12:12.12Z"^^xsd:dateTime .
+
+
+
+
+
+:hasText rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Text"@de ,
+                  "Texte"@fr ,
+                  "Testo"@it ,
+                  "Text"@en ;
+
+       knora-base:subjectClassConstraint :FreeTest ;
+
+       knora-base:objectClassConstraint knora-base:TextValue ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" .
+
+
+:hasInteger rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Ganzzahl"@de ,
+                  "Nombre entier"@fr ,
+                  "Intero"@it ,
+                  "Integer"@en ;
+
+       knora-base:subjectClassConstraint :FreeTest ;
+
+       knora-base:objectClassConstraint knora-base:IntValue ;
+
+       salsah-gui:guiElement salsah-gui:Spinbox ;
+
+       salsah-gui:guiAttribute "min=0" ,
+                                "max=-1" .
+
+
+
+:hasDecimal rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Dezimalzahl"@de ,
+                  "Nombre décimal"@fr ,
+                  "Numero decimale"@it ,
+                  "Decimal number"@en ;
+
+       knora-base:subjectClassConstraint :FreeTest ;
+
+       knora-base:objectClassConstraint knora-base:DecimalValue ;
+
+       salsah-gui:guiElement salsah-gui:SimpleText ;
+
+       salsah-gui:guiAttribute "size=80" ,
+                               "maxlength=255" .
+
+
+
+:hasBoolean rdf:type owl:ObjectProperty ;
+
+       rdfs:subPropertyOf knora-base:hasValue ;
+
+       rdfs:label "Boolescher Wert"@de ,
+                  "Valeur booléenne"@fr ,
+                  "Valore booleano"@it ,
+                  "Boolean value"@en ;
+
+       knora-base:subjectClassConstraint :FreeTest ;
+
+       knora-base:objectClassConstraint knora-base:BooleanValue ;
+
+       salsah-gui:guiElement salsah-gui:Checkbox .
+
+
+:FreeTest rdf:type owl:Class ;
+
+      rdfs:subClassOf knora-base:Resource ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasText ;
+                         owl:minCardinality "1"^^xsd:nonNegativeInteger ;
+                         salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                         rdf:type owl:Restriction ;
+                         owl:onProperty :hasBoolean ;
+                         owl:maxCardinality "1"^^xsd:nonNegativeInteger ;
+                         salsah-gui:guiOrder "2"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasDecimal ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "3"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasInteger ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                      ] ;
+
+      knora-base:resourceIcon "thing.png" ;
+
+      rdfs:label "FT de"@de ,
+                 "FT fr"@fr ,
+                 "FT it"@it ,
+                 "FT en"@en ;
+
+      rdfs:comment """A comment for FT."""@de .
+
+
+:ShortFreeTest rdf:type owl:Class ;
+    rdfs:subClassOf :FreeTest ;
+    rdfs:label "SFT de"@de ,
+               "SFT fr"@fr ,
+               "SFT it"@it ,
+               "SFT en"@en ;
+
+    rdfs:comment """A comment for SFT."""@de .

@@ -52,18 +52,18 @@ import scala.jdk.CollectionConverters._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
 /**
-  * Performs SPARQL queries and updates using an embedded Jena TDB triplestore.
-  */
+ * Performs SPARQL queries and updates using an embedded Jena TDB triplestore.
+ */
 class JenaTDBActor extends Actor with ActorLogging {
 
-  private val system = context.system
+  private val system                                              = context.system
   private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-  private val settings = KnoraSettings(system)
+  private val settings                                            = KnoraSettings(system)
 
-  private val persist = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.persisted")
+  private val persist          = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.persisted")
   private val loadExistingData = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.loadExistingData")
-  private val storagePath = Paths.get(settings.tripleStoreConfig.getString("embedded-jena-tdb.storage-path"))
-  private val tdbStoragePath = Paths.get(storagePath + "/db")
+  private val storagePath      = Paths.get(settings.tripleStoreConfig.getString("embedded-jena-tdb.storage-path"))
+  private val tdbStoragePath   = Paths.get(storagePath.toString + "/db")
 
   private val tsType = settings.triplestoreType
 
@@ -82,9 +82,9 @@ class JenaTDBActor extends Actor with ActorLogging {
   var initialized: Boolean = false
 
   /**
-    * The actor waits with processing messages until preStart is finished, so that the loading of data can finish
-    * before any requests are processed.
-    */
+   * The actor waits with processing messages until preStart is finished, so that the loading of data can finish
+   * before any requests are processed.
+   */
   override def preStart(): Unit = {
     if (persist) {
       if (reloadDataOnStart || !loadExistingData) {
@@ -118,11 +118,11 @@ class JenaTDBActor extends Actor with ActorLogging {
   }
 
   /**
-    * Receives a message requesting a SPARQL query or update, and returns an appropriate response message or
-    * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-    * method first returns `Failure` to the sender, then throws an exception.
-    */
-  def receive = {
+   * Receives a message requesting a SPARQL query or update, and returns an appropriate response message or
+   * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
+   * method first returns `Failure` to the sender, then throws an exception.
+   */
+  def receive: Receive = {
     case SparqlSelectRequest(sparqlSelectString) =>
       future2Message(sender(), executeSparqlSelectQuery(sparqlSelectString), log)
     case SparqlUpdateRequest(sparqlUpdateString) =>
@@ -132,18 +132,19 @@ class JenaTDBActor extends Actor with ActorLogging {
     case DropAllTRepositoryContent() => future2Message(sender(), Future(dropAllTriplestoreContent()), log)
     case InsertRepositoryContent(rdfDataObjects) =>
       future2Message(sender(), Future(insertDataIntoTriplestore(rdfDataObjects)), log)
-    case HelloTriplestore(msg) if msg == tsType => sender ! HelloTriplestore(tsType)
+    case HelloTriplestore(msg) if msg == tsType => sender() ! HelloTriplestore(tsType)
     case other =>
-      sender ! Status.Failure(
-        UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}"))
+      sender() ! Status.Failure(
+        UnexpectedMessageException(s"Unexpected message $other of type ${other.getClass.getCanonicalName}")
+      )
   }
 
   /**
-    * Submits a SPARQL query to the embedded Jena TDB store and returns the response as a [[SparqlSelectResult]].
-    *
-    * @param queryString the SPARQL request to be submitted.
-    * @return [[SparqlSelectResult]].
-    */
+   * Submits a SPARQL query to the embedded Jena TDB store and returns the response as a [[SparqlSelectResult]].
+   *
+   * @param queryString the SPARQL request to be submitted.
+   * @return [[SparqlSelectResult]].
+   */
   private def executeSparqlSelectQuery(queryString: String): Future[SparqlSelectResult] = {
 
     // Start read transaction
@@ -154,9 +155,9 @@ class JenaTDBActor extends Actor with ActorLogging {
       //println("# Content of dataset at beginning of query")
       //SSE.write(this.dataset)
 
-      val query: Query = QueryFactory.create(queryString)
+      val query: Query          = QueryFactory.create(queryString)
       val qExec: QueryExecution = QueryExecutionFactory.create(query, this.dataset)
-      val resultSet: ResultSet = qExec.execSelect()
+      val resultSet: ResultSet  = qExec.execSelect()
 
       /*
             Attention: the ResultSet can be only used once, i.e. it is not there anymore after use!
@@ -170,27 +171,31 @@ class JenaTDBActor extends Actor with ActorLogging {
 
       // Convert the results to a list of VariableResultsRows.
       val variableResultsRows = resultSet.asScala.foldLeft(Vector.empty[VariableResultsRow]) { (rowAcc, row) =>
-        val mapToWrap = resultVars.asScala.foldLeft(Map.empty[String, String]) {
-          case (varAcc, varName) =>
-            Option(row.get(varName)) match {
-              case Some(literal: Literal) if literal.getLexicalForm.isEmpty =>
-                varAcc // Omit variables with empty values.
+        val mapToWrap = resultVars.asScala.foldLeft(Map.empty[String, String]) { case (varAcc, varName) =>
+          Option(row.get(varName)) match {
+            case Some(literal: Literal) if literal.getLexicalForm.isEmpty =>
+              varAcc // Omit variables with empty values.
 
-              case Some(literal: Literal) =>
-                varAcc + (varName -> literal.getLexicalForm)
+            case Some(literal: Literal) =>
+              varAcc + (varName -> literal.getLexicalForm)
 
-              case Some(otherValue) =>
-                varAcc + (varName -> otherValue.toString)
+            case Some(otherValue) =>
+              varAcc + (varName -> otherValue.toString)
 
-              case None => varAcc
-            }
+            case None => varAcc
+          }
         }
 
         // Omit empty rows.
         if (mapToWrap.nonEmpty) {
-          rowAcc :+ VariableResultsRow(new ErrorHandlingMap(mapToWrap, { key: String =>
-            s"No value found for SPARQL query variable '$key' in query result row"
-          }))
+          rowAcc :+ VariableResultsRow(
+            new ErrorHandlingMap(
+              mapToWrap,
+              { key: String =>
+                s"No value found for SPARQL query variable '$key' in query result row"
+              }
+            )
+          )
         } else {
           rowAcc
         }
@@ -224,12 +229,12 @@ class JenaTDBActor extends Actor with ActorLogging {
   }
 
   /**
-    * Submits a SPARQL update request to the embedded Jena TDB store, and returns a [[SparqlUpdateResponse]] if the
-    * operation completed successfully.
-    *
-    * @param updateString the SPARQL update to be submitted.
-    * @return a [[SparqlUpdateResponse]].
-    */
+   * Submits a SPARQL update request to the embedded Jena TDB store, and returns a [[SparqlUpdateResponse]] if the
+   * operation completed successfully.
+   *
+   * @param updateString the SPARQL update to be submitted.
+   * @return a [[SparqlUpdateResponse]].
+   */
   private def executeSparqlUpdateQuery(updateString: String): Future[SparqlUpdateResponse] = {
     // println("=============================")
     // println(updateString)
@@ -266,13 +271,15 @@ class JenaTDBActor extends Actor with ActorLogging {
   }
 
   /**
-    * Reloads the contents of the triplestore from RDF data files.
-    *
-    * @param rdfDataObjects a list of [[RdfDataObject]] instances describing the files to be loaded.
-    * @return an [[ResetRepositoryContentACK]] indicating that the operation completed successfully.
-    */
-  private def resetTripleStoreContent(rdfDataObjects: Seq[RdfDataObject],
-                                      prependDefaults: Boolean = true): Future[ResetRepositoryContentACK] = {
+   * Reloads the contents of the triplestore from RDF data files.
+   *
+   * @param rdfDataObjects a list of [[RdfDataObject]] instances describing the files to be loaded.
+   * @return an [[ResetRepositoryContentACK]] indicating that the operation completed successfully.
+   */
+  private def resetTripleStoreContent(
+    rdfDataObjects: Seq[RdfDataObject],
+    prependDefaults: Boolean = true
+  ): Future[ResetRepositoryContentACK] = {
 
     val resetTriplestoreResult = for {
 
@@ -293,10 +300,10 @@ class JenaTDBActor extends Actor with ActorLogging {
   }
 
   /**
-    * Drops all content from the triplestore.
-    *
-    * @return a [[DropAllRepositoryContentACK]]
-    */
+   * Drops all content from the triplestore.
+   *
+   * @return a [[DropAllRepositoryContentACK]]
+   */
   private def dropAllTriplestoreContent(): DropAllRepositoryContentACK = {
 
     // log.debug("ResetTripleStoreContent ...")
@@ -334,11 +341,11 @@ class JenaTDBActor extends Actor with ActorLogging {
   }
 
   /**
-    * Inserts the data referenced in each [[RdfDataObject]]
-    *
-    * @param rdfDataObjects a sequence holding [[RdfDataObject]]
-    * @return a [[InsertTriplestoreContentACK]]
-    */
+   * Inserts the data referenced in each [[RdfDataObject]]
+   *
+   * @param rdfDataObjects a sequence holding [[RdfDataObject]]
+   * @return a [[InsertTriplestoreContentACK]]
+   */
   private def insertDataIntoTriplestore(rdfDataObjects: Seq[RdfDataObject]): InsertTriplestoreContentACK = {
 
     // log.debug("ResetTripleStoreContent ...")
@@ -382,17 +389,17 @@ class JenaTDBActor extends Actor with ActorLogging {
   }
 
   /**
-    * Used to manually refresh the Lucene index after changing data in the triplestore.
-    *
-    * @return a [[Boolean]] denoting if the update was successful
-    */
+   * Used to manually refresh the Lucene index after changing data in the triplestore.
+   *
+   * @return a [[Boolean]] denoting if the update was successful
+   */
   private def updateIndex(): Boolean = {
 
     this.dataset.begin(ReadWrite.WRITE)
     try {
       // get index.
       val dgt: DatasetGraphText = dataset.asDatasetGraph().asInstanceOf[DatasetGraphText]
-      val textIndex = dgt.getTextIndex
+      val textIndex             = dgt.getTextIndex
 
       // get entity definitions from index
       val entityDefinition = textIndex.getDocDef
@@ -405,7 +412,7 @@ class JenaTDBActor extends Actor with ActorLogging {
         for (prop: Node <- entityDefinition.getPredicates(field).asScala) {
           val quadIter: Iterator[Quad] = dgt.find(Node.ANY, Node.ANY, prop, Node.ANY).asScala
           while (quadIter.hasNext) {
-            val quad: Quad = quadIter.next()
+            val quad: Quad     = quadIter.next()
             val entity: Entity = TextQueryFuncs.entityFromQuad(entityDefinition, quad)
             if (entity != null) {
               textIndex.addEntity(entity)
@@ -427,17 +434,17 @@ class JenaTDBActor extends Actor with ActorLogging {
   }
 
   /**
-    * Creates the dataset with a Lucene index attached. The triplestore dataset is either disk-backed or in-memory,
-    * depending on the settings. The Lucene index is always in-memory.
-    *
-    * @return a [[Dataset]]
-    */
+   * Creates the dataset with a Lucene index attached. The triplestore dataset is either disk-backed or in-memory,
+   * depending on the settings. The Lucene index is always in-memory.
+   *
+   * @return a [[Dataset]]
+   */
   private def getDataset: Dataset = {
 
     // Define which fields should be indexed by lucene
     val knoraBase = "http://www.knora.org/ontology/knora-base#"
-    val rdfs = "http://www.w3.org/2000/01/rdf-schema#"
-    val entDef = new EntityDefinition("uri", "text", ResourceFactory.createProperty(knoraBase, "valueHasString"))
+    val rdfs      = "http://www.w3.org/2000/01/rdf-schema#"
+    val entDef    = new EntityDefinition("uri", "text", ResourceFactory.createProperty(knoraBase, "valueHasString"))
     entDef.setPrimaryPredicate(ResourceFactory.createProperty(rdfs, "label"))
     entDef.setPrimaryPredicate(ResourceFactory.createProperty(knoraBase, "valueHasComment"))
 

@@ -52,8 +52,8 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
 
 /**
-  * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
-  */
+ * R(oute)2R(esponder) Spec base class. Please, for any new E2E tests, use E2ESpec.
+ */
 class R2RSpec
     extends Core
     with StartupUtils
@@ -67,8 +67,10 @@ class R2RSpec
   /* needed by the core trait */
   implicit lazy val _system: ActorSystem = ActorSystem(
     actorSystemNameFrom(getClass),
-    TestContainers.PortConfig.withFallback(
-      ConfigFactory.parseString(testConfigSource).withFallback(ConfigFactory.load())))
+    TestContainersAll.PortConfig.withFallback(
+      ConfigFactory.parseString(testConfigSource).withFallback(ConfigFactory.load())
+    )
+  )
 
   implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(_system)
 
@@ -93,11 +95,12 @@ class R2RSpec
 
   lazy val appActor: ActorRef = system.actorOf(
     Props(new ApplicationActor with LiveManagers).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME)
+    name = APPLICATION_MANAGER_ACTOR_NAME
+  )
 
   // The main application actor forwards messages to the responder manager and the store manager.
   val responderManager: ActorRef = appActor
-  val storeManager: ActorRef = appActor
+  val storeManager: ActorRef     = appActor
 
   val routeData: KnoraRouteData = KnoraRouteData(
     system = system,
@@ -121,14 +124,13 @@ class R2RSpec
     loadTestData(rdfDataObjects)
   }
 
-  override def afterAll(): () = {
+  override def afterAll(): () =
     /* Stop the server when everything else has finished */
     appActor ! AppStop()
-  }
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-    val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
+    val responseBodyStr                    = Await.result(responseBodyFuture, 5.seconds)
     JsonLDUtil.parseJsonLD(responseBodyStr)
   }
 
@@ -146,35 +148,38 @@ class R2RSpec
     implicit val timeout: Timeout = Timeout(settings.defaultTimeout)
     Await.result(appActor ? ResetRepositoryContent(rdfDataObjects), 5 minutes)
 
-    Await.result(appActor ? LoadOntologiesRequestV2(
-                   featureFactoryConfig = defaultFeatureFactoryConfig,
-                   requestingUser = KnoraSystemInstances.Users.SystemUser
-                 ),
-                 30 seconds)
+    Await.result(
+      appActor ? LoadOntologiesRequestV2(
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = KnoraSystemInstances.Users.SystemUser
+      ),
+      30 seconds
+    )
   }
 
   /**
-    * Reads or writes a test data file.
-    * The written test data files can be found under:
-    * ./bazel-out/darwin-fastbuild/testlogs/<package-name>/<target-name>/test.outputs/outputs.zip
-    *
-    * @param responseAsString the API response received from Knora.
-    * @param file             the file in which the expected API response is stored.
-    * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
-    * @return the expected response.
-    */
-  protected def readOrWriteTextFile(responseAsString: String, file: Path, writeFile: Boolean = false): String = {
+   * Reads or writes a test data file.
+   * The written test data files can be found under:
+   * ./bazel-out/darwin-fastbuild/testlogs/<package-name>/<target-name>/test.outputs/outputs.zip
+   *
+   * @param responseAsString the API response received from Knora.
+   * @param file             the file in which the expected API response is stored.
+   * @param writeFile        if `true`, writes the response to the file and returns it, otherwise returns the current contents of the file.
+   * @return the expected response.
+   */
+  protected def readOrWriteTextFile(responseAsString: String, file: Path, writeFile: Boolean = false): String =
     if (writeFile) {
       // Per default only read access is allowed in the bazel sandbox.
       // This workaround allows to save test output.
       val testOutputDir: Path = Paths.get(sys.env("TEST_UNDECLARED_OUTPUTS_DIR"))
-      val newOutputFile = testOutputDir.resolve(file)
+      val newOutputFile       = testOutputDir.resolve(file)
       Files.createDirectories(newOutputFile.getParent)
-      FileUtil.writeTextFile(newOutputFile,
-                             responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL"))
+      FileUtil.writeTextFile(
+        newOutputFile,
+        responseAsString.replaceAll(settings.externalSipiIIIFGetUrl, "IIIF_BASE_URL")
+      )
       responseAsString
     } else {
       FileUtil.readTextFile(file).replaceAll("IIIF_BASE_URL", settings.externalSipiIIIFGetUrl)
     }
-  }
 }

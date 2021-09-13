@@ -321,10 +321,10 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
     case GetAppState() =>
       logger.debug("ApplicationStateActor - GetAppState - value: {}", appState)
-      sender ! appState
+      sender() ! appState
 
     case ActorReady() =>
-      sender ! ActorReadyAck()
+      sender() ! ActorReadyAck()
 
     case SetAllowReloadOverHTTPState(value) =>
       logger.debug("ApplicationStateActor - SetAllowReloadOverHTTPState - value: {}", value)
@@ -332,7 +332,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
     case GetAllowReloadOverHTTPState() =>
       logger.debug("ApplicationStateActor - GetAllowReloadOverHTTPState - value: {}", allowReloadOverHTTPState)
-      sender ! (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP)
+      sender() ! (allowReloadOverHTTPState | knoraSettings.allowReloadOverHTTP)
 
     case SetPrintConfigExtendedState(value) =>
       logger.debug("ApplicationStateActor - SetPrintConfigExtendedState - value: {}", value)
@@ -340,7 +340,7 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
     case GetPrintConfigExtendedState() =>
       logger.debug("ApplicationStateActor - GetPrintConfigExtendedState - value: {}", printConfigState)
-      sender ! (printConfigState | knoraSettings.printExtendedConfig)
+      sender() ! (printConfigState | knoraSettings.printExtendedConfig)
 
     /* check repository request */
     case CheckTriplestore() =>
@@ -481,11 +481,8 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
   def appStart(ignoreRepository: Boolean, requiresIIIFService: Boolean, retryCnt: Int): Unit = {
 
     val bindingFuture: Future[Http.ServerBinding] = Http()
-      .bindAndHandle(
-        Route.handlerFlow(apiRoutes),
-        knoraSettings.internalKnoraApiHost,
-        knoraSettings.internalKnoraApiPort
-      )
+      .newServerAt(knoraSettings.internalKnoraApiHost, knoraSettings.internalKnoraApiPort)
+      .bindFlow(Route.toFlow(apiRoutes))
 
     bindingFuture onComplete {
       case Success(_) =>

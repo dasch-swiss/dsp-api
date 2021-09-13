@@ -249,6 +249,7 @@ test-data/v2/resources/testding.json
 test-data/v2/resources/thing-with-picture.json
 test-data/v2/resources/update-resource-metadata-request-with-last-mod-date.json
 test-data/v2/resources/update-resource-metadata-request.json
+test-data/v2/resources/update-resource-metadata-response-with-last-mod-date.json
 test-data/v2/resources/update-resource-metadata-response.json
 test-data/v2/search/
 test-data/v2/search/thing-links.json

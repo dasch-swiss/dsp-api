@@ -49,8 +49,8 @@ import spray.json.JsValue
 import scala.concurrent.duration._
 
 /**
-  * Static data for testing [[ResourcesResponderV1]].
-  */
+ * Static data for testing [[ResourcesResponderV1]].
+ */
 object ResourcesResponderV1Spec {
   private val config: Config = ConfigFactory.parseString("""
          akka.loglevel = "DEBUG"
@@ -63,7 +63,8 @@ object ResourcesResponderV1Spec {
         id = "http://rdfh.ch/0803/2a6221216701",
         value = Vector("Reise ins Heilige Land", "Reysen und wanderschafften durch das Gelobte Land", "Itinerarius"),
         rights = Some(6)
-      ))
+      )
+    )
   )
 
   private val ReiseInsHeiligelandOneValueRestrictedToBook: ResourceSearchResponseV1 = ResourceSearchResponseV1(
@@ -72,7 +73,8 @@ object ResourcesResponderV1Spec {
         id = "http://rdfh.ch/0803/2a6221216701",
         value = Vector("Reise ins Heilige Land"),
         rights = Some(6)
-      ))
+      )
+    )
   )
 
   private val propertiesGetResponseV1Region = PropertiesGetResponseV1(
@@ -87,13 +89,16 @@ object ResourcesResponderV1Spec {
           "",
           "0",
           Vector(
-            PropertyGetValueV1(None,
-                               None,
-                               "Siehe Seite c5v",
-                               TextValueSimpleV1("Siehe Seite c5v"),
-                               "http://rdfh.ch/0803/021ec18f1735/values/8a96c303338201",
-                               None,
-                               None))
+            PropertyGetValueV1(
+              None,
+              None,
+              "Siehe Seite c5v",
+              TextValueSimpleV1("Siehe Seite c5v"),
+              "http://rdfh.ch/0803/021ec18f1735/values/8a96c303338201",
+              None,
+              None
+            )
+          )
         ),
         PropertyGetV1(
           "http://www.knora.org/ontology/knora-base#hasColor",
@@ -104,13 +109,16 @@ object ResourcesResponderV1Spec {
           "ncolors=8",
           "0",
           Vector(
-            PropertyGetValueV1(None,
-                               None,
-                               "#ff3333",
-                               ColorValueV1("#ff3333"),
-                               "http://rdfh.ch/0803/021ec18f1735/values/10ea6976338201",
-                               None,
-                               None))
+            PropertyGetValueV1(
+              None,
+              None,
+              "#ff3333",
+              ColorValueV1("#ff3333"),
+              "http://rdfh.ch/0803/021ec18f1735/values/10ea6976338201",
+              None,
+              None
+            )
+          )
         ),
         PropertyGetV1(
           "http://www.knora.org/ontology/knora-base#hasGeometry",
@@ -120,16 +128,19 @@ object ResourcesResponderV1Spec {
           Some("geometry"),
           "",
           "0",
-          Vector(PropertyGetValueV1(
-            None,
-            None,
-            "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}",
-            GeomValueV1(
-              "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}"),
-            "http://rdfh.ch/0803/021ec18f1735/values/4dc0163d338201",
-            None,
-            None
-          ))
+          Vector(
+            PropertyGetValueV1(
+              None,
+              None,
+              "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}",
+              GeomValueV1(
+                "{\"status\":\"active\",\"lineColor\":\"#ff3333\",\"lineWidth\":2,\"points\":[{\"x\":0.08098591549295775,\"y\":0.16741071428571427},{\"x\":0.7394366197183099,\"y\":0.7299107142857143}],\"type\":\"rectangle\",\"original_index\":0}"
+              ),
+              "http://rdfh.ch/0803/021ec18f1735/values/4dc0163d338201",
+              None,
+              None
+            )
+          )
         ),
         PropertyGetV1(
           "http://www.knora.org/ontology/knora-base#isRegionOf",
@@ -139,21 +150,27 @@ object ResourcesResponderV1Spec {
           None,
           "restypeid=http://www.knora.org/ontology/knora-base#Representation",
           "0",
-          Vector(PropertyGetValueV1(
-            None,
-            None,
-            "http://rdfh.ch/0803/9d626dc76c03",
-            LinkV1("http://rdfh.ch/0803/9d626dc76c03",
-                   Some("u1r"),
-                   Some("http://www.knora.org/ontology/0803/incunabula#page"),
-                   None,
-                   None),
-            "http://rdfh.ch/0803/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
-            None,
-            None
-          ))
+          Vector(
+            PropertyGetValueV1(
+              None,
+              None,
+              "http://rdfh.ch/0803/9d626dc76c03",
+              LinkV1(
+                "http://rdfh.ch/0803/9d626dc76c03",
+                Some("u1r"),
+                Some("http://www.knora.org/ontology/0803/incunabula#page"),
+                None,
+                None
+              ),
+              "http://rdfh.ch/0803/021ec18f1735/values/fbcb88bf-cd16-4b7b-b843-51e17c0669d7",
+              None,
+              None
+            )
+          )
         )
-      )))
+      )
+    )
+  )
 
   private val hasOtherThingIncomingLink = IncomingV1(
     value = Some("A thing that only project members can see"),
@@ -166,7 +183,8 @@ object ResourcesResponderV1Spec {
       preview = None,
       restype_iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       restype_description = Some(
-        "'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking"),
+        "'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking"
+      ),
       restype_label = Some("Ding"),
       restype_name = Some("http://www.knora.org/ontology/0001/anything#Thing"),
       restype_id = "http://www.knora.org/ontology/0001/anything#Thing",
@@ -190,7 +208,8 @@ object ResourcesResponderV1Spec {
       preview = None,
       restype_iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       restype_description = Some(
-        "'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking"),
+        "'The whole world is full of things, which means there's a real need for someone to go searching for them. And that's exactly what a thing-searcher does.' --Pippi Longstocking"
+      ),
       restype_label = Some("Ding"),
       restype_name = Some("http://www.knora.org/ontology/0001/anything#Thing"),
       restype_id = "http://www.knora.org/ontology/0001/anything#Thing",
@@ -218,7 +237,8 @@ object ResourcesResponderV1Spec {
         valueResourceClass = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         valueLabel = Some("Another thing that only project members can see"),
         targetResourceIri = "http://rdfh.ch/0001/project-thing-2"
-      )),
+      )
+    ),
     occurrence = Some("0-n"),
     attributes = "restypeid=http://www.knora.org/ontology/0001/anything#Thing",
     label = Some("Ein anderes Ding"),
@@ -243,7 +263,8 @@ object ResourcesResponderV1Spec {
         valueResourceClass = Some("http://www.knora.org/ontology/0001/anything#Thing"),
         valueLabel = Some("Another thing that only project members can see"),
         targetResourceIri = "http://rdfh.ch/0001/project-thing-2"
-      )),
+      )
+    ),
     occurrence = Some("0-n"),
     attributes = "restypeid=http://www.knora.org/ontology/knora-base#Resource",
     label = Some("hat Standoff Link zu"),
@@ -598,7 +619,8 @@ object ResourcesResponderV1Spec {
         propertyIri = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo",
         target = "http://rdfh.ch/0001/a-thing",
         source = "http://rdfh.ch/0001/a-thing-with-text-values"
-      )),
+      )
+    ),
     nodes = Vector(
       GraphNodeV1(
         resourceClassLabel = "Ding",
@@ -623,13 +645,14 @@ object ResourcesResponderV1Spec {
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing",
         resourceLabel = "Another thing",
         resourceIri = "http://rdfh.ch/0001/another-thing"
-      ))
+      )
+    )
   )
 }
 
 /**
-  * Tests [[ResourcesResponderV1]].
-  */
+ * Tests [[ResourcesResponderV1]].
+ */
 class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config) with ImplicitSender {
 
   import ResourcesResponderV1Spec._
@@ -646,7 +669,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
   /* we need to run our app with the mocked sipi actor */
   override lazy val appActor: ActorRef = system.actorOf(
     Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME)
+    name = APPLICATION_MANAGER_ACTOR_NAME
+  )
 
   // The default timeout for receiving reply messages from actors.
   private val timeout = 60.seconds
@@ -671,27 +695,28 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         .toSource(sortedReceivedProps)}"
     )
 
-    sortedExpectedProps.zip(sortedReceivedProps).foreach {
-      case (expectedProp: PropertyV1, receivedProp: PropertyV1) =>
-        // sort property attributes
-        val expectedPropWithSortedAttr = expectedProp.copy(
-          attributes = expectedProp.attributes.toSeq.sorted.unwrap
-        )
+    sortedExpectedProps.zip(sortedReceivedProps).foreach { case (expectedProp: PropertyV1, receivedProp: PropertyV1) =>
+      // sort property attributes
+      val expectedPropWithSortedAttr = expectedProp.copy(
+        attributes = expectedProp.attributes.toSeq.sorted.unwrap
+      )
 
-        val receivedPropWithSortedAttr = receivedProp.copy(
-          attributes = receivedProp.attributes.toSeq.sorted.unwrap
-        )
+      val receivedPropWithSortedAttr = receivedProp.copy(
+        attributes = receivedProp.attributes.toSeq.sorted.unwrap
+      )
 
-        assert(
-          receivedPropWithSortedAttr == expectedPropWithSortedAttr,
-          s"These props do not match:\n********** Expected:\n${MessageUtil
-            .toSource(expectedProp)}\n********** Received:\n${MessageUtil.toSource(receivedProp)}"
-        )
+      assert(
+        receivedPropWithSortedAttr == expectedPropWithSortedAttr,
+        s"These props do not match:\n********** Expected:\n${MessageUtil
+          .toSource(expectedProp)}\n********** Received:\n${MessageUtil.toSource(receivedProp)}"
+      )
     }
   }
 
-  private def compareResourcePartOfContextResponses(received: ResourceContextResponseV1,
-                                                    expected: ResourceContextResponseV1): Unit = {
+  private def compareResourcePartOfContextResponses(
+    received: ResourceContextResponseV1,
+    expected: ResourceContextResponseV1
+  ): Unit = {
     val receivedContext = received.resource_context
     val expectedContext = expected.resource_context
 
@@ -702,33 +727,36 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     assert(receivedContext.parent_resinfo == expectedContext.parent_resinfo, "parent_resinfo does not match")
   }
 
-  private def compareResourceSearchResults(received: ResourceSearchResponseV1,
-                                           expected: ResourceSearchResponseV1): Unit = {
-
+  private def compareResourceSearchResults(
+    received: ResourceSearchResponseV1,
+    expected: ResourceSearchResponseV1
+  ): Unit =
     assert(received.resources == expected.resources, "resources did not match")
-  }
 
   private def checkResourceCreation(received: ResourceCreateResponseV1, expected: Map[IRI, Seq[ApiValueV1]]): Unit = {
     // sort values by their string representation
     val sortedValuesReceived: Map[IRI, Seq[ResourceCreateValueResponseV1]] = received.results.map {
       case (propIri, propValues: Seq[ResourceCreateValueResponseV1]) =>
-        (propIri, propValues.sortBy { valueObject: ResourceCreateValueResponseV1 =>
-          val stringValue = valueObject.value.textval.map {
-            case (valType: LiteralValueType.Value, value: String) => value // get string and ignore value type
-          }.head // each value is represented by a map consisting of only one item (e.g. string -> "book title")
-          stringValue
-        })
+        (
+          propIri,
+          propValues.sortBy { valueObject: ResourceCreateValueResponseV1 =>
+            val stringValue = valueObject.value.textval.map { case (valType: LiteralValueType.Value, value: String) =>
+              value // get string and ignore value type
+            }.head  // each value is represented by a map consisting of only one item (e.g. string -> "book title")
+            stringValue
+          }
+        )
     }
 
     // sort values by their string representation
-    val sortedValuesExpected: Map[IRI, Seq[ResourceCreateValueResponseV1]] = expected
-      .map {
-        case (propIri, propValues) => (propIri, propValues.sortBy(_.toString))
-      }
-      .map {
-        // turn the expected ApiValueV1s in ResourceCreateValueResponseV1 (these are returned by the actor).
-        case (propIri: IRI, propValues: Seq[ApiValueV1]) =>
-          (propIri, propValues.map { propValue: ApiValueV1 =>
+    val sortedValuesExpected: Map[IRI, Seq[ResourceCreateValueResponseV1]] = expected.map {
+      case (propIri, propValues) => (propIri, propValues.sortBy(_.toString))
+    }.map {
+      // turn the expected ApiValueV1s in ResourceCreateValueResponseV1 (these are returned by the actor).
+      case (propIri: IRI, propValues: Seq[ApiValueV1]) =>
+        (
+          propIri,
+          propValues.map { propValue: ApiValueV1 =>
             val valueResponse = CreateValueResponseV1(
               value = propValue,
               rights = 6,
@@ -742,27 +770,27 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
               propertyIri = propIri,
               valueResponse = valueResponse
             )
-          })
-      }
+          }
+        )
+    }
 
     // compare expected and received values
-    sortedValuesExpected.foreach {
-      case (propIri, propValuesExpected) =>
-        assert(propValuesExpected.size == sortedValuesReceived(propIri).size, "number of props did not match")
+    sortedValuesExpected.foreach { case (propIri, propValuesExpected) =>
+      assert(propValuesExpected.size == sortedValuesReceived(propIri).size, "number of props did not match")
 
-        (propValuesExpected, sortedValuesReceived(propIri)).zipped.foreach {
-          case (expected: ResourceCreateValueResponseV1, received: ResourceCreateValueResponseV1) =>
-            assert(received.value.textval == expected.value.textval, "textval did not match")
-            assert(received.value.ival == expected.value.ival, "ival did not match")
-            assert(received.value.dval == expected.value.dval, "dval did not match")
-            assert(received.value.dateval1 == expected.value.dateval1, "dateval1 did not match")
-            assert(received.value.dateval2 == expected.value.dateval2, "dateval2 did not match")
-            assert(received.value.calendar == expected.value.calendar, "calendar did not match")
-            assert(received.value.dateprecision1 == expected.value.dateprecision1, "dateprecision1 did not match")
-            assert(received.value.dateprecision2 == expected.value.dateprecision2, "dateprecision2 did not match")
-            assert(received.value.timeval1 == expected.value.timeval1, "timeval1 did not match")
-            assert(received.value.timeval2 == expected.value.timeval2, "timeval2 did not match")
-        }
+      propValuesExpected.lazyZip(sortedValuesReceived(propIri)).foreach {
+        case (expected: ResourceCreateValueResponseV1, received: ResourceCreateValueResponseV1) =>
+          assert(received.value.textval == expected.value.textval, "textval did not match")
+          assert(received.value.ival == expected.value.ival, "ival did not match")
+          assert(received.value.dval == expected.value.dval, "dval did not match")
+          assert(received.value.dateval1 == expected.value.dateval1, "dateval1 did not match")
+          assert(received.value.dateval2 == expected.value.dateval2, "dateval2 did not match")
+          assert(received.value.calendar == expected.value.calendar, "calendar did not match")
+          assert(received.value.dateprecision1 == expected.value.dateprecision1, "dateprecision1 did not match")
+          assert(received.value.dateprecision2 == expected.value.dateprecision2, "dateprecision2 did not match")
+          assert(received.value.timeval1 == expected.value.timeval1, "timeval1 did not match")
+          assert(received.value.timeval2 == expected.value.timeval2, "timeval2 did not match")
+      }
     }
 
   }
@@ -777,51 +805,52 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
     storeManager ! SparqlSelectRequest(lastModSparqlQuery)
 
-    expectMsgPF(timeout) {
-      case response: SparqlSelectResult =>
-        val rows = response.results.bindings
-        assert(rows.size <= 1, s"Resource $resourceIri has more than one instance of knora-base:lastModificationDate")
+    expectMsgPF(timeout) { case response: SparqlSelectResult =>
+      val rows = response.results.bindings
+      assert(rows.size <= 1, s"Resource $resourceIri has more than one instance of knora-base:lastModificationDate")
 
-        if (rows.size == 1) {
-          Some(rows.head.rowMap("lastModificationDate"))
-        } else {
-          None
-        }
+      if (rows.size == 1) {
+        Some(rows.head.rowMap("lastModificationDate"))
+      } else {
+        None
+      }
     }
   }
 
-  private def comparePropertiesGetResponse(received: PropertiesGetResponseV1,
-                                           expected: PropertiesGetResponseV1): Unit = {
+  private def comparePropertiesGetResponse(
+    received: PropertiesGetResponseV1,
+    expected: PropertiesGetResponseV1
+  ): Unit = {
 
-    assert(received.properties.properties.length == expected.properties.properties.length,
-           "The length of given properties is not correct.")
+    assert(
+      received.properties.properties.length == expected.properties.properties.length,
+      "The length of given properties is not correct."
+    )
 
-    expected.properties.properties
-      .sortBy {
-        // sort by property Iri
-        prop =>
-          prop.pid
-      }
+    expected.properties.properties.sortBy {
+      // sort by property Iri
+      prop =>
+        prop.pid
+    }
       .zip(received.properties.properties.sortBy { prop =>
         prop.pid
       })
-      .foreach {
-        case (expectedProp: PropertyGetV1, receivedProp: PropertyGetV1) =>
-          // sort the values of each property
-          val expectedPropValuesSorted = expectedProp.values.sortBy(values => values.textval)
+      .foreach { case (expectedProp: PropertyGetV1, receivedProp: PropertyGetV1) =>
+        // sort the values of each property
+        val expectedPropValuesSorted = expectedProp.values.sortBy(values => values.textval)
 
-          val receivedPropValuesSorted = receivedProp.values.sortBy(values => values.textval)
+        val receivedPropValuesSorted = receivedProp.values.sortBy(values => values.textval)
 
-          // create PropertyGetV1 with sorted values
-          val expectedPropSorted = expectedProp.copy(
-            values = expectedPropValuesSorted
-          )
+        // create PropertyGetV1 with sorted values
+        val expectedPropSorted = expectedProp.copy(
+          values = expectedPropValuesSorted
+        )
 
-          val receivedPropSorted = receivedProp.copy(
-            values = receivedPropValuesSorted
-          )
+        val receivedPropSorted = receivedProp.copy(
+          values = receivedPropValuesSorted
+        )
 
-          assert(receivedPropSorted == expectedPropSorted, "Property did not match")
+        assert(receivedPropSorted == expectedPropSorted, "Property did not match")
       }
   }
 
@@ -872,8 +901,10 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       PermissionADM.restrictedViewPermission("http://www.knora.org/ontology/knora-admin#UnknownUser")
     )
 
-    responderManager ! ObjectAccessPermissionsForResourceGetADM(resourceIri = newBookResourceIri.get,
-                                                                requestingUser = KnoraSystemInstances.Users.SystemUser)
+    responderManager ! ObjectAccessPermissionsForResourceGetADM(
+      resourceIri = newBookResourceIri.get,
+      requestingUser = KnoraSystemInstances.Users.SystemUser
+    )
     expectMsgPF(timeout) {
       case Some(permission) =>
         val perms = permission.asInstanceOf[ObjectAccessPermissionADM].hasPermissions
@@ -886,27 +917,33 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
   "The resources responder" should {
     "return a full description of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
       // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a
-      responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0803/c5058f3a",
-                                                  featureFactoryConfig = defaultFeatureFactoryConfig,
-                                                  userADM = SharedTestDataADM.incunabulaMemberUser)
+      responderManager ! ResourceFullGetRequestV1(
+        iri = "http://rdfh.ch/0803/c5058f3a",
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        userADM = SharedTestDataADM.incunabulaMemberUser
+      )
 
-      expectMsgPF(timeout) {
-        case response: ResourceFullResponseV1 =>
-          compareResourceFullResponses(received = response,
-                                       expected = ResourcesResponderV1SpecFullData.expectedBookResourceFullResponse)
+      expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
+        compareResourceFullResponses(
+          received = response,
+          expected = ResourcesResponderV1SpecFullData.expectedBookResourceFullResponse
+        )
       }
     }
 
     "return a full description of the first page of the book 'Zeitglöcklein des Lebens und Leidens Christi' in the Incunabula test data" in {
       // http://0.0.0.0:3333/v1/resources/http%3A%2F%2Frdfh.ch%2F0803%2F8a0b1e75
-      responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0803/8a0b1e75",
-                                                  featureFactoryConfig = defaultFeatureFactoryConfig,
-                                                  userADM = SharedTestDataADM.incunabulaMemberUser)
+      responderManager ! ResourceFullGetRequestV1(
+        iri = "http://rdfh.ch/0803/8a0b1e75",
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        userADM = SharedTestDataADM.incunabulaMemberUser
+      )
 
-      expectMsgPF(timeout) {
-        case response: ResourceFullResponseV1 =>
-          compareResourceFullResponses(received = response,
-                                       expected = ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse)
+      expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
+        compareResourceFullResponses(
+          received = response,
+          expected = ResourcesResponderV1SpecFullData.expectedPageResourceFullResponse
+        )
       }
     }
 
@@ -933,11 +970,11 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceContextResponseV1 =>
-          compareResourcePartOfContextResponses(
-            received = response,
-            expected = ResourcesResponderV1SpecContextData.expectedPageResourceContextResponse)
+      expectMsgPF(timeout) { case response: ResourceContextResponseV1 =>
+        compareResourcePartOfContextResponses(
+          received = response,
+          expected = ResourcesResponderV1SpecContextData.expectedPageResourceContextResponse
+        )
       }
     }
 
@@ -951,9 +988,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         userProfile = SharedTestDataADM.incunabulaMemberUser
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceSearchResponseV1 =>
-          compareResourceSearchResults(received = response, expected = ReiseInsHeiligelandThreeValues)
+      expectMsgPF(timeout) { case response: ResourceSearchResponseV1 =>
+        compareResourceSearchResults(received = response, expected = ReiseInsHeiligelandThreeValues)
       }
     }
 
@@ -967,9 +1003,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         userProfile = SharedTestDataADM.incunabulaMemberUser
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceSearchResponseV1 =>
-          compareResourceSearchResults(received = response, expected = ReiseInsHeiligelandThreeValues)
+      expectMsgPF(timeout) { case response: ResourceSearchResponseV1 =>
+        compareResourceSearchResults(received = response, expected = ReiseInsHeiligelandThreeValues)
       }
     }
 
@@ -983,9 +1018,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         userProfile = SharedTestDataADM.incunabulaMemberUser
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceSearchResponseV1 =>
-          compareResourceSearchResults(received = response, expected = ReiseInsHeiligelandOneValueRestrictedToBook)
+      expectMsgPF(timeout) { case response: ResourceSearchResponseV1 =>
+        compareResourceSearchResults(received = response, expected = ReiseInsHeiligelandOneValueRestrictedToBook)
       }
     }
 
@@ -1005,9 +1039,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         resourceTypeIri = None
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceSearchResponseV1 =>
-          assert(response.resources.size == 27, s"expected 27 resources")
+      expectMsgPF(timeout) { case response: ResourceSearchResponseV1 =>
+        assert(response.resources.size == 27, s"expected 27 resources")
       }
     }
 
@@ -1022,9 +1055,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         resourceTypeIri = Some("http://www.knora.org/ontology/0803/incunabula#book")
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceSearchResponseV1 =>
-          assert(response.resources.size == 3, s"expected 3 resources")
+      expectMsgPF(timeout) { case response: ResourceSearchResponseV1 =>
+        assert(response.resources.size == 3, s"expected 3 resources")
       }
     }
 
@@ -1039,9 +1071,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         resourceTypeIri = Some("http://www.knora.org/ontology/0803/incunabula#page")
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceSearchResponseV1 =>
-          assert(response.resources.size == 19, s"expected 19 resources")
+      expectMsgPF(timeout) { case response: ResourceSearchResponseV1 =>
+        assert(response.resources.size == 19, s"expected 19 resources")
       }
     }
 
@@ -1056,9 +1087,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         resourceTypeIri = Some("http://www.knora.org/ontology/knora-base#Representation")
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceSearchResponseV1 =>
-          assert(response.resources.size == 19, s"expected 19 resources")
+      expectMsgPF(timeout) { case response: ResourceSearchResponseV1 =>
+        assert(response.resources.size == 19, s"expected 19 resources")
       }
     }
 
@@ -1083,8 +1113,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
       responderManager ! resourceCreateRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
@@ -1108,7 +1138,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       val valuesToBeCreated = Map(
         "http://www.knora.org/ontology/0803/incunabula#hasAuthor" -> author,
         "http://www.knora.org/ontology/0803/incunabula#pubdate" -> pubdate.map(date =>
-          CreateValueV1WithComment(DateUtilV1.dateValueV1ToJulianDayNumberValueV1(date), None))
+          CreateValueV1WithComment(DateUtilV1.dateValueV1ToJulianDayNumberValueV1(date), None)
+        )
       )
 
       val resourceCreateRequest = ResourceCreateRequestV1(
@@ -1123,8 +1154,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
       responderManager ! resourceCreateRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
@@ -1143,8 +1174,11 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             endPosition = 39,
             startIndex = 0,
             attributes = Vector(
-              StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-                                        value = nonexistentIri)),
+              StandoffTagIriAttributeV2(
+                standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
+                value = nonexistentIri
+              )
+            ),
             uuid = UUID.randomUUID(),
             originalXMLID = None
           )
@@ -1159,7 +1193,7 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       val pubdate = DateUtilV1.createJDNValueV1FromDateString("GREGORIAN:2015-12-03")
 
       val valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] = Map(
-        "http://www.knora.org/ontology/0803/incunabula#title" -> Vector(CreateValueV1WithComment(title1)),
+        "http://www.knora.org/ontology/0803/incunabula#title"   -> Vector(CreateValueV1WithComment(title1)),
         "http://www.knora.org/ontology/0803/incunabula#pubdate" -> Vector(CreateValueV1WithComment(pubdate)),
         "http://www.knora.org/ontology/0803/incunabula#citation" -> Vector(
           CreateValueV1WithComment(citation1, None)
@@ -1177,8 +1211,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
 
@@ -1204,8 +1238,11 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
             startPosition = 32,
             endPosition = 40,
             attributes = Vector(
-              StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-                                        value = "http://rdfh.ch/0803/c5058f3a")),
+              StandoffTagIriAttributeV2(
+                standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
+                value = "http://rdfh.ch/0803/c5058f3a"
+              )
+            ),
             uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 1
@@ -1221,14 +1258,16 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       val publoc = TextValueSimpleV1("Entenhausen")
 
       val pubdateRequest = DateUtilV1.createJDNValueV1FromDateString("GREGORIAN:2015-12-03")
-      val pubdateResponse = DateValueV1(dateval1 = "2015-12-03",
-                                        dateval2 = "2015-12-03",
-                                        era1 = "CE",
-                                        era2 = "CE",
-                                        calendar = KnoraCalendarV1.GREGORIAN)
+      val pubdateResponse = DateValueV1(
+        dateval1 = "2015-12-03",
+        dateval2 = "2015-12-03",
+        era1 = "CE",
+        era2 = "CE",
+        calendar = KnoraCalendarV1.GREGORIAN
+      )
 
       val valuesToBeCreated: Map[IRI, Seq[CreateValueV1WithComment]] = Map(
-        "http://www.knora.org/ontology/0803/incunabula#title" -> Vector(CreateValueV1WithComment(title1)),
+        "http://www.knora.org/ontology/0803/incunabula#title"   -> Vector(CreateValueV1WithComment(title1)),
         "http://www.knora.org/ontology/0803/incunabula#pubdate" -> Vector(CreateValueV1WithComment(pubdateRequest)),
         "http://www.knora.org/ontology/0803/incunabula#citation" -> Vector(
           CreateValueV1WithComment(citation4, None),
@@ -1240,10 +1279,10 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       )
 
       val valuesExpected = Map(
-        "http://www.knora.org/ontology/0803/incunabula#title" -> Vector(title1),
-        "http://www.knora.org/ontology/0803/incunabula#pubdate" -> Vector(pubdateResponse),
+        "http://www.knora.org/ontology/0803/incunabula#title"    -> Vector(title1),
+        "http://www.knora.org/ontology/0803/incunabula#pubdate"  -> Vector(pubdateResponse),
         "http://www.knora.org/ontology/0803/incunabula#citation" -> Vector(citation3, citation1, citation4, citation2),
-        "http://www.knora.org/ontology/0803/incunabula#publoc" -> Vector(publoc)
+        "http://www.knora.org/ontology/0803/incunabula#publoc"   -> Vector(publoc)
       )
 
       responderManager ! ResourceCreateRequestV1(
@@ -1256,10 +1295,9 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceCreateResponseV1 =>
-          newBookResourceIri.set(response.res_id)
-          checkResourceCreation(received = response, expected = valuesExpected)
+      expectMsgPF(timeout) { case response: ResourceCreateResponseV1 =>
+        newBookResourceIri.set(response.res_id)
+        checkResourceCreation(received = response, expected = valuesExpected)
       }
 
       // Check that the resource doesn't have more than one lastModificationDate.
@@ -1269,18 +1307,20 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       checkPermissionsOnResource(newBookResourceIri.get)
 
       // See if we can query the resource.
-      responderManager ! ResourceFullGetRequestV1(iri = newBookResourceIri.get,
-                                                  featureFactoryConfig = defaultFeatureFactoryConfig,
-                                                  userADM = SharedTestDataADM.incunabulaProjectAdminUser)
-      expectMsgPF(timeout) {
-        case response: ResourceFullResponseV1 => () // If we got a ResourceFullResponseV1, the operation succeeded.
+      responderManager ! ResourceFullGetRequestV1(
+        iri = newBookResourceIri.get,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        userADM = SharedTestDataADM.incunabulaProjectAdminUser
+      )
+      expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
+        () // If we got a ResourceFullResponseV1, the operation succeeded.
       }
     }
 
     "create an incunabula:page with a resource pointer" in {
-      val recto = TextValueSimpleV1("recto")
+      val recto    = TextValueSimpleV1("recto")
       val origname = TextValueSimpleV1("Blatt")
-      val seqnum = IntegerValueV1(1)
+      val seqnum   = IntegerValueV1(1)
 
       val fileValue = StillImageFileValueV1(
         internalMimeType = "image/jp2",
@@ -1296,22 +1336,26 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
       val valuesToBeCreated = Map(
         "http://www.knora.org/ontology/0803/incunabula#hasRightSideband" -> Vector(
-          CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://rdfh.ch/0803/482a33d65c36"))),
-        "http://www.knora.org/ontology/0803/incunabula#pagenum" -> Vector(CreateValueV1WithComment(recto)),
-        "http://www.knora.org/ontology/0803/incunabula#partOf" -> Vector(CreateValueV1WithComment(LinkUpdateV1(book))),
+          CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://rdfh.ch/0803/482a33d65c36"))
+        ),
+        "http://www.knora.org/ontology/0803/incunabula#pagenum"  -> Vector(CreateValueV1WithComment(recto)),
+        "http://www.knora.org/ontology/0803/incunabula#partOf"   -> Vector(CreateValueV1WithComment(LinkUpdateV1(book))),
         "http://www.knora.org/ontology/0803/incunabula#origname" -> Vector(CreateValueV1WithComment(origname)),
-        "http://www.knora.org/ontology/0803/incunabula#seqnum" -> Vector(CreateValueV1WithComment(seqnum))
+        "http://www.knora.org/ontology/0803/incunabula#seqnum"   -> Vector(CreateValueV1WithComment(seqnum))
       )
 
       val expected = Map(
         "http://www.knora.org/ontology/0803/incunabula#hasRightSideband" -> Vector(
-          LinkV1(targetResourceIri = "http://rdfh.ch/0803/482a33d65c36",
-                 valueResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#Sideband"))),
-        "http://www.knora.org/ontology/0803/incunabula#pagenum" -> Vector(recto),
-        "http://www.knora.org/ontology/0803/incunabula#partOf" -> Vector(LinkV1(book)),
+          LinkV1(
+            targetResourceIri = "http://rdfh.ch/0803/482a33d65c36",
+            valueResourceClass = Some("http://www.knora.org/ontology/0803/incunabula#Sideband")
+          )
+        ),
+        "http://www.knora.org/ontology/0803/incunabula#pagenum"  -> Vector(recto),
+        "http://www.knora.org/ontology/0803/incunabula#partOf"   -> Vector(LinkV1(book)),
         "http://www.knora.org/ontology/0803/incunabula#origname" -> Vector(origname),
-        "http://www.knora.org/ontology/0803/incunabula#seqnum" -> Vector(seqnum),
-        OntologyConstants.KnoraBase.HasStillImageFileValue -> Vector(fileValue)
+        "http://www.knora.org/ontology/0803/incunabula#seqnum"   -> Vector(seqnum),
+        OntologyConstants.KnoraBase.HasStillImageFileValue       -> Vector(fileValue)
       )
 
       responderManager ! ResourceCreateRequestV1(
@@ -1325,10 +1369,9 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceCreateResponseV1 =>
-          newPageResourceIri.set(response.res_id)
-          checkResourceCreation(received = response, expected = expected)
+      expectMsgPF(timeout) { case response: ResourceCreateResponseV1 =>
+        newPageResourceIri.set(response.res_id)
+        checkResourceCreation(received = response, expected = expected)
       }
 
       /* Check the permissions on the resource */
@@ -1349,9 +1392,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
       responderManager ! pageGetContext
 
-      expectMsgPF(timeout) {
-        case response: ResourceContextResponseV1 =>
-          compareNewPageContextResponse(received = response)
+      expectMsgPF(timeout) { case response: ResourceContextResponseV1 =>
+        compareNewPageContextResponse(received = response)
       }
     }
 
@@ -1377,8 +1419,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
 
       // Check that the resource's last modification date got updated.
@@ -1396,9 +1438,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
       responderManager ! propertiesGetRequest
 
-      expectMsgPF(timeout) {
-        case response: PropertiesGetResponseV1 =>
-          comparePropertiesGetResponse(received = response, expected = propertiesGetResponseV1Region)
+      expectMsgPF(timeout) { case response: PropertiesGetResponseV1 =>
+        comparePropertiesGetResponse(received = response, expected = propertiesGetResponseV1Region)
       }
     }
 
@@ -1413,8 +1454,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
 
       responderManager ! resourceContextPage
 
-      expectMsgPF(timeout) {
-        case response: ResourceContextResponseV1 => comparePageContextRegionResponse(received = response)
+      expectMsgPF(timeout) { case response: ResourceContextResponseV1 =>
+        comparePageContextRegionResponse(received = response)
       }
     }
 
@@ -1427,91 +1468,97 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         userADM = SharedTestDataADM.anythingUser1
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceFullResponseV1 =>
-          response.incoming.size should ===(2)
-          response.incoming.contains(hasStandoffLinkToIncomingLink) should ===(true)
-          response.incoming.contains(hasOtherThingIncomingLink) should ===(true)
+      expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
+        response.incoming.size should ===(2)
+        response.incoming.contains(hasStandoffLinkToIncomingLink) should ===(true)
+        response.incoming.contains(hasOtherThingIncomingLink) should ===(true)
       }
 
       // But another user should see only the hasStandoffLinkTo link.
 
-      responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-2",
-                                                  featureFactoryConfig = defaultFeatureFactoryConfig,
-                                                  userADM = SharedTestDataADM.anythingUser2)
+      responderManager ! ResourceFullGetRequestV1(
+        iri = "http://rdfh.ch/0001/project-thing-2",
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        userADM = SharedTestDataADM.anythingUser2
+      )
 
-      expectMsgPF(timeout) {
-        case response: ResourceFullResponseV1 =>
-          response.incoming.contains(hasStandoffLinkToIncomingLink) should ===(true)
-          response.incoming.contains(hasOtherThingIncomingLink) should ===(false)
+      expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
+        response.incoming.contains(hasStandoffLinkToIncomingLink) should ===(true)
+        response.incoming.contains(hasOtherThingIncomingLink) should ===(false)
       }
     }
 
     "show outgoing standoff links if the user has view permission on both resources, but show other outgoing links only if the user also has view permission on the link" in {
       // The link's owner, anythingUser1, should see the hasOtherThing link as well as the hasStandoffLinkTo link.
 
-      responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-1",
-                                                  featureFactoryConfig = defaultFeatureFactoryConfig,
-                                                  userADM = SharedTestDataADM.anythingUser1)
+      responderManager ! ResourceFullGetRequestV1(
+        iri = "http://rdfh.ch/0001/project-thing-1",
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        userADM = SharedTestDataADM.anythingUser1
+      )
 
-      expectMsgPF(timeout) {
-        case response: ResourceFullResponseV1 =>
-          val linkProps = response.props.get.properties.filter { prop =>
-            prop.values.nonEmpty && prop.valuetype_id.get != OntologyConstants.KnoraBase.TextValue
-          }
+      expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
+        val linkProps = response.props.get.properties.filter { prop =>
+          prop.values.nonEmpty && prop.valuetype_id.get != OntologyConstants.KnoraBase.TextValue
+        }
 
-          linkProps.size should ===(2)
+        linkProps.size should ===(2)
 
-          linkProps.contains(hasStandoffLinkToOutgoingLink) should ===(true)
-          linkProps.contains(hasOtherThingOutgoingLink) should ===(true)
+        linkProps.contains(hasStandoffLinkToOutgoingLink) should ===(true)
+        linkProps.contains(hasOtherThingOutgoingLink) should ===(true)
       }
 
       // But another user should see only the hasStandoffLinkTo link.
 
-      responderManager ! ResourceFullGetRequestV1(iri = "http://rdfh.ch/0001/project-thing-1",
-                                                  featureFactoryConfig = defaultFeatureFactoryConfig,
-                                                  userADM = SharedTestDataADM.anythingUser2)
+      responderManager ! ResourceFullGetRequestV1(
+        iri = "http://rdfh.ch/0001/project-thing-1",
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        userADM = SharedTestDataADM.anythingUser2
+      )
 
-      expectMsgPF(timeout) {
-        case response: ResourceFullResponseV1 =>
-          val linkProps = response.props.get.properties.filter { prop =>
-            prop.values.nonEmpty && prop.valuetype_id.get != OntologyConstants.KnoraBase.TextValue
-          }
+      expectMsgPF(timeout) { case response: ResourceFullResponseV1 =>
+        val linkProps = response.props.get.properties.filter { prop =>
+          prop.values.nonEmpty && prop.valuetype_id.get != OntologyConstants.KnoraBase.TextValue
+        }
 
-          linkProps.size should ===(1)
-          linkProps.contains(hasStandoffLinkToOutgoingLink) should ===(true)
-          linkProps.contains(hasOtherThingOutgoingLink) should ===(false)
+        linkProps.size should ===(1)
+        linkProps.contains(hasStandoffLinkToOutgoingLink) should ===(true)
+        linkProps.contains(hasOtherThingOutgoingLink) should ===(false)
       }
     }
 
     "show a contained resource in a context request only if the user has permission to see the containing resource, the contained resource, and the link value" in {
       // The owner of the resources and the link should see two contained resources.
 
-      responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0001/containing-thing",
-                                                     resinfo = true,
-                                                     featureFactoryConfig = defaultFeatureFactoryConfig,
-                                                     userProfile = SharedTestDataADM.anythingUser1)
+      responderManager ! ResourceContextGetRequestV1(
+        iri = "http://rdfh.ch/0001/containing-thing",
+        resinfo = true,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        userProfile = SharedTestDataADM.anythingUser1
+      )
 
-      expectMsgPF(timeout) {
-        case response: ResourceContextResponseV1 =>
-          response.resource_context.res_id should ===(
-            Some(
-              Vector(
-                "http://rdfh.ch/0001/contained-thing-1",
-                "http://rdfh.ch/0001/contained-thing-2"
-              )))
+      expectMsgPF(timeout) { case response: ResourceContextResponseV1 =>
+        response.resource_context.res_id should ===(
+          Some(
+            Vector(
+              "http://rdfh.ch/0001/contained-thing-1",
+              "http://rdfh.ch/0001/contained-thing-2"
+            )
+          )
+        )
       }
 
       // Another user in the project, who doesn't have permission to see the second link, should see only one contained resource.
 
-      responderManager ! ResourceContextGetRequestV1(iri = "http://rdfh.ch/0001/containing-thing",
-                                                     resinfo = true,
-                                                     featureFactoryConfig = defaultFeatureFactoryConfig,
-                                                     userProfile = SharedTestDataADM.anythingUser2)
+      responderManager ! ResourceContextGetRequestV1(
+        iri = "http://rdfh.ch/0001/containing-thing",
+        resinfo = true,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        userProfile = SharedTestDataADM.anythingUser2
+      )
 
-      expectMsgPF(timeout) {
-        case response: ResourceContextResponseV1 =>
-          response.resource_context.res_id should ===(Some(Vector("http://rdfh.ch/0001/contained-thing-1")))
+      expectMsgPF(timeout) { case response: ResourceContextResponseV1 =>
+        response.resource_context.res_id should ===(Some(Vector("http://rdfh.ch/0001/contained-thing-1")))
       }
 
       // A user who's not in the project shouldn't see any contained resources.
@@ -1523,9 +1570,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         userProfile = SharedTestDataADM.incunabulaProjectAdminUser
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceContextResponseV1 =>
-          response.resource_context.res_id should ===(None)
+      expectMsgPF(timeout) { case response: ResourceContextResponseV1 =>
+        response.resource_context.res_id should ===(None)
       }
     }
 
@@ -1541,8 +1587,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
 
@@ -1558,8 +1604,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
 
@@ -1575,8 +1621,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
 
@@ -1591,9 +1637,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case response: ChangeResourceLabelResponseV1 =>
-          response.label should ===(myNewLabel)
+      expectMsgPF(timeout) { case response: ChangeResourceLabelResponseV1 =>
+        response.label should ===(myNewLabel)
       }
 
     }
@@ -1601,7 +1646,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
     "not create an anything:BlueThing with property anything:hasBlueThing pointing to an anything:Thing" in {
       val valuesToBeCreated = Map(
         "http://www.knora.org/ontology/0001/anything#hasBlueThing" -> Vector(
-          CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://rdfh.ch/0001/a-thing")))
+          CreateValueV1WithComment(LinkUpdateV1(targetResourceIri = "http://rdfh.ch/0001/a-thing"))
+        )
       )
 
       responderManager ! ResourceCreateRequestV1(
@@ -1615,9 +1661,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure =>
-          msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
@@ -1629,8 +1674,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       )
 
       val response = expectMsgType[GraphDataGetResponseV1](timeout)
-      val edges = response.edges
-      val nodes = response.nodes
+      val edges    = response.edges
+      val nodes    = response.nodes
 
       edges should contain theSameElementsAs graphForAnythingUser1.edges
       nodes should contain theSameElementsAs graphForAnythingUser1.nodes
@@ -1644,8 +1689,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
       )
 
       val response = expectMsgType[GraphDataGetResponseV1](timeout)
-      val edges = response.edges
-      val nodes = response.nodes
+      val edges    = response.edges
+      val nodes    = response.nodes
 
       edges should contain theSameElementsAs graphForIncunabulaUser.edges
       nodes should contain theSameElementsAs graphForIncunabulaUser.nodes
@@ -1658,8 +1703,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         userADM = SharedTestDataADM.anythingUser1
       )
 
-      expectMsgPF(timeout) {
-        case response: GraphDataGetResponseV1 => response should ===(graphWithStandoffLink)
+      expectMsgPF(timeout) { case response: GraphDataGetResponseV1 =>
+        response should ===(graphWithStandoffLink)
       }
     }
 
@@ -1670,8 +1715,8 @@ class ResourcesResponderV1Spec extends CoreSpec(ResourcesResponderV1Spec.config)
         userADM = SharedTestDataADM.anythingUser1
       )
 
-      expectMsgPF(timeout) {
-        case response: GraphDataGetResponseV1 => response should ===(graphWithOneNode)
+      expectMsgPF(timeout) { case response: GraphDataGetResponseV1 =>
+        response should ===(graphWithOneNode)
       }
     }
   }

@@ -15,6 +15,7 @@ scala_library(
         "//webapi/src/main/scala/org/knora/webapi/feature",
         "//webapi/src/main/scala/org/knora/webapi/instrumentation",
         "//webapi/src/main/scala/org/knora/webapi/messages",
+        "//webapi/src/main/scala/org/knora/webapi/responders/v2/ontology",
         "//webapi/src/main/scala/org/knora/webapi/settings",
         "//webapi/src/main/scala/org/knora/webapi/store/cacheservice/settings",
         "//webapi/src/main/scala/org/knora/webapi/util",

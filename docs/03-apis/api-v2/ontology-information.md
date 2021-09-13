@@ -1541,15 +1541,13 @@ HTTP PUT to http://host/v2/ontologies/cardinalities
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
   "@graph" : [ {
-    {
-      "@id" : "CLASS_IRI",
-      "@type" : "owl:Class",
-      "rdfs:subClassOf" : {
-        "@type": "owl:Restriction",
-        "OWL_CARDINALITY_PREDICATE": "OWL_CARDINALITY_VALUE",
-        "owl:onProperty": {
-          "@id" : "PROPERTY_IRI"
-        }
+    "@id" : "CLASS_IRI",
+    "@type" : "owl:Class",
+    "rdfs:subClassOf" : {
+      "@type": "owl:Restriction",
+      "OWL_CARDINALITY_PREDICATE": "OWL_CARDINALITY_VALUE",
+      "owl:onProperty": {
+        "@id" : "PROPERTY_IRI"
       }
     }
   } ],
@@ -1579,6 +1577,75 @@ To check whether a class's cardinalities can be replaced:
 
 ```
 HTTP GET to http://host/v2/ontologies/canreplacecardinalities/CLASS_IRI
+```
+
+The response will look like this:
+
+```jsonld
+{
+    "knora-api:canDo": false,
+    "@context": {
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+    }
+}
+```
+
+
+### Delete a single cardinality from a class
+
+If a class is used in data, it is only allowed to delete a cardinality, if the
+property a cardinality refers to, is not used inside the data. Also, the property
+isn't allowed to be used inside the data in any subclasses of this class.
+
+```
+HTTP DELETE to http://host/v2/ontologies/cardinalities
+```
+
+```jsonld
+{
+  "@id" : "ONTOLOGY_IRI",
+  "@type" : "owl:Ontology",
+  "knora-api:lastModificationDate" : {
+    "@type" : "xsd:dateTimeStamp",
+    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  },
+  "@graph" : [ {
+    "@id" : "CLASS_IRI",
+    "@type" : "owl:Class",
+    "rdfs:subClassOf" : {
+      "@type": "owl:Restriction",
+      "OWL_CARDINALITY_PREDICATE": "OWL_CARDINALITY_VALUE",
+      "owl:onProperty": {
+        "@id" : "PROPERTY_IRI"
+      }
+    }
+  } ],
+  "@context" : {
+    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+    "owl" : "http://www.w3.org/2002/07/owl#",
+    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+  }
+}
+```
+
+`OWL_CARDINALITY_PREDICATE` and `OWL_CARDINALITY_VALUE` must correspond
+to the supported combinations given in
+[OWL Cardinalities](../../02-knora-ontologies/knora-base.md#owl-cardinalities). (The placeholder
+`OWL_CARDINALITY_VALUE` is shown here in quotes, but it should be an
+unquoted integer.)
+
+When a cardinality on a link property is submitted, an identical cardinality
+on the corresponding link value property is automatically added (see
+[Links Between Resources](../../02-knora-ontologies/knora-base.md#links-between-resources)).
+
+A successful response will be a JSON-LD document providing the new class
+definition (but not any of the other entities in the ontology).
+
+To check whether a class's cardinality can be deleted:
+
+```
+HTTP POST to http://host/v2/ontologies/candeletedinalities
 ```
 
 The response will look like this:

@@ -65,7 +65,7 @@ object CoreSpec {
       .dropWhile(_ matches "(java.lang.Thread|.*CoreSpec.?$)")
     val reduced = s.lastIndexWhere(_ == clazz.getName) match {
       case -1 => s
-      case z => s drop (z + 1)
+      case z  => s drop (z + 1)
     }
     reduced.head.replaceFirst(""".*\.""", "").replaceAll("[^a-zA-Z_0-9]", "_")
   }
@@ -85,24 +85,31 @@ abstract class CoreSpec(_system: ActorSystem)
     this(
       ActorSystem(
         name,
-        TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))))
+        TestContainersAll.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))
+      )
+    )
 
   def this(config: Config) =
     this(
       ActorSystem(
         CoreSpec.getCallerName(classOf[CoreSpec]),
-        TestContainers.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))))
+        TestContainersAll.PortConfig.withFallback(ConfigFactory.load(config.withFallback(CoreSpec.defaultConfig)))
+      )
+    )
 
-  def this(name: String) = this(ActorSystem(name, TestContainers.PortConfig.withFallback(ConfigFactory.load())))
+  def this(name: String) = this(ActorSystem(name, TestContainersAll.PortConfig.withFallback(ConfigFactory.load())))
 
   def this() =
     this(
-      ActorSystem(CoreSpec.getCallerName(classOf[CoreSpec]),
-                  TestContainers.PortConfig.withFallback(ConfigFactory.load())))
+      ActorSystem(
+        CoreSpec.getCallerName(classOf[CoreSpec]),
+        TestContainersAll.PortConfig.withFallback(ConfigFactory.load())
+      )
+    )
 
   /* needed by the core trait */
-  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
-  implicit val materializer: Materializer = Materializer.matFromSystem(system)
+  implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
+  implicit val materializer: Materializer         = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // can be overridden in individual spec
@@ -119,7 +126,7 @@ abstract class CoreSpec(_system: ActorSystem)
 
   // The main application actor forwards messages to the responder manager and the store manager.
   val responderManager: ActorRef = appActor
-  val storeManager: ActorRef = appActor
+  val storeManager: ActorRef     = appActor
 
   val responderData: ResponderData = ResponderData(
     system = system,
@@ -148,10 +155,8 @@ abstract class CoreSpec(_system: ActorSystem)
     // memusage()
   }
 
-  final override def afterAll(): () = {
+  final override def afterAll(): () =
     appActor ! AppStop()
-    // memusage()
-  }
 
   protected def loadTestData(rdfDataObjects: Seq[RdfDataObject]): Unit = {
     logger.info("Loading test data started ...")
@@ -163,11 +168,14 @@ abstract class CoreSpec(_system: ActorSystem)
 
     logger.info("Loading load ontologies into cache started ...")
     Try(
-      Await.result(appActor ? LoadOntologiesRequestV2(
-                     featureFactoryConfig = defaultFeatureFactoryConfig,
-                     requestingUser = KnoraSystemInstances.Users.SystemUser
-                   ),
-                   1 minute)) match {
+      Await.result(
+        appActor ? LoadOntologiesRequestV2(
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = KnoraSystemInstances.Users.SystemUser
+        ),
+        1 minute
+      )
+    ) match {
       case Success(res) => logger.info("... loading ontologies into cache done.")
       case Failure(e)   => logger.error(s"Loading ontologies into cache failed: ${e.getMessage}")
     }
@@ -178,15 +186,4 @@ abstract class CoreSpec(_system: ActorSystem)
       case Failure(e)   => logger.error(s"Flushing Redis cache failed: ${e.getMessage}")
     }
   }
-
-  def memusage(): Unit = {
-    // memory info
-    val mb = 1024 * 1024
-    val runtime = Runtime.getRuntime
-    println("** Used Memory:  " + (runtime.totalMemory - runtime.freeMemory) / mb)
-    println("** Free Memory:  " + runtime.freeMemory / mb)
-    println("** Total Memory: " + runtime.totalMemory / mb)
-    println("** Max Memory:   " + runtime.maxMemory / mb)
-  }
-
 }
