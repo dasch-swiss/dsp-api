@@ -2640,6 +2640,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           maybeUnescapedNewLinkValuePropertyDef.map { unescapedNewLinkPropertyDef =>
             unescapedNewLinkPropertyDef.propertyIri -> ReadPropertyInfoV2(
               entityInfoContent = unescapedNewLinkPropertyDef,
+              isEditable = true,
               isResourceProp = true,
               isLinkValueProp = true
             )
@@ -2665,7 +2666,6 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
             )
 
         // Read the data back from the cache.
-
         response <- getPropertyDefinitionsFromOntologyV2(
                       propertyIris = Set(internalPropertyIri),
                       allLanguages = true,
