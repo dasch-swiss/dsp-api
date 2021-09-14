@@ -1598,7 +1598,7 @@ property a cardinality refers to, is not used inside the data. Also, the propert
 isn't allowed to be used inside the data in any subclasses of this class.
 
 ```
-HTTP PATCH to http://host/v2/ontologies/cardinalities
+HTTP DELETE to http://host/v2/ontologies/cardinalities
 ```
 
 ```jsonld
@@ -1645,7 +1645,7 @@ definition (but not any of the other entities in the ontology).
 To check whether a class's cardinality can be deleted:
 
 ```
-HTTP POST to http://host/v2/ontologies/candeletecardinalities
+HTTP POST to http://host/v2/ontologies/candeletedinalities
 ```
 
 The response will look like this:

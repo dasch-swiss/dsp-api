@@ -526,7 +526,7 @@ class OntologiesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData)
   // not used in resources.
   private def deleteCardinalitiesFromClass(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(OntologiesBasePath / "cardinalities") {
-      patch {
+      delete {
         entity(as[String]) { jsonRequest => requestContext =>
           {
             val requestMessageFuture: Future[DeleteCardinalitiesFromClassRequestV2] = for {
