@@ -111,7 +111,7 @@ specified by the `id` in the request body as below:
 ### Update basic user information**
 
   - Required permission: SystemAdmin / self
-  - Changeable information: email, given name, family name,
+  - Changeable information: username, email, given name, family name,
     password, status, SystemAdmin membership 
   - TypeScript Docs: userFormats - ChangeUserApiRequestADM
   - PUT: `/admin/users/iri/<userIri>/BasicUserInformation`
