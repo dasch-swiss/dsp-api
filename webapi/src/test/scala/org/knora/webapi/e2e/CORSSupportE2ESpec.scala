@@ -63,14 +63,6 @@ class CORSSupportE2ESpec extends E2ESpec(CORSSupportE2ESpec.config) {
       )
     }
 
-//    "reject requests with invalid method" in {
-//      val request = Options(baseApiUrl + s"/admin/projects") ~> Origin(exampleOrigin) ~> `Access-Control-Request-Method`(
-//        PATCH)
-//      val response: HttpResponse = singleAwaitingRequest(request)
-//      responseToString(response) shouldEqual "CORS: invalid method 'PATCH'"
-//      response.status shouldBe StatusCodes.BadRequest
-//    }
-
     "send `Access-Control-Allow-Origin` header when the Knora resource is found " in {
       val request = Get(
         baseApiUrl + "/v1/resources/" + java.net.URLEncoder
