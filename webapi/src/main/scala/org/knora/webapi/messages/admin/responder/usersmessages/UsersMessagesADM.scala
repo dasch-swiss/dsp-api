@@ -941,21 +941,19 @@ case class UserChangeRequestADM(username: Option[Username] = None,
 }
 
 /**
- * Payload used for updating basic information of an existing user.
- *
- * @param username      the new username.
- * @param email         the new email address. Needs to be unique on the server.
- * @param givenName     the new given name.
- * @param familyName    the new family name.
- * @param lang          the new language.
- */
-case class UserUpdateBasicInformationPayloadADM(
-  username: Option[Username] = None,
-  email: Option[Email] = None,
-  givenName: Option[GivenName] = None,
-  familyName: Option[FamilyName] = None,
-  lang: Option[LanguageCode] = None
-) {
+  * Payload used for updating basic information of an existing user.
+  *
+  * @param username      the new username.
+  * @param email         the new email address. Needs to be unique on the server.
+  * @param givenName     the new given name.
+  * @param familyName    the new family name.
+  * @param lang          the new language.
+  */
+case class UserUpdateBasicInformationPayloadADM(username: Option[Username] = None,
+                                                email: Option[Email] = None,
+                                                givenName: Option[GivenName] = None,
+                                                familyName: Option[FamilyName] = None,
+                                                lang: Option[LanguageCode] = None) {
 
   val parametersCount: Int = List(
     username,
@@ -1005,8 +1003,6 @@ object UsersADMJsonProtocol
     "requesterPassword",
     "newPassword"
   )
-  implicit val changeUserPasswordApiRequestADMFormat: RootJsonFormat[ChangeUserPasswordApiRequestADM] =
-    jsonFormat(ChangeUserPasswordApiRequestADM, "requesterPassword", "newPassword")
   implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
   implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM] = jsonFormat1(UserResponseADM)
   implicit val userProjectMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectMembershipsGetResponseADM] =
