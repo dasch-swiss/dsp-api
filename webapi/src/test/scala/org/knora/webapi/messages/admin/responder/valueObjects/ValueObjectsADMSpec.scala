@@ -34,22 +34,22 @@ object ValueObjectsADMSpec {
 }
 
 /**
-  * This spec is used to test the creation of value objects of the [[ValueObject]] trait.
-  */
+ * This spec is used to test the creation of value objects of the [[ValueObject]] trait.
+ */
 class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
   /**
-   * Convenience method returning the UserEntity from the [[CreateUserApiRequestADM]] object
+   * Convenience method returning the UserCreatePayloadADM from the [[CreateUserApiRequestADM]] object
    *
    * @param createUserApiRequestADM the [[CreateUserApiRequestADM]] object
-   * @return                        a [[UserEntity]]
+   * @return                        a [[UserCreatePayloadADM]]
    */
-  private def createUserEntity(createUserApiRequestADM: CreateUserApiRequestADM): UserEntity = {
-    UserEntity.create(
-      id = stringFormatter.validateOptionalUserIri(createUserApiRequestADM.id,
-                                                   throw BadRequestException(s"Invalid user IRI")),
+  private def createUserCreatePayloadADM(createUserApiRequestADM: CreateUserApiRequestADM): UserCreatePayloadADM =
+    UserCreatePayloadADM.create(
+      id = stringFormatter
+        .validateOptionalUserIri(createUserApiRequestADM.id, throw BadRequestException(s"Invalid user IRI")),
       username = Username.create(createUserApiRequestADM.username).fold(error => throw error, value => value),
       email = Email.create(createUserApiRequestADM.email).fold(error => throw error, value => value),
       givenName = GivenName.create(createUserApiRequestADM.givenName).fold(error => throw error, value => value),
@@ -59,7 +59,6 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       lang = LanguageCode.create(createUserApiRequestADM.lang).fold(error => throw error, value => value),
       systemAdmin = SystemAdmin.create(createUserApiRequestADM.systemAdmin).fold(error => throw error, value => value)
     )
-  }
 
   /**
    * Convenience method returning the [[CreateUserApiRequestADM]] object
@@ -73,19 +72,19 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
    * @param status      the status of the user to be created (active = true, inactive = false).
    * @param lang        the default language of the user to be created.
    * @param systemAdmin the system admin membership.
-   * @return            a [[UserEntity]]
+   * @return            a [[UserCreatePayloadADM]]
    */
   private def createUserApiRequestADM(
-      id: Option[IRI] = None,
-      username: String = "donald.duck",
-      email: String = "donald.duck@example.com",
-      givenName: String = "Donald",
-      familyName: String = "Duck",
-      password: String = "test",
-      status: Boolean = true,
-      lang: String = "en",
-      systemAdmin: Boolean = false
-  ): CreateUserApiRequestADM = {
+    id: Option[IRI] = None,
+    username: String = "donald.duck",
+    email: String = "donald.duck@example.com",
+    givenName: String = "Donald",
+    familyName: String = "Duck",
+    password: String = "test",
+    status: Boolean = true,
+    lang: String = "en",
+    systemAdmin: Boolean = false
+  ): CreateUserApiRequestADM =
     CreateUserApiRequestADM(
       id = id,
       username = username,
@@ -97,24 +96,23 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       lang = lang,
       systemAdmin = systemAdmin
     )
-  }
 
-  "When the UserEntity case class is created it" should {
-    "create a valid UserEntity" in {
+  "When the UserCreatePayloadADM case class is created it" should {
+    "create a valid UserCreatePayloadADM" in {
 
       val request = createUserApiRequestADM()
 
-      val userEntity = createUserEntity(request)
+      val userCreatePayloadADM = createUserCreatePayloadADM(request)
 
-      userEntity.id should equal(request.id)
-      userEntity.username.get.value should equal(request.username)
-      userEntity.email.get.value should equal(request.email)
-      userEntity.password.get.value should equal(request.password)
-      userEntity.givenName.get.value should equal(request.givenName)
-      userEntity.familyName.get.value should equal(request.familyName)
-      userEntity.status.get.value should equal(request.status)
-      userEntity.lang.get.value should equal(request.lang)
-      userEntity.systemAdmin.get.value should equal(request.systemAdmin)
+      userCreatePayloadADM.id should equal(request.id)
+      userCreatePayloadADM.username.get.value should equal(request.username)
+      userCreatePayloadADM.email.get.value should equal(request.email)
+      userCreatePayloadADM.password.get.value should equal(request.password)
+      userCreatePayloadADM.givenName.get.value should equal(request.givenName)
+      userCreatePayloadADM.familyName.get.value should equal(request.familyName)
+      userCreatePayloadADM.status.get.value should equal(request.status)
+      userCreatePayloadADM.lang.get.value should equal(request.lang)
+      userCreatePayloadADM.systemAdmin.get.value should equal(request.systemAdmin)
 
       val otherRequest = createUserApiRequestADM(
         id = Some("http://rdfh.ch/users/notdonald"),
@@ -128,101 +126,103 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
         systemAdmin = true
       )
 
-      val otherUserEntity = createUserEntity(otherRequest)
+      val otherUserCreatePayloadADM = createUserCreatePayloadADM(otherRequest)
 
-      otherUserEntity.id should equal(otherRequest.id)
-      otherUserEntity.username.get.value should equal(otherRequest.username)
-      otherUserEntity.email.get.value should equal(otherRequest.email)
-      otherUserEntity.password.get.value should equal(otherRequest.password)
-      otherUserEntity.givenName.get.value should equal(otherRequest.givenName)
-      otherUserEntity.familyName.get.value should equal(otherRequest.familyName)
-      otherUserEntity.status.get.value should equal(otherRequest.status)
-      otherUserEntity.lang.get.value should equal(otherRequest.lang)
-      otherUserEntity.systemAdmin.get.value should equal(otherRequest.systemAdmin)
+      otherUserCreatePayloadADM.id should equal(otherRequest.id)
+      otherUserCreatePayloadADM.username.get.value should equal(otherRequest.username)
+      otherUserCreatePayloadADM.email.get.value should equal(otherRequest.email)
+      otherUserCreatePayloadADM.password.get.value should equal(otherRequest.password)
+      otherUserCreatePayloadADM.givenName.get.value should equal(otherRequest.givenName)
+      otherUserCreatePayloadADM.familyName.get.value should equal(otherRequest.familyName)
+      otherUserCreatePayloadADM.status.get.value should equal(otherRequest.status)
+      otherUserCreatePayloadADM.lang.get.value should equal(otherRequest.lang)
+      otherUserCreatePayloadADM.systemAdmin.get.value should equal(otherRequest.systemAdmin)
 
-      otherUserEntity.id should not equal request.id
-      otherUserEntity.username.get.value should not equal request.username
-      otherUserEntity.email.get.value should not equal request.email
-      otherUserEntity.password.get.value should not equal request.password
-      otherUserEntity.givenName.get.value should not equal request.givenName
-      otherUserEntity.familyName.get.value should not equal request.familyName
-      otherUserEntity.status.get.value should not equal request.status
-      otherUserEntity.lang.get.value should not equal request.lang
-      otherUserEntity.systemAdmin.get.value should not equal request.systemAdmin
+      otherUserCreatePayloadADM.id should not equal request.id
+      otherUserCreatePayloadADM.username.get.value should not equal request.username
+      otherUserCreatePayloadADM.email.get.value should not equal request.email
+      otherUserCreatePayloadADM.password.get.value should not equal request.password
+      otherUserCreatePayloadADM.givenName.get.value should not equal request.givenName
+      otherUserCreatePayloadADM.familyName.get.value should not equal request.familyName
+      otherUserCreatePayloadADM.status.get.value should not equal request.status
+      otherUserCreatePayloadADM.lang.get.value should not equal request.lang
+      otherUserCreatePayloadADM.systemAdmin.get.value should not equal request.systemAdmin
     }
 
     "throw 'BadRequestException' if 'username' is missing" in {
       val request = createUserApiRequestADM(username = "")
 
-      the[BadRequestException] thrownBy createUserEntity(request) should have message "Missing username"
+      the[BadRequestException] thrownBy createUserCreatePayloadADM(request) should have message "Missing username"
     }
 
     "throw 'BadRequestException' if 'email' is missing" in {
       val request = createUserApiRequestADM(email = "")
 
-      the[BadRequestException] thrownBy createUserEntity(request) should have message "Missing email"
+      the[BadRequestException] thrownBy createUserCreatePayloadADM(request) should have message "Missing email"
     }
 
     "throw 'BadRequestException' if 'password' is missing" in {
       val request = createUserApiRequestADM(password = "")
 
-      the[BadRequestException] thrownBy createUserEntity(request) should have message "Missing password"
+      the[BadRequestException] thrownBy createUserCreatePayloadADM(request) should have message "Missing password"
     }
 
     "throw 'BadRequestException' if 'givenName' is missing" in {
       val request = createUserApiRequestADM(givenName = "")
 
-      the[BadRequestException] thrownBy createUserEntity(request) should have message "Missing given name"
+      the[BadRequestException] thrownBy createUserCreatePayloadADM(request) should have message "Missing given name"
     }
 
     "throw 'BadRequestException' if 'familyName' is missing" in {
       val request = createUserApiRequestADM(familyName = "")
 
-      the[BadRequestException] thrownBy createUserEntity(request) should have message "Missing family name"
+      the[BadRequestException] thrownBy createUserCreatePayloadADM(request) should have message "Missing family name"
     }
 
     "throw 'BadRequestException' if 'lang' is missing" in {
       val request = createUserApiRequestADM(lang = "")
 
-      the[BadRequestException] thrownBy createUserEntity(request) should have message "Missing language code"
+      the[BadRequestException] thrownBy createUserCreatePayloadADM(request) should have message "Missing language code"
     }
 
     "throw 'BadRequestException' if the supplied 'id' is not a valid IRI" in {
       val request = createUserApiRequestADM(id = Some("invalid-iri"))
 
-      the[BadRequestException] thrownBy createUserEntity(request) should have message "Invalid user IRI"
+      the[BadRequestException] thrownBy createUserCreatePayloadADM(request) should have message "Invalid user IRI"
 
     }
 
     "throw 'BadRequestException' if 'username' is invalid" in {
       Set(
-        createUserApiRequestADM(username = "don"), // too short
+        createUserApiRequestADM(username = "don"),                                                  // too short
         createUserApiRequestADM(username = "asdfoiasdfasdnlasdkjflasdjfaskdjflaskdjfaddssdskdfjs"), // too long
-        createUserApiRequestADM(username = "_donald"), // starts with _
-        createUserApiRequestADM(username = ".donald"), // starts with .
-        createUserApiRequestADM(username = "donald_"), // ends with _
-        createUserApiRequestADM(username = "donald."), // ends with .
-        createUserApiRequestADM(username = "donald__duck"), // contains multiple _
-        createUserApiRequestADM(username = "donald..duck"), // contains multiple .
-        createUserApiRequestADM(username = "donald#duck"), // contains not only alphanumeric characters
-        createUserApiRequestADM(username = "dönälddück") // contains umlaut characters
+        createUserApiRequestADM(username = "_donald"),                                              // starts with _
+        createUserApiRequestADM(username = ".donald"),                                              // starts with .
+        createUserApiRequestADM(username = "donald_"),                                              // ends with _
+        createUserApiRequestADM(username = "donald."),                                              // ends with .
+        createUserApiRequestADM(username = "donald__duck"),                                         // contains multiple _
+        createUserApiRequestADM(username = "donald..duck"),                                         // contains multiple .
+        createUserApiRequestADM(username = "donald#duck"),                                          // contains not only alphanumeric characters
+        createUserApiRequestADM(username = "dönälddück")                                            // contains umlaut characters
       ).map(request =>
-        the[BadRequestException] thrownBy createUserEntity(request) should have message "Invalid username")
+        the[BadRequestException] thrownBy createUserCreatePayloadADM(request) should have message "Invalid username"
+      )
     }
 
     "throw 'BadRequestException' if 'email' is invalid" in {
       Set(
-        createUserApiRequestADM(email = "don"), // does not contain @
+        createUserApiRequestADM(email = "don"),  // does not contain @
         createUserApiRequestADM(email = "don@"), // ends with @
-        createUserApiRequestADM(email = "@don"), // starts with @
+        createUserApiRequestADM(email = "@don")  // starts with @
       ).map(request =>
-        the[BadRequestException] thrownBy createUserEntity(request) should have message "Invalid email")
+        the[BadRequestException] thrownBy createUserCreatePayloadADM(request) should have message "Invalid email"
+      )
     }
 
     "throw 'BadRequestException' if 'lang' is invalid" in {
       val request = createUserApiRequestADM(lang = "xy")
 
-      the[BadRequestException] thrownBy createUserEntity(request) should have message "Invalid language code"
+      the[BadRequestException] thrownBy createUserCreatePayloadADM(request) should have message "Invalid language code"
     }
 
   }

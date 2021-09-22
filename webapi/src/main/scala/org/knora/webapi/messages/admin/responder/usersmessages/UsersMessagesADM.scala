@@ -192,13 +192,13 @@ case class UserGetRequestADM(
 /**
  * Requests the creation of a new user.
  *
- * @param userEntity           the [[UserEntity]] information used for creating the new user.
+ * @param userCreatePayloadADM    the [[UserCreatePayloadADM]] information used for creating the new user.
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user creating the new user.
  * @param apiRequestID         the ID of the API request.
  */
 case class UserCreateRequestADM(
-  userEntity: UserEntity,
+  userCreatePayloadADM: UserCreatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
