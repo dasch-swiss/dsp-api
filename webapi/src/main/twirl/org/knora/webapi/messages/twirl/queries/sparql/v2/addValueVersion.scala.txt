@@ -27,22 +27,23 @@
 @**
  * Inserts a new version of an existing value of a resource property.
  *
- * @param dataNamedGraph the named graph to update.
- * @param triplestore the name of the triplestore being used.
- * @param resourceIri the resource to update.
- * @param propertyIri the IRI of the property that points from the resource to the value.
- * @param currentValueIri the most recent existing version of the value.
- * @param newValueIri the new value IRI.
- * @param valueTypeIri the type of the new value.
- * @param permissionRelevantAssertions Permission-relevant assertions, i.e. owner and project plus permissions, in
- *        the form of a list of tuples (predicate, object).
- * @param value the value to insert.
- * @param an optional comment on the new value.
- * @param linkUpdates a list of [[SparqlTemplateLinkUpdate]] objects describing links and LinkValues that need to be
- *        updated for resource references in standoff markup.
- * @param currentTime an xsd:dateTimeStamp that will be attached to the resources.
- * @param requestingUser the IRI of the user making the request.
- * @param stringFormatter a [[StringFormatter]].
+ * @param dataNamedGraph                the named graph to update.
+ * @param triplestore                   the name of the triplestore being used.
+ * @param resourceIri                   the resource to update.
+ * @param propertyIri                   the IRI of the property that points from the resource to the value.
+ * @param currentValueIri               the most recent existing version of the value.
+ * @param newValueIri                   the new value IRI.
+ * @param newValueArkUrl               the new value Ark-Url.
+ * @param valueTypeIri                  the type of the new value.
+ * @param permissionRelevantAssertions  Permission-relevant assertions, i.e. owner and project plus permissions, in
+ *                                      the form of a list of tuples (predicate, object).
+ * @param value                         the value to insert.
+ * @param maybeComment                  an optional comment on the new value.
+ * @param linkUpdates                   a list of [[SparqlTemplateLinkUpdate]] objects describing links and LinkValues
+ *                                      that need to be updated for resource references in standoff markup.
+ * @param currentTime                   an xsd:dateTimeStamp that will be attached to the resources.
+ * @param requestingUser                the IRI of the user making the request.
+ * @param stringFormatter               a [[StringFormatter]].
  *
  * This operation will do nothing if `currentValueIri` is not in fact the most recent version, if `valueTypeIri` is
  * the wrong type for the property, or if the resource or the current value are nonexistent or marked as deleted. To
@@ -54,6 +55,7 @@
   propertyIri: SmartIri,
   currentValueIri: IRI,
   newValueIri: IRI,
+  newValueArkUrl: IRI,
   valueTypeIri: SmartIri,
   value: ValueContentV2,
   valueCreator: IRI,
@@ -80,6 +82,7 @@ DELETE {
 
         @* Delete the UUID from the current version of the value, because the new version will store it. *@
         ?currentValue knora-base:valueHasUUID ?currentValueUUID .
+
 
         @* Delete the permissions from the current version of the value, because the new version will store them. *@
         ?currentValue knora-base:hasPermissions ?currentValuePermissions .
@@ -108,7 +111,8 @@ DELETE {
         ?newValue rdf:type <@value.valueType> ;
             knora-base:isDeleted false  ;
             knora-base:valueHasString """@value.valueHasString""" ;
-            knora-base:valueHasUUID ?currentValueUUID .
+            knora-base:valueHasUUID ?currentValueUUID ;
+            knora-base:arkUrl <@newValueArkUrl> .
 
         @{
             org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForValueContent(value = value,
@@ -160,17 +164,15 @@ DELETE {
             <@linkUpdate.newLinkValueIri> knora-base:attachedToUser <@linkUpdate.newLinkValueCreator> ;
                 knora-base:hasPermissions "@linkUpdate.newLinkValuePermissions" .
 
+            <@linkUpdate.newLinkValueIri> knora-base:arkUrl <@linkUpdate.newLinkValueArkUrl> .
+            <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(linkUpdate.newLinkValueUUID)}" .
+
             @*
 
-               If we're inserting a new version of an existing LinkValue, attach it to the previous version,
-               and use the previous version's UUID. Otherwise, make a random UUID.
-
+               If we're inserting a new version of an existing LinkValue, attach it to the previous version.
             *@
             @if(linkUpdate.linkValueExists) {
-                <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex ;
-                    knora-base:valueHasUUID ?linkValueUUID@linkValueIndex .
-            } else {
-                <@linkUpdate.newLinkValueIri> knora-base:valueHasUUID "@{stringFormatter.base64EncodeUuid(UUID.randomUUID)}" .
+                     <@linkUpdate.newLinkValueIri> knora-base:previousValue ?linkValue@linkValueIndex .
             }
 
             @* Attach the new LinkValue to its containing resource. *@
@@ -226,8 +228,8 @@ WHERE {
     @* Don't add a new version of a deleted value. *@
 
     ?currentValue knora-base:isDeleted false ;
-        knora-base:valueHasUUID ?currentValueUUID ;
-        knora-base:hasPermissions ?currentValuePermissions .
+                  knora-base:valueHasUUID ?currentValueUUID ;
+                  knora-base:hasPermissions ?currentValuePermissions .
 
     @* If this is a list value, make sure the list node that it points to exists and is a ListNode. *@
 
@@ -291,6 +293,7 @@ WHERE {
                 knora-base:valueHasRefCount @linkUpdate.currentReferenceCount ;
                 knora-base:isDeleted false ;
                 knora-base:valueHasUUID ?linkValueUUID@linkValueIndex ;
+                knora-base:arkUrl       ?linkArkUrl@linkValueIndex ;
                 knora-base:hasPermissions ?linkValuePermissions@linkValueIndex .
         } else {
             @* Make sure there is no such knora-base:LinkValue. *@

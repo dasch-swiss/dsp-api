@@ -89,6 +89,7 @@ INSERT {
             knora-base:deletedBy <@requestingUser> ;
             knora-base:previousValue ?currentLinkValue ;
             knora-base:valueHasUUID ?currentLinkUUID ;
+            knora-base:arkUrl <@linkUpdate.newLinkValueArkUrl> ;
             @maybeComment match {
                 case Some(comment) => {
                     knora-base:deleteComment """@comment""" ;

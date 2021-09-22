@@ -32,10 +32,12 @@ import org.knora.webapi._
   * @param resourceClassIri     the type of the resource to be created.
   * @param resourceLabel        the label of the resource.
   * @param resourceCreationDate the creation date that should be attached to the resource.
+  * @param resourceArkUrl       the ARK-URL of the resource.
   */
 case class SparqlTemplateResourceToCreate(resourceIri: IRI,
                                           permissions: String,
                                           sparqlForValues: String,
                                           resourceClassIri: IRI,
                                           resourceLabel: String,
-                                          resourceCreationDate: Instant)
+                                          resourceCreationDate: Instant,
+                                          resourceArkUrl: IRI)

@@ -21,13 +21,12 @@ package org.knora.webapi.messages.v2.responder.valuemessages
 
 import java.time.Instant
 import java.util.UUID
-
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import akka.util.Timeout
-import org.knora.webapi._
+import org.knora.webapi.{messages, _}
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException, NotImplementedException, SipiException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
@@ -180,12 +179,14 @@ object CreateValueRequestV2 extends KnoraJsonLDRequestReaderV2[CreateValueReques
   * @param valueType         the type of the value that was created.
   * @param valueUUID         the value's UUID.
   * @param valueCreationDate the value's creationDate
+  * @param valueArkUrl       the Ark-Url of the value.
   * @param projectADM        the project in which the value was created.
   */
 case class CreateValueResponseV2(valueIri: IRI,
                                  valueType: SmartIri,
                                  valueUUID: UUID,
                                  valueCreationDate: Instant,
+                                 valueArkUrl: IRI,
                                  projectADM: ProjectADM)
     extends KnoraJsonLDResponseV2
     with UpdateResultInProject {
@@ -207,6 +208,10 @@ case class CreateValueResponseV2(valueIri: IRI,
           OntologyConstants.KnoraApiV2Complex.ValueCreationDate -> JsonLDUtil.datatypeValueToJsonLDObject(
             value = valueCreationDate.toString,
             datatype = OntologyConstants.Xsd.DateTimeStamp.toSmartIri
+          ),
+          OntologyConstants.KnoraApiV2Complex.ArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+            value = valueArkUrl,
+            datatype = OntologyConstants.Xsd.Uri.toSmartIri
           )
         )
       ),
@@ -380,12 +385,17 @@ object UpdateValueRequestV2 extends KnoraJsonLDRequestReaderV2[UpdateValueReques
 /**
   * Represents a successful response to an [[UpdateValueRequestV2]].
   *
-  * @param valueIri   the IRI of the value version that was created.
-  * @param valueType  the type of the value that was updated.
-  * @param valueUUID  the value's UUID.
-  * @param projectADM the project in which the value was updated.
+  * @param valueIri     the IRI of the value version that was created.
+  * @param valueType    the type of the value that was updated.
+  * @param valueUUID    the value's UUID.
+  * @param valueArkUrl  the Ark-URL of the value.
+  * @param projectADM   the project in which the value was updated.
   */
-case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: UUID, projectADM: ProjectADM)
+case class UpdateValueResponseV2(valueIri: IRI,
+                                 valueType: SmartIri,
+                                 valueUUID: UUID,
+                                 valueArkUrl: IRI,
+                                 projectADM: ProjectADM)
     extends KnoraJsonLDResponseV2
     with UpdateResultInProject {
   override def toJsonLDDocument(targetSchema: ApiV2Schema,
@@ -402,7 +412,11 @@ case class UpdateValueResponseV2(valueIri: IRI, valueType: SmartIri, valueUUID: 
         Map(
           JsonLDKeywords.ID -> JsonLDString(valueIri),
           JsonLDKeywords.TYPE -> JsonLDString(valueType.toOntologySchema(ApiV2Complex).toString),
-          OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID))
+          OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(stringFormatter.base64EncodeUuid(valueUUID)),
+          OntologyConstants.KnoraApiV2Complex.ArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
+            value = valueArkUrl,
+            datatype = OntologyConstants.Xsd.Uri.toSmartIri
+          )
         )
       ),
       context = JsonLDUtil.makeContext(
@@ -664,6 +678,11 @@ sealed trait ReadValueV2 extends IOValueV2 {
   def previousValueIri: Option[IRI]
 
   /**
+    * The ARK URl stored for the value.
+    */
+  def valueArkUrl: IRI
+
+  /**
     * If the value has been marked as deleted, information about its deletion.
     */
   def deletionInfo: Option[DeletionInfo]
@@ -718,7 +737,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
               OntologyConstants.KnoraApiV2Complex.ValueHasUUID -> JsonLDString(
                 stringFormatter.base64EncodeUuid(valueHasUUID)),
               OntologyConstants.KnoraApiV2Complex.ArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
-                value = valueSmartIri.fromValueIriToArkUrl(valueUUID = valueHasUUID),
+                value = valueArkUrl,
                 datatype = OntologyConstants.Xsd.Uri.toSmartIri
               ),
               OntologyConstants.KnoraApiV2Complex.VersionArkUrl -> JsonLDUtil.datatypeValueToJsonLDObject(
@@ -756,7 +775,9 @@ sealed trait ReadValueV2 extends IOValueV2 {
   * @param attachedToUser                the user that created the value.
   * @param permissions                   the permissions that the value grants to user groups.
   * @param userPermission                the permission that the requesting user has on the value.
+  * @param valueCreationDate             the creation date of the value.
   * @param valueHasUUID                  the UUID shared by all the versions of this value.
+  * @param valueArkUrl                   the ARK-URL of the value.
   * @param valueContent                  the content of the value.
   * @param valueHasMaxStandoffStartIndex if this text value has standoff markup, the highest
   *                                      `knora-base:standoffTagHasEndIndex`
@@ -772,6 +793,7 @@ case class ReadTextValueV2(valueIri: IRI,
                            userPermission: EntityPermission,
                            valueCreationDate: Instant,
                            valueHasUUID: UUID,
+                           valueArkUrl: IRI,
                            valueContent: TextValueContentV2,
                            valueHasMaxStandoffStartIndex: Option[Int],
                            previousValueIri: Option[IRI],
@@ -840,7 +862,9 @@ case class ReadTextValueV2(valueIri: IRI,
   * @param attachedToUser   the user that created the value.
   * @param permissions      the permissions that the value grants to user groups.
   * @param userPermission   the permission that the requesting user has on the value.
+  * @param valueCreationDate the creation date of the value.
   * @param valueHasUUID     the UUID shared by all the versions of this value.
+  * @param valueArkUrl      the ARK-URL of the value.
   * @param valueContent     the content of the value.
   * @param valueHasRefCount if this is a link value, its reference count. Not returned in API responses, but needed
   *                         here for testing.
@@ -855,6 +879,7 @@ case class ReadLinkValueV2(valueIri: IRI,
                            userPermission: EntityPermission,
                            valueCreationDate: Instant,
                            valueHasUUID: UUID,
+                           valueArkUrl: IRI,
                            valueContent: LinkValueContentV2,
                            valueHasRefCount: Int,
                            previousValueIri: Option[IRI] = None,
@@ -879,7 +904,9 @@ case class ReadLinkValueV2(valueIri: IRI,
   * @param attachedToUser   the user that created the value.
   * @param permissions      the permissions that the value grants to user groups.
   * @param userPermission   the permission that the requesting user has on the value.
+  * @param valueCreationDate the creation date of the value.
   * @param valueHasUUID     the UUID shared by all the versions of this value.
+  * @param valueArkUrl      the ARK-URL of the value.
   * @param valueContent     the content of the value.
   * @param previousValueIri the IRI of the previous version of this value. Not returned in API responses, but needed
   *                         here for testing.
@@ -892,6 +919,7 @@ case class ReadOtherValueV2(valueIri: IRI,
                             userPermission: EntityPermission,
                             valueCreationDate: Instant,
                             valueHasUUID: UUID,
+                            valueArkUrl: IRI,
                             valueContent: ValueContentV2,
                             previousValueIri: Option[IRI],
                             deletionInfo: Option[DeletionInfo])
@@ -1021,12 +1049,14 @@ case class UpdateValuePermissionsV2(resourceIri: IRI,
   * @param valueContent the content of the new value (unescaped, as it would be read from the triplestore).
   * @param permissions  the permissions of the new value.
   * @param creationDate the new value's creation date.
+  * @param valueArkUrl  the ARK-URL of the value.
   */
 case class UnverifiedValueV2(newValueIri: IRI,
                              newValueUUID: UUID,
                              valueContent: ValueContentV2,
                              permissions: String,
-                             creationDate: Instant)
+                             creationDate: Instant,
+                             valueArkUrl: IRI)
 
 /**
   * The content of the value of a Knora property.

@@ -19,6 +19,7 @@
 
 @import org.knora.webapi.IRI
 @import org.knora.webapi.messages.SmartIri
+@import java.util.UUID
 @import java.time.Instant
 
 @**

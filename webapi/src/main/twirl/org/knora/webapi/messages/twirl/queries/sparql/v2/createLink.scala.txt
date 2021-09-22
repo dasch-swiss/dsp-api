@@ -31,7 +31,6 @@
  * @param triplestore       the name of the triplestore being used.
  * @param resourceIri       the resource that is the source of the link.
  * @param linkUpdate        a [[LinkUpdate]] object describing the link to insert.
- * @param newValueUUID      the UUID to be attached to the value.
  * @param creationDate      an xsd:dateTimeStamp that will be attached to the link value.
  * @param maybeComment      an optional comment on the link.
  * @param stringFormatter a [[StringFormatter]].
@@ -42,7 +41,6 @@
   triplestore: String,
   resourceIri: IRI,
   linkUpdate: SparqlTemplateLinkUpdate,
-  newValueUUID: UUID,
   creationDate: Instant,
   maybeComment: Option[String],
   stringFormatter: StringFormatter)
@@ -67,7 +65,6 @@ DELETE {
             org.knora.webapi.messages.twirl.queries.sparql.v2.txt.generateInsertStatementsForCreateLink(resourceIri = resourceIri,
                                                                         linkUpdate = linkUpdate,
                                                                         creationDate = creationDate,
-                                                                        newValueUUID = newValueUUID,
                                                                         maybeComment = maybeComment,
                                                                         maybeValueHasOrder = None,
                                                                         stringFormatter = stringFormatter)
