@@ -31,8 +31,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi.sharedtestdata._
 
 /**
-  * This spec is used to test subclasses of the [[PermissionsResponderRequestADM]] class.
-  */
+ * This spec is used to test subclasses of the [[PermissionsResponderRequestADM]] class.
+ */
 class PermissionsMessagesADMSpec extends CoreSpec() {
 
   "Administrative Permission Get Requests" should {
@@ -166,7 +166,8 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           name = invalidName,
           additionalInformation = None,
           permissionCode = None
-        ))
+        )
+      )
       val caught = intercept[BadRequestException](
         AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
@@ -181,7 +182,8 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       )
       assert(
         caught.getMessage === s"Invalid value for name parameter of hasPermissions: $invalidName, it should be one of " +
-          s"${AdministrativePermissionAbbreviations.toString}")
+          s"${AdministrativePermissionAbbreviations.toString}"
+      )
     }
 
     "return 'BadRequest' if the a permissions supplied for AdministrativePermissionCreateRequestADM had invalid name" in {
@@ -312,7 +314,8 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
         )
       )
       assert(
-        caught.getMessage === s"Either a group, a resource class, a property, or a combination of resource class and property must be given.")
+        caught.getMessage === s"Either a group, a resource class, a property, or a combination of resource class and property must be given."
+      )
     }
 
     "return 'ForbiddenException' if requesting user of DefaultObjectAccessPermissionGetRequestADM is not system or project admin" in {
@@ -324,7 +327,8 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
         )
       )
       assert(
-        caught.getMessage === s"Default object access permissions can only be queried by system and project admin.")
+        caught.getMessage === s"Default object access permissions can only be queried by system and project admin."
+      )
     }
 
     "return 'BadRequest' if the supplied project IRI for DefaultObjectAccessPermissionsForProjectGetRequestADM is not valid" in {
@@ -557,7 +561,8 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           name = invalidName,
           additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
           permissionCode = Some(8)
-        ))
+        )
+      )
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
@@ -568,11 +573,13 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID()
-        ))
+        )
+      )
       assert(
         caught.getMessage ===
           s"Invalid value for name parameter of hasPermissions: $invalidName, it should be one of " +
-            s"${EntityPermissionAbbreviations.toString}")
+          s"${EntityPermissionAbbreviations.toString}"
+      )
     }
 
     "not create a DefaultObjectAccessPermission for project and property if hasPermissions set contained permission with invalid code" in {
@@ -582,7 +589,8 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           name = OntologyConstants.KnoraBase.ChangeRightsPermission,
           additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
           permissionCode = Some(invalidCode)
-        ))
+        )
+      )
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
@@ -593,11 +601,13 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID()
-        ))
+        )
+      )
       assert(
         caught.getMessage ===
           s"Invalid value for permissionCode parameter of hasPermissions: $invalidCode, it should be one of " +
-            s"${PermissionTypeAndCodes.values.toString}")
+          s"${PermissionTypeAndCodes.values.toString}"
+      )
     }
 
     "not create a DefaultObjectAccessPermission for project and property if hasPermissions set contained permission with inconsistent code and name" in {
@@ -608,7 +618,8 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           name = name,
           additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
           permissionCode = Some(code)
-        ))
+        )
+      )
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
@@ -619,7 +630,8 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID()
-        ))
+        )
+      )
       assert(caught.getMessage === s"Given permission code $code and permission name $name are not consistent.")
     }
 
@@ -630,7 +642,8 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           name = "",
           additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
           permissionCode = None
-        ))
+        )
+      )
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
@@ -641,10 +654,12 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID()
-        ))
+        )
+      )
       assert(
         caught.getMessage ===
-          s"One of permission code or permission name must be provided for a default object access permission.")
+          s"One of permission code or permission name must be provided for a default object access permission."
+      )
     }
 
     "not create a DefaultObjectAccessPermission for project and property if hasPermissions set contained permission without additionalInformation parameter" in {
@@ -654,7 +669,8 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           name = OntologyConstants.KnoraBase.ChangeRightsPermission,
           additionalInformation = None,
           permissionCode = Some(8)
-        ))
+        )
+      )
       val caught = intercept[BadRequestException](
         DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
@@ -665,10 +681,12 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.anythingAdminUser,
           apiRequestID = UUID.randomUUID()
-        ))
+        )
+      )
       assert(
         caught.getMessage ===
-          s"additionalInformation of a default object access permission type cannot be empty.")
+          s"additionalInformation of a default object access permission type cannot be empty."
+      )
     }
 
     "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionCreateRequestADM is not system or project Admin" in {
@@ -766,7 +784,8 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
         )
       )
       assert(
-        caught.getMessage === "Either a group, a resource class, a property, or a combination of resource class and property must be given.")
+        caught.getMessage === "Either a group, a resource class, a property, or a combination of resource class and property must be given."
+      )
     }
   }
 
@@ -803,9 +822,11 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       val projectIri = INCUNABULA_PROJECT_IRI
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
-      val result = SharedTestDataADM.rootUser.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri),
-                                                                           projectIri,
-                                                                           None)
+      val result = SharedTestDataADM.rootUser.permissions.hasPermissionFor(
+        ResourceCreateOperation(resourceClassIri),
+        projectIri,
+        None
+      )
 
       result should be(true)
     }
@@ -836,9 +857,11 @@ class PermissionsMessagesADMSpec extends CoreSpec() {
       val projectIri = INCUNABULA_PROJECT_IRI
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
-      val result = SharedTestDataADM.normalUser.permissions.hasPermissionFor(ResourceCreateOperation(resourceClassIri),
-                                                                             projectIri,
-                                                                             None)
+      val result = SharedTestDataADM.normalUser.permissions.hasPermissionFor(
+        ResourceCreateOperation(resourceClassIri),
+        projectIri,
+        None
+      )
 
       result should be(false)
     }

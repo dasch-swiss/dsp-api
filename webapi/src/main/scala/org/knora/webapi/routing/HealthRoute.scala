@@ -34,8 +34,8 @@ import scala.concurrent.duration._
 case class HealthCheckResult(name: String, severity: String, status: Boolean, message: String)
 
 /**
-  * Provides health check logic
-  */
+ * Provides health check logic
+ */
 trait HealthCheck {
   this: HealthRoute =>
 
@@ -71,8 +71,7 @@ trait HealthCheck {
 
     } yield response
 
-  protected def createResponse(result: HealthCheckResult): HttpResponse = {
-
+  protected def createResponse(result: HealthCheckResult): HttpResponse =
     HttpResponse(
       status = statusCode(result.status),
       entity = HttpEntity(
@@ -85,44 +84,40 @@ trait HealthCheck {
         ).compactPrint
       )
     )
-  }
 
   private def status(s: Boolean) = if (s) "healthy" else "unhealthy"
 
   private def statusCode(s: Boolean) = if (s) StatusCodes.OK else StatusCodes.ServiceUnavailable
 
-  private def unhealthy(str: String) = {
+  private def unhealthy(str: String) =
     HealthCheckResult(
       name = "AppState",
       severity = "non fatal",
       status = false,
       message = str
     )
-  }
 
-  private def healthy() = {
+  private def healthy() =
     HealthCheckResult(
       name = "AppState",
       severity = "non fatal",
       status = true,
       message = "Application is healthy"
     )
-  }
 }
 
 /**
-  * Provides the '/health' endpoint serving the health status.
-  */
+ * Provides the '/health' endpoint serving the health status.
+ */
 class HealthRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with HealthCheck {
 
   /**
-    * Returns the route.
-    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
+   * Returns the route.
+   */
+  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     path("health") {
       get { requestContext =>
         requestContext.complete(healthCheck())
       }
     }
-  }
 }

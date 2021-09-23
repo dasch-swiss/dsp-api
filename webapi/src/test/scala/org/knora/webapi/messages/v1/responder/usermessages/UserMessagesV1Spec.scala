@@ -28,8 +28,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 /**
-  * This spec is used to test subclasses of the [[UsersResponderRequestV1]] class.
-  */
+ * This spec is used to test subclasses of the [[UsersResponderRequestV1]] class.
+ */
 class UserMessagesV1Spec extends AnyWordSpecLike with Matchers {
 
   private val lang = SharedTestDataV1.rootUser.userData.lang

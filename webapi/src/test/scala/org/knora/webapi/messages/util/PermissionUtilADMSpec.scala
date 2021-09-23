@@ -194,7 +194,10 @@ class PermissionUtilADMSpec extends CoreSpec("PermissionUtilSpec") with Implicit
         PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)
       )
 
-      PermissionUtilADM.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.OAP) should contain allElementsOf permissionsSet
+      PermissionUtilADM.parsePermissionsWithType(
+        Some(hasPermissionsString),
+        PermissionType.OAP
+      ) should contain allElementsOf permissionsSet
     }
 
     "return parsed permissions string as 'Set[PermissionV1]' (administrative permissions)" in {
@@ -208,7 +211,10 @@ class PermissionUtilADMSpec extends CoreSpec("PermissionUtilSpec") with Implicit
         PermissionADM.projectResourceCreateRestrictedPermission("http://www.knora.org/ontology/00FF/images#bildformat")
       )
 
-      PermissionUtilADM.parsePermissionsWithType(Some(hasPermissionsString), PermissionType.AP) should contain allElementsOf permissionsSet
+      PermissionUtilADM.parsePermissionsWithType(
+        Some(hasPermissionsString),
+        PermissionType.AP
+      ) should contain allElementsOf permissionsSet
     }
 
     "build a 'PermissionV1' object" in {

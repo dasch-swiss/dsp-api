@@ -27,12 +27,12 @@ import org.knora.webapi.messages.util.rdf._
 import scala.util.{Failure, Success, Try}
 
 /**
-  * Performs SHACL validation using RDF4J.
-  *
-  * @param baseDir       the base directory that SHACL graphs are loaded from.
-  * @param rdfFormatUtil an [[RdfFormatUtil]].
-  * @param nodeFactory   an [[RDF4JNodeFactory]].
-  */
+ * Performs SHACL validation using RDF4J.
+ *
+ * @param baseDir       the base directory that SHACL graphs are loaded from.
+ * @param rdfFormatUtil an [[RdfFormatUtil]].
+ * @param nodeFactory   an [[RDF4JNodeFactory]].
+ */
 class RDF4JShaclValidator(baseDir: Path, rdfFormatUtil: RDF4JFormatUtil, private val nodeFactory: RDF4JNodeFactory)
     extends AbstractShaclValidator[rdf4j.model.Model](baseDir, rdfFormatUtil) {
 
@@ -98,7 +98,6 @@ class RDF4JShaclValidator(baseDir: Path, rdfFormatUtil: RDF4JFormatUtil, private
     validationResultTry.get
   }
 
-  override protected def rdfModelToShaclGraph(rdfModel: RdfModel): rdf4j.model.Model = {
+  override protected def rdfModelToShaclGraph(rdfModel: RdfModel): rdf4j.model.Model =
     rdfModel.asRDF4JModel
-  }
 }

@@ -3,11 +3,11 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 import org.knora.webapi.IRI
 
 sealed trait ValidationError
-case object InvalidUsername          extends ValidationError
-case object InvalidEmail             extends ValidationError
+case object InvalidUsername extends ValidationError
+case object InvalidEmail extends ValidationError
 case object InvalidGivenOrFamilyName extends ValidationError
-case object InvalidPassword          extends ValidationError
-case object InvalidLanguageCode      extends ValidationError
+case object InvalidPassword extends ValidationError
+case object InvalidLanguageCode extends ValidationError
 
 trait UserCreatePayloadTraitADM {
   def create(

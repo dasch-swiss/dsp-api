@@ -32,45 +32,46 @@ import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import scala.jdk.CollectionConverters._
 
 /**
-  * Parses a Gravsearch query. The syntax that is accepted is that of a SPARQL CONSTRUCT query, with some restrictions:
-  *
-  * - The query must be a CONSTRUCT query.
-  * - It must use no internal ontologies.
-  * - The CONSTRUCT clause may contain only quad patterns.
-  * - The WHERE clause may contain only quad patterns, FILTER, and UNION.
-  * - A UNION may not contain a nested UNION or OPTIONAL.
-  * - The value assigned in a BIND must be a Knora data IRI.
-  */
+ * Parses a Gravsearch query. The syntax that is accepted is that of a SPARQL CONSTRUCT query, with some restrictions:
+ *
+ * - The query must be a CONSTRUCT query.
+ * - It must use no internal ontologies.
+ * - The CONSTRUCT clause may contain only quad patterns.
+ * - The WHERE clause may contain only quad patterns, FILTER, and UNION.
+ * - A UNION may not contain a nested UNION or OPTIONAL.
+ * - The value assigned in a BIND must be a Knora data IRI.
+ */
 object GravsearchParser {
   // This implementation uses the RDF4J SPARQL parser.
   private val sparqlParserFactory = new SPARQLParserFactory()
   private val sparqlParser: QueryParser = sparqlParserFactory.getParser
 
   /**
-    * Given a string representation of a Gravsearch query, returns a [[ConstructQuery]].
-    *
-    * @param query the Gravsearch string to be parsed.
-    * @return a [[ConstructQuery]].
-    */
+   * Given a string representation of a Gravsearch query, returns a [[ConstructQuery]].
+   *
+   * @param query the Gravsearch string to be parsed.
+   * @return a [[ConstructQuery]].
+   */
   def parseQuery(query: String): ConstructQuery = {
     val visitor = new ConstructQueryModelVisitor
 
-    val parsedQuery = try {
-      sparqlParser.parseQuery(query, OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion)
-    } catch {
-      case malformed: MalformedQueryException =>
-        throw GravsearchException(s"Invalid search query: ${malformed.getMessage}")
-    }
+    val parsedQuery =
+      try {
+        sparqlParser.parseQuery(query, OntologyConstants.KnoraApiV2Simple.KnoraApiV2PrefixExpansion)
+      } catch {
+        case malformed: MalformedQueryException =>
+          throw GravsearchException(s"Invalid search query: ${malformed.getMessage}")
+      }
 
     parsedQuery.getTupleExpr.visit(visitor)
     visitor.makeConstructQuery
   }
 
   /**
-    * An RDF4J [[algebra.QueryModelVisitor]] that converts a [[ParsedQuery]] into a [[ConstructQuery]].
-    *
-    * @param isInNegation Indicates if the element currently processed is in a context of negation (FILTER NOT EXISTS or MINUS).
-    */
+   * An RDF4J [[algebra.QueryModelVisitor]] that converts a [[ParsedQuery]] into a [[ConstructQuery]].
+   *
+   * @param isInNegation Indicates if the element currently processed is in a context of negation (FILTER NOT EXISTS or MINUS).
+   */
   class ConstructQueryModelVisitor(isInNegation: Boolean = false)
       extends algebra.QueryModelVisitor[GravsearchException] {
     private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -105,22 +106,22 @@ object GravsearchParser {
     private val allIris: collection.mutable.Set[SmartIri] = collection.mutable.Set.empty[SmartIri]
 
     /**
-      * After this visitor has visited the parse tree, this method returns a [[ConstructQuery]] representing
-      * the query that was parsed.
-      *
-      * @return a [[ConstructQuery]].
-      */
+     * After this visitor has visited the parse tree, this method returns a [[ConstructQuery]] representing
+     * the query that was parsed.
+     *
+     * @return a [[ConstructQuery]].
+     */
     def makeConstructQuery: ConstructQuery = {
 
       /**
-        * Given a source name used in an [[algebra.ProjectionElem]], checks whether it's the name of a constant whose
-        * literal value was saved when the [[algebra.ExtensionElem]] nodes were processed. If so, returns a [[algebra.Var]] representing
-        * the literal value. Otherwise, returns an [[algebra.Var]] representing the name itself. The resulting [[algebra.Var]] can be
-        * passed to `makeStatementPatternSubject`, `makeStatementPatternPredicate`, or `makeStatementPatternObject`.
-        *
-        * @param sourceName the source name.
-        * @return an [[algebra.Var]] representing the name or its literal value.
-        */
+       * Given a source name used in an [[algebra.ProjectionElem]], checks whether it's the name of a constant whose
+       * literal value was saved when the [[algebra.ExtensionElem]] nodes were processed. If so, returns a [[algebra.Var]] representing
+       * the literal value. Otherwise, returns an [[algebra.Var]] representing the name itself. The resulting [[algebra.Var]] can be
+       * passed to `makeStatementPatternSubject`, `makeStatementPatternPredicate`, or `makeStatementPatternObject`.
+       *
+       * @param sourceName the source name.
+       * @return an [[algebra.Var]] representing the name or its literal value.
+       */
       def nameToVar(sourceName: String): algebra.Var = {
         val sparqlVar = new algebra.Var
         sparqlVar.setName(sourceName)
@@ -156,9 +157,11 @@ object GravsearchParser {
 
       ConstructQuery(
         constructClause = ConstructClause(statements = constructStatements, querySchema = Some(querySchema)),
-        whereClause = WhereClause(patterns = getWherePatterns,
-                                  positiveEntities = positiveEntities.toSet,
-                                  querySchema = Some(querySchema)),
+        whereClause = WhereClause(
+          patterns = getWherePatterns,
+          positiveEntities = positiveEntities.toSet,
+          querySchema = Some(querySchema)
+        ),
         orderBy = orderBy.toSeq,
         offset = offset,
         querySchema = Some(querySchema)
@@ -166,15 +169,13 @@ object GravsearchParser {
     }
 
     /**
-      * Returns the WHERE patterns found in the query.
-      */
-    private def getWherePatterns: Seq[QueryPattern] = {
+     * Returns the WHERE patterns found in the query.
+     */
+    private def getWherePatterns: Seq[QueryPattern] =
       wherePatterns.toSeq
-    }
 
-    private def unsupported(node: algebra.QueryModelNode): Unit = {
+    private def unsupported(node: algebra.QueryModelNode): Unit =
       throw GravsearchException(s"SPARQL feature not supported in Gravsearch query: $node")
-    }
 
     private def checkIriSchema(smartIri: SmartIri): Unit = {
       if (smartIri.isKnoraOntologyIri) {
@@ -217,26 +218,25 @@ object GravsearchParser {
     }
 
     /**
-      * Converts an RDF4J [[algebra.Var]] into an [[Entity]].
-      *
-      * @param objVar the [[algebra.Var]] to be converted.
-      * @return a [[Entity]].
-      */
-    private def makeEntityFromVar(objVar: algebra.Var): Entity = {
+     * Converts an RDF4J [[algebra.Var]] into an [[Entity]].
+     *
+     * @param objVar the [[algebra.Var]] to be converted.
+     * @return a [[Entity]].
+     */
+    private def makeEntityFromVar(objVar: algebra.Var): Entity =
       if (objVar.isAnonymous || objVar.isConstant) {
         makeEntityFromValue(objVar.getValue)
       } else {
         makeQueryVariable(objVar.getName)
       }
-    }
 
     /**
-      * Converts an [[rdf4j.model.Value]] into an [[Entity]].
-      *
-      * @param value the value to be converted.
-      * @return a [[Entity]].
-      */
-    private def makeEntityFromValue(value: rdf4j.model.Value): Entity = {
+     * Converts an [[rdf4j.model.Value]] into an [[Entity]].
+     *
+     * @param value the value to be converted.
+     * @return a [[Entity]].
+     */
+    private def makeEntityFromValue(value: rdf4j.model.Value): Entity =
       value match {
         case iri: rdf4j.model.IRI => makeIri(iri)
 
@@ -248,7 +248,6 @@ object GravsearchParser {
 
         case other => throw GravsearchException(s"Unsupported Value: $other with class ${other.getClass.getName}")
       }
-    }
 
     private def makeQueryVariable(variableName: String): QueryVariable = {
       val queryVar = if (variableName.contains("__")) {
@@ -276,20 +275,18 @@ object GravsearchParser {
       wherePatterns.append(StatementPattern(subj = subj, pred = pred, obj = obj))
     }
 
-    override def meet(node: algebra.Str): Unit = {
+    override def meet(node: algebra.Str): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.Sum): Unit = {
+    override def meet(node: algebra.Sum): Unit =
       unsupported(node)
-    }
 
     /**
-      * Checks the contents of a block patterns to prevent nested blocks.
-      *
-      * @param patterns the patterns inside the block.
-      * @return the same patterns.
-      */
+     * Checks the contents of a block patterns to prevent nested blocks.
+     *
+     * @param patterns the patterns inside the block.
+     * @return the same patterns.
+     */
     private def checkBlockPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
       for (pattern <- patterns) {
         pattern match {
@@ -347,29 +344,23 @@ object GravsearchParser {
       wherePatterns.append(UnionPattern(Seq(leftPatterns) ++ rightPatterns))
     }
 
-    override def meet(node: algebra.ValueConstant): Unit = {
+    override def meet(node: algebra.ValueConstant): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.ListMemberOperator): Unit = {
+    override def meet(node: algebra.ListMemberOperator): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.Var): Unit = {
+    override def meet(node: algebra.Var): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.ZeroLengthPath): Unit = {
+    override def meet(node: algebra.ZeroLengthPath): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.Regex): Unit = {
+    override def meet(node: algebra.Regex): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.Reduced): Unit = {
+    override def meet(node: algebra.Reduced): Unit =
       node.visitChildren(this)
-    }
 
     override def meet(node: algebra.ProjectionElemList): Unit = {
       // A ProjectionElemList represents the patterns in the CONSTRUCT clause. They're represented using
@@ -402,16 +393,15 @@ object GravsearchParser {
       }
 
       constructStatementsWithConstants.append(
-        ConstructStatementWithConstants(subj = subj.get, pred = pred.get, obj = obj.get))
+        ConstructStatementWithConstants(subj = subj.get, pred = pred.get, obj = obj.get)
+      )
     }
 
-    override def meet(node: algebra.ProjectionElem): Unit = {
+    override def meet(node: algebra.ProjectionElem): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.Projection): Unit = {
+    override def meet(node: algebra.Projection): Unit =
       node.visitChildren(this)
-    }
 
     override def meet(node: algebra.OrderElem): Unit = {
       // Ignored, because it's handled in meet(algebra.Order)
@@ -442,67 +432,53 @@ object GravsearchParser {
       // Do nothing, because this is handled elsewhere.
     }
 
-    override def meet(node: algebra.Not): Unit = {
+    override def meet(node: algebra.Not): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.Namespace): Unit = {
+    override def meet(node: algebra.Namespace): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.MultiProjection): Unit = {
+    override def meet(node: algebra.MultiProjection): Unit =
       node.visitChildren(this)
-    }
 
-    override def meet(move: algebra.Move): Unit = {
+    override def meet(move: algebra.Move): Unit =
       unsupported(move)
-    }
 
-    override def meet(node: algebra.Coalesce): Unit = {
+    override def meet(node: algebra.Coalesce): Unit =
       unsupported(node)
-    }
 
     override def meet(node: algebra.Compare): Unit = {
       // Do nothing, because this is handled elsewhere.
     }
 
-    override def meet(node: algebra.CompareAll): Unit = {
+    override def meet(node: algebra.CompareAll): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.IsLiteral): Unit = {
+    override def meet(node: algebra.IsLiteral): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.IsNumeric): Unit = {
+    override def meet(node: algebra.IsNumeric): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.IsResource): Unit = {
+    override def meet(node: algebra.IsResource): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.IsURI): Unit = {
+    override def meet(node: algebra.IsURI): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.SameTerm): Unit = {
+    override def meet(node: algebra.SameTerm): Unit =
       unsupported(node)
-    }
 
-    override def meet(modify: algebra.Modify): Unit = {
+    override def meet(modify: algebra.Modify): Unit =
       unsupported(modify)
-    }
 
-    override def meet(node: algebra.Min): Unit = {
+    override def meet(node: algebra.Min): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.Max): Unit = {
+    override def meet(node: algebra.Max): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.ExtensionElem): Unit = {
+    override def meet(node: algebra.ExtensionElem): Unit =
       node.getExpr match {
         case valueConstant: algebra.ValueConstant =>
           if (node.getName.startsWith("_const_")) {
@@ -533,23 +509,18 @@ object GravsearchParser {
 
         case _ => ()
       }
-    }
 
-    override def meet(node: algebra.Extension): Unit = {
+    override def meet(node: algebra.Extension): Unit =
       node.visitChildren(this)
-    }
 
-    override def meet(node: algebra.Exists): Unit = {
+    override def meet(node: algebra.Exists): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.EmptySet): Unit = {
+    override def meet(node: algebra.EmptySet): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.Distinct): Unit = {
+    override def meet(node: algebra.Distinct): Unit =
       unsupported(node)
-    }
 
     override def meet(node: algebra.Difference): Unit = {
       // Visit the nodes that the MINUS applies to.
@@ -562,81 +533,63 @@ object GravsearchParser {
       allIris ++= subQueryVisitor.allIris
     }
 
-    override def meet(deleteData: algebra.DeleteData): Unit = {
+    override def meet(deleteData: algebra.DeleteData): Unit =
       unsupported(deleteData)
-    }
 
-    override def meet(node: algebra.Datatype): Unit = {
+    override def meet(node: algebra.Datatype): Unit =
       unsupported(node)
-    }
 
-    override def meet(clear: algebra.Clear): Unit = {
+    override def meet(clear: algebra.Clear): Unit =
       unsupported(clear)
-    }
 
-    override def meet(node: algebra.Bound): Unit = {
+    override def meet(node: algebra.Bound): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.BNodeGenerator): Unit = {
+    override def meet(node: algebra.BNodeGenerator): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.BindingSetAssignment): Unit = {
+    override def meet(node: algebra.BindingSetAssignment): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.Avg): Unit = {
+    override def meet(node: algebra.Avg): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.ArbitraryLengthPath): Unit = {
+    override def meet(node: algebra.ArbitraryLengthPath): Unit =
       unsupported(node)
-    }
 
     override def meet(node: algebra.And): Unit = {
       // Do nothing, because this is handled elsewhere.
     }
 
-    override def meet(add: algebra.Add): Unit = {
+    override def meet(add: algebra.Add): Unit =
       unsupported(add)
-    }
 
-    override def meet(node: algebra.QueryRoot): Unit = {
+    override def meet(node: algebra.QueryRoot): Unit =
       node.visitChildren(this)
-    }
 
-    override def meet(node: algebra.DescribeOperator): Unit = {
+    override def meet(node: algebra.DescribeOperator): Unit =
       throw GravsearchException(s"DESCRIBE queries are not allowed in search, please use a CONSTRUCT query instead")
-    }
 
-    override def meet(copy: algebra.Copy): Unit = {
+    override def meet(copy: algebra.Copy): Unit =
       unsupported(copy)
-    }
 
-    override def meet(node: algebra.Count): Unit = {
+    override def meet(node: algebra.Count): Unit =
       unsupported(node)
-    }
 
-    override def meet(create: algebra.Create): Unit = {
+    override def meet(create: algebra.Create): Unit =
       unsupported(create)
-    }
 
-    override def meet(node: algebra.Sample): Unit = {
+    override def meet(node: algebra.Sample): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.Service): Unit = {
+    override def meet(node: algebra.Service): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.SingletonSet): Unit = {
+    override def meet(node: algebra.SingletonSet): Unit =
       node.visitChildren(this)
-    }
 
-    override def meet(node: algebra.CompareAny): Unit = {
+    override def meet(node: algebra.CompareAny): Unit =
       unsupported(node)
-    }
 
     private def makeFilterExpression(valueExpr: algebra.ValueExpr): Expression = {
       valueExpr match {
@@ -649,7 +602,8 @@ object GravsearchParser {
             leftArg = leftArg,
             operator = CompareExpressionOperator.lookup(
               operator,
-              throw GravsearchException(s"Operator $operator is not supported in a CompareExpression")),
+              throw GravsearchException(s"Operator $operator is not supported in a CompareExpression")
+            ),
             rightArg = rightArg
           )
 
@@ -701,11 +655,13 @@ object GravsearchParser {
                 case queryVar: QueryVariable => queryVar
                 case _ =>
                   throw GravsearchException(
-                    s"Entity $objVar not allowed in regex function as the first argument, a variable is required")
+                    s"Entity $objVar not allowed in regex function as the first argument, a variable is required"
+                  )
               }
             case other =>
               throw GravsearchException(
-                s"$other is not allowed in regex function as first argument, a variable is required")
+                s"$other is not allowed in regex function as first argument, a variable is required"
+              )
           }
 
           // second argument representing the REGEX pattern to be used to perform the check
@@ -716,7 +672,8 @@ object GravsearchParser {
               valConstant.getValue.stringValue()
             case other =>
               throw GravsearchException(
-                s"$other not allowed in regex function as the second argument, a string is expected")
+                s"$other not allowed in regex function as the second argument, a string is expected"
+              )
 
           }
 
@@ -726,7 +683,8 @@ object GravsearchParser {
             case None                                     => None
             case other =>
               throw GravsearchException(
-                s"$other not allowed in regex function as the third argument, a string is expected")
+                s"$other not allowed in regex function as the third argument, a string is expected"
+              )
 
           }
 
@@ -743,11 +701,13 @@ object GravsearchParser {
                 case queryVar: QueryVariable => queryVar
                 case _ =>
                   throw GravsearchException(
-                    s"Entity $objVar not allowed in lang function as an argument, a variable is required")
+                    s"Entity $objVar not allowed in lang function as an argument, a variable is required"
+                  )
               }
             case other =>
               throw GravsearchException(
-                s"$other is not allowed in lang function as an argument, a variable is required")
+                s"$other is not allowed in lang function as an argument, a variable is required"
+              )
           }
 
           LangFunction(textValueVar)
@@ -757,7 +717,7 @@ object GravsearchParser {
     }
 
     override def meet(node: algebra.Filter): Unit = {
-      def makeFilterNotExists(not: algebra.Not): FilterNotExistsPattern = {
+      def makeFilterNotExists(not: algebra.Not): FilterNotExistsPattern =
         not.getArg match {
           case exists: algebra.Exists =>
             val subQueryVisitor = new ConstructQueryModelVisitor(isInNegation = true)
@@ -767,7 +727,6 @@ object GravsearchParser {
 
           case _ => throw GravsearchException(s"Unsupported NOT expression: $not")
         }
-      }
 
       // Visit the nodes that the filter applies to.
       node.getArg.visit(this)
@@ -787,61 +746,47 @@ object GravsearchParser {
       wherePatterns.append(filterQueryPattern)
     }
 
-    override def meet(node: algebra.FunctionCall): Unit = {
+    override def meet(node: algebra.FunctionCall): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.Group): Unit = {
+    override def meet(node: algebra.Group): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.GroupConcat): Unit = {
+    override def meet(node: algebra.GroupConcat): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.GroupElem): Unit = {
+    override def meet(node: algebra.GroupElem): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.If): Unit = {
+    override def meet(node: algebra.If): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.In): Unit = {
+    override def meet(node: algebra.In): Unit =
       unsupported(node)
-    }
 
-    override def meet(insertData: algebra.InsertData): Unit = {
+    override def meet(insertData: algebra.InsertData): Unit =
       unsupported(insertData)
-    }
 
-    override def meet(node: algebra.Intersection): Unit = {
+    override def meet(node: algebra.Intersection): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.IRIFunction): Unit = {
+    override def meet(node: algebra.IRIFunction): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.IsBNode): Unit = {
+    override def meet(node: algebra.IsBNode): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.MathExpr): Unit = {
+    override def meet(node: algebra.MathExpr): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.LocalName): Unit = {
+    override def meet(node: algebra.LocalName): Unit =
       unsupported(node)
-    }
 
-    override def meet(load: algebra.Load): Unit = {
+    override def meet(load: algebra.Load): Unit =
       unsupported(load)
-    }
 
-    override def meet(node: algebra.Like): Unit = {
+    override def meet(node: algebra.Like): Unit =
       unsupported(node)
-    }
 
     override def meet(node: algebra.LeftJoin): Unit = {
       // Visit the nodes that aren't in the OPTIONAL.
@@ -863,26 +808,21 @@ object GravsearchParser {
       wherePatterns.append(OptionalPattern(rightArgVisitor.getWherePatterns ++ filterPattern))
     }
 
-    override def meet(node: algebra.LangMatches): Unit = {
+    override def meet(node: algebra.LangMatches): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.Lang): Unit = {
+    override def meet(node: algebra.Lang): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.Label): Unit = {
+    override def meet(node: algebra.Label): Unit =
       unsupported(node)
-    }
 
-    override def meet(node: algebra.Join): Unit = {
+    override def meet(node: algebra.Join): Unit =
       // Successive statements are connected by Joins.
       node.visitChildren(this)
-    }
 
-    override def meetOther(node: algebra.QueryModelNode): Unit = {
+    override def meetOther(node: algebra.QueryModelNode): Unit =
       unsupported(node)
-    }
   }
 
 }

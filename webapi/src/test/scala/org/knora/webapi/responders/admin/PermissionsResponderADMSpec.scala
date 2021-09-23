@@ -49,8 +49,8 @@ object PermissionsResponderADMSpec {
 }
 
 /**
-  * This spec is used to test the [[PermissionsResponderADM]] actor.
-  */
+ * This spec is used to test the [[PermissionsResponderADM]] actor.
+ */
 class PermissionsResponderADMSpec
     extends CoreSpec(PermissionsResponderADMSpec.config)
     with ImplicitSender
@@ -69,8 +69,10 @@ class PermissionsResponderADMSpec
     PrivateMethod[Future[Set[PermissionADM]]](Symbol("defaultObjectAccessPermissionsForGroupsGetADM"))
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/responders.admin.PermissionsResponderV1Spec/additional_permissions-data.ttl",
-                  name = "http://www.knora.org/data/permissions"),
+    RdfDataObject(
+      path = "test_data/responders.admin.PermissionsResponderV1Spec/additional_permissions-data.ttl",
+      name = "http://www.knora.org/data/permissions"
+    ),
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
@@ -177,9 +179,10 @@ class PermissionsResponderADMSpec
     }
     "ask for userAdministrativePermissionsGetADM" should {
       "return user's administrative permissions (helper method used in queries before)" in {
-        val f
-          : Future[Map[IRI, Set[PermissionADM]]] = responderUnderTest invokePrivate userAdministrativePermissionsGetADM(
-          multiuserUser.permissions.groupsPerProject)
+        val f: Future[Map[IRI, Set[PermissionADM]]] =
+          responderUnderTest invokePrivate userAdministrativePermissionsGetADM(
+            multiuserUser.permissions.groupsPerProject
+          )
         val result: Map[IRI, Set[PermissionADM]] = Await.result(f, 1.seconds)
         result should equal(multiuserUser.permissions.administrativePermissionsPerProject)
       }
@@ -196,7 +199,8 @@ class PermissionsResponderADMSpec
         expectMsg(
           AdministrativePermissionsForProjectGetResponseADM(
             Seq(perm002_a2.p, perm002_a3.p, perm002_a1.p)
-          ))
+          )
+        )
       }
 
       "return AdministrativePermission for project and group" in {
@@ -224,8 +228,12 @@ class PermissionsResponderADMSpec
           apiRequestID = UUID.randomUUID()
         )
         expectMsg(
-          Failure(ForbiddenException(
-            s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
+          Failure(
+            ForbiddenException(
+              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
+            )
+          )
+        )
       }
     }
 
@@ -241,11 +249,16 @@ class PermissionsResponderADMSpec
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
-        expectMsg(Failure(DuplicateValueException(
-          s"An administrative permission for project: '${SharedTestDataADM.IMAGES_PROJECT_IRI}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists. " +
-            s"This permission currently has the scope '${PermissionUtilADM
-              .formatPermissionADMs(perm002_a1.p.hasPermissions, PermissionType.AP)}'. " +
-            s"Use its IRI ${perm002_a1.iri} to modify it, if necessary.")))
+        expectMsg(
+          Failure(
+            DuplicateValueException(
+              s"An administrative permission for project: '${SharedTestDataADM.IMAGES_PROJECT_IRI}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' combination already exists. " +
+                s"This permission currently has the scope '${PermissionUtilADM
+                  .formatPermissionADMs(perm002_a1.p.hasPermissions, PermissionType.AP)}'. " +
+                s"Use its IRI ${perm002_a1.iri} to modify it, if necessary."
+            )
+          )
+        )
       }
 
       "create and return an administrative permission with a custom IRI" in {
@@ -275,13 +288,15 @@ class PermissionsResponderADMSpec
             name = OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission,
             additionalInformation = Some("blabla"),
             permissionCode = Some(8)
-          ))
+          )
+        )
         val expectedHasPermissions = Set(
           PermissionADM(
             name = OntologyConstants.KnoraAdmin.ProjectResourceCreateAllPermission,
             additionalInformation = None,
             permissionCode = None
-          ))
+          )
+        )
         responderManager ! AdministrativePermissionCreateRequestADM(
           createRequest = CreateAdministrativePermissionAPIRequestADM(
             id = Some(customIri),
@@ -318,7 +333,8 @@ class PermissionsResponderADMSpec
           requestingUser = SharedTestDataADM.incunabulaMemberUser
         )
         expectMsg(
-          Failure(ForbiddenException("Object access permissions can only be queried by system and project admin.")))
+          Failure(ForbiddenException("Object access permissions can only be queried by system and project admin."))
+        )
       }
 
       "return object access permissions for a value" in {
@@ -336,7 +352,8 @@ class PermissionsResponderADMSpec
           requestingUser = SharedTestDataADM.incunabulaMemberUser
         )
         expectMsg(
-          Failure(ForbiddenException("Object access permissions can only be queried by system and project admin.")))
+          Failure(ForbiddenException("Object access permissions can only be queried by system and project admin."))
+        )
       }
     }
 
@@ -352,7 +369,8 @@ class PermissionsResponderADMSpec
         expectMsg(
           DefaultObjectAccessPermissionsForProjectGetResponseADM(
             defaultObjectAccessPermissions = Seq(perm002_d2.p, perm002_d1.p, perm0003_a4.p)
-          ))
+          )
+        )
       }
 
       "return DefaultObjectAccessPermission for IRI" in {
@@ -364,7 +382,8 @@ class PermissionsResponderADMSpec
         expectMsg(
           DefaultObjectAccessPermissionGetResponseADM(
             defaultObjectAccessPermission = perm002_d1.p
-          ))
+          )
+        )
       }
 
       "return 'ForbiddenException' if the user requesting DefaultObjectAccessPermissionForIriGetRequestADM is not System or project Admin" in {
@@ -376,8 +395,12 @@ class PermissionsResponderADMSpec
         )
 
         expectMsg(
-          Failure(ForbiddenException(
-            s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
+          Failure(
+            ForbiddenException(
+              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
+            )
+          )
+        )
       }
 
       "return DefaultObjectAccessPermission for project and group" in {
@@ -391,7 +414,8 @@ class PermissionsResponderADMSpec
         expectMsg(
           DefaultObjectAccessPermissionGetResponseADM(
             defaultObjectAccessPermission = perm003_d1.p
-          ))
+          )
+        )
       }
 
       "return DefaultObjectAccessPermission for project and resource class ('incunabula:Page')" in {
@@ -405,7 +429,8 @@ class PermissionsResponderADMSpec
         expectMsg(
           DefaultObjectAccessPermissionGetResponseADM(
             defaultObjectAccessPermission = perm003_d2.p
-          ))
+          )
+        )
       }
 
       "return DefaultObjectAccessPermission for project and property ('knora-base:hasStillImageFileValue') (system property)" in {
@@ -419,7 +444,8 @@ class PermissionsResponderADMSpec
         expectMsg(
           DefaultObjectAccessPermissionGetResponseADM(
             defaultObjectAccessPermission = perm001_d3.p
-          ))
+          )
+        )
       }
 
       "cache DefaultObjectAccessPermission" in {
@@ -433,7 +459,8 @@ class PermissionsResponderADMSpec
         expectMsg(
           DefaultObjectAccessPermissionGetResponseADM(
             defaultObjectAccessPermission = perm001_d3.p
-          ))
+          )
+        )
 
         val key = perm001_d3.p.cacheKey
         val maybePermission =
@@ -461,7 +488,8 @@ class PermissionsResponderADMSpec
         assert(received.defaultObjectAccessPermission.forGroup.contains(SharedTestDataADM.thingSearcherGroup.id))
         assert(
           received.defaultObjectAccessPermission.hasPermissions
-            .contains(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id)))
+            .contains(PermissionADM.restrictedViewPermission(SharedTestDataADM.thingSearcherGroup.id))
+        )
       }
 
       "create a DefaultObjectAccessPermission for project and group with custom IRI" in {
@@ -484,7 +512,8 @@ class PermissionsResponderADMSpec
         assert(received.defaultObjectAccessPermission.forGroup.contains(OntologyConstants.KnoraAdmin.UnknownUser))
         assert(
           received.defaultObjectAccessPermission.hasPermissions
-            .contains(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)))
+            .contains(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser))
+        )
       }
 
       "create a DefaultObjectAccessPermission for project and resource class" in {
@@ -503,10 +532,12 @@ class PermissionsResponderADMSpec
         assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.IMAGES_PROJECT_IRI)
         assert(
           received.defaultObjectAccessPermission.forResourceClass
-            .contains(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS))
+            .contains(SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS)
+        )
         assert(
           received.defaultObjectAccessPermission.hasPermissions
-            .contains(PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser)))
+            .contains(PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.KnownUser))
+        )
 
       }
 
@@ -525,10 +556,12 @@ class PermissionsResponderADMSpec
           expectMsgType[DefaultObjectAccessPermissionCreateResponseADM]
         assert(received.defaultObjectAccessPermission.forProject == SharedTestDataADM.IMAGES_PROJECT_IRI)
         assert(
-          received.defaultObjectAccessPermission.forProperty.contains(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY))
+          received.defaultObjectAccessPermission.forProperty.contains(SharedOntologyTestDataADM.IMAGES_TITEL_PROPERTY)
+        )
         assert(
           received.defaultObjectAccessPermission.hasPermissions
-            .contains(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator)))
+            .contains(PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.Creator))
+        )
       }
 
       "fail and return a 'DuplicateValueException' when a doap permission for project and group combination already exists" in {
@@ -542,12 +575,17 @@ class PermissionsResponderADMSpec
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
-        expectMsg(Failure(DuplicateValueException(
-          s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' " +
-            "combination already exists. " +
-            s"This permission currently has the scope '${PermissionUtilADM
-              .formatPermissionADMs(perm003_d1.p.hasPermissions, PermissionType.OAP)}'. " +
-            s"Use its IRI ${perm003_d1.iri} to modify it, if necessary.")))
+        expectMsg(
+          Failure(
+            DuplicateValueException(
+              s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and group: '${OntologyConstants.KnoraAdmin.ProjectMember}' " +
+                "combination already exists. " +
+                s"This permission currently has the scope '${PermissionUtilADM
+                  .formatPermissionADMs(perm003_d1.p.hasPermissions, PermissionType.OAP)}'. " +
+                s"Use its IRI ${perm003_d1.iri} to modify it, if necessary."
+            )
+          )
+        )
       }
 
       "fail and return a 'DuplicateValueException' when a doap permission for project and resourceClass combination already exists" in {
@@ -564,12 +602,17 @@ class PermissionsResponderADMSpec
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
-        expectMsg(Failure(DuplicateValueException(
-          s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS}' " +
-            "combination already exists. " +
-            s"This permission currently has the scope '${PermissionUtilADM
-              .formatPermissionADMs(perm003_d2.p.hasPermissions, PermissionType.OAP)}'. " +
-            s"Use its IRI ${perm003_d2.iri} to modify it, if necessary.")))
+        expectMsg(
+          Failure(
+            DuplicateValueException(
+              s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_BOOK_RESOURCE_CLASS}' " +
+                "combination already exists. " +
+                s"This permission currently has the scope '${PermissionUtilADM
+                  .formatPermissionADMs(perm003_d2.p.hasPermissions, PermissionType.OAP)}'. " +
+                s"Use its IRI ${perm003_d2.iri} to modify it, if necessary."
+            )
+          )
+        )
       }
 
       "fail and return a 'DuplicateValueException' when a doap permission for project and property combination already exists" in {
@@ -585,12 +628,17 @@ class PermissionsResponderADMSpec
           requestingUser = rootUser,
           apiRequestID = UUID.randomUUID()
         )
-        expectMsg(Failure(DuplicateValueException(
-          s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
-            "combination already exists. " +
-            s"This permission currently has the scope '${PermissionUtilADM
-              .formatPermissionADMs(perm003_d4.p.hasPermissions, PermissionType.OAP)}'. " +
-            s"Use its IRI ${perm003_d4.iri} to modify it, if necessary.")))
+        expectMsg(
+          Failure(
+            DuplicateValueException(
+              s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
+                "combination already exists. " +
+                s"This permission currently has the scope '${PermissionUtilADM
+                  .formatPermissionADMs(perm003_d4.p.hasPermissions, PermissionType.OAP)}'. " +
+                s"Use its IRI ${perm003_d4.iri} to modify it, if necessary."
+            )
+          )
+        )
       }
 
       "fail and return a 'DuplicateValueException' when a doap permission for project, resource class, and property combination already exists" in {
@@ -609,13 +657,17 @@ class PermissionsResponderADMSpec
           apiRequestID = UUID.randomUUID()
         )
         expectMsg(
-          Failure(DuplicateValueException(
-            s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS}' " +
-              s"and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
-              "combination already exists. " +
-              s"This permission currently has the scope '${PermissionUtilADM
-                .formatPermissionADMs(perm003_d5.p.hasPermissions, PermissionType.OAP)}'. " +
-              s"Use its IRI ${perm003_d5.iri} to modify it, if necessary.")))
+          Failure(
+            DuplicateValueException(
+              s"A default object access permission for project: '${SharedTestDataV1.INCUNABULA_PROJECT_IRI}' and resourceClass: '${SharedOntologyTestDataADM.INCUNABULA_PAGE_RESOURCE_CLASS}' " +
+                s"and property: '${SharedOntologyTestDataADM.INCUNABULA_PartOf_Property}' " +
+                "combination already exists. " +
+                s"This permission currently has the scope '${PermissionUtilADM
+                  .formatPermissionADMs(perm003_d5.p.hasPermissions, PermissionType.OAP)}'. " +
+                s"Use its IRI ${perm003_d5.iri} to modify it, if necessary."
+            )
+          )
+        )
       }
 
       "create a DefaultObjectAccessPermission for project and property even if name of a permission was missing" in {
@@ -624,7 +676,8 @@ class PermissionsResponderADMSpec
             name = "",
             additionalInformation = Some(OntologyConstants.KnoraAdmin.UnknownUser),
             permissionCode = Some(1)
-          ))
+          )
+        )
         responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
@@ -641,7 +694,8 @@ class PermissionsResponderADMSpec
         assert(received.defaultObjectAccessPermission.forGroup == Some(OntologyConstants.KnoraAdmin.UnknownUser))
         assert(
           received.defaultObjectAccessPermission.hasPermissions
-            .contains(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser)))
+            .contains(PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.UnknownUser))
+        )
       }
 
       "create a DefaultObjectAccessPermission for project and property even if permissionCode of a permission was missing" in {
@@ -650,13 +704,15 @@ class PermissionsResponderADMSpec
             name = OntologyConstants.KnoraBase.DeletePermission,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             permissionCode = None
-          ))
+          )
+        )
         val expectedPermissions = Set(
           PermissionADM(
             name = OntologyConstants.KnoraBase.DeletePermission,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             permissionCode = Some(7)
-          ))
+          )
+        )
         responderManager ! DefaultObjectAccessPermissionCreateRequestADM(
           createRequest = CreateDefaultObjectAccessPermissionAPIRequestADM(
             forProject = SharedTestDataADM.IMAGES_PROJECT_IRI,
@@ -1015,7 +1071,8 @@ class PermissionsResponderADMSpec
             name = OntologyConstants.KnoraAdmin.ProjectAdminAllPermission,
             additionalInformation = Some("aIRI"),
             permissionCode = Some(1)
-          ))
+          )
+        )
         responderManager ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
           changePermissionHasPermissionsRequest = ChangePermissionHasPermissionsApiRequestADM(
@@ -1062,14 +1119,16 @@ class PermissionsResponderADMSpec
             name = "",
             additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
             permissionCode = Some(8)
-          ))
+          )
+        )
 
         val expectedHasPermissions = Set(
           PermissionADM(
             name = OntologyConstants.KnoraBase.ChangeRightsPermission,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.Creator),
             permissionCode = Some(8)
-          ))
+          )
+        )
 
         responderManager ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
@@ -1093,14 +1152,16 @@ class PermissionsResponderADMSpec
             name = OntologyConstants.KnoraBase.DeletePermission,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             permissionCode = None
-          ))
+          )
+        )
 
         val expectedHasPermissions = Set(
           PermissionADM(
             name = OntologyConstants.KnoraBase.DeletePermission,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             permissionCode = Some(7)
-          ))
+          )
+        )
 
         responderManager ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
@@ -1126,7 +1187,8 @@ class PermissionsResponderADMSpec
             name = name,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             permissionCode = Some(code)
-          ))
+          )
+        )
 
         responderManager ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
@@ -1137,7 +1199,8 @@ class PermissionsResponderADMSpec
           apiRequestID = UUID.randomUUID()
         )
         expectMsg(
-          Failure(BadRequestException(s"Given permission code $code and permission name $name are not consistent.")))
+          Failure(BadRequestException(s"Given permission code $code and permission name $name are not consistent."))
+        )
 
       }
 
@@ -1149,7 +1212,8 @@ class PermissionsResponderADMSpec
             name = name,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             permissionCode = None
-          ))
+          )
+        )
 
         responderManager ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
@@ -1161,8 +1225,12 @@ class PermissionsResponderADMSpec
         )
         expectMsg(
           Failure(
-            BadRequestException(s"Invalid value for name parameter of hasPermissions: $name, it should be one of " +
-              s"${EntityPermissionAbbreviations.toString}")))
+            BadRequestException(
+              s"Invalid value for name parameter of hasPermissions: $name, it should be one of " +
+                s"${EntityPermissionAbbreviations.toString}"
+            )
+          )
+        )
 
       }
 
@@ -1174,7 +1242,8 @@ class PermissionsResponderADMSpec
             name = OntologyConstants.KnoraBase.DeletePermission,
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             permissionCode = Some(code)
-          ))
+          )
+        )
 
         responderManager ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
@@ -1188,7 +1257,10 @@ class PermissionsResponderADMSpec
           Failure(
             BadRequestException(
               s"Invalid value for permissionCode parameter of hasPermissions: $code, it should be one of " +
-                s"${PermissionTypeAndCodes.values.toString}")))
+                s"${PermissionTypeAndCodes.values.toString}"
+            )
+          )
+        )
 
       }
 
@@ -1199,7 +1271,8 @@ class PermissionsResponderADMSpec
             name = "",
             additionalInformation = Some(OntologyConstants.KnoraAdmin.ProjectAdmin),
             permissionCode = None
-          ))
+          )
+        )
 
         responderManager ! PermissionChangeHasPermissionsRequestADM(
           permissionIri = permissionIri,
@@ -1210,8 +1283,12 @@ class PermissionsResponderADMSpec
           apiRequestID = UUID.randomUUID()
         )
         expectMsg(
-          Failure(BadRequestException(
-            s"One of permission code or permission name must be provided for a default object access permission.")))
+          Failure(
+            BadRequestException(
+              s"One of permission code or permission name must be provided for a default object access permission."
+            )
+          )
+        )
 
       }
     }
@@ -1229,8 +1306,12 @@ class PermissionsResponderADMSpec
           apiRequestID = UUID.randomUUID()
         )
         expectMsg(
-          Failure(ForbiddenException(
-            s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
+          Failure(
+            ForbiddenException(
+              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
+            )
+          )
+        )
       }
       "update resource class of a default object access permission" in {
         val permissionIri = "http://rdfh.ch/permissions/0803/003-d2"
@@ -1284,8 +1365,13 @@ class PermissionsResponderADMSpec
           apiRequestID = UUID.randomUUID()
         )
         expectMsg(
-          Failure(BadRequestException(s"Permission $permissionIri is of type administrative permission. " +
-            s"Only a default object access permission defined for a resource class can be updated.")))
+          Failure(
+            BadRequestException(
+              s"Permission $permissionIri is of type administrative permission. " +
+                s"Only a default object access permission defined for a resource class can be updated."
+            )
+          )
+        )
       }
     }
     "ask to update property of a permission" should {
@@ -1302,8 +1388,13 @@ class PermissionsResponderADMSpec
           apiRequestID = UUID.randomUUID()
         )
         expectMsg(
-          Failure(BadRequestException(s"Permission $permissionIri is of type administrative permission. " +
-            s"Only a default object access permission defined for a property can be updated.")))
+          Failure(
+            BadRequestException(
+              s"Permission $permissionIri is of type administrative permission. " +
+                s"Only a default object access permission defined for a property can be updated."
+            )
+          )
+        )
       }
       "throw ForbiddenException for PermissionChangePropertyRequestADM if requesting user is not system or project Admin" in {
         val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
@@ -1318,8 +1409,12 @@ class PermissionsResponderADMSpec
           apiRequestID = UUID.randomUUID()
         )
         expectMsg(
-          Failure(ForbiddenException(
-            s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
+          Failure(
+            ForbiddenException(
+              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
+            )
+          )
+        )
       }
       "update property of a default object access permission" in {
         val permissionIri = "http://rdfh.ch/permissions/0000/001-d3"
@@ -1380,8 +1475,12 @@ class PermissionsResponderADMSpec
           apiRequestID = UUID.randomUUID()
         )
         expectMsg(
-          Failure(ForbiddenException(
-            s"Permission $permissionIri can only be queried/updated/deleted by system or project admin.")))
+          Failure(
+            ForbiddenException(
+              s"Permission $permissionIri can only be queried/updated/deleted by system or project admin."
+            )
+          )
+        )
       }
 
       "erase a permission with given IRI" in {

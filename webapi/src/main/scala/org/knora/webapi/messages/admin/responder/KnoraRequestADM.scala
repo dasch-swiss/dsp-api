@@ -20,6 +20,6 @@
 package org.knora.webapi.messages.admin.responder
 
 /**
-  * A tagging trait for messages that can be sent to Knora Admin responders.
-  */
+ * A tagging trait for messages that can be sent to Knora Admin responders.
+ */
 trait KnoraRequestADM

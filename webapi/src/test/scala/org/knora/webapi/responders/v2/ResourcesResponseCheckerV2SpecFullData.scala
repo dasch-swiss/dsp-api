@@ -44,7 +44,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#citation".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -227,7 +228,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -245,7 +247,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#book_comment".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -264,7 +267,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#url".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -284,7 +288,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#note".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -364,7 +369,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
             valueHasLanguage = None,
             comment = None,
             maybeValueHasString = Some(
-              "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516")
+              "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516"
+            )
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/2a6221216701/values/b82048bf9305",
@@ -396,7 +402,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#publoc".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -415,7 +422,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#pubdate".toSmartIri -> Vector(
         ReadOtherValueV2(
           valueContent = DateValueContentV2(
@@ -436,7 +444,8 @@ class ResourcesResponseCheckerV2SpecFullData(implicit stringFormatter: StringFor
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(

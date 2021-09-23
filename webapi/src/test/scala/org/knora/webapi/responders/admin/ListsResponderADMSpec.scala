@@ -36,8 +36,8 @@ import org.knora.webapi.util.MutableTestIri
 import scala.concurrent.duration._
 
 /**
-  * Static data for testing [[ListsResponderADM]].
-  */
+ * Static data for testing [[ListsResponderADM]].
+ */
 object ListsResponderADMSpec {
   val config: Config = ConfigFactory.parseString("""
          akka.loglevel = "DEBUG"
@@ -46,8 +46,8 @@ object ListsResponderADMSpec {
 }
 
 /**
-  * Tests [[ListsResponderADM]].
-  */
+ * Tests [[ListsResponderADM]].
+ */
 class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with ImplicitSender {
 
   // The default timeout for receiving reply messages from actors.
@@ -217,7 +217,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             projectIri = IMAGES_PROJECT_IRI,
             name = Some(nameWithSpecialCharacter),
             labels = Seq(StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))),
-            comments = Seq(StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))),
+            comments = Seq(StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de")))
           ).escape,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -257,12 +257,14 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
               Seq(
                 StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
                 StringLiteralV2(value = "Changed List", language = Some("en"))
-              )),
+              )
+            ),
             comments = Some(
               Seq(
                 StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                 StringLiteralV2(value = "New Comment", language = Some("en"))
-              ))
+              )
+            )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -281,7 +283,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           Seq(
             StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
             StringLiteralV2(value = "Changed List", language = Some("en"))
-          ).sorted)
+          ).sorted
+        )
 
         val comments = listInfo.comments.stringLiterals
         comments.size should be(2)
@@ -289,22 +292,29 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           Seq(
             StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
             StringLiteralV2(value = "New Comment", language = Some("en"))
-          ).sorted)
+          ).sorted
+        )
       }
 
       "not update basic list information if name is duplicate" in {
         responderManager ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
-          changeNodeRequest = ChangeNodeInfoApiRequestADM(listIri = newListIri.get,
-                                                          projectIri = IMAGES_PROJECT_IRI,
-                                                          name = Some("sommer")),
+          changeNodeRequest = ChangeNodeInfoApiRequestADM(
+            listIri = newListIri.get,
+            projectIri = IMAGES_PROJECT_IRI,
+            name = Some("sommer")
+          ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
         expectMsg(
-          Failure(DuplicateValueException(
-            "The name sommer is already used by a list inside the project http://rdfh.ch/projects/00FF.")))
+          Failure(
+            DuplicateValueException(
+              "The name sommer is already used by a list inside the project http://rdfh.ch/projects/00FF."
+            )
+          )
+        )
       }
 
       "add child to list - to the root node" in {
@@ -339,7 +349,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
+          Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en")))
+        )
 
         // check position
         val position = childNodeInfo.position
@@ -385,7 +396,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
+          Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
+        )
 
         // check position
         val position = childNodeInfo.position
@@ -430,7 +442,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val comments = childNodeInfo.comments.stringLiterals
         comments.size should be(1)
         comments.sorted should be(
-          Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
+          Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
+        )
 
         // check position
         val position = childNodeInfo.position
@@ -459,7 +472,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         expectMsg(
-          Failure(BadRequestException(s"Invalid position given ${givenPosition}, maximum allowed position is = 2.")))
+          Failure(BadRequestException(s"Invalid position given ${givenPosition}, maximum allowed position is = 2."))
+        )
       }
     }
 
@@ -603,7 +617,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         // last node of new parent must be shifted one place to right
         val isShifted = childrenOfNewParent.exists(child =>
-          child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3)
+          child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3
+        )
         isShifted should be(true)
 
         /* check old parent node */
@@ -653,7 +668,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
         // last node of new parent must have remained in its current position
         val isShifted = childrenOfNewParent.exists(child =>
-          child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3)
+          child.id == "http://rdfh.ch/lists/0001/notUsedList03" && child.position == 3
+        )
         isShifted should be(true)
 
         /* check old parent node */
@@ -824,7 +840,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         )
         val usedChild = "http://rdfh.ch/lists/0001/treeList10"
         expectMsg(
-          Failure(BadRequestException(s"Node ${nodeIri} cannot be deleted, because its child ${usedChild} is in use.")))
+          Failure(BadRequestException(s"Node ${nodeIri} cannot be deleted, because its child ${usedChild} is in use."))
+        )
 
       }
 
@@ -837,7 +854,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         expectMsg(
-          Failure(BadRequestException(s"Node ${nodeInUseInOntologyIri} cannot be deleted, because it is in use.")))
+          Failure(BadRequestException(s"Node ${nodeInUseInOntologyIri} cannot be deleted, because it is in use."))
+        )
 
       }
 

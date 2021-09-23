@@ -42,13 +42,13 @@ import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, Rout
 import scala.concurrent.Future
 
 /**
-  * Provides an Akka routing function for API routes that deal with values.
-  */
+ * Provides an Akka routing function for API routes that deal with values.
+ */
 class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   /**
-    * Returns the route.
-    */
+   * Returns the route.
+   */
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
 
     def makeVersionHistoryRequestMessage(iris: Seq[IRI], userADM: UserADM): ValueVersionHistoryGetRequestV1 = {
@@ -59,13 +59,16 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
       val resourceIri = stringFormatter.validateAndEscapeIri(
         resourceIriStr,
-        throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
+        throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
+      )
       val propertyIri = stringFormatter.validateAndEscapeIri(
         propertyIriStr,
-        throw BadRequestException(s"Invalid property IRI: $propertyIriStr"))
+        throw BadRequestException(s"Invalid property IRI: $propertyIriStr")
+      )
       val currentValueIri = stringFormatter.validateAndEscapeIri(
         currentValueIriStr,
-        throw BadRequestException(s"Invalid value IRI: $currentValueIriStr"))
+        throw BadRequestException(s"Invalid value IRI: $currentValueIriStr")
+      )
 
       ValueVersionHistoryGetRequestV1(
         resourceIri = resourceIri,
@@ -83,13 +86,16 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
       val subjectIri = stringFormatter.validateAndEscapeIri(
         subjectIriStr,
-        throw BadRequestException(s"Invalid subject IRI: $subjectIriStr"))
+        throw BadRequestException(s"Invalid subject IRI: $subjectIriStr")
+      )
       val predicateIri = stringFormatter.validateAndEscapeIri(
         predicateIriStr,
-        throw BadRequestException(s"Invalid predicate IRI: $predicateIriStr"))
+        throw BadRequestException(s"Invalid predicate IRI: $predicateIriStr")
+      )
       val objectIri = stringFormatter.validateAndEscapeIri(
         objectIriStr,
-        throw BadRequestException(s"Invalid object IRI: $objectIriStr"))
+        throw BadRequestException(s"Invalid object IRI: $objectIriStr")
+      )
 
       LinkValueGetRequestV1(
         subjectIri = subjectIri,
@@ -100,14 +106,18 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       )
     }
 
-    def makeCreateValueRequestMessage(apiRequest: CreateValueApiRequestV1,
-                                      userADM: UserADM): Future[CreateValueRequestV1] = {
+    def makeCreateValueRequestMessage(
+      apiRequest: CreateValueApiRequestV1,
+      userADM: UserADM
+    ): Future[CreateValueRequestV1] = {
       val resourceIri = stringFormatter.validateAndEscapeIri(
         apiRequest.res_id,
-        throw BadRequestException(s"Invalid resource IRI ${apiRequest.res_id}"))
+        throw BadRequestException(s"Invalid resource IRI ${apiRequest.res_id}")
+      )
       val propertyIri = stringFormatter.validateAndEscapeIri(
         apiRequest.prop,
-        throw BadRequestException(s"Invalid property IRI ${apiRequest.prop}"))
+        throw BadRequestException(s"Invalid property IRI ${apiRequest.prop}")
+      )
 
       for {
         (value: UpdateValueV1, commentStr: Option[String]) <- apiRequest.getValueClassIri match {
@@ -119,17 +129,24 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
               // simple text
               Future(
-                (TextValueSimpleV1(stringFormatter.toSparqlEncodedString(
-                                     richtext.utf8str.get,
-                                     throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'")),
-                                   richtext.language),
-                 apiRequest.comment))
+                (
+                  TextValueSimpleV1(
+                    stringFormatter.toSparqlEncodedString(
+                      richtext.utf8str.get,
+                      throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'")
+                    ),
+                    richtext.language
+                  ),
+                  apiRequest.comment
+                )
+              )
             } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
               // XML: text with markup
 
               val mappingIri = stringFormatter.validateAndEscapeIri(
                 richtext.mapping_id.get,
-                throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid"))
+                throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid")
+              )
 
               for {
 
@@ -146,21 +163,23 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
                 // collect the resource references from the linking standoff nodes
                 resourceReferences: Set[IRI] = stringFormatter.getResourceIrisFromStandoffTags(
-                  textWithStandoffTags.standoffTagV2)
+                  textWithStandoffTags.standoffTagV2
+                )
 
-              } yield
-                (TextValueWithStandoffV1(
-                   utf8str =
-                     stringFormatter.toSparqlEncodedString(textWithStandoffTags.text,
-                                                           throw InconsistentRepositoryDataException(
-                                                             "utf8str for for TextValue contains invalid characters")),
-                   language = textWithStandoffTags.language,
-                   resource_reference = resourceReferences,
-                   standoff = textWithStandoffTags.standoffTagV2,
-                   mappingIri = textWithStandoffTags.mapping.mappingIri,
-                   mapping = textWithStandoffTags.mapping.mapping
-                 ),
-                 apiRequest.comment)
+              } yield (
+                TextValueWithStandoffV1(
+                  utf8str = stringFormatter.toSparqlEncodedString(
+                    textWithStandoffTags.text,
+                    throw InconsistentRepositoryDataException("utf8str for for TextValue contains invalid characters")
+                  ),
+                  language = textWithStandoffTags.language,
+                  resource_reference = resourceReferences,
+                  standoff = textWithStandoffTags.standoffTagV2,
+                  mappingIri = textWithStandoffTags.mapping.mappingIri,
+                  mapping = textWithStandoffTags.mapping.mapping
+                ),
+                apiRequest.comment
+              )
 
             } else {
               throw BadRequestException("invalid parameters given for TextValueV1")
@@ -169,7 +188,8 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           case OntologyConstants.KnoraBase.LinkValue =>
             val resourceIRI = stringFormatter.validateAndEscapeIri(
               apiRequest.link_value.get,
-              throw BadRequestException(s"Invalid resource IRI: ${apiRequest.link_value.get}"))
+              throw BadRequestException(s"Invalid resource IRI: ${apiRequest.link_value.get}")
+            )
             Future(LinkUpdateV1(targetResourceIri = resourceIRI), apiRequest.comment)
 
           case OntologyConstants.KnoraBase.IntValue =>
@@ -183,11 +203,16 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           case OntologyConstants.KnoraBase.UriValue =>
             Future(
-              (UriValueV1(
-                 stringFormatter.validateAndEscapeIri(
-                   apiRequest.uri_value.get,
-                   throw BadRequestException(s"Invalid URI: ${apiRequest.uri_value.get}"))),
-               apiRequest.comment))
+              (
+                UriValueV1(
+                  stringFormatter.validateAndEscapeIri(
+                    apiRequest.uri_value.get,
+                    throw BadRequestException(s"Invalid URI: ${apiRequest.uri_value.get}")
+                  )
+                ),
+                apiRequest.comment
+              )
+            )
 
           case OntologyConstants.KnoraBase.DateValue =>
             Future(DateUtilV1.createJDNValueV1FromDateString(apiRequest.date_value.get), apiRequest.comment)
@@ -195,19 +220,22 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           case OntologyConstants.KnoraBase.ColorValue =>
             val colorValue = stringFormatter.validateColor(
               apiRequest.color_value.get,
-              throw BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}"))
+              throw BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}")
+            )
             Future(ColorValueV1(colorValue), apiRequest.comment)
 
           case OntologyConstants.KnoraBase.GeomValue =>
             val geometryValue = stringFormatter.validateGeometryString(
               apiRequest.geom_value.get,
-              throw BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}"))
+              throw BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}")
+            )
             Future(GeomValueV1(geometryValue), apiRequest.comment)
 
           case OntologyConstants.KnoraBase.ListValue =>
             val listNodeIri = stringFormatter.validateAndEscapeIri(
               apiRequest.hlist_value.get,
-              throw BadRequestException(s"Invalid value IRI: ${apiRequest.hlist_value.get}"))
+              throw BadRequestException(s"Invalid value IRI: ${apiRequest.hlist_value.get}")
+            )
             Future(HierarchicalListValueV1(listNodeIri), apiRequest.comment)
 
           case OntologyConstants.KnoraBase.IntervalValue =>
@@ -220,7 +248,8 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           case OntologyConstants.KnoraBase.TimeValue =>
             val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(
               apiRequest.time_value.get,
-              throw BadRequestException(s"Invalid timestamp: ${apiRequest.time_value.get}"))
+              throw BadRequestException(s"Invalid timestamp: ${apiRequest.time_value.get}")
+            )
             Future(TimeValueV1(timeStamp), apiRequest.comment)
 
           case OntologyConstants.KnoraBase.GeonameValue =>
@@ -228,22 +257,24 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           case _ => throw BadRequestException(s"No value submitted")
         }
-      } yield
-        CreateValueRequestV1(
-          resourceIri = resourceIri,
-          propertyIri = propertyIri,
-          value = value,
-          comment = commentStr.map(str =>
-            stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid comment: '$str'"))),
-          featureFactoryConfig = featureFactoryConfig,
-          userProfile = userADM,
-          apiRequestID = UUID.randomUUID
-        )
+      } yield CreateValueRequestV1(
+        resourceIri = resourceIri,
+        propertyIri = propertyIri,
+        value = value,
+        comment = commentStr.map(str =>
+          stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid comment: '$str'"))
+        ),
+        featureFactoryConfig = featureFactoryConfig,
+        userProfile = userADM,
+        apiRequestID = UUID.randomUUID
+      )
     }
 
-    def makeAddValueVersionRequestMessage(valueIriStr: IRI,
-                                          apiRequest: ChangeValueApiRequestV1,
-                                          userADM: UserADM): Future[ChangeValueRequestV1] = {
+    def makeAddValueVersionRequestMessage(
+      valueIriStr: IRI,
+      apiRequest: ChangeValueApiRequestV1,
+      userADM: UserADM
+    ): Future[ChangeValueRequestV1] = {
       val valueIri =
         stringFormatter.validateAndEscapeIri(valueIriStr, throw BadRequestException(s"Invalid value IRI: $valueIriStr"))
 
@@ -257,17 +288,24 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             if (richtext.utf8str.nonEmpty && richtext.xml.isEmpty && richtext.mapping_id.isEmpty) {
               // simple text
               Future(
-                (TextValueSimpleV1(stringFormatter.toSparqlEncodedString(
-                                     richtext.utf8str.get,
-                                     throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'")),
-                                   richtext.language),
-                 apiRequest.comment))
+                (
+                  TextValueSimpleV1(
+                    stringFormatter.toSparqlEncodedString(
+                      richtext.utf8str.get,
+                      throw BadRequestException(s"Invalid text: '${richtext.utf8str.get}'")
+                    ),
+                    richtext.language
+                  ),
+                  apiRequest.comment
+                )
+              )
             } else if (richtext.xml.nonEmpty && richtext.mapping_id.nonEmpty) {
               // XML: text with markup
 
               val mappingIri = stringFormatter.validateAndEscapeIri(
                 richtext.mapping_id.get,
-                throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid"))
+                throw BadRequestException(s"mapping_id ${richtext.mapping_id.get} is invalid")
+              )
 
               for {
 
@@ -284,21 +322,23 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
                 // collect the resource references from the linking standoff nodes
                 resourceReferences: Set[IRI] = stringFormatter.getResourceIrisFromStandoffTags(
-                  textWithStandoffTags.standoffTagV2)
+                  textWithStandoffTags.standoffTagV2
+                )
 
-              } yield
-                (TextValueWithStandoffV1(
-                   utf8str =
-                     stringFormatter.toSparqlEncodedString(textWithStandoffTags.text,
-                                                           throw InconsistentRepositoryDataException(
-                                                             "utf8str for for TextValue contains invalid characters")),
-                   language = richtext.language,
-                   resource_reference = resourceReferences,
-                   standoff = textWithStandoffTags.standoffTagV2,
-                   mappingIri = textWithStandoffTags.mapping.mappingIri,
-                   mapping = textWithStandoffTags.mapping.mapping
-                 ),
-                 apiRequest.comment)
+              } yield (
+                TextValueWithStandoffV1(
+                  utf8str = stringFormatter.toSparqlEncodedString(
+                    textWithStandoffTags.text,
+                    throw InconsistentRepositoryDataException("utf8str for for TextValue contains invalid characters")
+                  ),
+                  language = richtext.language,
+                  resource_reference = resourceReferences,
+                  standoff = textWithStandoffTags.standoffTagV2,
+                  mappingIri = textWithStandoffTags.mapping.mappingIri,
+                  mapping = textWithStandoffTags.mapping.mapping
+                ),
+                apiRequest.comment
+              )
 
             } else {
               throw BadRequestException("invalid parameters given for TextValueV1")
@@ -307,7 +347,8 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           case OntologyConstants.KnoraBase.LinkValue =>
             val resourceIRI = stringFormatter.validateAndEscapeIri(
               apiRequest.link_value.get,
-              throw BadRequestException(s"Invalid resource IRI: ${apiRequest.link_value.get}"))
+              throw BadRequestException(s"Invalid resource IRI: ${apiRequest.link_value.get}")
+            )
             Future(LinkUpdateV1(targetResourceIri = resourceIRI), apiRequest.comment)
 
           case OntologyConstants.KnoraBase.IntValue =>
@@ -321,11 +362,16 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           case OntologyConstants.KnoraBase.UriValue =>
             Future(
-              (UriValueV1(
-                 stringFormatter.validateAndEscapeIri(
-                   apiRequest.uri_value.get,
-                   throw BadRequestException(s"Invalid URI: ${apiRequest.uri_value.get}"))),
-               apiRequest.comment))
+              (
+                UriValueV1(
+                  stringFormatter.validateAndEscapeIri(
+                    apiRequest.uri_value.get,
+                    throw BadRequestException(s"Invalid URI: ${apiRequest.uri_value.get}")
+                  )
+                ),
+                apiRequest.comment
+              )
+            )
 
           case OntologyConstants.KnoraBase.DateValue =>
             Future(DateUtilV1.createJDNValueV1FromDateString(apiRequest.date_value.get), apiRequest.comment)
@@ -333,19 +379,22 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           case OntologyConstants.KnoraBase.ColorValue =>
             val colorValue = stringFormatter.validateColor(
               apiRequest.color_value.get,
-              throw BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}"))
+              throw BadRequestException(s"Invalid color value: ${apiRequest.color_value.get}")
+            )
             Future(ColorValueV1(colorValue), apiRequest.comment)
 
           case OntologyConstants.KnoraBase.GeomValue =>
             val geometryValue = stringFormatter.validateGeometryString(
               apiRequest.geom_value.get,
-              throw BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}"))
+              throw BadRequestException(s"Invalid geometry value: ${apiRequest.geom_value.get}")
+            )
             Future(GeomValueV1(geometryValue), apiRequest.comment)
 
           case OntologyConstants.KnoraBase.ListValue =>
             val listNodeIri = stringFormatter.validateAndEscapeIri(
               apiRequest.hlist_value.get,
-              throw BadRequestException(s"Invalid value IRI: ${apiRequest.hlist_value.get}"))
+              throw BadRequestException(s"Invalid value IRI: ${apiRequest.hlist_value.get}")
+            )
             Future(HierarchicalListValueV1(listNodeIri), apiRequest.comment)
 
           case OntologyConstants.KnoraBase.IntervalValue =>
@@ -358,7 +407,8 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           case OntologyConstants.KnoraBase.TimeValue =>
             val timeStamp: Instant = stringFormatter.xsdDateTimeStampToInstant(
               apiRequest.time_value.get,
-              throw BadRequestException(s"Invalid timestamp: ${apiRequest.time_value.get}"))
+              throw BadRequestException(s"Invalid timestamp: ${apiRequest.time_value.get}")
+            )
             Future(TimeValueV1(timeStamp), apiRequest.comment)
 
           case OntologyConstants.KnoraBase.GeonameValue =>
@@ -366,59 +416,64 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
 
           case _ => throw BadRequestException(s"No value submitted")
         }
-      } yield
-        ChangeValueRequestV1(
-          valueIri = valueIri,
-          value = value,
-          comment = commentStr.map(str =>
-            stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid comment: '$str'"))),
-          featureFactoryConfig = featureFactoryConfig,
-          userProfile = userADM,
-          apiRequestID = UUID.randomUUID
-        )
+      } yield ChangeValueRequestV1(
+        valueIri = valueIri,
+        value = value,
+        comment = commentStr.map(str =>
+          stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid comment: '$str'"))
+        ),
+        featureFactoryConfig = featureFactoryConfig,
+        userProfile = userADM,
+        apiRequestID = UUID.randomUUID
+      )
     }
 
-    def makeChangeCommentRequestMessage(valueIriStr: IRI,
-                                        comment: Option[String],
-                                        userADM: UserADM): ChangeCommentRequestV1 = {
+    def makeChangeCommentRequestMessage(
+      valueIriStr: IRI,
+      comment: Option[String],
+      userADM: UserADM
+    ): ChangeCommentRequestV1 =
       ChangeCommentRequestV1(
-        valueIri = stringFormatter.validateAndEscapeIri(valueIriStr,
-                                                        throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
+        valueIri = stringFormatter
+          .validateAndEscapeIri(valueIriStr, throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
         comment = comment.map(str =>
-          stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid comment: '$str'"))),
+          stringFormatter.toSparqlEncodedString(str, throw BadRequestException(s"Invalid comment: '$str'"))
+        ),
         featureFactoryConfig = featureFactoryConfig,
         userProfile = userADM,
         apiRequestID = UUID.randomUUID
       )
-    }
 
-    def makeDeleteValueRequest(valueIriStr: IRI,
-                               deleteComment: Option[String],
-                               userADM: UserADM): DeleteValueRequestV1 = {
+    def makeDeleteValueRequest(
+      valueIriStr: IRI,
+      deleteComment: Option[String],
+      userADM: UserADM
+    ): DeleteValueRequestV1 =
       DeleteValueRequestV1(
-        valueIri = stringFormatter.validateAndEscapeIri(valueIriStr,
-                                                        throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
+        valueIri = stringFormatter
+          .validateAndEscapeIri(valueIriStr, throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
         deleteComment = deleteComment.map(comment =>
-          stringFormatter.toSparqlEncodedString(comment, throw BadRequestException(s"Invalid comment: '$comment'"))),
+          stringFormatter.toSparqlEncodedString(comment, throw BadRequestException(s"Invalid comment: '$comment'"))
+        ),
         featureFactoryConfig = featureFactoryConfig,
         userProfile = userADM,
         apiRequestID = UUID.randomUUID
       )
-    }
 
-    def makeGetValueRequest(valueIriStr: IRI, userADM: UserADM): ValueGetRequestV1 = {
+    def makeGetValueRequest(valueIriStr: IRI, userADM: UserADM): ValueGetRequestV1 =
       ValueGetRequestV1(
-        valueIri = stringFormatter.validateAndEscapeIri(valueIriStr,
-                                                        throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
+        valueIri = stringFormatter
+          .validateAndEscapeIri(valueIriStr, throw BadRequestException(s"Invalid value IRI: $valueIriStr")),
         featureFactoryConfig = featureFactoryConfig,
         userProfile = userADM
       )
-    }
 
-    def makeChangeFileValueRequest(resIriStr: IRI,
-                                   projectShortcode: String,
-                                   apiRequest: ChangeFileValueApiRequestV1,
-                                   userADM: UserADM): Future[ChangeFileValueRequestV1] = {
+    def makeChangeFileValueRequest(
+      resIriStr: IRI,
+      projectShortcode: String,
+      apiRequest: ChangeFileValueApiRequestV1,
+      userADM: UserADM
+    ): Future[ChangeFileValueRequestV1] = {
       val resourceIri =
         stringFormatter.validateAndEscapeIri(resIriStr, throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
       val tempFileUrl = stringFormatter.makeSipiTempFileUrl(settings, apiRequest.file)
@@ -426,40 +481,38 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       for {
         fileMetadataResponse: GetFileMetadataResponse <- (storeManager ? GetFileMetadataRequest(
           fileUrl = tempFileUrl,
-          requestingUser = userADM)).mapTo[GetFileMetadataResponse]
-      } yield
-        ChangeFileValueRequestV1(
-          resourceIri = resourceIri,
-          file = RouteUtilV1.makeFileValue(
-            filename = apiRequest.file,
-            fileMetadataResponse = fileMetadataResponse,
-            projectShortcode = projectShortcode
-          ),
-          apiRequestID = UUID.randomUUID,
-          featureFactoryConfig = featureFactoryConfig,
-          userProfile = userADM
-        )
+          requestingUser = userADM
+        )).mapTo[GetFileMetadataResponse]
+      } yield ChangeFileValueRequestV1(
+        resourceIri = resourceIri,
+        file = RouteUtilV1.makeFileValue(
+          filename = apiRequest.file,
+          fileMetadataResponse = fileMetadataResponse,
+          projectShortcode = projectShortcode
+        ),
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = featureFactoryConfig,
+        userProfile = userADM
+      )
     }
 
     // Version history request requires 3 URL path segments: resource IRI, property IRI, and current value IRI
     path("v1" / "values" / "history" / Segments) { iris =>
       get { requestContext =>
-        {
-          val requestMessage = for {
-            userADM <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          } yield makeVersionHistoryRequestMessage(iris = iris, userADM = userADM)
-
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessage,
-            requestContext,
-            settings,
-            responderManager,
-            log
+        val requestMessage = for {
+          userADM <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
           )
-        }
+        } yield makeVersionHistoryRequestMessage(iris = iris, userADM = userADM)
+
+        RouteUtilV1.runJsonRouteWithFuture(
+          requestMessage,
+          requestContext,
+          settings,
+          responderManager,
+          log
+        )
       }
     } ~ path("v1" / "values") {
       post {
@@ -483,22 +536,20 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       }
     } ~ path("v1" / "values" / Segment) { valueIriStr =>
       get { requestContext =>
-        {
-          val requestMessage = for {
-            userADM <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          } yield makeGetValueRequest(valueIriStr = valueIriStr, userADM = userADM)
-
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessage,
-            requestContext,
-            settings,
-            responderManager,
-            log
+        val requestMessage = for {
+          userADM <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
           )
-        }
+        } yield makeGetValueRequest(valueIriStr = valueIriStr, userADM = userADM)
+
+        RouteUtilV1.runJsonRouteWithFuture(
+          requestMessage,
+          requestContext,
+          settings,
+          responderManager,
+          log
+        )
       } ~ put {
         entity(as[ChangeValueApiRequestV1]) { apiRequest => requestContext =>
           // In API v1, you cannot change a value and its comment in a single request. So we know that here,
@@ -511,9 +562,8 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             request <- apiRequest match {
               case ChangeValueApiRequestV1(_, _, _, _, _, _, _, _, _, _, _, _, _, Some(comment)) =>
                 FastFuture.successful(
-                  makeChangeCommentRequestMessage(valueIriStr = valueIriStr,
-                                                  comment = Some(comment),
-                                                  userADM = userADM))
+                  makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = Some(comment), userADM = userADM)
+                )
               case _ =>
                 makeAddValueVersionRequestMessage(valueIriStr = valueIriStr, apiRequest = apiRequest, userADM = userADM)
             }
@@ -525,66 +575,60 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             settings,
             responderManager,
             log
-        )
-        }
-      } ~ delete { requestContext =>
-        {
-          val requestMessage = for {
-            userADM <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-            params = requestContext.request.uri.query().toMap
-            deleteComment = params.get("deleteComment")
-          } yield makeDeleteValueRequest(valueIriStr = valueIriStr, deleteComment = deleteComment, userADM = userADM)
-
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessage,
-            requestContext,
-            settings,
-            responderManager,
-            log
           )
         }
+      } ~ delete { requestContext =>
+        val requestMessage = for {
+          userADM <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+          params = requestContext.request.uri.query().toMap
+          deleteComment = params.get("deleteComment")
+        } yield makeDeleteValueRequest(valueIriStr = valueIriStr, deleteComment = deleteComment, userADM = userADM)
+
+        RouteUtilV1.runJsonRouteWithFuture(
+          requestMessage,
+          requestContext,
+          settings,
+          responderManager,
+          log
+        )
       }
     } ~ path("v1" / "valuecomments" / Segment) { valueIriStr =>
       delete { requestContext =>
-        {
-          val requestMessage = for {
-            userADM <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          } yield makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = None, userADM = userADM)
-
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessage,
-            requestContext,
-            settings,
-            responderManager,
-            log
+        val requestMessage = for {
+          userADM <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
           )
-        }
+        } yield makeChangeCommentRequestMessage(valueIriStr = valueIriStr, comment = None, userADM = userADM)
+
+        RouteUtilV1.runJsonRouteWithFuture(
+          requestMessage,
+          requestContext,
+          settings,
+          responderManager,
+          log
+        )
       }
     } ~ path("v1" / "links" / Segments) { iris =>
       // Link value request requires 3 URL path segments: subject IRI, predicate IRI, and object IRI
       get { requestContext =>
-        {
-          val requestMessage = for {
-            userADM <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          } yield makeLinkValueGetRequestMessage(iris = iris, userADM = userADM)
-
-          RouteUtilV1.runJsonRouteWithFuture(
-            requestMessage,
-            requestContext,
-            settings,
-            responderManager,
-            log
+        val requestMessage = for {
+          userADM <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
           )
-        }
+        } yield makeLinkValueGetRequestMessage(iris = iris, userADM = userADM)
+
+        RouteUtilV1.runJsonRouteWithFuture(
+          requestMessage,
+          requestContext,
+          settings,
+          responderManager,
+          log
+        )
       }
     } ~ path("v1" / "filevalue" / Segment) { resIriStr: IRI =>
       put {
@@ -596,7 +640,8 @@ class ValuesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             )
             resourceIri = stringFormatter.validateAndEscapeIri(
               resIriStr,
-              throw BadRequestException(s"Invalid resource IRI: $resIriStr"))
+              throw BadRequestException(s"Invalid resource IRI: $resIriStr")
+            )
 
             resourceInfoResponse <- (responderManager ? ResourceInfoGetRequestV1(
               iri = resourceIri,

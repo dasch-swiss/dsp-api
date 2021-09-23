@@ -38,13 +38,13 @@ class CacheServiceManager(cs: CacheService)
     with InstrumentationSupport {
 
   /**
-    * The Knora Akka actor system.
-    */
+   * The Knora Akka actor system.
+   */
   protected implicit val _system: ActorSystem = context.system
 
   /**
-    * The Akka actor system's execution context for futures.
-    */
+   * The Akka actor system's execution context for futures.
+   */
   protected implicit val ec: ExecutionContext = context.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   def receive = {
@@ -62,99 +62,99 @@ class CacheServiceManager(cs: CacheService)
   }
 
   /**
-    * Stores the user under the IRI and additionally the IRI under the keys of
-    * USERNAME and EMAIL:
-    *
-    * IRI -> byte array
-    * username -> IRI
-    * email -> IRI
-    *
-    * @param value the stored value
-    */
+   * Stores the user under the IRI and additionally the IRI under the keys of
+   * USERNAME and EMAIL:
+   *
+   * IRI -> byte array
+   * username -> IRI
+   * email -> IRI
+   *
+   * @param value the stored value
+   */
   private def putUserADM(value: UserADM): Future[Boolean] = tracedFuture("caches-service-write-user") {
     cs.putUserADM(value)
   }
 
   /**
-    * Retrieves the user stored under the identifier (either iri, username,
-    * or email).
-    *
-    * @param identifier the project identifier.
-    */
+   * Retrieves the user stored under the identifier (either iri, username,
+   * or email).
+   *
+   * @param identifier the project identifier.
+   */
   private def getUserADM(identifier: UserIdentifierADM): Future[Option[UserADM]] =
     tracedFuture("cache-service-read-user") {
       cs.getUserADM(identifier)
     }
 
   /**
-    * Stores the project under the IRI and additionally the IRI under the keys
-    * of SHORTCODE and SHORTNAME:
-    *
-    * IRI -> byte array
-    * shortname -> IRI
-    * shortcode -> IRI
-    *
-    * @param value the stored value
-    */
+   * Stores the project under the IRI and additionally the IRI under the keys
+   * of SHORTCODE and SHORTNAME:
+   *
+   * IRI -> byte array
+   * shortname -> IRI
+   * shortcode -> IRI
+   *
+   * @param value the stored value
+   */
   private def putProjectADM(value: ProjectADM)(implicit ec: ExecutionContext): Future[Boolean] =
     tracedFuture("cache-service-write-project") {
       cs.putProjectADM(value)
     }
 
   /**
-    * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
-    *
-    * @param identifier the project identifier.
-    */
-  private def getProjectADM(identifier: ProjectIdentifierADM)(
-      implicit ec: ExecutionContext): Future[Option[ProjectADM]] =
+   * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
+   *
+   * @param identifier the project identifier.
+   */
+  private def getProjectADM(
+    identifier: ProjectIdentifierADM
+  )(implicit ec: ExecutionContext): Future[Option[ProjectADM]] =
     tracedFuture("redis-read-project") {
       cs.getProjectADM(identifier)
     }
 
   /**
-    * Get value stored under the key as a string.
-    *
-    * @param maybeKey the key.
-    */
+   * Get value stored under the key as a string.
+   *
+   * @param maybeKey the key.
+   */
   private def getStringValue(maybeKey: Option[String]): Future[Option[String]] =
     tracedFuture("cache-service-get-string") {
       cs.getStringValue(maybeKey)
     }
 
   /**
-    * Store string or byte array value under key.
-    *
-    * @param key   the key.
-    * @param value the value.
-    */
+   * Store string or byte array value under key.
+   *
+   * @param key   the key.
+   * @param value the value.
+   */
   private def writeStringValue(key: String, value: String): Future[Boolean] =
     tracedFuture("cache-service-write-string") {
       cs.writeStringValue(key, value)
     }
 
   /**
-    * Removes values for the provided keys. Any invalid keys are ignored.
-    *
-    * @param keys the keys.
-    */
+   * Removes values for the provided keys. Any invalid keys are ignored.
+   *
+   * @param keys the keys.
+   */
   private def removeValues(keys: Set[String]): Future[Boolean] =
     tracedFuture("redis-remove-values") {
       cs.removeValues(keys)
     }
 
   /**
-    * Flushes (removes) all stored content from the Redis store.
-    */
+   * Flushes (removes) all stored content from the Redis store.
+   */
   private def flushDB(requestingUser: UserADM): Future[CacheServiceFlushDBACK] =
     tracedFuture("redis-flush-db") {
       cs.flushDB(requestingUser)
     }
 
   /**
-    * Pings the cache service to see if it is available.
-    */
-  private def ping(): Future[CacheServiceStatusResponse] = {
+   * Pings the cache service to see if it is available.
+   */
+  private def ping(): Future[CacheServiceStatusResponse] =
     cs.ping()
-  }
 }

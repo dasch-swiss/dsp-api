@@ -23,6 +23,6 @@ import org.knora.webapi.feature._
 import org.knora.webapi.util.rdf.RdfModelSpec
 
 /**
-  * Tests [[org.knora.webapi.messages.util.rdf.rdf4jimpl.RDF4JModel]].
-  */
+ * Tests [[org.knora.webapi.messages.util.rdf.rdf4jimpl.RDF4JModel]].
+ */
 class RDF4JModelSpec extends RdfModelSpec(FeatureToggle("jena-rdf-library", ToggleStateOff))

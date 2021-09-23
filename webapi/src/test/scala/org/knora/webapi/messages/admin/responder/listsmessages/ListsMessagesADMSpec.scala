@@ -38,8 +38,8 @@ object ListsMessagesADMSpec {
 }
 
 /**
-  * This spec is used to test 'ListAdminMessages'.
-  */
+ * This spec is used to test 'ListAdminMessages'.
+ */
 class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with ListADMJsonProtocol {
 
   val exampleListIri = "http://rdfh.ch/lists/00FF/abcd"
@@ -52,11 +52,15 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
         id = "http://rdfh.ch/lists/73d0ec0302",
         projectIri = "http://rdfh.ch/projects/00FF",
         labels = StringLiteralSequenceV2(
-          Vector(StringLiteralV2("Title", Some("en")),
-                 StringLiteralV2("Titel", Some("de")),
-                 StringLiteralV2("Titre", Some("fr")))),
+          Vector(
+            StringLiteralV2("Title", Some("en")),
+            StringLiteralV2("Titel", Some("de")),
+            StringLiteralV2("Titre", Some("fr"))
+          )
+        ),
         comments = StringLiteralSequenceV2(
-          Vector(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de"))))
+          Vector(StringLiteralV2("Hierarchisches Stichwortverzeichnis / Signatur der Bilder", Some("de")))
+        )
       )
 
       val json = listInfo.toJson.compactPrint
@@ -97,7 +101,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
         comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
         children = Seq.empty[ListChildNodeADM],
         position = 0,
-        hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab",
+        hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
       )
 
       val json = listNode.toJson.compactPrint
@@ -159,11 +163,11 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "projectIri": "",
-                   |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-                   |    "comments": []
-                   |}
+           |{
+           |    "projectIri": "",
+           |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+           |    "comments": []
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
@@ -176,11 +180,11 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "projectIri": "not an IRI",
-                   |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-                   |    "comments": []
-                   |}
+           |{
+           |    "projectIri": "not an IRI",
+           |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+           |    "comments": []
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
@@ -192,11 +196,11 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [],
-                   |    "comments": []
-                   |}
+           |{
+           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "labels": [],
+           |    "comments": []
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
@@ -209,12 +213,12 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       // invalid list IRI
       val payload =
         s"""
-                   |{
-                   |    "id": "invalid-list-IRI",
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [{ "value": "New List", "language": "en"}],
-                   |    "comments": []
-                   |}
+           |{
+           |    "id": "invalid-list-IRI",
+           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "labels": [{ "value": "New List", "language": "en"}],
+           |    "comments": []
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
@@ -226,11 +230,11 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [{ "value": "Neuer List Node", "language": "de"}, { "value": "", "language": "en"}],
-                   |    "comments": []
-                   |}
+           |{
+           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "labels": [{ "value": "Neuer List Node", "language": "de"}, { "value": "", "language": "en"}],
+           |    "comments": []
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
@@ -242,12 +246,12 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "parentNodeIri": "$exampleListIri",
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
-                   |    "comments": [{ "value": "", "language": "de"}]
-                   |}
+           |{
+           |    "parentNodeIri": "$exampleListIri",
+           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
+           |    "comments": [{ "value": "", "language": "de"}]
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateListApiRequestADM]
@@ -259,12 +263,12 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "listIri": "",
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-                   |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-                   |}
+           |{
+           |    "listIri": "",
+           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+           |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
@@ -276,12 +280,12 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       val invalidIri = "notvalidIRI"
       val payload =
         s"""
-                   |{
-                   |    "listIri": "$invalidIri",
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-                   |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-                   |}
+           |{
+           |    "listIri": "$invalidIri",
+           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+           |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
@@ -293,11 +297,11 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "listIri": "$exampleListIri",
-                   |    "projectIri": "",
-                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}]
-                   |}
+           |{
+           |    "listIri": "$exampleListIri",
+           |    "projectIri": "",
+           |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}]
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
@@ -309,11 +313,11 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "listIri": "$exampleListIri",
-                   |    "projectIri": "notvalidIRI",
-                   |    "name": "a new name"
-                   |}
+           |{
+           |    "listIri": "$exampleListIri",
+           |    "projectIri": "notvalidIRI",
+           |    "name": "a new name"
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
@@ -325,12 +329,12 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "listIri": "$exampleListIri",
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [],
-                   |    "comments": []
-                   |}
+           |{
+           |    "listIri": "$exampleListIri",
+           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "labels": [],
+           |    "comments": []
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
@@ -399,12 +403,14 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
               Seq(
                 StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
                 StringLiteralV2(value = "Changed list", language = Some("en"))
-              )),
+              )
+            ),
             comments = Some(
               Seq(
                 StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                 StringLiteralV2(value = "New comment", language = Some("en"))
-              ))
+              )
+            )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser02,
@@ -418,12 +424,12 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "parentNodeIri": "",
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
-                   |    "comments": []
-                   |}
+           |{
+           |    "parentNodeIri": "",
+           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
+           |    "comments": []
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
@@ -436,12 +442,12 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "parentNodeIri": "notvalidIRI",
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
-                   |    "comments": []
-                   |}
+           |{
+           |    "parentNodeIri": "notvalidIRI",
+           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
+           |    "comments": []
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
@@ -454,12 +460,12 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "parentNodeIri": "$exampleListIri",
-                   |    "projectIri": "",
-                   |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
-                   |    "comments": []
-                   |}
+           |{
+           |    "parentNodeIri": "$exampleListIri",
+           |    "projectIri": "",
+           |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
+           |    "comments": []
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
@@ -472,12 +478,12 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "parentNodeIri": "$exampleListIri",
-                   |    "projectIri": "notvalidIRI",
-                   |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
-                   |    "comments": []
-                   |}
+           |{
+           |    "parentNodeIri": "$exampleListIri",
+           |    "projectIri": "notvalidIRI",
+           |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
+           |    "comments": []
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
@@ -490,12 +496,12 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "parentNodeIri": "$exampleListIri",
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [],
-                   |    "comments": []
-                   |}
+           |{
+           |    "parentNodeIri": "$exampleListIri",
+           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "labels": [],
+           |    "comments": []
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
@@ -508,12 +514,12 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{   "id": "invalid-list-node-IRI",
-                   |    "parentNodeIri": "$exampleListIri",
-                   |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                   |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
-                   |    "comments": []
-                   |}
+           |{   "id": "invalid-list-node-IRI",
+           |    "parentNodeIri": "$exampleListIri",
+           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+           |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
+           |    "comments": []
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
@@ -526,10 +532,10 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       val payload =
         s"""
-                   |{
-                   |    "parentNodeIri": "",
-                   |    "position": 1
-                   |}
+           |{
+           |    "parentNodeIri": "",
+           |    "position": 1
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
@@ -542,10 +548,10 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       val invalid_parentIri = "invalid-iri"
       val payload =
         s"""
-                   |{
-                   |    "parentNodeIri": "$invalid_parentIri",
-                   |    "position": 1
-                   |}
+           |{
+           |    "parentNodeIri": "$invalid_parentIri",
+           |    "position": 1
+           |}
                 """.stripMargin
 
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]

@@ -31,16 +31,16 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
-  * Object containing methods for dealing with [[HttpResponse]]
-  */
+ * Object containing methods for dealing with [[HttpResponse]]
+ */
 object AkkaHttpUtils extends LazyLogging {
 
   /**
-    * Given an [[HttpResponse]] containing json, return the said json.
-    *
-    * @param response the [[HttpResponse]] containing json
-    * @return an [[JsObject]]
-    */
+   * Given an [[HttpResponse]] containing json, return the said json.
+   *
+   * @param response the [[HttpResponse]] containing json
+   * @return an [[JsObject]]
+   */
   def httpResponseToJson(response: HttpResponse)(implicit ec: ExecutionContext, system: ActorSystem): JsObject = {
 
     import DefaultJsonProtocol._

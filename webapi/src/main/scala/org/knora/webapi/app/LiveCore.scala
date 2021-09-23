@@ -31,28 +31,28 @@ import scala.language.postfixOps
 import scala.languageFeature.postfixOps
 
 /**
-  * The applications actor system.
-  */
+ * The applications actor system.
+ */
 trait LiveCore extends Core {
 
   /**
-    * The application's actor system.
-    */
+   * The application's actor system.
+   */
   implicit lazy val system: ActorSystem = ActorSystem("webapi")
 
   /**
-    * The application's configuration.
-    */
+   * The application's configuration.
+   */
   implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
 
   /**
-    * Provides the actor materializer (akka-http)
-    */
+   * Provides the actor materializer (akka-http)
+   */
   implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
   /**
-    * Provides the default global execution context
-    */
+   * Provides the default global execution context
+   */
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // Initialise StringFormatter and RdfFeatureFactory with the system settings.
@@ -61,11 +61,11 @@ trait LiveCore extends Core {
   RdfFeatureFactory.init(settings)
 
   /**
-    * The main application supervisor actor which is at the top of the actor
-    * hierarchy. All other actors are instantiated as child actors. Further,
-    * this actor is responsible for the execution of the startup and shutdown
-    * sequences.
-    */
+   * The main application supervisor actor which is at the top of the actor
+   * hierarchy. All other actors are instantiated as child actors. Further,
+   * this actor is responsible for the execution of the startup and shutdown
+   * sequences.
+   */
   lazy val appActor: ActorRef = system.actorOf(
     Props(new ApplicationActor with LiveManagers)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),

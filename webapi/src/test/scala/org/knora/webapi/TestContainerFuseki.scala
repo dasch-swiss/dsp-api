@@ -31,7 +31,7 @@ import scala.jdk.CollectionConverters._
 object TestContainerFuseki {
 
   val FusekiImageName: DockerImageName = DockerImageName.parse("bazel/docker/knora-jena-fuseki:image")
-  val FusekiContainer                  = new GenericContainer(FusekiImageName)
+  val FusekiContainer = new GenericContainer(FusekiImageName)
 
   FusekiContainer.withExposedPorts(3030)
   FusekiContainer.withEnv("ADMIN_PASSWORD", "test")

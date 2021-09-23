@@ -27,7 +27,7 @@ import org.knora.webapi.messages.util.rdf._
 class UpgradePluginPR1746Spec extends UpgradePluginSpec with LazyLogging {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(defaultFeatureFactoryConfig)
 
-  private def checkLiteral(model: RdfModel, subj: IriNode, pred: IriNode, expectedObj: RdfLiteral): Unit = {
+  private def checkLiteral(model: RdfModel, subj: IriNode, pred: IriNode, expectedObj: RdfLiteral): Unit =
     model
       .find(
         subj = Some(subj),
@@ -44,7 +44,6 @@ class UpgradePluginPR1746Spec extends UpgradePluginSpec with LazyLogging {
 
       case None => throw AssertionException(s"No statement found with subject $subj and predicate $pred")
     }
-  }
 
   "Upgrade plugin PR1746" should {
     "replace empty string with FIXME" in {

@@ -35,10 +35,10 @@ object DeleteListItemsRouteADM {
 }
 
 /**
-  * A [[Feature]] that provides routes to delete list items.
-  *
-  * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
-  */
+ * A [[Feature]] that provides routes to delete list items.
+ *
+ * @param routeData the [[KnoraRouteData]] to be used in constructing the route.
+ */
 class DeleteListItemsRouteADM(routeData: KnoraRouteData)
     extends KnoraRoute(routeData)
     with Feature
@@ -60,11 +60,12 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ListItemDeleteRequestADM] = for {
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
-        } yield
-          ListItemDeleteRequestADM(nodeIri = nodeIri,
-                                   featureFactoryConfig = featureFactoryConfig,
-                                   requestingUser = requestingUser,
-                                   apiRequestID = UUID.randomUUID())
+        } yield ListItemDeleteRequestADM(
+          nodeIri = nodeIri,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser,
+          apiRequestID = UUID.randomUUID()
+        )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,

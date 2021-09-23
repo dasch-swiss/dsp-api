@@ -24,13 +24,15 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.util._
 
 /**
-  * Tests [[CalendarDateUtilV2]].
-  */
+ * Tests [[CalendarDateUtilV2]].
+ */
 class CalendarDateUtilV2Spec extends CoreSpec() {
-  private def checkSingleDate(calendarDate: CalendarDateV2,
-                              expectedStartJDN: Int,
-                              expectedEndJDN: Int,
-                              dateStr: String): Unit = {
+  private def checkSingleDate(
+    calendarDate: CalendarDateV2,
+    expectedStartJDN: Int,
+    expectedEndJDN: Int,
+    dateStr: String
+  ): Unit = {
     val calendarDateRange = CalendarDateRangeV2(
       startCalendarDate = calendarDate,
       endCalendarDate = calendarDate
@@ -44,10 +46,12 @@ class CalendarDateUtilV2Spec extends CoreSpec() {
     )
   }
 
-  private def checkDateRange(calendarDateRange: CalendarDateRangeV2,
-                             expectedStartJDN: Int,
-                             expectedEndJDN: Int,
-                             dateStr: String): Unit = {
+  private def checkDateRange(
+    calendarDateRange: CalendarDateRangeV2,
+    expectedStartJDN: Int,
+    expectedEndJDN: Int,
+    dateStr: String
+  ): Unit = {
     // Convert the date range to Julian Day Numbers and check that they're correct.
     val (startJDN: Int, endJDN: Int) = calendarDateRange.toJulianDayRange
     assert(startJDN == expectedStartJDN)

@@ -29,8 +29,8 @@ import org.knora.webapi.routing.admin._
 import org.knora.webapi.routing.admin.lists._
 
 /**
-  * Provides the '/api-docs' endpoint serving the 'swagger.json' OpenAPI specification
-  */
+ * Provides the '/api-docs' endpoint serving the 'swagger.json' OpenAPI specification
+ */
 class SwaggerApiDocsRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) with SwaggerHttpService {
 
   // List all routes here
@@ -64,10 +64,9 @@ class SwaggerApiDocsRoute(routeData: KnoraRouteData) extends KnoraRoute(routeDat
   override val securitySchemeDefinitions = Map("basicAuth" -> new BasicAuthDefinition())
 
   /**
-    * Returns the route.
-    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
+   * Returns the route.
+   */
+  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     routes
-  }
 
 }

@@ -41,8 +41,8 @@ import org.knora.webapi.util.cache.CacheUtil
 import scala.concurrent.Future
 
 /**
-  * Provides information about Knora users to other responders.
-  */
+ * Provides information about Knora users to other responders.
+ */
 class UsersResponderV1(responderData: ResponderData) extends Responder(responderData) {
 
   // The IRI used to lock user creation and update
@@ -51,8 +51,8 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   val USER_PROFILE_CACHE_NAME = "userProfileCache"
 
   /**
-    * Receives a message of type [[UsersResponderRequestV1]], and returns an appropriate response message.
-    */
+   * Receives a message of type [[UsersResponderRequestV1]], and returns an appropriate response message.
+   */
   def receive(msg: UsersResponderRequestV1) = msg match {
     case UsersGetV1(userProfile)            => usersGetV1(userProfile)
     case UsersGetRequestV1(userProfileV1)   => usersGetRequestV1(userProfileV1)
@@ -75,14 +75,12 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   }
 
   /**
-    * Gets all the users and returns them as a sequence of [[UserDataV1]].
-    *
-    * @return all the users as a sequence of [[UserDataV1]].
-    */
-  private def usersGetV1(userProfileV1: UserProfileV1): Future[Seq[UserDataV1]] = {
-
+   * Gets all the users and returns them as a sequence of [[UserDataV1]].
+   *
+   * @return all the users as a sequence of [[UserDataV1]].
+   */
+  private def usersGetV1(userProfileV1: UserProfileV1): Future[Seq[UserDataV1]] =
     //log.debug("usersGetV1")
-
     for {
       _ <- Future(
         if (!userProfileV1.permissionData.isSystemAdmin) {
@@ -95,7 +93,8 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
           .getUsers(
             triplestore = settings.triplestoreType
           )
-          .toString())
+          .toString()
+      )
 
       usersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
 
@@ -106,31 +105,29 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
           (userIri, rows.map(row => (row.rowMap("p"), row.rowMap("o"))).toMap)
       }
 
-      users = usersWithProperties.map {
-        case (userIri: IRI, propsMap: Map[String, String]) =>
-          UserDataV1(
-            lang = propsMap.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
-              case Some(langList) => langList
-              case None           => settings.fallbackLanguage
-            },
-            user_id = Some(userIri),
-            email = propsMap.get(OntologyConstants.KnoraAdmin.Email),
-            firstname = propsMap.get(OntologyConstants.KnoraAdmin.GivenName),
-            lastname = propsMap.get(OntologyConstants.KnoraAdmin.FamilyName),
-            status = propsMap.get(OntologyConstants.KnoraAdmin.Status).map(_.toBoolean)
-          )
+      users = usersWithProperties.map { case (userIri: IRI, propsMap: Map[String, String]) =>
+        UserDataV1(
+          lang = propsMap.get(OntologyConstants.KnoraAdmin.PreferredLanguage) match {
+            case Some(langList) => langList
+            case None           => settings.fallbackLanguage
+          },
+          user_id = Some(userIri),
+          email = propsMap.get(OntologyConstants.KnoraAdmin.Email),
+          firstname = propsMap.get(OntologyConstants.KnoraAdmin.GivenName),
+          lastname = propsMap.get(OntologyConstants.KnoraAdmin.FamilyName),
+          status = propsMap.get(OntologyConstants.KnoraAdmin.Status).map(_.toBoolean)
+        )
       }.toSeq
 
     } yield users
-  }
 
   /**
-    * Gets all the users and returns them as a [[UsersGetResponseV1]].
-    *
-    * @param userProfileV1 the type of the requested profile (restricted of full).
-    * @return all the users as a [[UsersGetResponseV1]].
-    */
-  private def usersGetRequestV1(userProfileV1: UserProfileV1): Future[UsersGetResponseV1] = {
+   * Gets all the users and returns them as a [[UsersGetResponseV1]].
+   *
+   * @param userProfileV1 the type of the requested profile (restricted of full).
+   * @return all the users as a [[UsersGetResponseV1]].
+   */
+  private def usersGetRequestV1(userProfileV1: UserProfileV1): Future[UsersGetResponseV1] =
     for {
       maybeUsersListToReturn <- usersGetV1(userProfileV1)
       result = maybeUsersListToReturn match {
@@ -138,17 +135,15 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
         case _                                        => throw NotFoundException(s"No users found")
       }
     } yield result
-  }
 
   /**
-    * Gets basic information about a Knora user, and returns it in a [[UserDataV1]].
-    *
-    * @param userIri the IRI of the user.
-    * @return a [[UserDataV1]] describing the user.
-    */
-  private def userDataByIriGetV1(userIri: IRI, short: Boolean): Future[Option[UserDataV1]] = {
+   * Gets basic information about a Knora user, and returns it in a [[UserDataV1]].
+   *
+   * @param userIri the IRI of the user.
+   * @return a [[UserDataV1]] describing the user.
+   */
+  private def userDataByIriGetV1(userIri: IRI, short: Boolean): Future[Option[UserDataV1]] =
     //log.debug("userDataByIriGetV1 - userIri: {}", userIri)
-
     for {
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -156,7 +151,8 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
             triplestore = settings.triplestoreType,
             userIri = userIri
           )
-          .toString())
+          .toString()
+      )
 
       // _ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
@@ -168,22 +164,21 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
     } yield maybeUserDataV1
 
-  }
-
   /**
-    * Gets information about a Knora user, and returns it in a [[UserProfileV1]]. If possible, tries to retrieve the
-    * user profile from cache. If not, it retrieves it from the triplestore and writes it to the cache.
-    *
-    * @param userIri              the IRI of the user.
-    * @param profileType          the type of the requested profile (restricted of full).
-    * @param featureFactoryConfig the feature factory configuration.
-    * @return a [[UserProfileV1]] describing the user.
-    */
-  private def userProfileByIRIGetV1(userIri: IRI,
-                                    profileType: UserProfileType,
-                                    featureFactoryConfig: FeatureFactoryConfig): Future[Option[UserProfileV1]] = {
+   * Gets information about a Knora user, and returns it in a [[UserProfileV1]]. If possible, tries to retrieve the
+   * user profile from cache. If not, it retrieves it from the triplestore and writes it to the cache.
+   *
+   * @param userIri              the IRI of the user.
+   * @param profileType          the type of the requested profile (restricted of full).
+   * @param featureFactoryConfig the feature factory configuration.
+   * @return a [[UserProfileV1]] describing the user.
+   */
+  private def userProfileByIRIGetV1(
+    userIri: IRI,
+    profileType: UserProfileType,
+    featureFactoryConfig: FeatureFactoryConfig
+  ): Future[Option[UserProfileV1]] =
     // log.debug(s"userProfileByIRIGetV1: userIri = $userIRI', clean = '$profileType'")
-
     CacheUtil.get[UserProfileV1](USER_PROFILE_CACHE_NAME, userIri) match {
       case Some(userProfile) =>
         // found a user profile in the cache
@@ -198,7 +193,8 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                 triplestore = settings.triplestoreType,
                 userIri = userIri
               )
-              .toString())
+              .toString()
+          )
 
           // _ = log.debug(s"userProfileByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
@@ -218,21 +214,22 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
           // _ = log.debug("userProfileByIRIGetV1 - maybeUserProfileV1: {}", MessageUtil.toSource(maybeUserProfileV1))
         } yield result // UserProfileV1(userData, groups, projects_info, sessionId, isSystemUser, permissionData)
     }
-  }
 
   /**
-    * Gets information about a Knora user, and returns it as a [[UserProfileResponseV1]].
-    *
-    * @param userIRI              the IRI of the user.
-    * @param profileType          the type of the requested profile (restriced or full).
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param userProfile          the requesting user's profile.
-    * @return a [[UserProfileResponseV1]]
-    */
-  private def userProfileByIRIGetRequestV1(userIRI: IRI,
-                                           profileType: UserProfileType,
-                                           featureFactoryConfig: FeatureFactoryConfig,
-                                           userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
+   * Gets information about a Knora user, and returns it as a [[UserProfileResponseV1]].
+   *
+   * @param userIRI              the IRI of the user.
+   * @param profileType          the type of the requested profile (restriced or full).
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param userProfile          the requesting user's profile.
+   * @return a [[UserProfileResponseV1]]
+   */
+  private def userProfileByIRIGetRequestV1(
+    userIRI: IRI,
+    profileType: UserProfileType,
+    featureFactoryConfig: FeatureFactoryConfig,
+    userProfile: UserProfileV1
+  ): Future[UserProfileResponseV1] =
     for {
       _ <- Future(
         if (!userProfile.permissionData.isSystemAdmin && !userProfile.userData.user_id.contains(userIRI)) {
@@ -250,22 +247,22 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
         case None     => throw NotFoundException(s"User '$userIRI' not found")
       }
     } yield result
-  }
 
   /**
-    * Gets information about a Knora user, and returns it in a [[UserProfileV1]]. If possible, tries to retrieve the user profile
-    * from cache. If not, it retrieves it from the triplestore and writes it to the cache.
-    *
-    * @param email                the email of the user.
-    * @param profileType          the type of the requested profile (restricted or full).
-    * @param featureFactoryConfig the feature factory configuration.
-    * @return a [[UserProfileV1]] describing the user.
-    */
-  private def userProfileByEmailGetV1(email: String,
-                                      profileType: UserProfileType,
-                                      featureFactoryConfig: FeatureFactoryConfig): Future[Option[UserProfileV1]] = {
+   * Gets information about a Knora user, and returns it in a [[UserProfileV1]]. If possible, tries to retrieve the user profile
+   * from cache. If not, it retrieves it from the triplestore and writes it to the cache.
+   *
+   * @param email                the email of the user.
+   * @param profileType          the type of the requested profile (restricted or full).
+   * @param featureFactoryConfig the feature factory configuration.
+   * @return a [[UserProfileV1]] describing the user.
+   */
+  private def userProfileByEmailGetV1(
+    email: String,
+    profileType: UserProfileType,
+    featureFactoryConfig: FeatureFactoryConfig
+  ): Future[Option[UserProfileV1]] =
     // log.debug(s"userProfileByEmailGetV1: username = '{}', type = '{}'", email, profileType)
-
     CacheUtil.get[UserProfileV1](USER_PROFILE_CACHE_NAME, email) match {
       case Some(userProfile) =>
         // found a user profile in the cache
@@ -280,7 +277,8 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
                 triplestore = settings.triplestoreType,
                 email = email
               )
-              .toString())
+              .toString()
+          )
           //_ = log.debug(s"userProfileByEmailGetV1 - sparqlQueryString: $sparqlQueryString")
 
           userDataQueryResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
@@ -302,22 +300,22 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
         } yield result // UserProfileV1(userDataV1, groupIris, projectIris)
     }
 
-  }
-
   /**
-    * Gets information about a Knora user, and returns it as a [[UserProfileResponseV1]].
-    *
-    * @param email                the email of the user.
-    * @param profileType          the type of the requested profile (restricted or full).
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param userProfile          the requesting user's profile.
-    * @return a [[UserProfileResponseV1]]
-    * @throws NotFoundException if the user with the supplied email is not found.
-    */
-  private def userProfileByEmailGetRequestV1(email: String,
-                                             profileType: UserProfileType,
-                                             featureFactoryConfig: FeatureFactoryConfig,
-                                             userProfile: UserProfileV1): Future[UserProfileResponseV1] = {
+   * Gets information about a Knora user, and returns it as a [[UserProfileResponseV1]].
+   *
+   * @param email                the email of the user.
+   * @param profileType          the type of the requested profile (restricted or full).
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param userProfile          the requesting user's profile.
+   * @return a [[UserProfileResponseV1]]
+   * @throws NotFoundException if the user with the supplied email is not found.
+   */
+  private def userProfileByEmailGetRequestV1(
+    email: String,
+    profileType: UserProfileType,
+    featureFactoryConfig: FeatureFactoryConfig,
+    userProfile: UserProfileV1
+  ): Future[UserProfileResponseV1] =
     for {
       maybeUserProfileToReturn <- userProfileByEmailGetV1(
         email = email,
@@ -330,19 +328,20 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
         case None                    => throw NotFoundException(s"User '$email' not found")
       }
     } yield result
-  }
 
   /**
-    * Returns the user's project memberships, where the result contains the IRIs of the projects the user is member of.
-    *
-    * @param userIri       the user's IRI.
-    * @param userProfileV1 the user profile of the requesting user.
-    * @param apiRequestID  the unique api request ID.
-    * @return a [[UserProjectMembershipsGetResponseV1]].
-    */
-  def userProjectMembershipsGetRequestV1(userIri: IRI,
-                                         userProfileV1: UserProfileV1,
-                                         apiRequestID: UUID): Future[UserProjectMembershipsGetResponseV1] = {
+   * Returns the user's project memberships, where the result contains the IRIs of the projects the user is member of.
+   *
+   * @param userIri       the user's IRI.
+   * @param userProfileV1 the user profile of the requesting user.
+   * @param apiRequestID  the unique api request ID.
+   * @return a [[UserProjectMembershipsGetResponseV1]].
+   */
+  def userProjectMembershipsGetRequestV1(
+    userIri: IRI,
+    userProfileV1: UserProfileV1,
+    apiRequestID: UUID
+  ): Future[UserProjectMembershipsGetResponseV1] =
     for {
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -350,7 +349,8 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
             triplestore = settings.triplestoreType,
             userIri = userIri
           )
-          .toString())
+          .toString()
+      )
 
       //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
@@ -368,20 +368,21 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
       // _ = log.debug("userProjectMembershipsGetRequestV1 - userIri: {}, projectIris: {}", userIri, projectIris)
     } yield UserProjectMembershipsGetResponseV1(projects = projectIris)
-  }
 
   /**
-    * Returns the user's project admin group memberships, where the result contains the IRIs of the projects the user
-    * is a member of the project admin group.
-    *
-    * @param userIri       the user's IRI.
-    * @param userProfileV1 the user profile of the requesting user.
-    * @param apiRequestID  the unique api request ID.
-    * @return a [[UserProjectMembershipsGetResponseV1]].
-    */
-  def userProjectAdminMembershipsGetRequestV1(userIri: IRI,
-                                              userProfileV1: UserProfileV1,
-                                              apiRequestID: UUID): Future[UserProjectAdminMembershipsGetResponseV1] = {
+   * Returns the user's project admin group memberships, where the result contains the IRIs of the projects the user
+   * is a member of the project admin group.
+   *
+   * @param userIri       the user's IRI.
+   * @param userProfileV1 the user profile of the requesting user.
+   * @param apiRequestID  the unique api request ID.
+   * @return a [[UserProjectMembershipsGetResponseV1]].
+   */
+  def userProjectAdminMembershipsGetRequestV1(
+    userIri: IRI,
+    userProfileV1: UserProfileV1,
+    apiRequestID: UUID
+  ): Future[UserProjectAdminMembershipsGetResponseV1] =
     for {
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -389,7 +390,8 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
             triplestore = settings.triplestoreType,
             userIri = userIri
           )
-          .toString())
+          .toString()
+      )
 
       //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
@@ -407,20 +409,20 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
       // _ = log.debug("userProjectAdminMembershipsGetRequestV1 - userIri: {}, projectIris: {}", userIri, projectIris)
     } yield UserProjectAdminMembershipsGetResponseV1(projects = projectIris)
-  }
 
   /**
-    * Returns the user's custom (without ProjectMember and ProjectAdmin) group memberships
-    *
-    * @param userIri       the user's IRI.
-    * @param userProfileV1 the user profile of the requesting user.
-    * @param apiRequestID  the unique api request ID.
-    * @return a [[UserGroupMembershipsGetResponseV1]]
-    */
-  def userGroupMembershipsGetRequestV1(userIri: IRI,
-                                       userProfileV1: UserProfileV1,
-                                       apiRequestID: UUID): Future[UserGroupMembershipsGetResponseV1] = {
-
+   * Returns the user's custom (without ProjectMember and ProjectAdmin) group memberships
+   *
+   * @param userIri       the user's IRI.
+   * @param userProfileV1 the user profile of the requesting user.
+   * @param apiRequestID  the unique api request ID.
+   * @return a [[UserGroupMembershipsGetResponseV1]]
+   */
+  def userGroupMembershipsGetRequestV1(
+    userIri: IRI,
+    userProfileV1: UserProfileV1,
+    apiRequestID: UUID
+  ): Future[UserGroupMembershipsGetResponseV1] =
     for {
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -428,7 +430,8 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
             triplestore = settings.triplestoreType,
             userIri = userIri
           )
-          .toString())
+          .toString()
+      )
 
       //_ = log.debug("userDataByIRIGetV1 - sparqlQueryString: {}", sparqlQueryString)
 
@@ -447,30 +450,28 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
 
     } yield UserGroupMembershipsGetResponseV1(groups = groupIris)
 
-  }
-
   ////////////////////
   // Helper Methods //
   ////////////////////
 
   /**
-    * Helper method used to create a [[UserDataV1]] from the [[SparqlSelectResult]] containing user data.
-    *
-    * @param userDataQueryResponse a [[SparqlSelectResult]] containing user data.
-    * @param short                 denotes if all information should be returned. If short == true, then no token and password should be returned.
-    * @return a [[UserDataV1]] containing the user's basic data.
-    */
-  private def userDataQueryResponse2UserDataV1(userDataQueryResponse: SparqlSelectResult,
-                                               short: Boolean): Future[Option[UserDataV1]] = {
-
+   * Helper method used to create a [[UserDataV1]] from the [[SparqlSelectResult]] containing user data.
+   *
+   * @param userDataQueryResponse a [[SparqlSelectResult]] containing user data.
+   * @param short                 denotes if all information should be returned. If short == true, then no token and password should be returned.
+   * @return a [[UserDataV1]] containing the user's basic data.
+   */
+  private def userDataQueryResponse2UserDataV1(
+    userDataQueryResponse: SparqlSelectResult,
+    short: Boolean
+  ): Future[Option[UserDataV1]] =
     // log.debug("userDataQueryResponse2UserDataV1 - " + MessageUtil.toSource(userDataQueryResponse))
-
     if (userDataQueryResponse.results.bindings.nonEmpty) {
       val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
 
       val groupedUserData: Map[String, Seq[String]] =
-        userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-          case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+        userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
+          predicate -> rows.map(_.rowMap("o"))
         }
 
       // _ = log.debug(s"userDataQueryResponse2UserProfileV1 - groupedUserData: ${MessageUtil.toSource(groupedUserData)}")
@@ -494,27 +495,25 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     } else {
       FastFuture.successful(None)
     }
-  }
 
   /**
-    * Helper method used to create a [[UserProfileV1]] from the [[SparqlSelectResult]] containing user data.
-    *
-    * @param userDataQueryResponse a [[SparqlSelectResult]] containing user data.
-    * @param featureFactoryConfig  the feature factory configuration.
-    * @return a [[UserProfileV1]] containing the user's data.
-    */
+   * Helper method used to create a [[UserProfileV1]] from the [[SparqlSelectResult]] containing user data.
+   *
+   * @param userDataQueryResponse a [[SparqlSelectResult]] containing user data.
+   * @param featureFactoryConfig  the feature factory configuration.
+   * @return a [[UserProfileV1]] containing the user's data.
+   */
   private def userDataQueryResponse2UserProfileV1(
-      userDataQueryResponse: SparqlSelectResult,
-      featureFactoryConfig: FeatureFactoryConfig): Future[Option[UserProfileV1]] = {
-
+    userDataQueryResponse: SparqlSelectResult,
+    featureFactoryConfig: FeatureFactoryConfig
+  ): Future[Option[UserProfileV1]] =
     // log.debug("userDataQueryResponse2UserProfileV1 - userDataQueryResponse: {}", MessageUtil.toSource(userDataQueryResponse))
-
     if (userDataQueryResponse.results.bindings.nonEmpty) {
       val returnedUserIri = userDataQueryResponse.getFirstRow.rowMap("s")
 
       val groupedUserData: Map[String, Seq[String]] =
-        userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map {
-          case (predicate, rows) => predicate -> rows.map(_.rowMap("o"))
+        userDataQueryResponse.results.bindings.groupBy(_.rowMap("p")).map { case (predicate, rows) =>
+          predicate -> rows.map(_.rowMap("o"))
         }
 
       // log.debug("userDataQueryResponse2UserProfileV1 - groupedUserData: {}", MessageUtil.toSource(groupedUserData))
@@ -597,71 +596,70 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
     } else {
       FastFuture.successful(None)
     }
-  }
 
   /**
-    * Helper method for checking if a user exists.
-    *
-    * @param userIri the IRI of the user.
-    * @return a [[Boolean]].
-    */
-  def userExists(userIri: IRI): Future[Boolean] = {
+   * Helper method for checking if a user exists.
+   *
+   * @param userIri the IRI of the user.
+   * @return a [[Boolean]].
+   */
+  def userExists(userIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.checkUserExists(userIri = userIri).toString)
+        org.knora.webapi.messages.twirl.queries.sparql.v1.txt.checkUserExists(userIri = userIri).toString
+      )
       // _ = log.debug("userExists - query: {}", askString)
 
       checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result = checkUserExistsResponse.result
 
     } yield result
-  }
 
   /**
-    * Helper method for checking if a project exists.
-    *
-    * @param projectIri the IRI of the project.
-    * @return a [[Boolean]].
-    */
-  def projectExists(projectIri: IRI): Future[Boolean] = {
+   * Helper method for checking if a project exists.
+   *
+   * @param projectIri the IRI of the project.
+   * @return a [[Boolean]].
+   */
+  def projectExists(projectIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .checkProjectExistsByIri(projectIri = projectIri)
-          .toString)
+          .toString
+      )
       // _ = log.debug("projectExists - query: {}", askString)
 
       checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result = checkUserExistsResponse.result
 
     } yield result
-  }
 
   /**
-    * Helper method for checking if a group exists.
-    *
-    * @param groupIri the IRI of the group.
-    * @return a [[Boolean]].
-    */
-  def groupExists(groupIri: IRI): Future[Boolean] = {
+   * Helper method for checking if a group exists.
+   *
+   * @param groupIri the IRI of the group.
+   * @return a [[Boolean]].
+   */
+  def groupExists(groupIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString
+      )
       // _ = log.debug("groupExists - query: {}", askString)
 
       checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result = checkUserExistsResponse.result
 
     } yield result
-  }
 
   /**
-    * Writes the user profile to cache.
-    *
-    * @param userProfile a [[UserProfileV1]].
-    * @return true if writing was successful.
-    * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
-    */
+   * Writes the user profile to cache.
+   *
+   * @param userProfile a [[UserProfileV1]].
+   * @return true if writing was successful.
+   * @throws ApplicationCacheException when there is a problem with writing the user's profile to cache.
+   */
   private def writeUserProfileV1ToCache(userProfile: UserProfileV1): Boolean = {
 
     val iri = if (userProfile.userData.user_id.nonEmpty) {
@@ -691,11 +689,11 @@ class UsersResponderV1(responderData: ResponderData) extends Responder(responder
   }
 
   /**
-    * Removes the user profile from cache.
-    *
-    * @param userIri the user's IRI und which a profile could be cached.
-    * @param email   the user's email under which a profile could be cached.
-    */
+   * Removes the user profile from cache.
+   *
+   * @param userIri the user's IRI und which a profile could be cached.
+   * @param email   the user's email under which a profile could be cached.
+   */
   private def invalidateCachedUserProfileV1(userIri: Option[IRI] = None, email: Option[String] = None): Unit = {
 
     if (userIri.nonEmpty) {

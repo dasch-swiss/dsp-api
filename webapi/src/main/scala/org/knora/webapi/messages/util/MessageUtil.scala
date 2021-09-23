@@ -29,28 +29,30 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.Cardinality
 import scala.reflect.runtime.{universe => ru}
 
 /**
-  * Utility functions for working with Akka messages.
-  */
+ * Utility functions for working with Akka messages.
+ */
 object MessageUtil {
 
   // Set of case class field names to skip.
   private val fieldsToSkip =
-    Set("stringFormatter",
-        "base64Decoder",
-        "knoraIdUtil",
-        "standoffLinkTagTargetResourceIris",
-        "knoraSettings",
-        "featureFactoryConfig")
+    Set(
+      "stringFormatter",
+      "base64Decoder",
+      "knoraIdUtil",
+      "standoffLinkTagTargetResourceIris",
+      "knoraSettings",
+      "featureFactoryConfig"
+    )
 
   /**
-    * Recursively converts a Scala object to Scala source code for constructing the object (with named parameters). This is useful
-    * for writing tests containing hard-coded Akka messages. It works with case classes, collections ([[Seq]], [[Set]],
-    * and [[Map]]), [[Option]], enumerations (as long as the enumeration value's `toString` representation is the same
-    * as its identifier), and primitive types. It doesn't work with classes defined inside methods.
-    *
-    * @param obj the object to convert.
-    * @return a string that can be pasted into Scala source code to construct the object.
-    */
+   * Recursively converts a Scala object to Scala source code for constructing the object (with named parameters). This is useful
+   * for writing tests containing hard-coded Akka messages. It works with case classes, collections ([[Seq]], [[Set]],
+   * and [[Map]]), [[Option]], enumerations (as long as the enumeration value's `toString` representation is the same
+   * as its identifier), and primitive types. It doesn't work with classes defined inside methods.
+   *
+   * @param obj the object to convert.
+   * @return a string that can be pasted into Scala source code to construct the object.
+   */
   def toSource(obj: Any): String = {
     def maybeMakeNewLine(elemCount: Int): String = if (elemCount > 1) "\n" else ""
 
@@ -102,10 +104,9 @@ object MessageUtil {
       case map: Map[Any @unchecked, Any @unchecked] =>
         val maybeNewLine = maybeMakeNewLine(map.size)
 
-        map
-          .map {
-            case (key, value) => toSource(key) + " -> " + toSource(value)
-          }
+        map.map { case (key, value) =>
+          toSource(key) + " -> " + toSource(value)
+        }
           .mkString("Map(" + maybeNewLine, ", " + maybeNewLine, maybeNewLine + ")")
 
       // Handle case classes.
@@ -125,10 +126,9 @@ object MessageUtil {
             }
         }
 
-        val members: Iterable[String] = fieldMap.map {
-          case (fieldName, fieldValue) =>
-            val fieldValueString = toSource(fieldValue)
-            s"$fieldName = $fieldValueString"
+        val members: Iterable[String] = fieldMap.map { case (fieldName, fieldValue) =>
+          val fieldValueString = toSource(fieldValue)
+          s"$fieldName = $fieldValueString"
         }
 
         val maybeNewLine = maybeMakeNewLine(members.size)
@@ -149,11 +149,12 @@ object MessageUtil {
           val memberName = member.name.toString.trim
 
           if (!(memberName.contains("$") || memberName.endsWith("Format") || fieldsToSkip.contains(memberName))) {
-            val fieldMirror = try {
-              instanceMirror.reflectField(member.asTerm)
-            } catch {
-              case e: Exception => throw new Exception(s"Can't format member $memberName in class $objClassName", e)
-            }
+            val fieldMirror =
+              try {
+                instanceMirror.reflectField(member.asTerm)
+              } catch {
+                case e: Exception => throw new Exception(s"Can't format member $memberName in class $objClassName", e)
+              }
 
             val memberValue = fieldMirror.get
             val memberValueString = toSource(memberValue)

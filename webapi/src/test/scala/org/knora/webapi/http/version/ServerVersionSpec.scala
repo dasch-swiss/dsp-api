@@ -24,8 +24,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
 /**
-  * This spec is used to test 'ListAdminMessages'.
-  */
+ * This spec is used to test 'ListAdminMessages'.
+ */
 class ServerVersionSpec extends AnyWordSpecLike with Matchers {
 
   "The server version header" should {

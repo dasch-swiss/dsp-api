@@ -45,8 +45,8 @@ object OldListsRouteADMFeatureE2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing lists endpoint.
-  */
+ * End-to-End (E2E) test specification for testing lists endpoint.
+ */
 class OldListsRouteADMFeatureE2ESpec
     extends E2ESpec(OldListsRouteADMFeatureE2ESpec.config)
     with SessionJsonProtocol
@@ -89,23 +89,22 @@ class OldListsRouteADMFeatureE2ESpec
   private val treeListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
   private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
   private val customChildNodeIRI = "http://rdfh.ch/lists/0001/JbKZ-L_i5rTwHlv4dSNp4A"
-  def addChildListNodeRequest(parentNodeIri: IRI, name: String, label: String, comment: String): String = {
+  def addChildListNodeRequest(parentNodeIri: IRI, name: String, label: String, comment: String): String =
     s"""{
-           |    "parentNodeIri": "$parentNodeIri",
-           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-           |    "name": "$name",
-           |    "labels": [{ "value": "$label", "language": "en"}],
-           |    "comments": [{ "value": "$comment", "language": "en"}]
-           |}""".stripMargin
-  }
+       |    "parentNodeIri": "$parentNodeIri",
+       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+       |    "name": "$name",
+       |    "labels": [{ "value": "$label", "language": "en"}],
+       |    "comments": [{ "value": "$comment", "language": "en"}]
+       |}""".stripMargin
 
   "The Lists Route (/admin/lists)" when {
 
     "used to query information about lists" should {
 
       "return all lists" in {
-        val request = Get(baseApiUrl + s"/admin/lists") ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+        val request =
+          Get(baseApiUrl + s"/admin/lists") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
         val response: HttpResponse = singleAwaitingRequest(request)
 
         // println(s"response: ${response.toString}")
@@ -131,8 +130,9 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "return all lists belonging to the images project" in {
-        val request = Get(baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF") ~> addCredentials(
-          rootCreds.basicHttpCredentials)
+        val request = Get(
+          baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF"
+        ) ~> addCredentials(rootCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
 
@@ -158,8 +158,9 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "return all lists belonging to the anything project" in {
-        val request = Get(baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F0001") ~> addCredentials(
-          rootCreds.basicHttpCredentials)
+        val request = Get(
+          baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F0001"
+        ) ~> addCredentials(rootCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
 
@@ -185,8 +186,9 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "return basic list information" in {
-        val request = Get(baseApiUrl + s"/admin/lists/infos/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList") ~> addCredentials(
-          rootCreds.basicHttpCredentials)
+        val request = Get(
+          baseApiUrl + s"/admin/lists/infos/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList"
+        ) ~> addCredentials(rootCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
 
@@ -212,8 +214,9 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "return a complete list" in {
-        val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList") ~> addCredentials(
-          rootCreds.basicHttpCredentials)
+        val request = Get(
+          baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList"
+        ) ~> addCredentials(rootCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // println(s"response: ${response.toString}")
 
@@ -236,8 +239,9 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "return node info without children" in {
-        val request = Get(baseApiUrl + s"/admin/lists/nodes/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList01") ~> addCredentials(
-          rootCreds.basicHttpCredentials)
+        val request = Get(
+          baseApiUrl + s"/admin/lists/nodes/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList01"
+        ) ~> addCredentials(rootCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
 
@@ -263,8 +267,9 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "return a complete node with children" in {
-        val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList03") ~> addCredentials(
-          rootCreds.basicHttpCredentials)
+        val request = Get(
+          baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList03"
+        ) ~> addCredentials(rootCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
@@ -291,11 +296,11 @@ class OldListsRouteADMFeatureE2ESpec
       "create a list with the provided custom Iri" in {
         val createListWithCustomIriRequest: String =
           s"""{
-                       |    "id": "${SharedTestDataADM.customListIRI}",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
-                       |    "comments": []
-                       |}""".stripMargin
+             |    "id": "${SharedTestDataADM.customListIRI}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
+             |    "comments": []
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -309,8 +314,8 @@ class OldListsRouteADMFeatureE2ESpec
         )
         val request = Post(
           baseApiUrl + s"/admin/lists",
-          HttpEntity(ContentTypes.`application/json`, createListWithCustomIriRequest)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+          HttpEntity(ContentTypes.`application/json`, createListWithCustomIriRequest)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
@@ -340,16 +345,18 @@ class OldListsRouteADMFeatureE2ESpec
         // duplicate list IRI
         val params =
           s"""
-                       |{
-                       |    "id": "${SharedTestDataADM.customListIRI}",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "New List", "language": "en"}],
-                       |    "comments": []
-                       |}
+             |{
+             |    "id": "${SharedTestDataADM.customListIRI}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "New List", "language": "en"}],
+             |    "comments": []
+             |}
                 """.stripMargin
 
-        val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request =
+          Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+            anythingAdminUserCreds.basicHttpCredentials
+          )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
 
@@ -363,13 +370,13 @@ class OldListsRouteADMFeatureE2ESpec
 
         val createChildNodeWithCustomIriRequest =
           s"""
-                                 |{   "id": "$customChildNodeIRI",
-                                 |    "parentNodeIri": "${SharedTestDataADM.customListIRI}",
-                                 |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                                 |    "name": "node with a custom IRI",
-                                 |    "labels": [{ "value": "New List Node", "language": "en"}],
-                                 |    "comments": []
-                                 |}""".stripMargin
+             |{   "id": "$customChildNodeIRI",
+             |    "parentNodeIri": "${SharedTestDataADM.customListIRI}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "name": "node with a custom IRI",
+             |    "labels": [{ "value": "New List Node", "language": "en"}],
+             |    "comments": []
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -386,8 +393,8 @@ class OldListsRouteADMFeatureE2ESpec
 
         val request = Post(
           baseApiUrl + s"/admin/lists/" + encodedParentNodeUrl,
-          HttpEntity(ContentTypes.`application/json`, createChildNodeWithCustomIriRequest)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+          HttpEntity(ContentTypes.`application/json`, createChildNodeWithCustomIriRequest)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // println(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -425,10 +432,10 @@ class OldListsRouteADMFeatureE2ESpec
       "create a list" in {
         val createListRequest: String =
           s"""{
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-                       |    "comments": []
-                       |}""".stripMargin
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+             |    "comments": []
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -440,8 +447,10 @@ class OldListsRouteADMFeatureE2ESpec
             text = createListRequest
           )
         )
-        val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, createListRequest)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Post(
+          baseApiUrl + s"/admin/lists",
+          HttpEntity(ContentTypes.`application/json`, createListRequest)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -478,15 +487,17 @@ class OldListsRouteADMFeatureE2ESpec
       "return a ForbiddenException if the user creating the list is not project or system admin" in {
         val params =
           s"""
-                       |{
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-                       |    "comments": []
-                       |}
+             |{
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+             |    "comments": []
+             |}
                 """.stripMargin
 
-        val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-          anythingUserCreds.basicHttpCredentials)
+        val request =
+          Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+            anythingUserCreds.basicHttpCredentials
+          )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.Forbidden)
@@ -497,11 +508,11 @@ class OldListsRouteADMFeatureE2ESpec
         // no project IRI
         val params01 =
           s"""
-                       |{
-                       |    "projectIri": "",
-                       |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-                       |    "comments": []
-                       |}
+             |{
+             |    "projectIri": "",
+             |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+             |    "comments": []
+             |}
                 """.stripMargin
 
         val request01 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params01))
@@ -512,11 +523,11 @@ class OldListsRouteADMFeatureE2ESpec
         // invalid project IRI
         val params02 =
           s"""
-                       |{
-                       |    "projectIri": "notvalidIRI",
-                       |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-                       |    "comments": []
-                       |}
+             |{
+             |    "projectIri": "notvalidIRI",
+             |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+             |    "comments": []
+             |}
                 """.stripMargin
 
         val request02 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params02))
@@ -527,11 +538,11 @@ class OldListsRouteADMFeatureE2ESpec
         // missing label
         val params03 =
           s"""
-                       |{
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [],
-                       |    "comments": []
-                       |}
+             |{
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [],
+             |    "comments": []
+             |}
                 """.stripMargin
 
         val request03 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params03))
@@ -545,11 +556,11 @@ class OldListsRouteADMFeatureE2ESpec
 
         val updateListInfo: String =
           s"""{
-                       |    "listIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-                       |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-                       |}""".stripMargin
+             |    "listIri": "${newListIri.get}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -563,9 +574,10 @@ class OldListsRouteADMFeatureE2ESpec
         )
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                          HttpEntity(ContentTypes.`application/json`, updateListInfo)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, updateListInfo)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -596,10 +608,10 @@ class OldListsRouteADMFeatureE2ESpec
       "update basic list information with a new name" in {
         val updateListName =
           s"""{
-                       |    "listIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "name": "a totally new name"
-                       |}""".stripMargin
+             |    "listIri": "${newListIri.get}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "name": "a totally new name"
+             |}""".stripMargin
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(
@@ -612,9 +624,10 @@ class OldListsRouteADMFeatureE2ESpec
         )
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                          HttpEntity(ContentTypes.`application/json`, updateListName)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, updateListName)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -642,19 +655,19 @@ class OldListsRouteADMFeatureE2ESpec
 
         val updateListInfoWithRepeatedCommentAndLabelValuesRequest: String =
           s"""{
-                       |    "listIri": "http://rdfh.ch/lists/0001/treeList",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |  "labels": [
-                       |    {"language": "en", "value": "Test List"},
-                       |    {"language": "se", "value": "Test List"}
-                       |  ],
-                       |  "comments": [
-                       |    {"language": "en", "value": "test"},
-                       |    {"language": "de", "value": "test"},
-                       |    {"language": "fr", "value": "test"},
-                       |     {"language": "it", "value": "test"}
-                       |  ]
-                       |}""".stripMargin
+             |    "listIri": "http://rdfh.ch/lists/0001/treeList",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |  "labels": [
+             |    {"language": "en", "value": "Test List"},
+             |    {"language": "se", "value": "Test List"}
+             |  ],
+             |  "comments": [
+             |    {"language": "en", "value": "test"},
+             |    {"language": "de", "value": "test"},
+             |    {"language": "fr", "value": "test"},
+             |     {"language": "it", "value": "test"}
+             |  ]
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -669,10 +682,10 @@ class OldListsRouteADMFeatureE2ESpec
 
         val encodedListUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                          HttpEntity(ContentTypes.`application/json`,
-                                     updateListInfoWithRepeatedCommentAndLabelValuesRequest)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, updateListInfoWithRepeatedCommentAndLabelValuesRequest)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -703,19 +716,20 @@ class OldListsRouteADMFeatureE2ESpec
       "return a ForbiddenException if the user updating the list is not project or system admin" in {
         val params =
           s"""
-                       |{
-                       |    "listIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-                       |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-                       |}
+             |{
+             |    "listIri": "${newListIri.get}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+             |}
                 """.stripMargin
 
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                          HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-          anythingUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, params)
+        ) ~> addCredentials(anythingUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.Forbidden)
@@ -728,17 +742,18 @@ class OldListsRouteADMFeatureE2ESpec
         // empty list IRI
         val params01 =
           s"""
-                       |{
-                       |    "listIri": "",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-                       |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-                       |}
+             |{
+             |    "listIri": "",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+             |}
                 """.stripMargin
 
-        val request01 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                            HttpEntity(ContentTypes.`application/json`, params01)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request01 = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, params01)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response01: HttpResponse = singleAwaitingRequest(request01)
         // log.debug(s"response: ${response.toString}")
         response01.status should be(StatusCodes.BadRequest)
@@ -746,17 +761,18 @@ class OldListsRouteADMFeatureE2ESpec
         // empty project
         val params02 =
           s"""
-                   |{
-                   |    "listIri": "${newListIri.get}",
-                   |    "projectIri": "",
-                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-                   |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-                   |}
+             |{
+             |    "listIri": "${newListIri.get}",
+             |    "projectIri": "",
+             |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+             |}
                 """.stripMargin
 
-        val request02 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                            HttpEntity(ContentTypes.`application/json`, params02)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request02 = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, params02)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response02: HttpResponse = singleAwaitingRequest(request02)
         // log.debug(s"response: ${response.toString}")
         response02.status should be(StatusCodes.BadRequest)
@@ -764,17 +780,18 @@ class OldListsRouteADMFeatureE2ESpec
         // empty parameters
         val params03 =
           s"""
-                       |{
-                       |    "listIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [],
-                       |    "comments": []
-                       |}
+             |{
+             |    "listIri": "${newListIri.get}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [],
+             |    "comments": []
+             |}
                 """.stripMargin
 
-        val request03 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                            HttpEntity(ContentTypes.`application/json`, params03)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request03 = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, params03)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response03: HttpResponse = singleAwaitingRequest(request03)
         // log.debug(s"response: ${response.toString}")
         response03.status should be(StatusCodes.BadRequest)
@@ -807,9 +824,10 @@ class OldListsRouteADMFeatureE2ESpec
           )
         )
 
-        val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                           HttpEntity(ContentTypes.`application/json`, addChildToRoot)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Post(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, addChildToRoot)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // println(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -877,9 +895,10 @@ class OldListsRouteADMFeatureE2ESpec
             text = addSecondChildToRoot
           )
         )
-        val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                           HttpEntity(ContentTypes.`application/json`, addSecondChildToRoot)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Post(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, addSecondChildToRoot)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // println(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -935,13 +954,13 @@ class OldListsRouteADMFeatureE2ESpec
 
         val insertChild =
           s"""{
-           |    "parentNodeIri": "${newListIri.get}",
-           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-           |    "name": "$name",
-           |    "position": 1,
-           |    "labels": [{ "value": "$label", "language": "en"}],
-           |    "comments": [{ "value": "$comment", "language": "en"}]
-           |}""".stripMargin
+             |    "parentNodeIri": "${newListIri.get}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "name": "$name",
+             |    "position": 1,
+             |    "labels": [{ "value": "$label", "language": "en"}],
+             |    "comments": [{ "value": "$comment", "language": "en"}]
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -953,9 +972,10 @@ class OldListsRouteADMFeatureE2ESpec
             text = insertChild
           )
         )
-        val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                           HttpEntity(ContentTypes.`application/json`, insertChild)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Post(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, insertChild)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // println(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -1025,9 +1045,10 @@ class OldListsRouteADMFeatureE2ESpec
             text = addChildToSecondChild
           )
         )
-        val request = Post(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                           HttpEntity(ContentTypes.`application/json`, addChildToSecondChild)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Post(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, addChildToSecondChild)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // println(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -1077,10 +1098,10 @@ class OldListsRouteADMFeatureE2ESpec
         val newName = "modified third child"
         val updateNodeName =
           s"""{
-                       |    "listIri": "$customChildNodeIRI",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "name": "${newName}"
-                       |}""".stripMargin
+             |    "listIri": "$customChildNodeIRI",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "name": "${newName}"
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -1095,9 +1116,10 @@ class OldListsRouteADMFeatureE2ESpec
 
         val encodedListUrl = java.net.URLEncoder.encode(customChildNodeIRI, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                          HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)

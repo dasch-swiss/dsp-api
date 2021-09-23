@@ -25,8 +25,8 @@ import org.knora.webapi.CoreSpec
 import org.knora.webapi.util.FileUtil
 
 /**
-  * Tests [[ResponseCheckerV2]].
-  */
+ * Tests [[ResponseCheckerV2]].
+ */
 class ResponseCheckerV2Spec extends CoreSpec() {
 
   "ResponseCheckerV2" should {

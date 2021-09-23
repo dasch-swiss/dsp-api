@@ -32,8 +32,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import scala.concurrent.duration._
 
 /**
-  * Tests [[MetadataResponderV2]].
-  */
+ * Tests [[MetadataResponderV2]].
+ */
 class MetadataResponderV2Spec extends CoreSpec() with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)

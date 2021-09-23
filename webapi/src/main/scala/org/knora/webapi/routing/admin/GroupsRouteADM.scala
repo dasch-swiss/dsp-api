@@ -35,8 +35,8 @@ object GroupsRouteADM {
 }
 
 /**
-  * Provides a routing function for API routes that deal with groups.
-  */
+ * Provides a routing function for API routes that deal with groups.
+ */
 
 @Api(value = "groups", produces = "application/json")
 @Path("/admin/groups")
@@ -57,8 +57,8 @@ class GroupsRouteADM(routeData: KnoraRouteData)
       getGroupMembers(featureFactoryConfig)
 
   /**
-    * Returns all groups
-    */
+   * Returns all groups
+   */
   private def getGroups(featureFactoryConfig: FeatureFactoryConfig): Route = path(GroupsBasePath) {
     get {
       /* return all groups */
@@ -68,11 +68,10 @@ class GroupsRouteADM(routeData: KnoraRouteData)
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig
           )
-        } yield
-          GroupsGetRequestADM(
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = requestingUser
-          )
+        } yield GroupsGetRequestADM(
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
+        )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
@@ -86,8 +85,8 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   }
 
   /**
-    * Creates a group
-    */
+   * Creates a group
+   */
   private def createGroup(featureFactoryConfig: FeatureFactoryConfig): Route = path(GroupsBasePath) {
     post {
       /* create a new group */
@@ -97,13 +96,12 @@ class GroupsRouteADM(routeData: KnoraRouteData)
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig
           )
-        } yield
-          GroupCreateRequestADM(
-            createRequest = apiRequest,
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
+        } yield GroupCreateRequestADM(
+          createRequest = apiRequest,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser,
+          apiRequestID = UUID.randomUUID()
+        )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
@@ -118,8 +116,8 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   }
 
   /**
-    * Returns a single group identified by IRI.
-    */
+   * Returns a single group identified by IRI.
+   */
   private def getGroupByIri(featureFactoryConfig: FeatureFactoryConfig): Route = path(GroupsBasePath / Segment) {
     value =>
       get {
@@ -133,12 +131,11 @@ class GroupsRouteADM(routeData: KnoraRouteData)
               requestContext = requestContext,
               featureFactoryConfig = featureFactoryConfig
             )
-          } yield
-            GroupGetRequestADM(
-              groupIri = checkedGroupIri,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser
-            )
+          } yield GroupGetRequestADM(
+            groupIri = checkedGroupIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
 
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
@@ -152,8 +149,8 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   }
 
   /**
-    * Update basic group information.
-    */
+   * Update basic group information.
+   */
   private def updateGroup(featureFactoryConfig: FeatureFactoryConfig): Route = path(GroupsBasePath / Segment) { value =>
     put {
       /* update a group identified by iri */
@@ -162,12 +159,13 @@ class GroupsRouteADM(routeData: KnoraRouteData)
           stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
         /**
-          * The api request is already checked at time of creation.
-          * See case class.
-          */
+         * The api request is already checked at time of creation.
+         * See case class.
+         */
         if (apiRequest.status.nonEmpty) {
           throw BadRequestException(
-            "The status property is not allowed to be set for this route. Please use the change status route.")
+            "The status property is not allowed to be set for this route. Please use the change status route."
+          )
         }
 
         val requestMessage = for {
@@ -175,14 +173,13 @@ class GroupsRouteADM(routeData: KnoraRouteData)
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig
           )
-        } yield
-          GroupChangeRequestADM(
-            groupIri = checkedGroupIri,
-            changeGroupRequest = apiRequest,
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
+        } yield GroupChangeRequestADM(
+          groupIri = checkedGroupIri,
+          changeGroupRequest = apiRequest,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser,
+          apiRequestID = UUID.randomUUID()
+        )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
@@ -197,8 +194,8 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   }
 
   /**
-    * Update the group's status.
-    */
+   * Update the group's status.
+   */
   private def changeGroupStatus(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(GroupsBasePath / Segment / "status") { value =>
       put {
@@ -208,12 +205,12 @@ class GroupsRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
           /**
-            * The api request is already checked at time of creation.
-            * See case class. Depending on the data sent, we are either
-            * doing a general update or status change. Since we are in
-            * the status change route, we are only interested in the
-            * value of the status property
-            */
+           * The api request is already checked at time of creation.
+           * See case class. Depending on the data sent, we are either
+           * doing a general update or status change. Since we are in
+           * the status change route, we are only interested in the
+           * value of the status property
+           */
           if (apiRequest.status.isEmpty) {
             throw BadRequestException("The status property is not allowed to be empty.")
           }
@@ -223,14 +220,13 @@ class GroupsRouteADM(routeData: KnoraRouteData)
               requestContext = requestContext,
               featureFactoryConfig = featureFactoryConfig
             )
-          } yield
-            GroupChangeStatusRequestADM(
-              groupIri = checkedGroupIri,
-              changeGroupRequest = apiRequest,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser,
-              apiRequestID = UUID.randomUUID()
-            )
+          } yield GroupChangeStatusRequestADM(
+            groupIri = checkedGroupIri,
+            changeGroupRequest = apiRequest,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
@@ -245,8 +241,8 @@ class GroupsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-    * Deletes a group (sets status to false)
-    */
+   * Deletes a group (sets status to false)
+   */
   private def deleteGroup(featureFactoryConfig: FeatureFactoryConfig): Route = path(GroupsBasePath / Segment) { value =>
     delete {
       /* update group status to false */
@@ -259,14 +255,13 @@ class GroupsRouteADM(routeData: KnoraRouteData)
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig
           )
-        } yield
-          GroupChangeStatusRequestADM(
-            groupIri = checkedGroupIri,
-            changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = requestingUser,
-            apiRequestID = UUID.randomUUID()
-          )
+        } yield GroupChangeStatusRequestADM(
+          groupIri = checkedGroupIri,
+          changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser,
+          apiRequestID = UUID.randomUUID()
+        )
 
         RouteUtilADM.runJsonRoute(
           requestMessageF = requestMessage,
@@ -280,8 +275,8 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   }
 
   /**
-    * Gets members of single group.
-    */
+   * Gets members of single group.
+   */
   private def getGroupMembers(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(GroupsBasePath / Segment / "members") { value =>
       get {
@@ -295,12 +290,11 @@ class GroupsRouteADM(routeData: KnoraRouteData)
               requestContext = requestContext,
               featureFactoryConfig = featureFactoryConfig
             )
-          } yield
-            GroupMembersGetRequestADM(
-              groupIri = checkedGroupIri,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser
-            )
+          } yield GroupMembersGetRequestADM(
+            groupIri = checkedGroupIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
 
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,

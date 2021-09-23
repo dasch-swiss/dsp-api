@@ -28,9 +28,9 @@ import org.knora.webapi.http.handler.KnoraExceptionHandler
 import org.knora.webapi.settings.KnoraSettings
 
 /**
-  * DSP-API HTTP directives, used by wrapping around a routes, to influence
-  * rejections and exception handling
-  */
+ * DSP-API HTTP directives, used by wrapping around a routes, to influence
+ * rejections and exception handling
+ */
 object DSPApiDirectives {
 
   // Our rejection handler. Here we are using the default one from the CORS lib

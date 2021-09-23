@@ -37,8 +37,8 @@ object SipiResponderADMSpec {
 }
 
 /**
-  * Tests [[SipiResponderADM]].
-  */
+ * Tests [[SipiResponderADM]].
+ */
 class SipiResponderADMSpec extends CoreSpec(SipiResponderADMSpec.config) with ImplicitSender {
 
   override lazy val rdfDataObjects = List(
@@ -70,10 +70,13 @@ class SipiResponderADMSpec extends CoreSpec(SipiResponderADMSpec.config) with Im
         requestingUser = SharedTestDataADM.anonymousUser
       )
 
-      expectMsg(timeout,
-                SipiFileInfoGetResponseADM(
-                  permissionCode = 1,
-                  Some(ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = Some("path_to_image")))))
+      expectMsg(
+        timeout,
+        SipiFileInfoGetResponseADM(
+          permissionCode = 1,
+          Some(ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = Some("path_to_image")))
+        )
+      )
     }
   }
 }

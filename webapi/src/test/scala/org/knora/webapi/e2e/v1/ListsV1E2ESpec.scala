@@ -39,8 +39,8 @@ object ListsV1E2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing users endpoint.
-  */
+ * End-to-End (E2E) test specification for testing users endpoint.
+ */
 class ListsV1E2ESpec
     extends E2ESpec(ListsV1E2ESpec.config)
     with SessionJsonProtocol
@@ -97,7 +97,7 @@ class ListsV1E2ESpec
 
                 val listInfos: Seq[ListInfoV1] = AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListInfoV1]]
                 listInfos.size should be (6)
-       */
+         */
       }
     }
   }
@@ -115,7 +115,7 @@ class ListsV1E2ESpec
 
                 val listInfos: Seq[ListInfoV1] = AkkaHttpUtils.httpResponseToJson(response).fields("lists").convertTo[Seq[ListInfoV1]]
                 listInfos.size should be (6)
-       */
+         */
       }
     }
   }

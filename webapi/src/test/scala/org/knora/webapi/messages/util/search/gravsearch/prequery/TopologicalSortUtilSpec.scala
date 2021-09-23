@@ -25,16 +25,15 @@ import scalax.collection.Graph
 import scalax.collection.GraphEdge._
 
 /**
-  * Tests [[TopologicalSortUtil]].
-  */
+ * Tests [[TopologicalSortUtil]].
+ */
 class TopologicalSortUtilSpec extends CoreSpec() {
   type NodeT = Graph[Int, DiHyperEdge]#NodeT
 
-  private def nodesToValues(orders: Set[Vector[NodeT]]): Set[Vector[Int]] = {
+  private def nodesToValues(orders: Set[Vector[NodeT]]): Set[Vector[Int]] =
     orders.map { order: Vector[NodeT] =>
       order.map(_.value)
     }
-  }
 
   "TopologicalSortUtilSpec" should {
 
@@ -44,7 +43,8 @@ class TopologicalSortUtilSpec extends CoreSpec() {
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
         TopologicalSortUtil
-          .findAllTopologicalOrderPermutations(graph))
+          .findAllTopologicalOrderPermutations(graph)
+      )
 
       val expectedOrders = Set(
         Vector(2, 7, 4, 5)
@@ -55,11 +55,18 @@ class TopologicalSortUtilSpec extends CoreSpec() {
 
     "return all topological orders of a graph with multiple leaves" in {
       val graph: Graph[Int, DiHyperEdge] =
-        Graph[Int, DiHyperEdge](DiHyperEdge[Int](2, 4), DiHyperEdge[Int](2, 7), DiHyperEdge[Int](2, 8), DiHyperEdge[Int](4, 5), DiHyperEdge[Int](7, 3))
+        Graph[Int, DiHyperEdge](
+          DiHyperEdge[Int](2, 4),
+          DiHyperEdge[Int](2, 7),
+          DiHyperEdge[Int](2, 8),
+          DiHyperEdge[Int](4, 5),
+          DiHyperEdge[Int](7, 3)
+        )
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
         TopologicalSortUtil
-          .findAllTopologicalOrderPermutations(graph))
+          .findAllTopologicalOrderPermutations(graph)
+      )
 
       val expectedOrders = Set(
         Vector(2, 8, 4, 7, 5, 3),
@@ -74,7 +81,8 @@ class TopologicalSortUtilSpec extends CoreSpec() {
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
         TopologicalSortUtil
-          .findAllTopologicalOrderPermutations(graph))
+          .findAllTopologicalOrderPermutations(graph)
+      )
 
       assert(allOrders.isEmpty)
     }
@@ -85,7 +93,8 @@ class TopologicalSortUtilSpec extends CoreSpec() {
 
       val allOrders: Set[Vector[Int]] = nodesToValues(
         TopologicalSortUtil
-          .findAllTopologicalOrderPermutations(graph))
+          .findAllTopologicalOrderPermutations(graph)
+      )
 
       assert(allOrders.isEmpty)
     }

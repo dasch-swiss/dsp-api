@@ -38,12 +38,12 @@ class UpgradePluginPR1322Spec extends UpgradePluginSpec {
 
       val query: String =
         """
-                  |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                  |
-                  |SELECT ?value WHERE {
-                  |    ?value knora-base:valueHasUUID ?valueHasUUID .
-                  |} ORDER BY ?value
-                  |""".stripMargin
+          |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+          |
+          |SELECT ?value WHERE {
+          |    ?value knora-base:valueHasUUID ?valueHasUUID .
+          |} ORDER BY ?value
+          |""".stripMargin
 
       val queryResult1: SparqlSelectResult = repository.doSelect(selectQuery = query)
 

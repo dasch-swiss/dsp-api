@@ -69,20 +69,20 @@ import org.apache.commons.lang3.{SerializationException, SerializationUtils}
  */
 
 /**
-  * A trait implemented by all Knora exceptions, which must be serializable and extend [[java.lang.Exception]].
-  */
+ * A trait implemented by all Knora exceptions, which must be serializable and extend [[java.lang.Exception]].
+ */
 trait KnoraException extends Serializable {
   this: Exception =>
   {}
 }
 
 /**
-  * An abstract base class for exceptions indicating that something about a request made it impossible to fulfil (e.g.
-  * it was malformed or referred to nonexistent data).
-  *
-  * @param msg   a description of the error.
-  * @param cause the cause of the error.
-  */
+ * An abstract base class for exceptions indicating that something about a request made it impossible to fulfil (e.g.
+ * it was malformed or referred to nonexistent data).
+ *
+ * @param msg   a description of the error.
+ * @param cause the cause of the error.
+ */
 abstract class RequestRejectedException(msg: String, cause: Throwable = null)
     extends Exception(msg, cause)
     with KnoraException
@@ -93,100 +93,100 @@ object RequestRejectedException {
 }
 
 /**
-  * An exception indicating that the request parameters did not make sense.
-  *
-  * @param message a description of the error.
-  */
+ * An exception indicating that the request parameters did not make sense.
+ *
+ * @param message a description of the error.
+ */
 case class BadRequestException(message: String) extends RequestRejectedException(message)
 
 /**
-  * An exception indicating that a user has provided bad credentials.
-  *
-  * @param message a description of the error.
-  */
+ * An exception indicating that a user has provided bad credentials.
+ *
+ * @param message a description of the error.
+ */
 case class BadCredentialsException(message: String) extends RequestRejectedException(message)
 
 /**
-  * An exception indicating that a user has made a request for which the user lacks the necessary permission.
-  *
-  * @param message a description of the error.
-  */
+ * An exception indicating that a user has made a request for which the user lacks the necessary permission.
+ *
+ * @param message a description of the error.
+ */
 case class ForbiddenException(message: String) extends RequestRejectedException(message)
 
 /**
-  * An exception indicating that the requested data was not found.
-  *
-  * @param message a description of the error.
-  */
+ * An exception indicating that the requested data was not found.
+ *
+ * @param message a description of the error.
+ */
 case class NotFoundException(message: String) extends RequestRejectedException(message)
 
 /**
-  * An exception indicating that a requested update is not allowed because it would create a duplicate value.
-  *
-  * @param message a description of the error.
-  */
+ * An exception indicating that a requested update is not allowed because it would create a duplicate value.
+ *
+ * @param message a description of the error.
+ */
 case class DuplicateValueException(message: String = "Duplicate values are not permitted")
     extends RequestRejectedException(message)
 
 /**
-  * An exception indicating that a requested update is not allowed because it would violate an ontology constraint,
-  * e.g. an `knora-base:objectClassConstraint` or an OWL cardinality restriction.
-  *
-  * @param message a description of the error.
-  */
+ * An exception indicating that a requested update is not allowed because it would violate an ontology constraint,
+ * e.g. an `knora-base:objectClassConstraint` or an OWL cardinality restriction.
+ *
+ * @param message a description of the error.
+ */
 case class OntologyConstraintException(message: String) extends RequestRejectedException(message)
 
 /**
-  * An exception indicating that a requested update is not allowed because another user has edited the
-  * data that was to be updated.
-  *
-  * @param message a description of the error.
-  */
+ * An exception indicating that a requested update is not allowed because another user has edited the
+ * data that was to be updated.
+ *
+ * @param message a description of the error.
+ */
 case class EditConflictException(message: String) extends RequestRejectedException(message)
 
 /**
-  * An exception indicating that the submitted standoff is not valid.
-  *
-  * @param message a description of the error.
-  */
+ * An exception indicating that the submitted standoff is not valid.
+ *
+ * @param message a description of the error.
+ */
 case class InvalidStandoffException(message: String) extends RequestRejectedException(message)
 
 /**
-  * An exception indicating that an error occurred when converting standoff markup to or from another format.
-  *
-  * @param message a description of the error.
-  */
+ * An exception indicating that an error occurred when converting standoff markup to or from another format.
+ *
+ * @param message a description of the error.
+ */
 case class StandoffConversionException(message: String) extends RequestRejectedException(message)
 
 /**
-  * An exception indicating that the Gravsearch query submitted to the API v2 search route was invalid.
-  *
-  * @param message a description of the error.
-  */
+ * An exception indicating that the Gravsearch query submitted to the API v2 search route was invalid.
+ *
+ * @param message a description of the error.
+ */
 case class GravsearchException(message: String) extends RequestRejectedException(message)
 
 /**
-  * An exception indication that the JSON-LD submitted to the API v2 was invalid.
-  *
-  * @param msg   a description of the error.
-  * @param cause the cause for the error
-  */
+ * An exception indication that the JSON-LD submitted to the API v2 was invalid.
+ *
+ * @param msg   a description of the error.
+ * @param cause the cause for the error
+ */
 case class InvalidJsonLDException(msg: String, cause: Throwable = null) extends RequestRejectedException(msg, cause)
 
 /**
-  * An exception indication that the RDF submitted to the API v2 was invalid.
-  *
-  * @param msg   a description of the error.
-  * @param cause the cause for the error
-  */
+ * An exception indication that the RDF submitted to the API v2 was invalid.
+ *
+ * @param msg   a description of the error.
+ * @param cause the cause for the error
+ */
 case class InvalidRdfException(msg: String, cause: Throwable = null) extends RequestRejectedException(msg, cause)
 
 /**
-  * An abstract class for exceptions indicating that something went wrong and it's not the client's fault.
-  *
-  * @param message a description of the error.
-  * @param cause   the original exception representing the cause of the error, if any.
-  */
+ * An abstract class for exceptions indicating that something went wrong and it's not the client's fault.
+ *
+ * @param message a description of the error.
+ * @param cause   the original exception representing the cause of the error, if any.
+ */
 abstract class InternalServerException(message: String, cause: Option[Throwable] = None)
     extends Exception(message, cause.orNull)
     with KnoraException
@@ -197,14 +197,14 @@ object InternalServerException {
 }
 
 /**
-  * An exception indicating that during authentication something unexpected happened.
-  *
-  * @param message a description of the error.
-  */
-case class AuthenticationException(message: String =
-                                     "Error during authentication. Please report this as a possible bug.",
-                                   cause: Option[Throwable] = None)
-    extends InternalServerException(message)
+ * An exception indicating that during authentication something unexpected happened.
+ *
+ * @param message a description of the error.
+ */
+case class AuthenticationException(
+  message: String = "Error during authentication. Please report this as a possible bug.",
+  cause: Option[Throwable] = None
+) extends InternalServerException(message)
 
 object AuthenticationException {
   def apply(message: String, e: Throwable, log: LoggingAdapter): AuthenticationException =
@@ -212,48 +212,48 @@ object AuthenticationException {
 }
 
 /**
-  * Indicates that data could not be converted from one format to another. This exception should not be thrown when
-  * validating user input, but rather when processing input that has already been validated, or data that has been
-  * loaded from the triplestore.
-  *
-  * @param message a description of the error.
-  */
+ * Indicates that data could not be converted from one format to another. This exception should not be thrown when
+ * validating user input, but rather when processing input that has already been validated, or data that has been
+ * loaded from the triplestore.
+ *
+ * @param message a description of the error.
+ */
 case class DataConversionException(message: String) extends InternalServerException(message)
 
 /**
-  * An exception indicating that during file upload there was an error.
-  *
-  * @param message a description of the error.
-  */
+ * An exception indicating that during file upload there was an error.
+ *
+ * @param message a description of the error.
+ */
 case class FileUploadException(message: String = "Error during file upload. Please report this as a possible bug.")
     extends InternalServerException(message)
 
 /**
-  * An exception indicating that a requested update was not performed, although it was expected to succeed.
-  * This probably indicates a bug.
-  *
-  * @param message a description of the error.
-  */
+ * An exception indicating that a requested update was not performed, although it was expected to succeed.
+ * This probably indicates a bug.
+ *
+ * @param message a description of the error.
+ */
 case class UpdateNotPerformedException(
-    message: String = "A requested update was not performed. Please report this as a possible bug.")
-    extends InternalServerException(message)
+  message: String = "A requested update was not performed. Please report this as a possible bug."
+) extends InternalServerException(message)
 
 /**
-  * An exception indicating that an unsupported value was passed.
-  * This probably indicates a bug.
-  *
-  * @param message a description of the error.
-  */
+ * An exception indicating that an unsupported value was passed.
+ * This probably indicates a bug.
+ *
+ * @param message a description of the error.
+ */
 case class UnsupportedValueException(
-    message: String = "An unsupported value was given. Please report this as a possible bug.")
-    extends InternalServerException(message)
+  message: String = "An unsupported value was given. Please report this as a possible bug."
+) extends InternalServerException(message)
 
 /**
-  * Indicates an internal server error in standoff-related processing.
-  *
-  * @param message a description of the error.
-  * @param cause   the original exception representing the cause of the error, if any.
-  */
+ * Indicates an internal server error in standoff-related processing.
+ *
+ * @param message a description of the error.
+ * @param cause   the original exception representing the cause of the error, if any.
+ */
 case class StandoffInternalException(message: String, cause: Option[Throwable] = None)
     extends InternalServerException(message, cause)
 
@@ -263,11 +263,11 @@ object StandoffInternalException {
 }
 
 /**
-  * Indicates that something happened that should be impossible.
-  *
-  * @param message a description of the error.
-  * @param cause   the original exception representing the cause of the error, if any.
-  */
+ * Indicates that something happened that should be impossible.
+ *
+ * @param message a description of the error.
+ * @param cause   the original exception representing the cause of the error, if any.
+ */
 case class AssertionException(message: String, cause: Option[Throwable] = None)
     extends InternalServerException(message, cause)
 
@@ -277,20 +277,20 @@ object AssertionException {
 }
 
 /**
-  * An abstract class for exceptions indicating that something went wrong with the triplestore.
-  *
-  * @param message a description of the error.
-  * @param cause   the original exception representing the cause of the error, if any.
-  */
+ * An abstract class for exceptions indicating that something went wrong with the triplestore.
+ *
+ * @param message a description of the error.
+ * @param cause   the original exception representing the cause of the error, if any.
+ */
 abstract class TriplestoreException(message: String, cause: Option[Throwable] = None)
     extends InternalServerException(message, cause)
 
 /**
-  * Indicates that the network connection to the triplestore failed.
-  *
-  * @param message a description of the error.
-  * @param cause   the original exception representing the cause of the error, if any.
-  */
+ * Indicates that the network connection to the triplestore failed.
+ *
+ * @param message a description of the error.
+ * @param cause   the original exception representing the cause of the error, if any.
+ */
 case class TriplestoreConnectionException(message: String, cause: Option[Throwable] = None)
     extends TriplestoreException(message, cause)
 
@@ -300,11 +300,11 @@ object TriplestoreConnectionException {
 }
 
 /**
-  * Indicates that a read timeout occurred while waiting for data from the triplestore.
-  *
-  * @param message a description of the error.
-  * @param cause   the original exception representing the cause of the error, if any.
-  */
+ * Indicates that a read timeout occurred while waiting for data from the triplestore.
+ *
+ * @param message a description of the error.
+ * @param cause   the original exception representing the cause of the error, if any.
+ */
 case class TriplestoreTimeoutException(message: String, cause: Option[Throwable] = None)
     extends TriplestoreException(message, cause)
 
@@ -314,11 +314,11 @@ object TriplestoreTimeoutException {
 }
 
 /**
-  * Indicates that we tried using a feature which is unsuported by the selected triplestore.
-  *
-  * @param message a description of the error.
-  * @param cause   the original exception representing the cause of the error, if any.
-  */
+ * Indicates that we tried using a feature which is unsuported by the selected triplestore.
+ *
+ * @param message a description of the error.
+ * @param cause   the original exception representing the cause of the error, if any.
+ */
 case class TriplestoreUnsupportedFeatureException(message: String, cause: Option[Throwable] = None)
     extends TriplestoreException(message, cause)
 
@@ -328,11 +328,11 @@ object TriplestoreUnsupportedFeatureException {
 }
 
 /**
-  * Indicates that something inside the Triplestore package went wrong. More details can be given in the message parameter.
-  *
-  * @param message a description of the error.
-  * @param cause   the original exception representing the cause of the error, if any.
-  */
+ * Indicates that something inside the Triplestore package went wrong. More details can be given in the message parameter.
+ *
+ * @param message a description of the error.
+ * @param cause   the original exception representing the cause of the error, if any.
+ */
 case class TriplestoreInternalException(message: String, cause: Option[Throwable] = None)
     extends TriplestoreException(message, cause)
 
@@ -342,11 +342,11 @@ object TriplestoreInternalException {
 }
 
 /**
-  * Indicates that the triplestore returned an error message, or a response that could not be parsed.
-  *
-  * @param message a description of the error.
-  * @param cause   the original exception representing the cause of the error, if any.
-  */
+ * Indicates that the triplestore returned an error message, or a response that could not be parsed.
+ *
+ * @param message a description of the error.
+ * @param cause   the original exception representing the cause of the error, if any.
+ */
 case class TriplestoreResponseException(message: String, cause: Option[Throwable] = None)
     extends TriplestoreException(message, cause)
 
@@ -356,10 +356,10 @@ object TriplestoreResponseException {
 }
 
 /**
-  * Indicates an inconsistency in repository data.
-  *
-  * @param message a description of the error.
-  */
+ * Indicates an inconsistency in repository data.
+ *
+ * @param message a description of the error.
+ */
 case class InconsistentRepositoryDataException(message: String, cause: Option[Throwable] = None)
     extends InternalServerException(message, cause)
 
@@ -369,11 +369,11 @@ object InconsistentRepositoryDataException {
 }
 
 /**
-  * Indicates that the API server generated invalid JSON in an API response.
-  *
-  * @param message a description of the error.
-  * @param cause   the original exception representing the cause of the error, if any.
-  */
+ * Indicates that the API server generated invalid JSON in an API response.
+ *
+ * @param message a description of the error.
+ * @param cause   the original exception representing the cause of the error, if any.
+ */
 case class InvalidApiJsonException(message: String, cause: Option[Throwable] = None)
     extends InternalServerException(message, cause)
 
@@ -383,76 +383,76 @@ object InvalidApiJsonException {
 }
 
 /**
-  * Indicates that the during caching with the [[org.knora.webapi.store.cacheservice.CacheService]] something went wrong.
-  *
-  * @param message a description of the error.
-  */
+ * Indicates that the during caching with the [[org.knora.webapi.store.cacheservice.CacheService]] something went wrong.
+ *
+ * @param message a description of the error.
+ */
 abstract class CacheServiceException(message: String) extends InternalServerException(message)
 
 /**
-  * Indicates that an application lock could not be acquired.
-  *
-  * @param message a description of the error.
-  */
+ * Indicates that an application lock could not be acquired.
+ *
+ * @param message a description of the error.
+ */
 case class ApplicationLockException(message: String) extends InternalServerException(message)
 
 /**
-  * Indicates that an error occurred in transaction management.
-  */
+ * Indicates that an error occurred in transaction management.
+ */
 case class TransactionManagementException(message: String) extends InternalServerException(message)
 
 /**
-  * Indicates that an Akka actor received an unexpected message.
-  *
-  * @param message a description of the error.
-  */
+ * Indicates that an Akka actor received an unexpected message.
+ *
+ * @param message a description of the error.
+ */
 case class UnexpectedMessageException(message: String) extends InternalServerException(message)
 
 /**
-  * Indicates that an error occurred in the application's cache.
-  *
-  * @param message a description of the error.
-  */
+ * Indicates that an error occurred in the application's cache.
+ *
+ * @param message a description of the error.
+ */
 case class ApplicationCacheException(message: String) extends InternalServerException(message)
 
 /**
-  * Indicates that an error occurred during the generation of SPARQL query code.
-  *
-  * @param message a description of the error.
-  */
+ * Indicates that an error occurred during the generation of SPARQL query code.
+ *
+ * @param message a description of the error.
+ */
 case class SparqlGenerationException(message: String) extends InternalServerException(message)
 
 /**
-  * Indicates that an error occurred during the generation of client API code.
-  *
-  * @param message a description of the error.
-  */
+ * Indicates that an error occurred during the generation of client API code.
+ *
+ * @param message a description of the error.
+ */
 case class ClientApiGenerationException(message: String) extends InternalServerException(message)
 
 /**
-  * A generic [[InternalServerException]] for wrapping any non-serializable exception in a serializable form.
-  */
+ * A generic [[InternalServerException]] for wrapping any non-serializable exception in a serializable form.
+ */
 case class WrapperException(e: Throwable) extends InternalServerException(e.toString)
 
 /**
-  * Indicates that an error occurred when trying to write a file to the disk.
-  *
-  * @param message a description of the error.
-  */
+ * Indicates that an error occurred when trying to write a file to the disk.
+ *
+ * @param message a description of the error.
+ */
 case class FileWriteException(message: String) extends InternalServerException(message)
 
 /**
-  * Indicates that a request attempted to use a feature that has not yet been implemented.
-  *
-  * @param message a description of the error.
-  */
+ * Indicates that a request attempted to use a feature that has not yet been implemented.
+ *
+ * @param message a description of the error.
+ */
 case class NotImplementedException(message: String) extends InternalServerException(message)
 
 /**
-  * Indicates that an error occurred with Sipi not relating to the user's request (it is not the user's fault).
-  *
-  * @param message a description of the error.
-  */
+ * Indicates that an error occurred with Sipi not relating to the user's request (it is not the user's fault).
+ *
+ * @param message a description of the error.
+ */
 case class SipiException(message: String, cause: Option[Throwable] = None)
     extends InternalServerException(message, cause)
 
@@ -462,10 +462,10 @@ object SipiException {
 }
 
 /**
-  * An abstract base class for exceptions indicating that something about a configuration made it impossible to start.
-  *
-  * @param message a description of the error.
-  */
+ * An abstract base class for exceptions indicating that something about a configuration made it impossible to start.
+ *
+ * @param message a description of the error.
+ */
 abstract class ApplicationConfigurationException(message: String, cause: Option[Throwable] = None)
     extends Exception(message, cause.orNull)
     with KnoraException
@@ -476,77 +476,75 @@ object ApplicationConfigurationException {
 }
 
 /**
-  * Indicates that an unsupported triplestore was selected in the configuration.
-  *
-  * @param message a description of the error.
-  */
+ * Indicates that an unsupported triplestore was selected in the configuration.
+ *
+ * @param message a description of the error.
+ */
 case class UnsupportedTriplestoreException(message: String) extends ApplicationConfigurationException(message)
 
 /**
-  * Indicates that the HTTP configuration is incorrect.
-  *
-  * @param message a description of the error.
-  */
+ * Indicates that the HTTP configuration is incorrect.
+ *
+ * @param message a description of the error.
+ */
 case class HttpConfigurationException(message: String) extends ApplicationConfigurationException(message)
 
 /**
-  * Indicates that a test configuration is incorrect.
-  *
-  * @param message a description of the error.
-  */
+ * Indicates that a test configuration is incorrect.
+ *
+ * @param message a description of the error.
+ */
 case class TestConfigurationException(message: String) extends ApplicationConfigurationException(message)
 
 /**
-  * Indicates that a feature toggle configuration is incorrect.
-  *
-  * @param message a description of the error.
-  */
+ * Indicates that a feature toggle configuration is incorrect.
+ *
+ * @param message a description of the error.
+ */
 case class FeatureToggleException(message: String, cause: Option[Throwable] = None)
     extends ApplicationConfigurationException(message)
 
 /**
-  * Indicates that RDF processing failed.
-  *
-  * @param message a description of the error.
-  * @param cause   the original exception representing the cause of the error, if any.
-  */
+ * Indicates that RDF processing failed.
+ *
+ * @param message a description of the error.
+ * @param cause   the original exception representing the cause of the error, if any.
+ */
 case class RdfProcessingException(message: String, cause: Option[Throwable] = None)
     extends InternalServerException(message)
 
 /**
-  * Helper functions for error handling.
-  */
+ * Helper functions for error handling.
+ */
 object ExceptionUtil {
 
   /**
-    * Checks whether an exception is serializable.
-    *
-    * @param e the exception to be checked.
-    * @return `true` if the exception is serializable, otherwise `false`.
-    */
-  def isSerializable(e: Throwable): Boolean = {
+   * Checks whether an exception is serializable.
+   *
+   * @param e the exception to be checked.
+   * @return `true` if the exception is serializable, otherwise `false`.
+   */
+  def isSerializable(e: Throwable): Boolean =
     try {
       SerializationUtils.serialize(e)
       true
     } catch {
       case _: SerializationException => false
     }
-  }
 
   /**
-    * Checks whether an exception is serializable. If it is serializable, it is returned as-is. If not,
-    * the exception is logged with its stack trace, and a string representation of it is returned in a
-    * [[WrapperException]].
-    *
-    * @param e the exception to be checked.
-    * @return the same exception, or a [[WrapperException]].
-    */
-  def logAndWrapIfNotSerializable(e: Throwable, log: LoggingAdapter): Throwable = {
+   * Checks whether an exception is serializable. If it is serializable, it is returned as-is. If not,
+   * the exception is logged with its stack trace, and a string representation of it is returned in a
+   * [[WrapperException]].
+   *
+   * @param e the exception to be checked.
+   * @return the same exception, or a [[WrapperException]].
+   */
+  def logAndWrapIfNotSerializable(e: Throwable, log: LoggingAdapter): Throwable =
     if (isSerializable(e)) {
       e
     } else {
       log.error(e, e.toString)
       WrapperException(e)
     }
-  }
 }

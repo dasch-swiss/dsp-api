@@ -23,6 +23,6 @@ import org.knora.webapi.feature.{FeatureToggle, ToggleStateOff}
 import org.knora.webapi.util.rdf.JsonLDUtilSpec
 
 /**
-  * Tests [[org.knora.webapi.messages.util.rdf.JsonLDUtil]] using the RDF4J API.
-  */
+ * Tests [[org.knora.webapi.messages.util.rdf.JsonLDUtil]] using the RDF4J API.
+ */
 class RDF4JJsonLDUtilSpec extends JsonLDUtilSpec(FeatureToggle("jena-rdf-library", ToggleStateOff))

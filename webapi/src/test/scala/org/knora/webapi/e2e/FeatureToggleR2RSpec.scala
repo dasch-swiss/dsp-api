@@ -34,62 +34,62 @@ import org.knora.webapi.routing.{KnoraRoute, KnoraRouteData, KnoraRouteFactory}
 import scala.concurrent.ExecutionContextExecutor
 
 /**
-  * Tests feature toggles that replace implementations of API routes.
-  */
+ * Tests feature toggles that replace implementations of API routes.
+ */
 class FeatureToggleR2RSpec extends R2RSpec {
   // Some feature toggles for testing.
   override def testConfigSource: String =
     """app {
-          |    feature-toggles {
-          |        FeatureToggleR2RSpec-new-foo {
-          |            description = "Replace the old foo routes with new ones."
-          |
-          |            available-versions = [ 1, 2 ]
-          |            default-version = 1
-          |            enabled-by-default = yes
-          |            override-allowed = yes
-          |
-          |            developer-emails = [
-          |                "Benjamin Geer <benjamin.geer@dasch.swiss>"
-          |            ]
-          |        }
-          |
-          |        FeatureToggleR2RSpec-new-bar {
-          |            description = "Replace the old bar routes with new ones."
-          |
-          |            available-versions = [ 1 ]
-          |            default-version = 1
-          |            enabled-by-default = yes
-          |            override-allowed = yes
-          |
-          |            developer-emails = [
-          |                "Benjamin Geer <benjamin.geer@dasch.swiss>"
-          |            ]
-          |        }
-          |
-          |        FeatureToggleR2RSpec-new-baz {
-          |            description = "Replace the old baz routes with new ones."
-          |
-          |            available-versions = [ 1 ]
-          |            default-version = 1
-          |            enabled-by-default = no
-          |            override-allowed = no
-          |
-          |            developer-emails = [
-          |                "Benjamin Geer <benjamin.geer@dasch.swiss>"
-          |            ]
-          |        }
-          |    }
-          |}
+      |    feature-toggles {
+      |        FeatureToggleR2RSpec-new-foo {
+      |            description = "Replace the old foo routes with new ones."
+      |
+      |            available-versions = [ 1, 2 ]
+      |            default-version = 1
+      |            enabled-by-default = yes
+      |            override-allowed = yes
+      |
+      |            developer-emails = [
+      |                "Benjamin Geer <benjamin.geer@dasch.swiss>"
+      |            ]
+      |        }
+      |
+      |        FeatureToggleR2RSpec-new-bar {
+      |            description = "Replace the old bar routes with new ones."
+      |
+      |            available-versions = [ 1 ]
+      |            default-version = 1
+      |            enabled-by-default = yes
+      |            override-allowed = yes
+      |
+      |            developer-emails = [
+      |                "Benjamin Geer <benjamin.geer@dasch.swiss>"
+      |            ]
+      |        }
+      |
+      |        FeatureToggleR2RSpec-new-baz {
+      |            description = "Replace the old baz routes with new ones."
+      |
+      |            available-versions = [ 1 ]
+      |            default-version = 1
+      |            enabled-by-default = no
+      |            override-allowed = no
+      |
+      |            developer-emails = [
+      |                "Benjamin Geer <benjamin.geer@dasch.swiss>"
+      |            ]
+      |        }
+      |    }
+      |}
         """.stripMargin
 
   /**
-    * A test implementation of a route feature that handles HTTP GET requests.
-    *
-    * @param pathStr     the route path.
-    * @param featureName the name of the feature.
-    * @param routeData   a [[KnoraRouteData]] providing access to the application.
-    */
+   * A test implementation of a route feature that handles HTTP GET requests.
+   *
+   * @param pathStr     the route path.
+   * @param featureName the name of the feature.
+   * @param routeData   a [[KnoraRouteData]] providing access to the application.
+   */
   class TestRouteFeature(pathStr: String, featureName: String, routeData: KnoraRouteData)
       extends KnoraRoute(routeData)
       with Feature {
@@ -114,8 +114,8 @@ class FeatureToggleR2RSpec extends R2RSpec {
   }
 
   /**
-    * A feature factory that constructs implementations of [[FooRoute]].
-    */
+   * A feature factory that constructs implementations of [[FooRoute]].
+   */
   class FooRouteFeatureFactory(routeData: KnoraRouteData) extends KnoraRouteFactory(routeData) with FeatureFactory {
 
     // A trait for version numbers of the new 'foo' feature.
@@ -139,12 +139,12 @@ class FeatureToggleR2RSpec extends R2RSpec {
       new TestRouteFeature(pathStr = "foo", featureName = "the new foo, version 2", routeData = routeData)
 
     /**
-      * Constructs an implementation of the 'foo' route according to the feature factory
-      * configuration.
-      *
-      * @param featureFactoryConfig the per-request feature factory configuration.
-      * @return a route configured with the features enabled by the feature factory configuration.
-      */
+     * Constructs an implementation of the 'foo' route according to the feature factory
+     * configuration.
+     *
+     * @param featureFactoryConfig the per-request feature factory configuration.
+     * @return a route configured with the features enabled by the feature factory configuration.
+     */
     def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
       // Get the 'new-foo' feature toggle.
       val fooToggle: FeatureToggle = featureFactoryConfig.getToggle("FeatureToggleR2RSpec-new-foo")
@@ -162,8 +162,8 @@ class FeatureToggleR2RSpec extends R2RSpec {
   }
 
   /**
-    * A feature factory that constructs implementations of [[BarRoute]].
-    */
+   * A feature factory that constructs implementations of [[BarRoute]].
+   */
   class BarRouteFeatureFactory(routeData: KnoraRouteData) extends KnoraRouteFactory(routeData) with FeatureFactory {
 
     // The old 'bar' feature implementation.
@@ -188,8 +188,8 @@ class FeatureToggleR2RSpec extends R2RSpec {
   }
 
   /**
-    * A feature factory that constructs implementations of [[BazRoute]].
-    */
+   * A feature factory that constructs implementations of [[BazRoute]].
+   */
   class BazRouteFeatureFactory(routeData: KnoraRouteData) extends KnoraRouteFactory(routeData) with FeatureFactory {
 
     // The old 'baz' feature implementation.
@@ -213,53 +213,50 @@ class FeatureToggleR2RSpec extends R2RSpec {
   }
 
   /**
-    * A façade route that uses implementations constructed by [[FooRouteFeatureFactory]].
-    */
+   * A façade route that uses implementations constructed by [[FooRouteFeatureFactory]].
+   */
   class FooRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
     private val featureFactory = new FooRouteFeatureFactory(routeData)
 
-    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
       featureFactory.makeRoute(featureFactoryConfig)
-    }
   }
 
   /**
-    * A façade route that uses implementations constructed by [[BarRouteFeatureFactory]].
-    */
+   * A façade route that uses implementations constructed by [[BarRouteFeatureFactory]].
+   */
   class BarRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
     private val featureFactory = new BarRouteFeatureFactory(routeData)
 
-    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
       featureFactory.makeRoute(featureFactoryConfig)
-    }
   }
 
   /**
-    * A façade route that uses implementations constructed by [[BazRouteFeatureFactory]].
-    */
+   * A façade route that uses implementations constructed by [[BazRouteFeatureFactory]].
+   */
   class BazRoute(routeData: KnoraRouteData) extends KnoraRoute(routeData) {
     private val featureFactory = new BazRouteFeatureFactory(routeData)
 
-    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
+    override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
       featureFactory.makeRoute(featureFactoryConfig)
-    }
   }
 
   // The façade route instances that we are going to test.
-  private val fooRoute = DSPApiDirectives.handleErrors(system) { new FooRoute(routeData).knoraApiPath }
-  private val bazRoute = DSPApiDirectives.handleErrors(system) { new BazRoute(routeData).knoraApiPath }
+  private val fooRoute = DSPApiDirectives.handleErrors(system)(new FooRoute(routeData).knoraApiPath)
+  private val bazRoute = DSPApiDirectives.handleErrors(system)(new BazRoute(routeData).knoraApiPath)
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
   /**
-    * Parses the HTTP response header that lists the configured feature toggles.
-    *
-    * @param response the HTTP response.
-    * @return a string per toggle.
-    */
-  private def parseResponseHeader(response: HttpResponse): Set[String] = {
+   * Parses the HTTP response header that lists the configured feature toggles.
+   *
+   * @param response the HTTP response.
+   * @return a string per toggle.
+   */
+  private def parseResponseHeader(response: HttpResponse): Set[String] =
     response.headers.find(_.lowercaseName == FeatureToggle.RESPONSE_HEADER_LOWERCASE) match {
       case Some(header) =>
         header.value.split(',').toSet.filter { toggleStr =>
@@ -268,7 +265,6 @@ class FeatureToggleR2RSpec extends R2RSpec {
 
       case None => Set.empty
     }
-  }
 
   "The feature toggle framework" should {
     "use default toggles" in {
@@ -281,7 +277,8 @@ class FeatureToggleR2RSpec extends R2RSpec {
             "FeatureToggleR2RSpec-new-foo:1=on",
             "FeatureToggleR2RSpec-new-bar:1=on",
             "FeatureToggleR2RSpec-new-baz=off"
-          ))
+          )
+        )
       }
     }
 
@@ -296,7 +293,8 @@ class FeatureToggleR2RSpec extends R2RSpec {
             "FeatureToggleR2RSpec-new-foo=off",
             "FeatureToggleR2RSpec-new-bar:1=on",
             "FeatureToggleR2RSpec-new-baz=off"
-          ))
+          )
+        )
       }
     }
 
@@ -311,7 +309,8 @@ class FeatureToggleR2RSpec extends R2RSpec {
             "FeatureToggleR2RSpec-new-foo:2=on",
             "FeatureToggleR2RSpec-new-bar:1=on",
             "FeatureToggleR2RSpec-new-baz=off"
-          ))
+          )
+        )
       }
     }
 
@@ -322,7 +321,9 @@ class FeatureToggleR2RSpec extends R2RSpec {
         assert(status == StatusCodes.BadRequest, responseStr)
         assert(
           responseStr.contains(
-            "You must specify a version number to enable feature toggle FeatureToggleR2RSpec-new-foo"))
+            "You must specify a version number to enable feature toggle FeatureToggleR2RSpec-new-foo"
+          )
+        )
       }
     }
 
@@ -342,7 +343,9 @@ class FeatureToggleR2RSpec extends R2RSpec {
         assert(status == StatusCodes.BadRequest, responseStr)
         assert(
           responseStr.contains(
-            "You cannot specify a version number when disabling feature toggle FeatureToggleR2RSpec-new-foo"))
+            "You cannot specify a version number when disabling feature toggle FeatureToggleR2RSpec-new-foo"
+          )
+        )
       }
     }
 
@@ -356,9 +359,9 @@ class FeatureToggleR2RSpec extends R2RSpec {
     }
 
     "not accept two settings for the same toggle" in {
-      Get(s"/baz").addHeader(RawHeader(
-        FeatureToggle.REQUEST_HEADER,
-        "FeatureToggleR2RSpec-new-foo=off,FeatureToggleR2RSpec-new-foo:2=on")) ~> bazRoute ~> check {
+      Get(s"/baz").addHeader(
+        RawHeader(FeatureToggle.REQUEST_HEADER, "FeatureToggleR2RSpec-new-foo=off,FeatureToggleR2RSpec-new-foo:2=on")
+      ) ~> bazRoute ~> check {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.BadRequest, responseStr)
         assert(responseStr.contains("You cannot set the same feature toggle more than once per request"))

@@ -25,11 +25,11 @@ import org.knora.webapi.routing.RouteUtilV2
 import scala.util.Try
 
 /**
-  * A custom Akka HTTP header representing [[RouteUtilV2.PROJECT_HEADER]], which a client can send to specify
-  * a project from which results should be returned.
-  *
-  * The definition follows [[https://doc.akka.io/docs/akka-http/current/common/http-model.html#custom-headers]].
-  */
+ * A custom Akka HTTP header representing [[RouteUtilV2.PROJECT_HEADER]], which a client can send to specify
+ * a project from which results should be returned.
+ *
+ * The definition follows [[https://doc.akka.io/docs/akka-http/current/common/http-model.html#custom-headers]].
+ */
 class ProjectHeader(token: String) extends ModeledCustomHeader[ProjectHeader] {
   override def renderInRequests = true
   override def renderInResponses = true

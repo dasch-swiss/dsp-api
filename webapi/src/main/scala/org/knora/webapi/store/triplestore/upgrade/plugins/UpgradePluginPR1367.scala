@@ -25,8 +25,8 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
-  * Transforms a repository for Knora PR 1367.
-  */
+ * Transforms a repository for Knora PR 1367.
+ */
 class UpgradePluginPR1367(featureFactoryConfig: FeatureFactoryConfig) extends UpgradePlugin {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
 

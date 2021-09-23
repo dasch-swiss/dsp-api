@@ -26,8 +26,8 @@ import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.util.ApacheLuceneSupport.LuceneQueryString
 
 /**
-  * Tests [[SparqlTransformer]].
-  */
+ * Tests [[SparqlTransformer]].
+ */
 class SparqlTransformerSpec extends CoreSpec() {
 
   protected implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -53,7 +53,8 @@ class SparqlTransformerSpec extends CoreSpec() {
     "create a syntactically valid base name from a given ontology IRI" in {
 
       val baseName = SparqlTransformer.escapeEntityForVariable(
-        IriRef("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri))
+        IriRef("http://www.knora.org/ontology/0803/incunabula#book".toSmartIri)
+      )
 
       baseName should ===("httpwwwknoraorgontology0803incunabulabook")
 
@@ -127,9 +128,11 @@ class SparqlTransformerSpec extends CoreSpec() {
         obj = IriRef("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
       )
       val hasValueStatement =
-        StatementPattern.makeExplicit(subj = QueryVariable("foo"),
-                                      pred = IriRef("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri),
-                                      obj = QueryVariable("text"))
+        StatementPattern.makeExplicit(
+          subj = QueryVariable("foo"),
+          pred = IriRef("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri),
+          obj = QueryVariable("text")
+        )
       val bindPattern =
         BindPattern(variable = QueryVariable("foo"), expression = IriRef("http://rdfh.ch/0001/a-thing".toSmartIri))
 
@@ -152,13 +155,17 @@ class SparqlTransformerSpec extends CoreSpec() {
 
     "move a Lucene query pattern to the beginning of a block" in {
       val hasValueStatement =
-        StatementPattern.makeExplicit(subj = QueryVariable("foo"),
-                                      pred = IriRef("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri),
-                                      obj = QueryVariable("text"))
+        StatementPattern.makeExplicit(
+          subj = QueryVariable("foo"),
+          pred = IriRef("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri),
+          obj = QueryVariable("text")
+        )
       val valueHasStringStatement =
-        StatementPattern.makeExplicit(subj = QueryVariable("text"),
-                                      pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
-                                      QueryVariable("text__valueHasString"))
+        StatementPattern.makeExplicit(
+          subj = QueryVariable("text"),
+          pred = IriRef(OntologyConstants.KnoraBase.ValueHasString.toSmartIri),
+          QueryVariable("text__valueHasString")
+        )
 
       val luceneQueryPattern = LuceneQueryPattern(
         subj = QueryVariable("text"),
@@ -190,9 +197,10 @@ class SparqlTransformerSpec extends CoreSpec() {
         pred = IriRef(OntologyConstants.Rdf.Type.toSmartIri),
         obj = IriRef("http://www.knora.org/ontology/0001/anything#Thing".toSmartIri)
       )
-      val expandedStatements = SparqlTransformer.transformStatementInWhereForNoInference(statementPattern =
-                                                                                           typeStatement,
-                                                                                         simulateInference = true)
+      val expandedStatements = SparqlTransformer.transformStatementInWhereForNoInference(
+        statementPattern = typeStatement,
+        simulateInference = true
+      )
 
       val expectedStatements: Seq[StatementPattern] = Seq(
         StatementPattern(
@@ -223,12 +231,15 @@ class SparqlTransformerSpec extends CoreSpec() {
 
     "expand a statement with a property IRI to simulate RDFS inference" in {
       val hasValueStatement =
-        StatementPattern.makeInferred(subj = QueryVariable("foo"),
-                                      pred = IriRef("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri),
-                                      obj = QueryVariable("text"))
-      val expandedStatements = SparqlTransformer.transformStatementInWhereForNoInference(statementPattern =
-                                                                                           hasValueStatement,
-                                                                                         simulateInference = true)
+        StatementPattern.makeInferred(
+          subj = QueryVariable("foo"),
+          pred = IriRef("http://www.knora.org/ontology/0001/anything#hasText".toSmartIri),
+          obj = QueryVariable("text")
+        )
+      val expandedStatements = SparqlTransformer.transformStatementInWhereForNoInference(
+        statementPattern = hasValueStatement,
+        simulateInference = true
+      )
 
       val expectedStatements: Seq[StatementPattern] = Seq(
         StatementPattern(

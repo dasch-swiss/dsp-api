@@ -11,8 +11,8 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
 /**
-  * Tests [[IriLocker]].
-  */
+ * Tests [[IriLocker]].
+ */
 class IriLockerSpec extends AnyWordSpecLike with Matchers {
 
   import scala.concurrent.ExecutionContext.Implicits.global
@@ -50,18 +50,19 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
         task = () => runShortTask()
       )
 
-      val secondTaskFailedWithLockTimeout = try {
-        Await.result(secondTaskResultFuture, 20.seconds)
-        false
-      } catch {
-        case ale: ApplicationLockException => true
-      }
+      val secondTaskFailedWithLockTimeout =
+        try {
+          Await.result(secondTaskResultFuture, 20.seconds)
+          false
+        } catch {
+          case ale: ApplicationLockException => true
+        }
 
       assert(secondTaskFailedWithLockTimeout, "Second task did not get a lock timeout")
     }
 
     "provide reentrant locks" in {
-      def runRecursiveTask(iri: IRI, apiRequestID: UUID, count: Int): Future[String] = {
+      def runRecursiveTask(iri: IRI, apiRequestID: UUID, count: Int): Future[String] =
         if (count > 0) {
           IriLocker.runWithIriLock(
             apiRequestID = apiRequestID,
@@ -71,7 +72,6 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
         } else {
           Future(SUCCESS)
         }
-      }
 
       val testIri: IRI = "http://example.org/test2"
 
@@ -103,12 +103,13 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
         task = () => runTask(false)
       )
 
-      val firstTaskFailed = try {
-        Await.result(firstTaskResultFuture, 1.second)
-        false
-      } catch {
-        case e: Exception => true
-      }
+      val firstTaskFailed =
+        try {
+          Await.result(firstTaskResultFuture, 1.second)
+          false
+        } catch {
+          case e: Exception => true
+        }
 
       assert(firstTaskFailed, "First task did not fail")
 
@@ -127,13 +128,12 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
 
     "release a lock when a task throws an exception instead of returning a future" in {
       // If succeed is true, returns a successful future, otherwise throws an exception.
-      def runTask(succeed: Boolean): Future[String] = {
+      def runTask(succeed: Boolean): Future[String] =
         if (succeed) {
           Future(SUCCESS)
         } else {
           throw new Exception(FAILURE)
         }
-      }
 
       val testIri: IRI = "http://example.org/test4"
 
@@ -145,12 +145,13 @@ class IriLockerSpec extends AnyWordSpecLike with Matchers {
         task = () => runTask(false)
       )
 
-      val firstTaskFailed = try {
-        Await.result(firstTaskResultFuture, 1.second)
-        false
-      } catch {
-        case e: Exception => true
-      }
+      val firstTaskFailed =
+        try {
+          Await.result(firstTaskResultFuture, 1.second)
+          false
+        } catch {
+          case e: Exception => true
+        }
 
       assert(firstTaskFailed, "First task did not fail")
 

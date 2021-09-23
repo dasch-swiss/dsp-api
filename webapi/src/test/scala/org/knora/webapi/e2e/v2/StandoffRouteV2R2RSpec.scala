@@ -38,15 +38,15 @@ import org.knora.webapi.util.FileUtil
 import scala.concurrent.ExecutionContextExecutor
 
 /**
-  * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
-  * here: http://spray.io/documentation/1.2.2/spray-testkit/
-  */
+ * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
+ * here: http://spray.io/documentation/1.2.2/spray-testkit/
+ */
 class StandoffRouteV2R2RSpec extends R2RSpec {
 
   override def testConfigSource: String =
     """
-          |# akka.loglevel = "DEBUG"
-          |# akka.stdout-loglevel = "DEBUG"
+      |# akka.loglevel = "DEBUG"
+      |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
   private val standoffPath = new StandoffRouteV2(routeData).knoraApiPath
@@ -93,17 +93,17 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
 
       val mappingParams =
         s"""
-                   |{
-                   |    "knora-api:mappingHasName": "LetterMapping",
-                   |    "knora-api:attachedToProject": {
-                   |      "@id": "$ANYTHING_PROJECT_IRI"
-                   |    },
-                   |    "rdfs:label": "letter mapping",
-                   |    "@context": {
-                   |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-                   |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
-                   |    }
-                   |}
+           |{
+           |    "knora-api:mappingHasName": "LetterMapping",
+           |    "knora-api:attachedToProject": {
+           |      "@id": "$ANYTHING_PROJECT_IRI"
+           |    },
+           |    "rdfs:label": "letter mapping",
+           |    "@context": {
+           |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
+           |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
+           |    }
+           |}
                 """.stripMargin
 
       val formDataMapping = Multipart.FormData(
@@ -119,16 +119,22 @@ class StandoffRouteV2R2RSpec extends R2RSpec {
       )
 
       // create standoff from XML
-      Post("/v2/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+      Post("/v2/mapping", formDataMapping) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> standoffPath ~> check {
 
-        assert(status == StatusCodes.OK,
-               "creation of a mapping returned a non successful HTTP status code: " + responseAs[String])
+        assert(
+          status == StatusCodes.OK,
+          "creation of a mapping returned a non successful HTTP status code: " + responseAs[String]
+        )
 
         val expectedAnswerJSONLD =
           FileUtil.readTextFile(Paths.get("test_data/standoffR2RV2/mappingCreationResponse.jsonld"))
 
-        compareJSONLDForMappingCreationResponse(expectedJSONLD = expectedAnswerJSONLD,
-                                                receivedJSONLD = responseAs[String])
+        compareJSONLDForMappingCreationResponse(
+          expectedJSONLD = expectedAnswerJSONLD,
+          receivedJSONLD = responseAs[String]
+        )
       }
     }
   }

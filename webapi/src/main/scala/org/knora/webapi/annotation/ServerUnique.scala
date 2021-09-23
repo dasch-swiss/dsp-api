@@ -20,9 +20,8 @@
 package org.knora.webapi.annotation
 
 /**
-  * Creates the ServerUnique annotation.
-  *
-  * Marks values which need to be unique on the level of the SERVER.
-  *
-  */
+ * Creates the ServerUnique annotation.
+ *
+ * Marks values which need to be unique on the level of the SERVER.
+ */
 class ServerUnique() extends scala.annotation.StaticAnnotation

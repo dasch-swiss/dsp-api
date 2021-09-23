@@ -30,8 +30,10 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
 
   "The metadata v2 endpoint" should {
     "perform a put request for the metadata of beol project given as Turtle" in {
-      val request = Put(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}",
-                        HttpEntity(RdfMediaTypes.`text/turtle`, metadataAsTurtle)) ~>
+      val request = Put(
+        s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}",
+        HttpEntity(RdfMediaTypes.`text/turtle`, metadataAsTurtle)
+      ) ~>
         addCredentials(BasicHttpCredentials(beolUserEmail, password))
 
       val response: HttpResponse = singleAwaitingRequest(request)
@@ -41,8 +43,10 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
     }
 
     "perform a put request for the metadata of beol project given as JSON-LD" in {
-      val request = Put(s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}",
-                        HttpEntity(RdfMediaTypes.`application/json`, metadataAsFlatJsonLD)) ~>
+      val request = Put(
+        s"$baseApiUrl/v2/metadata/${URLEncoder.encode(beolProjectIRI, "UTF-8")}",
+        HttpEntity(RdfMediaTypes.`application/json`, metadataAsFlatJsonLD)
+      ) ~>
         addCredentials(BasicHttpCredentials(beolUserEmail, password))
 
       val response: HttpResponse = singleAwaitingRequest(request)
@@ -91,9 +95,9 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
     }
 
     "not create metadata for an invalid project IRI" in {
-      val request = Put(s"$baseApiUrl/v2/metadata/invalid-projectIRI",
-                        HttpEntity(RdfMediaTypes.`text/turtle`, metadataAsTurtle)) ~>
-        addCredentials(BasicHttpCredentials(beolUserEmail, password))
+      val request =
+        Put(s"$baseApiUrl/v2/metadata/invalid-projectIRI", HttpEntity(RdfMediaTypes.`text/turtle`, metadataAsTurtle)) ~>
+          addCredentials(BasicHttpCredentials(beolUserEmail, password))
 
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status.isFailure())
@@ -103,8 +107,8 @@ class MetadataRouteV2E2ESpec extends E2ESpec {
       val turtleType = RdfMediaTypes.`text/turtle`.toString()
       val header = RawHeader("Accept", turtleType)
       val request = Get(
-        s"$baseApiUrl/v2/metadata/${URLEncoder.encode(SharedTestDataADM.INCUNABULA_PROJECT_IRI, "UTF-8")}") ~> addHeader(
-        header)
+        s"$baseApiUrl/v2/metadata/${URLEncoder.encode(SharedTestDataADM.INCUNABULA_PROJECT_IRI, "UTF-8")}"
+      ) ~> addHeader(header)
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.NotFound)
     }

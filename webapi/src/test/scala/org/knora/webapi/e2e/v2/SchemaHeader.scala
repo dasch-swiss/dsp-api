@@ -25,11 +25,11 @@ import org.knora.webapi.routing.RouteUtilV2
 import scala.util.Try
 
 /**
-  * A custom Akka HTTP header representing [[RouteUtilV2.SCHEMA_HEADER]], which a client can send to specify
-  * which ontology schema should be used in an API response.
-  *
-  * The definition follows [[https://doc.akka.io/docs/akka-http/current/common/http-model.html#custom-headers]].
-  */
+ * A custom Akka HTTP header representing [[RouteUtilV2.SCHEMA_HEADER]], which a client can send to specify
+ * which ontology schema should be used in an API response.
+ *
+ * The definition follows [[https://doc.akka.io/docs/akka-http/current/common/http-model.html#custom-headers]].
+ */
 final class SchemaHeader(token: String) extends ModeledCustomHeader[SchemaHeader] {
   override def renderInRequests = true
   override def renderInResponses = true

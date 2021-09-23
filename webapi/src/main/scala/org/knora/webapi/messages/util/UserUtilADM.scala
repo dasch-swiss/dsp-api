@@ -32,35 +32,39 @@ import org.knora.webapi.messages.admin.responder.usersmessages._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Utility functions for working with users.
-  */
+ * Utility functions for working with users.
+ */
 object UserUtilADM {
 
   /**
-    * Allows a system admin or project admin to perform an operation as another user in a specified project.
-    * Checks whether the requesting user is a system admin or a project admin in the project, and if so,
-    * returns a [[UserADM]] representing the requested user. Otherwise, returns a failed future containing
-    * [[ForbiddenException]].
-    *
-    * @param requestingUser   the requesting user.
-    * @param requestedUserIri the IRI of the requested user.
-    * @param projectIri       the IRI of the project.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @return a [[UserADM]] representing the requested user.
-    */
+   * Allows a system admin or project admin to perform an operation as another user in a specified project.
+   * Checks whether the requesting user is a system admin or a project admin in the project, and if so,
+   * returns a [[UserADM]] representing the requested user. Otherwise, returns a failed future containing
+   * [[ForbiddenException]].
+   *
+   * @param requestingUser   the requesting user.
+   * @param requestedUserIri the IRI of the requested user.
+   * @param projectIri       the IRI of the project.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @return a [[UserADM]] representing the requested user.
+   */
   def switchToUser(
-      requestingUser: UserADM,
-      requestedUserIri: IRI,
-      projectIri: IRI,
-      featureFactoryConfig: FeatureFactoryConfig,
-      responderManager: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
+    requestingUser: UserADM,
+    requestedUserIri: IRI,
+    projectIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
+    responderManager: ActorRef
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[UserADM] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     if (requestingUser.id == requestedUserIri) {
       FastFuture.successful(requestingUser)
     } else if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(projectIri))) {
-      Future.failed(ForbiddenException(
-        s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can perform an operation as another user"))
+      Future.failed(
+        ForbiddenException(
+          s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can perform an operation as another user"
+        )
+      )
     } else {
       for {
         userResponse: UserResponseADM <- (responderManager ? UserGetRequestADM(

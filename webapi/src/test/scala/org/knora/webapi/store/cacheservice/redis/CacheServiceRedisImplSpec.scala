@@ -37,9 +37,9 @@ import scala.concurrent.ExecutionContext
 class CacheServiceRedisImplSpec extends UnitSpec(TestContainerRedis.PortConfig) {
 
   implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  implicit val ec: ExecutionContext                       = ExecutionContext.global
+  implicit val ec: ExecutionContext = ExecutionContext.global
 
-  private val user: UserADM       = SharedTestDataADM.imagesUser01
+  private val user: UserADM = SharedTestDataADM.imagesUser01
   private val project: ProjectADM = SharedTestDataADM.imagesProject
 
   private val redisCache: CacheServiceRedisImpl = new CacheServiceRedisImpl(

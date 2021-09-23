@@ -43,15 +43,15 @@ object CacheServiceInMemImpl extends CacheService with LazyLogging {
     scala.collection.mutable.Map[Any, Any]()
 
   /**
-    * Stores the user under the IRI and additionally the IRI under the keys of
-    * USERNAME and EMAIL:
-    *
-    * IRI -> byte array
-    * username -> IRI
-    * email -> IRI
-    *
-    * @param value the stored value
-    */
+   * Stores the user under the IRI and additionally the IRI under the keys of
+   * USERNAME and EMAIL:
+   *
+   * IRI -> byte array
+   * username -> IRI
+   * email -> IRI
+   *
+   * @param value the stored value
+   */
   def putUserADM(value: UserADM)(implicit ec: ExecutionContext): Future[Boolean] = {
     cache(value.id) = value
     cache(value.username) = value.id
@@ -60,11 +60,11 @@ object CacheServiceInMemImpl extends CacheService with LazyLogging {
   }
 
   /**
-    * Retrieves the user stored under the identifier (either iri, username,
-    * or email).
-    *
-    * @param identifier the user identifier.
-    */
+   * Retrieves the user stored under the identifier (either iri, username,
+   * or email).
+   *
+   * @param identifier the user identifier.
+   */
   def getUserADM(identifier: UserIdentifierADM)(implicit ec: ExecutionContext): Future[Option[UserADM]] = {
     // The data is stored under the IRI key.
     // Additionally, the USERNAME and EMAIL keys point to the IRI key
@@ -86,15 +86,15 @@ object CacheServiceInMemImpl extends CacheService with LazyLogging {
   }
 
   /**
-    * Stores the project under the IRI and additionally the IRI under the keys
-    * of SHORTCODE and SHORTNAME:
-    *
-    * IRI -> byte array
-    * shortname -> IRI
-    * shortcode -> IRI
-    *
-    * @param value the stored value
-    */
+   * Stores the project under the IRI and additionally the IRI under the keys
+   * of SHORTCODE and SHORTNAME:
+   *
+   * IRI -> byte array
+   * shortname -> IRI
+   * shortcode -> IRI
+   *
+   * @param value the stored value
+   */
   def putProjectADM(value: ProjectADM)(implicit ec: ExecutionContext): Future[Boolean] = {
     cache(value.id) = value
     cache(value.shortcode) = value.id
@@ -103,10 +103,10 @@ object CacheServiceInMemImpl extends CacheService with LazyLogging {
   }
 
   /**
-    * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
-    *
-    * @param identifier the project identifier.
-    */
+   * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
+   *
+   * @param identifier the project identifier.
+   */
   def getProjectADM(identifier: ProjectIdentifierADM)(implicit ec: ExecutionContext): Future[Option[ProjectADM]] = {
     // The data is stored under the IRI key.
     // Additionally, the SHORTNAME and SHORTCODE keys point to the IRI key
@@ -128,11 +128,11 @@ object CacheServiceInMemImpl extends CacheService with LazyLogging {
   }
 
   /**
-    * Store string or byte array value under key.
-    *
-    * @param key   the key.
-    * @param value the value.
-    */
+   * Store string or byte array value under key.
+   *
+   * @param key   the key.
+   * @param value the value.
+   */
   def writeStringValue(key: String, value: String)(implicit ec: ExecutionContext): Future[Boolean] = {
 
     if (key.isEmpty)
@@ -146,24 +146,23 @@ object CacheServiceInMemImpl extends CacheService with LazyLogging {
   }
 
   /**
-    * Get value stored under the key as a string.
-    *
-    * @param maybeKey the key.
-    */
-  def getStringValue(maybeKey: Option[String])(implicit ec: ExecutionContext): Future[Option[String]] = {
+   * Get value stored under the key as a string.
+   *
+   * @param maybeKey the key.
+   */
+  def getStringValue(maybeKey: Option[String])(implicit ec: ExecutionContext): Future[Option[String]] =
     maybeKey match {
       case Some(key) =>
         FastFuture.successful(cache.get(key).map(_.asInstanceOf[String]))
       case None =>
         FastFuture.successful(None)
     }
-  }
 
   /**
-    * Removes values for the provided keys. Any invalid keys are ignored.
-    *
-    * @param keys the keys.
-    */
+   * Removes values for the provided keys. Any invalid keys are ignored.
+   *
+   * @param keys the keys.
+   */
   def removeValues(keys: Set[String])(implicit ec: ExecutionContext): Future[Boolean] = {
 
     logger.debug("removeValues - {}", keys)
@@ -175,18 +174,17 @@ object CacheServiceInMemImpl extends CacheService with LazyLogging {
   }
 
   /**
-    * Flushes (removes) all stored content from the in-memory cache.
-    */
+   * Flushes (removes) all stored content from the in-memory cache.
+   */
   def flushDB(requestingUser: UserADM)(implicit ec: ExecutionContext): Future[CacheServiceFlushDBACK] = {
     cache = scala.collection.mutable.Map[Any, Any]()
     FastFuture.successful(CacheServiceFlushDBACK())
   }
 
   /**
-    * Pings the in-memory cache to see if it is available.
-    */
-  def ping()(implicit ec: ExecutionContext): Future[CacheServiceStatusResponse] = {
+   * Pings the in-memory cache to see if it is available.
+   */
+  def ping()(implicit ec: ExecutionContext): Future[CacheServiceStatusResponse] =
     FastFuture.successful(CacheServiceStatusOK)
-  }
 
 }

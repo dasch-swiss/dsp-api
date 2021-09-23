@@ -31,15 +31,15 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
 /**
-  * This trait is only used for testing. It is necessary so that E2E tests will only start
-  * after the KnoraService is ready.
-  */
+ * This trait is only used for testing. It is necessary so that E2E tests will only start
+ * after the KnoraService is ready.
+ */
 trait StartupUtils extends LazyLogging {
   this: Core =>
 
   /**
-    * Returns only when the application state is 'Running'.
-    */
+   * Returns only when the application state is 'Running'.
+   */
   def applicationStateRunning(): Unit = {
 
     implicit val timeout: Timeout = Timeout(5.second)
@@ -54,8 +54,8 @@ trait StartupUtils extends LazyLogging {
   }
 
   /**
-    * A blocking future running on the blocking dispatcher.
-    */
+   * A blocking future running on the blocking dispatcher.
+   */
   private def blockingFuture(): Future[Unit] = {
 
     val delay: Long = 3.second.toMillis

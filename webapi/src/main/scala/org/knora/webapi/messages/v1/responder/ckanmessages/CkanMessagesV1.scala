@@ -29,34 +29,35 @@ import spray.json._
 // API requests
 
 /**
-  * An abstract trait representing a request message that can be sent to `CkanResponderV1`.
-  */
+ * An abstract trait representing a request message that can be sent to `CkanResponderV1`.
+ */
 sealed trait CkanResponderRequestV1 extends KnoraRequestV1
 
 /**
-  * Represents an API request payload that asks the Knora API server to return Ckan data
-  *
-  * @param projects
-  * @param limit
-  * @param info
-  * @param featureFactoryConfig the feature factory configuration.
-  * @param userProfile
-  */
-case class CkanRequestV1(projects: Option[Seq[String]],
-                         limit: Option[Int],
-                         info: Boolean,
-                         featureFactoryConfig: FeatureFactoryConfig,
-                         userProfile: UserADM)
-    extends CkanResponderRequestV1
+ * Represents an API request payload that asks the Knora API server to return Ckan data
+ *
+ * @param projects
+ * @param limit
+ * @param info
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param userProfile
+ */
+case class CkanRequestV1(
+  projects: Option[Seq[String]],
+  limit: Option[Int],
+  info: Boolean,
+  featureFactoryConfig: FeatureFactoryConfig,
+  userProfile: UserADM
+) extends CkanResponderRequestV1
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API response
 
 /**
-  * Represents an API response with the Ckan data
-  *
-  * @param projects
-  */
+ * Represents an API response with the Ckan data
+ *
+ * @param projects
+ */
 case class CkanResponseV1(projects: Seq[CkanProjectV1]) extends KnoraResponseV1 {
   def toJsValue = CkanV1JsonProtocol.ckanResponseV1Format.write(this)
 }
@@ -65,26 +66,29 @@ case class CkanResponseV1(projects: Seq[CkanProjectV1]) extends KnoraResponseV1 
 // Components of messages
 
 /**
-  *
-  * @param project_info
-  * @param project_datasets
-  */
+ * @param project_info
+ * @param project_datasets
+ */
 case class CkanProjectV1(project_info: CkanProjectInfoV1, project_datasets: Option[Seq[CkanProjectDatasetV1]] = None)
 
 case class CkanProjectInfoV1(shortname: String, longname: String, ckan_tags: Seq[String], ckan_license_id: String)
 
-case class CkanProjectDatasetV1(ckan_title: String,
-                                ckan_tags: Seq[String],
-                                files: Seq[CkanProjectDatasetFileV1],
-                                other_props: Map[String, String])
+case class CkanProjectDatasetV1(
+  ckan_title: String,
+  ckan_tags: Seq[String],
+  files: Seq[CkanProjectDatasetFileV1],
+  other_props: Map[String, String]
+)
 
-case class CkanProjectDatasetFileV1(ckan_title: String,
-                                    ckan_description: Option[String] = None,
-                                    data_url: String,
-                                    data_mimetype: String,
-                                    source_url: String,
-                                    source_mimetype: String,
-                                    other_props: Option[Map[String, String]] = None)
+case class CkanProjectDatasetFileV1(
+  ckan_title: String,
+  ckan_description: Option[String] = None,
+  data_url: String,
+  data_mimetype: String,
+  source_url: String,
+  source_mimetype: String,
+  other_props: Option[Map[String, String]] = None
+)
 
 // dokubib structure
 /*
@@ -189,12 +193,13 @@ case class IncunabulaCkanProjectDatasetFileV1(resid: String,
 // JSON formatting
 
 /**
-  * A spray-json protocol for generating Knora API v1 JSON for Ckan.
-  */
+ * A spray-json protocol for generating Knora API v1 JSON for Ckan.
+ */
 object CkanV1JsonProtocol extends SprayJsonSupport with DefaultJsonProtocol {
 
   implicit val ckanProjectDatasetFileV1Format: JsonFormat[CkanProjectDatasetFileV1] = jsonFormat7(
-    CkanProjectDatasetFileV1)
+    CkanProjectDatasetFileV1
+  )
   implicit val ckanProjectDatasetV1Format: JsonFormat[CkanProjectDatasetV1] = jsonFormat4(CkanProjectDatasetV1)
   implicit val ckanProjectInfoV1Format: JsonFormat[CkanProjectInfoV1] = jsonFormat4(CkanProjectInfoV1)
   implicit val ckanProjectV1Format: JsonFormat[CkanProjectV1] = jsonFormat2(CkanProjectV1)

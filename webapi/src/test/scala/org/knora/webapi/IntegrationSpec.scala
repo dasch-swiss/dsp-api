@@ -98,22 +98,23 @@ abstract class IntegrationSpec(_config: Config)
     implicit val ctx: MessageDispatcher = system.dispatchers.lookup(KnoraDispatchers.KnoraBlockingDispatcher)
     val checkTriplestore: ZIO[Any, Throwable, Unit] = for {
       checkResult <- ZIO.fromTry(
-                       Try(
-                         Await
-                           .result(actorRef ? CheckTriplestoreRequest(), 1.second.asScala)
-                           .asInstanceOf[CheckTriplestoreResponse]
-                       )
-                     )
+        Try(
+          Await
+            .result(actorRef ? CheckTriplestoreRequest(), 1.second.asScala)
+            .asInstanceOf[CheckTriplestoreResponse]
+        )
+      )
 
-      value <- if (checkResult.triplestoreStatus == TriplestoreStatus.ServiceAvailable) {
-                 ZIO.effectTotal(logger.info("... triplestore is ready."))
-               } else {
-                 ZIO.fail(
-                   new Exception(
-                     s"Triplestore not ready: ${checkResult.triplestoreStatus}"
-                   )
-                 )
-               }
+      value <-
+        if (checkResult.triplestoreStatus == TriplestoreStatus.ServiceAvailable) {
+          ZIO.effectTotal(logger.info("... triplestore is ready."))
+        } else {
+          ZIO.fail(
+            new Exception(
+              s"Triplestore not ready: ${checkResult.triplestoreStatus}"
+            )
+          )
+        }
     } yield value
 
     implicit val rt: Runtime[Clock with Console] = Runtime.default

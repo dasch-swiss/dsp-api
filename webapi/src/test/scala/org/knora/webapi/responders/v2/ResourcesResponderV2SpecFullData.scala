@@ -44,7 +44,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#citation".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -119,7 +120,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -137,7 +139,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#url".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -157,7 +160,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#location".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -176,7 +180,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#publoc".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -195,7 +200,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#pubdate".toSmartIri -> Vector(
         ReadOtherValueV2(
           valueContent = DateValueContentV2(
@@ -216,7 +222,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -235,7 +242,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        ))
+        )
+      )
     ),
     lastModificationDate = None,
     deletionInfo = None
@@ -287,7 +295,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#citation".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -470,7 +479,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#hasAuthor".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -488,7 +498,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#book_comment".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -507,7 +518,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#url".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -527,7 +539,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#note".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -607,7 +620,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
             valueHasLanguage = None,
             comment = None,
             maybeValueHasString = Some(
-              "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516")
+              "Zusammengebunden mit: Die zehen Gebote ; Was und wie man beten soll und Auslegung des hlg. Pater nosters / Hans von Warmont. Strassburg, 1516"
+            )
           ),
           valueHasMaxStandoffStartIndex = None,
           valueIri = "http://rdfh.ch/0803/2a6221216701/values/b82048bf9305",
@@ -639,7 +653,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#publoc".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -658,7 +673,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#pubdate".toSmartIri -> Vector(
         ReadOtherValueV2(
           valueContent = DateValueContentV2(
@@ -679,7 +695,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           attachedToUser = "http://rdfh.ch/users/91e19f1e01",
           previousValueIri = None,
           deletionInfo = None
-        )),
+        )
+      ),
       "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
         ReadTextValueV2(
           valueContent = TextValueContentV2(
@@ -758,15 +775,15 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
   )
 
   val expectedFullResourceResponseForZeitgloecklein: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
-    resources = Vector(expectedReadResourceV2ForZeitgloecklein),
+    resources = Vector(expectedReadResourceV2ForZeitgloecklein)
   )
 
   val expectedPreviewResourceResponseForZeitgloecklein: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
-    resources = Vector(expectedReadResourceV2ForZeitgloeckleinPreview),
+    resources = Vector(expectedReadResourceV2ForZeitgloeckleinPreview)
   )
 
   val expectedFullResourceResponseForReise: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
-    resources = Vector(expectedReadResourceV2ForReiseInsHeiligeland),
+    resources = Vector(expectedReadResourceV2ForReiseInsHeiligeland)
   )
 
   val expectedFullResourceResponseForThingWithHistory: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
@@ -798,7 +815,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
               attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
               previousValueIri = Some("http://rdfh.ch/0001/thing-with-history/values/2a"),
               deletionInfo = None
-            )),
+            )
+          ),
           "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri -> Vector(
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
@@ -816,7 +834,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
               attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
               previousValueIri = None,
               deletionInfo = None
-            )),
+            )
+          ),
           "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(
             ReadOtherValueV2(
               valueContent = IntegerValueContentV2(
@@ -832,7 +851,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
               attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
               previousValueIri = None,
               deletionInfo = None
-            ))
+            )
+          )
         ),
         projectADM = SharedTestDataADM.anythingProject,
         lastModificationDate = Some(Instant.parse("2019-02-13T09:05:10Z")),
@@ -879,7 +899,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         versionDate = Instant.parse("2019-02-08T15:05:10Z"),
         author = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
       )
-    ))
+    )
+  )
 
   val expectedPartialVersionHistoryResponse: ResourceVersionHistoryResponseV2 = ResourceVersionHistoryResponseV2(
     history = Vector(
@@ -911,7 +932,8 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         versionDate = Instant.parse("2019-02-10T10:05:10Z"),
         author = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
       )
-    ))
+    )
+  )
 
   val expectedFullResourceResponseForZeitgloeckleinAndReise: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
     resources = Vector(expectedReadResourceV2ForZeitgloecklein, expectedReadResourceV2ForReiseInsHeiligeland)
@@ -939,26 +961,29 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
         creationDate = Instant.parse("2019-02-08T15:05:10Z"),
         userPermission = ModifyPermission,
         values = Map(
-          "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(ReadOtherValueV2(
-            valueContent = IntegerValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasInteger = 3,
-              comment = None
-            ),
-            valueIri = "http://rdfh.ch/0001/thing-with-history/values/1c",
-            permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
-            valueCreationDate = Instant.parse("2019-02-13T09:05:10Z"),
-            attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
-            valueHasUUID = stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g"),
-            userPermission = ChangeRightsPermission,
-            previousValueIri = Some("http://rdfh.ch/0001/thing-with-history/values/1b"),
-            deletionInfo = None
-          ))
+          "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(
+            ReadOtherValueV2(
+              valueContent = IntegerValueContentV2(
+                ontologySchema = InternalSchema,
+                valueHasInteger = 3,
+                comment = None
+              ),
+              valueIri = "http://rdfh.ch/0001/thing-with-history/values/1c",
+              permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
+              valueCreationDate = Instant.parse("2019-02-13T09:05:10Z"),
+              attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
+              valueHasUUID = stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g"),
+              userPermission = ChangeRightsPermission,
+              previousValueIri = Some("http://rdfh.ch/0001/thing-with-history/values/1b"),
+              deletionInfo = None
+            )
+          )
         ),
         projectADM = SharedTestDataADM.anythingProject,
         lastModificationDate = Some(Instant.parse("2019-02-13T09:05:10Z")),
         deletionInfo = None
-      ))
+      )
+    )
   )
 
   val expectedFullResponseResponseForThingWithValueByUuidAndVersionDate: ReadResourcesSequenceV2 =
@@ -974,25 +999,28 @@ class ResourcesResponderV2SpecFullData(implicit stringFormatter: StringFormatter
           creationDate = Instant.parse("2019-02-08T15:05:10Z"),
           userPermission = ModifyPermission,
           values = Map(
-            "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(ReadOtherValueV2(
-              valueContent = IntegerValueContentV2(
-                ontologySchema = InternalSchema,
-                valueHasInteger = 2,
-                comment = None
-              ),
-              valueIri = "http://rdfh.ch/0001/thing-with-history/values/1b",
-              permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
-              valueCreationDate = Instant.parse("2019-02-12T09:05:10Z"),
-              attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
-              valueHasUUID = stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g"),
-              userPermission = ChangeRightsPermission,
-              previousValueIri = Some("http://rdfh.ch/0001/thing-with-history/values/1a"),
-              deletionInfo = None
-            ))
+            "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(
+              ReadOtherValueV2(
+                valueContent = IntegerValueContentV2(
+                  ontologySchema = InternalSchema,
+                  valueHasInteger = 2,
+                  comment = None
+                ),
+                valueIri = "http://rdfh.ch/0001/thing-with-history/values/1b",
+                permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
+                valueCreationDate = Instant.parse("2019-02-12T09:05:10Z"),
+                attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
+                valueHasUUID = stringFormatter.decodeUuid("pLlW4ODASumZfZFbJdpw1g"),
+                userPermission = ChangeRightsPermission,
+                previousValueIri = Some("http://rdfh.ch/0001/thing-with-history/values/1a"),
+                deletionInfo = None
+              )
+            )
           ),
           projectADM = SharedTestDataADM.anythingProject,
           lastModificationDate = Some(Instant.parse("2019-02-13T09:05:10Z")),
           deletionInfo = None
-        ))
+        )
+      )
     )
 }

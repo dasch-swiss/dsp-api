@@ -32,14 +32,14 @@ import scala.languageFeature.postfixOps
 
 object VersionRouteITSpec {
   val config: Config = ConfigFactory.parseString("""
-          |akka.loglevel = "DEBUG"
-          |akka.stdout-loglevel = "DEBUG"
+                                                   |akka.loglevel = "DEBUG"
+                                                   |akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
 
 /**
-  * End-to-End (E2E) test specification for testing route rejections.
-  */
+ * End-to-End (E2E) test specification for testing route rejections.
+ */
 class VersionRouteITSpec extends ITKnoraLiveSpec(VersionRouteITSpec.config) {
 
   private def getJsonResponse: JsObject = {

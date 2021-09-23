@@ -26,8 +26,8 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import spray.json._
 
 /**
-  * This spec is used to test 'ListAdminMessages'.
-  */
+ * This spec is used to test 'ListAdminMessages'.
+ */
 class TriplestoreMessagesSpec extends AnyWordSpecLike with Matchers with ListADMJsonProtocol {
 
   "Conversion from case class to JSON and back" should {

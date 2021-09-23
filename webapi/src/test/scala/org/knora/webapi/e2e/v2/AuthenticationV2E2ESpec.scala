@@ -42,10 +42,10 @@ object AuthenticationV2E2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing authentication.
-  *
-  * This spec tests the 'v1/authentication' and 'v1/session' route.
-  */
+ * End-to-End (E2E) test specification for testing authentication.
+ *
+ * This spec tests the 'v1/authentication' and 'v1/session' route.
+ */
 class AuthenticationV2E2ESpec
     extends E2ESpec(AuthenticationV2E2ESpec.config)
     with AuthenticationV2JsonProtocol
@@ -127,8 +127,8 @@ class AuthenticationV2E2ESpec
 
     "fail authentication with the user set as 'not active' " in {
       /* User not active */
-      val request = Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(
-        BasicHttpCredentials(inactiveUserEmail, testPass))
+      val request =
+        Get(baseApiUrl + s"/v2/authentication") ~> addCredentials(BasicHttpCredentials(inactiveUserEmail, testPass))
       val response: HttpResponse = singleAwaitingRequest(request)
       logger.debug(s"response: ${response.toString}")
       assert(response.status === StatusCodes.Unauthorized)
@@ -143,10 +143,10 @@ class AuthenticationV2E2ESpec
 
       val params =
         s"""
-                   |{
-                   |    "iri": "$rootIri",
-                   |    "password": "$testPass"
-                   |}
+           |{
+           |    "iri": "$rootIri",
+           |    "password": "$testPass"
+           |}
                 """.stripMargin
 
       val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
@@ -167,10 +167,10 @@ class AuthenticationV2E2ESpec
 
       val params =
         s"""
-                   |{
-                   |    "email": "$rootEmail",
-                   |    "password": "$testPass"
-                   |}
+           |{
+           |    "email": "$rootEmail",
+           |    "password": "$testPass"
+           |}
                 """.stripMargin
 
       val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
@@ -189,10 +189,10 @@ class AuthenticationV2E2ESpec
 
       val params =
         s"""
-                   |{
-                   |    "username": "$rootUsername",
-                   |    "password": "$testPass"
-                   |}
+           |{
+           |    "username": "$rootUsername",
+           |    "password": "$testPass"
+           |}
                 """.stripMargin
 
       val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
@@ -209,8 +209,8 @@ class AuthenticationV2E2ESpec
 
     "authenticate with token in header" in {
       // authenticate by calling '/v2/authenticate' without parameters but by providing token (from earlier login) in authorization header
-      val request = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(
-        GenericHttpCredentials("Bearer", token.get))
+      val request =
+        Get(baseApiUrl + "/v2/authentication") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
       val response = singleAwaitingRequest(request)
       logger.debug("response: {}", response.toString())
       assert(response.status === StatusCodes.OK)
@@ -226,8 +226,8 @@ class AuthenticationV2E2ESpec
 
     "logout when providing token in header" in {
       // do logout with stored token
-      val request = Delete(baseApiUrl + "/v2/authentication?") ~> addCredentials(
-        GenericHttpCredentials("Bearer", token.get))
+      val request =
+        Delete(baseApiUrl + "/v2/authentication?") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
       val response = singleAwaitingRequest(request)
       // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
@@ -237,10 +237,10 @@ class AuthenticationV2E2ESpec
 
       val params =
         s"""
-                   |{
-                   |    "email": "$rootEmail",
-                   |    "password": "$testPass"
-                   |}
+           |{
+           |    "email": "$rootEmail",
+           |    "password": "$testPass"
+           |}
                 """.stripMargin
 
       val request1 = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
@@ -255,8 +255,8 @@ class AuthenticationV2E2ESpec
     }
 
     "fail with authentication when providing the token after logout" in {
-      val request = Get(baseApiUrl + "/v2/authentication") ~> addCredentials(
-        GenericHttpCredentials("Bearer", token.get))
+      val request =
+        Get(baseApiUrl + "/v2/authentication") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
       val response = singleAwaitingRequest(request)
       // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
@@ -267,10 +267,10 @@ class AuthenticationV2E2ESpec
 
       val params =
         s"""
-                   |{
-                   |    "email": "$rootEmail",
-                   |    "password": "wrong"
-                   |}
+           |{
+           |    "email": "$rootEmail",
+           |    "password": "wrong"
+           |}
                 """.stripMargin
 
       val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
@@ -283,10 +283,10 @@ class AuthenticationV2E2ESpec
       /* wrong username */
       val params =
         s"""
-                   |{
-                   |    "username": "wrong",
-                   |    "password": "wrong"
-                   |}
+           |{
+           |    "username": "wrong",
+           |    "password": "wrong"
+           |}
                 """.stripMargin
 
       val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
@@ -319,10 +319,10 @@ class AuthenticationV2E2ESpec
 
       val params =
         s"""
-                   |{
-                   |    "email": "$rootEmail",
-                   |    "password": "$testPass"
-                   |}
+           |{
+           |    "email": "$rootEmail",
+           |    "password": "$testPass"
+           |}
                 """.stripMargin
 
       val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
@@ -358,8 +358,8 @@ class AuthenticationV2E2ESpec
 
     "allow access using HTTP Bearer Auth header and token from v2" in {
       /* Correct email / correct password */
-      val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(
-        GenericHttpCredentials("Bearer", token.get))
+      val request =
+        Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
       val response = singleAwaitingRequest(request)
       // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
@@ -367,8 +367,8 @@ class AuthenticationV2E2ESpec
 
     "fail with authentication using HTTP Bearer Auth header and wrong token " in {
       /* Correct email / wrong password */
-      val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(
-        GenericHttpCredentials("Bearer", "123456"))
+      val request =
+        Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", "123456"))
       val response = singleAwaitingRequest(request)
       // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)
@@ -396,10 +396,10 @@ class AuthenticationV2E2ESpec
 
       val params =
         s"""
-                   |{
-                   |    "email": "$rootEmail",
-                   |    "password": "$testPass"
-                   |}
+           |{
+           |    "email": "$rootEmail",
+           |    "password": "$testPass"
+           |}
                 """.stripMargin
 
       val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
@@ -435,8 +435,8 @@ class AuthenticationV2E2ESpec
 
     "allow access using HTTP Bearer Auth header with token from v2" in {
       /* Correct token */
-      val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc") ~> addCredentials(
-        GenericHttpCredentials("Bearer", token.get))
+      val request =
+        Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", token.get))
       val response = singleAwaitingRequest(request)
       // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
@@ -444,8 +444,8 @@ class AuthenticationV2E2ESpec
 
     "fail with authentication using HTTP Bearer Auth header with wrong token " in {
       /* Wrong token */
-      val request = Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc") ~> addCredentials(
-        GenericHttpCredentials("Bearer", "123456"))
+      val request =
+        Get(baseApiUrl + s"/admin/users/iri/$rootIriEnc") ~> addCredentials(GenericHttpCredentials("Bearer", "123456"))
       val response = singleAwaitingRequest(request)
       // logger.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)

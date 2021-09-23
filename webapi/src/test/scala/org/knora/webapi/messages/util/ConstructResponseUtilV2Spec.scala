@@ -36,8 +36,8 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
 
 /**
-  * Tests [[ConstructResponseUtilV2]].
-  */
+ * Tests [[ConstructResponseUtilV2]].
+ */
 class ConstructResponseUtilV2Spec extends CoreSpec() with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private implicit val timeout: Timeout = 10.seconds

@@ -23,8 +23,8 @@ import org.knora.webapi.messages.util.rdf.RdfModel
 import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
 
 /**
-  * An update plugin that does nothing. Used for updates in which only the built-in named graphs have changed.
-  */
+ * An update plugin that does nothing. Used for updates in which only the built-in named graphs have changed.
+ */
 class NoopPlugin extends UpgradePlugin {
   override def transform(model: RdfModel): Unit = {}
 }

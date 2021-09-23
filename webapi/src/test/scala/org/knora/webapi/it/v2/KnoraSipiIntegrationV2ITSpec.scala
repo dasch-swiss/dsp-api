@@ -41,14 +41,14 @@ import scala.concurrent.duration._
 
 object KnoraSipiIntegrationV2ITSpec {
   val config: Config = ConfigFactory.parseString("""
-          |akka.loglevel = "DEBUG"
-          |akka.stdout-loglevel = "DEBUG"
+                                                   |akka.loglevel = "DEBUG"
+                                                   |akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
 
 /**
-  * Tests interaction between Knora and Sipi using Knora API v2.
-  */
+ * Tests interaction between Knora and Sipi using Knora API v2.
+ */
 class KnoraSipiIntegrationV2ITSpec
     extends ITKnoraLiveSpec(KnoraSipiIntegrationV2ITSpec.config)
     with AuthenticationV2JsonProtocol
@@ -129,117 +129,127 @@ class KnoraSipiIntegrationV2ITSpec
   private val pathToTestVideo2 = s"test_data/test_route/files/$testVideo2OriginalFilename"
 
   /**
-    * Represents the information that Knora returns about an image file value that was created.
-    *
-    * @param internalFilename the image's internal filename.
-    * @param iiifUrl          the image's IIIF URL.
-    * @param width            the image's width in pixels.
-    * @param height           the image's height in pixels.
-    */
+   * Represents the information that Knora returns about an image file value that was created.
+   *
+   * @param internalFilename the image's internal filename.
+   * @param iiifUrl          the image's IIIF URL.
+   * @param width            the image's width in pixels.
+   * @param height           the image's height in pixels.
+   */
   case class SavedImage(internalFilename: String, iiifUrl: String, width: Int, height: Int)
 
   /**
-    * Represents the information that Knora returns about a document file value that was created.
-    *
-    * @param internalFilename the files's internal filename.
-    * @param url              the file's URL.
-    * @param pageCount        the document's page count.
-    * @param width            the document's width in pixels.
-    * @param height           the document's height in pixels.
-    */
-  case class SavedDocument(internalFilename: String,
-                           url: String,
-                           pageCount: Option[Int],
-                           width: Option[Int],
-                           height: Option[Int])
+   * Represents the information that Knora returns about a document file value that was created.
+   *
+   * @param internalFilename the files's internal filename.
+   * @param url              the file's URL.
+   * @param pageCount        the document's page count.
+   * @param width            the document's width in pixels.
+   * @param height           the document's height in pixels.
+   */
+  case class SavedDocument(
+    internalFilename: String,
+    url: String,
+    pageCount: Option[Int],
+    width: Option[Int],
+    height: Option[Int]
+  )
 
   /**
-    * Represents the information that Knora returns about a text file value that was created.
-    *
-    * @param internalFilename the file's internal filename.
-    * @param url              the file's URL.
-    */
+   * Represents the information that Knora returns about a text file value that was created.
+   *
+   * @param internalFilename the file's internal filename.
+   * @param url              the file's URL.
+   */
   case class SavedTextFile(internalFilename: String, url: String)
 
   /**
-    * Represents the information that Knora returns about an audio file value that was created.
-    *
-    * @param internalFilename the file's internal filename.
-    * @param url              the file's URL.
-    * @param duration         the duration of the audio in seconds.
-    */
+   * Represents the information that Knora returns about an audio file value that was created.
+   *
+   * @param internalFilename the file's internal filename.
+   * @param url              the file's URL.
+   * @param duration         the duration of the audio in seconds.
+   */
   case class SavedAudioFile(internalFilename: String, url: String, duration: Option[BigDecimal])
 
   /**
-    * Represents the information that Knora returns about a video file value that was created.
-    *
-    * @param internalFilename the file's internal filename.
-    * @param url              the file's URL.
-    * @param width            the video's width in pixels.
-    * @param height           the video's height in pixels.
-    * @param duration         the duration of the video in seconds.
-    * @param fps              the frame rate of the video in seconds.
-    */
-  case class SavedVideoFile(internalFilename: String,
-                            url: String,
-                            dimX: Int,
-                            dimY: Int,
-                            duration: Option[BigDecimal],
-                            fps: Option[BigDecimal])
+   * Represents the information that Knora returns about a video file value that was created.
+   *
+   * @param internalFilename the file's internal filename.
+   * @param url              the file's URL.
+   * @param width            the video's width in pixels.
+   * @param height           the video's height in pixels.
+   * @param duration         the duration of the video in seconds.
+   * @param fps              the frame rate of the video in seconds.
+   */
+  case class SavedVideoFile(
+    internalFilename: String,
+    url: String,
+    dimX: Int,
+    dimY: Int,
+    duration: Option[BigDecimal],
+    fps: Option[BigDecimal]
+  )
 
   /**
-    * Given a JSON-LD document representing a resource, returns a JSON-LD array containing the values of the specified
-    * property.
-    *
-    * @param resource            the JSON-LD document.
-    * @param propertyIriInResult the property IRI.
-    * @return a JSON-LD array containing the values of the specified property.
-    */
-  private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray = {
+   * Given a JSON-LD document representing a resource, returns a JSON-LD array containing the values of the specified
+   * property.
+   *
+   * @param resource            the JSON-LD document.
+   * @param propertyIriInResult the property IRI.
+   * @return a JSON-LD array containing the values of the specified property.
+   */
+  private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray =
     resource.requireArray(propertyIriInResult.toString)
-  }
 
   /**
-    * Given a JSON-LD document representing a resource, returns a JSON-LD object representing the expected single
-    * value of the specified property.
-    *
-    * @param resource            the JSON-LD document.
-    * @param propertyIriInResult the property IRI.
-    * @param expectedValueIri    the IRI of the expected value.
-    * @return a JSON-LD object representing the expected single value of the specified property.
-    */
-  private def getValueFromResource(resource: JsonLDDocument,
-                                   propertyIriInResult: SmartIri,
-                                   expectedValueIri: IRI): JsonLDObject = {
+   * Given a JSON-LD document representing a resource, returns a JSON-LD object representing the expected single
+   * value of the specified property.
+   *
+   * @param resource            the JSON-LD document.
+   * @param propertyIriInResult the property IRI.
+   * @param expectedValueIri    the IRI of the expected value.
+   * @return a JSON-LD object representing the expected single value of the specified property.
+   */
+  private def getValueFromResource(
+    resource: JsonLDDocument,
+    propertyIriInResult: SmartIri,
+    expectedValueIri: IRI
+  ): JsonLDObject = {
     val resourceIri: IRI = resource.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
     val propertyValues: JsonLDArray =
       getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
 
     val matchingValues: Seq[JsonLDObject] = propertyValues.value.collect {
       case jsonLDObject: JsonLDObject
-          if jsonLDObject.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri) == expectedValueIri =>
+          if jsonLDObject.requireStringWithValidation(
+            JsonLDKeywords.ID,
+            stringFormatter.validateAndEscapeIri
+          ) == expectedValueIri =>
         jsonLDObject
     }
 
     if (matchingValues.isEmpty) {
       throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>")
+        s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>"
+      )
     }
 
     if (matchingValues.size > 1) {
       throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <$resourceIri> has more than one value with the IRI <$expectedValueIri>")
+        s"Property <$propertyIriInResult> of resource <$resourceIri> has more than one value with the IRI <$expectedValueIri>"
+      )
     }
 
     matchingValues.head
   }
 
   /**
-    * Given a JSON-LD object representing a Knora image file value, returns a [[SavedImage]] containing the same information.
-    *
-    * @param savedValue a JSON-LD object representing a Knora image file value.
-    * @return a [[SavedImage]] containing the same information.
-    */
+   * Given a JSON-LD object representing a Knora image file value, returns a [[SavedImage]] containing the same information.
+   *
+   * @param savedValue a JSON-LD object representing a Knora image file value.
+   * @return a [[SavedImage]] containing the same information.
+   */
   private def savedValueToSavedImage(savedValue: JsonLDObject): SavedImage = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
@@ -261,11 +271,11 @@ class KnoraSipiIntegrationV2ITSpec
   }
 
   /**
-    * Given a JSON-LD object representing a Knora document file value, returns a [[SavedDocument]] containing the same information.
-    *
-    * @param savedValue a JSON-LD object representing a Knora document file value.
-    * @return a [[SavedDocument]] containing the same information.
-    */
+   * Given a JSON-LD object representing a Knora document file value, returns a [[SavedDocument]] containing the same information.
+   *
+   * @param savedValue a JSON-LD object representing a Knora document file value.
+   * @return a [[SavedDocument]] containing the same information.
+   */
   private def savedValueToSavedDocument(savedValue: JsonLDObject): SavedDocument = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
@@ -289,11 +299,11 @@ class KnoraSipiIntegrationV2ITSpec
   }
 
   /**
-    * Given a JSON-LD object representing a Knora text file value, returns a [[SavedTextFile]] containing the same information.
-    *
-    * @param savedValue a JSON-LD object representing a Knora document file value.
-    * @return a [[SavedTextFile]] containing the same information.
-    */
+   * Given a JSON-LD object representing a Knora text file value, returns a [[SavedTextFile]] containing the same information.
+   *
+   * @param savedValue a JSON-LD object representing a Knora document file value.
+   * @return a [[SavedTextFile]] containing the same information.
+   */
   private def savedValueToSavedTextFile(savedValue: JsonLDObject): SavedTextFile = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
@@ -310,11 +320,11 @@ class KnoraSipiIntegrationV2ITSpec
   }
 
   /**
-    * Given a JSON-LD object representing a Knora audio file value, returns a [[SavedAudioFile]] containing the same information.
-    *
-    * @param savedValue a JSON-LD object representing a Knora audio file value.
-    * @return a [[SavedAudioFile]] containing the same information.
-    */
+   * Given a JSON-LD object representing a Knora audio file value, returns a [[SavedAudioFile]] containing the same information.
+   *
+   * @param savedValue a JSON-LD object representing a Knora audio file value.
+   * @return a [[SavedAudioFile]] containing the same information.
+   */
   private def savedValueToSavedAudioFile(savedValue: JsonLDObject): SavedAudioFile = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
@@ -338,11 +348,11 @@ class KnoraSipiIntegrationV2ITSpec
   }
 
   /**
-    * Given a JSON-LD object representing a Knora video file value, returns a [[SavedVideoFile]] containing the same information.
-    *
-    * @param savedValue a JSON-LD object representing a Knora video file value.
-    * @return a [[SavedVideoFile]] containing the same information.
-    */
+   * Given a JSON-LD object representing a Knora video file value, returns a [[SavedVideoFile]] containing the same information.
+   *
+   * @param savedValue a JSON-LD object representing a Knora video file value.
+   * @return a [[SavedVideoFile]] containing the same information.
+   */
   private def savedValueToSavedVideoFile(savedValue: JsonLDObject): SavedVideoFile = {
     val internalFilename = savedValue.requireString(OntologyConstants.KnoraApiV2Complex.FileValueHasFilename)
 
@@ -408,10 +418,10 @@ class KnoraSipiIntegrationV2ITSpec
 
       val params =
         s"""
-                   |{
-                   |    "email": "$anythingUserEmail",
-                   |    "password": "$password"
-                   |}
+           |{
+           |    "email": "$anythingUserEmail",
+           |    "password": "$password"
+           |}
                 """.stripMargin
 
       val request = Post(baseApiUrl + s"/v2/authentication", HttpEntity(ContentTypes.`application/json`, params))
@@ -441,26 +451,28 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity =
         s"""{
-                   |  "@type" : "anything:ThingPicture",
-                   |  "knora-api:hasStillImageFileValue" : {
-                   |    "@type" : "knora-api:StillImageFileValue",
-                   |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
-                   |  },
-                   |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
-                   |  },
-                   |  "rdfs:label" : "test thing",
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@type" : "anything:ThingPicture",
+           |  "knora-api:hasStillImageFileValue" : {
+           |    "@type" : "knora-api:StillImageFileValue",
+           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
+           |  },
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "rdfs:label" : "test thing",
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
-      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        s"$baseApiUrl/v2/resources",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       stillImageResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
@@ -468,7 +480,8 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(stillImageResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture")
+        resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
+      )
 
       // Get the new file value from the resource.
 
@@ -521,23 +534,25 @@ class KnoraSipiIntegrationV2ITSpec
       // JSON describing the new image to Knora.
       val jsonLdEntity =
         s"""{
-                   |  "@id" : "${stillImageResourceIri.get}",
-                   |  "@type" : "anything:ThingPicture",
-                   |  "knora-api:hasStillImageFileValue" : {
-                   |    "@id" : "${stillImageFileValueIri.get}",
-                   |    "@type" : "knora-api:StillImageFileValue",
-                   |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}",
-                   |    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "${stillImageResourceIri.get}",
+           |  "@type" : "anything:ThingPicture",
+           |  "knora-api:hasStillImageFileValue" : {
+           |    "@id" : "${stillImageFileValueIri.get}",
+           |    "@type" : "knora-api:StillImageFileValue",
+           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}",
+           |    "knora-api:hasPermissions" : "CR knora-admin:Creator|V knora-admin:UnknownUser"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       // Send the JSON in a PUT request to Knora.
-      val knoraPostRequest = Put(baseApiUrl + "/v2/values", HttpEntity(ContentTypes.`application/json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val knoraPostRequest =
+        Put(baseApiUrl + "/v2/values", HttpEntity(ContentTypes.`application/json`, jsonLdEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val responseJsonDoc = getResponseJsonLD(knoraPostRequest)
       stillImageFileValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
@@ -577,21 +592,23 @@ class KnoraSipiIntegrationV2ITSpec
       // JSON describing the new image to Knora.
       val jsonLdEntity =
         s"""{
-                   |  "@id" : "${stillImageResourceIri.get}",
-                   |  "@type" : "anything:ThingDocument",
-                   |  "knora-api:hasStillImageFileValue" : {
-                   |    "@type" : "knora-api:StillImageFileValue",
-                   |    "knora-api:fileValueHasFilename" : "$internalFilename"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "${stillImageResourceIri.get}",
+           |  "@type" : "anything:ThingDocument",
+           |  "knora-api:hasStillImageFileValue" : {
+           |    "@type" : "knora-api:StillImageFileValue",
+           |    "knora-api:fileValueHasFilename" : "$internalFilename"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       // Send the JSON in a POST request to Knora.
-      val knoraPostRequest = Post(baseApiUrl + "/v2/values", HttpEntity(ContentTypes.`application/json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(incunabulaUserEmail, password))
+      val knoraPostRequest =
+        Post(baseApiUrl + "/v2/values", HttpEntity(ContentTypes.`application/json`, jsonLdEntity)) ~> addCredentials(
+          BasicHttpCredentials(incunabulaUserEmail, password)
+        )
       val knoraPostResponse = singleAwaitingRequest(knoraPostRequest)
       assert(knoraPostResponse.status == StatusCodes.Forbidden)
 
@@ -615,26 +632,28 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity =
         s"""{
-                   |  "@type" : "anything:ThingDocument",
-                   |  "knora-api:hasDocumentFileValue" : {
-                   |    "@type" : "knora-api:DocumentFileValue",
-                   |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
-                   |  },
-                   |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
-                   |  },
-                   |  "rdfs:label" : "test thing",
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@type" : "anything:ThingDocument",
+           |  "knora-api:hasDocumentFileValue" : {
+           |    "@type" : "knora-api:DocumentFileValue",
+           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
+           |  },
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "rdfs:label" : "test thing",
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
-      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        s"$baseApiUrl/v2/resources",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       pdfResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
@@ -642,7 +661,8 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(pdfResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument")
+        resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument"
+      )
 
       // Get the new file value from the resource.
 
@@ -690,24 +710,26 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity =
         s"""{
-                   |  "@id" : "${pdfResourceIri.get}",
-                   |  "@type" : "anything:ThingDocument",
-                   |  "knora-api:hasDocumentFileValue" : {
-                   |    "@id" : "${pdfValueIri.get}",
-                   |    "@type" : "knora-api:DocumentFileValue",
-                   |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
-                   |  },
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "${pdfResourceIri.get}",
+           |  "@type" : "anything:ThingDocument",
+           |  "knora-api:hasDocumentFileValue" : {
+           |    "@id" : "${pdfValueIri.get}",
+           |    "@type" : "knora-api:DocumentFileValue",
+           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
+           |  },
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
-      val request = Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       pdfValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
@@ -748,25 +770,27 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity =
         s"""{
-                   |  "@type" : "knora-api:TextRepresentation",
-                   |  "knora-api:hasTextFileValue" : {
-                   |    "@type" : "knora-api:TextFileValue",
-                   |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
-                   |  },
-                   |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
-                   |  },
-                   |  "rdfs:label" : "text file",
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-                   |  }
-                   |}""".stripMargin
+           |  "@type" : "knora-api:TextRepresentation",
+           |  "knora-api:hasTextFileValue" : {
+           |    "@type" : "knora-api:TextFileValue",
+           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
+           |  },
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "rdfs:label" : "text file",
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
 
-      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        s"$baseApiUrl/v2/resources",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       val resourceIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
@@ -819,23 +843,25 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity =
         s"""{
-                   |  "@id" : "${csvResourceIri.get}",
-                   |  "@type" : "knora-api:TextRepresentation",
-                   |  "knora-api:hasTextFileValue" : {
-                   |    "@id" : "${csvValueIri.get}",
-                   |    "@type" : "knora-api:TextFileValue",
-                   |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
-                   |  },
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "${csvResourceIri.get}",
+           |  "@type" : "knora-api:TextRepresentation",
+           |  "knora-api:hasTextFileValue" : {
+           |    "@id" : "${csvValueIri.get}",
+           |    "@type" : "knora-api:TextFileValue",
+           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
+           |  },
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
 
-      val request = Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       csvValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
@@ -873,25 +899,27 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity =
         s"""{
-                   |  "@type" : "knora-api:StillImageRepresentation",
-                   |  "knora-api:hasStillImageValue" : {
-                   |    "@type" : "knora-api:StillImageFileValue",
-                   |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
-                   |  },
-                   |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
-                   |  },
-                   |  "rdfs:label" : "still image file",
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-                   |  }
-                   |}""".stripMargin
+           |  "@type" : "knora-api:StillImageRepresentation",
+           |  "knora-api:hasStillImageValue" : {
+           |    "@type" : "knora-api:StillImageFileValue",
+           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
+           |  },
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "rdfs:label" : "still image file",
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
 
-      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        s"$baseApiUrl/v2/resources",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest)
     }
@@ -911,25 +939,27 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity =
         s"""{
-                   |  "@type" : "knora-api:TextRepresentation",
-                   |  "knora-api:hasTextFileValue" : {
-                   |    "@type" : "knora-api:TextFileValue",
-                   |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
-                   |  },
-                   |  "knora-api:attachedToProject" : {
-                   |    "@id" : "http://rdfh.ch/projects/0001"
-                   |  },
-                   |  "rdfs:label" : "text file",
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-                   |  }
-                   |}""".stripMargin
+           |  "@type" : "knora-api:TextRepresentation",
+           |  "knora-api:hasTextFileValue" : {
+           |    "@type" : "knora-api:TextFileValue",
+           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
+           |  },
+           |  "knora-api:attachedToProject" : {
+           |    "@id" : "http://rdfh.ch/projects/0001"
+           |  },
+           |  "rdfs:label" : "text file",
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
 
-      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        s"$baseApiUrl/v2/resources",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       val resourceIri: IRI =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
@@ -982,23 +1012,25 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity =
         s"""{
-                   |  "@id" : "${xmlResourceIri.get}",
-                   |  "@type" : "knora-api:TextRepresentation",
-                   |  "knora-api:hasTextFileValue" : {
-                   |    "@id" : "${xmlValueIri.get}",
-                   |    "@type" : "knora-api:TextFileValue",
-                   |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
-                   |  },
-                   |  "@context" : {
-                   |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "${xmlResourceIri.get}",
+           |  "@type" : "knora-api:TextRepresentation",
+           |  "knora-api:hasTextFileValue" : {
+           |    "@id" : "${xmlValueIri.get}",
+           |    "@type" : "knora-api:TextFileValue",
+           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
+           |  },
+           |  "@context" : {
+           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
 
-      val request = Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       xmlValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
@@ -1053,8 +1085,10 @@ class KnoraSipiIntegrationV2ITSpec
            |  }
            |}""".stripMargin
 
-      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        s"$baseApiUrl/v2/resources",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       zipResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
@@ -1062,7 +1096,8 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument")
+        resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument"
+      )
 
       // Get the new file value from the resource.
 
@@ -1123,8 +1158,10 @@ class KnoraSipiIntegrationV2ITSpec
            |  }
            |}""".stripMargin
 
-      val request = Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       zipValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
@@ -1179,8 +1216,10 @@ class KnoraSipiIntegrationV2ITSpec
            |  }
            |}""".stripMargin
 
-      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        s"$baseApiUrl/v2/resources",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       wavResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
@@ -1188,7 +1227,8 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(wavResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation")
+        resource.requireTypeAsKnoraTypeIri.toString == "http://api.knora.org/ontology/knora-api/v2#AudioRepresentation"
+      )
 
       // Get the new file value from the resource.
 
@@ -1234,10 +1274,10 @@ class KnoraSipiIntegrationV2ITSpec
       val jsonLdEntity =
         s"""{
            |  "@id" : "${wavResourceIri.get}",
-					 |  "@type" : "knora-api:AudioRepresentation",
+           |  "@type" : "knora-api:AudioRepresentation",
            |  "knora-api:hasAudioFileValue" : {
            |    "@type" : "knora-api:AudioFileValue",
-					 |    "@id" : "${wavValueIri.get}",
+           |    "@id" : "${wavValueIri.get}",
            |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
            |  },
            |  "@context" : {
@@ -1248,8 +1288,10 @@ class KnoraSipiIntegrationV2ITSpec
            |  }
            |}""".stripMargin
 
-      val request = Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       wavValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
@@ -1304,8 +1346,10 @@ class KnoraSipiIntegrationV2ITSpec
            |  }
            |}""".stripMargin
 
-      val request = Post(s"$baseApiUrl/v2/resources", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        s"$baseApiUrl/v2/resources",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       videoResourceIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 
@@ -1313,7 +1357,8 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(videoResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation")
+        resource.requireTypeAsKnoraTypeIri.toString == "http://api.knora.org/ontology/knora-api/v2#MovingImageRepresentation"
+      )
 
       // Get the new file value from the resource.
 
@@ -1358,10 +1403,10 @@ class KnoraSipiIntegrationV2ITSpec
       val jsonLdEntity =
         s"""{
            |  "@id" : "${videoResourceIri.get}",
-		   |  "@type" : "knora-api:MovingImageRepresentation",
+           |  "@type" : "knora-api:MovingImageRepresentation",
            |  "knora-api:hasMovingImageFileValue" : {
            |    "@type" : "knora-api:MovingImageFileValue",
-		   |    "@id" : "${videoValueIri.get}",
+           |    "@id" : "${videoValueIri.get}",
            |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
            |  },
            |  "@context" : {
@@ -1372,8 +1417,10 @@ class KnoraSipiIntegrationV2ITSpec
            |  }
            |}""".stripMargin
 
-      val request = Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
       videoValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
 

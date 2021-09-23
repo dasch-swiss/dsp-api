@@ -27,347 +27,347 @@ import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.{ApiV2Complex, ApiV2Simple, CoreSpec}
 
 /**
-  * Tests [[GravsearchParser]].
-  */
+ * Tests [[GravsearchParser]].
+ */
 class GravsearchParserSpec extends CoreSpec() {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   val Query: String =
     """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?book knora-api:isMainResource true .
-          |    ?book incunabula:publisher ?bookPublisher .
-          |    ?book incunabula:publoc ?bookPubLoc .
-          |    ?page incunabula:isPartOf ?book .
-          |} WHERE {
-          |    ?book a incunabula:book .
-          |
-          |    OPTIONAL {
-          |        ?book incunabula:publisher ?bookPublisher .
-          |        ?book incunabula:publoc ?bookPubLoc .
-          |    }
-          |
-          |    ?book incunabula:pubdate ?pubdate .
-          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
-          |    ?page a incunabula:page .
-          |    ?page incunabula:isPartOf ?book .
-          |
-          |    {
-          |        ?page incunabula:pagenum "a7r"^^xsd:string .
-          |        ?page incunabula:seqnum "14"^^xsd:integer.
-          |    } UNION {
-          |        ?page incunabula:pagenum "a8r"^^xsd:string .
-          |        ?page incunabula:seqnum "16"^^xsd:integer.
-          |    } UNION {
-          |        ?page incunabula:pagenum "a9r"^^xsd:string .
-          |        ?page incunabula:seqnum ?seqnum.
-          |        FILTER(?seqnum > "17"^^xsd:integer)
-          |    }
-          |}
+      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?book knora-api:isMainResource true .
+      |    ?book incunabula:publisher ?bookPublisher .
+      |    ?book incunabula:publoc ?bookPubLoc .
+      |    ?page incunabula:isPartOf ?book .
+      |} WHERE {
+      |    ?book a incunabula:book .
+      |
+      |    OPTIONAL {
+      |        ?book incunabula:publisher ?bookPublisher .
+      |        ?book incunabula:publoc ?bookPubLoc .
+      |    }
+      |
+      |    ?book incunabula:pubdate ?pubdate .
+      |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+      |    ?page a incunabula:page .
+      |    ?page incunabula:isPartOf ?book .
+      |
+      |    {
+      |        ?page incunabula:pagenum "a7r"^^xsd:string .
+      |        ?page incunabula:seqnum "14"^^xsd:integer.
+      |    } UNION {
+      |        ?page incunabula:pagenum "a8r"^^xsd:string .
+      |        ?page incunabula:seqnum "16"^^xsd:integer.
+      |    } UNION {
+      |        ?page incunabula:pagenum "a9r"^^xsd:string .
+      |        ?page incunabula:seqnum ?seqnum.
+      |        FILTER(?seqnum > "17"^^xsd:integer)
+      |    }
+      |}
         """.stripMargin
 
   // val ParsedQuery = ???
 
   val QueryWithBind: String =
     """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?thing knora-api:isMainResource true .
-          |} WHERE {
-          |    BIND(<http://rdfh.ch/a-thing> AS ?thing)
-          |    ?thing a knora-api:Resource .
-          |    ?thing a anything:Thing .
-          |}
+      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    BIND(<http://rdfh.ch/a-thing> AS ?thing)
+      |    ?thing a knora-api:Resource .
+      |    ?thing a anything:Thing .
+      |}
         """.stripMargin
 
   val QueryWithFilterNotExists: String =
     """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?thing knora-api:isMainResource true .
-          |} WHERE {
-          |    ?thing a anything:Thing .
-          |
-          |    FILTER NOT EXISTS {
-          |        ?thing anything:hasOtherThing ?aThing .
-          |    }
-          |}
+      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |
+      |    FILTER NOT EXISTS {
+      |        ?thing anything:hasOtherThing ?aThing .
+      |    }
+      |}
         """.stripMargin
 
   val QueryWithMinus: String =
     """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?thing knora-api:isMainResource true .
-          |} WHERE {
-          |    ?thing a anything:Thing .
-          |
-          |    MINUS {
-          |        ?thing anything:hasOtherThing ?aThing .
-          |    }
-          |}
+      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |
+      |    MINUS {
+      |        ?thing anything:hasOtherThing ?aThing .
+      |    }
+      |}
         """.stripMargin
 
   val QueryWithOffset: String =
     """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?thing knora-api:isMainResource true.
-          |} WHERE {
-          |    ?thing a anything:Thing .
-          |} OFFSET 10
+      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true.
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |} OFFSET 10
         """.stripMargin
 
   val QueryStrWithNestedOptional: String =
     """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?book knora-api:isMainResource true .
-          |    ?book incunabula:title ?bookTitle .
-          |    ?page incunabula:isPartOf ?book .
-          |} WHERE {
-          |    ?book a incunabula:book .
-          |
-          |    OPTIONAL {
-          |        ?book incunabula:publisher ?publisher .
-          |
-          |        FILTER(?publisher = "Lienhart Ysenhut"^^xsd:string)
-          |
-          |        OPTIONAL {
-          |            ?book incunabula:title ?bookTitle .
-          |        }
-          |    }
-          |
-          |    ?book incunabula:pubdate ?pubdate .
-          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
-          |}
+      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?book knora-api:isMainResource true .
+      |    ?book incunabula:title ?bookTitle .
+      |    ?page incunabula:isPartOf ?book .
+      |} WHERE {
+      |    ?book a incunabula:book .
+      |
+      |    OPTIONAL {
+      |        ?book incunabula:publisher ?publisher .
+      |
+      |        FILTER(?publisher = "Lienhart Ysenhut"^^xsd:string)
+      |
+      |        OPTIONAL {
+      |            ?book incunabula:title ?bookTitle .
+      |        }
+      |    }
+      |
+      |    ?book incunabula:pubdate ?pubdate .
+      |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+      |}
         """.stripMargin
 
   val QueryWithWrongFilter: String =
     """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?book knora-api:isMainResource true .
-          |} WHERE {
-          |    ?book a incunabula:book .
-          |    ?book incunabula:pubdate ?pubdate .
-          |    FILTER(BOUND(?pubdate))
-          |}
+      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?book knora-api:isMainResource true .
+      |} WHERE {
+      |    ?book a incunabula:book .
+      |    ?book incunabula:pubdate ?pubdate .
+      |    FILTER(BOUND(?pubdate))
+      |}
         """.stripMargin
 
   val QueryWithInternalEntityIri: String =
     """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://www.knora.org/ontology/0803/incunabula#>
-          |
-          |CONSTRUCT {
-          |    ?book knora-api:isMainResource true .
-          |} WHERE {
-          |    ?book a incunabula:book .
-          |    ?book incunabula:pubdate ?pubdate .
-          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
-          |}
+      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX incunabula: <http://www.knora.org/ontology/0803/incunabula#>
+      |
+      |CONSTRUCT {
+      |    ?book knora-api:isMainResource true .
+      |} WHERE {
+      |    ?book a incunabula:book .
+      |    ?book incunabula:pubdate ?pubdate .
+      |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+      |}
         """.stripMargin
 
   val SparqlSelect: String =
     """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |
-          |SELECT ?subject ?object
-          |WHERE {
-          |    ?subject a incunabula:book .
-          |    ?book incunabula:pubdate ?object .
-          |}
+      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+      |
+      |SELECT ?subject ?object
+      |WHERE {
+      |    ?subject a incunabula:book .
+      |    ?book incunabula:pubdate ?object .
+      |}
         """.stripMargin
 
   val SparqlDescribe: String =
     """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |
-          |DESCRIBE ?book
-          |WHERE {
-          |    ?book a incunabula:book .
-          |    ?book incunabula:pubdate ?pubdate .
-          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
-          |}
+      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+      |
+      |DESCRIBE ?book
+      |WHERE {
+      |    ?book a incunabula:book .
+      |    ?book incunabula:pubdate ?pubdate .
+      |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+      |}
         """.stripMargin
 
   val SparqlInsert: String =
     """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |
-          |INSERT DATA {
-          |    <http://example.org/12345> a incunabula:book .
-          |}
+      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+      |
+      |INSERT DATA {
+      |    <http://example.org/12345> a incunabula:book .
+      |}
         """.stripMargin
 
   val SparqlDelete: String =
     """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |
-          |DELETE {
-          |    <http://example.org/12345> a incunabula:book .
-          |} WHERE {
-          |    ?book a incunabula:book .
-          |    ?book incunabula:pubdate ?pubdate .
-          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
-          |}
+      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+      |
+      |DELETE {
+      |    <http://example.org/12345> a incunabula:book .
+      |} WHERE {
+      |    ?book a incunabula:book .
+      |    ?book incunabula:pubdate ?pubdate .
+      |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+      |}
         """.stripMargin
 
   val QueryWithLeftNestedUnion: String =
     """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?book knora-api:isMainResource true .
-          |    ?page incunabula:isPartOf ?book .
-          |} WHERE {
-          |    ?book a incunabula:book .
-          |    ?book incunabula:publisher "Lienhart Ysenhut"^^xsd:string .
-          |    ?book incunabula:pubdate ?pubdate .
-          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
-          |    ?page a incunabula:page .
-          |    ?page incunabula:isPartOf ?book .
-          |
-          |    {
-          |        ?page incunabula:pagenum "a6r"^^xsd:string .
-          |        ?page incunabula:seqnum "12"^^xsd:integer.
-          |
-          |        {
-          |            ?page incunabula:pagenum "a7r"^^xsd:string .
-          |            ?page incunabula:seqnum "14"^^xsd:integer.
-          |        } UNION {
-          |            ?page incunabula:pagenum "a8r"^^xsd:string .
-          |            ?page incunabula:seqnum "16"^^xsd:integer.
-          |        }
-          |    } UNION {
-          |        ?page incunabula:pagenum "a9r"^^xsd:string .
-          |        ?page incunabula:seqnum "18"^^xsd:integer.
-          |    } UNION {
-          |        ?page incunabula:pagenum "a10r"^^xsd:string .
-          |        ?page incunabula:seqnum "20"^^xsd:integer.
-          |    }
-          |}
+      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?book knora-api:isMainResource true .
+      |    ?page incunabula:isPartOf ?book .
+      |} WHERE {
+      |    ?book a incunabula:book .
+      |    ?book incunabula:publisher "Lienhart Ysenhut"^^xsd:string .
+      |    ?book incunabula:pubdate ?pubdate .
+      |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+      |    ?page a incunabula:page .
+      |    ?page incunabula:isPartOf ?book .
+      |
+      |    {
+      |        ?page incunabula:pagenum "a6r"^^xsd:string .
+      |        ?page incunabula:seqnum "12"^^xsd:integer.
+      |
+      |        {
+      |            ?page incunabula:pagenum "a7r"^^xsd:string .
+      |            ?page incunabula:seqnum "14"^^xsd:integer.
+      |        } UNION {
+      |            ?page incunabula:pagenum "a8r"^^xsd:string .
+      |            ?page incunabula:seqnum "16"^^xsd:integer.
+      |        }
+      |    } UNION {
+      |        ?page incunabula:pagenum "a9r"^^xsd:string .
+      |        ?page incunabula:seqnum "18"^^xsd:integer.
+      |    } UNION {
+      |        ?page incunabula:pagenum "a10r"^^xsd:string .
+      |        ?page incunabula:seqnum "20"^^xsd:integer.
+      |    }
+      |}
         """.stripMargin
 
   val QueryStrWithRightNestedUnion: String =
     """
-          |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?book knora-api:isMainResource true .
-          |    ?page a ?pageType .
-          |    ?page incunabula:isPartOf ?book .
-          |} WHERE {
-          |    ?book a incunabula:book .
-          |    ?book incunabula:publisher "Lienhart Ysenhut"^^xsd:string .
-          |    ?book incunabula:pubdate ?pubdate .
-          |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
-          |    ?page a incunabula:page .
-          |    ?page incunabula:isPartOf ?book .
-          |
-          |    {
-          |        ?page incunabula:pagenum "a7r"^^xsd:string .
-          |        ?page incunabula:seqnum "14"^^xsd:integer.
-          |    } UNION {
-          |        ?page incunabula:pagenum "a8r"^^xsd:string .
-          |        ?page incunabula:seqnum "16"^^xsd:integer.
-          |    } UNION {
-          |        ?page incunabula:pagenum "a9r"^^xsd:string .
-          |        ?page incunabula:seqnum "18"^^xsd:integer.
-          |
-          |        {
-          |            ?page incunabula:pagenum "a10r"^^xsd:string .
-          |            ?page incunabula:seqnum "20"^^xsd:integer.
-          |        } UNION {
-          |            ?page incunabula:pagenum "a11r"^^xsd:string .
-          |            ?page incunabula:seqnum "22"^^xsd:integer.
-          |        }
-          |    }
-          |}
+      |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+      |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX incunabula: <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?book knora-api:isMainResource true .
+      |    ?page a ?pageType .
+      |    ?page incunabula:isPartOf ?book .
+      |} WHERE {
+      |    ?book a incunabula:book .
+      |    ?book incunabula:publisher "Lienhart Ysenhut"^^xsd:string .
+      |    ?book incunabula:pubdate ?pubdate .
+      |    FILTER(?pubdate < "GREGORIAN:1500"^^xsd:string)
+      |    ?page a incunabula:page .
+      |    ?page incunabula:isPartOf ?book .
+      |
+      |    {
+      |        ?page incunabula:pagenum "a7r"^^xsd:string .
+      |        ?page incunabula:seqnum "14"^^xsd:integer.
+      |    } UNION {
+      |        ?page incunabula:pagenum "a8r"^^xsd:string .
+      |        ?page incunabula:seqnum "16"^^xsd:integer.
+      |    } UNION {
+      |        ?page incunabula:pagenum "a9r"^^xsd:string .
+      |        ?page incunabula:seqnum "18"^^xsd:integer.
+      |
+      |        {
+      |            ?page incunabula:pagenum "a10r"^^xsd:string .
+      |            ?page incunabula:seqnum "20"^^xsd:integer.
+      |        } UNION {
+      |            ?page incunabula:pagenum "a11r"^^xsd:string .
+      |            ?page incunabula:seqnum "22"^^xsd:integer.
+      |        }
+      |    }
+      |}
         """.stripMargin
 
   val QueryStrWithUnionInOptional: String =
     """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX test: <http://0.0.0.0:3333/ontology/0666/test/simple/v2#>
-          |CONSTRUCT {
-          |  ?Project knora-api:isMainResource true .
-          |  ?isInProject test:isInProject ?Project .
-          |} WHERE {
-          |  ?Project a knora-api:Resource .
-          |  ?Project a test:Project .
-          |
-          |  OPTIONAL {
-          |    ?isInProject test:isInProject ?Project .
-          |    test:isInProject knora-api:objectType knora-api:Resource .
-          |    ?isInProject a knora-api:Resource .
-          |    { ?isInProject a test:BibliographicNotice . } UNION { ?isInProject a test:Person . }
-          |  }
-          |}
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX test: <http://0.0.0.0:3333/ontology/0666/test/simple/v2#>
+      |CONSTRUCT {
+      |  ?Project knora-api:isMainResource true .
+      |  ?isInProject test:isInProject ?Project .
+      |} WHERE {
+      |  ?Project a knora-api:Resource .
+      |  ?Project a test:Project .
+      |
+      |  OPTIONAL {
+      |    ?isInProject test:isInProject ?Project .
+      |    test:isInProject knora-api:objectType knora-api:Resource .
+      |    ?isInProject a knora-api:Resource .
+      |    { ?isInProject a test:BibliographicNotice . } UNION { ?isInProject a test:Person . }
+      |  }
+      |}
         """.stripMargin
 
   val ParsedQueryWithUnionInOptional: ConstructQuery = ConstructQuery(
@@ -418,19 +418,26 @@ class GravsearchParserSpec extends CoreSpec() {
               pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
               obj = IriRef("http://api.knora.org/ontology/knora-api/simple/v2#Resource".toSmartIri)
             ),
-            UnionPattern(blocks = Vector(
-              Vector(StatementPattern(
-                subj = QueryVariable(variableName = "isInProject"),
-                pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
-                obj = IriRef("http://0.0.0.0:3333/ontology/0666/test/simple/v2#BibliographicNotice".toSmartIri)
-              )),
-              Vector(StatementPattern(
-                subj = QueryVariable(variableName = "isInProject"),
-                pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
-                obj = IriRef("http://0.0.0.0:3333/ontology/0666/test/simple/v2#Person".toSmartIri)
-              ))
-            ))
-          ))
+            UnionPattern(blocks =
+              Vector(
+                Vector(
+                  StatementPattern(
+                    subj = QueryVariable(variableName = "isInProject"),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://0.0.0.0:3333/ontology/0666/test/simple/v2#BibliographicNotice".toSmartIri)
+                  )
+                ),
+                Vector(
+                  StatementPattern(
+                    subj = QueryVariable(variableName = "isInProject"),
+                    pred = IriRef("http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri),
+                    obj = IriRef("http://0.0.0.0:3333/ontology/0666/test/simple/v2#Person".toSmartIri)
+                  )
+                )
+              )
+            )
+          )
+        )
       ),
       positiveEntities = Set(
         QueryVariable(variableName = "Project"),
@@ -452,135 +459,135 @@ class GravsearchParserSpec extends CoreSpec() {
 
   val QueryForAThingRelatingToAnotherThing: String =
     """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?thing knora-api:isMainResource true .
-          |    ?thing knora-api:hasLinkTo <http://rdfh.ch/a-thing> .
-          |} WHERE {
-          |    ?thing a anything:Thing .
-          |
-          |    ?thing ?linkingProp <http://rdfh.ch/a-thing> .
-          |    FILTER(?linkingProp = anything:isPartOfOtherThing || ?linkingProp = anything:hasOtherThing)
-          |
-          |}
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |    ?thing knora-api:hasLinkTo <http://rdfh.ch/a-thing> .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |
+      |    ?thing ?linkingProp <http://rdfh.ch/a-thing> .
+      |    FILTER(?linkingProp = anything:isPartOfOtherThing || ?linkingProp = anything:hasOtherThing)
+      |
+      |}
         """.stripMargin
 
   val queryWithFilterContainingRegex: String =
     """
-          |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |    CONSTRUCT {
-          |
-          |        ?mainRes knora-api:isMainResource true .
-          |
-          |        ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
-          |
-          |     } WHERE {
-          |
-          |        ?mainRes a knora-api:Resource .
-          |
-          |        ?mainRes a <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book> .
-          |
-          |
-          |        ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
-          |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
-          |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
-          |
-          |        FILTER regex(?propVal0, "Zeit", "i")
-          |
-          |     }
+      |    PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |    CONSTRUCT {
+      |
+      |        ?mainRes knora-api:isMainResource true .
+      |
+      |        ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
+      |
+      |     } WHERE {
+      |
+      |        ?mainRes a knora-api:Resource .
+      |
+      |        ?mainRes a <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#book> .
+      |
+      |
+      |        ?mainRes <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> ?propVal0 .
+      |        <http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title> knora-api:objectType <http://www.w3.org/2001/XMLSchema#string> .
+      |        ?propVal0 a <http://www.w3.org/2001/XMLSchema#string> .
+      |
+      |        FILTER regex(?propVal0, "Zeit", "i")
+      |
+      |     }
         """.stripMargin
 
   val QueryWithMatchFunction: String =
     """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?thing knora-api:isMainResource true .
-          |} WHERE {
-          |    ?thing a anything:Thing .
-          |    ?thing anything:hasText ?text .
-          |    FILTER(knora-api:match(?text, "foo"))
-          |}
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    ?thing anything:hasText ?text .
+      |    FILTER(knora-api:match(?text, "foo"))
+      |}
         """.stripMargin
 
   val QueryWithMatchTextFunction: String =
     """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?thing knora-api:isMainResource true .
-          |} WHERE {
-          |    ?thing a anything:Thing .
-          |    ?thing anything:hasText ?text .
-          |    FILTER(knora-api:matchText(?text, "foo"))
-          |}
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    ?thing anything:hasText ?text .
+      |    FILTER(knora-api:matchText(?text, "foo"))
+      |}
         """.stripMargin
 
   val QueryWithFilterContainingLang: String =
     """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |
-          |CONSTRUCT {
-          |    ?thing knora-api:isMainResource true .
-          |} WHERE {
-          |    ?thing a anything:Thing .
-          |    ?thing anything:hasText ?text .
-          |    FILTER(lang(?text) = "en")
-          |}
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |
+      |CONSTRUCT {
+      |    ?thing knora-api:isMainResource true .
+      |} WHERE {
+      |    ?thing a anything:Thing .
+      |    ?thing anything:hasText ?text .
+      |    FILTER(lang(?text) = "en")
+      |}
         """.stripMargin
 
   // val ParsedQueryWithLangFunction = ???
 
   val QueryWithFilterInOptional: String =
     """
-          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          |
-          |    CONSTRUCT {
-          |        ?letter knora-api:isMainResource true .
-          |
-          |        ?letter beol:creationDate ?date .
-          |
-          |        ?letter ?linkingProp1 ?person1 .
-          |
-          |        ?person1 beol:hasFamilyName ?name .
-          |
-          |    } WHERE {
-          |        ?letter a knora-api:Resource .
-          |        ?letter a beol:letter .
-          |
-          |        ?letter beol:creationDate ?date .
-          |
-          |        beol:creationDate knora-api:objectType knora-api:Date .
-          |        ?date a knora-api:Date .
-          |
-          |        ?letter ?linkingProp1 ?person1 .
-          |
-          |        ?person1 a knora-api:Resource .
-          |
-          |        ?linkingProp1 knora-api:objectType knora-api:Resource .
-          |
-          |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
-          |
-          |        beol:hasAuthor knora-api:objectType knora-api:Resource .
-          |        beol:hasRecipient knora-api:objectType knora-api:Resource .
-          |
-          |        OPTIONAL {
-          |            ?person1 beol:hasFamilyName ?name .
-          |
-          |            beol:hasFamilyName knora-api:objectType xsd:string .
-          |            ?name a xsd:string .
-          |
-          |            FILTER(?name = "Meier")
-          |        }
-          |
-          |    } ORDER BY ?date
+      |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/simple/v2#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+      |
+      |    CONSTRUCT {
+      |        ?letter knora-api:isMainResource true .
+      |
+      |        ?letter beol:creationDate ?date .
+      |
+      |        ?letter ?linkingProp1 ?person1 .
+      |
+      |        ?person1 beol:hasFamilyName ?name .
+      |
+      |    } WHERE {
+      |        ?letter a knora-api:Resource .
+      |        ?letter a beol:letter .
+      |
+      |        ?letter beol:creationDate ?date .
+      |
+      |        beol:creationDate knora-api:objectType knora-api:Date .
+      |        ?date a knora-api:Date .
+      |
+      |        ?letter ?linkingProp1 ?person1 .
+      |
+      |        ?person1 a knora-api:Resource .
+      |
+      |        ?linkingProp1 knora-api:objectType knora-api:Resource .
+      |
+      |        FILTER(?linkingProp1 = beol:hasAuthor || ?linkingProp1 = beol:hasRecipient)
+      |
+      |        beol:hasAuthor knora-api:objectType knora-api:Resource .
+      |        beol:hasRecipient knora-api:objectType knora-api:Resource .
+      |
+      |        OPTIONAL {
+      |            ?person1 beol:hasFamilyName ?name .
+      |
+      |            beol:hasFamilyName knora-api:objectType xsd:string .
+      |            ?name a xsd:string .
+      |
+      |            FILTER(?name = "Meier")
+      |        }
+      |
+      |    } ORDER BY ?date
         """.stripMargin
 
   private val ParsedQueryWithFilterInOptional: ConstructQuery = ConstructQuery(
@@ -631,7 +638,8 @@ class GravsearchParserSpec extends CoreSpec() {
       OrderCriterion(
         queryVariable = QueryVariable(variableName = "date"),
         isAscending = true
-      )),
+      )
+    ),
     whereClause = WhereClause(
       patterns = Vector(
         StatementPattern(
@@ -792,15 +800,18 @@ class GravsearchParserSpec extends CoreSpec() {
               ),
               namedGraph = None
             ),
-            FilterPattern(expression = CompareExpression(
-              leftArg = QueryVariable(variableName = "name"),
-              operator = CompareExpressionOperator.EQUALS,
-              rightArg = XsdLiteral(
-                value = "Meier",
-                datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+            FilterPattern(expression =
+              CompareExpression(
+                leftArg = QueryVariable(variableName = "name"),
+                operator = CompareExpressionOperator.EQUALS,
+                rightArg = XsdLiteral(
+                  value = "Meier",
+                  datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+                )
               )
-            ))
-          )),
+            )
+          )
+        ),
         FilterPattern(
           expression = OrExpression(
             leftArg = CompareExpression(
@@ -819,7 +830,8 @@ class GravsearchParserSpec extends CoreSpec() {
                 propertyPathOperator = None
               )
             )
-          ))
+          )
+        )
       ),
       positiveEntities = Set(
         QueryVariable(variableName = "name"),
@@ -958,7 +970,8 @@ class GravsearchParserSpec extends CoreSpec() {
               obj = QueryVariable(variableName = "bookPubLoc"),
               namedGraph = None
             )
-          )),
+          )
+        ),
         StatementPattern(
           subj = QueryVariable(variableName = "book"),
           pred = IriRef(
@@ -1065,16 +1078,19 @@ class GravsearchParserSpec extends CoreSpec() {
                 obj = QueryVariable(variableName = "seqnum"),
                 namedGraph = None
               ),
-              FilterPattern(expression = CompareExpression(
-                leftArg = QueryVariable(variableName = "seqnum"),
-                operator = CompareExpressionOperator.GREATER_THAN,
-                rightArg = XsdLiteral(
-                  value = "17",
-                  datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
+              FilterPattern(expression =
+                CompareExpression(
+                  leftArg = QueryVariable(variableName = "seqnum"),
+                  operator = CompareExpressionOperator.GREATER_THAN,
+                  rightArg = XsdLiteral(
+                    value = "17",
+                    datatype = "http://www.w3.org/2001/XMLSchema#integer".toSmartIri
+                  )
                 )
-              ))
+              )
             )
-          )),
+          )
+        ),
         FilterPattern(
           expression = CompareExpression(
             leftArg = QueryVariable(variableName = "pubdate"),
@@ -1083,7 +1099,8 @@ class GravsearchParserSpec extends CoreSpec() {
               value = "GREGORIAN:1500",
               datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
             )
-          ))
+          )
+        )
       ),
       positiveEntities = Set(
         IriRef(
@@ -1151,7 +1168,8 @@ class GravsearchParserSpec extends CoreSpec() {
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
           ),
           namedGraph = None
-        )),
+        )
+      ),
       querySchema = Some(ApiV2Simple)
     ),
     querySchema = Some(ApiV2Simple),
@@ -1292,7 +1310,8 @@ class GravsearchParserSpec extends CoreSpec() {
                 propertyPathOperator = None
               )
             )
-          ))
+          )
+        )
       ),
       positiveEntities = Set(
         QueryVariable(variableName = "thing"),
@@ -1344,7 +1363,8 @@ class GravsearchParserSpec extends CoreSpec() {
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
           ),
           namedGraph = None
-        )),
+        )
+      ),
       querySchema = Some(ApiV2Simple)
     ),
     querySchema = Some(ApiV2Simple),
@@ -1365,15 +1385,18 @@ class GravsearchParserSpec extends CoreSpec() {
           namedGraph = None
         ),
         FilterNotExistsPattern(
-          patterns = Vector(StatementPattern(
-            subj = QueryVariable(variableName = "thing"),
-            pred = IriRef(
-              iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasOtherThing".toSmartIri,
-              propertyPathOperator = None
-            ),
-            obj = QueryVariable(variableName = "aThing"),
-            namedGraph = None
-          )))
+          patterns = Vector(
+            StatementPattern(
+              subj = QueryVariable(variableName = "thing"),
+              pred = IriRef(
+                iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasOtherThing".toSmartIri,
+                propertyPathOperator = None
+              ),
+              obj = QueryVariable(variableName = "aThing"),
+              namedGraph = None
+            )
+          )
+        )
       ),
       positiveEntities = Set(
         IriRef(
@@ -1408,7 +1431,8 @@ class GravsearchParserSpec extends CoreSpec() {
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
           ),
           namedGraph = None
-        )),
+        )
+      ),
       querySchema = Some(ApiV2Simple)
     ),
     querySchema = Some(ApiV2Simple),
@@ -1429,15 +1453,18 @@ class GravsearchParserSpec extends CoreSpec() {
           namedGraph = None
         ),
         MinusPattern(
-          patterns = Vector(StatementPattern(
-            subj = QueryVariable(variableName = "thing"),
-            pred = IriRef(
-              iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasOtherThing".toSmartIri,
-              propertyPathOperator = None
-            ),
-            obj = QueryVariable(variableName = "aThing"),
-            namedGraph = None
-          )))
+          patterns = Vector(
+            StatementPattern(
+              subj = QueryVariable(variableName = "thing"),
+              pred = IriRef(
+                iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#hasOtherThing".toSmartIri,
+                propertyPathOperator = None
+              ),
+              obj = QueryVariable(variableName = "aThing"),
+              namedGraph = None
+            )
+          )
+        )
       ),
       positiveEntities = Set(
         IriRef(
@@ -1472,7 +1499,8 @@ class GravsearchParserSpec extends CoreSpec() {
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
           ),
           namedGraph = None
-        )),
+        )
+      ),
       querySchema = Some(ApiV2Simple)
     ),
     querySchema = Some(ApiV2Simple),
@@ -1491,7 +1519,8 @@ class GravsearchParserSpec extends CoreSpec() {
             propertyPathOperator = None
           ),
           namedGraph = None
-        )),
+        )
+      ),
       positiveEntities = Set(
         IriRef(
           iri = "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#Thing".toSmartIri,
@@ -1608,7 +1637,8 @@ class GravsearchParserSpec extends CoreSpec() {
             textExpr = QueryVariable(variableName = "propVal0"),
             pattern = "Zeit",
             modifier = Some("i")
-          ))
+          )
+        )
       ),
       positiveEntities = Set(
         IriRef(
@@ -1660,7 +1690,8 @@ class GravsearchParserSpec extends CoreSpec() {
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
           ),
           namedGraph = None
-        )),
+        )
+      ),
       querySchema = Some(ApiV2Simple)
     ),
     querySchema = Some(ApiV2Simple),
@@ -1702,7 +1733,8 @@ class GravsearchParserSpec extends CoreSpec() {
                 datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
               )
             )
-          ))
+          )
+        )
       ),
       positiveEntities = Set(
         QueryVariable(variableName = "thing"),
@@ -1742,7 +1774,8 @@ class GravsearchParserSpec extends CoreSpec() {
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
           ),
           namedGraph = None
-        )),
+        )
+      ),
       querySchema = Some(ApiV2Simple)
     ),
     querySchema = Some(ApiV2Simple),
@@ -1784,7 +1817,8 @@ class GravsearchParserSpec extends CoreSpec() {
                 datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
               )
             )
-          ))
+          )
+        )
       ),
       positiveEntities = Set(
         QueryVariable(variableName = "thing"),
@@ -1824,7 +1858,8 @@ class GravsearchParserSpec extends CoreSpec() {
             datatype = "http://www.w3.org/2001/XMLSchema#boolean".toSmartIri
           ),
           namedGraph = None
-        )),
+        )
+      ),
       querySchema = Some(ApiV2Simple)
     ),
     querySchema = Some(ApiV2Simple),
@@ -1861,7 +1896,8 @@ class GravsearchParserSpec extends CoreSpec() {
               value = "en",
               datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
             )
-          ))
+          )
+        )
       ),
       positiveEntities = Set(
         QueryVariable(variableName = "thing"),
@@ -1951,24 +1987,31 @@ class GravsearchParserSpec extends CoreSpec() {
               obj = QueryVariable(variableName = "publisher"),
               namedGraph = None
             ),
-            OptionalPattern(patterns = Vector(StatementPattern(
-              subj = QueryVariable(variableName = "book"),
-              pred = IriRef(
-                iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri,
-                propertyPathOperator = None
-              ),
-              obj = QueryVariable(variableName = "bookTitle"),
-              namedGraph = None
-            ))),
-            FilterPattern(expression = CompareExpression(
-              leftArg = QueryVariable(variableName = "publisher"),
-              operator = CompareExpressionOperator.EQUALS,
-              rightArg = XsdLiteral(
-                value = "Lienhart Ysenhut",
-                datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+            OptionalPattern(patterns =
+              Vector(
+                StatementPattern(
+                  subj = QueryVariable(variableName = "book"),
+                  pred = IriRef(
+                    iri = "http://0.0.0.0:3333/ontology/0803/incunabula/simple/v2#title".toSmartIri,
+                    propertyPathOperator = None
+                  ),
+                  obj = QueryVariable(variableName = "bookTitle"),
+                  namedGraph = None
+                )
               )
-            ))
-          )),
+            ),
+            FilterPattern(expression =
+              CompareExpression(
+                leftArg = QueryVariable(variableName = "publisher"),
+                operator = CompareExpressionOperator.EQUALS,
+                rightArg = XsdLiteral(
+                  value = "Lienhart Ysenhut",
+                  datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
+                )
+              )
+            )
+          )
+        ),
         StatementPattern(
           subj = QueryVariable(variableName = "book"),
           pred = IriRef(
@@ -1986,7 +2029,8 @@ class GravsearchParserSpec extends CoreSpec() {
               value = "GREGORIAN:1500",
               datatype = "http://www.w3.org/2001/XMLSchema#string".toSmartIri
             )
-          ))
+          )
+        )
       ),
       positiveEntities = Set(
         IriRef(
@@ -2029,21 +2073,21 @@ class GravsearchParserSpec extends CoreSpec() {
 
   val QueryWithIriArgInFunction: String =
     """
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
-          |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
-          |
-          |CONSTRUCT {
-          |    ?letter knora-api:isMainResource true .
-          |    ?letter beol:hasText ?text .
-          |} WHERE {
-          |    ?letter a beol:letter .
-          |    ?letter beol:hasText ?text .
-          |    ?text knora-api:textValueHasStandoff ?standoffLinkTag .
-          |    ?standoffLinkTag a knora-api:StandoffLinkTag .
-          |
-          |    FILTER knora-api:standoffLink(?letter, ?standoffLinkTag, <http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA>)
-          |}
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+      |PREFIX standoff: <http://api.knora.org/ontology/standoff/v2#>
+      |PREFIX beol: <http://0.0.0.0:3333/ontology/0801/beol/v2#>
+      |
+      |CONSTRUCT {
+      |    ?letter knora-api:isMainResource true .
+      |    ?letter beol:hasText ?text .
+      |} WHERE {
+      |    ?letter a beol:letter .
+      |    ?letter beol:hasText ?text .
+      |    ?text knora-api:textValueHasStandoff ?standoffLinkTag .
+      |    ?standoffLinkTag a knora-api:StandoffLinkTag .
+      |
+      |    FILTER knora-api:standoffLink(?letter, ?standoffLinkTag, <http://rdfh.ch/biblio/up0Q0ZzPSLaULC2tlTs1sA>)
+      |}
         """.stripMargin
 
   val ParsedQueryWithIriArgInFunction: ConstructQuery = ConstructQuery(
@@ -2134,7 +2178,8 @@ class GravsearchParserSpec extends CoreSpec() {
                 propertyPathOperator = None
               )
             )
-          ))
+          )
+        )
       ),
       positiveEntities = Set(
         QueryVariable(variableName = "standoffLinkTag"),

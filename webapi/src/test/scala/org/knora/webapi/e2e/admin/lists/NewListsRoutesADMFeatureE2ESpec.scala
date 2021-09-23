@@ -46,8 +46,8 @@ object NewListsRouteADMFeatureE2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing new lists endpoint.
-  */
+ * End-to-End (E2E) test specification for testing new lists endpoint.
+ */
 class NewListsRouteADMFeatureE2ESpec
     extends E2ESpec(NewListsRouteADMFeatureE2ESpec.config)
     with SessionJsonProtocol
@@ -91,15 +91,14 @@ class NewListsRouteADMFeatureE2ESpec
   private val treeListNodes: Seq[ListChildNodeADM] = SharedListsTestDataADM.treeListChildNodes
   private val customChildNodeIRI = "http://rdfh.ch/lists/0001/JbKZ-L_i5rTwHlv4dSNp4A"
 
-  def addChildListNodeRequest(parentNodeIri: IRI, name: String, label: String, comment: String): String = {
+  def addChildListNodeRequest(parentNodeIri: IRI, name: String, label: String, comment: String): String =
     s"""{
-           |    "parentNodeIri": "$parentNodeIri",
-           |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-           |    "name": "$name",
-           |    "labels": [{ "value": "$label", "language": "en"}],
-           |    "comments": [{ "value": "$comment", "language": "en"}]
-           |}""".stripMargin
-  }
+       |    "parentNodeIri": "$parentNodeIri",
+       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+       |    "name": "$name",
+       |    "labels": [{ "value": "$label", "language": "en"}],
+       |    "comments": [{ "value": "$comment", "language": "en"}]
+       |}""".stripMargin
 
   "The Lists Route (/admin/lists)" when {
 
@@ -108,7 +107,8 @@ class NewListsRouteADMFeatureE2ESpec
       "return all lists" in {
         val request = Get(baseApiUrl + s"/admin/lists")
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          BasicHttpCredentials(rootCreds.email, rootCreds.password))
+          BasicHttpCredentials(rootCreds.email, rootCreds.password)
+        )
 
         val response: HttpResponse = singleAwaitingRequest(request)
         // println(s"response: ${response.toString}")
@@ -136,7 +136,8 @@ class NewListsRouteADMFeatureE2ESpec
       "return all lists belonging to the images project" in {
         val request = Get(baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF")
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          rootCreds.basicHttpCredentials)
+          rootCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
 
@@ -164,7 +165,8 @@ class NewListsRouteADMFeatureE2ESpec
       "return all lists belonging to the anything project" in {
         val request = Get(baseApiUrl + s"/admin/lists?projectIri=http%3A%2F%2Frdfh.ch%2Fprojects%2F0001")
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          rootCreds.basicHttpCredentials)
+          rootCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
 
@@ -192,7 +194,8 @@ class NewListsRouteADMFeatureE2ESpec
       "return basic list information" in {
         val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList/info")
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          rootCreds.basicHttpCredentials)
+          rootCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
 
@@ -220,7 +223,8 @@ class NewListsRouteADMFeatureE2ESpec
       "return a complete list" in {
         val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList")
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          rootCreds.basicHttpCredentials)
+          rootCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // println(s"response: ${response.toString}")
 
@@ -245,7 +249,8 @@ class NewListsRouteADMFeatureE2ESpec
       "return node info without children" in {
         val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList01/info")
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          rootCreds.basicHttpCredentials)
+          rootCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
 
@@ -273,7 +278,8 @@ class NewListsRouteADMFeatureE2ESpec
       "return a complete node with children" in {
         val request = Get(baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList03")
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          rootCreds.basicHttpCredentials)
+          rootCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
@@ -300,11 +306,11 @@ class NewListsRouteADMFeatureE2ESpec
       "create a list with the provided custom Iri" in {
         val createListWithCustomIriRequest: String =
           s"""{
-                       |    "id": "${SharedTestDataADM.customListIRI}",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
-                       |    "comments": []
-                       |}""".stripMargin
+             |    "id": "${SharedTestDataADM.customListIRI}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
+             |    "comments": []
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -316,10 +322,13 @@ class NewListsRouteADMFeatureE2ESpec
             text = createListWithCustomIriRequest
           )
         )
-        val request = Post(baseApiUrl + s"/admin/lists",
-                           HttpEntity(ContentTypes.`application/json`, createListWithCustomIriRequest))
+        val request = Post(
+          baseApiUrl + s"/admin/lists",
+          HttpEntity(ContentTypes.`application/json`, createListWithCustomIriRequest)
+        )
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+          anythingAdminUserCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
@@ -349,17 +358,18 @@ class NewListsRouteADMFeatureE2ESpec
         // duplicate list IRI
         val params =
           s"""
-                       |{
-                       |    "id": "${SharedTestDataADM.customListIRI}",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "New List", "language": "en"}],
-                       |    "comments": []
-                       |}
+             |{
+             |    "id": "${SharedTestDataADM.customListIRI}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "New List", "language": "en"}],
+             |    "comments": []
+             |}
                 """.stripMargin
 
         val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+          anythingAdminUserCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
 
@@ -373,13 +383,13 @@ class NewListsRouteADMFeatureE2ESpec
 
         val createChildNodeWithCustomIriRequest =
           s"""
-                                 |{   "id": "$customChildNodeIRI",
-                                 |    "parentNodeIri": "${SharedTestDataADM.customListIRI}",
-                                 |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                                 |    "name": "node with a custom IRI",
-                                 |    "labels": [{ "value": "New List Node", "language": "en"}],
-                                 |    "comments": []
-                                 |}""".stripMargin
+             |{   "id": "$customChildNodeIRI",
+             |    "parentNodeIri": "${SharedTestDataADM.customListIRI}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "name": "node with a custom IRI",
+             |    "labels": [{ "value": "New List Node", "language": "en"}],
+             |    "comments": []
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -392,10 +402,13 @@ class NewListsRouteADMFeatureE2ESpec
           )
         )
 
-        val request = Post(baseApiUrl + s"/admin/lists",
-                           HttpEntity(ContentTypes.`application/json`, createChildNodeWithCustomIriRequest))
+        val request = Post(
+          baseApiUrl + s"/admin/lists",
+          HttpEntity(ContentTypes.`application/json`, createChildNodeWithCustomIriRequest)
+        )
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+          anythingAdminUserCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // println(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -433,10 +446,10 @@ class NewListsRouteADMFeatureE2ESpec
       "create a list" in {
         val createListRequest: String =
           s"""{
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-                       |    "comments": []
-                       |}""".stripMargin
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+             |    "comments": []
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -450,7 +463,8 @@ class NewListsRouteADMFeatureE2ESpec
         )
         val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, createListRequest))
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+          anythingAdminUserCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -487,16 +501,17 @@ class NewListsRouteADMFeatureE2ESpec
       "return a ForbiddenException if the user creating the list is not project or system admin" in {
         val params =
           s"""
-                       |{
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-                       |    "comments": []
-                       |}
+             |{
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+             |    "comments": []
+             |}
                 """.stripMargin
 
         val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params))
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingUserCreds.basicHttpCredentials)
+          anythingUserCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.Forbidden)
@@ -507,11 +522,11 @@ class NewListsRouteADMFeatureE2ESpec
         // no project IRI
         val params01 =
           s"""
-                       |{
-                       |    "projectIri": "",
-                       |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-                       |    "comments": []
-                       |}
+             |{
+             |    "projectIri": "",
+             |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+             |    "comments": []
+             |}
                 """.stripMargin
 
         val request01 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params01))
@@ -523,11 +538,11 @@ class NewListsRouteADMFeatureE2ESpec
         // invalid project IRI
         val params02 =
           s"""
-                       |{
-                       |    "projectIri": "notvalidIRI",
-                       |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-                       |    "comments": []
-                       |}
+             |{
+             |    "projectIri": "notvalidIRI",
+             |    "labels": [{ "value": "Neue Liste", "language": "de"}],
+             |    "comments": []
+             |}
                 """.stripMargin
 
         val request02 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params02))
@@ -539,11 +554,11 @@ class NewListsRouteADMFeatureE2ESpec
         // missing label
         val params03 =
           s"""
-                       |{
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [],
-                       |    "comments": []
-                       |}
+             |{
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [],
+             |    "comments": []
+             |}
                 """.stripMargin
 
         val request03 = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, params03))
@@ -558,11 +573,11 @@ class NewListsRouteADMFeatureE2ESpec
 
         val updateListInfo: String =
           s"""{
-                       |    "listIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-                       |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-                       |}""".stripMargin
+             |    "listIri": "${newListIri.get}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -576,10 +591,13 @@ class NewListsRouteADMFeatureE2ESpec
         )
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                          HttpEntity(ContentTypes.`application/json`, updateListInfo))
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, updateListInfo)
+        )
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+          anythingAdminUserCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -610,10 +628,10 @@ class NewListsRouteADMFeatureE2ESpec
       "update basic list information with a new name" in {
         val updateListName =
           s"""{
-                       |    "listIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "name": "a totally new name"
-                       |}""".stripMargin
+             |    "listIri": "${newListIri.get}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "name": "a totally new name"
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -627,10 +645,13 @@ class NewListsRouteADMFeatureE2ESpec
         )
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                          HttpEntity(ContentTypes.`application/json`, updateListName))
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, updateListName)
+        )
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+          anythingAdminUserCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -658,19 +679,19 @@ class NewListsRouteADMFeatureE2ESpec
 
         val updateListInfoWithRepeatedCommentAndLabelValuesRequest: String =
           s"""{
-                       |    "listIri": "http://rdfh.ch/lists/0001/treeList",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |  "labels": [
-                       |    {"language": "en", "value": "Test List"},
-                       |    {"language": "se", "value": "Test List"}
-                       |  ],
-                       |  "comments": [
-                       |    {"language": "en", "value": "test"},
-                       |    {"language": "de", "value": "test"},
-                       |    {"language": "fr", "value": "test"},
-                       |     {"language": "it", "value": "test"}
-                       |  ]
-                       |}""".stripMargin
+             |    "listIri": "http://rdfh.ch/lists/0001/treeList",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |  "labels": [
+             |    {"language": "en", "value": "Test List"},
+             |    {"language": "se", "value": "Test List"}
+             |  ],
+             |  "comments": [
+             |    {"language": "en", "value": "test"},
+             |    {"language": "de", "value": "test"},
+             |    {"language": "fr", "value": "test"},
+             |     {"language": "it", "value": "test"}
+             |  ]
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -685,11 +706,13 @@ class NewListsRouteADMFeatureE2ESpec
 
         val encodedListUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/treeList", "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                          HttpEntity(ContentTypes.`application/json`,
-                                     updateListInfoWithRepeatedCommentAndLabelValuesRequest))
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, updateListInfoWithRepeatedCommentAndLabelValuesRequest)
+        )
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+          anythingAdminUserCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -720,20 +743,21 @@ class NewListsRouteADMFeatureE2ESpec
       "return a ForbiddenException if the user updating the list is not project or system admin" in {
         val params =
           s"""
-                       |{
-                       |    "listIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-                       |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-                       |}
+             |{
+             |    "listIri": "${newListIri.get}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+             |}
                 """.stripMargin
 
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                          HttpEntity(ContentTypes.`application/json`, params))
-          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingUserCreds.basicHttpCredentials)
+        val request =
+          Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params))
+            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+            anythingUserCreds.basicHttpCredentials
+          )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.Forbidden)
@@ -746,18 +770,19 @@ class NewListsRouteADMFeatureE2ESpec
         // empty list IRI
         val params01 =
           s"""
-                       |{
-                       |    "listIri": "",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-                       |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-                       |}
+             |{
+             |    "listIri": "",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+             |}
                 """.stripMargin
 
-        val request01 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                            HttpEntity(ContentTypes.`application/json`, params01))
-          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request01 =
+          Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params01))
+            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+            anythingAdminUserCreds.basicHttpCredentials
+          )
         val response01: HttpResponse = singleAwaitingRequest(request01)
         // log.debug(s"response: ${response.toString}")
         response01.status should be(StatusCodes.BadRequest)
@@ -765,18 +790,19 @@ class NewListsRouteADMFeatureE2ESpec
         // empty project
         val params02 =
           s"""
-                   |{
-                   |    "listIri": "${newListIri.get}",
-                   |    "projectIri": "",
-                   |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-                   |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-                   |}
+             |{
+             |    "listIri": "${newListIri.get}",
+             |    "projectIri": "",
+             |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+             |}
                 """.stripMargin
 
-        val request02 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                            HttpEntity(ContentTypes.`application/json`, params02))
-          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request02 =
+          Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params02))
+            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+            anythingAdminUserCreds.basicHttpCredentials
+          )
         val response02: HttpResponse = singleAwaitingRequest(request02)
         // log.debug(s"response: ${response.toString}")
         response02.status should be(StatusCodes.BadRequest)
@@ -784,18 +810,19 @@ class NewListsRouteADMFeatureE2ESpec
         // empty parameters
         val params03 =
           s"""
-                       |{
-                       |    "listIri": "${newListIri.get}",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "labels": [],
-                       |    "comments": []
-                       |}
+             |{
+             |    "listIri": "${newListIri.get}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [],
+             |    "comments": []
+             |}
                 """.stripMargin
 
-        val request03 = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                            HttpEntity(ContentTypes.`application/json`, params03))
-          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request03 =
+          Put(baseApiUrl + s"/admin/lists/" + encodedListUrl, HttpEntity(ContentTypes.`application/json`, params03))
+            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+            anythingAdminUserCreds.basicHttpCredentials
+          )
         val response03: HttpResponse = singleAwaitingRequest(request03)
         // log.debug(s"response: ${response.toString}")
         response03.status should be(StatusCodes.BadRequest)
@@ -827,7 +854,8 @@ class NewListsRouteADMFeatureE2ESpec
 
         val request = Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, addChildToRoot))
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+          anythingAdminUserCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // println(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -893,10 +921,11 @@ class NewListsRouteADMFeatureE2ESpec
             text = addSecondChildToRoot
           )
         )
-        val request = Post(baseApiUrl + s"/admin/lists",
-                           HttpEntity(ContentTypes.`application/json`, addSecondChildToRoot))
-          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request =
+          Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, addSecondChildToRoot))
+            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+            anythingAdminUserCreds.basicHttpCredentials
+          )
         val response: HttpResponse = singleAwaitingRequest(request)
         // println(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -964,10 +993,11 @@ class NewListsRouteADMFeatureE2ESpec
             text = addChildToSecondChild
           )
         )
-        val request = Post(baseApiUrl + s"/admin/lists",
-                           HttpEntity(ContentTypes.`application/json`, addChildToSecondChild))
-          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request =
+          Post(baseApiUrl + s"/admin/lists", HttpEntity(ContentTypes.`application/json`, addChildToSecondChild))
+            .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+            anythingAdminUserCreds.basicHttpCredentials
+          )
         val response: HttpResponse = singleAwaitingRequest(request)
         // println(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -1016,10 +1046,10 @@ class NewListsRouteADMFeatureE2ESpec
         val newName = "modified third child"
         val updateNodeName =
           s"""{
-                       |    "listIri": "$customChildNodeIRI",
-                       |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-                       |    "name": "${newName}"
-                       |}""".stripMargin
+             |    "listIri": "$customChildNodeIRI",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "name": "${newName}"
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -1034,10 +1064,13 @@ class NewListsRouteADMFeatureE2ESpec
 
         val encodedListUrl = java.net.URLEncoder.encode(customChildNodeIRI, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl,
-                          HttpEntity(ContentTypes.`application/json`, updateNodeName))
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+        )
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+          anythingAdminUserCreds.basicHttpCredentials
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)

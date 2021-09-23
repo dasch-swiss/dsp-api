@@ -29,8 +29,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import scala.concurrent.duration._
 
 /**
-  * Static data for testing [[SearchResponderV1]].
-  */
+ * Static data for testing [[SearchResponderV1]].
+ */
 object SearchResponderV1Spec {
 
   private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
@@ -64,7 +64,8 @@ object SearchResponderV1Spec {
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       obj_id = "http://rdfh.ch/0001/a-thing-with-text-values"
-    ))
+    )
+  )
 
   private val fulltextValueInThingResultsForUser1 = Vector(
     SearchResultRowV1(
@@ -88,7 +89,8 @@ object SearchResponderV1Spec {
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       obj_id = "http://rdfh.ch/0001/a-thing-with-text-values"
-    ))
+    )
+  )
 
   private val fulltextThingResultsForUser2 = Vector(
     SearchResultRowV1(
@@ -103,7 +105,8 @@ object SearchResponderV1Spec {
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       obj_id = "http://rdfh.ch/0001/a-thing-with-text-values"
-    ))
+    )
+  )
 
   private val hasOtherThingResultsForUser1 = Vector(
     SearchResultRowV1(
@@ -127,7 +130,8 @@ object SearchResponderV1Spec {
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       obj_id = "http://rdfh.ch/0001/project-thing-1"
-    ))
+    )
+  )
 
   private val hasStandoffLinkToResultsForUser1 = Vector(
     SearchResultRowV1(
@@ -151,7 +155,8 @@ object SearchResponderV1Spec {
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       obj_id = "http://rdfh.ch/0001/project-thing-1"
-    ))
+    )
+  )
 
   private val hasStandoffLinkToResultsForUser2 = Vector(
     SearchResultRowV1(
@@ -175,13 +180,14 @@ object SearchResponderV1Spec {
       iconsrc = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       preview_path = Some("http://0.0.0.0:3335/project-icons/anything/thing.png"),
       obj_id = "http://rdfh.ch/0001/project-thing-1"
-    ))
+    )
+  )
 
 }
 
 /**
-  * Tests [[SearchResponderV1]].
-  */
+ * Tests [[SearchResponderV1]].
+ */
 class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
 
   import SearchResponderV1Spec._
@@ -206,7 +212,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         show_nrows = 2,
         start_at = 0,
         current = true
-      )),
+      )
+    ),
     nhits = "2",
     subjects = Vector(
       SearchResultRowV1(
@@ -402,15 +409,17 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         userProfile = incunabulaUser,
         searchValue = Vector("Zeitglöcklein", "JULIAN:1490"),
         compareProps = Vector(SearchComparisonOperatorV1.MATCH, SearchComparisonOperatorV1.EQ),
-        propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#title",
-                             "http://www.knora.org/ontology/0803/incunabula#pubdate"),
+        propertyIri = Vector(
+          "http://www.knora.org/ontology/0803/incunabula#title",
+          "http://www.knora.org/ontology/0803/incunabula#pubdate"
+        ),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#book"),
         startAt = 0,
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(1)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(1)
       }
     }
 
@@ -450,8 +459,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(18)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(18)
       }
     }
 
@@ -482,8 +491,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(18)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(18)
       }
     }
 
@@ -499,8 +508,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(19)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(19)
       }
     }
 
@@ -516,8 +525,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(19)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(19)
       }
     }
 
@@ -533,8 +542,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(19)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(19)
       }
     }
 
@@ -550,8 +559,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 100
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(79)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(79)
       }
     }
 
@@ -566,8 +575,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 100
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(79)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(79)
       }
     }
 
@@ -583,8 +592,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(2)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(2)
       }
     }
 
@@ -600,8 +609,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(7)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(7)
       }
     }
 
@@ -617,8 +626,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(15)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(15)
       }
     }
 
@@ -634,8 +643,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 500
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(402)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(402)
       }
     }
 
@@ -645,15 +654,17 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         userProfile = incunabulaUser,
         searchValue = Vector("1", ""),
         compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
-        propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#seqnum",
-                             "http://www.knora.org/ontology/0803/incunabula#partOf"),
+        propertyIri = Vector(
+          "http://www.knora.org/ontology/0803/incunabula#seqnum",
+          "http://www.knora.org/ontology/0803/incunabula#partOf"
+        ),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
         startAt = 0,
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(19)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(19)
       }
     }
 
@@ -662,15 +673,17 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         userProfile = incunabulaUser,
         searchValue = Vector("1", ""),
         compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
-        propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#seqnum",
-                             "http://www.knora.org/ontology/knora-base#isPartOf"),
+        propertyIri = Vector(
+          "http://www.knora.org/ontology/0803/incunabula#seqnum",
+          "http://www.knora.org/ontology/knora-base#isPartOf"
+        ),
         filterByRestype = Some("http://www.knora.org/ontology/knora-base#Representation"),
         startAt = 0,
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(19)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(19)
       }
     }
 
@@ -680,15 +693,17 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         userProfile = incunabulaUser,
         searchValue = Vector("http://rdfh.ch/0803/c5058f3a", ""),
         compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
-        propertyIri = Vector("http://www.knora.org/ontology/0803/incunabula#partOf",
-                             "http://www.knora.org/ontology/0803/incunabula#seqnum"),
+        propertyIri = Vector(
+          "http://www.knora.org/ontology/0803/incunabula#partOf",
+          "http://www.knora.org/ontology/0803/incunabula#seqnum"
+        ),
         filterByRestype = Some("http://www.knora.org/ontology/0803/incunabula#page"),
         startAt = 0,
         showNRows = 500
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(402)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(402)
       }
 
     }
@@ -698,15 +713,17 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         userProfile = incunabulaUser,
         searchValue = Vector("http://rdfh.ch/0803/c5058f3a", ""),
         compareProps = Vector(SearchComparisonOperatorV1.EQ, SearchComparisonOperatorV1.EXISTS),
-        propertyIri = Vector("http://www.knora.org/ontology/knora-base#isPartOf",
-                             "http://www.knora.org/ontology/knora-base#seqnum"),
+        propertyIri = Vector(
+          "http://www.knora.org/ontology/knora-base#isPartOf",
+          "http://www.knora.org/ontology/knora-base#seqnum"
+        ),
         filterByRestype = Some("http://www.knora.org/ontology/knora-base#Representation"),
         startAt = 0,
         showNRows = 500
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(402)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(402)
       }
 
     }
@@ -727,8 +744,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 300
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(199)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(199)
       }
 
     }
@@ -745,8 +762,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(10)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(10)
       }
 
     }
@@ -763,8 +780,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(1)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(1)
       }
 
     }
@@ -781,8 +798,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(4)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(4)
       }
 
     }
@@ -799,8 +816,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects should ===(fulltextThingResultsForUser1)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects should ===(fulltextThingResultsForUser1)
       }
 
       // Another user in the same project, anythingUser2, should get the resource as a search result, but should not see the values.
@@ -813,8 +830,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects should ===(fulltextThingResultsForUser2)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects should ===(fulltextThingResultsForUser2)
       }
 
       // User anythingUser2 should also get the resource as a search result by searching for something that matches the resource's label, but not the values.
@@ -827,8 +844,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects should ===(fulltextThingResultsForUser2)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects should ===(fulltextThingResultsForUser2)
       }
 
       // If user anythingUser1 searches for something that matches one of the values, but doesn't match the resource's label, the result should include the
@@ -842,8 +859,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects should ===(fulltextValueInThingResultsForUser1)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects should ===(fulltextValueInThingResultsForUser1)
       }
 
       // If user anythingUser2 searches for something that matches one of the values, but doesn't match the resource's label, no results should be returned.
@@ -856,8 +873,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(0)
       }
 
       // A user in another project shouldn't get any results for any of those queries.
@@ -870,8 +887,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(0)
       }
 
       responderManager ! FulltextSearchGetRequestV1(
@@ -882,8 +899,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(0)
       }
 
       responderManager ! FulltextSearchGetRequestV1(
@@ -894,8 +911,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 25
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(0)
       }
     }
 
@@ -910,8 +927,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 10
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(0)
       }
 
       responderManager ! ExtendedSearchGetRequestV1(
@@ -924,8 +941,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 10
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(0)
       }
     }
 
@@ -942,8 +959,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 10
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects should ===(hasOtherThingResultsForUser1)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects should ===(hasOtherThingResultsForUser1)
       }
 
       responderManager ! ExtendedSearchGetRequestV1(
@@ -956,8 +973,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 10
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects should ===(hasStandoffLinkToResultsForUser1)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects should ===(hasStandoffLinkToResultsForUser1)
       }
 
       // But another user in the Anything project should see only the hasStandoffLinkTo link.
@@ -972,8 +989,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 10
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects.size should ===(0)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects.size should ===(0)
       }
 
       responderManager ! ExtendedSearchGetRequestV1(
@@ -986,8 +1003,8 @@ class SearchResponderV1Spec extends CoreSpec() with ImplicitSender {
         showNRows = 10
       )
 
-      expectMsgPF(timeout) {
-        case response: SearchGetResponseV1 => response.subjects should ===(hasStandoffLinkToResultsForUser2)
+      expectMsgPF(timeout) { case response: SearchGetResponseV1 =>
+        response.subjects should ===(hasStandoffLinkToResultsForUser2)
       }
     }
 

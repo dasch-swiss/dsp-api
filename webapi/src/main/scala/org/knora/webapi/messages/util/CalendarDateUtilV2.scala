@@ -26,158 +26,157 @@ import org.knora.webapi.exceptions.{AssertionException, BadRequestException}
 import org.knora.webapi.messages.StringFormatter
 
 /**
-  * Indicates the era (CE or BCE) in Gregorian and Julian calendar dates.
-  */
+ * Indicates the era (CE or BCE) in Gregorian and Julian calendar dates.
+ */
 sealed trait DateEraV2
 
 object DateEraV2 {
 
   /**
-    * Parses a calendar era.
-    *
-    * @param eraStr   a string representing the era.
-    * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
-    * @return a [[DateEraV2]] representing the era.
-    */
-  def parse(eraStr: String, errorFun: => Nothing): DateEraV2 = {
+   * Parses a calendar era.
+   *
+   * @param eraStr   a string representing the era.
+   * @param errorFun a function that throws an exception. It will be called if the string cannot be parsed.
+   * @return a [[DateEraV2]] representing the era.
+   */
+  def parse(eraStr: String, errorFun: => Nothing): DateEraV2 =
     eraStr match {
       case StringFormatter.Era_AD | StringFormatter.Era_CE  => DateEraCE
       case StringFormatter.Era_BC | StringFormatter.Era_BCE => DateEraBCE
       case _                                                => errorFun
     }
-  }
 }
 
 /**
-  * Represents the era BCE in a Gregorian or Julian calendar date.
-  */
+ * Represents the era BCE in a Gregorian or Julian calendar date.
+ */
 case object DateEraBCE extends DateEraV2 {
   override def toString: String = StringFormatter.Era_BCE
 }
 
 /**
-  * Represents the era CE in a Gregorian or Julian calendar date.
-  */
+ * Represents the era CE in a Gregorian or Julian calendar date.
+ */
 case object DateEraCE extends DateEraV2 {
   override def toString: String = StringFormatter.Era_CE
 }
 
 /**
-  * Represents the precision of a date.
-  */
+ * Represents the precision of a date.
+ */
 sealed trait DatePrecisionV2
 
 object DatePrecisionV2 {
 
   /**
-    * Parses the name of a date precision.
-    *
-    * @param precisionStr the string to be parsed.
-    * @param errorFun     a function that throws an exception. It will be called if the string cannot be parsed.
-    * @return a [[DatePrecisionV2]] representing the date precision.
-    */
-  def parse(precisionStr: String, errorFun: => Nothing): DatePrecisionV2 = {
+   * Parses the name of a date precision.
+   *
+   * @param precisionStr the string to be parsed.
+   * @param errorFun     a function that throws an exception. It will be called if the string cannot be parsed.
+   * @return a [[DatePrecisionV2]] representing the date precision.
+   */
+  def parse(precisionStr: String, errorFun: => Nothing): DatePrecisionV2 =
     precisionStr match {
       case StringFormatter.PrecisionDay   => DatePrecisionDay
       case StringFormatter.PrecisionMonth => DatePrecisionMonth
       case StringFormatter.PrecisionYear  => DatePrecisionYear
       case _                              => errorFun
     }
-  }
 }
 
 /**
-  * Indicates that a date has year precision.
-  */
+ * Indicates that a date has year precision.
+ */
 case object DatePrecisionYear extends DatePrecisionV2 {
   override def toString: String = StringFormatter.PrecisionYear
 }
 
 /**
-  * Indicates that a date has month precision.
-  */
+ * Indicates that a date has month precision.
+ */
 case object DatePrecisionMonth extends DatePrecisionV2 {
   override def toString: String = StringFormatter.PrecisionMonth
 }
 
 /**
-  * Indicates that a date has day precision.
-  */
+ * Indicates that a date has day precision.
+ */
 case object DatePrecisionDay extends DatePrecisionV2 {
   override def toString: String = StringFormatter.PrecisionDay
 }
 
 /**
-  * Represents the name of a calendar.
-  */
+ * Represents the name of a calendar.
+ */
 sealed trait CalendarNameV2
 
 object CalendarNameV2 {
 
   /**
-    * Parses the name of a calendar.
-    *
-    * @param calendarNameStr a string representing the name of the calendar.
-    * @param errorFun        a function that throws an exception. It will be called if the string cannot
-    *                        be parsed.
-    * @return a [[CalendarNameV2]] representing the name of the calendar.
-    */
-  def parse(calendarNameStr: String, errorFun: => Nothing): CalendarNameV2 = {
+   * Parses the name of a calendar.
+   *
+   * @param calendarNameStr a string representing the name of the calendar.
+   * @param errorFun        a function that throws an exception. It will be called if the string cannot
+   *                        be parsed.
+   * @return a [[CalendarNameV2]] representing the name of the calendar.
+   */
+  def parse(calendarNameStr: String, errorFun: => Nothing): CalendarNameV2 =
     calendarNameStr match {
       case StringFormatter.CalendarGregorian => CalendarNameGregorian
       case StringFormatter.CalendarJulian    => CalendarNameJulian
       case StringFormatter.CalendarIslamic   => CalendarNameIslamic
       case _                                 => errorFun
     }
-  }
 }
 
 /**
-  * Represents the name of a Gregorian or Julian calendar.
-  */
+ * Represents the name of a Gregorian or Julian calendar.
+ */
 sealed trait CalendarNameGregorianOrJulian extends CalendarNameV2
 
 /**
-  * Represents the name of a Islamic Civil
-  */
+ * Represents the name of a Islamic Civil
+ */
 sealed trait CalendarNameIslamicCivil extends CalendarNameV2
 
 /**
-  * Represents the name of the Gregorian calendar.
-  */
+ * Represents the name of the Gregorian calendar.
+ */
 case object CalendarNameGregorian extends CalendarNameGregorianOrJulian {
   override def toString: String = StringFormatter.CalendarGregorian
 }
 
 /**
-  * Represents the name of the Julian calendar.
-  */
+ * Represents the name of the Julian calendar.
+ */
 case object CalendarNameJulian extends CalendarNameGregorianOrJulian {
   override def toString: String = StringFormatter.CalendarJulian
 }
 
 /**
-  * Represents the name of the Islamic calendar.
-  */
+ * Represents the name of the Islamic calendar.
+ */
 case object CalendarNameIslamic extends CalendarNameIslamicCivil {
   override def toString: String = StringFormatter.CalendarIslamic
 }
 
 /**
-  * Represents a date as values that are suitable for constructing human-readable representations.
-  *
-  * @param calendarName the name of the calendar.
-  * @param year         the date's year.
-  * @param maybeMonth   the date's month, if given.
-  * @param maybeDay     the date's day, if given.
-  * @param maybeEra     the date's era, if the calendar supports it. An era is required in Gregorian and
-  *                     Julian calendars.
-  */
-case class CalendarDateV2(calendarName: CalendarNameV2,
-                          year: Int,
-                          maybeMonth: Option[Int],
-                          maybeDay: Option[Int],
-                          maybeEra: Option[DateEraV2]) {
+ * Represents a date as values that are suitable for constructing human-readable representations.
+ *
+ * @param calendarName the name of the calendar.
+ * @param year         the date's year.
+ * @param maybeMonth   the date's month, if given.
+ * @param maybeDay     the date's day, if given.
+ * @param maybeEra     the date's era, if the calendar supports it. An era is required in Gregorian and
+ *                     Julian calendars.
+ */
+case class CalendarDateV2(
+  calendarName: CalendarNameV2,
+  year: Int,
+  maybeMonth: Option[Int],
+  maybeDay: Option[Int],
+  maybeEra: Option[DateEraV2]
+) {
   if (maybeMonth.isEmpty && maybeDay.isDefined) {
     throw AssertionException(s"Invalid date: CalendarDateV2($calendarName, $year, $maybeMonth, $maybeDay, $maybeEra)")
   }
@@ -192,8 +191,8 @@ case class CalendarDateV2(calendarName: CalendarNameV2,
   }
 
   /**
-    * The precision of this date.
-    */
+   * The precision of this date.
+   */
   lazy val precision: DatePrecisionV2 = {
     (maybeMonth, maybeDay) match {
       case (Some(_), Some(_)) => DatePrecisionDay
@@ -204,8 +203,8 @@ case class CalendarDateV2(calendarName: CalendarNameV2,
   }
 
   /**
-    * Returns this date in Knora API v2 simple format, without the calendar.
-    */
+   * Returns this date in Knora API v2 simple format, without the calendar.
+   */
   override def toString: String = {
     val eraString = maybeEra match {
       case Some(era) => s"${StringFormatter.EraSeparator}$era"
@@ -230,8 +229,8 @@ case class CalendarDateV2(calendarName: CalendarNameV2,
   }
 
   /**
-    * Constructs a [[Calendar]] based on the calendar name and era, to be used in subsequent date conversions.
-    */
+   * Constructs a [[Calendar]] based on the calendar name and era, to be used in subsequent date conversions.
+   */
   private def makeBaseCalendar: Calendar = {
     def calendarSetInitTime(calendar: Calendar): Calendar = {
       calendar.set(Calendar.HOUR, 0)
@@ -263,18 +262,17 @@ case class CalendarDateV2(calendarName: CalendarNameV2,
   }
 
   /**
-    * Converts this [[CalendarDateV2]] to a pair of Julian Day Numbers representing a date range. If the date's
-    * precision is [[DatePrecisionDay]], the two Julian Day Numbers will be equal. This method validates the date
-    * using its calendar.
-    */
-  def toJulianDayRange: (Int, Int) = {
+   * Converts this [[CalendarDateV2]] to a pair of Julian Day Numbers representing a date range. If the date's
+   * precision is [[DatePrecisionDay]], the two Julian Day Numbers will be equal. This method validates the date
+   * using its calendar.
+   */
+  def toJulianDayRange: (Int, Int) =
     // Note:
     //
     // In com.ibm.icu.util.Calendar, JULIAN_DAY demarcates days at local zone midnight, rather than noon GMT:
     // http://icu-project.org/apiref/icu4j/com/ibm/icu/util/GregorianCalendar.html#setGregorianChange-java.util.Date-
     //
     // Month is 0-based.
-
     try {
       precision match {
         case DatePrecisionYear =>
@@ -322,19 +320,18 @@ case class CalendarDateV2(calendarName: CalendarNameV2,
       case e: Exception =>
         throw BadRequestException(s"The date '${this.toString}' could not be handled correctly: ${e.getMessage}")
     }
-  }
 }
 
 object CalendarDateV2 {
 
   /**
-    * Converts a Julian Day Number to a [[CalendarDateV2]].
-    *
-    * @param julianDay    the Julian Day Number.
-    * @param precision    the desired precision.
-    * @param calendarName the name of the calendar to be used.
-    * @return a [[CalendarDateV2]] with the specified precision and calendar.
-    */
+   * Converts a Julian Day Number to a [[CalendarDateV2]].
+   *
+   * @param julianDay    the Julian Day Number.
+   * @param precision    the desired precision.
+   * @param calendarName the name of the calendar to be used.
+   * @return a [[CalendarDateV2]] with the specified precision and calendar.
+   */
   def fromJulianDayNumber(julianDay: Int, precision: DatePrecisionV2, calendarName: CalendarNameV2): CalendarDateV2 = {
     // Convert the Julian Day Number to a com.ibm.icu.util.Calendar.
     val (calendar: Calendar, maybeEra: Option[DateEraV2]) = calendarName match {
@@ -396,13 +393,13 @@ object CalendarDateV2 {
   }
 
   /**
-    * Parses a string representing a single date, without the calendar. This method does does not check that the
-    * date is valid in its calendar; to do that, call `toJulianDayRange` on it.
-    *
-    * @param dateStr      the string to be parsed.
-    * @param calendarName the name of the calendar used.
-    * @return a [[CalendarDateV2]] representing the date.
-    */
+   * Parses a string representing a single date, without the calendar. This method does does not check that the
+   * date is valid in its calendar; to do that, call `toJulianDayRange` on it.
+   *
+   * @param dateStr      the string to be parsed.
+   * @param calendarName the name of the calendar used.
+   * @return a [[CalendarDateV2]] representing the date.
+   */
   def parse(dateStr: String, calendarName: CalendarNameV2): CalendarDateV2 = {
     // Get the era, if provided.
 
@@ -466,21 +463,21 @@ object CalendarDateV2 {
 }
 
 /**
-  * Represents a date range consisting of two instances of [[CalendarDateV2]]. Both instances must have the same
-  * calendar.
-  *
-  * @param startCalendarDate the start of the range.
-  * @param endCalendarDate   the end of the range.
-  */
+ * Represents a date range consisting of two instances of [[CalendarDateV2]]. Both instances must have the same
+ * calendar.
+ *
+ * @param startCalendarDate the start of the range.
+ * @param endCalendarDate   the end of the range.
+ */
 case class CalendarDateRangeV2(startCalendarDate: CalendarDateV2, endCalendarDate: CalendarDateV2) {
   if (startCalendarDate.calendarName != endCalendarDate.calendarName) {
     throw AssertionException("Both dates in a date range must have the same calendar")
   }
 
   /**
-    * Returns this date range in Knora API v2 simple format, with the calendar. If the start and end dates
-    * are equal, only one date is returned.
-    */
+   * Returns this date range in Knora API v2 simple format, with the calendar. If the start and end dates
+   * are equal, only one date is returned.
+   */
   override def toString: String = {
     // Concatenate the calendar name and the start date.
     val strBuilder =
@@ -497,8 +494,8 @@ case class CalendarDateRangeV2(startCalendarDate: CalendarDateV2, endCalendarDat
   }
 
   /**
-    * Converts this [[CalendarDateRangeV2]] to a pair of Julian Day Numbers representing a date range.
-    */
+   * Converts this [[CalendarDateRangeV2]] to a pair of Julian Day Numbers representing a date range.
+   */
   def toJulianDayRange: (Int, Int) = {
     // Is this a date range or a single date?
     val (startJDN: Int, endJDN: Int) = if (startCalendarDate == endCalendarDate) {
@@ -522,13 +519,13 @@ case class CalendarDateRangeV2(startCalendarDate: CalendarDateV2, endCalendarDat
 object CalendarDateRangeV2 {
 
   /**
-    * Parses a string representing a date range with a calendar. If the end date is not provided, it is assumed to be
-    * the same as the start date. This method does syntactic validation, but does not check that the date range is valid
-    * in its calendar; to do that, call `toJulianDayRange` on it.
-    *
-    * @param dateStr the string to be parsed.
-    * @return a [[CalendarDateRangeV2]] representing the date range.
-    */
+   * Parses a string representing a date range with a calendar. If the end date is not provided, it is assumed to be
+   * the same as the start date. This method does syntactic validation, but does not check that the date range is valid
+   * in its calendar; to do that, call `toJulianDayRange` on it.
+   *
+   * @param dateStr the string to be parsed.
+   * @return a [[CalendarDateRangeV2]] representing the date range.
+   */
   def parse(dateStr: String): CalendarDateRangeV2 = {
     // Validate the date string.
     val stringFormatter = StringFormatter.getGeneralInstance
@@ -561,24 +558,23 @@ object CalendarDateRangeV2 {
 }
 
 /**
-  * Utility functions for working with calendar dates.
-  */
+ * Utility functions for working with calendar dates.
+ */
 object CalendarDateUtilV2 {
 
   /**
-    * Returns the date that must be passed to `com.ibm.icu.util.GregorianCalendar.setGregorianChange()` to select
-    * either the Gregorian or the Julian calendar.
-    *
-    * @param calendarName the name of the Gregorian or Julian calendar.
-    * @return a date that can be passed to `com.ibm.icu.util.GregorianCalendar.setGregorianChange()` to select
-    *         the specified calendar.
-    */
-  def getGregorianCalendarChangeDate(calendarName: CalendarNameGregorianOrJulian): Date = {
+   * Returns the date that must be passed to `com.ibm.icu.util.GregorianCalendar.setGregorianChange()` to select
+   * either the Gregorian or the Julian calendar.
+   *
+   * @param calendarName the name of the Gregorian or Julian calendar.
+   * @return a date that can be passed to `com.ibm.icu.util.GregorianCalendar.setGregorianChange()` to select
+   *         the specified calendar.
+   */
+  def getGregorianCalendarChangeDate(calendarName: CalendarNameGregorianOrJulian): Date =
     // http://icu-project.org/apiref/icu4j/com/ibm/icu/util/GregorianCalendar.html#setGregorianChange-java.util.Date-
     calendarName match {
       case CalendarNameJulian    => new Date(java.lang.Long.MAX_VALUE)
       case CalendarNameGregorian => new Date(java.lang.Long.MIN_VALUE)
       case _                     => throw AssertionException(s"Invalid calendar: $calendarName")
     }
-  }
 }

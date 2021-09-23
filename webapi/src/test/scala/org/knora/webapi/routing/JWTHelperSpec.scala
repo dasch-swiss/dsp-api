@@ -27,12 +27,12 @@ import spray.json.JsString
 
 object JWTHelperSpec {
   val config: Config = ConfigFactory.parseString("""
-          |app {
-          |    akka.loglevel = "DEBUG"
-          |
-          |    jwt-secret-key = "UP 4888, nice 4-8-4 steam engine"
-          |    jwt-longevity = 36500 days
-          |}
+                                                   |app {
+                                                   |    akka.loglevel = "DEBUG"
+                                                   |
+                                                   |    jwt-secret-key = "UP 4888, nice 4-8-4 steam engine"
+                                                   |    jwt-longevity = 36500 days
+                                                   |}
         """.stripMargin)
 }
 

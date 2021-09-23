@@ -18,9 +18,9 @@
  */
 
 /**
-  * To be able to test UsersResponder, we need to be able to start UsersResponder isolated. Now the UsersResponder
-  * extend ResponderADM which messes up testing, as we cannot inject the TestActor system.
-  */
+ * To be able to test UsersResponder, we need to be able to start UsersResponder isolated. Now the UsersResponder
+ * extend ResponderADM which messes up testing, as we cannot inject the TestActor system.
+ */
 package org.knora.webapi.responders.admin
 
 import java.util.UUID
@@ -46,8 +46,8 @@ object GroupsResponderADMSpec {
 }
 
 /**
-  * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.UsersResponderADM]] actor.
-  */
+ * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.UsersResponderADM]] actor.
+ */
 class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) with ImplicitSender {
 
   private val timeout = 5.seconds
@@ -90,8 +90,8 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
           requestingUser = rootUser
         )
 
-        expectMsgPF(timeout) {
-          case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+          msg.cause.isInstanceOf[NotFoundException] should ===(true)
         }
       }
     }
@@ -129,18 +129,20 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
       "return a 'DuplicateValueException' if the supplied group name is not unique" in {
         responderManager ! GroupCreateRequestADM(
-          createRequest = CreateGroupApiRequestADM(name = "NewGroup",
-                                                   description = Some("NewGroupDescription"),
-                                                   project = SharedTestDataADM.IMAGES_PROJECT_IRI,
-                                                   status = true,
-                                                   selfjoin = false),
+          createRequest = CreateGroupApiRequestADM(
+            name = "NewGroup",
+            description = Some("NewGroupDescription"),
+            project = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            status = true,
+            selfjoin = false
+          ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
 
-        expectMsgPF(timeout) {
-          case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+          msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
         }
       }
 
@@ -148,11 +150,13 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
         /* missing group name */
         responderManager ! GroupCreateRequestADM(
-          createRequest = CreateGroupApiRequestADM(name = "",
-                                                   description = Some("NoNameGroupDescription"),
-                                                   project = SharedTestDataADM.IMAGES_PROJECT_IRI,
-                                                   status = true,
-                                                   selfjoin = false),
+          createRequest = CreateGroupApiRequestADM(
+            name = "",
+            description = Some("NoNameGroupDescription"),
+            project = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            status = true,
+            selfjoin = false
+          ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -161,11 +165,13 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
         /* missing project */
         responderManager ! GroupCreateRequestADM(
-          createRequest = CreateGroupApiRequestADM(name = "OtherNewGroup",
-                                                   description = Some("OtherNewGroupDescription"),
-                                                   project = "",
-                                                   status = true,
-                                                   selfjoin = false),
+          createRequest = CreateGroupApiRequestADM(
+            name = "OtherNewGroup",
+            description = Some("OtherNewGroupDescription"),
+            project = "",
+            status = true,
+            selfjoin = false
+          ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -176,8 +182,10 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       "UPDATE a group" in {
         responderManager ! GroupChangeRequestADM(
           groupIri = newGroupIri.get,
-          changeGroupRequest = ChangeGroupApiRequestADM(Some("UpdatedGroupName"),
-                                                        Some("""UpdatedDescription with "quotes" and <html tag>""")),
+          changeGroupRequest = ChangeGroupApiRequestADM(
+            Some("UpdatedGroupName"),
+            Some("""UpdatedDescription with "quotes" and <html tag>""")
+          ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -202,8 +210,8 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
           apiRequestID = UUID.randomUUID
         )
 
-        expectMsgPF(timeout) {
-          case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+          msg.cause.isInstanceOf[NotFoundException] should ===(true)
         }
       }
 
@@ -216,8 +224,8 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
           apiRequestID = UUID.randomUUID
         )
 
-        expectMsgPF(timeout) {
-          case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+          msg.cause.isInstanceOf[BadRequestException] should ===(true)
         }
       }
 
@@ -282,8 +290,8 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
           requestingUser = SharedTestDataADM.rootUser
         )
 
-        expectMsgPF(timeout) {
-          case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+        expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+          msg.cause.isInstanceOf[NotFoundException] should ===(true)
         }
 
       }

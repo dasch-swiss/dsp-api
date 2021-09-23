@@ -30,11 +30,12 @@ class MockableStoreManager(mockStoreConnectors: Map[String, ActorRef], appActor:
     with LiveActorMaker {
 
   /**
-    * Starts the MockableIIIFManager
-    */
+   * Starts the MockableIIIFManager
+   */
   override lazy val iiifManager: ActorRef = makeActor(
     Props(new MockableIIIFManager(mockStoreConnectors) with LiveActorMaker)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    IIIFManagerActorName)
+    IIIFManagerActorName
+  )
 
 }

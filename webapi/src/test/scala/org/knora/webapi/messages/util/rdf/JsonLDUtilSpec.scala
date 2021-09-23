@@ -28,8 +28,8 @@ import org.knora.webapi.util.FileUtil
 import spray.json.{JsValue, JsonParser}
 
 /**
-  * Tests [[JsonLDUtil]].
-  */
+ * Tests [[JsonLDUtil]].
+ */
 abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
   private val featureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
     testToggles = Set(featureToggle),
@@ -43,78 +43,78 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
     "parse JSON-LD text, compact it with an empty context, convert the result to a JsonLDDocument, and convert that back to text" in {
       val ontologyJsonLDInputStr =
         """
-                  |{
-                  |  "knora-api:hasOntologies" : {
-                  |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                  |    "@type" : "owl:Ontology",
-                  |    "knora-api:hasProperties" : {
-                  |      "anything:hasName" : {
-                  |        "@id" : "anything:hasName",
-                  |        "@type" : "owl:ObjectProperty",
-                  |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-                  |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
-                  |        "rdfs:comment" : [ {
-                  |          "@language" : "en",
-                  |          "@value" : "The name of a Thing"
-                  |        }, {
-                  |          "@language" : "de",
-                  |          "@value" : "Der Name eines Dinges"
-                  |        } ],
-                  |        "rdfs:label" : [ {
-                  |          "@language" : "en",
-                  |          "@value" : "has name"
-                  |        }, {
-                  |          "@language" : "de",
-                  |          "@value" : "hat Namen"
-                  |        } ],
-                  |        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://schema.org/name" ]
-                  |      }
-                  |    },
-                  |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
-                  |  },
-                  |  "@context" : {
-                  |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                  |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                  |    "owl" : "http://www.w3.org/2002/07/owl#",
-                  |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                  |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                  |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                  |  }
-                  |}
+          |{
+          |  "knora-api:hasOntologies" : {
+          |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
+          |    "@type" : "owl:Ontology",
+          |    "knora-api:hasProperties" : {
+          |      "anything:hasName" : {
+          |        "@id" : "anything:hasName",
+          |        "@type" : "owl:ObjectProperty",
+          |        "knora-api:objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+          |        "knora-api:subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
+          |        "rdfs:comment" : [ {
+          |          "@language" : "en",
+          |          "@value" : "The name of a Thing"
+          |        }, {
+          |          "@language" : "de",
+          |          "@value" : "Der Name eines Dinges"
+          |        } ],
+          |        "rdfs:label" : [ {
+          |          "@language" : "en",
+          |          "@value" : "has name"
+          |        }, {
+          |          "@language" : "de",
+          |          "@value" : "hat Namen"
+          |        } ],
+          |        "rdfs:subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://schema.org/name" ]
+          |      }
+          |    },
+          |    "knora-api:lastModificationDate" : "2017-12-19T15:23:42.166Z"
+          |  },
+          |  "@context" : {
+          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+          |    "owl" : "http://www.w3.org/2002/07/owl#",
+          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+          |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+          |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+          |  }
+          |}
                 """.stripMargin
 
       val ontologyCompactedJsonLDOutputStr =
         """
-                  |{
-                  |  "http://api.knora.org/ontology/knora-api/v2#hasOntologies" : {
-                  |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
-                  |    "@type" : "http://www.w3.org/2002/07/owl#Ontology",
-                  |    "http://api.knora.org/ontology/knora-api/v2#hasProperties" : {
-                  |      "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName" : {
-                  |        "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
-                  |        "@type" : "http://www.w3.org/2002/07/owl#ObjectProperty",
-                  |        "http://api.knora.org/ontology/knora-api/v2#objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
-                  |        "http://api.knora.org/ontology/knora-api/v2#subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
-                  |        "http://www.w3.org/2000/01/rdf-schema#comment" : [ {
-                  |          "@language" : "en",
-                  |          "@value" : "The name of a Thing"
-                  |        }, {
-                  |          "@language" : "de",
-                  |          "@value" : "Der Name eines Dinges"
-                  |        } ],
-                  |        "http://www.w3.org/2000/01/rdf-schema#label" : [ {
-                  |          "@language" : "en",
-                  |          "@value" : "has name"
-                  |        }, {
-                  |          "@language" : "de",
-                  |          "@value" : "hat Namen"
-                  |        } ],
-                  |        "http://www.w3.org/2000/01/rdf-schema#subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://schema.org/name" ]
-                  |      }
-                  |    },
-                  |    "http://api.knora.org/ontology/knora-api/v2#lastModificationDate" : "2017-12-19T15:23:42.166Z"
-                  |  }
-                  |}
+          |{
+          |  "http://api.knora.org/ontology/knora-api/v2#hasOntologies" : {
+          |    "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
+          |    "@type" : "http://www.w3.org/2002/07/owl#Ontology",
+          |    "http://api.knora.org/ontology/knora-api/v2#hasProperties" : {
+          |      "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName" : {
+          |        "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
+          |        "@type" : "http://www.w3.org/2002/07/owl#ObjectProperty",
+          |        "http://api.knora.org/ontology/knora-api/v2#objectType" : "http://api.knora.org/ontology/knora-api/v2#TextValue",
+          |        "http://api.knora.org/ontology/knora-api/v2#subjectType" : "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
+          |        "http://www.w3.org/2000/01/rdf-schema#comment" : [ {
+          |          "@language" : "en",
+          |          "@value" : "The name of a Thing"
+          |        }, {
+          |          "@language" : "de",
+          |          "@value" : "Der Name eines Dinges"
+          |        } ],
+          |        "http://www.w3.org/2000/01/rdf-schema#label" : [ {
+          |          "@language" : "en",
+          |          "@value" : "has name"
+          |        }, {
+          |          "@language" : "de",
+          |          "@value" : "hat Namen"
+          |        } ],
+          |        "http://www.w3.org/2000/01/rdf-schema#subPropertyOf" : [ "http://api.knora.org/ontology/knora-api/v2#hasValue", "http://schema.org/name" ]
+          |      }
+          |    },
+          |    "http://api.knora.org/ontology/knora-api/v2#lastModificationDate" : "2017-12-19T15:23:42.166Z"
+          |  }
+          |}
                 """.stripMargin
 
       val compactedJsonLDDoc: JsonLDDocument = JsonLDUtil.parseJsonLD(ontologyJsonLDInputStr)
@@ -234,16 +234,16 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
       // A Turtle document with a circular reference.
       val turtle =
         """@prefix foo: <http://example.org/foo#> .
-                  |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-                  |
-                  |<http://rdfh.ch/foo1> a foo:Foo;
-                  |  rdfs:label "foo 1";
-                  |  foo:hasOtherFoo <http://rdfh.ch/foo2>.
-                  |
-                  |<http://rdfh.ch/foo2> a foo:Foo;
-                  |  rdfs:label "foo 2";
-                  |  foo:hasOtherFoo <http://rdfh.ch/foo1>.
-                  |""".stripMargin
+          |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+          |
+          |<http://rdfh.ch/foo1> a foo:Foo;
+          |  rdfs:label "foo 1";
+          |  foo:hasOtherFoo <http://rdfh.ch/foo2>.
+          |
+          |<http://rdfh.ch/foo2> a foo:Foo;
+          |  rdfs:label "foo 2";
+          |  foo:hasOtherFoo <http://rdfh.ch/foo1>.
+          |""".stripMargin
 
       // Parse it to an RDF4J Model.
       val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
@@ -258,28 +258,36 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
           "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
           "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
           "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
-          "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value = Map(
-            "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
-            "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
-            "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
-            "http://example.org/foo#hasOtherFoo" -> JsonLDObject(
-              value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo1"))),
-          )),
-        ))
+          "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value =
+            Map(
+              "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
+              "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+              "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
+              "http://example.org/foo#hasOtherFoo" -> JsonLDObject(
+                value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo1"))
+              )
+            )
+          )
+        )
+      )
 
       val expectedWithFoo2AtTopLevel = JsonLDObject(
         value = Map(
           "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
           "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
           "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
-          "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value = Map(
-            "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
-            "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
-            "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
-            "http://example.org/foo#hasOtherFoo" -> JsonLDObject(
-              value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2")))
-          ))
-        ))
+          "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value =
+            Map(
+              "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
+              "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+              "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
+              "http://example.org/foo#hasOtherFoo" -> JsonLDObject(
+                value = Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2"))
+              )
+            )
+          )
+        )
+      )
 
       assert(
         outputJsonLD.body == expectedWithFoo1AtTopLevel ||
@@ -291,25 +299,25 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
       // A simple Turtle document.
       val turtle =
         """@prefix foo: <http://example.org/foo#> .
-                  |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-                  |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-                  |
-                  |<http://rdfh.ch/foo1> a foo:Foo;
-                  |  rdfs:label "foo 1";
-                  |  foo:hasBar [
-                  |    a foo:Bar;
-                  |    rdfs:label "bar 1"
-                  |  ];
-                  |  foo:hasOtherFoo <http://rdfh.ch/foo2>.
-                  |
-                  |<http://rdfh.ch/foo2> a foo:Foo;
-                  |  rdfs:label "foo 2";
-                  |  foo:hasIndex "3"^^xsd:integer;
-                  |  foo:hasBar [
-                  |    a foo:Bar;
-                  |    rdfs:label "bar 2"
-                  |  ].
-                  |""".stripMargin
+          |@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+          |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+          |
+          |<http://rdfh.ch/foo1> a foo:Foo;
+          |  rdfs:label "foo 1";
+          |  foo:hasBar [
+          |    a foo:Bar;
+          |    rdfs:label "bar 1"
+          |  ];
+          |  foo:hasOtherFoo <http://rdfh.ch/foo2>.
+          |
+          |<http://rdfh.ch/foo2> a foo:Foo;
+          |  rdfs:label "foo 2";
+          |  foo:hasIndex "3"^^xsd:integer;
+          |  foo:hasBar [
+          |    a foo:Bar;
+          |    rdfs:label "bar 2"
+          |  ].
+          |""".stripMargin
 
       // Parse it to an RDF4J Model.
       val inputModel: RdfModel = rdfFormatUtil.parseToRdfModel(rdfStr = turtle, rdfFormat = Turtle)
@@ -325,19 +333,25 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
             value = Map(
               "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
               "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
-            )),
+            )
+          ),
           "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
-          "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value = Map(
-            "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
-            "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
-            "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
-            "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
-            "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
-              "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
-              "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2")
-            ))
-          ))
-        ))
+          "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value =
+            Map(
+              "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
+              "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+              "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
+              "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
+              "http://example.org/foo#hasBar" -> JsonLDObject(value =
+                Map(
+                  "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                  "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2")
+                )
+              )
+            )
+          )
+        )
+      )
 
       assert(hierarchicalJsonLD.body == expectedHierarchicalJsonLD)
 
@@ -345,29 +359,43 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
       val flatJsonLD: JsonLDDocument = JsonLDUtil.fromRdfModel(model = inputModel, flatJsonLD = true)
 
       val expectedFlatJsonLD = JsonLDObject(
-        value = Map("@graph" -> JsonLDArray(value = Vector(
-          JsonLDObject(value = Map(
-            "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
-            "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
-            "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
-            "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
-              "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
-              "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
-            )),
-            "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value =
-              Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2")))
-          )),
-          JsonLDObject(value = Map(
-            "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
-            "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
-            "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
-            "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
-            "http://example.org/foo#hasBar" -> JsonLDObject(value = Map(
-              "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2"),
-              "@type" -> JsonLDString(value = "http://example.org/foo#Bar")
-            ))
-          ))
-        ))))
+        value = Map(
+          "@graph" -> JsonLDArray(value =
+            Vector(
+              JsonLDObject(value =
+                Map(
+                  "@id" -> JsonLDString(value = "http://rdfh.ch/foo1"),
+                  "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+                  "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 1"),
+                  "http://example.org/foo#hasBar" -> JsonLDObject(value =
+                    Map(
+                      "@type" -> JsonLDString(value = "http://example.org/foo#Bar"),
+                      "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 1")
+                    )
+                  ),
+                  "http://example.org/foo#hasOtherFoo" -> JsonLDObject(value =
+                    Map("@id" -> JsonLDString(value = "http://rdfh.ch/foo2"))
+                  )
+                )
+              ),
+              JsonLDObject(value =
+                Map(
+                  "@id" -> JsonLDString(value = "http://rdfh.ch/foo2"),
+                  "@type" -> JsonLDString(value = "http://example.org/foo#Foo"),
+                  "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "foo 2"),
+                  "http://example.org/foo#hasIndex" -> JsonLDInt(value = 3),
+                  "http://example.org/foo#hasBar" -> JsonLDObject(value =
+                    Map(
+                      "http://www.w3.org/2000/01/rdf-schema#label" -> JsonLDString(value = "bar 2"),
+                      "@type" -> JsonLDString(value = "http://example.org/foo#Bar")
+                    )
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
 
       assert(flatJsonLD.body == expectedFlatJsonLD)
     }
@@ -378,11 +406,11 @@ abstract class JsonLDUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
 
       val jsonLDWithInvalidProperties =
         """{
-                  |   "http://ns.dasch.swiss/repository#hasLicense":{
-                  |      "type": "https://schema.org/URL",
-                  |      "value": "https://creativecommons.org/licenses/by/3.0"
-                  |   }
-                  |}""".stripMargin
+          |   "http://ns.dasch.swiss/repository#hasLicense":{
+          |      "type": "https://schema.org/URL",
+          |      "value": "https://creativecommons.org/licenses/by/3.0"
+          |   }
+          |}""".stripMargin
 
       // Parse the JSON-LD and check the parsed data structure.
 

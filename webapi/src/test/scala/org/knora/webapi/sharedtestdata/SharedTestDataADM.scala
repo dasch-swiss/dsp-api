@@ -31,14 +31,18 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.util.KnoraSystemInstances
 
 /**
-  * This object holds the same user which are loaded with 'test_data/all_data/admin-data.ttl'. Using this object
-  * in tests, allows easier updating of details as they change over time.
-  */
+ * This object holds the same user which are loaded with 'test_data/all_data/admin-data.ttl'. Using this object
+ * in tests, allows easier updating of details as they change over time.
+ */
 object SharedTestDataADM {
 
-  /** ***********************************/
-  /** System Admin Data                **/
-  /** ***********************************/
+  /**
+   * **********************************
+   */
+  /** System Admin Data                * */
+  /**
+   * **********************************
+   */
   val SYSTEM_PROJECT_IRI: IRI = OntologyConstants.KnoraAdmin.SystemProject // built-in project
 
   val testPass: String = java.net.URLEncoder.encode("test", "utf-8")
@@ -144,11 +148,15 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          INCUNABULA_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember,
-                                         OntologyConstants.KnoraAdmin.ProjectAdmin),
-          IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer",
-                                     OntologyConstants.KnoraAdmin.ProjectMember,
-                                     OntologyConstants.KnoraAdmin.ProjectAdmin)
+          INCUNABULA_PROJECT_IRI -> List(
+            OntologyConstants.KnoraAdmin.ProjectMember,
+            OntologyConstants.KnoraAdmin.ProjectAdmin
+          ),
+          IMAGES_PROJECT_IRI -> List(
+            "http://rdfh.ch/groups/00FF/images-reviewer",
+            OntologyConstants.KnoraAdmin.ProjectMember,
+            OntologyConstants.KnoraAdmin.ProjectAdmin
+          )
         ),
         administrativePermissionsPerProject = Map(
           INCUNABULA_PROJECT_IRI -> Set(
@@ -182,8 +190,8 @@ object SharedTestDataADM {
     selfjoin = false
   )
 
-  val DefaultSharedOntologiesProjectIri
-    : IRI = OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject // built-in project
+  val DefaultSharedOntologiesProjectIri: IRI =
+    OntologyConstants.KnoraAdmin.DefaultSharedOntologiesProject // built-in project
 
   /* represents the full project info of the default shared ontologies project */
   def defaultSharedOntologiesProject: ProjectADM = ProjectADM(
@@ -199,9 +207,13 @@ object SharedTestDataADM {
     selfjoin = false
   )
 
-  /** ***********************************/
-  /** Images Demo Project Admin Data  **/
-  /** ***********************************/
+  /**
+   * **********************************
+   */
+  /** Images Demo Project Admin Data  * */
+  /**
+   * **********************************
+   */
   val IMAGES_PROJECT_IRI = "http://rdfh.ch/projects/00FF"
 
   /* represents 'user01' as found in admin-data.ttl  */
@@ -221,8 +233,10 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember,
-                                     OntologyConstants.KnoraAdmin.ProjectAdmin)
+          IMAGES_PROJECT_IRI -> List(
+            OntologyConstants.KnoraAdmin.ProjectMember,
+            OntologyConstants.KnoraAdmin.ProjectAdmin
+          )
         ),
         administrativePermissionsPerProject = Map(
           IMAGES_PROJECT_IRI -> Set(
@@ -277,15 +291,19 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer",
-                                     OntologyConstants.KnoraAdmin.ProjectMember)
+          IMAGES_PROJECT_IRI -> List(
+            "http://rdfh.ch/groups/00FF/images-reviewer",
+            OntologyConstants.KnoraAdmin.ProjectMember
+          )
         ),
         administrativePermissionsPerProject = Map(
           IMAGES_PROJECT_IRI -> Set(
             PermissionADM.projectResourceCreateRestrictedPermission(
-              s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild"),
+              s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bild"
+            ),
             PermissionADM.projectResourceCreateRestrictedPermission(
-              s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bildformat")
+              s"${SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI}#bildformat"
+            )
           )
         )
       )
@@ -335,9 +353,13 @@ object SharedTestDataADM {
     selfjoin = false
   )
 
-  /** ***********************************/
-  /** Incunabula Project Admin Data   **/
-  /** ***********************************/
+  /**
+   * **********************************
+   */
+  /** Incunabula Project Admin Data   * */
+  /**
+   * **********************************
+   */
   val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/0803"
 
   /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
@@ -357,8 +379,10 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          INCUNABULA_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember,
-                                         OntologyConstants.KnoraAdmin.ProjectAdmin)
+          INCUNABULA_PROJECT_IRI -> List(
+            OntologyConstants.KnoraAdmin.ProjectMember,
+            OntologyConstants.KnoraAdmin.ProjectAdmin
+          )
         ),
         administrativePermissionsPerProject = Map(
           INCUNABULA_PROJECT_IRI -> Set(
@@ -434,7 +458,8 @@ object SharedTestDataADM {
         value =
           "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>",
         language = None
-      )),
+      )
+    ),
     keywords = Seq(
       "Basler Frühdrucke",
       "Inkunabel",
@@ -457,9 +482,13 @@ object SharedTestDataADM {
     selfjoin = false
   )
 
-  /** **********************************/
-  /** Anything Admin Data            **/
-  /** **********************************/
+  /**
+   * *********************************
+   */
+  /** Anything Admin Data            * */
+  /**
+   * *********************************
+   */
   val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/0001"
 
   val customResourceIRI: IRI = "http://rdfh.ch/0001/aUrDPcJRmFNzBHW_AlR1hw"
@@ -489,8 +518,10 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember,
-                                       OntologyConstants.KnoraAdmin.ProjectAdmin)
+          ANYTHING_PROJECT_IRI -> List(
+            OntologyConstants.KnoraAdmin.ProjectMember,
+            OntologyConstants.KnoraAdmin.ProjectAdmin
+          )
         ),
         administrativePermissionsPerProject = Map(
           ANYTHING_PROJECT_IRI -> Set(
@@ -517,8 +548,10 @@ object SharedTestDataADM {
       sessionId = None,
       permissions = PermissionsDataADM(
         groupsPerProject = Map(
-          ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember,
-                                       "http://rdfh.ch/groups/0001/thing-searcher")
+          ANYTHING_PROJECT_IRI -> List(
+            OntologyConstants.KnoraAdmin.ProjectMember,
+            "http://rdfh.ch/groups/0001/thing-searcher"
+          )
         ),
         administrativePermissionsPerProject = Map(
           ANYTHING_PROJECT_IRI -> Set(
@@ -577,9 +610,13 @@ object SharedTestDataADM {
     selfjoin = true
   )
 
-  /** **********************************/
-  /** BEOL                           **/
-  /** **********************************/
+  /**
+   * *********************************
+   */
+  /** BEOL                           * */
+  /**
+   * *********************************
+   */
   val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/yTerZGyxjZVqFMNNKXCDPF"
 
   def beolProject: ProjectADM = ProjectADM(
@@ -626,9 +663,13 @@ object SharedTestDataADM {
     )
   )
 
-  /** **********************************/
-  /** DOKUBIB                        **/
-  /** **********************************/
+  /**
+   * *********************************
+   */
+  /** DOKUBIB                        * */
+  /**
+   * *********************************
+   */
   val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/0804"
 
   def dokubibProject: ProjectADM = ProjectADM(

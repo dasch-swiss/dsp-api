@@ -43,9 +43,9 @@ import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 /**
-  * End-to-end test specification for the standoff endpoint. This specification uses the Spray Testkit as documented
-  * here: http://spray.io/documentation/1.2.2/spray-testkit/
-  */
+ * End-to-end test specification for the standoff endpoint. This specification uses the Spray Testkit as documented
+ * here: http://spray.io/documentation/1.2.2/spray-testkit/
+ */
 class StandoffV1R2RSpec extends R2RSpec {
 
   override def testConfigSource: String =
@@ -54,8 +54,8 @@ class StandoffV1R2RSpec extends R2RSpec {
          # akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
-  private val standoffPath = DSPApiDirectives.handleErrors(system) { new StandoffRouteV1(routeData).knoraApiPath }
-  private val valuesPath = DSPApiDirectives.handleErrors(system) { new ValuesRouteV1(routeData).knoraApiPath }
+  private val standoffPath = DSPApiDirectives.handleErrors(system)(new StandoffRouteV1(routeData).knoraApiPath)
+  private val valuesPath = DSPApiDirectives.handleErrors(system)(new ValuesRouteV1(routeData).knoraApiPath)
 
   private val anythingUser = SharedTestDataV1.anythingUser1
   private val anythingUserEmail = anythingUser.userData.email.get
@@ -90,7 +90,8 @@ class StandoffV1R2RSpec extends R2RSpec {
           case None                      => throw InvalidApiJsonException(s"The response does not contain a field called '$memberName'")
           case other =>
             throw InvalidApiJsonException(
-              s"The response does not contain a field '$memberName' of type JsString, but $other")
+              s"The response does not contain a field '$memberName' of type JsString, but $other"
+            )
         }
       }
 
@@ -105,11 +106,11 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     val paramsCreateLetterMappingFromXML: String =
       s"""
-               |{
-               |  "project_id": "$ANYTHING_PROJECT_IRI",
-               |  "label": "mapping for letters",
-               |  "mappingName": "LetterMapping"
-               |}
+         |{
+         |  "project_id": "$ANYTHING_PROJECT_IRI",
+         |  "label": "mapping for letters",
+         |  "mappingName": "LetterMapping"
+         |}
              """.stripMargin
 
     val pathToLetterMapping = "test_data/test_route/texts/mappingForLetter.xml"
@@ -122,11 +123,11 @@ class StandoffV1R2RSpec extends R2RSpec {
 
     val paramsCreateHTMLMappingFromXML: String =
       s"""
-               |{
-               |  "project_id": "$ANYTHING_PROJECT_IRI",
-               |  "label": "mapping for HTML",
-               |  "mappingName": "HTMLMapping"
-               |}
+         |{
+         |  "project_id": "$ANYTHING_PROJECT_IRI",
+         |  "label": "mapping for HTML",
+         |  "mappingName": "HTMLMapping"
+         |}
              """.stripMargin
 
     // Standard HTML is the html code that can be translated into Standoff markup with the OntologyConstants.KnoraBase.StandardMapping
@@ -146,39 +147,39 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       val brokenMapping: String =
         """<?xml version="1.0" encoding="UTF-8"?>
-                              |<mapping>
-                              |    <mappingElement>
-                              |        <tag>
-                              |            <name>text</name>
-                              |            <class>noClass</class>
-                              |            <namespace>noNamespace</namespace>
-                              |            <separatesWords>false</separatesWords>
-                              |        </tag>
-                              |        <standoffClass>
-                              |            <classIri>http://www.knora.org/ontology/standoff#StandoffRot</classIri>
-                              |            <attributes>
-                              |                <attribute>
-                              |                    <attributeName>documentType</attributeName>
-                              |                    <namespace>noNamespace</namespace>
-                              |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
-                              |                </attribute>
-                              |            </attributes>
-                              |        </standoffClass>
-                              |    </mappingElement>
-                              |
-                              |    <mappingElement>
-                              |        <tag>
-                              |            <name>p</name>
-                              |            <class>noClass</class>
-                              |            <namespace>noNamespace</namespace>
-                              |            <separatesWords>true</separatesWords>
-                              |        </tag>
-                              |        <standoffClass>
-                              |            <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
-                              |        </standoffClass>
-                              |    </mappingElement>
-                              |</mapping>
-                              |    """.stripMargin
+          |<mapping>
+          |    <mappingElement>
+          |        <tag>
+          |            <name>text</name>
+          |            <class>noClass</class>
+          |            <namespace>noNamespace</namespace>
+          |            <separatesWords>false</separatesWords>
+          |        </tag>
+          |        <standoffClass>
+          |            <classIri>http://www.knora.org/ontology/standoff#StandoffRot</classIri>
+          |            <attributes>
+          |                <attribute>
+          |                    <attributeName>documentType</attributeName>
+          |                    <namespace>noNamespace</namespace>
+          |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+          |                </attribute>
+          |            </attributes>
+          |        </standoffClass>
+          |    </mappingElement>
+          |
+          |    <mappingElement>
+          |        <tag>
+          |            <name>p</name>
+          |            <class>noClass</class>
+          |            <namespace>noNamespace</namespace>
+          |            <separatesWords>true</separatesWords>
+          |        </tag>
+          |        <standoffClass>
+          |            <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
+          |        </standoffClass>
+          |    </mappingElement>
+          |</mapping>
+          |    """.stripMargin
 
       val formDataMapping = Multipart.FormData(
         Multipart.FormData.BodyPart(
@@ -193,7 +194,9 @@ class StandoffV1R2RSpec extends R2RSpec {
       )
 
       // send mapping xml to route
-      Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+      Post("/v1/mapping", formDataMapping) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> standoffPath ~> check {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
@@ -209,39 +212,39 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       val brokenMapping =
         """<?xml version="1.0" encoding="UTF-8"?>
-                                  |<mapping>
-                                  |    <mappingElement>
-                                  |        <tag>
-                                  |            <name>text</name>
-                                  |            <class>noClass</class>
-                                  |            <namespace>noNamespace</namespace>
-                                  |            <separatesWords>false</separatesWords>
-                                  |        </tag>
-                                  |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
-                                  |            <attributes>
-                                  |                <attribute>
-                                  |                    <attributeName>documentType</attributeName>
-                                  |                    <namespace>noNamespace</namespace>
-                                  |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDoc</propertyIri>
-                                  |                </attribute>
-                                  |            </attributes>
-                                  |        </standoffClass>
-                                  |    </mappingElement>
-                                  |
-                                  |    <mappingElement>
-                                  |        <tag>
-                                  |            <name>p</name>
-                                  |            <class>noClass</class>
-                                  |            <namespace>noNamespace</namespace>
-                                  |            <separatesWords>true</separatesWords>
-                                  |        </tag>
-                                  |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
-                                  |        </standoffClass>
-                                  |    </mappingElement>
-                                  |</mapping>
-                                  |    """.stripMargin
+          |<mapping>
+          |    <mappingElement>
+          |        <tag>
+          |            <name>text</name>
+          |            <class>noClass</class>
+          |            <namespace>noNamespace</namespace>
+          |            <separatesWords>false</separatesWords>
+          |        </tag>
+          |        <standoffClass>
+          |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+          |            <attributes>
+          |                <attribute>
+          |                    <attributeName>documentType</attributeName>
+          |                    <namespace>noNamespace</namespace>
+          |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDoc</propertyIri>
+          |                </attribute>
+          |            </attributes>
+          |        </standoffClass>
+          |    </mappingElement>
+          |
+          |    <mappingElement>
+          |        <tag>
+          |            <name>p</name>
+          |            <class>noClass</class>
+          |            <namespace>noNamespace</namespace>
+          |            <separatesWords>true</separatesWords>
+          |        </tag>
+          |        <standoffClass>
+          |            <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
+          |        </standoffClass>
+          |    </mappingElement>
+          |</mapping>
+          |    """.stripMargin
 
       val formDataMapping = Multipart.FormData(
         Multipart.FormData.BodyPart(
@@ -256,7 +259,9 @@ class StandoffV1R2RSpec extends R2RSpec {
       )
 
       // send mapping xml to route
-      Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+      Post("/v1/mapping", formDataMapping) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> standoffPath ~> check {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
@@ -272,46 +277,46 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       val brokenMapping =
         """<?xml version="1.0" encoding="UTF-8"?>
-                                  |<mapping>
-                                  |    <mappingElement>
-                                  |        <tag>
-                                  |            <name>text</name>
-                                  |            <class>noClass</class>
-                                  |            <namespace>noNamespace</namespace>
-                                  |            <separatesWords>false</separatesWords>
-                                  |        </tag>
-                                  |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
-                                  |            <attributes>
-                                  |                <attribute>
-                                  |                    <attributeName>documentType</attributeName>
-                                  |                    <namespace>noNamespace</namespace>
-                                  |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
-                                  |                </attribute>
-                                  |            </attributes>
-                                  |        </standoffClass>
-                                  |    </mappingElement>
-                                  |
-                                  |    <mappingElement>
-                                  |        <tag>
-                                  |            <name>p</name>
-                                  |            <class>noClass</class>
-                                  |            <namespace>noNamespace</namespace>
-                                  |            <separatesWords>true</separatesWords>
-                                  |        </tag>
-                                  |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
-                                  |            <attributes>
-                                  |                <attribute>
-                                  |                    <attributeName>documentType</attributeName>
-                                  |                    <namespace>noNamespace</namespace>
-                                  |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
-                                  |                </attribute>
-                                  |            </attributes>
-                                  |        </standoffClass>
-                                  |    </mappingElement>
-                                  |</mapping>
-                                  |    """.stripMargin
+          |<mapping>
+          |    <mappingElement>
+          |        <tag>
+          |            <name>text</name>
+          |            <class>noClass</class>
+          |            <namespace>noNamespace</namespace>
+          |            <separatesWords>false</separatesWords>
+          |        </tag>
+          |        <standoffClass>
+          |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+          |            <attributes>
+          |                <attribute>
+          |                    <attributeName>documentType</attributeName>
+          |                    <namespace>noNamespace</namespace>
+          |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+          |                </attribute>
+          |            </attributes>
+          |        </standoffClass>
+          |    </mappingElement>
+          |
+          |    <mappingElement>
+          |        <tag>
+          |            <name>p</name>
+          |            <class>noClass</class>
+          |            <namespace>noNamespace</namespace>
+          |            <separatesWords>true</separatesWords>
+          |        </tag>
+          |        <standoffClass>
+          |            <classIri>http://www.knora.org/ontology/standoff#StandoffParagraphTag</classIri>
+          |            <attributes>
+          |                <attribute>
+          |                    <attributeName>documentType</attributeName>
+          |                    <namespace>noNamespace</namespace>
+          |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+          |                </attribute>
+          |            </attributes>
+          |        </standoffClass>
+          |    </mappingElement>
+          |</mapping>
+          |    """.stripMargin
 
       val formDataMapping = Multipart.FormData(
         Multipart.FormData.BodyPart(
@@ -326,7 +331,9 @@ class StandoffV1R2RSpec extends R2RSpec {
       )
 
       // send mapping xml to route
-      Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+      Post("/v1/mapping", formDataMapping) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> standoffPath ~> check {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
@@ -343,44 +350,44 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       val brokenMapping =
         """<?xml version="1.0" encoding="UTF-8"?>
-                                  |<mapping>
-                                  |    <mappingElement>
-                                  |        <tag>
-                                  |            <name>text</name>
-                                  |            <class>noClass</class>
-                                  |            <namespace>noNamespace</namespace>
-                                  |            <separatesWords>false</separatesWords>
-                                  |        </tag>
-                                  |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
-                                  |            <attributes>
-                                  |                <attribute>
-                                  |                    <attributeName>documentType</attributeName>
-                                  |                    <namespace>noNamespace</namespace>
-                                  |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
-                                  |                </attribute>
-                                  |            </attributes>
-                                  |        </standoffClass>
-                                  |    </mappingElement>
-                                  |
-                                  |    <mappingElement>
-                                  |        <tag>
-                                  |            <name>event</name>
-                                  |            <class>noClass</class>
-                                  |            <namespace>noNamespace</namespace>
-                                  |            <separatesWords>true</separatesWords>
-                                  |        </tag>
-                                  |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/0001/anything#StandoffEventTag</classIri>
-                                  |            <!-- attribute definition for http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription missing-->
-                                  |            <datatype>
-                                  |                <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
-                                  |                <attributeName>src</attributeName>
-                                  |            </datatype>
-                                  |        </standoffClass>
-                                  |    </mappingElement>
-                                  |</mapping>
-                                  |    """.stripMargin
+          |<mapping>
+          |    <mappingElement>
+          |        <tag>
+          |            <name>text</name>
+          |            <class>noClass</class>
+          |            <namespace>noNamespace</namespace>
+          |            <separatesWords>false</separatesWords>
+          |        </tag>
+          |        <standoffClass>
+          |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+          |            <attributes>
+          |                <attribute>
+          |                    <attributeName>documentType</attributeName>
+          |                    <namespace>noNamespace</namespace>
+          |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+          |                </attribute>
+          |            </attributes>
+          |        </standoffClass>
+          |    </mappingElement>
+          |
+          |    <mappingElement>
+          |        <tag>
+          |            <name>event</name>
+          |            <class>noClass</class>
+          |            <namespace>noNamespace</namespace>
+          |            <separatesWords>true</separatesWords>
+          |        </tag>
+          |        <standoffClass>
+          |            <classIri>http://www.knora.org/ontology/0001/anything#StandoffEventTag</classIri>
+          |            <!-- attribute definition for http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription missing-->
+          |            <datatype>
+          |                <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
+          |                <attributeName>src</attributeName>
+          |            </datatype>
+          |        </standoffClass>
+          |    </mappingElement>
+          |</mapping>
+          |    """.stripMargin
 
       val formDataMapping = Multipart.FormData(
         Multipart.FormData.BodyPart(
@@ -395,7 +402,9 @@ class StandoffV1R2RSpec extends R2RSpec {
       )
 
       // send mapping xml to route
-      Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+      Post("/v1/mapping", formDataMapping) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> standoffPath ~> check {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
@@ -404,7 +413,8 @@ class StandoffV1R2RSpec extends R2RSpec {
         // make sure the user gets informed about the missing required property anything:standoffEventTagHasDescription
         assert(responseAs[String].contains("http://www.knora.org/ontology/0001/anything#StandoffEventTag"))
         assert(
-          responseAs[String].contains("http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription"))
+          responseAs[String].contains("http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription")
+        )
 
       }
     }
@@ -413,47 +423,47 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       val brokenMapping =
         """<?xml version="1.0" encoding="UTF-8"?>
-                                  |<mapping>
-                                  |    <mappingElement>
-                                  |        <tag>
-                                  |            <name>text</name>
-                                  |            <class>noClass</class>
-                                  |            <namespace>noNamespace</namespace>
-                                  |            <separatesWords>false</separatesWords>
-                                  |        </tag>
-                                  |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
-                                  |            <attributes>
-                                  |                <attribute>
-                                  |                    <attributeName>documentType</attributeName>
-                                  |                    <namespace>noNamespace</namespace>
-                                  |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
-                                  |                </attribute>
-                                  |            </attributes>
-                                  |        </standoffClass>
-                                  |    </mappingElement>
-                                  |
-                                  |    <mappingElement>
-                                  |        <tag>
-                                  |            <name>event</name>
-                                  |            <class>noClass</class>
-                                  |            <namespace>noNamespace</namespace>
-                                  |            <separatesWords>true</separatesWords>
-                                  |        </tag>
-                                  |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/0001/anything#StandoffEventTag</classIri>
-                                  |             <attributes>
-                                  |                <attribute>
-                                  |                    <attributeName>desc</attributeName>
-                                  |                    <namespace>noNamespace</namespace>
-                                  |                    <propertyIri>http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription</propertyIri>
-                                  |                </attribute>
-                                  |            </attributes>
-                                  |            <!-- no data type provided, but required -->
-                                  |        </standoffClass>
-                                  |    </mappingElement>
-                                  |</mapping>
-                                  |    """.stripMargin
+          |<mapping>
+          |    <mappingElement>
+          |        <tag>
+          |            <name>text</name>
+          |            <class>noClass</class>
+          |            <namespace>noNamespace</namespace>
+          |            <separatesWords>false</separatesWords>
+          |        </tag>
+          |        <standoffClass>
+          |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+          |            <attributes>
+          |                <attribute>
+          |                    <attributeName>documentType</attributeName>
+          |                    <namespace>noNamespace</namespace>
+          |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+          |                </attribute>
+          |            </attributes>
+          |        </standoffClass>
+          |    </mappingElement>
+          |
+          |    <mappingElement>
+          |        <tag>
+          |            <name>event</name>
+          |            <class>noClass</class>
+          |            <namespace>noNamespace</namespace>
+          |            <separatesWords>true</separatesWords>
+          |        </tag>
+          |        <standoffClass>
+          |            <classIri>http://www.knora.org/ontology/0001/anything#StandoffEventTag</classIri>
+          |             <attributes>
+          |                <attribute>
+          |                    <attributeName>desc</attributeName>
+          |                    <namespace>noNamespace</namespace>
+          |                    <propertyIri>http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription</propertyIri>
+          |                </attribute>
+          |            </attributes>
+          |            <!-- no data type provided, but required -->
+          |        </standoffClass>
+          |    </mappingElement>
+          |</mapping>
+          |    """.stripMargin
 
       val formDataMapping = Multipart.FormData(
         Multipart.FormData.BodyPart(
@@ -468,7 +478,9 @@ class StandoffV1R2RSpec extends R2RSpec {
       )
 
       // send mapping xml to route
-      Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+      Post("/v1/mapping", formDataMapping) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> standoffPath ~> check {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
@@ -485,50 +497,50 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       val brokenMapping =
         """<?xml version="1.0" encoding="UTF-8"?>
-                                  |<mapping>
-                                  |    <mappingElement>
-                                  |        <tag>
-                                  |            <name>text</name>
-                                  |            <class>noClass</class>
-                                  |            <namespace>noNamespace</namespace>
-                                  |            <separatesWords>false</separatesWords>
-                                  |        </tag>
-                                  |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
-                                  |            <attributes>
-                                  |                <attribute>
-                                  |                    <attributeName>documentType</attributeName>
-                                  |                    <namespace>noNamespace</namespace>
-                                  |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
-                                  |                </attribute>
-                                  |            </attributes>
-                                  |        </standoffClass>
-                                  |    </mappingElement>
-                                  |
-                                  |    <mappingElement>
-                                  |        <tag>
-                                  |            <name>event</name>
-                                  |            <class>noClass</class>
-                                  |            <namespace>noNamespace</namespace>
-                                  |            <separatesWords>true</separatesWords>
-                                  |        </tag>
-                                  |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/0001/anything#StandoffEventTag</classIri>
-                                  |             <attributes>
-                                  |                <attribute>
-                                  |                    <attributeName>desc</attributeName>
-                                  |                    <namespace>noNamespace</namespace>
-                                  |                    <propertyIri>http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription</propertyIri>
-                                  |                </attribute>
-                                  |            </attributes>
-                                  |            <datatype>
-                                  |                <type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
-                                  |                <attributeName>src</attributeName>
-                                  |            </datatype>
-                                  |        </standoffClass>
-                                  |    </mappingElement>
-                                  |</mapping>
-                                  |    """.stripMargin
+          |<mapping>
+          |    <mappingElement>
+          |        <tag>
+          |            <name>text</name>
+          |            <class>noClass</class>
+          |            <namespace>noNamespace</namespace>
+          |            <separatesWords>false</separatesWords>
+          |        </tag>
+          |        <standoffClass>
+          |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+          |            <attributes>
+          |                <attribute>
+          |                    <attributeName>documentType</attributeName>
+          |                    <namespace>noNamespace</namespace>
+          |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+          |                </attribute>
+          |            </attributes>
+          |        </standoffClass>
+          |    </mappingElement>
+          |
+          |    <mappingElement>
+          |        <tag>
+          |            <name>event</name>
+          |            <class>noClass</class>
+          |            <namespace>noNamespace</namespace>
+          |            <separatesWords>true</separatesWords>
+          |        </tag>
+          |        <standoffClass>
+          |            <classIri>http://www.knora.org/ontology/0001/anything#StandoffEventTag</classIri>
+          |             <attributes>
+          |                <attribute>
+          |                    <attributeName>desc</attributeName>
+          |                    <namespace>noNamespace</namespace>
+          |                    <propertyIri>http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription</propertyIri>
+          |                </attribute>
+          |            </attributes>
+          |            <datatype>
+          |                <type>http://www.knora.org/ontology/knora-base#StandoffUriTag</type>
+          |                <attributeName>src</attributeName>
+          |            </datatype>
+          |        </standoffClass>
+          |    </mappingElement>
+          |</mapping>
+          |    """.stripMargin
 
       val formDataMapping = Multipart.FormData(
         Multipart.FormData.BodyPart(
@@ -543,7 +555,9 @@ class StandoffV1R2RSpec extends R2RSpec {
       )
 
       // send mapping xml to route
-      Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+      Post("/v1/mapping", formDataMapping) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> standoffPath ~> check {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
@@ -560,54 +574,54 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       val brokenMapping =
         """<?xml version="1.0" encoding="UTF-8"?>
-                                  |<mapping>
-                                  |    <mappingElement>
-                                  |        <tag>
-                                  |            <name>text</name>
-                                  |            <class>noClass</class>
-                                  |            <namespace>noNamespace</namespace>
-                                  |            <separatesWords>false</separatesWords>
-                                  |        </tag>
-                                  |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
-                                  |            <attributes>
-                                  |                <attribute>
-                                  |                    <attributeName>documentType</attributeName>
-                                  |                    <namespace>noNamespace</namespace>
-                                  |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
-                                  |                </attribute>
-                                  |            </attributes>
-                                  |            <datatype>
-                                  |                <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
-                                  |                <attributeName>src</attributeName>
-                                  |            </datatype>
-                                  |        </standoffClass>
-                                  |    </mappingElement>
-                                  |
-                                  |    <mappingElement>
-                                  |        <tag>
-                                  |            <name>event</name>
-                                  |            <class>noClass</class>
-                                  |            <namespace>noNamespace</namespace>
-                                  |            <separatesWords>true</separatesWords>
-                                  |        </tag>
-                                  |        <standoffClass>
-                                  |            <classIri>http://www.knora.org/ontology/0001/anything#StandoffEventTag</classIri>
-                                  |             <attributes>
-                                  |                <attribute>
-                                  |                    <attributeName>desc</attributeName>
-                                  |                    <namespace>noNamespace</namespace>
-                                  |                    <propertyIri>http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription</propertyIri>
-                                  |                </attribute>
-                                  |            </attributes>
-                                  |            <datatype>
-                                  |                <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
-                                  |                <attributeName>src</attributeName>
-                                  |            </datatype>
-                                  |        </standoffClass>
-                                  |    </mappingElement>
-                                  |</mapping>
-                                  |    """.stripMargin
+          |<mapping>
+          |    <mappingElement>
+          |        <tag>
+          |            <name>text</name>
+          |            <class>noClass</class>
+          |            <namespace>noNamespace</namespace>
+          |            <separatesWords>false</separatesWords>
+          |        </tag>
+          |        <standoffClass>
+          |            <classIri>http://www.knora.org/ontology/standoff#StandoffRootTag</classIri>
+          |            <attributes>
+          |                <attribute>
+          |                    <attributeName>documentType</attributeName>
+          |                    <namespace>noNamespace</namespace>
+          |                    <propertyIri>http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType</propertyIri>
+          |                </attribute>
+          |            </attributes>
+          |            <datatype>
+          |                <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
+          |                <attributeName>src</attributeName>
+          |            </datatype>
+          |        </standoffClass>
+          |    </mappingElement>
+          |
+          |    <mappingElement>
+          |        <tag>
+          |            <name>event</name>
+          |            <class>noClass</class>
+          |            <namespace>noNamespace</namespace>
+          |            <separatesWords>true</separatesWords>
+          |        </tag>
+          |        <standoffClass>
+          |            <classIri>http://www.knora.org/ontology/0001/anything#StandoffEventTag</classIri>
+          |             <attributes>
+          |                <attribute>
+          |                    <attributeName>desc</attributeName>
+          |                    <namespace>noNamespace</namespace>
+          |                    <propertyIri>http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription</propertyIri>
+          |                </attribute>
+          |            </attributes>
+          |            <datatype>
+          |                <type>http://www.knora.org/ontology/knora-base#StandoffDateTag</type>
+          |                <attributeName>src</attributeName>
+          |            </datatype>
+          |        </standoffClass>
+          |    </mappingElement>
+          |</mapping>
+          |    """.stripMargin
 
       val formDataMapping = Multipart.FormData(
         Multipart.FormData.BodyPart(
@@ -622,7 +636,9 @@ class StandoffV1R2RSpec extends R2RSpec {
       )
 
       // send mapping xml to route
-      Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+      Post("/v1/mapping", formDataMapping) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> standoffPath ~> check {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
@@ -652,10 +668,14 @@ class StandoffV1R2RSpec extends R2RSpec {
       )
 
       // send mapping xml to route
-      Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+      Post("/v1/mapping", formDataMapping) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> standoffPath ~> check {
 
-        assert(status == StatusCodes.OK,
-               "standoff mapping creation route returned a non successful HTTP status code: " + responseAs[String])
+        assert(
+          status == StatusCodes.OK,
+          "standoff mapping creation route returned a non successful HTTP status code: " + responseAs[String]
+        )
 
         // check if mappingIri is correct
         val mappingIri = ResponseUtils.getStringMemberFromResponse(response, "mappingIri")
@@ -685,10 +705,13 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       // create standoff from XML
       Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
-        assert(status == StatusCodes.OK,
-               "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
+        assert(
+          status == StatusCodes.OK,
+          "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String]
+        )
 
         firstTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
 
@@ -702,7 +725,8 @@ class StandoffV1R2RSpec extends R2RSpec {
       val xmlStr = FileUtil.readTextFile(xmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
         assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
@@ -741,12 +765,15 @@ class StandoffV1R2RSpec extends R2RSpec {
                 """
 
       // change standoff from XML
-      Put("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8"),
-          HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+      Put(
+        "/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8"),
+        HttpEntity(ContentTypes.`application/json`, newValueParams)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
 
-        assert(status == StatusCodes.OK,
-               "standoff creation route returned a non successful HTTP status code: " + responseAs[String])
+        assert(
+          status == StatusCodes.OK,
+          "standoff creation route returned a non successful HTTP status code: " + responseAs[String]
+        )
 
         firstTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
 
@@ -760,7 +787,8 @@ class StandoffV1R2RSpec extends R2RSpec {
       val xmlStr = FileUtil.readTextFile(xmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(firstTextValueIri.get, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
         assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
@@ -802,10 +830,13 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       // create standoff from XML
       Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
-        assert(status == StatusCodes.OK,
-               "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
+        assert(
+          status == StatusCodes.OK,
+          "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String]
+        )
 
         secondTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
 
@@ -819,7 +850,8 @@ class StandoffV1R2RSpec extends R2RSpec {
       val xmlStr = FileUtil.readTextFile(xmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(secondTextValueIri.get, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
         assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
@@ -858,10 +890,14 @@ class StandoffV1R2RSpec extends R2RSpec {
       )
 
       // send mapping xml to route
-      Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+      Post("/v1/mapping", formDataMapping) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> standoffPath ~> check {
 
-        assert(status == StatusCodes.OK,
-               "standoff mapping creation route returned a non successful HTTP status code: " + responseAs[String])
+        assert(
+          status == StatusCodes.OK,
+          "standoff mapping creation route returned a non successful HTTP status code: " + responseAs[String]
+        )
 
         // check if mappingIri is correct
         val mappingIri = ResponseUtils.getStringMemberFromResponse(response, "mappingIri")
@@ -892,10 +928,13 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       // create standoff from XML
       Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
-        assert(status == StatusCodes.OK,
-               "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
+        assert(
+          status == StatusCodes.OK,
+          "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String]
+        )
 
         thirdTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
 
@@ -909,7 +948,8 @@ class StandoffV1R2RSpec extends R2RSpec {
       val htmlStr = FileUtil.readTextFile(htmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
         assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
@@ -951,10 +991,13 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       // create standoff from XML
       Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
-        assert(status == StatusCodes.OK,
-               "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
+        assert(
+          status == StatusCodes.OK,
+          "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String]
+        )
 
         fourthTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
 
@@ -968,7 +1011,8 @@ class StandoffV1R2RSpec extends R2RSpec {
       val htmlStr = FileUtil.readTextFile(htmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(fourthTextValueIri.get, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
         assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
@@ -1010,10 +1054,13 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       // create standoff from XML
       Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
-        assert(status == StatusCodes.OK,
-               "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
+        assert(
+          status == StatusCodes.OK,
+          "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String]
+        )
 
         thirdTextValueIri.set(ResponseUtils.getStringMemberFromResponse(response, "id"))
 
@@ -1027,7 +1074,8 @@ class StandoffV1R2RSpec extends R2RSpec {
       val htmlStr = FileUtil.readTextFile(htmlFile)
 
       Get("/v1/values/" + URLEncoder.encode(thirdTextValueIri.get, "UTF-8")) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
         assert(response.status == StatusCodes.OK, "reading back text value to XML failed")
 
@@ -1073,13 +1121,15 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       // create standoff from XML
       Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
         // the error message should inform the user that the required property http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription is missing
         assert(
-          responseAs[String].contains("http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription"))
+          responseAs[String].contains("http://www.knora.org/ontology/0001/anything#standoffEventTagHasDescription")
+        )
 
       }
 
@@ -1110,7 +1160,8 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       // create standoff from XML
       Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
@@ -1145,7 +1196,8 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       // create standoff from XML
       Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
@@ -1180,7 +1232,8 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       // create standoff from XML
       Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
@@ -1218,7 +1271,8 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       // create standoff from XML
       Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
@@ -1253,14 +1307,17 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       // create standoff from XML
       Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
         assert(status == StatusCodes.BadRequest, response.toString)
 
         // the error message should inform the user that the provided mapping Iri is invalid
         assert(
           responseAs[String].contains(
-            s"mapping $ANYTHING_PROJECT_IRI/invalidPathForMappings/HTMLMapping does not exist"))
+            s"mapping $ANYTHING_PROJECT_IRI/invalidPathForMappings/HTMLMapping does not exist"
+          )
+        )
 
       }
 
@@ -1303,11 +1360,11 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       val params =
         s"""
-                   |{
-                   |  "project_id": "$ANYTHING_PROJECT_IRI",
-                   |  "label": "mapping for elements separating words",
-                   |  "mappingName": "MappingSeparatingWords"
-                   |}
+           |{
+           |  "project_id": "$ANYTHING_PROJECT_IRI",
+           |  "label": "mapping for elements separating words",
+           |  "mappingName": "MappingSeparatingWords"
+           |}
              """.stripMargin
 
       val formDataMapping = Multipart.FormData(
@@ -1323,7 +1380,9 @@ class StandoffV1R2RSpec extends R2RSpec {
       )
 
       // send mapping xml to route
-      Post("/v1/mapping", formDataMapping) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password)) ~> standoffPath ~> check {
+      Post("/v1/mapping", formDataMapping) ~> addCredentials(
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> standoffPath ~> check {
 
         assert(status == StatusCodes.OK)
 
@@ -1355,10 +1414,13 @@ class StandoffV1R2RSpec extends R2RSpec {
 
       // create standoff from XML
       Post("/v1/values", HttpEntity(ContentTypes.`application/json`, newValueParams)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> valuesPath ~> check {
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> valuesPath ~> check {
 
-        assert(status == StatusCodes.OK,
-               "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String])
+        assert(
+          status == StatusCodes.OK,
+          "creation of a TextValue from XML returned a non successful HTTP status code: " + responseAs[String]
+        )
 
       }
 

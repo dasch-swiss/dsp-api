@@ -80,8 +80,8 @@ trait LiveManagers extends Managers {
   this: Actor =>
 
   /**
-    * The actor that forwards messages to actors that deal with persistent storage.
-    */
+   * The actor that forwards messages to actors that deal with persistent storage.
+   */
   lazy val storeManager: ActorRef = context.actorOf(
     Props(new StoreManager(appActor = self, cs = CacheServiceInMemImpl) with LiveActorMaker)
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
@@ -89,30 +89,33 @@ trait LiveManagers extends Managers {
   )
 
   /**
-    * The actor that forwards messages to responder actors to handle API requests.
-    */
+   * The actor that forwards messages to responder actors to handle API requests.
+   */
   lazy val responderManager: ActorRef = context.actorOf(
     Props(
       new ResponderManager(
         appActor = self,
-        responderData = ResponderData(system = context.system,
-                                      appActor = self,
-                                      knoraSettings = KnoraSettings(system),
-                                      cacheServiceSettings = new CacheServiceSettings(system.settings.config))
-      ) with LiveActorMaker)
+        responderData = ResponderData(
+          system = context.system,
+          appActor = self,
+          knoraSettings = KnoraSettings(system),
+          cacheServiceSettings = new CacheServiceSettings(system.settings.config)
+        )
+      ) with LiveActorMaker
+    )
       .withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
     name = RESPONDER_MANAGER_ACTOR_NAME
   )
 }
 
 /**
-  * This is the first actor in the application. All other actors are children
-  * of this actor and thus it takes also the role of the supervisor actor.
-  * It accepts messages for starting and stopping the Knora-API, holds the
-  * current state of the application, and is responsible for coordination of
-  * the startup and shutdown sequence. Further, it forwards any messages meant
-  * for responders or the store to the respective actor.
-  */
+ * This is the first actor in the application. All other actors are children
+ * of this actor and thus it takes also the role of the supervisor actor.
+ * It accepts messages for starting and stopping the Knora-API, holds the
+ * current state of the application, and is responsible for coordination of
+ * the startup and shutdown sequence. Further, it forwards any messages meant
+ * for responders or the store to the respective actor.
+ */
 class ApplicationActor extends Actor with Stash with LazyLogging with AroundDirectives with Timers {
   this: Managers =>
 
@@ -121,47 +124,47 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
   implicit val system: ActorSystem = context.system
 
   /**
-    * The application's configuration.
-    */
+   * The application's configuration.
+   */
   implicit val knoraSettings: KnoraSettingsImpl = KnoraSettings(system)
 
   /**
-    * The Cache Service's configuration.
-    */
+   * The Cache Service's configuration.
+   */
   implicit val cacheServiceSettings: CacheServiceSettings = new CacheServiceSettings(system.settings.config)
 
   /**
-    * The default feature factory configuration, which is used during startup.
-    */
+   * The default feature factory configuration, which is used during startup.
+   */
   val defaultFeatureFactoryConfig: FeatureFactoryConfig = new KnoraSettingsFeatureFactoryConfig(knoraSettings)
 
   /**
-    * Provides the actor materializer (akka-http)
-    */
+   * Provides the actor materializer (akka-http)
+   */
   implicit val materializer: Materializer = Materializer.matFromSystem(system)
 
   /**
-    * Provides the default global execution context
-    */
+   * Provides the default global execution context
+   */
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   /**
-    * Timeout definition
-    */
+   * Timeout definition
+   */
   implicit protected val timeout: Timeout = knoraSettings.defaultTimeout
 
   /**
-    * Route data.
-    */
+   * Route data.
+   */
   private val routeData = KnoraRouteData(
     system = system,
     appActor = self
   )
 
   /**
-    * This actor acts as the supervisor for its child actors.
-    * Here we can override the default supervisor strategy.
-    */
+   * This actor acts as the supervisor for its child actors.
+   * Here we can override the default supervisor strategy.
+   */
   override val supervisorStrategy: OneForOneStrategy =
     OneForOneStrategy(maxNrOfRetries = 10, withinTimeRange = 1.minute) {
       case _: ArithmeticException      => Resume
@@ -187,15 +190,14 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
   private val withCacheService = cacheServiceSettings.cacheServiceEnabled
 
   /**
-    * Startup of the ApplicationActor is a two step process:
-    * 1. Step: Start the http server and bind to ip and port. This is done with
-    * the "initializing" behaviour
-    * - Success: After a successful bind, go to step 2.
-    * - Failure: If bind fails, then retry up to 5 times before exiting.
-    *
-    * 2. Step:
-    *
-    */
+   * Startup of the ApplicationActor is a two step process:
+   * 1. Step: Start the http server and bind to ip and port. This is done with
+   * the "initializing" behaviour
+   * - Success: After a successful bind, go to step 2.
+   * - Failure: If bind fails, then retry up to 5 times before exiting.
+   *
+   * 2. Step:
+   */
   def receive: Receive = initializing()
 
   def initializing(): Receive = {
@@ -420,16 +422,17 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
 
     case other =>
       throw UnexpectedMessageException(
-        s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}")
+        s"ApplicationActor received an unexpected message $other of type ${other.getClass.getCanonicalName}"
+      )
   }
 
   /**
-    * All routes composed together and CORS activated based on the
-    * the configuration in application.conf (akka-http-cors).
-    *
-    * ALL requests go through each of the routes in ORDER.
-    * The FIRST matching route is used for handling a request.
-    */
+   * All routes composed together and CORS activated based on the
+   * the configuration in application.conf (akka-http-cors).
+   *
+   * ALL requests go through each of the routes in ORDER.
+   * The FIRST matching route is used for handling a request.
+   */
   private val apiRoutes: Route = logDuration {
     ServerVersion.addServerHeader {
       DSPApiDirectives.handleErrors(system) {
@@ -472,12 +475,12 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
   }
 
   /**
-    * Starts the Knora-API server.
-    *
-    * @param ignoreRepository    if `true`, don't read anything from the repository on startup.
-    * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
-    * @param retryCnt            how many times was this command tried
-    */
+   * Starts the Knora-API server.
+   *
+   * @param ignoreRepository    if `true`, don't read anything from the repository on startup.
+   * @param requiresIIIFService if `true`, ensure that the IIIF service is started.
+   * @param retryCnt            how many times was this command tried
+   */
   def appStart(ignoreRepository: Boolean, requiresIIIFService: Boolean, retryCnt: Int): Unit = {
 
     val bindingFuture: Future[Http.ServerBinding] = Http()
@@ -524,8 +527,8 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
   }
 
   /**
-    * Stops Knora-API.
-    */
+   * Stops Knora-API.
+   */
   def appStop(): Unit = {
     logger.info("ApplicationActor - initiating shutdown ...")
     context.stop(self)
@@ -546,17 +549,17 @@ class ApplicationActor extends Actor with Stash with LazyLogging with AroundDire
   }
 
   /**
-    * Prints the welcome message
-    */
+   * Prints the welcome message
+   */
   private def printBanner(): Unit = {
 
     var msg =
       """
-              |  ____  ____  ____         _    ____ ___
-              | |  _ \/ ___||  _ \       / \  |  _ \_ _|
-              | | | | \___ \| |_) |____ / _ \ | |_) | |
-              | | |_| |___) |  __/_____/ ___ \|  __/| |
-              | |____/|____/|_|       /_/   \_\_|  |___|
+        |  ____  ____  ____         _    ____ ___
+        | |  _ \/ ___||  _ \       / \  |  _ \_ _|
+        | | | | \___ \| |_) |____ / _ \ | |_) | |
+        | | |_| |___) |  __/_____/ ___ \|  __/| |
+        | |____/|____/|_|       /_/   \_\_|  |___|
             """.stripMargin
 
     msg += "\n"

@@ -35,13 +35,17 @@ case class oap(iri: String, p: ObjectAccessPermissionADM)
 case class doap(iri: String, p: DefaultObjectAccessPermissionADM)
 
 /**
-  * This object holds data representations for the data in 'test_data/all_data/permissions-data.ttl'.
-  */
+ * This object holds data representations for the data in 'test_data/all_data/permissions-data.ttl'.
+ */
 object SharedPermissionsTestData {
 
-  /*************************************/
-  /** Knora System Permissions        **/
-  /*************************************/
+  /**
+   * **********************************
+   */
+  /** Knora System Permissions        * */
+  /**
+   * **********************************
+   */
   val perm001_d1: doap =
     doap(
       iri = "http://rdfh.ch/permissions/0000/001-d1",
@@ -88,9 +92,13 @@ object SharedPermissionsTestData {
       )
     )
 
-  /*************************************/
-  /** Images Demo Project Permissions **/
-  /*************************************/
+  /**
+   * **********************************
+   */
+  /** Images Demo Project Permissions * */
+  /**
+   * **********************************
+   */
   val perm002_a1: ap =
     ap(
       iri = "http://rdfh.ch/permissions/00FF/a1",
@@ -172,9 +180,13 @@ object SharedPermissionsTestData {
       )
     )
 
-  /*************************************/
-  /** Incunabula Project Permissions  **/
-  /*************************************/
+  /**
+   * **********************************
+   */
+  /** Incunabula Project Permissions  * */
+  /**
+   * **********************************
+   */
   val perm003_a1: ap =
     ap(
       iri = "http://rdfh.ch/permissions/0803/003-a1",
@@ -303,9 +315,13 @@ object SharedPermissionsTestData {
       )
     )
 
-  /************************************/
-  /** Anything Project Permissions   **/
-  /************************************/
+  /**
+   * *********************************
+   */
+  /** Anything Project Permissions   * */
+  /**
+   * *********************************
+   */
   val perm005_a1: ap =
     ap(
       iri = "http://rdfh.ch/permissions/0001/005-a1",

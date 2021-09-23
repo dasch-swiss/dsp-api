@@ -42,8 +42,8 @@ object UpdateListItemsRouteADME2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing update node props routes.
-  */
+ * End-to-End (E2E) test specification for testing update node props routes.
+ */
 class UpdateListItemsRouteADME2ESpec
     extends E2ESpec(UpdateListItemsRouteADME2ESpec.config)
     with SessionJsonProtocol
@@ -92,8 +92,8 @@ class UpdateListItemsRouteADME2ESpec
       "update only node name" in {
         val updateNodeName =
           s"""{
-                       |    "name": "updated root node name"
-                       |}""".stripMargin
+             |    "name": "updated root node name"
+             |}""".stripMargin
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(
@@ -106,9 +106,10 @@ class UpdateListItemsRouteADME2ESpec
         )
         val encodedListUrl = java.net.URLEncoder.encode(treeListInfo.id, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/name",
-                          HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl + "/name",
+          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -134,8 +135,8 @@ class UpdateListItemsRouteADME2ESpec
       "update only node labels" in {
         val updateNodeLabels =
           s"""{
-                       |    "labels": [{"language": "se", "value": "nya märkningen"}]
-                       |}""".stripMargin
+             |    "labels": [{"language": "se", "value": "nya märkningen"}]
+             |}""".stripMargin
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(
@@ -148,9 +149,10 @@ class UpdateListItemsRouteADME2ESpec
         )
         val encodedListUrl = java.net.URLEncoder.encode(treeListInfo.id, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/labels",
-                          HttpEntity(ContentTypes.`application/json`, updateNodeLabels)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl + "/labels",
+          HttpEntity(ContentTypes.`application/json`, updateNodeLabels)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -178,8 +180,8 @@ class UpdateListItemsRouteADME2ESpec
       "update node comments" in {
         val updateCommentsLabels =
           s"""{
-                       |    "comments": [{"language": "se", "value": "nya kommentarer"}]
-                       |}""".stripMargin
+             |    "comments": [{"language": "se", "value": "nya kommentarer"}]
+             |}""".stripMargin
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(
@@ -192,9 +194,10 @@ class UpdateListItemsRouteADME2ESpec
         )
         val encodedListUrl = java.net.URLEncoder.encode(treeListInfo.id, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
-                          HttpEntity(ContentTypes.`application/json`, updateCommentsLabels)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
+          HttpEntity(ContentTypes.`application/json`, updateCommentsLabels)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -225,9 +228,10 @@ class UpdateListItemsRouteADME2ESpec
              |}""".stripMargin
         val encodedListUrl = java.net.URLEncoder.encode(treeListInfo.id, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
-                          HttpEntity(ContentTypes.`application/json`, deleteCommentsLabels)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
+          HttpEntity(ContentTypes.`application/json`, deleteCommentsLabels)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
@@ -246,8 +250,8 @@ class UpdateListItemsRouteADME2ESpec
         val newName = "updated third child name"
         val updateNodeName =
           s"""{
-                       |    "name": "$newName"
-                       |}""".stripMargin
+             |    "name": "$newName"
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -262,9 +266,10 @@ class UpdateListItemsRouteADME2ESpec
 
         val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/name",
-                          HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl + "/name",
+          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -288,8 +293,8 @@ class UpdateListItemsRouteADME2ESpec
       "update only the labels of the child node" in {
         val updateNodeLabels =
           s"""{
-                       |    "labels": [{"language": "se", "value": "nya märkningen för nod"}]
-                       |}""".stripMargin
+             |    "labels": [{"language": "se", "value": "nya märkningen för nod"}]
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -304,9 +309,10 @@ class UpdateListItemsRouteADME2ESpec
 
         val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/labels",
-                          HttpEntity(ContentTypes.`application/json`, updateNodeLabels)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl + "/labels",
+          HttpEntity(ContentTypes.`application/json`, updateNodeLabels)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -332,8 +338,8 @@ class UpdateListItemsRouteADME2ESpec
       "update only comments of the child node" in {
         val updateNodeComments =
           s"""{
-                       |    "comments": [{"language": "se", "value": "nya kommentarer för nod"}]
-                       |}""".stripMargin
+             |    "comments": [{"language": "se", "value": "nya kommentarer för nod"}]
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -348,9 +354,10 @@ class UpdateListItemsRouteADME2ESpec
 
         val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
-                          HttpEntity(ContentTypes.`application/json`, updateNodeComments)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
+          HttpEntity(ContentTypes.`application/json`, updateNodeComments)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -379,15 +386,16 @@ class UpdateListItemsRouteADME2ESpec
         val nodeIri = "invalid-iri"
         val updateNodeName =
           s"""{
-                       |    "parentNodeIri": "$parentIri",
-                       |    "position": $newPosition
-                       |}""".stripMargin
+             |    "parentNodeIri": "$parentIri",
+             |    "position": $newPosition
+             |}""".stripMargin
 
         val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
-                          HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
+          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.BadRequest)
@@ -399,9 +407,9 @@ class UpdateListItemsRouteADME2ESpec
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList014"
         val updateNodeName =
           s"""{
-                       |    "parentNodeIri": "$parentIri",
-                       |    "position": $newPosition
-                       |}""".stripMargin
+             |    "parentNodeIri": "$parentIri",
+             |    "position": $newPosition
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -416,9 +424,10 @@ class UpdateListItemsRouteADME2ESpec
 
         val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
-                          HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
+          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -444,9 +453,9 @@ class UpdateListItemsRouteADME2ESpec
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
         val updateNodeName =
           s"""{
-                       |    "parentNodeIri": "$parentIri",
-                       |    "position": $newPosition
-                       |}""".stripMargin
+             |    "parentNodeIri": "$parentIri",
+             |    "position": $newPosition
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -461,9 +470,10 @@ class UpdateListItemsRouteADME2ESpec
 
         val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
-                          HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
+          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -489,9 +499,9 @@ class UpdateListItemsRouteADME2ESpec
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList015"
         val updateNodeName =
           s"""{
-                       |    "parentNodeIri": "$parentIri",
-                       |    "position": $newPosition
-                       |}""".stripMargin
+             |    "parentNodeIri": "$parentIri",
+             |    "position": $newPosition
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -506,9 +516,10 @@ class UpdateListItemsRouteADME2ESpec
 
         val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
-                          HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
+          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -534,9 +545,9 @@ class UpdateListItemsRouteADME2ESpec
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList015"
         val updateNodeName =
           s"""{
-                       |    "parentNodeIri": "$parentIri",
-                       |    "position": $newPosition
-                       |}""".stripMargin
+             |    "parentNodeIri": "$parentIri",
+             |    "position": $newPosition
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -551,9 +562,10 @@ class UpdateListItemsRouteADME2ESpec
 
         val encodedListUrl = java.net.URLEncoder.encode(nodeIri, "utf-8")
 
-        val request = Put(baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
-                          HttpEntity(ContentTypes.`application/json`, updateNodeName)) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials)
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl + "/position",
+          HttpEntity(ContentTypes.`application/json`, updateNodeName)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)

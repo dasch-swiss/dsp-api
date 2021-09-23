@@ -25,11 +25,11 @@ import org.knora.webapi.routing.RouteUtilV2
 import scala.util.Try
 
 /**
-  * A custom Akka HTTP header representing [[RouteUtilV2.MARKUP_HEADER]], which a client can send to specify
-  * how text markup should be returned in an API response.
-  *
-  * The definition follows [[https://doc.akka.io/docs/akka-http/current/common/http-model.html#custom-headers]].
-  */
+ * A custom Akka HTTP header representing [[RouteUtilV2.MARKUP_HEADER]], which a client can send to specify
+ * how text markup should be returned in an API response.
+ *
+ * The definition follows [[https://doc.akka.io/docs/akka-http/current/common/http-model.html#custom-headers]].
+ */
 final class MarkupHeader(token: String) extends ModeledCustomHeader[MarkupHeader] {
   override def renderInRequests = true
   override def renderInResponses = true

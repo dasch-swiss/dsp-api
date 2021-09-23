@@ -26,13 +26,15 @@ import org.knora.webapi.messages.v2.responder.valuemessages._
 object ResourcesResponseCheckerV2 {
 
   /**
-    * Compares the response to a full resource request with the expected response.
-    *
-    * @param received the response returned by the resource responder.
-    * @param expected the expected response.
-    */
-  def compareReadResourcesSequenceV2Response(expected: ReadResourcesSequenceV2,
-                                             received: ReadResourcesSequenceV2): Unit = {
+   * Compares the response to a full resource request with the expected response.
+   *
+   * @param received the response returned by the resource responder.
+   * @param expected the expected response.
+   */
+  def compareReadResourcesSequenceV2Response(
+    expected: ReadResourcesSequenceV2,
+    received: ReadResourcesSequenceV2
+  ): Unit = {
     assert(expected.resources.size == received.resources.size, "number of resources is not equal")
     assert(expected.resources.size == received.resources.size, "number of resources are not equal")
 
@@ -55,8 +57,10 @@ object ResourcesResponseCheckerV2 {
         // compare the properties
         // convert Map to a sequence of tuples and sort by property Iri)
         expectedResource.values.toSeq.sortBy(_._1).zip(receivedResource.values.toSeq.sortBy(_._1)).foreach {
-          case ((expectedPropIri: SmartIri, expectedPropValues: Seq[ReadValueV2]),
-                (receivedPropIri: SmartIri, receivedPropValues: Seq[ReadValueV2])) =>
+          case (
+                (expectedPropIri: SmartIri, expectedPropValues: Seq[ReadValueV2]),
+                (receivedPropIri: SmartIri, receivedPropValues: Seq[ReadValueV2])
+              ) =>
             assert(expectedPropIri == receivedPropIri)
 
             // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.

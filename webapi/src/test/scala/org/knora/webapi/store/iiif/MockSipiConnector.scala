@@ -31,21 +31,21 @@ import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
 /**
-  * Constants for [[MockSipiConnector]].
-  */
+ * Constants for [[MockSipiConnector]].
+ */
 object MockSipiConnector {
 
   /**
-    * A request to [[MockSipiConnector]] with this filename will always cause the responder to simulate a Sipi
-    * error.
-    */
+   * A request to [[MockSipiConnector]] with this filename will always cause the responder to simulate a Sipi
+   * error.
+   */
   val FAILURE_FILENAME: String = "failure.jp2"
 }
 
 /**
-  * Takes the place of [[SipiConnector]] for tests without an actual Sipi server, by returning hard-coded responses
-  * simulating responses from Sipi.
-  */
+ * Takes the place of [[SipiConnector]] for tests without an actual Sipi server, by returning hard-coded responses
+ * simulating responses from Sipi.
+ */
 class MockSipiConnector extends Actor with ActorLogging {
 
   implicit val system: ActorSystem = context.system
@@ -77,20 +77,18 @@ class MockSipiConnector extends Actor with ActorLogging {
     }
 
   private def moveTemporaryFileToPermanentStorage(
-      moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest)
-    : Try[SuccessResponseV2] = {
+    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
+  ): Try[SuccessResponseV2] =
     if (moveTemporaryFileToPermanentStorageRequestV2.internalFilename == MockSipiConnector.FAILURE_FILENAME) {
       Failure(SipiException("Sipi failed to move file to permanent storage"))
     } else {
       Success(SuccessResponseV2("Moved file to permanent storage"))
     }
-  }
 
-  private def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Try[SuccessResponseV2] = {
+  private def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Try[SuccessResponseV2] =
     if (deleteTemporaryFileRequestV2.internalFilename == MockSipiConnector.FAILURE_FILENAME) {
       Failure(SipiException("Sipi failed to delete temporary file"))
     } else {
       Success(SuccessResponseV2("Deleted temporary file"))
     }
-  }
 }

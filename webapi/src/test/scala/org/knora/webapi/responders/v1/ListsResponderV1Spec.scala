@@ -29,8 +29,8 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import scala.concurrent.duration._
 
 /**
-  * Static data for testing [[ListsResponderV1]].
-  */
+ * Static data for testing [[ListsResponderV1]].
+ */
 object ListsResponderV1Spec {
   val config: Config = ConfigFactory.parseString("""
          akka.loglevel = "DEBUG"
@@ -39,8 +39,8 @@ object ListsResponderV1Spec {
 }
 
 /**
-  * Tests [[ListsResponderV1]].
-  */
+ * Tests [[ListsResponderV1]].
+ */
 class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with ImplicitSender {
 
   // The default timeout for receiving reply messages from actors.
@@ -97,7 +97,8 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 label = Some("Personen"),
                 name = Some("1"),
                 id = "http://rdfh.ch/lists/00FF/a5f66db8a7"
-              )),
+              )
+            ),
             label = Some("SCHWEIZ"),
             name = Some("1"),
             id = "http://rdfh.ch/lists/00FF/0cc31a7fa7"
@@ -113,7 +114,8 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 label = Some("Personen"),
                 name = Some("1"),
                 id = "http://rdfh.ch/lists/00FF/d75d142ba8"
-              )),
+              )
+            ),
             label = Some("GRAUB\u00DCNDEN"),
             name = Some("2"),
             id = "http://rdfh.ch/lists/00FF/3e2ac1f1a7"
@@ -1392,11 +1394,13 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 label = Some("St. Moritz Kirchen"),
                 name = Some("1"),
                 id = "http://rdfh.ch/lists/00FF/af007b34ca"
-              )),
+              )
+            ),
             label = Some("RELIGION UND KIRCHEN"),
             name = Some("1"),
             id = "http://rdfh.ch/lists/00FF/16cd27fbc9"
-          )),
+          )
+        ),
         label = Some("RELIGION"),
         name = Some("7REL"),
         id = "http://rdfh.ch/lists/00FF/7d99d4c1c9"
@@ -2022,7 +2026,8 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                     label = Some("Personen"),
                     name = Some("1"),
                     id = "http://rdfh.ch/lists/00FF/4db9d4abdb"
-                  )),
+                  )
+                ),
                 label = Some("Curling"),
                 name = Some("5"),
                 id = "http://rdfh.ch/lists/00FF/b4858172db"
@@ -2688,7 +2693,8 @@ class ListsResponderV1Spec extends CoreSpec(ListsResponderV1Spec.config) with Im
                 label = Some("Eisenbahnen und Bahnh\u00F6fe"),
                 name = Some("1"),
                 id = "http://rdfh.ch/lists/00FF/1dd9d495ed"
-              )),
+              )
+            ),
             label = Some("EISENBAHNEN"),
             name = Some("1-1"),
             id = "http://rdfh.ch/lists/00FF/84a5815ced"

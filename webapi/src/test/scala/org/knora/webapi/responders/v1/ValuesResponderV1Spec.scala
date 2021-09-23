@@ -47,8 +47,8 @@ import org.knora.webapi.util.MutableTestIri
 import scala.concurrent.duration._
 
 /**
-  * Static data for testing [[ValuesResponderV1]].
-  */
+ * Static data for testing [[ValuesResponderV1]].
+ */
 object ValuesResponderV1Spec {
   val config: Config = ConfigFactory.parseString("""
          akka.loglevel = "DEBUG"
@@ -67,8 +67,8 @@ object ValuesResponderV1Spec {
 }
 
 /**
-  * Tests [[ValuesResponderV1]].
-  */
+ * Tests [[ValuesResponderV1]].
+ */
 class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with ImplicitSender {
   implicit private val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -77,11 +77,14 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
   /* we need to run our app with the mocked sipi actor */
   override lazy val appActor: ActorRef = system.actorOf(
     Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME)
+    name = APPLICATION_MANAGER_ACTOR_NAME
+  )
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl",
-                  name = "http://www.knora.org/data/0803/incunabula"),
+    RdfDataObject(
+      path = "test_data/responders.v1.ValuesResponderV1Spec/incunabula-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula"
+    ),
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
@@ -127,9 +130,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     defaultXSLTransformation = None
   )
 
-  private def checkComment1aResponse(response: CreateValueResponseV1,
-                                     utf8str: String,
-                                     standoff: Seq[StandoffTagV2] = Seq.empty[StandoffTagV2]): Unit = {
+  private def checkComment1aResponse(
+    response: CreateValueResponseV1,
+    utf8str: String,
+    standoff: Seq[StandoffTagV2] = Seq.empty[StandoffTagV2]
+  ): Unit = {
     assert(response.rights == 8, "rights was not 8")
     assert(response.value.asInstanceOf[TextValueV1].utf8str == utf8str, "comment value did not match")
 
@@ -138,8 +143,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         case textValueWithStandoff: TextValueWithStandoffV1 =>
           assert(
             textValueWithStandoff.standoff.sortBy(standoffTag =>
-              (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)) == standoff.sortBy(standoffTag =>
-              (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)),
+              (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)
+            ) == standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)),
             "standoff did not match"
           )
         case _ => throw AssertionException("response should be of type TextValueWithStandoffV1")
@@ -186,14 +191,17 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
     assert(
       response.value.asInstanceOf[TextValueWithStandoffV1].standoff.sortBy(_.standoffTagClassIri) == standoff.sortBy(
-        _.standoffTagClassIri),
+        _.standoffTagClassIri
+      ),
       "standoff did not match"
     )
   }
 
-  private def checkComment1bResponse(response: ChangeValueResponseV1,
-                                     utf8str: String,
-                                     standoff: Seq[StandoffTagV2] = Seq.empty[StandoffTagV2]): Unit = {
+  private def checkComment1bResponse(
+    response: ChangeValueResponseV1,
+    utf8str: String,
+    standoff: Seq[StandoffTagV2] = Seq.empty[StandoffTagV2]
+  ): Unit = {
     assert(response.rights == 8, "rights was not 8")
 
     assert(response.value.asInstanceOf[TextValueV1].utf8str == utf8str, "comment value did not match")
@@ -203,8 +211,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         case textValueWithStandoff: TextValueWithStandoffV1 =>
           assert(
             textValueWithStandoff.standoff.sortBy(standoffTag =>
-              (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)) == standoff.sortBy(standoffTag =>
-              (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)),
+              (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)
+            ) == standoff.sortBy(standoffTag => (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)),
             "standoff did not match"
           )
         case _ => throw AssertionException("response should be of type TextValueWithStandoffV1")
@@ -218,11 +226,13 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
     val comments =
       response.props.get.properties.filter(_.pid == "http://www.knora.org/ontology/0803/incunabula#book_comment").head
 
-    assert(comments.values == Vector(
-             TextValueSimpleV1(utf8str = "Comment 1b"),
-             TextValueSimpleV1("Comment 2")
-           ),
-           "Values of book_comment did not match")
+    assert(
+      comments.values == Vector(
+        TextValueSimpleV1(utf8str = "Comment 1b"),
+        TextValueSimpleV1("Comment 2")
+      ),
+      "Values of book_comment did not match"
+    )
   }
 
   private def checkTextValue(expected: TextValueV1, received: TextValueV1): Unit = {
@@ -234,19 +244,24 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       case expectedWithStandoff: TextValueWithStandoffV1 =>
         assert(
-          received.asInstanceOf[TextValueWithStandoffV1].resource_reference == expectedWithStandoff.resource_reference)
+          received.asInstanceOf[TextValueWithStandoffV1].resource_reference == expectedWithStandoff.resource_reference
+        )
         assert(
           received
             .asInstanceOf[TextValueWithStandoffV1]
             .standoff
             .map(_.standoffTagClassIri)
-            .sorted == expectedWithStandoff.standoff.map(_.standoffTagClassIri).sorted)
+            .sorted == expectedWithStandoff.standoff.map(_.standoffTagClassIri).sorted
+        )
         assert(
           received
             .asInstanceOf[TextValueWithStandoffV1]
             .standoff
-            .sortBy(standoffTag => (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)) == expectedWithStandoff.standoff
-            .sortBy(standoffTag => (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)))
+            .sortBy(standoffTag =>
+              (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition)
+            ) == expectedWithStandoff.standoff
+            .sortBy(standoffTag => (standoffTag.standoffTagClassIri.toString, standoffTag.startPosition))
+        )
       case _ =>
     }
 
@@ -262,21 +277,22 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
     storeManager ! SparqlSelectRequest(lastModSparqlQuery)
 
-    expectMsgPF(timeout) {
-      case response: SparqlSelectResult =>
-        val rows = response.results.bindings
-        assert(rows.size <= 1, s"Resource $resourceIri has more than one instance of knora-base:lastModificationDate")
+    expectMsgPF(timeout) { case response: SparqlSelectResult =>
+      val rows = response.results.bindings
+      assert(rows.size <= 1, s"Resource $resourceIri has more than one instance of knora-base:lastModificationDate")
 
-        if (rows.size == 1) {
-          Some(rows.head.rowMap("lastModificationDate"))
-        } else {
-          None
-        }
+      if (rows.size == 1) {
+        Some(rows.head.rowMap("lastModificationDate"))
+      } else {
+        None
+      }
     }
   }
 
-  private def checkImageFileValueChange(received: ChangeFileValueResponseV1,
-                                        request: ChangeFileValueRequestV1): Unit = {
+  private def checkImageFileValueChange(
+    received: ChangeFileValueResponseV1,
+    request: ChangeFileValueRequestV1
+  ): Unit = {
     assert(received.locations.size == 1, "Expected one file value to have been changed")
 
     received.locations.foreach { location: LocationV1 =>
@@ -299,8 +315,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: CreateValueResponseV1 => checkComment1aResponse(msg, utf8str)
+      expectMsgPF(timeout) { case msg: CreateValueResponseV1 =>
+        checkComment1aResponse(msg, utf8str)
       }
 
       // Check that the resource's last modification date got updated.
@@ -321,8 +337,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
       }
 
     }
@@ -334,8 +350,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         userProfile = incunabulaUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: ValueGetResponseV1 => checkValueGetResponse(msg)
+      expectMsgPF(timeout) { case msg: ValueGetResponseV1 =>
+        checkValueGetResponse(msg)
       }
     }
 
@@ -346,9 +362,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         userProfile = incunabulaUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: ValueGetResponseV1 =>
-          checkValueGetResponseWithStandoff(msg)
+      expectMsgPF(timeout) { case msg: ValueGetResponseV1 =>
+        checkValueGetResponseWithStandoff(msg)
       }
     }
 
@@ -359,8 +374,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         userProfile = anythingUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: ValueGetResponseV1 => msg.rights should ===(2)
+      expectMsgPF(timeout) { case msg: ValueGetResponseV1 =>
+        msg.rights should ===(2)
       }
     }
 
@@ -373,17 +388,17 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         userProfile = incunabulaUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: ValueGetResponseV1 =>
-          msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
-          msg.value should ===(
-            LinkValueV1(
-              subjectIri = "http://rdfh.ch/0803/8a0b1e75",
-              predicateIri = "http://www.knora.org/ontology/0803/incunabula#partOf",
-              objectIri = zeitglöckleinIri,
-              referenceCount = 1
-            ))
-          msg.rights should ===(2)
+      expectMsgPF(timeout) { case msg: ValueGetResponseV1 =>
+        msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+        msg.value should ===(
+          LinkValueV1(
+            subjectIri = "http://rdfh.ch/0803/8a0b1e75",
+            predicateIri = "http://www.knora.org/ontology/0803/incunabula#partOf",
+            objectIri = zeitglöckleinIri,
+            referenceCount = 1
+          )
+        )
+        msg.rights should ===(2)
       }
     }
 
@@ -402,8 +417,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: ChangeValueResponseV1 => checkComment1bResponse(msg, utf8str)
+      expectMsgPF(timeout) { case msg: ChangeValueResponseV1 =>
+        checkComment1bResponse(msg, utf8str)
       }
 
       // Check that the resource's last modification date got updated.
@@ -414,29 +429,28 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       val sparqlQuery =
         s"""
-                   |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-                   |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-                   |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-                   |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-                   |
-                   |SELECT ?value ?uuid ?permissions WHERE {
-                   |    BIND(IRI("$oldIri") AS ?value)
-                   |
-                   |    OPTIONAL {
-                   |        ?value knora-base:valueHasUUID ?uuid .
-                   |    }
-                   |
-                   |    OPTIONAL {
-                   |        ?value knora-base:hasPermissions ?permissions .
-                   |    }
-                   |}
+           |PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+           |PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+           |PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+           |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+           |
+           |SELECT ?value ?uuid ?permissions WHERE {
+           |    BIND(IRI("$oldIri") AS ?value)
+           |
+           |    OPTIONAL {
+           |        ?value knora-base:valueHasUUID ?uuid .
+           |    }
+           |
+           |    OPTIONAL {
+           |        ?value knora-base:hasPermissions ?permissions .
+           |    }
+           |}
                  """.stripMargin
 
       storeManager ! SparqlSelectRequest(sparqlQuery)
 
-      expectMsgPF(timeout) {
-        case sparqlSelectResponse: SparqlSelectResult =>
-          assert(sparqlSelectResponse.results.bindings.head.rowMap.keySet == Set("value"))
+      expectMsgPF(timeout) { case sparqlSelectResponse: SparqlSelectResult =>
+        assert(sparqlSelectResponse.results.bindings.head.rowMap.keySet == Set("value"))
       }
     }
 
@@ -451,8 +465,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
       }
     }
 
@@ -468,8 +482,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
       }
     }
 
@@ -484,8 +498,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
       }
     }
 
@@ -499,8 +513,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: CreateValueResponseV1 => ()
+      expectMsgPF(timeout) { case msg: CreateValueResponseV1 =>
+        ()
       }
 
       responderManager ! ResourceFullGetRequestV1(
@@ -509,8 +523,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         userADM = incunabulaUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: ResourceFullResponseV1 => checkOrderInResource(msg)
+      expectMsgPF(timeout) { case msg: ResourceFullResponseV1 =>
+        checkOrderInResource(msg)
       }
     }
 
@@ -522,8 +536,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         userProfile = incunabulaUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: ValueVersionHistoryGetResponseV1 => msg.valueVersions.length should ===(2)
+      expectMsgPF(timeout) { case msg: ValueVersionHistoryGetResponseV1 =>
+        msg.valueVersions.length should ===(2)
       }
     }
 
@@ -537,8 +551,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: DeleteValueResponseV1 => commentIri.set(msg.id)
+      expectMsgPF(timeout) { case msg: DeleteValueResponseV1 =>
+        commentIri.set(msg.id)
       }
 
       responderManager ! ValueGetRequestV1(
@@ -547,8 +561,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         userProfile = incunabulaUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
 
       // Check that the resource's last modification date got updated.
@@ -566,8 +580,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
 
@@ -581,8 +595,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
 
@@ -595,8 +609,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
 
@@ -610,8 +624,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
 
@@ -625,8 +639,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
@@ -639,8 +653,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
 
@@ -653,9 +667,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure =>
-          msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
@@ -670,8 +683,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
 
       // The cardinality of incunabula:seqnum in incunabula:page is 0-1, and page http://rdfh.ch/0803/4f11adaf already has a seqnum.
@@ -684,8 +697,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
@@ -702,10 +715,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: CreateValueResponseV1 =>
-          currentColorValueIri.set(msg.id)
-          msg.value should ===(ColorValueV1(color))
+      expectMsgPF(timeout) { case msg: CreateValueResponseV1 =>
+        currentColorValueIri.set(msg.id)
+        msg.value should ===(ColorValueV1(color))
       }
     }
 
@@ -721,10 +733,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: ChangeValueResponseV1 =>
-          currentColorValueIri.set(msg.id)
-          msg.value should ===(ColorValueV1(color))
+      expectMsgPF(timeout) { case msg: ChangeValueResponseV1 =>
+        currentColorValueIri.set(msg.id)
+        msg.value should ===(ColorValueV1(color))
       }
     }
 
@@ -742,10 +753,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: CreateValueResponseV1 =>
-          currentGeomValueIri.set(msg.id)
-          msg.value should ===(GeomValueV1(geom))
+      expectMsgPF(timeout) { case msg: CreateValueResponseV1 =>
+        currentGeomValueIri.set(msg.id)
+        msg.value should ===(GeomValueV1(geom))
       }
 
     }
@@ -763,10 +773,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: ChangeValueResponseV1 =>
-          currentGeomValueIri.set(msg.id)
-          msg.value should ===(GeomValueV1(geom))
+      expectMsgPF(timeout) { case msg: ChangeValueResponseV1 =>
+        currentGeomValueIri.set(msg.id)
+        msg.value should ===(GeomValueV1(geom))
       }
     }
 
@@ -777,17 +786,19 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       responderManager ! CreateValueRequestV1(
         resourceIri = zeitglöckleinIri,
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
-        value = TextValueWithStandoffV1(utf8str = utf8str,
-                                        standoff = sampleStandoff,
-                                        mapping = dummyMapping,
-                                        mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"),
+        value = TextValueWithStandoffV1(
+          utf8str = utf8str,
+          standoff = sampleStandoff,
+          mapping = dummyMapping,
+          mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
+        ),
         featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: CreateValueResponseV1 => checkComment1aResponse(msg, utf8str, sampleStandoff)
+      expectMsgPF(timeout) { case msg: CreateValueResponseV1 =>
+        checkComment1aResponse(msg, utf8str, sampleStandoff)
       }
     }
 
@@ -798,17 +809,19 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       responderManager ! CreateValueRequestV1(
         resourceIri = zeitglöckleinIri,
         propertyIri = "http://www.knora.org/ontology/0803/incunabula#book_comment",
-        value = TextValueWithStandoffV1(utf8str = utf8str,
-                                        standoff = sampleStandoff,
-                                        mapping = dummyMapping,
-                                        mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"),
+        value = TextValueWithStandoffV1(
+          utf8str = utf8str,
+          standoff = sampleStandoff,
+          mapping = dummyMapping,
+          mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
+        ),
         featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
       }
 
     }
@@ -819,17 +832,19 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       responderManager ! ChangeValueRequestV1(
         valueIri = commentIri.get,
-        value = TextValueWithStandoffV1(utf8str = utf8str,
-                                        standoff = sampleStandoff,
-                                        mapping = dummyMapping,
-                                        mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"),
+        value = TextValueWithStandoffV1(
+          utf8str = utf8str,
+          standoff = sampleStandoff,
+          mapping = dummyMapping,
+          mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
+        ),
         featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: ChangeValueResponseV1 => checkComment1bResponse(msg, utf8str, sampleStandoff)
+      expectMsgPF(timeout) { case msg: ChangeValueResponseV1 =>
+        checkComment1bResponse(msg, utf8str, sampleStandoff)
       }
     }
 
@@ -839,17 +854,19 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       responderManager ! ChangeValueRequestV1(
         valueIri = commentIri.get,
-        value = TextValueWithStandoffV1(utf8str = utf8str,
-                                        standoff = sampleStandoff,
-                                        mapping = dummyMapping,
-                                        mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"),
+        value = TextValueWithStandoffV1(
+          utf8str = utf8str,
+          standoff = sampleStandoff,
+          mapping = dummyMapping,
+          mappingIri = "http://rdfh.ch/standoff/mappings/StandardMapping"
+        ),
         featureFactoryConfig = defaultFeatureFactoryConfig,
         userProfile = incunabulaUser,
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
       }
 
     }
@@ -864,8 +881,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             startPosition = 31,
             endPosition = 39,
             attributes = Vector(
-              StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-                                        value = zeitglöckleinIri)),
+              StandoffTagIriAttributeV2(
+                standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
+                value = zeitglöckleinIri
+              )
+            ),
             uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 0
@@ -885,10 +905,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case CreateValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _) =>
-          firstValueIriWithResourceRef.set(newValueIri)
-          checkTextValue(received = newValue, expected = textValueWithResourceRef)
+      expectMsgPF(timeout) { case CreateValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _) =>
+        firstValueIriWithResourceRef.set(newValueIri)
+        checkTextValue(received = newValue, expected = textValueWithResourceRef)
       }
 
       responderManager ! LinkValueGetRequestV1(
@@ -902,17 +921,17 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       // Since this is the first Standoff resource reference between the source and target resources, we should
       // now have version 1 of a LinkValue, with a reference count of 1.
 
-      expectMsgPF(timeout) {
-        case msg: ValueGetResponseV1 =>
-          msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
-          msg.value should ===(
-            LinkValueV1(
-              subjectIri = "http://rdfh.ch/0803/21abac2162",
-              predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-              objectIri = zeitglöckleinIri,
-              referenceCount = 1
-            ))
-          msg.rights should ===(2)
+      expectMsgPF(timeout) { case msg: ValueGetResponseV1 =>
+        msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+        msg.value should ===(
+          LinkValueV1(
+            subjectIri = "http://rdfh.ch/0803/21abac2162",
+            predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+            objectIri = zeitglöckleinIri,
+            referenceCount = 1
+          )
+        )
+        msg.rights should ===(2)
       }
 
       val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -928,12 +947,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       // The new LinkValue should have no previous version, and there should be a direct link between the resources.
 
-      expectMsgPF(timeout) {
-        case response: SparqlSelectResult =>
-          val rows = response.results.bindings
-          rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-          rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
-          rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+      expectMsgPF(timeout) { case response: SparqlSelectResult =>
+        val rows = response.results.bindings
+        rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+        rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
+        rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
       }
 
     }
@@ -949,8 +967,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             startPosition = 0,
             endPosition = 4,
             attributes = Vector(
-              StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-                                        value = zeitglöckleinIri)),
+              StandoffTagIriAttributeV2(
+                standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
+                value = zeitglöckleinIri
+              )
+            ),
             uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 0
@@ -961,8 +982,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             startPosition = 39,
             endPosition = 47,
             attributes = Vector(
-              StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-                                        value = zeitglöckleinIri)),
+              StandoffTagIriAttributeV2(
+                standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
+                value = zeitglöckleinIri
+              )
+            ),
             uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 1
@@ -981,10 +1005,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case ChangeValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _) =>
-          firstValueIriWithResourceRef.set(newValueIri)
-          checkTextValue(received = newValue, expected = textValueWithResourceRef)
+      expectMsgPF(timeout) { case ChangeValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _) =>
+        firstValueIriWithResourceRef.set(newValueIri)
+        checkTextValue(received = newValue, expected = textValueWithResourceRef)
       }
 
       responderManager ! LinkValueGetRequestV1(
@@ -998,17 +1021,17 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       // Since the new version still refers to the same resource, the reference count of the LinkValue should not
       // change.
 
-      expectMsgPF(timeout) {
-        case msg: ValueGetResponseV1 =>
-          msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
-          msg.value should ===(
-            LinkValueV1(
-              subjectIri = "http://rdfh.ch/0803/21abac2162",
-              predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-              objectIri = zeitglöckleinIri,
-              referenceCount = 1
-            ))
-          msg.rights should ===(2)
+      expectMsgPF(timeout) { case msg: ValueGetResponseV1 =>
+        msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+        msg.value should ===(
+          LinkValueV1(
+            subjectIri = "http://rdfh.ch/0803/21abac2162",
+            predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+            objectIri = zeitglöckleinIri,
+            referenceCount = 1
+          )
+        )
+        msg.rights should ===(2)
       }
 
       val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -1024,12 +1047,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       // There should be no new version of the LinkValue, and the direct link should still be there.
 
-      expectMsgPF(timeout) {
-        case response: SparqlSelectResult =>
-          val rows = response.results.bindings
-          rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-          rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
-          rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+      expectMsgPF(timeout) { case response: SparqlSelectResult =>
+        val rows = response.results.bindings
+        rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+        rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
+        rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
       }
     }
 
@@ -1043,8 +1065,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             startPosition = 30,
             endPosition = 38,
             attributes = Vector(
-              StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-                                        value = zeitglöckleinIri)),
+              StandoffTagIriAttributeV2(
+                standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
+                value = zeitglöckleinIri
+              )
+            ),
             uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 0
@@ -1064,10 +1089,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case CreateValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _) =>
-          secondValueIriWithResourceRef.set(newValueIri)
-          checkTextValue(received = newValue, expected = textValueWithResourceRef)
+      expectMsgPF(timeout) { case CreateValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _) =>
+        secondValueIriWithResourceRef.set(newValueIri)
+        checkTextValue(received = newValue, expected = textValueWithResourceRef)
       }
 
       responderManager ! LinkValueGetRequestV1(
@@ -1081,17 +1105,17 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       // Now that we've added a different TextValue that refers to the same resource, we should have version 2
       // of the LinkValue, with a reference count of 2.
 
-      expectMsgPF(timeout) {
-        case msg: ValueGetResponseV1 =>
-          msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
-          msg.value should ===(
-            LinkValueV1(
-              subjectIri = "http://rdfh.ch/0803/21abac2162",
-              predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-              objectIri = zeitglöckleinIri,
-              referenceCount = 2
-            ))
-          msg.rights should ===(2)
+      expectMsgPF(timeout) { case msg: ValueGetResponseV1 =>
+        msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+        msg.value should ===(
+          LinkValueV1(
+            subjectIri = "http://rdfh.ch/0803/21abac2162",
+            predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+            objectIri = zeitglöckleinIri,
+            referenceCount = 2
+          )
+        )
+        msg.rights should ===(2)
       }
 
       val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -1108,12 +1132,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       // It should have a previousValue pointing to the previous version, and the direct link should
       // still be there.
 
-      expectMsgPF(timeout) {
-        case response: SparqlSelectResult =>
-          val rows = response.results.bindings
-          rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-          rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-          rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+      expectMsgPF(timeout) { case response: SparqlSelectResult =>
+        val rows = response.results.bindings
+        rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+        rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
+        rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
       }
     }
 
@@ -1128,10 +1151,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case ChangeValueResponseV1(newValue: TextValueSimpleV1, _, newValueIri: IRI, _) =>
-          firstValueIriWithResourceRef.set(newValueIri)
-          checkTextValue(received = textValue, expected = newValue)
+      expectMsgPF(timeout) { case ChangeValueResponseV1(newValue: TextValueSimpleV1, _, newValueIri: IRI, _) =>
+        firstValueIriWithResourceRef.set(newValueIri)
+        checkTextValue(received = textValue, expected = newValue)
       }
 
       responderManager ! LinkValueGetRequestV1(
@@ -1144,17 +1166,17 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       // Version 3 of the LinkValue should have a reference count of 1.
 
-      expectMsgPF(timeout) {
-        case msg: ValueGetResponseV1 =>
-          msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
-          msg.value should ===(
-            LinkValueV1(
-              subjectIri = "http://rdfh.ch/0803/21abac2162",
-              predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-              objectIri = zeitglöckleinIri,
-              referenceCount = 1
-            ))
-          msg.rights should ===(2)
+      expectMsgPF(timeout) { case msg: ValueGetResponseV1 =>
+        msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+        msg.value should ===(
+          LinkValueV1(
+            subjectIri = "http://rdfh.ch/0803/21abac2162",
+            predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+            objectIri = zeitglöckleinIri,
+            referenceCount = 1
+          )
+        )
+        msg.rights should ===(2)
       }
 
       val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -1170,13 +1192,12 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       // The LinkValue should point to its previous version, and the direct link should still be there.
 
-      expectMsgPF(timeout) {
-        case response: SparqlSelectResult =>
-          standoffLinkValueIri.set(response.results.bindings.head.rowMap("linkValue"))
-          val rows = response.results.bindings
-          rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-          rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-          rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+      expectMsgPF(timeout) { case response: SparqlSelectResult =>
+        standoffLinkValueIri.set(response.results.bindings.head.rowMap("linkValue"))
+        val rows = response.results.bindings
+        rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+        rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
+        rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
       }
 
       // The LinkValue should have 3 versions in its version history.
@@ -1188,8 +1209,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         userProfile = incunabulaUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: ValueVersionHistoryGetResponseV1 => msg.valueVersions.length should ===(3)
+      expectMsgPF(timeout) { case msg: ValueVersionHistoryGetResponseV1 =>
+        msg.valueVersions.length should ===(3)
       }
     }
 
@@ -1204,10 +1225,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case ChangeValueResponseV1(newValue: TextValueSimpleV1, _, newValueIri: IRI, _) =>
-          secondValueIriWithResourceRef.set(newValueIri)
-          checkTextValue(received = newValue, expected = textValue)
+      expectMsgPF(timeout) { case ChangeValueResponseV1(newValue: TextValueSimpleV1, _, newValueIri: IRI, _) =>
+        secondValueIriWithResourceRef.set(newValueIri)
+        checkTextValue(received = newValue, expected = textValue)
       }
 
       // The new version of the LinkValue should be marked as deleted.
@@ -1220,8 +1240,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         userProfile = incunabulaUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
 
       val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -1238,17 +1258,16 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       // The LinkValue should point to its previous version. There should be no direct link.
 
-      expectMsgPF(timeout) {
-        case response: SparqlSelectResult =>
-          standoffLinkValueIri.unset()
-          val rows = response.results.bindings
-          rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-          rows.exists(row =>
-            row
-              .rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(
-            true)
-          rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-          rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
+      expectMsgPF(timeout) { case response: SparqlSelectResult =>
+        standoffLinkValueIri.unset()
+        val rows = response.results.bindings
+        rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+        rows.exists(row =>
+          row
+            .rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean
+        ) should ===(true)
+        rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
+        rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
       }
     }
 
@@ -1262,8 +1281,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             startPosition = 45,
             endPosition = 53,
             attributes = Vector(
-              StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-                                        value = zeitglöckleinIri)),
+              StandoffTagIriAttributeV2(
+                standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
+                value = zeitglöckleinIri
+              )
+            ),
             uuid = UUID.randomUUID(),
             originalXMLID = None,
             startIndex = 0
@@ -1282,10 +1304,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case ChangeValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _) =>
-          firstValueIriWithResourceRef.set(newValueIri)
-          checkTextValue(received = newValue, expected = textValueWithResourceRef)
+      expectMsgPF(timeout) { case ChangeValueResponseV1(newValue: TextValueWithStandoffV1, _, newValueIri: IRI, _) =>
+        firstValueIriWithResourceRef.set(newValueIri)
+        checkTextValue(received = newValue, expected = textValueWithResourceRef)
       }
 
       responderManager ! LinkValueGetRequestV1(
@@ -1299,17 +1320,17 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
       // There should now be a new LinkValue with no previous versions and a reference count of 1, and
       // there should once again be a direct link.
 
-      expectMsgPF(timeout) {
-        case msg: ValueGetResponseV1 =>
-          msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
-          msg.value should ===(
-            LinkValueV1(
-              subjectIri = "http://rdfh.ch/0803/21abac2162",
-              predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-              objectIri = zeitglöckleinIri,
-              referenceCount = 1
-            ))
-          msg.rights should ===(2)
+      expectMsgPF(timeout) { case msg: ValueGetResponseV1 =>
+        msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+        msg.value should ===(
+          LinkValueV1(
+            subjectIri = "http://rdfh.ch/0803/21abac2162",
+            predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+            objectIri = zeitglöckleinIri,
+            referenceCount = 1
+          )
+        )
+        msg.rights should ===(2)
       }
 
       val sparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -1323,12 +1344,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       storeManager ! SparqlSelectRequest(sparqlQuery)
 
-      expectMsgPF(timeout) {
-        case response: SparqlSelectResult =>
-          val rows = response.results.bindings
-          rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-          rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
-          rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+      expectMsgPF(timeout) { case response: SparqlSelectResult =>
+        val rows = response.results.bindings
+        rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+        rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
+        rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
       }
     }
 
@@ -1345,10 +1365,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case CreateValueResponseV1(newValue: IntegerValueV1, _, newValueIri: IRI, _) =>
-          currentSeqnumValueIri.set(newValueIri)
-          newValue should ===(IntegerValueV1(seqnum))
+      expectMsgPF(timeout) { case CreateValueResponseV1(newValue: IntegerValueV1, _, newValueIri: IRI, _) =>
+        currentSeqnumValueIri.set(newValueIri)
+        newValue should ===(IntegerValueV1(seqnum))
       }
     }
 
@@ -1364,9 +1383,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case ChangeValueResponseV1(newValue: IntegerValueV1, _, newValueIri: IRI, _) =>
-          newValue should ===(IntegerValueV1(seqnum))
+      expectMsgPF(timeout) { case ChangeValueResponseV1(newValue: IntegerValueV1, _, newValueIri: IRI, _) =>
+        newValue should ===(IntegerValueV1(seqnum))
       }
     }
 
@@ -1383,10 +1401,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case CreateValueResponseV1(newValue: TimeValueV1, _, newValueIri: IRI, _) =>
-          currentTimeValueIri.set(newValueIri)
-          newValue should ===(TimeValueV1(timeStamp))
+      expectMsgPF(timeout) { case CreateValueResponseV1(newValue: TimeValueV1, _, newValueIri: IRI, _) =>
+        currentTimeValueIri.set(newValueIri)
+        newValue should ===(TimeValueV1(timeStamp))
       }
     }
 
@@ -1402,9 +1419,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case ChangeValueResponseV1(newValue: TimeValueV1, _, newValueIri: IRI, _) =>
-          newValue should ===(TimeValueV1(timeStamp))
+      expectMsgPF(timeout) { case ChangeValueResponseV1(newValue: TimeValueV1, _, newValueIri: IRI, _) =>
+        newValue should ===(TimeValueV1(timeStamp))
       }
     }
 
@@ -1427,10 +1443,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: CreateValueResponseV1 =>
-          currentPubdateValueIri.set(msg.id)
-          msg.value should ===(DateValueV1("2000", "2015-01-21", "CE", "CE", KnoraCalendarV1.GREGORIAN))
+      expectMsgPF(timeout) { case msg: CreateValueResponseV1 =>
+        currentPubdateValueIri.set(msg.id)
+        msg.value should ===(DateValueV1("2000", "2015-01-21", "CE", "CE", KnoraCalendarV1.GREGORIAN))
       }
     }
 
@@ -1450,10 +1465,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: ChangeValueResponseV1 =>
-          currentPubdateValueIri.set(msg.id)
-          msg.value should ===(DateValueV1("1491-07-28", "1491-07-28", "CE", "CE", KnoraCalendarV1.JULIAN))
+      expectMsgPF(timeout) { case msg: ChangeValueResponseV1 =>
+        currentPubdateValueIri.set(msg.id)
+        msg.value should ===(DateValueV1("1491-07-28", "1491-07-28", "CE", "CE", KnoraCalendarV1.JULIAN))
       }
 
     }
@@ -1475,11 +1489,10 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       responderManager ! createValueRequest
 
-      expectMsgPF(timeout) {
-        case CreateValueResponseV1(linkV1: LinkV1, _, newLinkValueIri: IRI, _) =>
-          linkObjLinkValueIri.set(newLinkValueIri)
-          linkV1.targetResourceIri should ===(zeitglöckleinIri)
-          linkV1.valueResourceClass should ===(Some("http://www.knora.org/ontology/0803/incunabula#book"))
+      expectMsgPF(timeout) { case CreateValueResponseV1(linkV1: LinkV1, _, newLinkValueIri: IRI, _) =>
+        linkObjLinkValueIri.set(newLinkValueIri)
+        linkV1.targetResourceIri should ===(zeitglöckleinIri)
+        linkV1.valueResourceClass should ===(Some("http://www.knora.org/ontology/0803/incunabula#book"))
       }
 
       // The new LinkValue should have no previous version, and there should be a direct link between the resources.
@@ -1495,12 +1508,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       storeManager ! SparqlSelectRequest(sparqlQuery)
 
-      expectMsgPF(timeout) {
-        case response: SparqlSelectResult =>
-          val rows = response.results.bindings
-          rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-          rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
-          rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+      expectMsgPF(timeout) { case response: SparqlSelectResult =>
+        val rows = response.results.bindings
+        rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+        rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
+        rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
       }
 
       // Check that the resource's last modification date got updated.
@@ -1522,15 +1534,16 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       responderManager ! createValueRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
       }
     }
 
     "not create a link that points to a resource of the wrong class" in {
       responderManager ! CreateValueRequestV1(
         resourceIri = miscResourceIri,
-        propertyIri = "http://www.knora.org/ontology/0803/incunabula#miscHasBook", // can only point to an incunabula:book
+        propertyIri =
+          "http://www.knora.org/ontology/0803/incunabula#miscHasBook", // can only point to an incunabula:book
         value = LinkUpdateV1(
           targetResourceIri = "http://rdfh.ch/0803/8a0b1e75" // an incunabula:page, not an incunabula:book
         ),
@@ -1539,8 +1552,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
@@ -1561,10 +1574,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       responderManager ! changeValueRequest
 
-      expectMsgPF(timeout) {
-        case ChangeValueResponseV1(linkValue: LinkV1, _, newLinkValueIri: IRI, _) =>
-          linkObjLinkValueIri.set(newLinkValueIri)
-          linkValue.targetResourceIri should ===(linkTargetIri)
+      expectMsgPF(timeout) { case ChangeValueResponseV1(linkValue: LinkV1, _, newLinkValueIri: IRI, _) =>
+        linkObjLinkValueIri.set(newLinkValueIri)
+        linkValue.targetResourceIri should ===(linkTargetIri)
       }
 
       // The old LinkValue should be deleted now, and the old direct link should have been removed.
@@ -1581,16 +1593,15 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       storeManager ! SparqlSelectRequest(oldLinkValueSparqlQuery)
 
-      expectMsgPF(timeout) {
-        case response: SparqlSelectResult =>
-          val rows = response.results.bindings
-          rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-          rows.exists(row =>
-            row
-              .rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(
-            true)
-          rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-          rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
+      expectMsgPF(timeout) { case response: SparqlSelectResult =>
+        val rows = response.results.bindings
+        rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+        rows.exists(row =>
+          row
+            .rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean
+        ) should ===(true)
+        rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
+        rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
       }
 
       // The new LinkValue should have no previous version, and there should be a direct link between the resources.
@@ -1606,12 +1617,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       storeManager ! SparqlSelectRequest(newLinkValueSparqlQuery)
 
-      expectMsgPF(timeout) {
-        case response: SparqlSelectResult =>
-          val rows = response.results.bindings
-          rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-          rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
-          rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+      expectMsgPF(timeout) { case response: SparqlSelectResult =>
+        val rows = response.results.bindings
+        rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+        rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
+        rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
       }
 
       // Check that the link source's last modification date got updated.
@@ -1635,8 +1645,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: DeleteValueResponseV1 => linkObjLinkValueIri.set(msg.id)
+      expectMsgPF(timeout) { case msg: DeleteValueResponseV1 =>
+        linkObjLinkValueIri.set(msg.id)
       }
 
       val deletedLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -1651,20 +1661,19 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       storeManager ! SparqlSelectRequest(deletedLinkValueSparqlQuery)
 
-      expectMsgPF(timeout) {
-        case response: SparqlSelectResult =>
-          val rows = response.results.bindings
-          rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-          rows.exists(row =>
-            row
-              .rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(
-            true)
-          rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-          rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
-          rows.exists(
-            row =>
-              row.rowMap("objPred") == OntologyConstants.KnoraBase.DeleteComment && row
-                .rowMap("objObj") == comment) should ===(true)
+      expectMsgPF(timeout) { case response: SparqlSelectResult =>
+        val rows = response.results.bindings
+        rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+        rows.exists(row =>
+          row
+            .rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean
+        ) should ===(true)
+        rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
+        rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
+        rows.exists(row =>
+          row.rowMap("objPred") == OntologyConstants.KnoraBase.DeleteComment && row
+            .rowMap("objObj") == comment
+        ) should ===(true)
       }
 
       // Check that the link source's last modification date got updated.
@@ -1693,11 +1702,10 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       responderManager ! changeValueRequest
 
-      expectMsgPF(timeout) {
-        case ChangeValueResponseV1(linkValue: LinkV1, _, newLinkValueIri: IRI, _) =>
-          // save valueIri for next test
-          partOfLinkValueIri.set(newLinkValueIri)
-          linkValue.targetResourceIri should ===(linkTargetIri)
+      expectMsgPF(timeout) { case ChangeValueResponseV1(linkValue: LinkV1, _, newLinkValueIri: IRI, _) =>
+        // save valueIri for next test
+        partOfLinkValueIri.set(newLinkValueIri)
+        linkValue.targetResourceIri should ===(linkTargetIri)
       }
 
     }
@@ -1721,8 +1729,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       responderManager ! changeValueRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
       }
 
     }
@@ -1741,10 +1749,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: CreateValueResponseV1 =>
-          msg.value.toString should ===(comment)
-          msg.comment should ===(Some(metaComment))
+      expectMsgPF(timeout) { case msg: CreateValueResponseV1 =>
+        msg.value.toString should ===(comment)
+        msg.comment should ===(Some(metaComment))
       }
     }
 
@@ -1763,10 +1770,9 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       responderManager ! changeCommentRequest
 
-      expectMsgPF(timeout) {
-        case msg: ChangeValueResponseV1 =>
-          msg.value should ===(TextValueSimpleV1(utf8str = "Berthold, der Bruder"))
-          msg.comment should ===(comment)
+      expectMsgPF(timeout) { case msg: ChangeValueResponseV1 =>
+        msg.value should ===(TextValueSimpleV1(utf8str = "Berthold, der Bruder"))
+        msg.comment should ===(comment)
       }
 
       // Check that the resource's last modification date got updated.
@@ -1796,8 +1802,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       responderManager ! fileChangeRequest
 
-      expectMsgPF(timeout) {
-        case msg: ChangeFileValueResponseV1 => checkImageFileValueChange(msg, fileChangeRequest)
+      expectMsgPF(timeout) { case msg: ChangeFileValueResponseV1 =>
+        checkImageFileValueChange(msg, fileChangeRequest)
       }
 
     }
@@ -1814,9 +1820,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case ChangeValueResponseV1(newListValue: HierarchicalListValueV1, _, _, _) =>
-          newListValue should ===(HierarchicalListValueV1(winter))
+      expectMsgPF(timeout) { case ChangeValueResponseV1(newListValue: HierarchicalListValueV1, _, _, _) =>
+        newListValue should ===(HierarchicalListValueV1(winter))
       }
 
     }
@@ -1834,9 +1839,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case CreateValueResponseV1(newListValue: HierarchicalListValueV1, _, _, _) =>
-          newListValue should ===(HierarchicalListValueV1(summer))
+      expectMsgPF(timeout) { case CreateValueResponseV1(newListValue: HierarchicalListValueV1, _, _, _) =>
+        newListValue should ===(HierarchicalListValueV1(summer))
       }
 
     }
@@ -1853,15 +1857,16 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case CreateValueResponseV1(newDecimalValue: DecimalValueV1, _, _, _) =>
-          newDecimalValue should ===(decimalValue)
+      expectMsgPF(timeout) { case CreateValueResponseV1(newDecimalValue: DecimalValueV1, _, _, _) =>
+        newDecimalValue should ===(decimalValue)
       }
     }
 
     "add an interval value to an anything:Thing" in {
-      val intervalValue = IntervalValueV1(timeval1 = BigDecimal("1000000000000000.0000000000000001"),
-                                          timeval2 = BigDecimal("1000000000000000.0000000000000002"))
+      val intervalValue = IntervalValueV1(
+        timeval1 = BigDecimal("1000000000000000.0000000000000001"),
+        timeval2 = BigDecimal("1000000000000000.0000000000000002")
+      )
 
       responderManager ! CreateValueRequestV1(
         value = intervalValue,
@@ -1872,9 +1877,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case CreateValueResponseV1(newIntervalValue: IntervalValueV1, _, _, _) =>
-          newIntervalValue should ===(intervalValue)
+      expectMsgPF(timeout) { case CreateValueResponseV1(newIntervalValue: IntervalValueV1, _, _, _) =>
+        newIntervalValue should ===(intervalValue)
       }
     }
 
@@ -1890,9 +1894,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case CreateValueResponseV1(newColorValue: ColorValueV1, _, _, _) =>
-          newColorValue should ===(colorValue)
+      expectMsgPF(timeout) { case CreateValueResponseV1(newColorValue: ColorValueV1, _, _, _) =>
+        newColorValue should ===(colorValue)
       }
     }
 
@@ -1945,9 +1948,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case CreateValueResponseV1(newBooleanValue: BooleanValueV1, _, _, _) =>
-          newBooleanValue should ===(booleanValue)
+      expectMsgPF(timeout) { case CreateValueResponseV1(newBooleanValue: BooleanValueV1, _, _, _) =>
+        newBooleanValue should ===(booleanValue)
       }
     }
 
@@ -1963,9 +1965,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case CreateValueResponseV1(newUriValue: UriValueV1, _, _, _) =>
-          newUriValue should ===(uriValue)
+      expectMsgPF(timeout) { case CreateValueResponseV1(newUriValue: UriValueV1, _, _, _) =>
+        newUriValue should ===(uriValue)
       }
     }
 
@@ -1985,17 +1986,17 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         userProfile = anythingUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: ValueGetResponseV1 =>
-          msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
-          msg.value should ===(
-            LinkValueV1(
-              subjectIri = thingWithTextValues,
-              predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-              objectIri = aThingIri,
-              referenceCount = 2
-            ))
-          msg.rights should ===(2)
+      expectMsgPF(timeout) { case msg: ValueGetResponseV1 =>
+        msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+        msg.value should ===(
+          LinkValueV1(
+            subjectIri = thingWithTextValues,
+            predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+            objectIri = aThingIri,
+            referenceCount = 2
+          )
+        )
+        msg.rights should ===(2)
       }
 
       val initialLinkValueSparqlQuery = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
@@ -2011,12 +2012,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       // It should have no previousValue, and the direct link should exist.
 
-      expectMsgPF(timeout) {
-        case response: SparqlSelectResult =>
-          val rows = response.results.bindings
-          rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-          rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
-          rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+      expectMsgPF(timeout) { case response: SparqlSelectResult =>
+        val rows = response.results.bindings
+        rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+        rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(false)
+        rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
       }
 
       // Now delete the first text value.
@@ -2028,8 +2028,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      val deletedFirstTextValue = expectMsgPF(timeout) {
-        case msg: DeleteValueResponseV1 => msg.id
+      val deletedFirstTextValue = expectMsgPF(timeout) { case msg: DeleteValueResponseV1 =>
+        msg.id
       }
 
       responderManager ! ValueGetRequestV1(
@@ -2038,8 +2038,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         userProfile = anythingUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
 
       // Check that the resource's last modification date got updated.
@@ -2056,17 +2056,17 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         userProfile = anythingUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: ValueGetResponseV1 =>
-          msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
-          msg.value should ===(
-            LinkValueV1(
-              subjectIri = thingWithTextValues,
-              predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
-              objectIri = aThingIri,
-              referenceCount = 1
-            ))
-          msg.rights should ===(2)
+      expectMsgPF(timeout) { case msg: ValueGetResponseV1 =>
+        msg.valuetype should ===(OntologyConstants.KnoraBase.LinkValue)
+        msg.value should ===(
+          LinkValueV1(
+            subjectIri = thingWithTextValues,
+            predicateIri = OntologyConstants.KnoraBase.HasStandoffLinkTo,
+            objectIri = aThingIri,
+            referenceCount = 1
+          )
+        )
+        msg.rights should ===(2)
       }
 
       // It should have a previousValue, and the direct link should still exist.
@@ -2082,12 +2082,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       storeManager ! SparqlSelectRequest(decrementedLinkValueSparqlQuery)
 
-      expectMsgPF(timeout) {
-        case response: SparqlSelectResult =>
-          val rows = response.results.bindings
-          rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-          rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-          rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
+      expectMsgPF(timeout) { case response: SparqlSelectResult =>
+        val rows = response.results.bindings
+        rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+        rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
+        rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(true)
       }
 
       // Now delete the second text value.
@@ -2099,8 +2098,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      val deletedSecondTextValue = expectMsgPF(timeout) {
-        case msg: DeleteValueResponseV1 => msg.id
+      val deletedSecondTextValue = expectMsgPF(timeout) { case msg: DeleteValueResponseV1 =>
+        msg.id
       }
 
       responderManager ! ValueGetRequestV1(
@@ -2109,8 +2108,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         userProfile = anythingUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
 
       // Check that the resource's last modification date got updated.
@@ -2127,8 +2126,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         userProfile = anythingUser
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
 
       // The LinkValue should point to its previous version. There should be no direct link.
@@ -2145,17 +2144,16 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
 
       storeManager ! SparqlSelectRequest(deletedLinkValueSparqlQuery)
 
-      expectMsgPF(timeout) {
-        case response: SparqlSelectResult =>
-          standoffLinkValueIri.unset()
-          val rows = response.results.bindings
-          rows.groupBy(_.rowMap("linkValue")).size should ===(1)
-          rows.exists(row =>
-            row
-              .rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean) should ===(
-            true)
-          rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
-          rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
+      expectMsgPF(timeout) { case response: SparqlSelectResult =>
+        standoffLinkValueIri.unset()
+        val rows = response.results.bindings
+        rows.groupBy(_.rowMap("linkValue")).size should ===(1)
+        rows.exists(row =>
+          row
+            .rowMap("objPred") == OntologyConstants.KnoraBase.IsDeleted && row.rowMap("objObj").toBoolean
+        ) should ===(true)
+        rows.exists(_.rowMap("objPred") == OntologyConstants.KnoraBase.PreviousValue) should ===(true)
+        rows.head.rowMap.get("directLinkExists").exists(_.toBoolean) should ===(false)
       }
     }
 
@@ -2172,8 +2170,11 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
             endPosition = 39,
             startIndex = 0,
             attributes = Vector(
-              StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-                                        value = nonexistentIri)),
+              StandoffTagIriAttributeV2(
+                standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
+                value = nonexistentIri
+              )
+            ),
             uuid = UUID.randomUUID(),
             originalXMLID = None
           )
@@ -2192,9 +2193,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure =>
-          msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
 
@@ -2209,9 +2209,8 @@ class ValuesResponderV1Spec extends CoreSpec(ValuesResponderV1Spec.config) with 
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: CreateValueResponseV1 =>
-          msg.value should ===(TextValueSimpleV1(utf8str = "Hello World!", language = Some("en")))
+      expectMsgPF(timeout) { case msg: CreateValueResponseV1 =>
+        msg.value should ===(TextValueSimpleV1(utf8str = "Hello World!", language = Some("en")))
 
       }
     }

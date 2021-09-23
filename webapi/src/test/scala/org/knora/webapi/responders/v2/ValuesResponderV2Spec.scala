@@ -52,8 +52,8 @@ import org.knora.webapi.util.MutableTestIri
 import scala.concurrent.duration._
 
 /**
-  * Tests [[ValuesResponderV2]].
-  */
+ * Tests [[ValuesResponderV2]].
+ */
 class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -71,11 +71,14 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
   /* we need to run our app with the mocked sipi actor */
   override lazy val appActor: ActorRef = system.actorOf(
     Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME)
+    name = APPLICATION_MANAGER_ACTOR_NAME
+  )
 
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl",
-                  name = "http://www.knora.org/data/0803/incunabula"),
+    RdfDataObject(
+      path = "test_data/responders.v2.ValuesResponderV2Spec/incunabula-data.ttl",
+      name = "http://www.knora.org/data/0803/incunabula"
+    ),
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
@@ -158,8 +161,11 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       originalXMLID = None,
       startIndex = 0,
       attributes = Vector(
-        StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-                                  value = aThingIri)),
+        StandoffTagIriAttributeV2(
+          standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
+          value = aThingIri
+        )
+      )
     ),
     StandoffTagV2(
       standoffTagClassIri = OntologyConstants.Standoff.StandoffParagraphTag.toSmartIri,
@@ -173,9 +179,11 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   private var standardMapping: Option[MappingXMLtoStandoff] = None
 
-  private def getResourceWithValues(resourceIri: IRI,
-                                    propertyIrisForGravsearch: Seq[SmartIri],
-                                    requestingUser: UserADM): ReadResourceV2 = {
+  private def getResourceWithValues(
+    resourceIri: IRI,
+    propertyIrisForGravsearch: Seq[SmartIri],
+    requestingUser: UserADM
+  ): ReadResourceV2 = {
     // Make a Gravsearch query from a template.
     val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt
       .getResourceWithSpecifiedProperties(
@@ -196,36 +204,42 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       requestingUser = requestingUser
     )
 
-    expectMsgPF(timeout) {
-      case searchResponse: ReadResourcesSequenceV2 =>
-        searchResponse.toResource(resourceIri).toOntologySchema(ApiV2Complex)
+    expectMsgPF(timeout) { case searchResponse: ReadResourcesSequenceV2 =>
+      searchResponse.toResource(resourceIri).toOntologySchema(ApiV2Complex)
     }
   }
 
-  private def getValuesFromResource(resource: ReadResourceV2, propertyIriInResult: SmartIri): Seq[ReadValueV2] = {
+  private def getValuesFromResource(resource: ReadResourceV2, propertyIriInResult: SmartIri): Seq[ReadValueV2] =
     resource.values.getOrElse(
       propertyIriInResult,
-      throw AssertionException(s"Resource <${resource.resourceIri}> does not have property <$propertyIriInResult>"))
-  }
+      throw AssertionException(s"Resource <${resource.resourceIri}> does not have property <$propertyIriInResult>")
+    )
 
-  private def getValueFromResource(resource: ReadResourceV2,
-                                   propertyIriInResult: SmartIri,
-                                   expectedValueIri: IRI): ReadValueV2 = {
+  private def getValueFromResource(
+    resource: ReadResourceV2,
+    propertyIriInResult: SmartIri,
+    expectedValueIri: IRI
+  ): ReadValueV2 = {
     val propertyValues: Seq[ReadValueV2] =
       getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
     propertyValues
       .find(_.valueIri == expectedValueIri)
-      .getOrElse(throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <${resource.resourceIri}> does not have value <$expectedValueIri>"))
+      .getOrElse(
+        throw AssertionException(
+          s"Property <$propertyIriInResult> of resource <${resource.resourceIri}> does not have value <$expectedValueIri>"
+        )
+      )
   }
 
-  private def checkValueIsDeleted(resourceIri: IRI,
-                                  maybePreviousLastModDate: Option[Instant],
-                                  propertyIriForGravsearch: SmartIri,
-                                  propertyIriInResult: SmartIri,
-                                  valueIri: IRI,
-                                  customDeleteDate: Option[Instant] = None,
-                                  requestingUser: UserADM): Unit = {
+  private def checkValueIsDeleted(
+    resourceIri: IRI,
+    maybePreviousLastModDate: Option[Instant],
+    propertyIriForGravsearch: SmartIri,
+    propertyIriInResult: SmartIri,
+    valueIri: IRI,
+    customDeleteDate: Option[Instant] = None,
+    requestingUser: UserADM
+  ): Unit = {
     val resource = getResourceWithValues(
       resourceIri = resourceIri,
       propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
@@ -258,25 +272,26 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         storeManager ! SparqlSelectRequest(sparqlQuery)
 
-        expectMsgPF(timeout) {
-          case sparqlSelectResponse: SparqlSelectResult =>
-            val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
+        expectMsgPF(timeout) { case sparqlSelectResponse: SparqlSelectResult =>
+          val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
 
-            val savedDeleteDate: Instant = stringFormatter.xsdDateTimeStampToInstant(
-              savedDeleteDateStr,
-              throw AssertionException(s"Couldn't parse delete date from triplestore: $savedDeleteDateStr")
-            )
+          val savedDeleteDate: Instant = stringFormatter.xsdDateTimeStampToInstant(
+            savedDeleteDateStr,
+            throw AssertionException(s"Couldn't parse delete date from triplestore: $savedDeleteDateStr")
+          )
 
-            assert(savedDeleteDate == deleteDate)
+          assert(savedDeleteDate == deleteDate)
         }
 
       case None => ()
     }
   }
 
-  private def checkLastModDate(resourceIri: IRI,
-                               maybePreviousLastModDate: Option[Instant],
-                               maybeUpdatedLastModDate: Option[Instant]): Unit = {
+  private def checkLastModDate(
+    resourceIri: IRI,
+    maybePreviousLastModDate: Option[Instant],
+    maybeUpdatedLastModDate: Option[Instant]
+  ): Unit =
     maybeUpdatedLastModDate match {
       case Some(updatedLastModDate) =>
         maybePreviousLastModDate match {
@@ -286,15 +301,16 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       case None => throw AssertionException(s"Resource $resourceIri has no knora-base:lastModificationDate")
     }
-  }
 
-  private def getValue(resourceIri: IRI,
-                       maybePreviousLastModDate: Option[Instant],
-                       propertyIriForGravsearch: SmartIri,
-                       propertyIriInResult: SmartIri,
-                       expectedValueIri: IRI,
-                       requestingUser: UserADM,
-                       checkLastModDateChanged: Boolean = true): ReadValueV2 = {
+  private def getValue(
+    resourceIri: IRI,
+    maybePreviousLastModDate: Option[Instant],
+    propertyIriForGravsearch: SmartIri,
+    propertyIriInResult: SmartIri,
+    expectedValueIri: IRI,
+    requestingUser: UserADM,
+    checkLastModDateChanged: Boolean = true
+  ): ReadValueV2 = {
     val resource = getResourceWithValues(
       resourceIri = resourceIri,
       propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
@@ -324,62 +340,59 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       requestingUser = requestingUser
     )
 
-    expectMsgPF(timeout) {
-      case previewResponse: ReadResourcesSequenceV2 =>
-        val resourcePreview: ReadResourceV2 = previewResponse.toResource(resourceIri)
-        resourcePreview.lastModificationDate
+    expectMsgPF(timeout) { case previewResponse: ReadResourcesSequenceV2 =>
+      val resourcePreview: ReadResourceV2 = previewResponse.toResource(resourceIri)
+      resourcePreview.lastModificationDate
     }
   }
 
   private def getValueUUID(valueIri: IRI): Option[UUID] = {
     val sparqlQuery =
       s"""
-               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-               |
-               |SELECT ?valueUUID WHERE {
-               |    <$valueIri> knora-base:valueHasUUID ?valueUUID .
-               |}
+         |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+         |
+         |SELECT ?valueUUID WHERE {
+         |    <$valueIri> knora-base:valueHasUUID ?valueUUID .
+         |}
              """.stripMargin
 
     storeManager ! SparqlSelectRequest(sparqlQuery)
 
-    expectMsgPF(timeout) {
-      case response: SparqlSelectResult =>
-        val rows = response.results.bindings
+    expectMsgPF(timeout) { case response: SparqlSelectResult =>
+      val rows = response.results.bindings
 
-        if (rows.isEmpty) {
-          None
-        } else if (rows.size > 1) {
-          throw AssertionException(s"Expected one knora-base:valueHasUUID, got ${rows.size}")
-        } else {
-          Some(stringFormatter.base64DecodeUuid(rows.head.rowMap("valueUUID")))
-        }
+      if (rows.isEmpty) {
+        None
+      } else if (rows.size > 1) {
+        throw AssertionException(s"Expected one knora-base:valueHasUUID, got ${rows.size}")
+      } else {
+        Some(stringFormatter.base64DecodeUuid(rows.head.rowMap("valueUUID")))
+      }
     }
   }
 
   private def getValuePermissions(valueIri: IRI): Option[UUID] = {
     val sparqlQuery =
       s"""
-               |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
-               |
-               |SELECT ?valuePermissions WHERE {
-               |    <$valueIri> knora-base:hasPermissions ?valuePermissions .
-               |}
+         |PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
+         |
+         |SELECT ?valuePermissions WHERE {
+         |    <$valueIri> knora-base:hasPermissions ?valuePermissions .
+         |}
              """.stripMargin
 
     storeManager ! SparqlSelectRequest(sparqlQuery)
 
-    expectMsgPF(timeout) {
-      case response: SparqlSelectResult =>
-        val rows = response.results.bindings
+    expectMsgPF(timeout) { case response: SparqlSelectResult =>
+      val rows = response.results.bindings
 
-        if (rows.isEmpty) {
-          None
-        } else if (rows.size > 1) {
-          throw AssertionException(s"Expected one knora-base:hasPermissions, got ${rows.size}")
-        } else {
-          Some(stringFormatter.base64DecodeUuid(rows.head.rowMap("valuePermissions")))
-        }
+      if (rows.isEmpty) {
+        None
+      } else if (rows.size > 1) {
+        throw AssertionException(s"Expected one knora-base:hasPermissions, got ${rows.size}")
+      } else {
+        Some(stringFormatter.base64DecodeUuid(rows.head.rowMap("valuePermissions")))
+      }
     }
   }
 
@@ -390,9 +403,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       requestingUser = KnoraSystemInstances.Users.SystemUser
     )
 
-    expectMsgPF(timeout) {
-      case mappingResponse: GetMappingResponseV2 =>
-        standardMapping = Some(mappingResponse.mapping)
+    expectMsgPF(timeout) { case mappingResponse: GetMappingResponseV2 =>
+      standardMapping = Some(mappingResponse.mapping)
     }
   }
 
@@ -420,11 +432,10 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 =>
-          intValueIri.set(createValueResponse.valueIri)
-          firstIntValueVersionIri.set(createValueResponse.valueIri)
-          integerValueUUID = createValueResponse.valueUUID
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        intValueIri.set(createValueResponse.valueIri)
+        firstIntValueVersionIri.set(createValueResponse.valueIri)
+        integerValueUUID = createValueResponse.valueUUID
       }
 
       // Read the value back to check that it was added correctly.
@@ -464,8 +475,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -505,10 +516,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 =>
-          intValueIri.set(updateValueResponse.valueIri)
-          assert(updateValueResponse.valueUUID == integerValueUUID)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        intValueIri.set(updateValueResponse.valueIri)
+        assert(updateValueResponse.valueUUID == integerValueUUID)
       }
 
       // Read the value back to check that it was added correctly.
@@ -557,8 +567,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -600,8 +610,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => intValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        intValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -653,8 +663,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -696,8 +706,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => intValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        intValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -751,9 +761,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 =>
-          intValueIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        intValueIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -801,9 +810,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 =>
-          intValueIriWithCustomPermissions.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        intValueIriWithCustomPermissions.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -821,7 +829,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         case savedValue: IntegerValueContentV2 =>
           savedValue.valueHasInteger should ===(intValue)
           PermissionUtilADM.parsePermissions(valueFromTriplestore.permissions) should ===(
-            PermissionUtilADM.parsePermissions(permissions))
+            PermissionUtilADM.parsePermissions(permissions)
+          )
 
         case _ => throw AssertionException(s"Expected integer value, got $valueFromTriplestore")
       }
@@ -849,8 +858,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[BadRequestException])
       }
 
     }
@@ -877,8 +886,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[NotFoundException])
       }
     }
 
@@ -909,8 +918,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => intValueForRsyncIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        intValueForRsyncIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -957,8 +966,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[BadRequestException])
       }
     }
 
@@ -989,9 +998,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 =>
-          intValueForRsyncIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        intValueForRsyncIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1041,9 +1049,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 =>
-          intValueForRsyncIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        intValueForRsyncIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1086,8 +1093,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[ForbiddenException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[ForbiddenException])
       }
     }
 
@@ -1111,9 +1118,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 =>
-          zeitglöckleinCommentWithoutStandoffIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        zeitglöckleinCommentWithoutStandoffIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1152,8 +1158,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -1179,9 +1185,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 =>
-          zeitglöckleinCommentWithCommentIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        zeitglöckleinCommentWithCommentIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1228,9 +1233,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 =>
-          zeitglöckleinCommentWithStandoffIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        zeitglöckleinCommentWithStandoffIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1278,8 +1282,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -1306,8 +1310,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => decimalValueIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        decimalValueIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1347,8 +1351,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -1375,8 +1379,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => timeValueIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        timeValueIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1424,8 +1428,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => dateValueIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        dateValueIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1476,8 +1480,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -1504,8 +1508,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => booleanValueIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        booleanValueIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1549,8 +1553,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => geometryValueIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        geometryValueIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1591,8 +1595,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -1621,8 +1625,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => intervalValueIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        intervalValueIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1667,8 +1671,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -1695,8 +1699,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => listValueIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        listValueIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1738,8 +1742,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -1763,8 +1767,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[NotFoundException])
       }
     }
 
@@ -1791,8 +1795,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => colorValueIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        colorValueIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1834,8 +1838,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -1862,8 +1866,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => uriValueIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        uriValueIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1905,8 +1909,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -1933,8 +1937,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => geonameValueIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        geonameValueIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -1976,8 +1980,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -2004,10 +2008,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! createValueRequest
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 =>
-          linkValueIri.set(createValueResponse.valueIri)
-          linkValueUUID = createValueResponse.valueUUID
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        linkValueIri.set(createValueResponse.valueIri)
+        linkValueUUID = createValueResponse.valueUUID
       }
 
       val valueFromTriplestore = getValue(
@@ -2049,8 +2052,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! createValueRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -2075,8 +2078,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! createValueRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[BadRequestException])
       }
     }
 
@@ -2096,8 +2099,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[BadRequestException])
       }
     }
 
@@ -2121,8 +2124,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[NotFoundException])
       }
     }
 
@@ -2146,8 +2149,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[NotFoundException])
       }
     }
 
@@ -2171,8 +2174,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[BadRequestException])
       }
     }
 
@@ -2195,8 +2198,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[OntologyConstraintException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[OntologyConstraintException])
       }
     }
 
@@ -2220,8 +2223,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[OntologyConstraintException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[OntologyConstraintException])
       }
 
       // The cardinality of incunabula:seqnum in incunabula:page is 0-1, and page http://rdfh.ch/0803/4f11adaf already has a seqnum.
@@ -2241,8 +2244,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[OntologyConstraintException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[OntologyConstraintException])
       }
     }
 
@@ -2259,12 +2262,16 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           startPosition = 31,
           endPosition = 39,
           attributes = Vector(
-            StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-                                      value = zeitglöckleinIri)),
+            StandoffTagIriAttributeV2(
+              standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
+              value = zeitglöckleinIri
+            )
+          ),
           uuid = UUID.randomUUID(),
           originalXMLID = None,
           startIndex = 0
-        ))
+        )
+      )
 
       responderManager ! CreateValueRequestV2(
         CreateValueV2(
@@ -2284,8 +2291,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => lobComment1Iri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        lobComment1Iri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -2352,12 +2359,16 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
           startPosition = 30,
           endPosition = 38,
           attributes = Vector(
-            StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-                                      value = zeitglöckleinIri)),
+            StandoffTagIriAttributeV2(
+              standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
+              value = zeitglöckleinIri
+            )
+          ),
           uuid = UUID.randomUUID(),
           originalXMLID = None,
           startIndex = 0
-        ))
+        )
+      )
 
       responderManager ! CreateValueRequestV2(
         CreateValueV2(
@@ -2377,8 +2388,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => lobComment2Iri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        lobComment2Iri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -2454,8 +2465,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[NotFoundException])
       }
     }
 
@@ -2480,8 +2491,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[ForbiddenException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[ForbiddenException])
       }
     }
 
@@ -2509,8 +2520,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => intValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        intValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -2556,8 +2567,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[ForbiddenException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[ForbiddenException])
       }
     }
 
@@ -2584,8 +2595,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[BadRequestException])
       }
     }
 
@@ -2612,8 +2623,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[NotFoundException])
       }
     }
 
@@ -2647,8 +2658,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => intValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        intValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -2685,8 +2696,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[ForbiddenException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[ForbiddenException])
       }
     }
 
@@ -2709,8 +2720,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[BadRequestException])
       }
     }
 
@@ -2733,8 +2744,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[NotFoundException])
       }
     }
 
@@ -2759,8 +2770,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -2785,9 +2796,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 =>
-          zeitglöckleinCommentWithoutStandoffIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        zeitglöckleinCommentWithoutStandoffIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -2832,9 +2842,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 =>
-          zeitglöckleinCommentWithStandoffIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        zeitglöckleinCommentWithStandoffIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -2903,8 +2912,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -2932,9 +2941,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 =>
-          zeitglöckleinSecondCommentWithStandoffIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        zeitglöckleinSecondCommentWithStandoffIri.set(createValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -2983,8 +2991,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -3013,9 +3021,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 =>
-          zeitglöckleinSecondCommentWithStandoffIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        zeitglöckleinSecondCommentWithStandoffIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -3064,8 +3071,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -3089,8 +3096,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -3116,8 +3123,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => decimalValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        decimalValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -3158,8 +3165,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -3185,8 +3192,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => timeValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        timeValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -3227,8 +3234,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -3259,8 +3266,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => dateValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        dateValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -3312,8 +3319,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -3339,8 +3346,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => booleanValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        booleanValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -3381,8 +3388,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -3409,8 +3416,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => geometryValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        geometryValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -3452,8 +3459,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -3481,8 +3488,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => intervalValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        intervalValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -3528,8 +3535,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -3555,8 +3562,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => listValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        listValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -3599,8 +3606,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -3625,8 +3632,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[NotFoundException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[NotFoundException])
       }
     }
 
@@ -3652,8 +3659,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => colorValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        colorValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -3696,8 +3703,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -3723,8 +3730,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => uriValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        uriValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -3767,8 +3774,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -3794,8 +3801,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => geonameValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        geonameValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -3838,8 +3845,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -3867,13 +3874,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! updateValueRequest
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 =>
-          linkValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        linkValueIri.set(updateValueResponse.valueIri)
 
-          // When you change a link value's target, it gets a new UUID.
-          assert(updateValueResponse.valueUUID != linkValueUUID)
-          linkValueUUID = updateValueResponse.valueUUID
+        // When you change a link value's target, it gets a new UUID.
+        assert(updateValueResponse.valueUUID != linkValueUUID)
+        linkValueUUID = updateValueResponse.valueUUID
       }
 
       val valueFromTriplestore = getValue(
@@ -3916,8 +3922,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! updateValueRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -3947,12 +3953,11 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! updateValueRequest
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 =>
-          linkValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        linkValueIri.set(updateValueResponse.valueIri)
 
-          // Since we only changed metadata, the link should have the same UUID.
-          assert(updateValueResponse.valueUUID == linkValueUUID)
+        // Since we only changed metadata, the link should have the same UUID.
+        assert(updateValueResponse.valueUUID == linkValueUUID)
       }
 
       val valueFromTriplestore = getValue(
@@ -3998,8 +4003,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! updateValueRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -4029,12 +4034,11 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! updateValueRequest
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 =>
-          linkValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        linkValueIri.set(updateValueResponse.valueIri)
 
-          // Since we only changed metadata, the link should have the same UUID.
-          assert(updateValueResponse.valueUUID == linkValueUUID)
+        // Since we only changed metadata, the link should have the same UUID.
+        assert(updateValueResponse.valueUUID == linkValueUUID)
       }
 
       val valueFromTriplestore = getValue(
@@ -4081,8 +4085,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! createValueRequest
 
-      expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => linkValueIri.set(createValueResponse.valueIri)
+      expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        linkValueIri.set(createValueResponse.valueIri)
       }
 
       val valueFromTriplestore = getValue(
@@ -4121,8 +4125,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[BadRequestException])
       }
     }
 
@@ -4157,8 +4161,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! updateValueRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[DuplicateValueException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[DuplicateValueException])
       }
     }
 
@@ -4205,8 +4209,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => stillImageFileValueIri.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        stillImageFileValueIri.set(updateValueResponse.valueIri)
       }
 
       // Read the value back to check that it was added correctly.
@@ -4260,9 +4264,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure =>
-          assert(msg.cause.isInstanceOf[ForbiddenException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[ForbiddenException])
       }
     }
 
@@ -4296,8 +4299,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[SipiException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[SipiException])
       }
     }
 
@@ -4317,8 +4320,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[ForbiddenException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[ForbiddenException])
       }
     }
 
@@ -4395,8 +4398,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[BadRequestException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[BadRequestException])
       }
     }
 
@@ -4481,8 +4484,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[OntologyConstraintException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[OntologyConstraintException])
       }
     }
 
@@ -4526,8 +4529,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => assert(msg.cause.isInstanceOf[ForbiddenException])
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[ForbiddenException])
       }
     }
 
@@ -4641,8 +4644,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      val textValue1Iri: IRI = expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => createValueResponse.valueIri
+      val textValue1Iri: IRI = expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        createValueResponse.valueIri
       }
 
       val resourceVersion1: ReadResourceV2 = getResourceWithValues(
@@ -4685,8 +4688,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      val textValue2Version1Iri: IRI = expectMsgPF(timeout) {
-        case createValueResponse: CreateValueResponseV2 => createValueResponse.valueIri
+      val textValue2Version1Iri: IRI = expectMsgPF(timeout) { case createValueResponse: CreateValueResponseV2 =>
+        createValueResponse.valueIri
       }
 
       val resourceVersion2: ReadResourceV2 = getResourceWithValues(
@@ -4739,8 +4742,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      val textValue2Version2Iri = expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 => updateValueResponse.valueIri
+      val textValue2Version2Iri = expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        updateValueResponse.valueIri
       }
 
       val resourceVersion3: ReadResourceV2 = getResourceWithValues(
@@ -4768,7 +4771,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         resourceVersion3
           .values(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri)
           .head
-          .valueIri == standoffLinkValueVersion2.valueIri)
+          .valueIri == standoffLinkValueVersion2.valueIri
+      )
     }
   }
 }

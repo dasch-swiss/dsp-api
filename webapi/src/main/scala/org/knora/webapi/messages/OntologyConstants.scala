@@ -23,8 +23,8 @@ package messages
 import exceptions.InconsistentRepositoryDataException
 
 /**
-  * Contains string constants for IRIs from ontologies used by the application.
-  */
+ * Contains string constants for IRIs from ontologies used by the application.
+ */
 object OntologyConstants {
 
   object Rdf {
@@ -72,9 +72,9 @@ object OntologyConstants {
     val OnDatatype: IRI = OwlPrefixExpansion + "onDatatype"
 
     /**
-      * Cardinality IRIs expressed as OWL restrictions, which specify the properties that resources of
-      * a particular type can have.
-      */
+     * Cardinality IRIs expressed as OWL restrictions, which specify the properties that resources of
+     * a particular type can have.
+     */
     val cardinalityOWLRestrictions: Set[IRI] = Set(
       Cardinality,
       MinCardinality,
@@ -84,8 +84,8 @@ object OntologyConstants {
     val NamedIndividual: IRI = OwlPrefixExpansion + "NamedIndividual"
 
     /**
-      * Classes defined by OWL that can be used as knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
-      */
+     * Classes defined by OWL that can be used as knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
+     */
     val ClassesThatCanBeKnoraClassConstraints: Set[IRI] = Set(
       Ontology,
       Class,
@@ -138,8 +138,8 @@ object OntologyConstants {
   }
 
   /**
-    * http://schema.org
-    */
+   * http://schema.org
+   */
   object SchemaOrg {
     val SchemaOrgPrefixExpansion: IRI = "http://schema.org/"
     val Name: IRI = SchemaOrgPrefixExpansion + "name"
@@ -152,23 +152,23 @@ object OntologyConstants {
   }
 
   /**
-    * The object types of resource metadata properties.
-    */
+   * The object types of resource metadata properties.
+   */
   val ResourceMetadataPropertyAxioms: Map[IRI, IRI] = Map(
     OntologyConstants.Rdfs.Label -> OntologyConstants.Xsd.String
   )
 
   /**
-    * Ontology labels that are used only in the internal schema.
-    */
+   * Ontology labels that are used only in the internal schema.
+   */
   val InternalOntologyLabels: Set[String] = Set(
     KnoraBase.KnoraBaseOntologyLabel,
     KnoraAdmin.KnoraAdminOntologyLabel
   )
 
   /**
-    * Ontology labels that are reserved for built-in ontologies.
-    */
+   * Ontology labels that are reserved for built-in ontologies.
+   */
   val BuiltInOntologyLabels: Set[String] = Set(
     KnoraBase.KnoraBaseOntologyLabel,
     KnoraAdmin.KnoraAdminOntologyLabel,
@@ -398,8 +398,8 @@ object OntologyConstants {
     val StandoffTagHasEndParent: IRI = KnoraBasePrefixExpansion + "standoffTagHasEndParent"
     val StandoffTagHasUUID: IRI = KnoraBasePrefixExpansion + "standoffTagHasUUID"
     val StandoffTagHasOriginalXMLID: IRI = KnoraBasePrefixExpansion + "standoffTagHasOriginalXMLID"
-    val TargetHasOriginalXMLID
-      : IRI = KnoraBasePrefixExpansion + "targetHasOriginalXMLID" // virtual property, used only in CONSTRUCT
+    val TargetHasOriginalXMLID: IRI =
+      KnoraBasePrefixExpansion + "targetHasOriginalXMLID" // virtual property, used only in CONSTRUCT
     val StandoffTagHasInternalReference: IRI = KnoraBasePrefixExpansion + "standoffTagHasInternalReference"
     val StandoffTagHasStartAncestor: IRI = KnoraBasePrefixExpansion + "standoffTagHasStartAncestor"
 
@@ -560,14 +560,14 @@ object OntologyConstants {
     val DefaultSharedOntologiesProject: IRI = KnoraAdminPrefixExpansion + "DefaultSharedOntologiesProject"
 
     /**
-      * The system user is the owner of objects that are created by the system, rather than directly by the user,
-      * such as link values for standoff resource references.
-      */
+     * The system user is the owner of objects that are created by the system, rather than directly by the user,
+     * such as link values for standoff resource references.
+     */
     val SystemUser: IRI = KnoraAdminPrefixExpansion + "SystemUser"
 
     /**
-      * Every user not logged-in is per default an anonymous user.
-      */
+     * Every user not logged-in is per default an anonymous user.
+     */
     val AnonymousUser: IRI = KnoraAdminPrefixExpansion + "AnonymousUser"
   }
 
@@ -636,12 +636,11 @@ object OntologyConstants {
 
       val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
-      def lookup(name: String): Value = {
+      def lookup(name: String): Value =
         valueMap.get(name) match {
           case Some(value) => value
           case None        => throw InconsistentRepositoryDataException(s"salsah-gui attribute type not found: $name")
         }
-      }
     }
 
   }
@@ -681,48 +680,46 @@ object OntologyConstants {
     val KnoraApiPrefix: String = KnoraApiOntologyLabel + ":"
 
     /**
-      * The IRIs representing `knora-api:Resource` in Knora API v2, in the simple and complex schemas.
-      */
+     * The IRIs representing `knora-api:Resource` in Knora API v2, in the simple and complex schemas.
+     */
     lazy val KnoraApiV2ResourceIris: Set[IRI] = Set(
       OntologyConstants.KnoraApiV2Simple.Resource,
       OntologyConstants.KnoraApiV2Complex.Resource
     )
 
     /**
-      * The IRIs representing `knora-api:GravsearchOptions` in Knora API v2, in the simple and complex schemas.
-      */
+     * The IRIs representing `knora-api:GravsearchOptions` in Knora API v2, in the simple and complex schemas.
+     */
     lazy val GravsearchOptionsIris: Set[IRI] = Set(
       OntologyConstants.KnoraApiV2Simple.GravsearchOptions,
       OntologyConstants.KnoraApiV2Complex.GravsearchOptions
     )
 
     /**
-      * The IRIs representing `knora-api:useInference` in Knora API v2, in the simple and complex schemas.
-      */
+     * The IRIs representing `knora-api:useInference` in Knora API v2, in the simple and complex schemas.
+     */
     lazy val UseInferenceIris: Set[IRI] = Set(
       OntologyConstants.KnoraApiV2Simple.UseInference,
       OntologyConstants.KnoraApiV2Complex.UseInference
     )
 
     /**
-      * Returns the IRI of `knora-api:subjectType` in the specified schema.
-      */
-    def getSubjectTypePredicate(apiV2Schema: ApiV2Schema): IRI = {
+     * Returns the IRI of `knora-api:subjectType` in the specified schema.
+     */
+    def getSubjectTypePredicate(apiV2Schema: ApiV2Schema): IRI =
       apiV2Schema match {
         case ApiV2Simple  => KnoraApiV2Simple.SubjectType
         case ApiV2Complex => KnoraApiV2Complex.SubjectType
       }
-    }
 
     /**
-      * Returns the IRI of `knora-api:objectType` in the specified schema.
-      */
-    def getObjectTypePredicate(apiV2Schema: ApiV2Schema): IRI = {
+     * Returns the IRI of `knora-api:objectType` in the specified schema.
+     */
+    def getObjectTypePredicate(apiV2Schema: ApiV2Schema): IRI =
       apiV2Schema match {
         case ApiV2Simple  => KnoraApiV2Simple.ObjectType
         case ApiV2Complex => KnoraApiV2Complex.ObjectType
       }
-    }
   }
 
   object KnoraApiV2Complex {
@@ -978,8 +975,8 @@ object OntologyConstants {
   }
 
   object SalsahGuiApiV2WithValueObjects {
-    val SalsahGuiOntologyIri
-      : IRI = KnoraApi.ApiOntologyStart + SalsahGui.SalsahGuiOntologyLabel + KnoraApiV2Complex.VersionSegment
+    val SalsahGuiOntologyIri: IRI =
+      KnoraApi.ApiOntologyStart + SalsahGui.SalsahGuiOntologyLabel + KnoraApiV2Complex.VersionSegment
     val SalsahGuiPrefixExpansion: IRI = SalsahGuiOntologyIri + "#"
 
     val GuiAttribute: IRI = SalsahGuiPrefixExpansion + "guiAttribute"
@@ -1083,9 +1080,9 @@ object OntologyConstants {
   }
 
   /**
-    * A map of IRIs in each possible source schema to the corresponding IRIs in each possible target schema, for the
-    * cases where this can't be done formally by [[SmartIri]].
-    */
+   * A map of IRIs in each possible source schema to the corresponding IRIs in each possible target schema, for the
+   * cases where this can't be done formally by [[SmartIri]].
+   */
   val CorrespondingIris: Map[(OntologySchema, OntologySchema), Map[IRI, IRI]] = Map(
     (InternalSchema, ApiV2Simple) -> Map(
       // All the values of this map must be either properties or datatypes. PropertyInfoContentV2.toOntologySchema
