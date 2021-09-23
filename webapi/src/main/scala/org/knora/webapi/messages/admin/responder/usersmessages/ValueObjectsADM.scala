@@ -1,11 +1,14 @@
 package org.knora.webapi.messages.admin.responder.usersmessages
 
 import org.knora.webapi.LanguageCodes
-import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.{AssertionException, BadRequestException}
+import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 import scala.util.matching.Regex
 
 trait ValueObject[T, K] {
+  val stringFormatter = StringFormatter.getGeneralInstance
   def create(value: K): Either[Throwable, T]
 }
 
@@ -143,4 +146,106 @@ sealed abstract case class SystemAdmin(value: Boolean)
 object SystemAdmin extends ValueObject[SystemAdmin, Boolean] {
   override def create(value: Boolean): Either[Throwable, SystemAdmin] =
     Right(new SystemAdmin(value) {})
+}
+
+/**
+ * Project shortcode value object.
+ */
+sealed abstract case class Shortcode(value: String)
+
+object Shortcode extends ValueObject[Shortcode, String] {
+
+  override def create(value: String): Either[Throwable, Shortcode] =
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing shortcode"))
+    } else {
+      val shortcode: String = stringFormatter.validateProjectShortcode(value, throw AssertionException("not valid"))
+      Right(new Shortcode(shortcode) {})
+    }
+}
+
+/**
+ * Project shortname value object.
+ */
+sealed abstract case class Shortname(value: String)
+
+object Shortname extends ValueObject[Shortname, String] {
+
+  override def create(value: String): Either[Throwable, Shortname] =
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing shortname"))
+    } else {
+      val shortname = stringFormatter.validateAndEscapeProjectShortname(value, throw AssertionException("not valid"))
+      Right(new Shortname(shortname) {})
+    }
+}
+
+/**
+ * Project longname value object.
+ */
+sealed abstract case class Longname(value: String)
+
+object Longname extends ValueObject[Longname, String] {
+
+  override def create(value: String): Either[Throwable, Longname] =
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing long name"))
+    } else {
+      Right(new Longname(value) {})
+    }
+}
+
+/**
+ * Project description value object.
+ */
+sealed abstract case class Description(value: Seq[StringLiteralV2])
+
+object Description extends ValueObject[Description, Seq[StringLiteralV2]] {
+
+  override def create(value: Seq[StringLiteralV2]): Either[Throwable, Description] =
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing description"))
+    } else {
+      Right(new Description(value) {})
+    }
+}
+
+/**
+ * Project keywords value object.
+ */
+sealed abstract case class Keywords(value: Seq[String])
+
+object Keywords extends ValueObject[Keywords, Seq[String]] {
+
+  override def create(value: Seq[String]): Either[Throwable, Keywords] =
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing keywords"))
+    } else {
+      Right(new Keywords(value) {})
+    }
+}
+
+/**
+ * Project logo value object.
+ */
+sealed abstract case class Logo(value: String)
+
+object Logo extends ValueObject[Logo, String] {
+
+  override def create(value: String): Either[Throwable, Logo] =
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing logo"))
+    } else {
+      Right(new Logo(value) {})
+    }
+}
+
+/**
+ * selfjoin value object.
+ */
+sealed abstract case class Selfjoin(value: Boolean)
+
+object Selfjoin extends ValueObject[Selfjoin, Boolean] {
+  override def create(value: Boolean): Either[Throwable, Selfjoin] =
+    Right(new Selfjoin(value) {})
 }
