@@ -19,7 +19,7 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import com.typesafe.config.ConfigFactory
+import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
@@ -29,14 +29,14 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
 
 object UsersMessagesADMSpec {
-  val config = ConfigFactory.parseString("""
+  val config: Config = ConfigFactory.parseString("""
           akka.loglevel = "DEBUG"
           akka.stdout-loglevel = "DEBUG"
         """.stripMargin)
 }
 
 /**
-  * This spec is used to test subclasses of the [[UsersMessagesADM]] class.
+  * This spec is used to test the [[UserADM]] and [[UserIdentifierADM]] classes.
   */
 class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
 
@@ -171,108 +171,6 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
     }
   }
 
-  "The CreateUserApiRequestADM case class" should {
-
-    "throw 'BadRequestException' if 'username'is missing" in {
-
-      assertThrows[BadRequestException](
-        CreateUserApiRequestADM(
-          username = "",
-          email = "ddd@example.com",
-          givenName = "Donald",
-          familyName = "Duck",
-          password = "test",
-          status = true,
-          lang = "en",
-          systemAdmin = false
-        )
-      )
-    }
-
-    "throw 'BadRequestException' if 'email' is missing" in {
-
-      assertThrows[BadRequestException](
-        CreateUserApiRequestADM(
-          username = "ddd",
-          email = "",
-          givenName = "Donald",
-          familyName = "Duck",
-          password = "test",
-          status = true,
-          lang = "en",
-          systemAdmin = false
-        )
-      )
-    }
-
-    "throw 'BadRequestException' if 'password' is missing" in {
-
-      assertThrows[BadRequestException](
-        CreateUserApiRequestADM(
-          username = "donald.duck",
-          email = "donald.duck@example.com",
-          givenName = "Donald",
-          familyName = "Duck",
-          password = "",
-          status = true,
-          lang = "en",
-          systemAdmin = false
-        )
-      )
-    }
-
-    "throw 'BadRequestException' if 'givenName' is missing" in {
-
-      assertThrows[BadRequestException](
-        CreateUserApiRequestADM(
-          username = "donald.duck",
-          email = "donald.duck@example.com",
-          givenName = "",
-          familyName = "Duck",
-          password = "test",
-          status = true,
-          lang = "en",
-          systemAdmin = false
-        )
-      )
-    }
-
-    "throw 'BadRequestException' if 'familyName' is missing" in {
-
-      assertThrows[BadRequestException](
-        CreateUserApiRequestADM(
-          username = "donald.duck",
-          email = "donald.duck@example.com",
-          givenName = "Donald",
-          familyName = "",
-          password = "test",
-          status = true,
-          lang = "en",
-          systemAdmin = false
-        )
-      )
-    }
-
-    "return 'BadRequest' if the supplied 'id' is not a valid IRI" in {
-
-      val caught = intercept[BadRequestException](
-        CreateUserApiRequestADM(
-          id = Some("invalid-user-IRI"),
-          username = "userWithInvalidCustomIri",
-          email = "userWithInvalidCustomIri@example.org",
-          givenName = "a user",
-          familyName = "with an invalid custom Iri",
-          password = "test",
-          status = true,
-          lang = "en",
-          systemAdmin = false
-        )
-      )
-      assert(caught.getMessage === "Invalid user IRI")
-    }
-
-  }
-
   "The UserIdentifierADM case class" should {
 
     "return the identifier type" in {
@@ -333,5 +231,65 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
       )
     }
 
+  }
+
+  "The ChangeUserApiRequestADM case class" should {
+
+    "throw a BadRequestException if number of parameters is wrong" in {
+
+      // all parameters are None
+      assertThrows[BadRequestException](
+        ChangeUserApiRequestADM()
+      )
+
+      val errorNoParameters = the[BadRequestException] thrownBy ChangeUserApiRequestADM()
+      errorNoParameters.getMessage should equal("No data sent in API request.")
+
+      // more than one parameter for status update
+      assertThrows[BadRequestException](
+        ChangeUserApiRequestADM(status = Some(true), systemAdmin = Some(true))
+      )
+
+      val errorTooManyParametersStatusUpdate = the[BadRequestException] thrownBy ChangeUserApiRequestADM(status =
+                                                                                                           Some(true),
+                                                                                                         systemAdmin =
+                                                                                                           Some(true))
+      errorTooManyParametersStatusUpdate.getMessage should equal("Too many parameters sent for change request.")
+
+      // more than one parameter for systemAdmin update
+      assertThrows[BadRequestException](
+        ChangeUserApiRequestADM(systemAdmin = Some(true), status = Some(true))
+      )
+
+      val errorTooManyParametersSystemAdminUpdate = the[BadRequestException] thrownBy ChangeUserApiRequestADM(
+        systemAdmin = Some(true),
+        status = Some(true))
+      errorTooManyParametersSystemAdminUpdate.getMessage should equal("Too many parameters sent for change request.")
+
+      // more than 5 parameters for basic user information update
+      assertThrows[BadRequestException](
+        ChangeUserApiRequestADM(
+          username = Some("newUsername"),
+          email = Some("newEmail@email.com"),
+          givenName = Some("newGivenName"),
+          familyName = Some("familyName"),
+          lang = Some("en"),
+          status = Some(true),
+          systemAdmin = Some(false)
+        )
+      )
+
+      val errorTooManyParametersBasicInformationUpdate = the[BadRequestException] thrownBy ChangeUserApiRequestADM(
+        username = Some("newUsername"),
+        email = Some("newEmail@email.com"),
+        givenName = Some("newGivenName"),
+        familyName = Some("familyName"),
+        lang = Some("en"),
+        status = Some(true),
+        systemAdmin = Some(false)
+      )
+      errorTooManyParametersBasicInformationUpdate.getMessage should equal(
+        "Too many parameters sent for change request.")
+    }
   }
 }

@@ -31,7 +31,6 @@
  * @param maybeEmail         the new optional value for email.
  * @param maybeGivenName     the new optional value for given name.
  * @param maybeFamilyName    the new optional value for family name.
- * @param maybePassword      the new optional value for value for password.
  * @param maybeStatus        the new optional value for status.
  * @param maybeLang          the new optional value for lang.
  * @param maybeProjects      the new optional value for projects.
@@ -46,7 +45,6 @@
   maybeEmail: Option[String],
   maybeGivenName: Option[String],
   maybeFamilyName: Option[String],
-  maybePassword: Option[String],
   maybeStatus: Option[Boolean],
   maybeLang: Option[String],
   maybeProjects: Option[Seq[IRI]],
@@ -78,10 +76,6 @@ DELETE {
 
     @if(maybeFamilyName.nonEmpty) {
         ?user knora-admin:familyName ?currentFamilyName .
-    }
-
-    @if(maybePassword.nonEmpty) {
-        ?user knora-admin:password ?currentPassword .
     }
 
     @if(maybeStatus.nonEmpty) {
@@ -126,10 +120,6 @@ DELETE {
 
     @if(maybeFamilyName.nonEmpty) {
         ?user knora-admin:familyName "@maybeFamilyName.get"^^xsd:string .
-    }
-
-    @if(maybePassword.nonEmpty) {
-        ?user knora-admin:password "@maybePassword.get"^^xsd:string .
     }
 
     @if(maybeStatus.nonEmpty) {
@@ -192,8 +182,6 @@ WHERE {
     ?user knora-admin:givenName ?currentGivenName .
 
     ?user knora-admin:familyName ?currentFamilyName .
-
-    ?user knora-admin:password ?currentPassword .
 
     ?user knora-admin:status ?currentStatus .
 

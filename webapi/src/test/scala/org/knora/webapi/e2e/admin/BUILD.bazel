@@ -99,7 +99,7 @@ scala_test(
 
 scala_test(
     name = "UsersADME2ESpec",
-    size = "small",
+    size = "medium",
     srcs = [
         "UsersADME2ESpec.scala",
         "//webapi/src/test/scala/org/knora/webapi/messages:SessionMessagesV1",

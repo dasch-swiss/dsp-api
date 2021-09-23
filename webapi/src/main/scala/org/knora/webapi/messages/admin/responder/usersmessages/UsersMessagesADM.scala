@@ -19,8 +19,6 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import java.util.UUID
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, InconsistentRepositoryDataException}
@@ -34,6 +32,8 @@ import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import spray.json._
+
+import java.util.UUID
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -63,33 +63,18 @@ case class CreateUserApiRequestADM(
   systemAdmin: Boolean
 ) {
 
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
   def toJsValue: JsValue = UsersADMJsonProtocol.createUserApiRequestADMFormat.write(this)
-
-  // check for required information
-  if (username.isEmpty) throw BadRequestException("Username cannot be empty")
-  if (email.isEmpty) throw BadRequestException("Email cannot be empty")
-  if (password.isEmpty) throw BadRequestException("Password cannot be empty")
-  if (givenName.isEmpty) throw BadRequestException("Given name cannot be empty")
-  if (familyName.isEmpty) throw BadRequestException("Family name cannot be empty")
-
-  //check the custom Iri
-  stringFormatter.validateOptionalUserIri(id, throw BadRequestException(s"Invalid user IRI"))
 }
 
 /**
  * Represents an API request payload that asks the Knora API server to update an existing user. Information that can
- * be changed include the user's username, email, given name, family name, language, password, user status, and system admin
- * membership.
+ * be changed are: user's username, email, given name, family name, language, user status, and system admin membership.
  *
  * @param username          the new username. Needs to be unique on the server.
  * @param email             the new email address. Needs to be unique on the server.
  * @param givenName         the new given name.
  * @param familyName        the new family name.
  * @param lang              the new ISO 639-1 code of the new preferred language.
- * @param requesterPassword the password of the user making the request.
- * @param newPassword       the new password.
  * @param status            the new user status (active = true, inactive = false).
  * @param systemAdmin       the new system admin membership status.
  */
@@ -99,8 +84,6 @@ case class ChangeUserApiRequestADM(
   givenName: Option[String] = None,
   familyName: Option[String] = None,
   lang: Option[String] = None,
-  requesterPassword: Option[String] = None,
-  newPassword: Option[String] = None,
   status: Option[Boolean] = None,
   systemAdmin: Option[Boolean] = None
 ) {
@@ -111,49 +94,40 @@ case class ChangeUserApiRequestADM(
     givenName,
     familyName,
     lang,
-    requesterPassword,
-    newPassword,
     status,
     systemAdmin
   ).flatten.size
 
-  // println(requesterPassword + " " + newPassword)
-
   // something needs to be sent, i.e. everything 'None' is not allowed
   if (parametersCount == 0) throw BadRequestException("No data sent in API request.")
 
-  /* check that only allowed information for the 4 cases is send and not more. */
-
-  // change password case
-  if (requesterPassword.isDefined || newPassword.isDefined) {
-    if (parametersCount > 2) {
-      throw BadRequestException("Too many parameters sent for password change.")
-    } else if (parametersCount < 2) {
-      throw BadRequestException("Too few parameters sent for password change.")
-    }
-  }
+  /* check that only allowed information for the 3 cases (changing status, systemAdmin and basic information) is sent and not more. */
 
   // change status case
   if (status.isDefined) {
-    if (parametersCount > 1) throw BadRequestException("Too many parameters sent for user status change.")
+    if (parametersCount > 1) throw BadRequestException("Too many parameters sent for change request.")
   }
 
   // change system admin membership case
   if (systemAdmin.isDefined) {
-    if (parametersCount > 1) throw BadRequestException("Too many parameters sent for system admin membership change.")
+    if (parametersCount > 1) throw BadRequestException("Too many parameters sent for change request.")
   }
 
   // change basic user information case
-  if (parametersCount > 5) throw BadRequestException("Too many parameters sent for basic user information change.")
+  if (parametersCount > 5) throw BadRequestException("Too many parameters sent for change request.")
 
   def toJsValue: JsValue = UsersADMJsonProtocol.changeUserApiRequestADMFormat.write(this)
+}
+
+case class ChangeUserPasswordApiRequestADM(requesterPassword: Option[String], newPassword: Option[String]) {
+  def toJsValue: JsValue = UsersADMJsonProtocol.changeUserPasswordApiRequestADMFormat.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Messages
 
 /**
- * An abstract trait representing message that can be sent to `UsersResponderV1`.
+ * An abstract trait representing message that can be sent to `UsersResponderADM`.
  */
 sealed trait UsersResponderRequestADM extends KnoraRequestADM
 
@@ -172,7 +146,7 @@ case class UsersGetADM(
 ) extends UsersResponderRequestADM
 
 /**
- * Get all information about all users in form of [[UsersGetResponseV1]]. The UsersGetRequestV1 returns either
+ * Get all information about all users in form of [[UsersGetResponseADM]]. The UsersResponderRequestADM returns either
  * something or a NotFound exception if there are no users found. Administration permission checking is performed.
  *
  * @param userInformationTypeADM the extent of the information returned.
@@ -218,13 +192,13 @@ case class UserGetRequestADM(
 /**
  * Requests the creation of a new user.
  *
- * @param createRequest        the [[CreateUserApiRequestADM]] information used for creating the new user.
+ * @param userCreatePayloadADM    the [[UserCreatePayloadADM]] information used for creating the new user.
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user creating the new user.
  * @param apiRequestID         the ID of the API request.
  */
 case class UserCreateRequestADM(
-  createRequest: CreateUserApiRequestADM,
+  userCreatePayloadADM: UserCreatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -234,14 +208,14 @@ case class UserCreateRequestADM(
  * Request updating of an existing user.
  *
  * @param userIri              the IRI of the user to be updated.
- * @param changeUserRequest    the data which needs to be update.
+ * @param userUpdateBasicInformationPayload    the [[UserUpdateBasicInformationPayloadADM]] object containing the data to be updated.
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user initiating the request.
  * @param apiRequestID         the ID of the API request.
  */
-case class UserChangeBasicUserInformationRequestADM(
+case class UserChangeBasicInformationRequestADM(
   userIri: IRI,
-  changeUserRequest: ChangeUserApiRequestADM,
+  userUpdateBasicInformationPayload: UserUpdateBasicInformationPayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -251,14 +225,14 @@ case class UserChangeBasicUserInformationRequestADM(
  * Request updating the users password.
  *
  * @param userIri              the IRI of the user to be updated.
- * @param changeUserRequest    the [[ChangeUserApiRequestADM]] object containing the old and new password.
+ * @param userUpdatePasswordPayload    the [[UserUpdatePasswordPayloadADM]] object containing the old and new password.
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user initiating the request.
  * @param apiRequestID         the ID of the API request.
  */
 case class UserChangePasswordRequestADM(
   userIri: IRI,
-  changeUserRequest: ChangeUserApiRequestADM,
+  userUpdatePasswordPayload: UserUpdatePasswordPayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -268,14 +242,14 @@ case class UserChangePasswordRequestADM(
  * Request updating the users status ('knora-base:isActiveUser' property)
  *
  * @param userIri              the IRI of the user to be updated.
- * @param changeUserRequest    the [[ChangeUserApiRequestADM]] containing the new status (true / false).
+ * @param status               the [[Status]] containing the new status (true / false).
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user initiating the request.
  * @param apiRequestID         the ID of the API request.
  */
 case class UserChangeStatusRequestADM(
   userIri: IRI,
-  changeUserRequest: ChangeUserApiRequestADM,
+  status: Status,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -285,15 +259,14 @@ case class UserChangeStatusRequestADM(
  * Request updating the users system admin status ('knora-base:isInSystemAdminGroup' property)
  *
  * @param userIri              the IRI of the user to be updated.
- * @param changeUserRequest    the [[ChangeUserApiRequestADM]] containing
- *                             the new system admin membership status (true / false).
+ * @param systemAdmin          the [[SystemAdmin]] value object containing the new system admin membership status (true / false).
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user initiating the request.
  * @param apiRequestID         the ID of the API request.
  */
 case class UserChangeSystemAdminMembershipStatusRequestADM(
   userIri: IRI,
-  changeUserRequest: ChangeUserApiRequestADM,
+  systemAdmin: SystemAdmin,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -450,7 +423,7 @@ case class UserGroupMembershipRemoveRequestADM(
  * @param users a sequence of user profiles of the requested type.
  */
 case class UsersGetResponseADM(users: Seq[UserADM]) extends KnoraResponseADM {
-  def toJsValue = UsersADMJsonProtocol.usersGetResponseADMFormat.write(this)
+  def toJsValue: JsValue = UsersADMJsonProtocol.usersGetResponseADMFormat.write(this)
 }
 
 /**
@@ -553,12 +526,12 @@ case class UserADM(
         // SCrypt
         import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
         val encoder = new SCryptPasswordEncoder()
-        encoder.matches(password, hashedPassword.toString)
+        encoder.matches(password, hashedPassword)
       } else if (hashedPassword.startsWith("$2a$")) {
         // BCrypt
         import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
         val encoder = new BCryptPasswordEncoder()
-        encoder.matches(password, hashedPassword.toString)
+        encoder.matches(password, hashedPassword)
       } else {
         // SHA-1
         val md = java.security.MessageDigest.getInstance("SHA-1")
@@ -573,7 +546,7 @@ case class UserADM(
    */
   def ofType(userTemplateType: UserInformationTypeADM): UserADM =
     userTemplateType match {
-      case UserInformationTypeADM.PUBLIC => {
+      case UserInformationTypeADM.PUBLIC =>
         UserADM(
           id = id,
           username = "",
@@ -589,9 +562,7 @@ case class UserADM(
           sessionId = None,
           permissions = PermissionsDataADM()
         )
-      }
-      case UserInformationTypeADM.SHORT => {
-
+      case UserInformationTypeADM.SHORT =>
         UserADM(
           id = id,
           username = username,
@@ -607,9 +578,7 @@ case class UserADM(
           sessionId = None,
           permissions = PermissionsDataADM()
         )
-      }
-      case UserInformationTypeADM.RESTRICTED => {
-
+      case UserInformationTypeADM.RESTRICTED =>
         UserADM(
           id = id,
           username = username,
@@ -625,8 +594,7 @@ case class UserADM(
           sessionId = None,
           permissions = permissions
         )
-      }
-      case UserInformationTypeADM.FULL => {
+      case UserInformationTypeADM.FULL =>
         UserADM(
           id = id,
           username = username,
@@ -642,7 +610,6 @@ case class UserADM(
           sessionId = sessionId,
           permissions = permissions
         )
-      }
       case _ => throw BadRequestException(s"The requested userTemplateType: $userTemplateType is invalid.")
     }
 
@@ -667,8 +634,6 @@ case class UserADM(
       .contains(OntologyConstants.KnoraAdmin.SystemAdmin)
 
   def isSystemUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.SystemUser)
-
-  def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
 
   def fullname: String = givenName + " " + familyName
 
@@ -744,6 +709,8 @@ case class UserADM(
       status = Some(status),
       lang = lang
     )
+
+  def isAnonymousUser: Boolean = id.equalsIgnoreCase(OntologyConstants.KnoraAdmin.AnonymousUser)
 }
 
 /**
@@ -763,10 +730,10 @@ object UserInformationTypeADM extends Enumeration {
 
   type UserInformationTypeADM = Value
 
-  val PUBLIC     = Value(0, "public")     // a temporary type which only returns firstname and lastname
-  val SHORT      = Value(1, "short")      // only basic user information (restricted and additionally without groups
-  val RESTRICTED = Value(2, "restricted") // without sensitive information
-  val FULL       = Value(3, "full")       // everything, including sensitive information
+  val PUBLIC: Value     = Value(0, "public")     // a temporary type which only returns firstname and lastname
+  val SHORT: Value      = Value(1, "short")      // only basic user information (restricted and additionally without groups
+  val RESTRICTED: Value = Value(2, "restricted") // without sensitive information
+  val FULL: Value       = Value(3, "full")       // everything, including sensitive information
 
   val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
@@ -791,9 +758,9 @@ object UserIdentifierType extends Enumeration {
 
   type UserIdentifierType
 
-  val IRI      = Value(0, "iri")
-  val EMAIL    = Value(1, "email")
-  val USERNAME = Value(3, "username")
+  val IRI: Value      = Value(0, "iri")
+  val EMAIL: Value    = Value(1, "email")
+  val USERNAME: Value = Value(3, "username")
 }
 
 /**
@@ -911,13 +878,12 @@ class UserIdentifierADM private (
 }
 
 /**
- * Payload used for updating of an existing user.
+ * Payload used for updating an existing user.
  *
- * @param email         the new email address. Needs to be unique on the server.
  * @param username      the new username.
+ * @param email         the new email address. Needs to be unique on the server.
  * @param givenName     the new given name.
  * @param familyName    the new family name.
- * @param password      the new password.
  * @param status        the new status.
  * @param lang          the new language.
  * @param projects      the new project memberships list.
@@ -925,25 +891,24 @@ class UserIdentifierADM private (
  * @param groups        the new group memberships list.
  * @param systemAdmin   the new system admin membership
  */
-case class UserUpdatePayloadADM(
-  username: Option[String] = None,
-  email: Option[String] = None,
-  givenName: Option[String] = None,
-  familyName: Option[String] = None,
-  password: Option[String] = None,
-  status: Option[Boolean] = None,
-  lang: Option[String] = None,
+case class UserChangeRequestADM(
+  username: Option[Username] = None,
+  email: Option[Email] = None,
+  givenName: Option[GivenName] = None,
+  familyName: Option[FamilyName] = None,
+  status: Option[Status] = None,
+  lang: Option[LanguageCode] = None,
   projects: Option[Seq[IRI]] = None,
   projectsAdmin: Option[Seq[IRI]] = None,
   groups: Option[Seq[IRI]] = None,
-  systemAdmin: Option[Boolean] = None
+  systemAdmin: Option[SystemAdmin] = None
 ) {
 
   val parametersCount: Int = List(
+    username,
     email,
     givenName,
     familyName,
-    password,
     status,
     lang,
     projects,
@@ -955,13 +920,6 @@ case class UserUpdatePayloadADM(
   // something needs to be sent, i.e. everything 'None' is not allowed
   if (parametersCount == 0) {
     throw BadRequestException("No data sent in API request.")
-  }
-
-  /* check that only allowed information for the 4 cases is send and not more. */
-
-  // change password case
-  if (password.isDefined && parametersCount > 1) {
-    throw BadRequestException("Too many parameters sent for password change.")
   }
 
   // change status case
@@ -990,11 +948,43 @@ case class UserUpdatePayloadADM(
   }
 
   // change basic user information case
-  if (parametersCount > 4) {
+  if (parametersCount > 5) {
     throw BadRequestException("Too many parameters sent for basic user information change.")
   }
-
 }
+
+/**
+ * Payload used for updating basic information of an existing user.
+ *
+ * @param username      the new username.
+ * @param email         the new email address. Needs to be unique on the server.
+ * @param givenName     the new given name.
+ * @param familyName    the new family name.
+ * @param lang          the new language.
+ */
+case class UserUpdateBasicInformationPayloadADM(
+  username: Option[Username] = None,
+  email: Option[Email] = None,
+  givenName: Option[GivenName] = None,
+  familyName: Option[FamilyName] = None,
+  lang: Option[LanguageCode] = None
+) {
+
+  val parametersCount: Int = List(
+    username,
+    email,
+    givenName,
+    familyName,
+    lang
+  ).flatten.size
+
+  // something needs to be sent, i.e. everything 'None' is not allowed
+  if (parametersCount == 0) {
+    throw BadRequestException("No data sent in API request.")
+  }
+}
+
+case class UserUpdatePasswordPayloadADM(requesterPassword: Password, newPassword: Password) {}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
@@ -1022,17 +1012,12 @@ object UsersADMJsonProtocol
     "lang",
     "systemAdmin"
   )
-  implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] = jsonFormat(
-    ChangeUserApiRequestADM,
-    "username",
-    "email",
-    "givenName",
-    "familyName",
-    "lang",
+  implicit val changeUserApiRequestADMFormat: RootJsonFormat[ChangeUserApiRequestADM] =
+    jsonFormat(ChangeUserApiRequestADM, "username", "email", "givenName", "familyName", "lang", "status", "systemAdmin")
+  implicit val changeUserPasswordApiRequestADMFormat: RootJsonFormat[ChangeUserPasswordApiRequestADM] = jsonFormat(
+    ChangeUserPasswordApiRequestADM,
     "requesterPassword",
-    "newPassword",
-    "status",
-    "systemAdmin"
+    "newPassword"
   )
   implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
   implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM]  = jsonFormat1(UserResponseADM)
