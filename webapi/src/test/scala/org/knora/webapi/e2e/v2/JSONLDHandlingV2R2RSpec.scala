@@ -35,14 +35,14 @@ import spray.json._
 import scala.concurrent.ExecutionContextExecutor
 
 /**
-  * End-to-end specification for the handling of JSONLD documents.
-  */
+ * End-to-end specification for the handling of JSONLD documents.
+ */
 class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
   override def testConfigSource: String =
     """
-          |# akka.loglevel = "DEBUG"
-          |# akka.stdout-loglevel = "DEBUG"
+      |# akka.loglevel = "DEBUG"
+      |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
   private val resourcesPath = new ResourcesRouteV2(routeData).knoraApiPath
@@ -70,12 +70,17 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
       // expected result after expansion
       val expectedJsonldExpandedParsed = JsonLDUtil.parseJsonLD(
-        readOrWriteTextFile("",
-                            Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"),
-                            writeFile = false))
+        readOrWriteTextFile(
+          "",
+          Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPageExpanded.jsonld"),
+          writeFile = false
+        )
+      )
 
-      compareParsedJSONLDForResourcesResponse(expectedResponse = expectedJsonldExpandedParsed,
-                                              receivedResponse = jsonldParsedExpanded)
+      compareParsedJSONLDForResourcesResponse(
+        expectedResponse = expectedJsonldExpandedParsed,
+        receivedResponse = jsonldParsedExpanded
+      )
 
     }
 
@@ -89,9 +94,12 @@ class JSONLDHandlingV2R2RSpec extends R2RSpec {
 
         val expectedJson: JsObject =
           JsonParser(
-            readOrWriteTextFile("",
-                                Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
-                                writeFile = false)).asJsObject
+            readOrWriteTextFile(
+              "",
+              Paths.get("test_data/resourcesR2RV2/NarrenschiffFirstPage.jsonld"),
+              writeFile = false
+            )
+          ).asJsObject
 
         assert(receivedJson.fields("@context") == expectedJson.fields("@context"), "@context incorrect")
 

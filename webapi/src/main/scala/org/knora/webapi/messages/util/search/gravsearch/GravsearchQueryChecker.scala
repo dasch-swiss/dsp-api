@@ -33,25 +33,29 @@ import org.knora.webapi.messages.util.search._
 object GravsearchQueryChecker {
 
   /**
-    * Checks that the correct schema is used in a statement pattern and that the predicate is allowed in Gravsearch.
-    * If the statement is in the CONSTRUCT clause in the complex schema, non-property variables may refer only to resources or Knora values.
-    *
-    * @param statementPattern     the statement pattern to be checked.
-    * @param querySchema          the API v2 ontology schema used in the query.
-    * @param typeInspectionResult the type inspection result.
-    * @param inConstructClause    `true` if the statement is in the CONSTRUCT clause.
-    */
-  def checkStatement(statementPattern: StatementPattern,
-                     querySchema: ApiV2Schema,
-                     typeInspectionResult: GravsearchTypeInspectionResult,
-                     inConstructClause: Boolean = false): Unit = {
+   * Checks that the correct schema is used in a statement pattern and that the predicate is allowed in Gravsearch.
+   * If the statement is in the CONSTRUCT clause in the complex schema, non-property variables may refer only to resources or Knora values.
+   *
+   * @param statementPattern     the statement pattern to be checked.
+   * @param querySchema          the API v2 ontology schema used in the query.
+   * @param typeInspectionResult the type inspection result.
+   * @param inConstructClause    `true` if the statement is in the CONSTRUCT clause.
+   */
+  def checkStatement(
+    statementPattern: StatementPattern,
+    querySchema: ApiV2Schema,
+    typeInspectionResult: GravsearchTypeInspectionResult,
+    inConstructClause: Boolean = false
+  ): Unit = {
     // Check each entity in the statement.
     for (entity <- Seq(statementPattern.subj, statementPattern.pred, statementPattern.obj)) {
       entity match {
         case iriRef: IriRef =>
           // The entity is an IRI. If it has a schema, check that it's the query schema.
-          iriRef.iri.checkApiV2Schema(querySchema,
-                                      throw GravsearchException(s"${iriRef.toSparql} is not in the correct schema"))
+          iriRef.iri.checkApiV2Schema(
+            querySchema,
+            throw GravsearchException(s"${iriRef.toSparql} is not in the correct schema")
+          )
 
           // If we're in the CONSTRUCT clause, don't allow rdf, rdfs, or owl IRIs.
           if (inConstructClause && iriRef.iri.toString.contains('#')) {
@@ -72,12 +76,14 @@ object GravsearchQueryChecker {
                 case propertyTypeInfo: PropertyTypeInfo =>
                   propertyTypeInfo.objectTypeIri.checkApiV2Schema(
                     querySchema,
-                    throw GravsearchException(s"${entity.toSparql} is not in the correct schema"))
+                    throw GravsearchException(s"${entity.toSparql} is not in the correct schema")
+                  )
 
                 case nonPropertyTypeInfo: NonPropertyTypeInfo =>
                   nonPropertyTypeInfo.typeIri.checkApiV2Schema(
                     querySchema,
-                    throw GravsearchException(s"${entity.toSparql} is not in the correct schema"))
+                    throw GravsearchException(s"${entity.toSparql} is not in the correct schema")
+                  )
 
                   // If it's a variable that doesn't represent a property, and we're using the complex schema and the statement
                   // is in the CONSTRUCT clause, check that it refers to a resource or value.
@@ -129,14 +135,16 @@ object GravsearchQueryChecker {
   }
 
   /**
-    * Checks that the correct schema is used in a CONSTRUCT clause, that all the predicates used are allowed in Gravsearch,
-    * and that in the complex schema, non-property variables refer only to resources or Knora values.
-    *
-    * @param constructClause      the CONSTRUCT clause to be checked.
-    * @param typeInspectionResult the type inspection result.
-    */
-  def checkConstructClause(constructClause: ConstructClause,
-                           typeInspectionResult: GravsearchTypeInspectionResult): Unit = {
+   * Checks that the correct schema is used in a CONSTRUCT clause, that all the predicates used are allowed in Gravsearch,
+   * and that in the complex schema, non-property variables refer only to resources or Knora values.
+   *
+   * @param constructClause      the CONSTRUCT clause to be checked.
+   * @param typeInspectionResult the type inspection result.
+   */
+  def checkConstructClause(
+    constructClause: ConstructClause,
+    typeInspectionResult: GravsearchTypeInspectionResult
+  ): Unit =
     for (statementPattern <- constructClause.statements) {
       checkStatement(
         statementPattern = statementPattern,
@@ -146,7 +154,6 @@ object GravsearchQueryChecker {
         inConstructClause = true
       )
     }
-  }
 
   // A set of predicates that aren't allowed in Gravsearch.
   val forbiddenPredicates: Set[IRI] = Set(

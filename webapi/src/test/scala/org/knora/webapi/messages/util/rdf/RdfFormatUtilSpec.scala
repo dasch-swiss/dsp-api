@@ -29,8 +29,8 @@ import org.knora.webapi.util.FileUtil
 import org.knora.webapi.{CoreSpec, IRI}
 
 /**
-  * Tests implementations of [[RdfFormatUtil]].
-  */
+ * Tests implementations of [[RdfFormatUtil]].
+ */
 abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec {
   private val featureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
     testToggles = Set(featureToggle),
@@ -48,33 +48,29 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
   )
 
   /**
-    * Processes `anything-onto.ttl` and checks whether the expected content is received.
-    */
+   * Processes `anything-onto.ttl` and checks whether the expected content is received.
+   */
   class TestStreamProcessor extends RdfStreamProcessor {
     var startCalled: Boolean = false
     var finishCalled: Boolean = false
     var gotKnoraBaseNamespace = false
     var gotThingLabelStatement: Boolean = false
 
-    override def start(): Unit = {
+    override def start(): Unit =
       startCalled = true
-    }
 
-    override def processNamespace(prefix: String, namespace: IRI): Unit = {
+    override def processNamespace(prefix: String, namespace: IRI): Unit =
       if (prefix == "knora-base" && namespace == "http://www.knora.org/ontology/knora-base#") {
         gotKnoraBaseNamespace = true
       }
-    }
 
-    override def processStatement(statement: Statement): Unit = {
+    override def processStatement(statement: Statement): Unit =
       if (statement == expectedThingLabelStatement) {
         gotThingLabelStatement = true
       }
-    }
 
-    override def finish(): Unit = {
+    override def finish(): Unit =
       finishCalled = true
-    }
 
     def check(): Unit = {
       assert(startCalled)
@@ -98,9 +94,8 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
     assert(statements.head.obj == rdfNodeFactory.makeIriNode("http://0.0.0.0:3333/ontology/0803/incunabula/v2#book"))
   }
 
-  private def checkJsonLDDocumentForRdfTypeBook(jsonLDDocument: JsonLDDocument): Unit = {
+  private def checkJsonLDDocumentForRdfTypeBook(jsonLDDocument: JsonLDDocument): Unit =
     assert(jsonLDDocument.requireString(JsonLDKeywords.TYPE) == "http://0.0.0.0:3333/ontology/0803/incunabula/v2#book")
-  }
 
   "RdfFormatUtil" should {
     "parse RDF in Turtle format, producing an RdfModel, then format it as Turtle again" in {
@@ -177,8 +172,8 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
     "read Turtle, add a graph IRI to it, write it to a TriG file, and read back the TriG file" in {
       val graphIri = "http://example.org/data#"
       val rdfSource = RdfInputStreamSource(
-        new BufferedInputStream(
-          Files.newInputStream(Paths.get("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))))
+        new BufferedInputStream(Files.newInputStream(Paths.get("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")))
+      )
       val outputFile: Path = Files.createTempFile("test", ".trig")
 
       rdfFormatUtil.turtleToQuadsFile(
@@ -195,8 +190,8 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
     "read Turtle, add a graph IRI to it, write it to an N-Quads file, and read back the N-Quads file" in {
       val graphIri = "http://example.org/data#"
       val rdfSource = RdfInputStreamSource(
-        new BufferedInputStream(
-          Files.newInputStream(Paths.get("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl"))))
+        new BufferedInputStream(Files.newInputStream(Paths.get("test_data/resourcesR2RV2/BookReiseInsHeiligeLand.ttl")))
+      )
       val outputFile: Path = Files.createTempFile("test", ".trig")
 
       rdfFormatUtil.turtleToQuadsFile(
@@ -305,9 +300,11 @@ abstract class RdfFormatUtilSpec(featureToggle: FeatureToggle) extends CoreSpec 
       assert(rdfModel.contains(expectedThingLabelStatement))
 
       val byteArrayOutputStream = new ByteArrayOutputStream()
-      rdfFormatUtil.rdfModelToOutputStream(rdfModel = rdfModel,
-                                           outputStream = byteArrayOutputStream,
-                                           rdfFormat = Turtle)
+      rdfFormatUtil.rdfModelToOutputStream(
+        rdfModel = rdfModel,
+        outputStream = byteArrayOutputStream,
+        rdfFormat = Turtle
+      )
       byteArrayOutputStream.close()
 
       val byteArrayInputStream = new ByteArrayInputStream(byteArrayOutputStream.toByteArray)

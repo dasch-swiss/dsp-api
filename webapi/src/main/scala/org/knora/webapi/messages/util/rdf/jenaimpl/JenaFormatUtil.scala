@@ -29,53 +29,48 @@ import org.knora.webapi.messages.util.rdf._
 import scala.util.{Failure, Success, Try}
 
 /**
-  * Wraps an [[RdfStreamProcessor]] in a [[jena.riot.system.StreamRDF]].
-  */
+ * Wraps an [[RdfStreamProcessor]] in a [[jena.riot.system.StreamRDF]].
+ */
 class StreamProcessorAsStreamRDF(streamProcessor: RdfStreamProcessor) extends jena.riot.system.StreamRDF {
   override def start(): Unit = streamProcessor.start()
 
-  override def triple(triple: jena.graph.Triple): Unit = {
+  override def triple(triple: jena.graph.Triple): Unit =
     streamProcessor.processStatement(
       JenaStatement(jena.sparql.core.Quad.create(jena.sparql.core.Quad.defaultGraphIRI, triple))
     )
-  }
 
-  override def quad(quad: jena.sparql.core.Quad): Unit = {
+  override def quad(quad: jena.sparql.core.Quad): Unit =
     streamProcessor.processStatement(JenaStatement(quad))
-  }
 
   override def base(s: String): Unit = {}
 
-  override def prefix(prefixStr: String, namespace: String): Unit = {
+  override def prefix(prefixStr: String, namespace: String): Unit =
     streamProcessor.processNamespace(prefixStr, namespace)
-  }
 
   override def finish(): Unit = streamProcessor.finish()
 }
 
 /**
-  * Wraps a [[jena.riot.system.StreamRDF]] in a [[RdfStreamProcessor]].
-  */
+ * Wraps a [[jena.riot.system.StreamRDF]] in a [[RdfStreamProcessor]].
+ */
 class StreamRDFAsStreamProcessor(streamRDF: jena.riot.system.StreamRDF) extends RdfStreamProcessor {
 
   import JenaConversions._
 
   override def start(): Unit = streamRDF.start()
 
-  override def processNamespace(prefix: String, namespace: IRI): Unit = {
+  override def processNamespace(prefix: String, namespace: IRI): Unit =
     streamRDF.prefix(prefix, namespace)
-  }
 
-  override def processStatement(statement: Statement): Unit = {
+  override def processStatement(statement: Statement): Unit =
     streamRDF.quad(statement.asJenaQuad)
-  }
 
   override def finish(): Unit = streamRDF.finish()
 }
 
 /**
-  * An implementation of [[RdfFormatUtil]] that uses the Jena API.
-  */
+ * An implementation of [[RdfFormatUtil]] that uses the Jena API.
+ */
 class JenaFormatUtil(private val modelFactory: JenaModelFactory, private val nodeFactory: JenaNodeFactory)
     extends RdfFormatUtil
     with Feature {
@@ -83,14 +78,13 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory, private val nod
 
   override def getRdfNodeFactory: RdfNodeFactory = nodeFactory
 
-  private def rdfFormatToJenaParsingLang(rdfFormat: NonJsonLD): jena.riot.Lang = {
+  private def rdfFormatToJenaParsingLang(rdfFormat: NonJsonLD): jena.riot.Lang =
     rdfFormat match {
       case Turtle => jena.riot.RDFLanguages.TURTLE
       case TriG   => jena.riot.RDFLanguages.TRIG
       case RdfXml => jena.riot.RDFLanguages.RDFXML
       case NQuads => jena.riot.RDFLanguages.NQUADS
     }
-  }
 
   override def parseNonJsonLDToRdfModel(rdfStr: String, rdfFormat: NonJsonLD): RdfModel = {
     val jenaModel: JenaModel = modelFactory.makeEmptyModel
@@ -146,9 +140,11 @@ class JenaFormatUtil(private val modelFactory: JenaModelFactory, private val nod
     stringWriter.toString
   }
 
-  override def parseWithStreamProcessor(rdfSource: RdfSource,
-                                        rdfFormat: NonJsonLD,
-                                        rdfStreamProcessor: RdfStreamProcessor): Unit = {
+  override def parseWithStreamProcessor(
+    rdfSource: RdfSource,
+    rdfFormat: NonJsonLD,
+    rdfStreamProcessor: RdfStreamProcessor
+  ): Unit = {
     // Wrap the RdfStreamProcessor in a StreamProcessorAsStreamRDF.
     val streamRDF = new StreamProcessorAsStreamRDF(rdfStreamProcessor)
 

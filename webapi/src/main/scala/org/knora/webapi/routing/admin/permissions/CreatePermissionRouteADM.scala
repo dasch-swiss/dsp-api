@@ -45,15 +45,15 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
   import CreatePermissionRouteADM._
 
   /**
-    * Returns the route.
-    */
+   * Returns the route.
+   */
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     createAdministrativePermission(featureFactoryConfig) ~
       createDefaultObjectAccessPermission(featureFactoryConfig)
 
   /**
-    * Create a new administrative permission
-    */
+   * Create a new administrative permission
+   */
   private def createAdministrativePermission(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(PermissionsBasePath / "ap") {
       post {
@@ -64,13 +64,12 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
               requestContext = requestContext,
               featureFactoryConfig = featureFactoryConfig
             )
-          } yield
-            AdministrativePermissionCreateRequestADM(
-              createRequest = apiRequest,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser,
-              apiRequestID = UUID.randomUUID()
-            )
+          } yield AdministrativePermissionCreateRequestADM(
+            createRequest = apiRequest,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,
@@ -85,8 +84,8 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-    * Create default object access permission
-    */
+   * Create default object access permission
+   */
   private def createDefaultObjectAccessPermission(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(PermissionsBasePath / "doap") {
       post {
@@ -97,13 +96,12 @@ class CreatePermissionRouteADM(routeData: KnoraRouteData)
               requestContext = requestContext,
               featureFactoryConfig = featureFactoryConfig
             )
-          } yield
-            DefaultObjectAccessPermissionCreateRequestADM(
-              createRequest = apiRequest,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser,
-              apiRequestID = UUID.randomUUID()
-            )
+          } yield DefaultObjectAccessPermissionCreateRequestADM(
+            createRequest = apiRequest,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
           RouteUtilADM.runJsonRoute(
             requestMessageF = requestMessage,

@@ -45,8 +45,8 @@ import scala.concurrent.{ExecutionContext, Future}
 class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with LazyLogging {
 
   /**
-    * The Redis Client Pool
-    */
+   * The Redis Client Pool
+   */
   val pool: JedisPool = new JedisPool(new JedisPoolConfig(), s.cacheServiceRedisHost, s.cacheServiceRedisPort, 20999)
 
   // this is needed for time measurements using 'org.knora.webapi.Timing'
@@ -54,15 +54,15 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
   implicit val l: Logger = logger
 
   /**
-    * Stores the user under the IRI and additionally the IRI under the keys of
-    * USERNAME and EMAIL:
-    *
-    * IRI -> byte array
-    * username -> IRI
-    * email -> IRI
-    *
-    * @param value the stored value
-    */
+   * Stores the user under the IRI and additionally the IRI under the keys of
+   * USERNAME and EMAIL:
+   *
+   * IRI -> byte array
+   * username -> IRI
+   * email -> IRI
+   *
+   * @param value the stored value
+   */
   def putUserADM(value: UserADM)(implicit ec: ExecutionContext): Future[Boolean] = {
     val resultFuture = for {
       bytes: Array[Byte] <- CacheSerialization.serialize(value)
@@ -72,21 +72,20 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
       _ = writeStringValue(value.email, value.id)
     } yield result
 
-    val recoverableResultFuture = resultFuture.recover {
-      case e: Exception =>
-        logger.warn("Aborting writing 'UserADM' to Redis - {}", e.getMessage)
-        false
+    val recoverableResultFuture = resultFuture.recover { case e: Exception =>
+      logger.warn("Aborting writing 'UserADM' to Redis - {}", e.getMessage)
+      false
     }
 
     recoverableResultFuture
   }
 
   /**
-    * Retrieves the user stored under the identifier (either iri, username,
-    * or email).
-    *
-    * @param identifier the user identifier.
-    */
+   * Retrieves the user stored under the identifier (either iri, username,
+   * or email).
+   *
+   * @param identifier the user identifier.
+   */
   def getUserADM(identifier: UserIdentifierADM)(implicit ec: ExecutionContext): Future[Option[UserADM]] = {
     // The data is stored under the IRI key.
     // Additionally, the USERNAME and EMAIL keys point to the IRI key
@@ -121,25 +120,24 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
         } yield maybeUser
     }
 
-    val recoverableResultFuture = resultFuture.recover {
-      case e: Exception =>
-        logger.warn("Aborting reading 'UserADM' from Redis - {}", e.getMessage)
-        None
+    val recoverableResultFuture = resultFuture.recover { case e: Exception =>
+      logger.warn("Aborting reading 'UserADM' from Redis - {}", e.getMessage)
+      None
     }
 
     recoverableResultFuture
   }
 
   /**
-    * Stores the project under the IRI and additionally the IRI under the keys
-    * of SHORTCODE and SHORTNAME:
-    *
-    * IRI -> byte array
-    * shortname -> IRI
-    * shortcode -> IRI
-    *
-    * @param value the stored value
-    */
+   * Stores the project under the IRI and additionally the IRI under the keys
+   * of SHORTCODE and SHORTNAME:
+   *
+   * IRI -> byte array
+   * shortname -> IRI
+   * shortcode -> IRI
+   *
+   * @param value the stored value
+   */
   def putProjectADM(value: ProjectADM)(implicit ec: ExecutionContext): Future[Boolean] = {
     val resultFuture = for {
       bytes: Array[Byte] <- CacheSerialization.serialize(value)
@@ -148,20 +146,19 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
       _ = writeStringValue(value.shortname, value.id)
     } yield result
 
-    val recoverableResultFuture = resultFuture.recover {
-      case e: Exception =>
-        logger.warn("Aborting writing 'ProjectADM' to Redis - {}", e.getMessage)
-        false
+    val recoverableResultFuture = resultFuture.recover { case e: Exception =>
+      logger.warn("Aborting writing 'ProjectADM' to Redis - {}", e.getMessage)
+      false
     }
 
     recoverableResultFuture
   }
 
   /**
-    * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
-    *
-    * @param identifier the project identifier.
-    */
+   * Retrieves the project stored under the identifier (either iri, shortname, or shortcode).
+   *
+   * @param identifier the project identifier.
+   */
   def getProjectADM(identifier: ProjectIdentifierADM)(implicit ec: ExecutionContext): Future[Option[ProjectADM]] = {
 
     // The data is stored under the IRI key.
@@ -195,21 +192,20 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
         } yield maybeProject
     }
 
-    val recoverableResultFuture = resultFuture.recover {
-      case e: Exception =>
-        logger.warn("Aborting reading 'ProjectADM' from Redis - {}", e.getMessage)
-        None
+    val recoverableResultFuture = resultFuture.recover { case e: Exception =>
+      logger.warn("Aborting reading 'ProjectADM' from Redis - {}", e.getMessage)
+      None
     }
 
     recoverableResultFuture
   }
 
   /**
-    * Store string or byte array value under key.
-    *
-    * @param key   the key.
-    * @param value the value.
-    */
+   * Store string or byte array value under key.
+   *
+   * @param key   the key.
+   * @param value the value.
+   */
   def writeStringValue(key: String, value: String)(implicit ec: ExecutionContext): Future[Boolean] = {
 
     if (key.isEmpty)
@@ -230,21 +226,20 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
 
     }
 
-    val recoverableOperationFuture = operationFuture.recover {
-      case e: Exception =>
-        // Log any errors.
-        logger.warn("Writing to Redis failed - {}", e.getMessage)
-        false
+    val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
+      // Log any errors.
+      logger.warn("Writing to Redis failed - {}", e.getMessage)
+      false
     }
 
     recoverableOperationFuture
   }
 
   /**
-    * Get value stored under the key as a string.
-    *
-    * @param maybeKey the key.
-    */
+   * Get value stored under the key as a string.
+   *
+   * @param maybeKey the key.
+   */
   def getStringValue(maybeKey: Option[String])(implicit ec: ExecutionContext): Future[Option[String]] = {
 
     val operationFuture: Future[Option[String]] = maybeKey match {
@@ -261,21 +256,20 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
         FastFuture.successful(None)
     }
 
-    val recoverableOperationFuture = operationFuture.recover {
-      case e: Exception =>
-        // Log any errors.
-        logger.warn("Reading string from Redis failed, {}", e)
-        None
+    val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
+      // Log any errors.
+      logger.warn("Reading string from Redis failed, {}", e)
+      None
     }
 
     recoverableOperationFuture
   }
 
   /**
-    * Removes values for the provided keys. Any invalid keys are ignored.
-    *
-    * @param keys the keys.
-    */
+   * Removes values for the provided keys. Any invalid keys are ignored.
+   *
+   * @param keys the keys.
+   */
   def removeValues(keys: Set[String])(implicit ec: ExecutionContext): Future[Boolean] = {
 
     logger.debug("removeValues - {}", keys)
@@ -291,19 +285,18 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
       }
     }
 
-    val recoverableOperationFuture = operationFuture.recover {
-      case e: Exception =>
-        // Log any errors.
-        logger.warn("Removing keys from Redis failed.", e.getMessage)
-        false
+    val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
+      // Log any errors.
+      logger.warn("Removing keys from Redis failed.", e.getMessage)
+      false
     }
 
     recoverableOperationFuture
   }
 
   /**
-    * Flushes (removes) all stored content from the Redis store.
-    */
+   * Flushes (removes) all stored content from the Redis store.
+   */
   def flushDB(requestingUser: UserADM)(implicit ec: ExecutionContext): Future[CacheServiceFlushDBACK] = {
 
     if (!requestingUser.isSystemUser) {
@@ -321,19 +314,18 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
       }
     }
 
-    val recoverableOperationFuture = operationFuture.recover {
-      case e: Exception =>
-        // Log any errors.
-        logger.warn("Flushing DB failed", e.getMessage)
-        throw e
+    val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
+      // Log any errors.
+      logger.warn("Flushing DB failed", e.getMessage)
+      throw e
     }
 
     recoverableOperationFuture
   }
 
   /**
-    * Pings the Redis store to see if it is available.
-    */
+   * Pings the Redis store to see if it is available.
+   */
   def ping()(implicit ec: ExecutionContext): Future[CacheServiceStatusResponse] = {
     val operationFuture: Future[CacheServiceStatusResponse] = Future {
 
@@ -346,20 +338,19 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
       }
     }
 
-    val recoverableOperationFuture = operationFuture.recover {
-      case e: Exception =>
-        CacheServiceStatusNOK
+    val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
+      CacheServiceStatusNOK
     }
 
     recoverableOperationFuture
   }
 
   /**
-    * Store string or byte array value under key.
-    *
-    * @param key   the key.
-    * @param value the value.
-    */
+   * Store string or byte array value under key.
+   *
+   * @param key   the key.
+   * @param value the value.
+   */
   private def writeBytesValue(key: String, value: Array[Byte])(implicit ec: ExecutionContext): Future[Boolean] = {
 
     if (key.isEmpty)
@@ -378,22 +369,21 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
       }
     }
 
-    val recoverableOperationFuture = operationFuture.recover {
-      case e: Exception =>
-        // Log any errors.
-        logger.warn("Writing to Redis failed - {}", e.getMessage)
-        false
+    val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
+      // Log any errors.
+      logger.warn("Writing to Redis failed - {}", e.getMessage)
+      false
     }
 
     recoverableOperationFuture
   }
 
   /**
-    * Get value stored under the key as a byte array. If no value is found
-    * under the key, then a [[None]] is returned..
-    *
-    * @param maybeKey the key.
-    */
+   * Get value stored under the key as a byte array. If no value is found
+   * under the key, then a [[None]] is returned..
+   *
+   * @param maybeKey the key.
+   */
   private def getBytesValue(maybeKey: Option[String])(implicit ec: ExecutionContext): Future[Option[Array[Byte]]] = {
 
     val operationFuture: Future[Option[Array[Byte]]] = maybeKey match {
@@ -410,11 +400,10 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
         FastFuture.successful(None)
     }
 
-    val recoverableOperationFuture = operationFuture.recover {
-      case e: Exception =>
-        // Log any errors.
-        logger.warn("Reading byte array from Redis failed - {}", e.getMessage)
-        None
+    val recoverableOperationFuture = operationFuture.recover { case e: Exception =>
+      // Log any errors.
+      logger.warn("Reading byte array from Redis failed - {}", e.getMessage)
+      None
     }
 
     recoverableOperationFuture

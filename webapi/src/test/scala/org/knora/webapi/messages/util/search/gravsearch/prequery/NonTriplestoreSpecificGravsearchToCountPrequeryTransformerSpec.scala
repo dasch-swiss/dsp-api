@@ -26,9 +26,11 @@ private object CountQueryHandler {
 
   val anythingUser: UserADM = SharedTestDataADM.anythingAdminUser
 
-  def transformQuery(query: String,
-                     responderData: ResponderData,
-                     featureFactoryConfig: FeatureFactoryConfig): SelectQuery = {
+  def transformQuery(
+    query: String,
+    responderData: ResponderData,
+    featureFactoryConfig: FeatureFactoryConfig
+  ): SelectQuery = {
 
     val constructQuery = GravsearchParser.parseQuery(query)
 
@@ -76,27 +78,27 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
 
   val inputQueryWithDecimalOptionalSortCriterionAndFilter: String =
     """
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
-          |
-          |CONSTRUCT {
-          |     ?thing knora-api:isMainResource true .
-          |
-          |     ?thing anything:hasDecimal ?decimal .
-          |} WHERE {
-          |
-          |     ?thing a anything:Thing .
-          |     ?thing a knora-api:Resource .
-          |
-          |     OPTIONAL {
-          |        ?thing anything:hasDecimal ?decimal .
-          |        anything:hasDecimal knora-api:objectType xsd:decimal .
-          |
-          |        ?decimal a xsd:decimal .
-          |
-          |        FILTER(?decimal > "2"^^xsd:decimal)
-          |     }
-          |} ORDER BY ASC(?decimal)
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/simple/v2#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/simple/v2#>
+      |
+      |CONSTRUCT {
+      |     ?thing knora-api:isMainResource true .
+      |
+      |     ?thing anything:hasDecimal ?decimal .
+      |} WHERE {
+      |
+      |     ?thing a anything:Thing .
+      |     ?thing a knora-api:Resource .
+      |
+      |     OPTIONAL {
+      |        ?thing anything:hasDecimal ?decimal .
+      |        anything:hasDecimal knora-api:objectType xsd:decimal .
+      |
+      |        ?decimal a xsd:decimal .
+      |
+      |        FILTER(?decimal > "2"^^xsd:decimal)
+      |     }
+      |} ORDER BY ASC(?decimal)
         """.stripMargin
 
   val transformedQueryWithDecimalOptionalSortCriterionAndFilter: SelectQuery =
@@ -106,7 +108,8 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
           inputVariable = QueryVariable(variableName = "thing"),
           distinct = true,
           outputVariableName = "count"
-        )),
+        )
+      ),
       offset = 0,
       groupBy = Nil,
       orderBy = Nil,
@@ -126,7 +129,8 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
               IriRef(
                 iri = "http://www.knora.org/explicit".toSmartIri,
                 propertyPathOperator = None
-              ))
+              )
+            )
           ),
           StatementPattern(
             subj = QueryVariable(variableName = "thing"),
@@ -165,7 +169,8 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
                   IriRef(
                     iri = "http://www.knora.org/explicit".toSmartIri,
                     propertyPathOperator = None
-                  ))
+                  )
+                )
               ),
               StatementPattern(
                 subj = QueryVariable(variableName = "decimal"),
@@ -178,17 +183,21 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
                   IriRef(
                     iri = "http://www.knora.org/explicit".toSmartIri,
                     propertyPathOperator = None
-                  ))
-              ),
-              FilterPattern(expression = CompareExpression(
-                leftArg = QueryVariable(variableName = "decimal__valueHasDecimal"),
-                operator = CompareExpressionOperator.GREATER_THAN,
-                rightArg = XsdLiteral(
-                  value = "2",
-                  datatype = "http://www.w3.org/2001/XMLSchema#decimal".toSmartIri
+                  )
                 )
-              ))
-            ))
+              ),
+              FilterPattern(expression =
+                CompareExpression(
+                  leftArg = QueryVariable(variableName = "decimal__valueHasDecimal"),
+                  operator = CompareExpressionOperator.GREATER_THAN,
+                  rightArg = XsdLiteral(
+                    value = "2",
+                    datatype = "http://www.w3.org/2001/XMLSchema#decimal".toSmartIri
+                  )
+                )
+              )
+            )
+          )
         ).toSeq,
         positiveEntities = Set(),
         querySchema = None
@@ -199,26 +208,26 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
 
   val inputQueryWithDecimalOptionalSortCriterionAndFilterComplex: String =
     """
-          |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
-          |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
-          |
-          |CONSTRUCT {
-          |     ?thing knora-api:isMainResource true .
-          |
-          |     ?thing anything:hasDecimal ?decimal .
-          |} WHERE {
-          |
-          |     ?thing a anything:Thing .
-          |     ?thing a knora-api:Resource .
-          |
-          |     OPTIONAL {
-          |        ?thing anything:hasDecimal ?decimal .
-          |
-          |        ?decimal knora-api:decimalValueAsDecimal ?decimalVal .
-          |
-          |        FILTER(?decimalVal > "2"^^xsd:decimal)
-          |     }
-          |} ORDER BY ASC(?decimal)
+      |PREFIX anything: <http://0.0.0.0:3333/ontology/0001/anything/v2#>
+      |PREFIX knora-api: <http://api.knora.org/ontology/knora-api/v2#>
+      |
+      |CONSTRUCT {
+      |     ?thing knora-api:isMainResource true .
+      |
+      |     ?thing anything:hasDecimal ?decimal .
+      |} WHERE {
+      |
+      |     ?thing a anything:Thing .
+      |     ?thing a knora-api:Resource .
+      |
+      |     OPTIONAL {
+      |        ?thing anything:hasDecimal ?decimal .
+      |
+      |        ?decimal knora-api:decimalValueAsDecimal ?decimalVal .
+      |
+      |        FILTER(?decimalVal > "2"^^xsd:decimal)
+      |     }
+      |} ORDER BY ASC(?decimal)
         """.stripMargin
 
   val transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex: SelectQuery =
@@ -229,7 +238,8 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
           outputVariableName = "count",
           distinct = true,
           inputVariable = QueryVariable(variableName = "thing")
-        )),
+        )
+      ),
       offset = 0,
       groupBy = Nil,
       orderBy = Nil,
@@ -249,7 +259,8 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
               IriRef(
                 iri = "http://www.knora.org/explicit".toSmartIri,
                 propertyPathOperator = None
-              ))
+              )
+            )
           ),
           StatementPattern(
             subj = QueryVariable(variableName = "thing"),
@@ -297,17 +308,21 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
                   IriRef(
                     iri = "http://www.knora.org/explicit".toSmartIri,
                     propertyPathOperator = None
-                  ))
-              ),
-              FilterPattern(expression = CompareExpression(
-                leftArg = QueryVariable(variableName = "decimalVal"),
-                operator = CompareExpressionOperator.GREATER_THAN,
-                rightArg = XsdLiteral(
-                  value = "2",
-                  datatype = "http://www.w3.org/2001/XMLSchema#decimal".toSmartIri
+                  )
                 )
-              ))
-            ))
+              ),
+              FilterPattern(expression =
+                CompareExpression(
+                  leftArg = QueryVariable(variableName = "decimalVal"),
+                  operator = CompareExpressionOperator.GREATER_THAN,
+                  rightArg = XsdLiteral(
+                    value = "2",
+                    datatype = "http://www.w3.org/2001/XMLSchema#decimal".toSmartIri
+                  )
+                )
+              )
+            )
+          )
         ),
         positiveEntities = Set(),
         querySchema = None
@@ -321,9 +336,11 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
     "transform an input query with a decimal as an optional sort criterion and a filter" in {
 
       val transformedQuery =
-        CountQueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilter,
-                                         responderData,
-                                         defaultFeatureFactoryConfig)
+        CountQueryHandler.transformQuery(
+          inputQueryWithDecimalOptionalSortCriterionAndFilter,
+          responderData,
+          defaultFeatureFactoryConfig
+        )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilter)
 
@@ -332,9 +349,11 @@ class NonTriplestoreSpecificGravsearchToCountPrequeryTransformerSpec extends Cor
     "transform an input query with a decimal as an optional sort criterion and a filter (submitted in complex schema)" in {
 
       val transformedQuery =
-        CountQueryHandler.transformQuery(inputQueryWithDecimalOptionalSortCriterionAndFilterComplex,
-                                         responderData,
-                                         defaultFeatureFactoryConfig)
+        CountQueryHandler.transformQuery(
+          inputQueryWithDecimalOptionalSortCriterionAndFilterComplex,
+          responderData,
+          defaultFeatureFactoryConfig
+        )
 
       assert(transformedQuery === transformedQueryWithDecimalOptionalSortCriterionAndFilterComplex)
 

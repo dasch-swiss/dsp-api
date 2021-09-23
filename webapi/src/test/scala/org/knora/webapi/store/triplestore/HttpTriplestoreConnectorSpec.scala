@@ -33,11 +33,11 @@ class HttpTriplestoreConnectorSpec extends CoreSpec() with ImplicitSender {
     "report a connection timeout with an appropriate error message" in {
       storeManager ! SimulateTimeoutRequest()
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure =>
-          assert(msg.cause.isInstanceOf[TriplestoreTimeoutException])
-          assert(
-            msg.cause.getMessage == "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help.")
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        assert(msg.cause.isInstanceOf[TriplestoreTimeoutException])
+        assert(
+          msg.cause.getMessage == "The triplestore took too long to process a request. This can happen because the triplestore needed too much time to search through the data that is currently in the triplestore. Query optimisation may help."
+        )
       }
     }
   }

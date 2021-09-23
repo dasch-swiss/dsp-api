@@ -31,19 +31,20 @@ import org.knora.webapi.store.cacheservice.settings.CacheServiceSettings
 import org.knora.webapi.store.iiif.MockSipiConnector
 
 /**
-  * Mixin trait for running the application with mocked Sipi
-  */
+ * Mixin trait for running the application with mocked Sipi
+ */
 trait ManagersWithMockedSipi extends Managers {
   this: Actor =>
 
   lazy val mockStoreConnectors: Map[String, ActorRef] = Map(
-    SipiConnectorActorName -> context.actorOf(Props(new MockSipiConnector)))
+    SipiConnectorActorName -> context.actorOf(Props(new MockSipiConnector))
+  )
   lazy val mockResponders: Map[String, ActorRef] = Map.empty[String, ActorRef]
 
   lazy val storeManager: ActorRef = context.actorOf(
     Props(
       new MockableStoreManager(mockStoreConnectors = mockStoreConnectors, appActor = self, cs = CacheServiceInMemImpl)
-      with LiveActorMaker
+        with LiveActorMaker
     ),
     name = StoreManagerActorName
   )
@@ -53,11 +54,14 @@ trait ManagersWithMockedSipi extends Managers {
       new MockableResponderManager(
         mockRespondersOrStoreConnectors = mockResponders,
         appActor = self,
-        responderData = ResponderData(system,
-                                      self,
-                                      knoraSettings = KnoraSettings(system),
-                                      cacheServiceSettings = new CacheServiceSettings(system.settings.config))
-      )),
+        responderData = ResponderData(
+          system,
+          self,
+          knoraSettings = KnoraSettings(system),
+          cacheServiceSettings = new CacheServiceSettings(system.settings.config)
+        )
+      )
+    ),
     name = RESPONDER_MANAGER_ACTOR_NAME
   )
 }

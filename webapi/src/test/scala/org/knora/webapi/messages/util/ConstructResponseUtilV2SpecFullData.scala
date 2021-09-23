@@ -28,42 +28,45 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         creationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
         userPermission = ChangeRightsPermission,
-        values = Map("http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(
-          ReadOtherValueV2(
-            valueContent = IntegerValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasInteger = 543212345,
-              comment = Some("second hidden int value in visible resource")
+        values = Map(
+          "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(
+            ReadOtherValueV2(
+              valueContent = IntegerValueContentV2(
+                ontologySchema = InternalSchema,
+                valueHasInteger = 543212345,
+                comment = Some("second hidden int value in visible resource")
+              ),
+              valueIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g",
+              permissions = "M knora-admin:ProjectMember",
+              valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
+              attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+              previousValueIri = None,
+              valueHasUUID = stringFormatter.decodeUuid("F2xCr0S2QfWRQxJDWY9L0g"),
+              userPermission = ChangeRightsPermission,
+              deletionInfo = None
             ),
-            valueIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/F2xCr0S2QfWRQxJDWY9L0g",
-            permissions = "M knora-admin:ProjectMember",
-            valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
-            attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-            previousValueIri = None,
-            valueHasUUID = stringFormatter.decodeUuid("F2xCr0S2QfWRQxJDWY9L0g"),
-            userPermission = ChangeRightsPermission,
-            deletionInfo = None
-          ),
-          ReadOtherValueV2(
-            valueContent = IntegerValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasInteger = 123454321,
-              comment = Some("first hidden int value in visible resource")
-            ),
-            valueIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw",
-            permissions = "M knora-admin:ProjectMember",
-            valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
-            attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-            previousValueIri = None,
-            valueHasUUID = stringFormatter.decodeUuid("yVTqO37cRkCSvXbFc3vTyw"),
-            userPermission = ChangeRightsPermission,
-            deletionInfo = None
+            ReadOtherValueV2(
+              valueContent = IntegerValueContentV2(
+                ontologySchema = InternalSchema,
+                valueHasInteger = 123454321,
+                comment = Some("first hidden int value in visible resource")
+              ),
+              valueIri = "http://rdfh.ch/0001/F8L7zPp7TI-4MGJQlCO4Zg/values/yVTqO37cRkCSvXbFc3vTyw",
+              permissions = "M knora-admin:ProjectMember",
+              valueCreationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
+              attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+              previousValueIri = None,
+              valueHasUUID = stringFormatter.decodeUuid("yVTqO37cRkCSvXbFc3vTyw"),
+              userPermission = ChangeRightsPermission,
+              deletionInfo = None
+            )
           )
-        )),
+        ),
         projectADM = SharedTestDataADM.anythingProject,
         lastModificationDate = None,
         deletionInfo = None
-      )),
+      )
+    ),
     hiddenResourceIris = Set(),
     mayHaveMoreResults = false
   )
@@ -83,7 +86,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         projectADM = SharedTestDataADM.anythingProject,
         lastModificationDate = None,
         deletionInfo = None
-      )),
+      )
+    ),
     hiddenResourceIris = Set(),
     mayHaveMoreResults = false
   )
@@ -100,58 +104,65 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         creationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
         userPermission = ChangeRightsPermission,
         values = Map(
-          "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri -> Vector(ReadLinkValueV2(
-            valueContent = LinkValueContentV2(
-              isIncomingLink = false,
-              referredResourceIri = "http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ",
-              ontologySchema = InternalSchema,
-              comment = Some("link value pointing to hidden resource"),
-              referredResourceExists = true,
-              nestedResource = Some(ReadResourceV2(
-                versionDate = None,
-                label = "hidden thing",
-                resourceIri = "http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ",
-                permissions = "V knora-admin:Creator",
-                attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
-                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
-                creationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
-                userPermission = ChangeRightsPermission,
-                values = Map(),
-                projectADM = SharedTestDataADM.anythingProject,
-                lastModificationDate = None,
-                deletionInfo = None
-              ))
-            ),
-            valueHasRefCount = 1,
-            valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/UgSp5mXTTSKdI02ZU1KIAA",
-            permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-            valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
-            attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-            previousValueIri = None,
-            valueHasUUID = stringFormatter.decodeUuid("UgSp5mXTTSKdI02ZU1KIAA"),
-            userPermission = ChangeRightsPermission,
-            deletionInfo = None
-          )),
-          "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(ReadOtherValueV2(
-            valueContent = IntegerValueContentV2(
-              ontologySchema = InternalSchema,
-              valueHasInteger = 123454321,
-              comment = Some("visible int value in main resource")
-            ),
-            valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
-            permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-            valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
-            attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-            previousValueIri = None,
-            valueHasUUID = stringFormatter.decodeUuid("U1PwfNaVRQebbOSFWNdMqQ"),
-            userPermission = ChangeRightsPermission,
-            deletionInfo = None
-          ))
+          "http://www.knora.org/ontology/0001/anything#hasOtherThingValue".toSmartIri -> Vector(
+            ReadLinkValueV2(
+              valueContent = LinkValueContentV2(
+                isIncomingLink = false,
+                referredResourceIri = "http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ",
+                ontologySchema = InternalSchema,
+                comment = Some("link value pointing to hidden resource"),
+                referredResourceExists = true,
+                nestedResource = Some(
+                  ReadResourceV2(
+                    versionDate = None,
+                    label = "hidden thing",
+                    resourceIri = "http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ",
+                    permissions = "V knora-admin:Creator",
+                    attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
+                    resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                    creationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
+                    userPermission = ChangeRightsPermission,
+                    values = Map(),
+                    projectADM = SharedTestDataADM.anythingProject,
+                    lastModificationDate = None,
+                    deletionInfo = None
+                  )
+                )
+              ),
+              valueHasRefCount = 1,
+              valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/UgSp5mXTTSKdI02ZU1KIAA",
+              permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+              valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
+              attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+              previousValueIri = None,
+              valueHasUUID = stringFormatter.decodeUuid("UgSp5mXTTSKdI02ZU1KIAA"),
+              userPermission = ChangeRightsPermission,
+              deletionInfo = None
+            )
+          ),
+          "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(
+            ReadOtherValueV2(
+              valueContent = IntegerValueContentV2(
+                ontologySchema = InternalSchema,
+                valueHasInteger = 123454321,
+                comment = Some("visible int value in main resource")
+              ),
+              valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
+              permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+              valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
+              attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+              previousValueIri = None,
+              valueHasUUID = stringFormatter.decodeUuid("U1PwfNaVRQebbOSFWNdMqQ"),
+              userPermission = ChangeRightsPermission,
+              deletionInfo = None
+            )
+          )
         ),
         projectADM = SharedTestDataADM.anythingProject,
         lastModificationDate = None,
         deletionInfo = None
-      )),
+      )
+    ),
     hiddenResourceIris = Set(),
     mayHaveMoreResults = false
   )
@@ -167,25 +178,30 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         creationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
         userPermission = ViewPermission,
-        values = Map("http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(ReadOtherValueV2(
-          valueContent = IntegerValueContentV2(
-            ontologySchema = InternalSchema,
-            valueHasInteger = 123454321,
-            comment = Some("visible int value in main resource")
-          ),
-          valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
-          permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-          valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
-          attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-          previousValueIri = None,
-          valueHasUUID = stringFormatter.decodeUuid("U1PwfNaVRQebbOSFWNdMqQ"),
-          userPermission = ViewPermission,
-          deletionInfo = None
-        ))),
+        values = Map(
+          "http://www.knora.org/ontology/0001/anything#hasInteger".toSmartIri -> Vector(
+            ReadOtherValueV2(
+              valueContent = IntegerValueContentV2(
+                ontologySchema = InternalSchema,
+                valueHasInteger = 123454321,
+                comment = Some("visible int value in main resource")
+              ),
+              valueIri = "http://rdfh.ch/0001/0JhgKcqoRIeRRG6ownArSw/values/U1PwfNaVRQebbOSFWNdMqQ",
+              permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+              valueCreationDate = Instant.parse("2020-04-07T09:12:56.710717Z"),
+              attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+              previousValueIri = None,
+              valueHasUUID = stringFormatter.decodeUuid("U1PwfNaVRQebbOSFWNdMqQ"),
+              userPermission = ViewPermission,
+              deletionInfo = None
+            )
+          )
+        ),
         projectADM = SharedTestDataADM.anythingProject,
         lastModificationDate = None,
         deletionInfo = None
-      )),
+      )
+    ),
     hiddenResourceIris = Set("http://rdfh.ch/0001/XTxSMt0ySraVmwXD-bD2wQ"),
     mayHaveMoreResults = false
   )
@@ -230,7 +246,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                         standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink".toSmartIri,
                         value = "http://rdfh.ch/0001/a-thing",
                         targetExists = true
-                      )),
+                      )
+                    ),
                     startIndex = 1,
                     endIndex = None,
                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
@@ -283,7 +300,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                         standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasLink".toSmartIri,
                         value = "http://rdfh.ch/0001/a-thing",
                         targetExists = true
-                      )),
+                      )
+                    ),
                     startIndex = 1,
                     endIndex = None,
                     dataType = Some(StandoffDataTypeClasses.StandoffLinkTag),
@@ -297,7 +315,7 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 maybeValueHasString = Some("Na ja, die Dinge sind OK."),
                 comment = None,
                 xslt = None,
-                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping"),
+                mappingIri = Some("http://rdfh.ch/standoff/mappings/StandardMapping")
               ),
               valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/2",
               permissions = "CR knora-admin:Creator",
@@ -310,43 +328,48 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               deletionInfo = None
             )
           ),
-          "http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue".toSmartIri -> Vector(ReadLinkValueV2(
-            valueContent = LinkValueContentV2(
-              isIncomingLink = false,
-              referredResourceIri = "http://rdfh.ch/0001/a-thing",
-              ontologySchema = InternalSchema,
-              comment = None,
-              referredResourceExists = true,
-              nestedResource = Some(ReadResourceV2(
-                versionDate = None,
-                label = "A thing",
-                resourceIri = "http://rdfh.ch/0001/a-thing",
-                permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
-                attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-                resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
-                creationDate = Instant.parse("2016-03-02T15:05:10Z"),
-                userPermission = ChangeRightsPermission,
-                values = Map(),
-                projectADM = SharedTestDataADM.anythingProject,
-                lastModificationDate = None,
-                deletionInfo = None
-              ))
-            ),
-            valueHasRefCount = 2,
-            valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/0",
-            permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser",
-            valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
-            attachedToUser = "http://www.knora.org/ontology/knora-admin#SystemUser",
-            previousValueIri = None,
-            valueHasUUID = stringFormatter.decodeUuid("0"),
-            userPermission = ChangeRightsPermission,
-            deletionInfo = None
-          ))
+          "http://www.knora.org/ontology/knora-base#hasStandoffLinkToValue".toSmartIri -> Vector(
+            ReadLinkValueV2(
+              valueContent = LinkValueContentV2(
+                isIncomingLink = false,
+                referredResourceIri = "http://rdfh.ch/0001/a-thing",
+                ontologySchema = InternalSchema,
+                comment = None,
+                referredResourceExists = true,
+                nestedResource = Some(
+                  ReadResourceV2(
+                    versionDate = None,
+                    label = "A thing",
+                    resourceIri = "http://rdfh.ch/0001/a-thing",
+                    permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:UnknownUser",
+                    attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+                    resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
+                    creationDate = Instant.parse("2016-03-02T15:05:10Z"),
+                    userPermission = ChangeRightsPermission,
+                    values = Map(),
+                    projectADM = SharedTestDataADM.anythingProject,
+                    lastModificationDate = None,
+                    deletionInfo = None
+                  )
+                )
+              ),
+              valueHasRefCount = 2,
+              valueIri = "http://rdfh.ch/0001/a-thing-with-text-values/values/0",
+              permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser",
+              valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
+              attachedToUser = "http://www.knora.org/ontology/knora-admin#SystemUser",
+              previousValueIri = None,
+              valueHasUUID = stringFormatter.decodeUuid("0"),
+              userPermission = ChangeRightsPermission,
+              deletionInfo = None
+            )
+          )
         ),
         projectADM = SharedTestDataADM.anythingProject,
         lastModificationDate = None,
         deletionInfo = None
-      )),
+      )
+    ),
     hiddenResourceIris = Set(),
     mayHaveMoreResults = false
   )
@@ -372,38 +395,44 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
-                nestedResource = Some(ReadResourceV2(
-                  versionDate = None,
-                  label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-                  resourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
-                  permissions =
-                    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-                  attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                  resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
-                  creationDate = Instant.parse("2016-03-02T15:05:23Z"),
-                  userPermission = ChangeRightsPermission,
-                  values =
-                    Map("http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(ReadTextValueV2(
-                      valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
-                        ontologySchema = InternalSchema,
-                        maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
-                        comment = None
-                      ),
-                      valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
-                      permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-                      valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
-                      valueHasMaxStandoffStartIndex = None,
-                      attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                      previousValueIri = None,
-                      valueHasUUID = stringFormatter.decodeUuid("d9a522845006"),
-                      userPermission = ChangeRightsPermission,
-                      deletionInfo = None
-                    ))),
-                  projectADM = SharedTestDataADM.incunabulaProject,
-                  lastModificationDate = None,
-                  deletionInfo = None
-                ))
+                nestedResource = Some(
+                  ReadResourceV2(
+                    versionDate = None,
+                    label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
+                    resourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+                    permissions =
+                      "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+                    attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+                    creationDate = Instant.parse("2016-03-02T15:05:23Z"),
+                    userPermission = ChangeRightsPermission,
+                    values = Map(
+                      "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
+                        ReadTextValueV2(
+                          valueContent = TextValueContentV2(
+                            valueHasLanguage = None,
+                            ontologySchema = InternalSchema,
+                            maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
+                            comment = None
+                          ),
+                          valueIri = "http://rdfh.ch/0803/ff17e5ef9601/values/d9a522845006",
+                          permissions =
+                            "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+                          valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
+                          valueHasMaxStandoffStartIndex = None,
+                          attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                          previousValueIri = None,
+                          valueHasUUID = stringFormatter.decodeUuid("d9a522845006"),
+                          userPermission = ChangeRightsPermission,
+                          deletionInfo = None
+                        )
+                      )
+                    ),
+                    projectADM = SharedTestDataADM.incunabulaProject,
+                    lastModificationDate = None,
+                    deletionInfo = None
+                  )
+                )
               ),
               valueHasRefCount = 1,
               valueIri = "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
@@ -415,7 +444,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasUUID = stringFormatter.decodeUuid("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
-            )),
+            )
+          ),
           "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri -> Vector(
             ReadOtherValueV2(
               valueContent = IntegerValueContentV2(
@@ -432,7 +462,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasUUID = stringFormatter.decodeUuid("fae17f4f6106"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
-            ))
+            )
+          )
         ),
         projectADM = SharedTestDataADM.incunabulaProject,
         lastModificationDate = None,
@@ -457,38 +488,44 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
-                nestedResource = Some(ReadResourceV2(
-                  versionDate = None,
-                  label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
-                  resourceIri = "http://rdfh.ch/0803/c5058f3a",
-                  permissions =
-                    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-                  attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                  resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
-                  creationDate = Instant.parse("2016-03-02T15:05:10Z"),
-                  userPermission = ChangeRightsPermission,
-                  values =
-                    Map("http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(ReadTextValueV2(
-                      valueContent = TextValueContentV2(
-                        valueHasLanguage = None,
-                        ontologySchema = InternalSchema,
-                        maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
-                        comment = None
-                      ),
-                      valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
-                      permissions = "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
-                      valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
-                      valueHasMaxStandoffStartIndex = None,
-                      attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                      previousValueIri = None,
-                      valueHasUUID = stringFormatter.decodeUuid("c3295339"),
-                      userPermission = ChangeRightsPermission,
-                      deletionInfo = None
-                    ))),
-                  projectADM = SharedTestDataADM.incunabulaProject,
-                  lastModificationDate = None,
-                  deletionInfo = None
-                ))
+                nestedResource = Some(
+                  ReadResourceV2(
+                    versionDate = None,
+                    label = "Zeitgl\u00F6cklein des Lebens und Leidens Christi",
+                    resourceIri = "http://rdfh.ch/0803/c5058f3a",
+                    permissions =
+                      "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+                    attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#book".toSmartIri,
+                    creationDate = Instant.parse("2016-03-02T15:05:10Z"),
+                    userPermission = ChangeRightsPermission,
+                    values = Map(
+                      "http://www.knora.org/ontology/0803/incunabula#title".toSmartIri -> Vector(
+                        ReadTextValueV2(
+                          valueContent = TextValueContentV2(
+                            valueHasLanguage = None,
+                            ontologySchema = InternalSchema,
+                            maybeValueHasString = Some("Zeitgl\u00F6cklein des Lebens und Leidens Christi"),
+                            comment = None
+                          ),
+                          valueIri = "http://rdfh.ch/0803/c5058f3a/values/c3295339",
+                          permissions =
+                            "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser,knora-admin:UnknownUser",
+                          valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
+                          valueHasMaxStandoffStartIndex = None,
+                          attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                          previousValueIri = None,
+                          valueHasUUID = stringFormatter.decodeUuid("c3295339"),
+                          userPermission = ChangeRightsPermission,
+                          deletionInfo = None
+                        )
+                      )
+                    ),
+                    projectADM = SharedTestDataADM.incunabulaProject,
+                    lastModificationDate = None,
+                    deletionInfo = None
+                  )
+                )
               ),
               valueHasRefCount = 1,
               valueIri = "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
@@ -500,7 +537,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasUUID = stringFormatter.decodeUuid("25c5e9fd-2cb2-4350-88bb-882be3373745"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
-            )),
+            )
+          ),
           "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri -> Vector(
             ReadOtherValueV2(
               valueContent = IntegerValueContentV2(
@@ -517,7 +555,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasUUID = stringFormatter.decodeUuid("53feeaf80a"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
-            ))
+            )
+          )
         ),
         projectADM = SharedTestDataADM.incunabulaProject,
         lastModificationDate = None,
@@ -559,7 +598,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasUUID = stringFormatter.decodeUuid("c3295339"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
-            )),
+            )
+          ),
           "http://www.knora.org/ontology/knora-base#hasIncomingLinkValue".toSmartIri -> Vector(
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
@@ -568,56 +608,64 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
-                nestedResource = Some(ReadResourceV2(
-                  versionDate = None,
-                  label = "a5v",
-                  resourceIri = "http://rdfh.ch/0803/773f258402",
-                  permissions =
-                    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-                  attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                  resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-                  creationDate = Instant.parse("2016-03-02T15:05:10Z"),
-                  userPermission = ChangeRightsPermission,
-                  values = Map(
-                    "http://www.knora.org/ontology/0803/incunabula#partOfValue".toSmartIri -> Vector(ReadLinkValueV2(
-                      valueContent = LinkValueContentV2(
-                        isIncomingLink = false,
-                        referredResourceIri = "http://rdfh.ch/0803/c5058f3a",
-                        ontologySchema = InternalSchema,
-                        comment = None,
-                        referredResourceExists = true,
-                        nestedResource = None
+                nestedResource = Some(
+                  ReadResourceV2(
+                    versionDate = None,
+                    label = "a5v",
+                    resourceIri = "http://rdfh.ch/0803/773f258402",
+                    permissions =
+                      "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+                    attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                    creationDate = Instant.parse("2016-03-02T15:05:10Z"),
+                    userPermission = ChangeRightsPermission,
+                    values = Map(
+                      "http://www.knora.org/ontology/0803/incunabula#partOfValue".toSmartIri -> Vector(
+                        ReadLinkValueV2(
+                          valueContent = LinkValueContentV2(
+                            isIncomingLink = false,
+                            referredResourceIri = "http://rdfh.ch/0803/c5058f3a",
+                            ontologySchema = InternalSchema,
+                            comment = None,
+                            referredResourceExists = true,
+                            nestedResource = None
+                          ),
+                          valueHasRefCount = 1,
+                          valueIri = "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
+                          permissions =
+                            "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
+                          valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
+                          attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                          previousValueIri = None,
+                          valueHasUUID = stringFormatter.decodeUuid("25c5e9fd-2cb2-4350-88bb-882be3373745"),
+                          userPermission = ChangeRightsPermission,
+                          deletionInfo = None
+                        )
                       ),
-                      valueHasRefCount = 1,
-                      valueIri = "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
-                      permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
-                      valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
-                      attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                      previousValueIri = None,
-                      valueHasUUID = stringFormatter.decodeUuid("25c5e9fd-2cb2-4350-88bb-882be3373745"),
-                      userPermission = ChangeRightsPermission,
-                      deletionInfo = None
-                    )),
-                    "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri -> Vector(ReadOtherValueV2(
-                      valueContent = IntegerValueContentV2(
-                        ontologySchema = InternalSchema,
-                        valueHasInteger = 10,
-                        comment = None
-                      ),
-                      valueIri = "http://rdfh.ch/0803/773f258402/values/53feeaf80a",
-                      permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
-                      valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
-                      attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                      previousValueIri = None,
-                      valueHasUUID = stringFormatter.decodeUuid("53feeaf80a"),
-                      userPermission = ChangeRightsPermission,
-                      deletionInfo = None
-                    ))
-                  ),
-                  projectADM = SharedTestDataADM.incunabulaProject,
-                  lastModificationDate = None,
-                  deletionInfo = None
-                ))
+                      "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri -> Vector(
+                        ReadOtherValueV2(
+                          valueContent = IntegerValueContentV2(
+                            ontologySchema = InternalSchema,
+                            valueHasInteger = 10,
+                            comment = None
+                          ),
+                          valueIri = "http://rdfh.ch/0803/773f258402/values/53feeaf80a",
+                          permissions =
+                            "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
+                          valueCreationDate = Instant.parse("2016-03-02T15:05:10Z"),
+                          attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                          previousValueIri = None,
+                          valueHasUUID = stringFormatter.decodeUuid("53feeaf80a"),
+                          userPermission = ChangeRightsPermission,
+                          deletionInfo = None
+                        )
+                      )
+                    ),
+                    projectADM = SharedTestDataADM.incunabulaProject,
+                    lastModificationDate = None,
+                    deletionInfo = None
+                  )
+                )
               ),
               valueHasRefCount = 1,
               valueIri = "http://rdfh.ch/0803/773f258402/values/25c5e9fd-2cb2-4350-88bb-882be3373745",
@@ -629,7 +677,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasUUID = stringFormatter.decodeUuid("25c5e9fd-2cb2-4350-88bb-882be3373745"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
-            ))
+            )
+          )
         ),
         projectADM = SharedTestDataADM.incunabulaProject,
         lastModificationDate = None,
@@ -664,7 +713,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasUUID = stringFormatter.decodeUuid("d9a522845006"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
-            )),
+            )
+          ),
           "http://www.knora.org/ontology/knora-base#hasIncomingLinkValue".toSmartIri -> Vector(
             ReadLinkValueV2(
               valueContent = LinkValueContentV2(
@@ -673,56 +723,64 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
                 ontologySchema = InternalSchema,
                 comment = None,
                 referredResourceExists = true,
-                nestedResource = Some(ReadResourceV2(
-                  versionDate = None,
-                  label = "a5v",
-                  resourceIri = "http://rdfh.ch/0803/76570a749901",
-                  permissions =
-                    "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-                  attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                  resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
-                  creationDate = Instant.parse("2016-03-02T15:05:23Z"),
-                  userPermission = ChangeRightsPermission,
-                  values = Map(
-                    "http://www.knora.org/ontology/0803/incunabula#partOfValue".toSmartIri -> Vector(ReadLinkValueV2(
-                      valueContent = LinkValueContentV2(
-                        isIncomingLink = false,
-                        referredResourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
-                        ontologySchema = InternalSchema,
-                        comment = None,
-                        referredResourceExists = true,
-                        nestedResource = None
+                nestedResource = Some(
+                  ReadResourceV2(
+                    versionDate = None,
+                    label = "a5v",
+                    resourceIri = "http://rdfh.ch/0803/76570a749901",
+                    permissions =
+                      "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+                    attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                    resourceClassIri = "http://www.knora.org/ontology/0803/incunabula#page".toSmartIri,
+                    creationDate = Instant.parse("2016-03-02T15:05:23Z"),
+                    userPermission = ChangeRightsPermission,
+                    values = Map(
+                      "http://www.knora.org/ontology/0803/incunabula#partOfValue".toSmartIri -> Vector(
+                        ReadLinkValueV2(
+                          valueContent = LinkValueContentV2(
+                            isIncomingLink = false,
+                            referredResourceIri = "http://rdfh.ch/0803/ff17e5ef9601",
+                            ontologySchema = InternalSchema,
+                            comment = None,
+                            referredResourceExists = true,
+                            nestedResource = None
+                          ),
+                          valueHasRefCount = 1,
+                          valueIri = "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
+                          permissions =
+                            "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
+                          valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
+                          attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                          previousValueIri = None,
+                          valueHasUUID = stringFormatter.decodeUuid("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
+                          userPermission = ChangeRightsPermission,
+                          deletionInfo = None
+                        )
                       ),
-                      valueHasRefCount = 1,
-                      valueIri = "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
-                      permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
-                      valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
-                      attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                      previousValueIri = None,
-                      valueHasUUID = stringFormatter.decodeUuid("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
-                      userPermission = ChangeRightsPermission,
-                      deletionInfo = None
-                    )),
-                    "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri -> Vector(ReadOtherValueV2(
-                      valueContent = IntegerValueContentV2(
-                        ontologySchema = InternalSchema,
-                        valueHasInteger = 10,
-                        comment = None
-                      ),
-                      valueIri = "http://rdfh.ch/0803/76570a749901/values/fae17f4f6106",
-                      permissions = "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
-                      valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
-                      attachedToUser = "http://rdfh.ch/users/91e19f1e01",
-                      previousValueIri = None,
-                      valueHasUUID = stringFormatter.decodeUuid("fae17f4f6106"),
-                      userPermission = ChangeRightsPermission,
-                      deletionInfo = None
-                    ))
-                  ),
-                  projectADM = SharedTestDataADM.incunabulaProject,
-                  lastModificationDate = None,
-                  deletionInfo = None
-                ))
+                      "http://www.knora.org/ontology/0803/incunabula#seqnum".toSmartIri -> Vector(
+                        ReadOtherValueV2(
+                          valueContent = IntegerValueContentV2(
+                            ontologySchema = InternalSchema,
+                            valueHasInteger = 10,
+                            comment = None
+                          ),
+                          valueIri = "http://rdfh.ch/0803/76570a749901/values/fae17f4f6106",
+                          permissions =
+                            "CR knora-admin:Creator|V knora-admin:UnknownUser,knora-admin:KnownUser,knora-admin:ProjectMember",
+                          valueCreationDate = Instant.parse("2016-03-02T15:05:23Z"),
+                          attachedToUser = "http://rdfh.ch/users/91e19f1e01",
+                          previousValueIri = None,
+                          valueHasUUID = stringFormatter.decodeUuid("fae17f4f6106"),
+                          userPermission = ChangeRightsPermission,
+                          deletionInfo = None
+                        )
+                      )
+                    ),
+                    projectADM = SharedTestDataADM.incunabulaProject,
+                    lastModificationDate = None,
+                    deletionInfo = None
+                  )
+                )
               ),
               valueHasRefCount = 1,
               valueIri = "http://rdfh.ch/0803/76570a749901/values/bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d",
@@ -734,7 +792,8 @@ class ConstructResponseUtilV2SpecFullData(implicit stringFormatter: StringFormat
               valueHasUUID = stringFormatter.decodeUuid("bbd4d6a9-8b73-4670-b0cd-e851cd0a7c5d"),
               userPermission = ChangeRightsPermission,
               deletionInfo = None
-            ))
+            )
+          )
         ),
         projectADM = SharedTestDataADM.incunabulaProject,
         lastModificationDate = None,

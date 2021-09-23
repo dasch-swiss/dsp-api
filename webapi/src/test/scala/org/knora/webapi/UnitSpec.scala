@@ -45,7 +45,7 @@ object UnitSpec {
       .dropWhile(_ matches "(java.lang.Thread|.*UnitSpec.?$)")
     val reduced = s.lastIndexWhere(_ == clazz.getName) match {
       case -1 => s
-      case z => s drop (z + 1)
+      case z  => s drop (z + 1)
     }
     reduced.head.replaceFirst(""".*\.""", "").replaceAll("[^a-zA-Z_0-9]", "_")
   }

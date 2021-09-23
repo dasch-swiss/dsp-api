@@ -61,8 +61,8 @@ import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 /**
-  * Returns information about Knora projects.
-  */
+ * Returns information about Knora projects.
+ */
 class ProjectsResponderADM(responderData: ResponderData) extends Responder(responderData) with InstrumentationSupport {
 
   // Global lock IRI used for project creation and update
@@ -72,8 +72,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   private val PERMISSIONS_DATA_GRAPH = "http://www.knora.org/data/permissions"
 
   /**
-    * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
-    */
+   * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message.
+   */
   def receive(msg: ProjectsResponderRequestADM) = msg match {
     case ProjectsGetADM(featureFactoryConfig, requestingUser) => projectsGetADM(featureFactoryConfig, requestingUser)
     case ProjectsGetRequestADM(featureFactoryConfig, requestingUser) =>
@@ -96,31 +96,36 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       projectRestrictedViewSettingsGetRequestADM(identifier, featureFactoryConfig, requestingUser)
     case ProjectCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
       projectCreateRequestADM(createRequest, featureFactoryConfig, requestingUser, apiRequestID)
-    case ProjectChangeRequestADM(projectIri,
-                                 changeProjectRequest,
-                                 featureFactoryConfig,
-                                 requestingUser,
-                                 apiRequestID) =>
-      changeBasicInformationRequestADM(projectIri,
-                                       changeProjectRequest,
-                                       featureFactoryConfig,
-                                       requestingUser,
-                                       apiRequestID)
+    case ProjectChangeRequestADM(
+          projectIri,
+          changeProjectRequest,
+          featureFactoryConfig,
+          requestingUser,
+          apiRequestID
+        ) =>
+      changeBasicInformationRequestADM(
+        projectIri,
+        changeProjectRequest,
+        featureFactoryConfig,
+        requestingUser,
+        apiRequestID
+      )
     case ProjectDataGetRequestADM(projectIdentifier, featureFactoryConfig, requestingUser) =>
       projectDataGetRequestADM(projectIdentifier, featureFactoryConfig, requestingUser)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
   /**
-    * Gets all the projects and returns them as a sequence containing [[ProjectADM]].
-    *
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @return all the projects as a sequence containing [[ProjectADM]].
-    */
-  private def projectsGetADM(featureFactoryConfig: FeatureFactoryConfig,
-                             requestingUser: UserADM): Future[Seq[ProjectADM]] = {
-
+   * Gets all the projects and returns them as a sequence containing [[ProjectADM]].
+   *
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @return all the projects as a sequence containing [[ProjectADM]].
+   */
+  private def projectsGetADM(
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[Seq[ProjectADM]] =
     for {
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -130,7 +135,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             maybeShortname = None,
             maybeShortcode = None
           )
-          .toString())
+          .toString()
+      )
       // _ = log.debug(s"getProjectsResponseV1 - query: $sparqlQueryString")
 
       projectsResponse <- (storeManager ? SparqlExtendedConstructRequest(
@@ -142,8 +148,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       statements: List[(SubjectV2, Map[SmartIri, Seq[LiteralV2]])] = projectsResponse.statements.toList
       // _ = log.debug(s"projectsGetADM - statements: $statements")
 
-      projectIris = statements.map {
-        case (projectIri: SubjectV2, _) => projectIri.toString
+      projectIris = statements.map { case (projectIri: SubjectV2, _) =>
+        projectIri.toString
       }.toSet
 
       ontologiesForProjects: Map[IRI, Seq[IRI]] <- getOntologiesForProjects(projectIris, requestingUser)
@@ -155,123 +161,125 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       }
 
     } yield projects.sorted
-  }
 
   /**
-    * Given a set of project IRIs, gets the ontologies that belong to each project.
-    *
-    * @param projectIris    a set of project IRIs. If empty, returns the ontologies for all projects.
-    * @param requestingUser the requesting user.
-    * @return a map of project IRIs to sequences of ontology IRIs.
-    */
-  private def getOntologiesForProjects(projectIris: Set[IRI], requestingUser: UserADM): Future[Map[IRI, Seq[IRI]]] = {
+   * Given a set of project IRIs, gets the ontologies that belong to each project.
+   *
+   * @param projectIris    a set of project IRIs. If empty, returns the ontologies for all projects.
+   * @param requestingUser the requesting user.
+   * @return a map of project IRIs to sequences of ontology IRIs.
+   */
+  private def getOntologiesForProjects(projectIris: Set[IRI], requestingUser: UserADM): Future[Map[IRI, Seq[IRI]]] =
     for {
       ontologyMetadataResponse: ReadOntologyMetadataV2 <- (responderManager ? OntologyMetadataGetByProjectRequestV2(
         projectIris = projectIris.map(_.toSmartIri),
-        requestingUser = requestingUser)).mapTo[ReadOntologyMetadataV2]
-    } yield
-      ontologyMetadataResponse.ontologies
-        .map { ontology =>
-          val ontologyIri: IRI = ontology.ontologyIri.toString
-          val projectIri: IRI = ontology.projectIri
-            .getOrElse(throw InconsistentRepositoryDataException(s"Ontology $ontologyIri has no project"))
-            .toString
-          projectIri -> ontologyIri
-        }
-        .groupBy(_._1)
-        .map {
-          case (projectIri, projectIriAndOntologies: Set[(IRI, IRI)]) =>
-            projectIri -> projectIriAndOntologies.map(_._2).toSeq
-        }
-  }
+        requestingUser = requestingUser
+      )).mapTo[ReadOntologyMetadataV2]
+    } yield ontologyMetadataResponse.ontologies.map { ontology =>
+      val ontologyIri: IRI = ontology.ontologyIri.toString
+      val projectIri: IRI = ontology.projectIri
+        .getOrElse(throw InconsistentRepositoryDataException(s"Ontology $ontologyIri has no project"))
+        .toString
+      projectIri -> ontologyIri
+    }
+      .groupBy(_._1)
+      .map { case (projectIri, projectIriAndOntologies: Set[(IRI, IRI)]) =>
+        projectIri -> projectIriAndOntologies.map(_._2).toSeq
+      }
 
   /**
-    * Gets all the projects and returns them as a [[ProjectsResponseV1]].
-    *
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user that is making the request.
-    * @return all the projects as a [[ProjectsResponseV1]].
-    * @throws NotFoundException if no projects are found.
-    */
-  private def projectsGetRequestADM(featureFactoryConfig: FeatureFactoryConfig,
-                                    requestingUser: UserADM): Future[ProjectsGetResponseADM] = {
-
+   * Gets all the projects and returns them as a [[ProjectsResponseV1]].
+   *
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user that is making the request.
+   * @return all the projects as a [[ProjectsResponseV1]].
+   * @throws NotFoundException if no projects are found.
+   */
+  private def projectsGetRequestADM(
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[ProjectsGetResponseADM] =
     // log.debug("projectsGetRequestADM")
 
     // ToDo: What permissions should be required, if any?
-
     for {
       projects <- projectsGetADM(
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser
       )
 
-      result = if (projects.nonEmpty) {
-        ProjectsGetResponseADM(
-          projects = projects
-        )
-      } else {
-        throw NotFoundException(s"No projects found")
-      }
+      result =
+        if (projects.nonEmpty) {
+          ProjectsGetResponseADM(
+            projects = projects
+          )
+        } else {
+          throw NotFoundException(s"No projects found")
+        }
 
     } yield result
-  }
 
   /**
-    * Gets the project with the given project IRI, shortname, or shortcode and returns the information as a [[ProjectADM]].
-    *
-    * @param identifier           the IRI, shortname, or shortcode of the project.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @return information about the project as a [[ProjectInfoV1]].
-    */
-  private def getSingleProjectADM(identifier: ProjectIdentifierADM,
-                                  featureFactoryConfig: FeatureFactoryConfig,
-                                  requestingUser: UserADM,
-                                  skipCache: Boolean = false): Future[Option[ProjectADM]] =
+   * Gets the project with the given project IRI, shortname, or shortcode and returns the information as a [[ProjectADM]].
+   *
+   * @param identifier           the IRI, shortname, or shortcode of the project.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @return information about the project as a [[ProjectInfoV1]].
+   */
+  private def getSingleProjectADM(
+    identifier: ProjectIdentifierADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM,
+    skipCache: Boolean = false
+  ): Future[Option[ProjectADM]] =
     tracedFuture("admin-get-project") {
 
       // log.debug("getSingleProjectADM - projectIRI: {}", projectIri)
 
-      log.debug(s"getSingleProjectADM - id: {}, requester: {}, skipCache: {}",
-                identifier.value,
-                requestingUser.username,
-                skipCache)
+      log.debug(
+        s"getSingleProjectADM - id: {}, requester: {}, skipCache: {}",
+        identifier.value,
+        requestingUser.username,
+        skipCache
+      )
 
       for {
-        maybeProjectADM <- if (skipCache) {
-          // getting directly from triplestore
-          getProjectFromTriplestore(identifier = identifier, featureFactoryConfig = featureFactoryConfig)
-        } else {
-          // getting from cache or triplestore
-          getProjectFromCacheOrTriplestore(identifier = identifier, featureFactoryConfig = featureFactoryConfig)
-        }
+        maybeProjectADM <-
+          if (skipCache) {
+            // getting directly from triplestore
+            getProjectFromTriplestore(identifier = identifier, featureFactoryConfig = featureFactoryConfig)
+          } else {
+            // getting from cache or triplestore
+            getProjectFromCacheOrTriplestore(identifier = identifier, featureFactoryConfig = featureFactoryConfig)
+          }
 
-        _ = if (maybeProjectADM.nonEmpty) {
-          log.debug("getSingleProjectADM - successfully retrieved project: {}", identifier.value)
-        } else {
-          log.debug("getSingleProjectADM - could not retrieve project: {}", identifier.value)
-        }
+        _ =
+          if (maybeProjectADM.nonEmpty) {
+            log.debug("getSingleProjectADM - successfully retrieved project: {}", identifier.value)
+          } else {
+            log.debug("getSingleProjectADM - could not retrieve project: {}", identifier.value)
+          }
 
       } yield maybeProjectADM
     }
 
   /**
-    * Gets the project with the given project IRI, shortname, or shortcode and returns the information
-    * as a [[ProjectGetResponseADM]].
-    *
-    * @param identifier           the IRI, shortname, or shortcode of the project.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @return information about the project as a [[ProjectInfoResponseV1]].
-    * @throws NotFoundException when no project for the given IRI can be found
-    */
-  private def getSingleProjectADMRequest(identifier: ProjectIdentifierADM,
-                                         featureFactoryConfig: FeatureFactoryConfig,
-                                         requestingUser: UserADM): Future[ProjectGetResponseADM] = {
-
+   * Gets the project with the given project IRI, shortname, or shortcode and returns the information
+   * as a [[ProjectGetResponseADM]].
+   *
+   * @param identifier           the IRI, shortname, or shortcode of the project.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @return information about the project as a [[ProjectInfoResponseV1]].
+   * @throws NotFoundException when no project for the given IRI can be found
+   */
+  private def getSingleProjectADMRequest(
+    identifier: ProjectIdentifierADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[ProjectGetResponseADM] =
     // log.debug("getSingleProjectADMRequest - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
-
     for {
       maybeProject: Option[ProjectADM] <- getSingleProjectADM(
         identifier = identifier,
@@ -283,27 +291,25 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         case Some(p) => p
         case None    => throw NotFoundException(s"Project '${identifier.value}' not found")
       }
-    } yield
-      ProjectGetResponseADM(
-        project = project
-      )
-  }
+    } yield ProjectGetResponseADM(
+      project = project
+    )
 
   /**
-    * Gets the members of a project with the given IRI, shortname, oder shortcode. Returns an empty list
-    * if none are found.
-    *
-    * @param identifier           the IRI, shortname, or shortcode of the project.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @return the members of a project as a [[ProjectMembersGetResponseADM]]
-    */
-  private def projectMembersGetRequestADM(identifier: ProjectIdentifierADM,
-                                          featureFactoryConfig: FeatureFactoryConfig,
-                                          requestingUser: UserADM): Future[ProjectMembersGetResponseADM] = {
-
+   * Gets the members of a project with the given IRI, shortname, oder shortcode. Returns an empty list
+   * if none are found.
+   *
+   * @param identifier           the IRI, shortname, or shortcode of the project.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @return the members of a project as a [[ProjectMembersGetResponseADM]]
+   */
+  private def projectMembersGetRequestADM(
+    identifier: ProjectIdentifierADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[ProjectMembersGetResponseADM] =
     // log.debug("projectMembersGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
-
     for {
 
       /* Get project and verify permissions. */
@@ -313,13 +319,18 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
-      _ = if (project.isEmpty) {
-        throw NotFoundException(s"Project '${identifier.value}' not found.")
-      } else {
-        if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(project.get.id) && !requestingUser.isSystemUser) {
-          throw ForbiddenException("SystemAdmin or ProjectAdmin permissions are required.")
+      _ =
+        if (project.isEmpty) {
+          throw NotFoundException(s"Project '${identifier.value}' not found.")
+        } else {
+          if (
+            !requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(
+              project.get.id
+            ) && !requestingUser.isSystemUser
+          ) {
+            throw ForbiddenException("SystemAdmin or ProjectAdmin permissions are required.")
+          }
         }
-      }
 
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -329,7 +340,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             maybeShortname = identifier.toShortnameOption,
             maybeShortcode = identifier.toShortcodeOption
           )
-          .toString())
+          .toString()
+      )
       //_ = log.debug(s"projectMembersGetRequestADM - query: $sparqlQueryString")
 
       projectMembersResponse <- (storeManager ? SparqlExtendedConstructRequest(
@@ -342,11 +354,12 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       // _ = log.debug(s"projectMembersGetRequestADM - statements: {}", MessageUtil.toSource(statements))
 
       // get project member IRI from results rows
-      userIris: Seq[IRI] = if (statements.nonEmpty) {
-        statements.map(_._1.toString)
-      } else {
-        Seq.empty[IRI]
-      }
+      userIris: Seq[IRI] =
+        if (statements.nonEmpty) {
+          statements.map(_._1.toString)
+        } else {
+          Seq.empty[IRI]
+        }
 
       maybeUserFutures: Seq[Future[Option[UserADM]]] = userIris.map { userIri =>
         (responderManager ? UserGetADM(
@@ -362,23 +375,22 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       // _ = log.debug(s"projectMembersGetRequestADM - users: {}", users)
 
     } yield ProjectMembersGetResponseADM(members = users)
-  }
 
   /**
-    * Gets the admin members of a project with the given IRI, shortname, or shortcode. Returns an empty list
-    * if none are found
-    *
-    * @param identifier           the IRI, shortname, or shortcode of the project.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @return the members of a project as a [[ProjectMembersGetResponseADM]]
-    */
-  private def projectAdminMembersGetRequestADM(identifier: ProjectIdentifierADM,
-                                               featureFactoryConfig: FeatureFactoryConfig,
-                                               requestingUser: UserADM): Future[ProjectAdminMembersGetResponseADM] = {
-
+   * Gets the admin members of a project with the given IRI, shortname, or shortcode. Returns an empty list
+   * if none are found
+   *
+   * @param identifier           the IRI, shortname, or shortcode of the project.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @return the members of a project as a [[ProjectMembersGetResponseADM]]
+   */
+  private def projectAdminMembersGetRequestADM(
+    identifier: ProjectIdentifierADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[ProjectAdminMembersGetResponseADM] =
     // log.debug("projectAdminMembersGetRequestADM - maybeIri: {}, maybeShortname: {}, maybeShortcode: {}", maybeIri, maybeShortname, maybeShortcode)
-
     for {
       /* Get project and verify permissions. */
       project <- getSingleProjectADM(
@@ -387,13 +399,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
 
-      _ = if (project.isEmpty) {
-        throw NotFoundException(s"Project '${identifier.value}' not found.")
-      } else {
-        if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(project.get.id)) {
-          throw ForbiddenException("SystemAdmin or ProjectAdmin permissions are required.")
+      _ =
+        if (project.isEmpty) {
+          throw NotFoundException(s"Project '${identifier.value}' not found.")
+        } else {
+          if (!requestingUser.permissions.isSystemAdmin && !requestingUser.permissions.isProjectAdmin(project.get.id)) {
+            throw ForbiddenException("SystemAdmin or ProjectAdmin permissions are required.")
+          }
         }
-      }
 
       sparqlQueryString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -403,7 +416,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             maybeShortname = identifier.toShortnameOption,
             maybeShortcode = identifier.toShortcodeOption
           )
-          .toString())
+          .toString()
+      )
       //_ = log.debug(s"projectAdminMembersByIRIGetRequestV1 - query: $sparqlQueryString")
 
       projectAdminMembersResponse <- (storeManager ? SparqlExtendedConstructRequest(
@@ -415,11 +429,12 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       statements = projectAdminMembersResponse.statements.toList
 
       // get project member IRI from results rows
-      userIris: Seq[IRI] = if (statements.nonEmpty) {
-        statements.map(_._1.toString)
-      } else {
-        Seq.empty[IRI]
-      }
+      userIris: Seq[IRI] =
+        if (statements.nonEmpty) {
+          statements.map(_._1.toString)
+        } else {
+          Seq.empty[IRI]
+        }
 
       maybeUserFutures: Seq[Future[Option[UserADM]]] = userIris.map { userIri =>
         (responderManager ? UserGetADM(
@@ -435,18 +450,18 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       //_ = log.debug(s"projectMembersGetRequestADM - users: $users")
 
     } yield ProjectAdminMembersGetResponseADM(members = users)
-  }
 
   /**
-    * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
-    *
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
-    */
-  private def projectsKeywordsGetRequestADM(featureFactoryConfig: FeatureFactoryConfig,
-                                            requestingUser: UserADM): Future[ProjectsKeywordsGetResponseADM] = {
-
+   * Gets all unique keywords for all projects and returns them. Returns an empty list if none are found.
+   *
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @return all keywords for all projects as [[ProjectsKeywordsGetResponseADM]]
+   */
+  private def projectsKeywordsGetRequestADM(
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[ProjectsKeywordsGetResponseADM] =
     for {
       projects <- projectsGetADM(
         featureFactoryConfig = featureFactoryConfig,
@@ -456,20 +471,20 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       keywords: Seq[String] = projects.flatMap(_.keywords).distinct.sorted
 
     } yield ProjectsKeywordsGetResponseADM(keywords = keywords)
-  }
 
   /**
-    * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
-    *
-    * @param projectIri           the IRI of the project.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
-    */
-  private def projectKeywordsGetRequestADM(projectIri: IRI,
-                                           featureFactoryConfig: FeatureFactoryConfig,
-                                           requestingUser: UserADM): Future[ProjectKeywordsGetResponseADM] = {
-
+   * Gets all keywords for a single project and returns them. Returns an empty list if none are found.
+   *
+   * @param projectIri           the IRI of the project.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @return keywords for a projects as [[ProjectKeywordsGetResponseADM]]
+   */
+  private def projectKeywordsGetRequestADM(
+    projectIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[ProjectKeywordsGetResponseADM] =
     for {
       maybeProject <- getSingleProjectADM(
         identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
@@ -483,18 +498,19 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       }
 
     } yield ProjectKeywordsGetResponseADM(keywords = keywords)
-  }
 
-  private def projectDataGetRequestADM(projectIdentifier: ProjectIdentifierADM,
-                                       featureFactoryConfig: FeatureFactoryConfig,
-                                       requestingUser: UserADM): Future[ProjectDataGetResponseADM] = {
+  private def projectDataGetRequestADM(
+    projectIdentifier: ProjectIdentifierADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[ProjectDataGetResponseADM] = {
 
     /**
-      * Represents a named graph to be saved to a TriG file.
-      *
-      * @param graphIri the IRI of the named graph.
-      * @param tempDir  the directory in which the file is to be saved.
-      */
+     * Represents a named graph to be saved to a TriG file.
+     *
+     * @param graphIri the IRI of the named graph.
+     * @param tempDir  the directory in which the file is to be saved.
+     */
     case class NamedGraphTrigFile(graphIri: IRI, tempDir: Path) {
       lazy val dataFile: Path = {
         val filename = graphIri.replaceAll(":", "_").replaceAll("/", "_").replaceAll("""\.""", "_") +
@@ -505,10 +521,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * An [[RdfStreamProcessor]] for combining several named graphs into one.
-      *
-      * @param formattingStreamProcessor an [[RdfStreamProcessor]] for writing the combined result.
-      */
+     * An [[RdfStreamProcessor]] for combining several named graphs into one.
+     *
+     * @param formattingStreamProcessor an [[RdfStreamProcessor]] for writing the combined result.
+     */
     class CombiningRdfProcessor(formattingStreamProcessor: RdfStreamProcessor) extends RdfStreamProcessor {
       private var startedStatements = false
 
@@ -518,12 +534,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       // Ignore this, since it will be done after the last file is written.
       override def finish(): Unit = {}
 
-      override def processNamespace(prefix: IRI, namespace: IRI): Unit = {
+      override def processNamespace(prefix: IRI, namespace: IRI): Unit =
         // Only accept namespaces from the first graph, to prevent conflicts.
         if (!startedStatements) {
           formattingStreamProcessor.processNamespace(prefix, namespace)
         }
-      }
 
       override def processStatement(statement: Statement): Unit = {
         startedStatements = true
@@ -532,11 +547,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     }
 
     /**
-      * Combines several TriG files into one.
-      *
-      * @param namedGraphTrigFiles the TriG files to combine.
-      * @param resultFile          the output file.
-      */
+     * Combines several TriG files into one.
+     *
+     * @param namedGraphTrigFiles the TriG files to combine.
+     * @param resultFile          the output file.
+     */
     def combineGraphs(namedGraphTrigFiles: Seq[NamedGraphTrigFile], resultFile: Path): Unit = {
       val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
       var maybeBufferedFileOutputStream: Option[BufferedOutputStream] = None
@@ -590,12 +605,14 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       )
 
       project: ProjectADM = maybeProject.getOrElse(
-        throw NotFoundException(s"Project '${projectIdentifier.value}' not found."))
+        throw NotFoundException(s"Project '${projectIdentifier.value}' not found.")
+      )
 
       // Check that the user has permission to download the data.
       _ = if (!(requestingUser.permissions.isSystemAdmin || requestingUser.permissions.isProjectAdmin(project.id))) {
         throw ForbiddenException(
-          s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can request a project's data")
+          s"You are logged in as ${requestingUser.username}, but only a system administrator or project administrator can request a project's data"
+        )
       }
 
       // Make a temporary directory for the downloaded data.
@@ -607,10 +624,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       projectDataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
       graphsToDownload: Seq[IRI] = project.ontologies :+ projectDataNamedGraph
       projectSpecificNamedGraphTrigFiles: Seq[NamedGraphTrigFile] = graphsToDownload.map(graphIri =>
-        NamedGraphTrigFile(graphIri = graphIri, tempDir = tempDir))
+        NamedGraphTrigFile(graphIri = graphIri, tempDir = tempDir)
+      )
 
-      projectSpecificNamedGraphTrigFileWriteFutures: Seq[Future[FileWrittenResponse]] = projectSpecificNamedGraphTrigFiles
-        .map { trigFile =>
+      projectSpecificNamedGraphTrigFileWriteFutures: Seq[Future[FileWrittenResponse]] =
+        projectSpecificNamedGraphTrigFiles.map { trigFile =>
           for {
             fileWrittenResponse: FileWrittenResponse <- (
               storeManager ?
@@ -666,28 +684,28 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       // Stream the combined results into the output file.
 
-      namedGraphTrigFiles: Seq[NamedGraphTrigFile] = projectSpecificNamedGraphTrigFiles :+ adminDataNamedGraphTrigFile :+ permissionDataNamedGraphTrigFile
+      namedGraphTrigFiles: Seq[NamedGraphTrigFile] =
+        projectSpecificNamedGraphTrigFiles :+ adminDataNamedGraphTrigFile :+ permissionDataNamedGraphTrigFile
       resultFile: Path = tempDir.resolve(project.shortname + ".trig")
       _ = combineGraphs(namedGraphTrigFiles = namedGraphTrigFiles, resultFile = resultFile)
     } yield ProjectDataGetResponseADM(resultFile)
   }
 
   /**
-    * Get project's restricted view settings.
-    *
-    * @param identifier           the project's identifier (IRI / shortcode / shortname)
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @return [[ProjectRestrictedViewSettingsADM]]
-    */
+   * Get project's restricted view settings.
+   *
+   * @param identifier           the project's identifier (IRI / shortcode / shortname)
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @return [[ProjectRestrictedViewSettingsADM]]
+   */
   @ApiMayChange
   private def projectRestrictedViewSettingsGetADM(
-      identifier: ProjectIdentifierADM,
-      featureFactoryConfig: FeatureFactoryConfig,
-      requestingUser: UserADM): Future[Option[ProjectRestrictedViewSettingsADM]] = {
-
+    identifier: ProjectIdentifierADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[Option[ProjectRestrictedViewSettingsADM]] =
     // ToDo: We have two possible NotFound scenarios: 1. Project, 2. ProjectRestrictedViewSettings resource. How to send the client the correct NotFound reply?
-
     for {
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -697,46 +715,47 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             maybeShortname = identifier.toShortnameOption,
             maybeShortcode = identifier.toShortcodeOption
           )
-          .toString())
+          .toString()
+      )
 
       projectResponse <- (storeManager ? SparqlExtendedConstructRequest(
         sparql = sparqlQuery,
         featureFactoryConfig = featureFactoryConfig
       )).mapTo[SparqlExtendedConstructResponse]
 
-      restrictedViewSettings = if (projectResponse.statements.nonEmpty) {
+      restrictedViewSettings =
+        if (projectResponse.statements.nonEmpty) {
 
-        val (_, propsMap): (SubjectV2, Map[SmartIri, Seq[LiteralV2]]) = projectResponse.statements.head
+          val (_, propsMap): (SubjectV2, Map[SmartIri, Seq[LiteralV2]]) = projectResponse.statements.head
 
-        val size = propsMap
-          .get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize.toSmartIri)
-          .map(_.head.asInstanceOf[StringLiteralV2].value)
-        val watermark = propsMap
-          .get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark.toSmartIri)
-          .map(_.head.asInstanceOf[StringLiteralV2].value)
+          val size = propsMap
+            .get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewSize.toSmartIri)
+            .map(_.head.asInstanceOf[StringLiteralV2].value)
+          val watermark = propsMap
+            .get(OntologyConstants.KnoraAdmin.ProjectRestrictedViewWatermark.toSmartIri)
+            .map(_.head.asInstanceOf[StringLiteralV2].value)
 
-        Some(ProjectRestrictedViewSettingsADM(size, watermark))
-      } else {
-        None
-      }
+          Some(ProjectRestrictedViewSettingsADM(size, watermark))
+        } else {
+          None
+        }
 
     } yield restrictedViewSettings
 
-  }
-
   /**
-    * Get project's restricted view settings.
-    *
-    * @param identifier     the project's identifier (IRI / shortcode / shortname)
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser the user making the request.
-    * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
-    */
+   * Get project's restricted view settings.
+   *
+   * @param identifier     the project's identifier (IRI / shortcode / shortname)
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser the user making the request.
+   * @return [[ProjectRestrictedViewSettingsGetResponseADM]]
+   */
   @ApiMayChange
   private def projectRestrictedViewSettingsGetRequestADM(
-      identifier: ProjectIdentifierADM,
-      featureFactoryConfig: FeatureFactoryConfig,
-      requestingUser: UserADM): Future[ProjectRestrictedViewSettingsGetResponseADM] = {
+    identifier: ProjectIdentifierADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[ProjectRestrictedViewSettingsGetResponseADM] = {
 
     val maybeIri = identifier.toIriOption
     val maybeShortname = identifier.toShortnameOption
@@ -760,30 +779,34 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   }
 
   /**
-    * Changes project's basic information.
-    *
-    * @param projectIri           the IRI of the project.
-    * @param changeProjectRequest the change payload.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @param apiRequestID         the unique api request ID.
-    * @return a [[ProjectOperationResponseADM]].
-    * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
-    */
-  private def changeBasicInformationRequestADM(projectIri: IRI,
-                                               changeProjectRequest: ChangeProjectApiRequestADM,
-                                               featureFactoryConfig: FeatureFactoryConfig,
-                                               requestingUser: UserADM,
-                                               apiRequestID: UUID): Future[ProjectOperationResponseADM] = {
+   * Changes project's basic information.
+   *
+   * @param projectIri           the IRI of the project.
+   * @param changeProjectRequest the change payload.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[ProjectOperationResponseADM]].
+   * @throws ForbiddenException in the case that the user is not allowed to perform the operation.
+   */
+  private def changeBasicInformationRequestADM(
+    projectIri: IRI,
+    changeProjectRequest: ChangeProjectApiRequestADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Future[ProjectOperationResponseADM] = {
 
     //log.debug(s"changeBasicInformationRequestV1: changeProjectRequest: {}", changeProjectRequest)
 
     /**
-      * The actual change project task run with an IRI lock.
-      */
-    def changeProjectTask(projectIri: IRI,
-                          changeProjectRequest: ChangeProjectApiRequestADM,
-                          requestingUser: UserADM): Future[ProjectOperationResponseADM] =
+     * The actual change project task run with an IRI lock.
+     */
+    def changeProjectTask(
+      projectIri: IRI,
+      changeProjectRequest: ChangeProjectApiRequestADM,
+      requestingUser: UserADM
+    ): Future[ProjectOperationResponseADM] =
       for {
 
         _ <- Future(
@@ -828,20 +851,22 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   }
 
   /**
-    * Main project update method.
-    *
-    * @param projectIri           the IRI of the project.
-    * @param projectUpdatePayload the data to be updated. Update means exchanging what is in the triplestore with
-    *                             this data. If only some parts of the data need to be changed, then this needs to
-    *                             be prepared in the step before this one.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @return a [[ProjectOperationResponseADM]].
-    * @throws NotFoundException in the case that the project's IRI is not found.
-    */
-  private def updateProjectADM(projectIri: IRI,
-                               projectUpdatePayload: ProjectUpdatePayloadADM,
-                               featureFactoryConfig: FeatureFactoryConfig,
-                               requestingUser: UserADM): Future[ProjectOperationResponseADM] = {
+   * Main project update method.
+   *
+   * @param projectIri           the IRI of the project.
+   * @param projectUpdatePayload the data to be updated. Update means exchanging what is in the triplestore with
+   *                             this data. If only some parts of the data need to be changed, then this needs to
+   *                             be prepared in the step before this one.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @return a [[ProjectOperationResponseADM]].
+   * @throws NotFoundException in the case that the project's IRI is not found.
+   */
+  private def updateProjectADM(
+    projectIri: IRI,
+    projectUpdatePayload: ProjectUpdatePayloadADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[ProjectOperationResponseADM] = {
 
     // log.debug("updateProjectADM - projectIri: {}, projectUpdatePayload: {}", projectIri, projectUpdatePayload)
 
@@ -887,7 +912,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             maybeStatus = projectUpdatePayload.status,
             maybeSelfjoin = projectUpdatePayload.selfjoin
           )
-          .toString)
+          .toString
+      )
 
       // _ = log.debug(s"updateProjectADM - update query: {}", updateProjectSparqlString)
 
@@ -903,30 +929,37 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       )
 
       updatedProject: ProjectADM = maybeUpdatedProject.getOrElse(
-        throw UpdateNotPerformedException("Project was not updated. Please report this as a possible bug."))
+        throw UpdateNotPerformedException("Project was not updated. Please report this as a possible bug.")
+      )
 
-      _ = log.debug("updateProjectADM - projectUpdatePayload: {} /  updatedProject: {}",
-                    projectUpdatePayload,
-                    updatedProject)
+      _ = log.debug(
+        "updateProjectADM - projectUpdatePayload: {} /  updatedProject: {}",
+        projectUpdatePayload,
+        updatedProject
+      )
 
       _ = if (projectUpdatePayload.shortname.isDefined) {
         val unescapedShortName: String = stringFormatter.fromSparqlEncodedString(projectUpdatePayload.shortname.get)
         if (updatedProject.shortname != unescapedShortName)
           throw UpdateNotPerformedException(
-            "Project's 'shortname' was not updated. Please report this as a possible bug.")
+            "Project's 'shortname' was not updated. Please report this as a possible bug."
+          )
       }
       _ = if (projectUpdatePayload.longname.isDefined) {
         val unescapedLongname: Option[String] = stringFormatter.unescapeOptionalString(projectUpdatePayload.longname)
         if (updatedProject.longname != unescapedLongname)
           throw UpdateNotPerformedException(
-            s"Project's 'longname' was not updated. Please report this as a possible bug.")
+            s"Project's 'longname' was not updated. Please report this as a possible bug."
+          )
       }
       _ = if (projectUpdatePayload.description.isDefined) {
         val unescapedDescriptions: Seq[StringLiteralV2] = projectUpdatePayload.description.get.map(desc =>
-          StringLiteralV2(stringFormatter.fromSparqlEncodedString(desc.value), desc.language))
+          StringLiteralV2(stringFormatter.fromSparqlEncodedString(desc.value), desc.language)
+        )
         if (updatedProject.description.diff(unescapedDescriptions).nonEmpty)
           throw UpdateNotPerformedException(
-            "Project's 'description' was not updated. Please report this as a possible bug.")
+            "Project's 'description' was not updated. Please report this as a possible bug."
+          )
       }
 
       _ = if (projectUpdatePayload.keywords.isDefined) {
@@ -934,7 +967,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
           projectUpdatePayload.keywords.get.map(key => stringFormatter.fromSparqlEncodedString(key))
         if (updatedProject.keywords.sorted != unescapedKeywords.sorted)
           throw UpdateNotPerformedException(
-            "Project's 'keywords' was not updated. Please report this as a possible bug.")
+            "Project's 'keywords' was not updated. Please report this as a possible bug."
+          )
       }
       _ = if (projectUpdatePayload.logo.isDefined) {
         val unescapedLogo: Option[String] = stringFormatter.unescapeOptionalString(projectUpdatePayload.logo)
@@ -949,7 +983,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       _ = if (projectUpdatePayload.selfjoin.isDefined) {
         if (updatedProject.selfjoin != projectUpdatePayload.selfjoin.get)
           throw UpdateNotPerformedException(
-            "Project's 'selfjoin' status was not updated. Please report this as a possible bug.")
+            "Project's 'selfjoin' status was not updated. Please report this as a possible bug."
+          )
       }
 
     } yield ProjectOperationResponseADM(project = updatedProject)
@@ -957,31 +992,33 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   }
 
   /**
-    * Creates a project.
-    *
-    * @param createProjectRequest the new project's information.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user that is making the request.
-    * @param apiRequestID         the unique api request ID.
-    * @return a [[ProjectOperationResponseADM]].
-    * @throws ForbiddenException      in the case that the user is not allowed to perform the operation.
-    * @throws DuplicateValueException in the case when either the shortname or shortcode are not unique.
-    * @throws BadRequestException     in the case when the shortcode is invalid.
-    */
-  private def projectCreateRequestADM(createProjectRequest: CreateProjectApiRequestADM,
-                                      featureFactoryConfig: FeatureFactoryConfig,
-                                      requestingUser: UserADM,
-                                      apiRequestID: UUID): Future[ProjectOperationResponseADM] = {
+   * Creates a project.
+   *
+   * @param createProjectRequest the new project's information.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user that is making the request.
+   * @param apiRequestID         the unique api request ID.
+   * @return a [[ProjectOperationResponseADM]].
+   * @throws ForbiddenException      in the case that the user is not allowed to perform the operation.
+   * @throws DuplicateValueException in the case when either the shortname or shortcode are not unique.
+   * @throws BadRequestException     in the case when the shortcode is invalid.
+   */
+  private def projectCreateRequestADM(
+    createProjectRequest: CreateProjectApiRequestADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Future[ProjectOperationResponseADM] = {
 
     /**
-      * Creates following permissions for the new project
-      * 1. Permissions for project admins to do all operations on project level and to create, modify, delete, change rights,
-      * view, and restricted view of all new resources and values that belong to this project.
-      * 2. Permissions for project members to create, modify, view and restricted view of all new resources and values that belong to this project.
-      *
-      * @param projectIri the IRI of the new project.
-      * @throws BadRequestException if a permission is not created.
-      */
+     * Creates following permissions for the new project
+     * 1. Permissions for project admins to do all operations on project level and to create, modify, delete, change rights,
+     * view, and restricted view of all new resources and values that belong to this project.
+     * 2. Permissions for project members to create, modify, view and restricted view of all new resources and values that belong to this project.
+     *
+     * @param projectIri the IRI of the new project.
+     * @throws BadRequestException if a permission is not created.
+     */
     def createPermissionsForAdminsAndMembersOfNewProject(projectIri: IRI, projectShortCode: String): Future[Unit] =
       for {
         // Give the admins of the new project rights for any operation in project level, and rights to create resources.
@@ -1046,15 +1083,18 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         )).mapTo[DefaultObjectAccessPermissionCreateResponseADM]
       } yield ()
 
-    def projectCreateTask(createProjectRequest: CreateProjectApiRequestADM,
-                          requestingUser: UserADM): Future[ProjectOperationResponseADM] =
+    def projectCreateTask(
+      createProjectRequest: CreateProjectApiRequestADM,
+      requestingUser: UserADM
+    ): Future[ProjectOperationResponseADM] =
       for {
 
         // check if the supplied shortname is unique
         shortnameExists <- projectByShortnameExists(createProjectRequest.shortname)
         _ = if (shortnameExists) {
           throw DuplicateValueException(
-            s"Project with the shortname: '${createProjectRequest.shortname}' already exists")
+            s"Project with the shortname: '${createProjectRequest.shortname}' already exists"
+          )
         }
 
         // check if the optionally supplied shortcode is valid and unique
@@ -1062,7 +1102,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
         _ = if (shortcodeExists) {
           throw DuplicateValueException(
-            s"Project with the shortcode: '${createProjectRequest.shortcode}' already exists")
+            s"Project with the shortcode: '${createProjectRequest.shortcode}' already exists"
+          )
         }
 
         // check if the requesting user is allowed to create project
@@ -1075,7 +1116,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         customProjectIri: Option[SmartIri] = createProjectRequest.id.map(iri => iri.toSmartIri)
         newProjectIRI: IRI <- checkOrCreateEntityIri(
           customProjectIri,
-          stringFormatter.makeRandomProjectIri(createProjectRequest.shortcode))
+          stringFormatter.makeRandomProjectIri(createProjectRequest.shortcode)
+        )
 
         createNewProjectSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .createNewProject(
@@ -1112,7 +1154,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         // check to see if we could retrieve the new project
         newProjectADM = maybeNewProjectADM.getOrElse(
           throw UpdateNotPerformedException(
-            s"Project $newProjectIRI was not created. Please report this as a possible bug.")
+            s"Project $newProjectIRI was not created. Please report this as a possible bug."
+          )
         )
         // create permissions for admins and members of the new group
         _ <- createPermissionsForAdminsAndMembersOfNewProject(newProjectIRI, newProjectADM.shortcode)
@@ -1134,51 +1177,52 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   ////////////////////
 
   /**
-    * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
-    * If project is not found in cache but in triplestore, then project is written to cache.
-    *
-    * @param featureFactoryConfig the feature factory configuration.
-    */
+   * Tries to retrieve a [[ProjectADM]] either from triplestore or cache if caching is enabled.
+   * If project is not found in cache but in triplestore, then project is written to cache.
+   *
+   * @param featureFactoryConfig the feature factory configuration.
+   */
   private def getProjectFromCacheOrTriplestore(
-      identifier: ProjectIdentifierADM,
-      featureFactoryConfig: FeatureFactoryConfig): Future[Option[ProjectADM]] = {
+    identifier: ProjectIdentifierADM,
+    featureFactoryConfig: FeatureFactoryConfig
+  ): Future[Option[ProjectADM]] =
     if (cacheServiceSettings.cacheServiceEnabled) {
       // caching enabled
-      getProjectFromCache(identifier)
-        .flatMap {
-          case None =>
-            // none found in cache. getting from triplestore.
-            getProjectFromTriplestore(identifier = identifier, featureFactoryConfig = featureFactoryConfig)
-              .flatMap {
-                case None =>
-                  // also none found in triplestore. finally returning none.
-                  log.debug("getProjectFromCacheOrTriplestore - not found in cache and in triplestore")
-                  FastFuture.successful(None)
-                case Some(project) =>
-                  // found a project in the triplestore. need to write to cache.
-                  log.debug(
-                    "getProjectFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache.")
-                  // writing project to cache and afterwards returning the project found in the triplestore
-                  writeProjectADMToCache(project).map(res => Some(project))
-              }
-          case Some(user) =>
-            log.debug("getProjectFromCacheOrTriplestore - found in cache. returning user.")
-            FastFuture.successful(Some(user))
-        }
+      getProjectFromCache(identifier).flatMap {
+        case None =>
+          // none found in cache. getting from triplestore.
+          getProjectFromTriplestore(identifier = identifier, featureFactoryConfig = featureFactoryConfig).flatMap {
+            case None =>
+              // also none found in triplestore. finally returning none.
+              log.debug("getProjectFromCacheOrTriplestore - not found in cache and in triplestore")
+              FastFuture.successful(None)
+            case Some(project) =>
+              // found a project in the triplestore. need to write to cache.
+              log.debug(
+                "getProjectFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
+              )
+              // writing project to cache and afterwards returning the project found in the triplestore
+              writeProjectADMToCache(project).map(res => Some(project))
+          }
+        case Some(user) =>
+          log.debug("getProjectFromCacheOrTriplestore - found in cache. returning user.")
+          FastFuture.successful(Some(user))
+      }
     } else {
       // caching disabled
       log.debug("getProjectFromCacheOrTriplestore - caching disabled. getting from triplestore.")
       getProjectFromTriplestore(identifier = identifier, featureFactoryConfig = featureFactoryConfig)
     }
-  }
 
   /**
-    * Tries to retrieve a [[ProjectADM]] from the triplestore.
-    *
-    * @param featureFactoryConfig the feature factory configuration.
-    */
-  private def getProjectFromTriplestore(identifier: ProjectIdentifierADM,
-                                        featureFactoryConfig: FeatureFactoryConfig): Future[Option[ProjectADM]] =
+   * Tries to retrieve a [[ProjectADM]] from the triplestore.
+   *
+   * @param featureFactoryConfig the feature factory configuration.
+   */
+  private def getProjectFromTriplestore(
+    identifier: ProjectIdentifierADM,
+    featureFactoryConfig: FeatureFactoryConfig
+  ): Future[Option[ProjectADM]] =
     for {
 
       sparqlQuery <- Future(
@@ -1189,7 +1233,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             maybeShortname = identifier.toShortnameOption,
             maybeShortcode = identifier.toShortcodeOption
           )
-          .toString())
+          .toString()
+      )
 
       projectResponse <- (storeManager ? SparqlExtendedConstructRequest(
         sparql = sparqlQuery,
@@ -1198,32 +1243,36 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
 
       projectIris = projectResponse.statements.keySet.map(_.toString)
 
-      ontologies <- if (projectResponse.statements.nonEmpty) {
-        getOntologiesForProjects(projectIris, KnoraSystemInstances.Users.SystemUser)
-      } else {
-        FastFuture.successful(Map.empty[IRI, Seq[IRI]])
-      }
+      ontologies <-
+        if (projectResponse.statements.nonEmpty) {
+          getOntologiesForProjects(projectIris, KnoraSystemInstances.Users.SystemUser)
+        } else {
+          FastFuture.successful(Map.empty[IRI, Seq[IRI]])
+        }
 
-      maybeProjectADM: Option[ProjectADM] = if (projectResponse.statements.nonEmpty) {
-        log.debug("getProjectFromTriplestore - triplestore hit for: {}", identifier)
-        val projectOntologies = ontologies.getOrElse(projectIris.head, Seq.empty[IRI])
-        Some(statements2ProjectADM(statements = projectResponse.statements.head, ontologies = projectOntologies))
-      } else {
-        log.debug("getProjectFromTriplestore - no triplestore hit for: {}", identifier)
-        None
-      }
+      maybeProjectADM: Option[ProjectADM] =
+        if (projectResponse.statements.nonEmpty) {
+          log.debug("getProjectFromTriplestore - triplestore hit for: {}", identifier)
+          val projectOntologies = ontologies.getOrElse(projectIris.head, Seq.empty[IRI])
+          Some(statements2ProjectADM(statements = projectResponse.statements.head, ontologies = projectOntologies))
+        } else {
+          log.debug("getProjectFromTriplestore - no triplestore hit for: {}", identifier)
+          None
+        }
 
     } yield maybeProjectADM
 
   /**
-    * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
-    *
-    * @param statements results from the SPARQL query representing information about the project.
-    * @param ontologies the ontologies in the project.
-    * @return a [[ProjectADM]] representing information about project.
-    */
-  private def statements2ProjectADM(statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]]),
-                                    ontologies: Seq[IRI]): ProjectADM = {
+   * Helper method that turns SPARQL result rows into a [[ProjectInfoV1]].
+   *
+   * @param statements results from the SPARQL query representing information about the project.
+   * @param ontologies the ontologies in the project.
+   * @return a [[ProjectADM]] representing information about project.
+   */
+  private def statements2ProjectADM(
+    statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]]),
+    ontologies: Seq[IRI]
+  ): ProjectADM = {
 
     // log.debug("statements2ProjectADM - statements: {}", statements)
 
@@ -1233,14 +1282,18 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     ProjectADM(
       id = projectIri,
       shortname = propsMap
-        .getOrElse(OntologyConstants.KnoraAdmin.ProjectShortname.toSmartIri,
-                   throw InconsistentRepositoryDataException(s"Project: $projectIri has no shortname defined."))
+        .getOrElse(
+          OntologyConstants.KnoraAdmin.ProjectShortname.toSmartIri,
+          throw InconsistentRepositoryDataException(s"Project: $projectIri has no shortname defined.")
+        )
         .head
         .asInstanceOf[StringLiteralV2]
         .value,
       shortcode = propsMap
-        .getOrElse(OntologyConstants.KnoraAdmin.ProjectShortcode.toSmartIri,
-                   throw InconsistentRepositoryDataException(s"Project: $projectIri has no shortcode defined."))
+        .getOrElse(
+          OntologyConstants.KnoraAdmin.ProjectShortcode.toSmartIri,
+          throw InconsistentRepositoryDataException(s"Project: $projectIri has no shortcode defined.")
+        )
         .head
         .asInstanceOf[StringLiteralV2]
         .value,
@@ -1262,8 +1315,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         .map(_.head.asInstanceOf[StringLiteralV2].value),
       ontologies = ontologies,
       status = propsMap
-        .getOrElse(OntologyConstants.KnoraAdmin.Status.toSmartIri,
-                   throw InconsistentRepositoryDataException(s"Project: $projectIri has no status defined."))
+        .getOrElse(
+          OntologyConstants.KnoraAdmin.Status.toSmartIri,
+          throw InconsistentRepositoryDataException(s"Project: $projectIri has no status defined.")
+        )
         .head
         .asInstanceOf[BooleanLiteralV2]
         .value,
@@ -1279,17 +1334,18 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   }
 
   /**
-    * Helper method for checking if a project exists.
-    *
-    * @param maybeIri       the IRI of the project.
-    * @param maybeShortname the shortname of the project.
-    * @param maybeShortcode the shortcode of the project.
-    * @return a [[Boolean]].
-    */
-  private def projectExists(maybeIri: Option[IRI],
-                            maybeShortname: Option[String],
-                            maybeShortcode: Option[String]): Future[Boolean] = {
-
+   * Helper method for checking if a project exists.
+   *
+   * @param maybeIri       the IRI of the project.
+   * @param maybeShortname the shortname of the project.
+   * @param maybeShortcode the shortcode of the project.
+   * @return a [[Boolean]].
+   */
+  private def projectExists(
+    maybeIri: Option[IRI],
+    maybeShortname: Option[String],
+    maybeShortcode: Option[String]
+  ): Future[Boolean] =
     if (maybeIri.nonEmpty) {
       projectByIriExists(maybeIri.get)
     } else if (maybeShortname.nonEmpty) {
@@ -1299,71 +1355,70 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     } else {
       FastFuture.successful(false)
     }
-  }
 
   /**
-    * Helper method for checking if a project identified by IRI exists.
-    *
-    * @param projectIri the IRI of the project.
-    * @return a [[Boolean]].
-    */
-  private def projectByIriExists(projectIri: IRI): Future[Boolean] = {
+   * Helper method for checking if a project identified by IRI exists.
+   *
+   * @param projectIri the IRI of the project.
+   * @return a [[Boolean]].
+   */
+  private def projectByIriExists(projectIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .checkProjectExistsByIri(projectIri = projectIri)
-          .toString)
+          .toString
+      )
       //_ = log.debug("projectExists - query: {}", askString)
 
       checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result = checkProjectExistsResponse.result
 
     } yield result
-  }
 
   /**
-    * Helper method for checking if a project identified by shortname exists.
-    *
-    * @param shortname the shortname of the project.
-    * @return a [[Boolean]].
-    */
-  private def projectByShortnameExists(shortname: String): Future[Boolean] = {
+   * Helper method for checking if a project identified by shortname exists.
+   *
+   * @param shortname the shortname of the project.
+   * @return a [[Boolean]].
+   */
+  private def projectByShortnameExists(shortname: String): Future[Boolean] =
     for {
       askString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .checkProjectExistsByShortname(shortname = shortname)
-          .toString)
+          .toString
+      )
       //_ = log.debug("projectExists - query: {}", askString)
 
       checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result = checkProjectExistsResponse.result
 
     } yield result
-  }
 
   /**
-    * Helper method for checking if a project identified by shortcode exists.
-    *
-    * @param shortcode the shortcode of the project.
-    * @return a [[Boolean]].
-    */
-  private def projectByShortcodeExists(shortcode: String): Future[Boolean] = {
+   * Helper method for checking if a project identified by shortcode exists.
+   *
+   * @param shortcode the shortcode of the project.
+   * @return a [[Boolean]].
+   */
+  private def projectByShortcodeExists(shortcode: String): Future[Boolean] =
     for {
       askString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .checkProjectExistsByShortcode(shortcode = shortcode)
-          .toString)
+          .toString
+      )
       //_ = log.debug("projectExists - query: {}", askString)
 
       checkProjectExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result = checkProjectExistsResponse.result
 
     } yield result
-  }
 
   /**
-    * Tries to retrieve a [[ProjectADM]] from the cache.
-    */
+   * Tries to retrieve a [[ProjectADM]] from the cache.
+   */
   private def getProjectFromCache(identifier: ProjectIdentifierADM): Future[Option[ProjectADM]] = {
     val result = (storeManager ? CacheServiceGetProjectADM(identifier)).mapTo[Option[ProjectADM]]
     result.map {
@@ -1377,11 +1432,11 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   }
 
   /**
-    * Writes the project to cache.
-    *
-    * @param project a [[ProjectADM]].
-    * @return true if writing was successful.
-    */
+   * Writes the project to cache.
+   *
+   * @param project a [[ProjectADM]].
+   * @return true if writing was successful.
+   */
   private def writeProjectADMToCache(project: ProjectADM): Future[Boolean] = {
     val result = (storeManager ? CacheServicePutProjectADM(project)).mapTo[Boolean]
     result.map { res =>
@@ -1391,9 +1446,9 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
   }
 
   /**
-    * Removes the project from cache.
-    */
-  private def invalidateCachedProjectADM(maybeProject: Option[ProjectADM]): Future[Boolean] = {
+   * Removes the project from cache.
+   */
+  private def invalidateCachedProjectADM(maybeProject: Option[ProjectADM]): Future[Boolean] =
     if (cacheServiceSettings.cacheServiceEnabled) {
       val keys: Set[String] =
         Seq(maybeProject.map(_.id), maybeProject.map(_.shortname), maybeProject.map(_.shortcode)).flatten.toSet
@@ -1413,5 +1468,4 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       FastFuture.successful(true)
     }
 
-  }
 }

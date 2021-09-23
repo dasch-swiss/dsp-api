@@ -46,19 +46,21 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 /**
-  * Utility functions for working with Knora resources and their values.
-  */
+ * Utility functions for working with Knora resources and their values.
+ */
 object ResourceUtilV2 {
 
   /**
-    * Checks that a user has the specified permission on a resource.
-    *
-    * @param resourceInfo   the resource to be updated.
-    * @param requestingUser the requesting user.
-    */
-  def checkResourcePermission(resourceInfo: ReadResourceV2,
-                              permissionNeeded: EntityPermission,
-                              requestingUser: UserADM): Unit = {
+   * Checks that a user has the specified permission on a resource.
+   *
+   * @param resourceInfo   the resource to be updated.
+   * @param requestingUser the requesting user.
+   */
+  def checkResourcePermission(
+    resourceInfo: ReadResourceV2,
+    permissionNeeded: EntityPermission,
+    requestingUser: UserADM
+  ): Unit = {
     val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
       entityCreator = resourceInfo.attachedToUser,
       entityProject = resourceInfo.projectADM.id,
@@ -73,21 +75,24 @@ object ResourceUtilV2 {
 
     if (!hasRequiredPermission) {
       throw ForbiddenException(
-        s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on resource <${resourceInfo.resourceIri}>")
+        s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on resource <${resourceInfo.resourceIri}>"
+      )
     }
   }
 
   /**
-    * Checks that a user has the specified permission on a value.
-    *
-    * @param resourceInfo   the resource containing the value.
-    * @param valueInfo      the value to be updated.
-    * @param requestingUser the requesting user.
-    */
-  def checkValuePermission(resourceInfo: ReadResourceV2,
-                           valueInfo: ReadValueV2,
-                           permissionNeeded: EntityPermission,
-                           requestingUser: UserADM): Unit = {
+   * Checks that a user has the specified permission on a value.
+   *
+   * @param resourceInfo   the resource containing the value.
+   * @param valueInfo      the value to be updated.
+   * @param requestingUser the requesting user.
+   */
+  def checkValuePermission(
+    resourceInfo: ReadResourceV2,
+    valueInfo: ReadValueV2,
+    permissionNeeded: EntityPermission,
+    requestingUser: UserADM
+  ): Unit = {
     val maybeUserPermission: Option[EntityPermission] = PermissionUtilADM.getUserPermissionADM(
       entityCreator = valueInfo.attachedToUser,
       entityProject = resourceInfo.projectADM.id,
@@ -102,25 +107,27 @@ object ResourceUtilV2 {
 
     if (!hasRequiredPermission) {
       throw ForbiddenException(
-        s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on value <${valueInfo.valueIri}>")
+        s"User ${requestingUser.email} does not have ${permissionNeeded.getName} on value <${valueInfo.valueIri}>"
+      )
     }
   }
 
   /**
-    * Gets the default permissions for a new value.
-    *
-    * @param projectIri       the IRI of the project of the containing resource.
-    * @param resourceClassIri the internal IRI of the resource class.
-    * @param propertyIri      the internal IRI of the property that points to the value.
-    * @param requestingUser   the user that is creating the value.
-    * @return a permission string.
-    */
+   * Gets the default permissions for a new value.
+   *
+   * @param projectIri       the IRI of the project of the containing resource.
+   * @param resourceClassIri the internal IRI of the resource class.
+   * @param propertyIri      the internal IRI of the property that points to the value.
+   * @param requestingUser   the user that is creating the value.
+   * @return a permission string.
+   */
   def getDefaultValuePermissions(
-      projectIri: IRI,
-      resourceClassIri: SmartIri,
-      propertyIri: SmartIri,
-      requestingUser: UserADM,
-      responderManager: ActorRef)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] = {
+    projectIri: IRI,
+    resourceClassIri: SmartIri,
+    propertyIri: SmartIri,
+    requestingUser: UserADM,
+    responderManager: ActorRef
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[String] =
     for {
       defaultObjectAccessPermissionsResponse: DefaultObjectAccessPermissionsStringResponseADM <- {
         responderManager ? DefaultObjectAccessPermissionsStringForPropertyGetADM(
@@ -132,21 +139,22 @@ object ResourceUtilV2 {
         )
       }.mapTo[DefaultObjectAccessPermissionsStringResponseADM]
     } yield defaultObjectAccessPermissionsResponse.permissionLiteral
-  }
 
   /**
-    * Checks whether a list node exists, and throws [[NotFoundException]] otherwise.
-    *
-    * @param listNodeIri the IRI of the list node.
-    */
-  def checkListNodeExists(listNodeIri: IRI, storeManager: ActorRef)(
-      implicit timeout: Timeout,
-      executionContext: ExecutionContext): Future[Unit] = {
+   * Checks whether a list node exists, and throws [[NotFoundException]] otherwise.
+   *
+   * @param listNodeIri the IRI of the list node.
+   */
+  def checkListNodeExists(listNodeIri: IRI, storeManager: ActorRef)(implicit
+    timeout: Timeout,
+    executionContext: ExecutionContext
+  ): Future[Unit] =
     for {
       askString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .checkListNodeExistsByIri(listNodeIri = listNodeIri)
-          .toString)
+          .toString
+      )
 
       checkListNodeExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
 
@@ -154,25 +162,25 @@ object ResourceUtilV2 {
         throw NotFoundException(s"<$listNodeIri> does not exist or is not a ListNode")
       }
     } yield ()
-  }
 
   /**
-    * Given a future representing an operation that was supposed to update a value in a triplestore, checks whether
-    * the updated value was a file value. If not, this method returns the same future. If it was a file value, this
-    * method checks whether the update was successful. If so, it asks Sipi to move the file to permanent storage.
-    * If not, it asks Sipi to delete the temporary file.
-    *
-    * @param updateFuture   the future that should have updated the triplestore.
-    * @param valueContent   the value that should have been created or updated.
-    * @param requestingUser the user making the request.
-    */
+   * Given a future representing an operation that was supposed to update a value in a triplestore, checks whether
+   * the updated value was a file value. If not, this method returns the same future. If it was a file value, this
+   * method checks whether the update was successful. If so, it asks Sipi to move the file to permanent storage.
+   * If not, it asks Sipi to delete the temporary file.
+   *
+   * @param updateFuture   the future that should have updated the triplestore.
+   * @param valueContent   the value that should have been created or updated.
+   * @param requestingUser the user making the request.
+   */
   def doSipiPostUpdate[T <: UpdateResultInProject](
-      updateFuture: Future[T],
-      valueContent: ValueContentV2,
-      requestingUser: UserADM,
-      responderManager: ActorRef,
-      storeManager: ActorRef,
-      log: Logger)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[T] = {
+    updateFuture: Future[T],
+    valueContent: ValueContentV2,
+    requestingUser: UserADM,
+    responderManager: ActorRef,
+    storeManager: ActorRef,
+    log: Logger
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[T] =
     // Was this a file value update?
     valueContent match {
       case fileValueContent: FileValueContentV2 =>
@@ -215,5 +223,4 @@ object ResourceUtilV2 {
         // This wasn't a file value update. Return the future we were given.
         updateFuture
     }
-  }
 }

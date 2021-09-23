@@ -32,8 +32,8 @@ object GroupsMessagesADMSpec {
 }
 
 /**
-  * This spec is used to test 'GroupAdminMessages'.
-  */
+ * This spec is used to test 'GroupAdminMessages'.
+ */
 class GroupsMessagesADMSpec extends CoreSpec(GroupsMessagesADMSpec.config) {
 
   "The CreateGroupsApiRequestADM case class" should {

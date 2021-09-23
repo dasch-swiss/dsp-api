@@ -61,8 +61,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.xml.{Elem, Node, NodeSeq, XML}
 
 /**
-  * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
-  */
+ * Responds to requests relating to the creation of mappings from XML elements and attributes to standoff classes and properties.
+ */
 class StandoffResponderV2(responderData: ResponderData) extends Responder(responderData) {
 
   /* actor materializer needed for http requests */
@@ -74,20 +74,22 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
   )
 
   /**
-    * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
-    */
+   * Receives a message of type [[StandoffResponderRequestV2]], and returns an appropriate response message.
+   */
   def receive(msg: StandoffResponderRequestV2) = msg match {
     case getStandoffPageRequestV2: GetStandoffPageRequestV2 => getStandoffV2(getStandoffPageRequestV2)
     case getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2 =>
       getRemainingStandoffFromTextValueV2(getRemainingStandoffFromTextValueRequestV2)
     case CreateMappingRequestV2(metadata, xml, featureFactoryConfig, requestingUser, uuid) =>
-      createMappingV2(xml.xml,
-                      metadata.label,
-                      metadata.projectIri,
-                      metadata.mappingName,
-                      featureFactoryConfig,
-                      requestingUser,
-                      uuid)
+      createMappingV2(
+        xml.xml,
+        metadata.label,
+        metadata.projectIri,
+        metadata.mappingName,
+        featureFactoryConfig,
+        requestingUser,
+        uuid
+      )
     case GetMappingRequestV2(mappingIri, featureFactoryConfig, requestingUser) =>
       getMappingV2(mappingIri, featureFactoryConfig, requestingUser)
     case GetXSLTransformationRequestV2(xsltTextReprIri, featureFactoryConfig, requestingUser) =>
@@ -116,7 +118,8 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             maybeStandoffMaxStartIndex = Some(requestMaxStartIndex),
             stringFormatter = stringFormatter
           )
-          .toString())
+          .toString()
+      )
 
       // _ = println("=================================")
       // _ = println(resourceRequestSparql)
@@ -134,8 +137,10 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
       // separate resources and values
       mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData = ConstructResponseUtilV2
-        .splitMainResourcesAndValueRdfData(constructQueryResults = resourceRequestResponse,
-                                           requestingUser = getStandoffRequestV2.requestingUser)
+        .splitMainResourcesAndValueRdfData(
+          constructQueryResults = resourceRequestResponse,
+          requestingUser = getStandoffRequestV2.requestingUser
+        )
 
       readResourcesSequenceV2: ReadResourcesSequenceV2 <- ConstructResponseUtilV2.createApiResponse(
         mainResourcesAndValueRdfData = mainResourcesAndValueRdfData,
@@ -156,14 +161,18 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
       valueObj: ReadValueV2 = readResourceV2.values.values.flatten
         .find(_.valueIri == getStandoffRequestV2.valueIri)
-        .getOrElse(throw NotFoundException(
-          s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> (maybe you do not have permission to see it, or it is marked as deleted)"))
+        .getOrElse(
+          throw NotFoundException(
+            s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> (maybe you do not have permission to see it, or it is marked as deleted)"
+          )
+        )
 
       textValueObj: ReadTextValueV2 = valueObj match {
         case textVal: ReadTextValueV2 => textVal
         case _ =>
           throw BadRequestException(
-            s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> is not a text value")
+            s"Value <${getStandoffRequestV2.valueIri}> not found in resource <${getStandoffRequestV2.resourceIri}> is not a text value"
+          )
       }
 
       nextOffset: Option[Int] = textValueObj.valueHasMaxStandoffStartIndex match {
@@ -176,25 +185,26 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
         case None => None
       }
-    } yield
-      GetStandoffResponseV2(
-        valueIri = textValueObj.valueIri,
-        standoff = textValueObj.valueContent.standoff,
-        nextOffset = nextOffset
-      )
+    } yield GetStandoffResponseV2(
+      valueIri = textValueObj.valueIri,
+      standoff = textValueObj.valueContent.standoff,
+      nextOffset = nextOffset
+    )
   }
 
   /**
-    * If not already in the cache, retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL transformation file from Sipi.
-    *
-    * @param xslTransformationIri the IRI of the resource representing the XSL Transformation (a [[OntologyConstants.KnoraBase.XSLTransformation]]).
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @return a [[GetXSLTransformationResponseV2]].
-    */
-  private def getXSLTransformation(xslTransformationIri: IRI,
-                                   featureFactoryConfig: FeatureFactoryConfig,
-                                   requestingUser: UserADM): Future[GetXSLTransformationResponseV2] = {
+   * If not already in the cache, retrieves a `knora-base:XSLTransformation` in the triplestore and requests the corresponding XSL transformation file from Sipi.
+   *
+   * @param xslTransformationIri the IRI of the resource representing the XSL Transformation (a [[OntologyConstants.KnoraBase.XSLTransformation]]).
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @return a [[GetXSLTransformationResponseV2]].
+   */
+  private def getXSLTransformation(
+    xslTransformationIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[GetXSLTransformationResponseV2] = {
 
     val xsltUrlFuture = for {
 
@@ -209,11 +219,13 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
       _ = if (resource.resourceClassIri.toString != OntologyConstants.KnoraBase.XSLTransformation) {
         throw BadRequestException(
-          s"Resource $xslTransformationIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}")
+          s"Resource $xslTransformationIri is not a ${OntologyConstants.KnoraBase.XSLTransformation}"
+        )
       }
 
       (fileValueIri: IRI, xsltFileValueContent: TextFileValueContentV2) = resource.values.get(
-        OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri) match {
+        OntologyConstants.KnoraBase.HasTextFileValue.toSmartIri
+      ) match {
         case Some(values: Seq[ReadValueV2]) if values.size == 1 =>
           values.head match {
             case value: ReadValueV2 =>
@@ -221,28 +233,31 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 case textRepr: TextFileValueContentV2 => (value.valueIri, textRepr)
                 case _ =>
                   throw InconsistentRepositoryDataException(
-                    s"${OntologyConstants.KnoraBase.XSLTransformation} $xslTransformationIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}")
+                    s"${OntologyConstants.KnoraBase.XSLTransformation} $xslTransformationIri is supposed to have exactly one value of type ${OntologyConstants.KnoraBase.TextFileValue}"
+                  )
               }
           }
 
         case None =>
           throw InconsistentRepositoryDataException(
-            s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}")
+            s"${OntologyConstants.KnoraBase.XSLTransformation} has no property ${OntologyConstants.KnoraBase.HasTextFileValue}"
+          )
       }
 
       // check if xsltFileValueContent represents an XSL transformation
       _ = if (!xmlMimeTypes.contains(xsltFileValueContent.fileValue.internalMimeType)) {
         throw BadRequestException(
-          s"Expected $fileValueIri to be an XML file referring to an XSL transformation, but it has MIME type ${xsltFileValueContent.fileValue.internalMimeType}")
+          s"Expected $fileValueIri to be an XML file referring to an XSL transformation, but it has MIME type ${xsltFileValueContent.fileValue.internalMimeType}"
+        )
       }
 
-      xsltUrl: String = s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
+      xsltUrl: String =
+        s"${settings.internalSipiBaseUrl}/${resource.projectADM.shortcode}/${xsltFileValueContent.fileValue.internalFilename}/file"
 
     } yield xsltUrl
 
-    val recoveredXsltUrlFuture = xsltUrlFuture.recover {
-      case notFound: NotFoundException =>
-        throw BadRequestException(s"XSL transformation $xslTransformationIri not found: ${notFound.message}")
+    val recoveredXsltUrlFuture = xsltUrlFuture.recover { case notFound: NotFoundException =>
+      throw BadRequestException(s"XSL transformation $xslTransformationIri not found: ${notFound.message}")
     }
 
     for {
@@ -252,45 +267,50 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
       xsltMaybe: Option[String] = CacheUtil.get[String](cacheName = xsltCacheName, key = xsltFileUrl)
 
-      xslt: String <- if (xsltMaybe.nonEmpty) {
-        // XSL transformation is cached
-        Future(xsltMaybe.get)
-      } else {
-        for {
-          response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(
-            fileUrl = xsltFileUrl,
-            requestingUser = KnoraSystemInstances.Users.SystemUser,
-            senderName = this.getClass.getName
-          )).mapTo[SipiGetTextFileResponse]
-          _ = CacheUtil.put(cacheName = xsltCacheName, key = xsltFileUrl, value = response.content)
-        } yield response.content
-      }
+      xslt: String <-
+        if (xsltMaybe.nonEmpty) {
+          // XSL transformation is cached
+          Future(xsltMaybe.get)
+        } else {
+          for {
+            response: SipiGetTextFileResponse <- (storeManager ? SipiGetTextFileRequest(
+              fileUrl = xsltFileUrl,
+              requestingUser = KnoraSystemInstances.Users.SystemUser,
+              senderName = this.getClass.getName
+            )).mapTo[SipiGetTextFileResponse]
+            _ = CacheUtil.put(cacheName = xsltCacheName, key = xsltFileUrl, value = response.content)
+          } yield response.content
+        }
 
     } yield GetXSLTransformationResponseV2(xslt = xslt)
 
   }
 
   /**
-    * Creates a mapping between XML elements and attributes to standoff classes and properties.
-    * The mapping is used to convert XML documents to texts with standoff and back.
-    *
-    * @param xml                  the provided mapping.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the client that made the request.
-    */
-  private def createMappingV2(xml: String,
-                              label: String,
-                              projectIri: SmartIri,
-                              mappingName: String,
-                              featureFactoryConfig: FeatureFactoryConfig,
-                              requestingUser: UserADM,
-                              apiRequestID: UUID): Future[CreateMappingResponseV2] = {
+   * Creates a mapping between XML elements and attributes to standoff classes and properties.
+   * The mapping is used to convert XML documents to texts with standoff and back.
+   *
+   * @param xml                  the provided mapping.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the client that made the request.
+   */
+  private def createMappingV2(
+    xml: String,
+    label: String,
+    projectIri: SmartIri,
+    mappingName: String,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Future[CreateMappingResponseV2] = {
 
-    def createMappingAndCheck(xml: String,
-                              label: String,
-                              mappingIri: IRI,
-                              namedGraph: String,
-                              requestingUser: UserADM): Future[CreateMappingResponseV2] = {
+    def createMappingAndCheck(
+      xml: String,
+      label: String,
+      mappingIri: IRI,
+      namedGraph: String,
+      requestingUser: UserADM
+    ): Future[CreateMappingResponseV2] = {
 
       val createMappingFuture = for {
 
@@ -359,7 +379,8 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
           val separatorRequired: Boolean = stringFormatter.validateBoolean(
             separatorBooleanAsString,
-            throw BadRequestException(s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString"))
+            throw BadRequestException(s"<separatesWords> could not be converted to Boolean: $separatorBooleanAsString")
+          )
 
           // get the standoff class IRI
           val standoffClassIri = (curMappingEle \ "standoffClass" \ "classIri").headOption
@@ -387,13 +408,16 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             MappingXMLAttribute(
               attributeName = stringFormatter.toSparqlEncodedString(
                 attrName,
-                throw BadRequestException(s"tagname $attrName contains invalid characters")),
+                throw BadRequestException(s"tagname $attrName contains invalid characters")
+              ),
               namespace = stringFormatter.toSparqlEncodedString(
                 attributeNamespace,
-                throw BadRequestException(s"tagname $attributeNamespace contains invalid characters")),
+                throw BadRequestException(s"tagname $attributeNamespace contains invalid characters")
+              ),
               standoffProperty = stringFormatter.validateAndEscapeIri(
                 propIri,
-                throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
+                throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")
+              ),
               mappingXMLAttributeElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri)
             )
 
@@ -409,8 +433,10 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
               .text
 
             val dataType: StandoffDataTypeClasses.Value =
-              StandoffDataTypeClasses.lookup(dataTypeXML,
-                                             throw BadRequestException(s"Invalid data type provided for $tagName"))
+              StandoffDataTypeClasses.lookup(
+                dataTypeXML,
+                throw BadRequestException(s"Invalid data type provided for $tagName")
+              )
             val dataTypeAttribute: String = (datatypeMaybe \ "attributeName").headOption
               .getOrElse(throw BadRequestException(s"no '<attributeName>' given for datatype"))
               .text
@@ -420,9 +446,11 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                 datatype = dataType.toString, // safe because it is an enumeration
                 attributeName = stringFormatter.toSparqlEncodedString(
                   dataTypeAttribute,
-                  throw BadRequestException(s"tagname $dataTypeAttribute contains invalid characters")),
+                  throw BadRequestException(s"tagname $dataTypeAttribute contains invalid characters")
+                ),
                 mappingStandoffDataTypeClassElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri)
-              ))
+              )
+            )
           } else {
             None
           }
@@ -430,16 +458,20 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
           MappingElement(
             tagName = stringFormatter.toSparqlEncodedString(
               tagName,
-              throw BadRequestException(s"tagname $tagName contains invalid characters")),
+              throw BadRequestException(s"tagname $tagName contains invalid characters")
+            ),
             namespace = stringFormatter.toSparqlEncodedString(
               tagNamespace,
-              throw BadRequestException(s"namespace $tagNamespace contains invalid characters")),
+              throw BadRequestException(s"namespace $tagNamespace contains invalid characters")
+            ),
             className = stringFormatter.toSparqlEncodedString(
               className,
-              throw BadRequestException(s"classname $className contains invalid characters")),
+              throw BadRequestException(s"classname $className contains invalid characters")
+            ),
             standoffClass = stringFormatter.validateAndEscapeIri(
               standoffClassIri,
-              throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")),
+              throw BadRequestException(s"standoff class IRI $standoffClassIri is not a valid IRI")
+            ),
             attributes = attributes,
             standoffDataTypeClass = standoffDataTypeOption,
             mappingElementIri = stringFormatter.makeRandomMappingElementIri(mappingIri),
@@ -450,8 +482,10 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
         // transform mappingElements to the structure that is used internally to convert to or from standoff
         // in order to check for duplicates (checks are done during transformation)
-        mappingXMLToStandoff: MappingXMLtoStandoff = transformMappingElementsToMappingXMLtoStandoff(mappingElements,
-                                                                                                    None)
+        mappingXMLToStandoff: MappingXMLtoStandoff = transformMappingElementsToMappingXMLtoStandoff(
+          mappingElements,
+          None
+        )
 
         // get the standoff entities used in the mapping
         // checks if the standoff classes exist in the ontology
@@ -499,9 +533,11 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
         _ = if (newMappingResponse.statements.isEmpty) {
           log.error(
-            s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$newMappingResponse")
+            s"Attempted a SPARQL update to create a new resource, but it inserted no rows:\n\n$newMappingResponse"
+          )
           throw UpdateNotPerformedException(
-            s"Resource $mappingIri was not created. Please report this as a possible bug.")
+            s"Resource $mappingIri was not created. Please report this as a possible bug."
+          )
         }
 
         // get the mapping from the triplestore and cache it thereby
@@ -562,7 +598,9 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
       result: CreateMappingResponseV2 <- IriLocker.runWithIriLock(
         apiRequestID,
         stringFormatter
-          .createMappingLockIriForProject(projectIri.toString), // use a special project specific IRI to lock the creation of mappings for the given project
+          .createMappingLockIriForProject(
+            projectIri.toString
+          ), // use a special project specific IRI to lock the creation of mappings for the given project
         () =>
           createMappingAndCheck(
             xml = xml,
@@ -570,7 +608,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             mappingIri = mappingIri,
             namedGraph = namedGraph,
             requestingUser = requestingUser
-        )
+          )
       )
 
     } yield result
@@ -578,127 +616,138 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
   }
 
   /**
-    * Transforms a mapping represented as a Seq of [[MappingElement]] to a [[MappingXMLtoStandoff]].
-    * This method is called when reading a mapping back from the triplestore.
-    *
-    * @param mappingElements the Seq of MappingElement to be transformed.
-    * @return a [[MappingXMLtoStandoff]].
-    */
+   * Transforms a mapping represented as a Seq of [[MappingElement]] to a [[MappingXMLtoStandoff]].
+   * This method is called when reading a mapping back from the triplestore.
+   *
+   * @param mappingElements the Seq of MappingElement to be transformed.
+   * @return a [[MappingXMLtoStandoff]].
+   */
   private def transformMappingElementsToMappingXMLtoStandoff(
-      mappingElements: Seq[MappingElement],
-      defaultXSLTransformation: Option[IRI]): MappingXMLtoStandoff = {
+    mappingElements: Seq[MappingElement],
+    defaultXSLTransformation: Option[IRI]
+  ): MappingXMLtoStandoff = {
 
     val mappingXMLToStandoff = mappingElements.foldLeft(
-      MappingXMLtoStandoff(namespace = Map.empty[String, Map[String, Map[String, XMLTag]]],
-                           defaultXSLTransformation = None)) {
-      case (acc: MappingXMLtoStandoff, curEle: MappingElement) =>
-        // get the name of the XML tag
-        val tagname = curEle.tagName
+      MappingXMLtoStandoff(
+        namespace = Map.empty[String, Map[String, Map[String, XMLTag]]],
+        defaultXSLTransformation = None
+      )
+    ) { case (acc: MappingXMLtoStandoff, curEle: MappingElement) =>
+      // get the name of the XML tag
+      val tagname = curEle.tagName
 
-        // get the namespace the tag is defined in
-        val namespace = curEle.namespace
+      // get the namespace the tag is defined in
+      val namespace = curEle.namespace
 
-        // get the class the tag is combined with
-        val classname = curEle.className
+      // get the class the tag is combined with
+      val classname = curEle.className
 
-        // get tags from this namespace if already existent, otherwise create an empty map
-        val namespaceMap: Map[String, Map[String, XMLTag]] =
-          acc.namespace.getOrElse(namespace, Map.empty[String, Map[String, XMLTag]])
+      // get tags from this namespace if already existent, otherwise create an empty map
+      val namespaceMap: Map[String, Map[String, XMLTag]] =
+        acc.namespace.getOrElse(namespace, Map.empty[String, Map[String, XMLTag]])
 
-        // get the standoff class IRI
-        val standoffClassIri = curEle.standoffClass
+      // get the standoff class IRI
+      val standoffClassIri = curEle.standoffClass
 
-        // get a collection containing all the attributes
-        val attributeNodes: Seq[MappingXMLAttribute] = curEle.attributes
+      // get a collection containing all the attributes
+      val attributeNodes: Seq[MappingXMLAttribute] = curEle.attributes
 
-        // group attributes by their namespace
-        val attributeNodesByNamespace: Map[String, Seq[MappingXMLAttribute]] = attributeNodes.groupBy {
-          attr: MappingXMLAttribute =>
-            attr.namespace
-        }
+      // group attributes by their namespace
+      val attributeNodesByNamespace: Map[String, Seq[MappingXMLAttribute]] = attributeNodes.groupBy {
+        attr: MappingXMLAttribute =>
+          attr.namespace
+      }
 
-        // create attribute entries for each given namespace
-        val attributes: Map[String, Map[String, IRI]] = attributeNodesByNamespace.map {
-          case (namespace: String, attrNodes: Seq[MappingXMLAttribute]) =>
-            // collect all the attributes for the current namespace
-            val attributesInNamespace: Map[String, IRI] = attrNodes.foldLeft(Map.empty[String, IRI]) {
-              case (acc: Map[String, IRI], attrEle: MappingXMLAttribute) =>
-                // get the current attribute's name
-                val attrName = attrEle.attributeName
+      // create attribute entries for each given namespace
+      val attributes: Map[String, Map[String, IRI]] = attributeNodesByNamespace.map {
+        case (namespace: String, attrNodes: Seq[MappingXMLAttribute]) =>
+          // collect all the attributes for the current namespace
+          val attributesInNamespace: Map[String, IRI] = attrNodes.foldLeft(Map.empty[String, IRI]) {
+            case (acc: Map[String, IRI], attrEle: MappingXMLAttribute) =>
+              // get the current attribute's name
+              val attrName = attrEle.attributeName
 
-                // check if the current attribute already exists in this namespace
-                if (acc.get(attrName).nonEmpty) {
-                  throw BadRequestException("Duplicate attribute name in namespace")
-                }
+              // check if the current attribute already exists in this namespace
+              if (acc.get(attrName).nonEmpty) {
+                throw BadRequestException("Duplicate attribute name in namespace")
+              }
 
-                // get the standoff property IRI for the current attribute
-                val propIri = attrEle.standoffProperty
+              // get the standoff property IRI for the current attribute
+              val propIri = attrEle.standoffProperty
 
-                // add the current attribute to the collection
-                acc + (attrName -> propIri)
-            }
+              // add the current attribute to the collection
+              acc + (attrName -> propIri)
+          }
 
-            namespace -> attributesInNamespace
-        }
+          namespace -> attributesInNamespace
+      }
 
-        // if "datatype" is given, create a `XMLStandoffDataTypeClass`
-        val dataTypeOption: Option[XMLStandoffDataTypeClass] = curEle.standoffDataTypeClass match {
+      // if "datatype" is given, create a `XMLStandoffDataTypeClass`
+      val dataTypeOption: Option[XMLStandoffDataTypeClass] = curEle.standoffDataTypeClass match {
 
-          case Some(dataTypeClass: MappingStandoffDatatypeClass) =>
-            val dataType =
-              StandoffDataTypeClasses.lookup(dataTypeClass.datatype,
-                                             throw BadRequestException(s"Invalid data type provided for $tagname"))
+        case Some(dataTypeClass: MappingStandoffDatatypeClass) =>
+          val dataType =
+            StandoffDataTypeClasses.lookup(
+              dataTypeClass.datatype,
+              throw BadRequestException(s"Invalid data type provided for $tagname")
+            )
 
-            val dataTypeAttribute = dataTypeClass.attributeName
+          val dataTypeAttribute = dataTypeClass.attributeName
 
-            Some(
-              XMLStandoffDataTypeClass(
-                standoffDataTypeClass = dataType,
-                dataTypeXMLAttribute = dataTypeAttribute
-              ))
+          Some(
+            XMLStandoffDataTypeClass(
+              standoffDataTypeClass = dataType,
+              dataTypeXMLAttribute = dataTypeAttribute
+            )
+          )
 
-          case None => None
-        }
+        case None => None
+      }
 
-        // add the current tag to the map
-        val newNamespaceMap: Map[String, Map[String, XMLTag]] = namespaceMap.get(tagname) match {
-          case Some(tagMap: Map[String, XMLTag]) =>
-            tagMap.get(classname) match {
-              case Some(existingClassname) =>
-                throw BadRequestException("Duplicate tag and classname combination in the same namespace")
-              case None =>
-                // create the definition for the current element
-                val xmlElementDef = XMLTag(
-                  name = tagname,
-                  mapping = XMLTagToStandoffClass(standoffClassIri = standoffClassIri,
-                                                  attributesToProps = attributes,
-                                                  dataType = dataTypeOption),
-                  separatorRequired = curEle.separatorRequired
-                )
-
-                // combine the definition for the this classname with the existing definitions beloning to the same element
-                val combinedClassDef: Map[String, XMLTag] = namespaceMap(tagname) + (classname -> xmlElementDef)
-
-                // combine all elements for this namespace
-                namespaceMap + (tagname -> combinedClassDef)
-
-            }
-          case None =>
-            namespaceMap + (tagname -> Map(
-              classname -> XMLTag(
+      // add the current tag to the map
+      val newNamespaceMap: Map[String, Map[String, XMLTag]] = namespaceMap.get(tagname) match {
+        case Some(tagMap: Map[String, XMLTag]) =>
+          tagMap.get(classname) match {
+            case Some(existingClassname) =>
+              throw BadRequestException("Duplicate tag and classname combination in the same namespace")
+            case None =>
+              // create the definition for the current element
+              val xmlElementDef = XMLTag(
                 name = tagname,
-                mapping = XMLTagToStandoffClass(standoffClassIri = standoffClassIri,
-                                                attributesToProps = attributes,
-                                                dataType = dataTypeOption),
+                mapping = XMLTagToStandoffClass(
+                  standoffClassIri = standoffClassIri,
+                  attributesToProps = attributes,
+                  dataType = dataTypeOption
+                ),
                 separatorRequired = curEle.separatorRequired
-              )))
-        }
+              )
 
-        // recreate the whole structure for all namespaces
-        MappingXMLtoStandoff(
-          namespace = acc.namespace + (namespace -> newNamespaceMap),
-          defaultXSLTransformation = defaultXSLTransformation
-        )
+              // combine the definition for the this classname with the existing definitions beloning to the same element
+              val combinedClassDef: Map[String, XMLTag] = namespaceMap(tagname) + (classname -> xmlElementDef)
+
+              // combine all elements for this namespace
+              namespaceMap + (tagname -> combinedClassDef)
+
+          }
+        case None =>
+          namespaceMap + (tagname -> Map(
+            classname -> XMLTag(
+              name = tagname,
+              mapping = XMLTagToStandoffClass(
+                standoffClassIri = standoffClassIri,
+                attributesToProps = attributes,
+                dataType = dataTypeOption
+              ),
+              separatorRequired = curEle.separatorRequired
+            )
+          ))
+      }
+
+      // recreate the whole structure for all namespaces
+      MappingXMLtoStandoff(
+        namespace = acc.namespace + (namespace -> newNamespaceMap),
+        defaultXSLTransformation = defaultXSLTransformation
+      )
 
     }
 
@@ -711,21 +760,23 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
   }
 
   /**
-    * The name of the mapping cache.
-    */
+   * The name of the mapping cache.
+   */
   val mappingCacheName = "mappingCache"
 
   /**
-    * Gets a mapping either from the cache or by making a request to the triplestore.
-    *
-    * @param mappingIri           the IRI of the mapping to retrieve.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @return a [[MappingXMLtoStandoff]].
-    */
-  private def getMappingV2(mappingIri: IRI,
-                           featureFactoryConfig: FeatureFactoryConfig,
-                           requestingUser: UserADM): Future[GetMappingResponseV2] = {
+   * Gets a mapping either from the cache or by making a request to the triplestore.
+   *
+   * @param mappingIri           the IRI of the mapping to retrieve.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @return a [[MappingXMLtoStandoff]].
+   */
+  private def getMappingV2(
+    mappingIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[GetMappingResponseV2] = {
 
     val mappingFuture: Future[GetMappingResponseV2] =
       CacheUtil.get[MappingXMLtoStandoff](cacheName = mappingCacheName, key = mappingIri) match {
@@ -734,12 +785,11 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
             entities: StandoffEntityInfoGetResponseV2 <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
 
-          } yield
-            GetMappingResponseV2(
-              mappingIri = mappingIri,
-              mapping = mapping,
-              standoffEntities = entities
-            )
+          } yield GetMappingResponseV2(
+            mappingIri = mappingIri,
+            mapping = mapping,
+            standoffEntities = entities
+          )
 
         case None =>
           for {
@@ -751,17 +801,15 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
             entities: StandoffEntityInfoGetResponseV2 <- getStandoffEntitiesFromMappingV2(mapping, requestingUser)
 
-          } yield
-            GetMappingResponseV2(
-              mappingIri = mappingIri,
-              mapping = mapping,
-              standoffEntities = entities
-            )
+          } yield GetMappingResponseV2(
+            mappingIri = mappingIri,
+            mapping = mapping,
+            standoffEntities = entities
+          )
       }
 
-    val mappingRecovered: Future[GetMappingResponseV2] = mappingFuture.recover {
-      case e: Exception =>
-        throw BadRequestException(s"An error occurred when requesting mapping $mappingIri: ${e.getMessage}")
+    val mappingRecovered: Future[GetMappingResponseV2] = mappingFuture.recover { case e: Exception =>
+      throw BadRequestException(s"An error occurred when requesting mapping $mappingIri: ${e.getMessage}")
     }
 
     for {
@@ -771,17 +819,18 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
   }
 
   /**
-    *
-    * Gets a mapping from the triplestore.
-    *
-    * @param mappingIri           the IRI of the mapping to retrieve.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @return a [[MappingXMLtoStandoff]].
-    */
-  private def getMappingFromTriplestore(mappingIri: IRI,
-                                        featureFactoryConfig: FeatureFactoryConfig,
-                                        requestingUser: UserADM): Future[MappingXMLtoStandoff] = {
+   * Gets a mapping from the triplestore.
+   *
+   * @param mappingIri           the IRI of the mapping to retrieve.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @return a [[MappingXMLtoStandoff]].
+   */
+  private def getMappingFromTriplestore(
+    mappingIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[MappingXMLtoStandoff] = {
 
     val getMappingSparql = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
       .getMapping(
@@ -794,7 +843,7 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
       mappingResponse: SparqlConstructResponse <- (storeManager ? SparqlConstructRequest(
         sparql = getMappingSparql,
-        featureFactoryConfig = featureFactoryConfig,
+        featureFactoryConfig = featureFactoryConfig
       )).mapTo[SparqlConstructResponse]
 
       // if the result is empty, the mapping does not exist
@@ -803,10 +852,9 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
       }
 
       // separate MappingElements from other statements (attributes and datatypes)
-      (mappingElementStatements: Map[IRI, Seq[(IRI, String)]], otherStatements: Map[IRI, Seq[(IRI, String)]]) = mappingResponse.statements
-        .partition {
-          case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
-            assertions.contains((OntologyConstants.Rdf.Type, OntologyConstants.KnoraBase.MappingElement))
+      (mappingElementStatements: Map[IRI, Seq[(IRI, String)]], otherStatements: Map[IRI, Seq[(IRI, String)]]) =
+        mappingResponse.statements.partition { case (subjectIri: IRI, assertions: Seq[(IRI, String)]) =>
+          assertions.contains((OntologyConstants.Rdf.Type, OntologyConstants.KnoraBase.MappingElement))
         }
 
       mappingElements: Seq[MappingElement] = mappingElementStatements.map {
@@ -815,22 +863,18 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
           val assertionsAsMap: Map[IRI, String] = assertions.toMap
 
           // check for attributes
-          val attributes: Seq[MappingXMLAttribute] = assertions
-            .filter {
-              case (propIri, obj) =>
-                propIri == OntologyConstants.KnoraBase.MappingHasXMLAttribute
-            }
-            .map {
-              case (attrProp: IRI, attributeElementIri: String) =>
-                val attributeStatementsAsMap: Map[IRI, String] = otherStatements(attributeElementIri).toMap
+          val attributes: Seq[MappingXMLAttribute] = assertions.filter { case (propIri, obj) =>
+            propIri == OntologyConstants.KnoraBase.MappingHasXMLAttribute
+          }.map { case (attrProp: IRI, attributeElementIri: String) =>
+            val attributeStatementsAsMap: Map[IRI, String] = otherStatements(attributeElementIri).toMap
 
-                MappingXMLAttribute(
-                  attributeName = attributeStatementsAsMap(OntologyConstants.KnoraBase.MappingHasXMLAttributename),
-                  namespace = attributeStatementsAsMap(OntologyConstants.KnoraBase.MappingHasXMLNamespace),
-                  standoffProperty = attributeStatementsAsMap(OntologyConstants.KnoraBase.MappingHasStandoffProperty),
-                  mappingXMLAttributeElementIri = attributeElementIri
-                )
-            }
+            MappingXMLAttribute(
+              attributeName = attributeStatementsAsMap(OntologyConstants.KnoraBase.MappingHasXMLAttributename),
+              namespace = attributeStatementsAsMap(OntologyConstants.KnoraBase.MappingHasXMLNamespace),
+              standoffProperty = attributeStatementsAsMap(OntologyConstants.KnoraBase.MappingHasStandoffProperty),
+              mappingXMLAttributeElementIri = attributeElementIri
+            )
+          }
 
           // check for standoff data type class
           val dataTypeOption: Option[IRI] =
@@ -851,7 +895,8 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
                     datatype = dataTypeAssertionsAsMap(OntologyConstants.KnoraBase.MappingHasStandoffClass),
                     attributeName = dataTypeAssertionsAsMap(OntologyConstants.KnoraBase.MappingHasXMLAttributename),
                     mappingStandoffDataTypeClassElementIri = dataTypeElementIri
-                  ))
+                  )
+                )
               case None => None
             },
             attributes = attributes,
@@ -861,18 +906,16 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
       }.toSeq
 
       // check if there is a default XSL transformation
-      defaultXSLTransformationOption: Option[IRI] = otherStatements(mappingIri)
-        .find {
-          case (pred: IRI, obj: String) =>
-            pred == OntologyConstants.KnoraBase.MappingHasDefaultXSLTransformation
-        }
-        .map {
-          case (hasDefaultTransformation: IRI, xslTransformationIri: IRI) =>
-            xslTransformationIri
-        }
+      defaultXSLTransformationOption: Option[IRI] = otherStatements(mappingIri).find { case (pred: IRI, obj: String) =>
+        pred == OntologyConstants.KnoraBase.MappingHasDefaultXSLTransformation
+      }.map { case (hasDefaultTransformation: IRI, xslTransformationIri: IRI) =>
+        xslTransformationIri
+      }
 
-      mappingXMLToStandoff = transformMappingElementsToMappingXMLtoStandoff(mappingElements,
-                                                                            defaultXSLTransformationOption)
+      mappingXMLToStandoff = transformMappingElementsToMappingXMLtoStandoff(
+        mappingElements,
+        defaultXSLTransformationOption
+      )
 
       // add the mapping to the cache
       _ = CacheUtil.put(cacheName = mappingCacheName, key = mappingIri, value = mappingXMLToStandoff)
@@ -882,14 +925,16 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
   }
 
   /**
-    * Gets the required standoff entities (classes and properties) from the mapping and requests information about these entities from the ontology responder.
-    *
-    * @param mappingXMLtoStandoff the mapping to be used.
-    * @param requestingUser       the client that made the request.
-    * @return a [[StandoffEntityInfoGetResponseV2]] holding information about standoff classes and properties.
-    */
-  private def getStandoffEntitiesFromMappingV2(mappingXMLtoStandoff: MappingXMLtoStandoff,
-                                               requestingUser: UserADM): Future[StandoffEntityInfoGetResponseV2] = {
+   * Gets the required standoff entities (classes and properties) from the mapping and requests information about these entities from the ontology responder.
+   *
+   * @param mappingXMLtoStandoff the mapping to be used.
+   * @param requestingUser       the client that made the request.
+   * @return a [[StandoffEntityInfoGetResponseV2]] holding information about standoff classes and properties.
+   */
+  private def getStandoffEntitiesFromMappingV2(
+    mappingXMLtoStandoff: MappingXMLtoStandoff,
+    requestingUser: UserADM
+  ): Future[StandoffEntityInfoGetResponseV2] = {
 
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -910,149 +955,159 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
     // make sure that the mapping does not contain system or data type standoff properties as attributes
     // these standoff properties can only be used via the standoff base tag and standoff data type classes
     val systemOrDatatypePropsAsAttr: Set[IRI] = standoffPropertyIrisFromMapping.intersect(
-      StandoffProperties.systemProperties ++ StandoffProperties.dataTypeProperties)
+      StandoffProperties.systemProperties ++ StandoffProperties.dataTypeProperties
+    )
     if (systemOrDatatypePropsAsAttr.nonEmpty)
       throw InvalidStandoffException(
-        s"attempt to define attributes for system or data type properties: ${systemOrDatatypePropsAsAttr.mkString(", ")}")
+        s"attempt to define attributes for system or data type properties: ${systemOrDatatypePropsAsAttr.mkString(", ")}"
+      )
 
     for {
 
       // request information about standoff classes that should be created
       standoffClassEntities: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(
         standoffClassIris = standoffTagIrisFromMapping.map(_.toSmartIri),
-        requestingUser = requestingUser)).mapTo[StandoffEntityInfoGetResponseV2]
+        requestingUser = requestingUser
+      )).mapTo[StandoffEntityInfoGetResponseV2]
 
       // check that the ontology responder returned the information for all the standoff classes it was asked for
       // if the ontology responder does not return a standoff class it was asked for, then this standoff class does not exist
       _ = if (standoffTagIrisFromMapping.map(_.toSmartIri) != standoffClassEntities.standoffClassInfoMap.keySet) {
         throw NotFoundException(
           s"the ontology responder could not find information about these standoff classes: ${(standoffTagIrisFromMapping
-            .map(_.toSmartIri) -- standoffClassEntities.standoffClassInfoMap.keySet).mkString(", ")}")
+            .map(_.toSmartIri) -- standoffClassEntities.standoffClassInfoMap.keySet).mkString(", ")}"
+        )
       }
 
       // get the property Iris that are defined on the standoff classes returned by the ontology responder
       standoffPropertyIrisFromOntologyResponder: Set[SmartIri] = standoffClassEntities.standoffClassInfoMap.foldLeft(
-        Set.empty[SmartIri]) {
-        case (acc, (standoffClassIri, standoffClassEntity: ReadClassInfoV2)) =>
-          val props = standoffClassEntity.allCardinalities.keySet
-          acc ++ props
+        Set.empty[SmartIri]
+      ) { case (acc, (standoffClassIri, standoffClassEntity: ReadClassInfoV2)) =>
+        val props = standoffClassEntity.allCardinalities.keySet
+        acc ++ props
       }
 
       // request information about the standoff properties
       standoffPropertyEntities: StandoffEntityInfoGetResponseV2 <- (responderManager ? StandoffEntityInfoGetRequestV2(
         standoffPropertyIris = standoffPropertyIrisFromOntologyResponder,
-        requestingUser = requestingUser)).mapTo[StandoffEntityInfoGetResponseV2]
+        requestingUser = requestingUser
+      )).mapTo[StandoffEntityInfoGetResponseV2]
 
       // check that the ontology responder returned the information for all the standoff properties it was asked for
       // if the ontology responder does not return a standoff property it was asked for, then this standoff property does not exist
-      propertyDefinitionsFromMappingFoundInOntology: Set[SmartIri] = standoffPropertyEntities.standoffPropertyInfoMap.keySet
-        .intersect(standoffPropertyIrisFromMapping.map(_.toSmartIri))
+      propertyDefinitionsFromMappingFoundInOntology: Set[SmartIri] =
+        standoffPropertyEntities.standoffPropertyInfoMap.keySet
+          .intersect(standoffPropertyIrisFromMapping.map(_.toSmartIri))
 
       _ = if (standoffPropertyIrisFromMapping.map(_.toSmartIri) != propertyDefinitionsFromMappingFoundInOntology) {
         throw NotFoundException(
           s"the ontology responder could not find information about these standoff properties: " +
             s"${(standoffPropertyIrisFromMapping.map(_.toSmartIri) -- propertyDefinitionsFromMappingFoundInOntology)
-              .mkString(", ")}")
+              .mkString(", ")}"
+        )
       }
 
       // check that for each standoff property defined in the mapping element for a standoff class, a corresponding cardinality exists in the ontology
-      _ = mappingStandoffToXML.foreach {
-        case (standoffClass: IRI, xmlTag: XMLTagItem) =>
-          // collect all the standoff properties defined for this standoff class
-          val standoffPropertiesForStandoffClass: Set[SmartIri] = xmlTag.attributes.keySet.map(_.toSmartIri)
+      _ = mappingStandoffToXML.foreach { case (standoffClass: IRI, xmlTag: XMLTagItem) =>
+        // collect all the standoff properties defined for this standoff class
+        val standoffPropertiesForStandoffClass: Set[SmartIri] = xmlTag.attributes.keySet.map(_.toSmartIri)
 
-          // check that the current standoff class has cardinalities for all the properties defined
-          val cardinalitiesFound = standoffClassEntities
-            .standoffClassInfoMap(standoffClass.toSmartIri)
-            .allCardinalities
-            .keySet
-            .intersect(standoffPropertiesForStandoffClass)
+        // check that the current standoff class has cardinalities for all the properties defined
+        val cardinalitiesFound = standoffClassEntities
+          .standoffClassInfoMap(standoffClass.toSmartIri)
+          .allCardinalities
+          .keySet
+          .intersect(standoffPropertiesForStandoffClass)
 
-          if (standoffPropertiesForStandoffClass != cardinalitiesFound) {
-            throw NotFoundException(
-              s"the following standoff properties have no cardinality for $standoffClass: ${(standoffPropertiesForStandoffClass -- cardinalitiesFound)
-                .mkString(", ")}")
+        if (standoffPropertiesForStandoffClass != cardinalitiesFound) {
+          throw NotFoundException(
+            s"the following standoff properties have no cardinality for $standoffClass: ${(standoffPropertiesForStandoffClass -- cardinalitiesFound)
+              .mkString(", ")}"
+          )
+        }
+
+        // collect the required standoff properties for the standoff class
+        val requiredPropsForClass: Set[SmartIri] = standoffClassEntities
+          .standoffClassInfoMap(standoffClass.toSmartIri)
+          .allCardinalities
+          .filter { case (property: SmartIri, card: KnoraCardinalityInfo) =>
+            card.cardinality == Cardinality.MustHaveOne || card.cardinality == Cardinality.MustHaveSome
           }
+          .keySet -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.dataTypeProperties
+          .map(_.toSmartIri)
 
-          // collect the required standoff properties for the standoff class
-          val requiredPropsForClass: Set[SmartIri] = standoffClassEntities
-            .standoffClassInfoMap(standoffClass.toSmartIri)
-            .allCardinalities
-            .filter {
-              case (property: SmartIri, card: KnoraCardinalityInfo) =>
-                card.cardinality == Cardinality.MustHaveOne || card.cardinality == Cardinality.MustHaveSome
+        // check that all the required standoff properties exist in the mapping
+        if (standoffPropertiesForStandoffClass.intersect(requiredPropsForClass) != requiredPropsForClass) {
+          throw NotFoundException(
+            s"the following required standoff properties are not defined for the standoff class $standoffClass: ${(requiredPropsForClass -- standoffPropertiesForStandoffClass)
+              .mkString(", ")}"
+          )
+        }
+
+        // check if the standoff class's data type is correct in the mapping
+        standoffClassEntities.standoffClassInfoMap(standoffClass.toSmartIri).standoffDataType match {
+          case Some(dataType: StandoffDataTypeClasses.Value) =>
+            // check if this corresponds to the datatype in the mapping
+            val dataTypeFromMapping: XMLStandoffDataTypeClass = xmlTag.tagItem.mapping.dataType.getOrElse(
+              throw InvalidStandoffException(s"no data type provided for $standoffClass, but $dataType required")
+            )
+            if (dataTypeFromMapping.standoffDataTypeClass != dataType) {
+              throw InvalidStandoffException(
+                s"wrong data type ${dataTypeFromMapping.standoffDataTypeClass} provided for $standoffClass, but $dataType required"
+              )
             }
-            .keySet -- StandoffProperties.systemProperties.map(_.toSmartIri) -- StandoffProperties.dataTypeProperties
-            .map(_.toSmartIri)
-
-          // check that all the required standoff properties exist in the mapping
-          if (standoffPropertiesForStandoffClass.intersect(requiredPropsForClass) != requiredPropsForClass) {
-            throw NotFoundException(
-              s"the following required standoff properties are not defined for the standoff class $standoffClass: ${(requiredPropsForClass -- standoffPropertiesForStandoffClass)
-                .mkString(", ")}")
-          }
-
-          // check if the standoff class's data type is correct in the mapping
-          standoffClassEntities.standoffClassInfoMap(standoffClass.toSmartIri).standoffDataType match {
-            case Some(dataType: StandoffDataTypeClasses.Value) =>
-              // check if this corresponds to the datatype in the mapping
-              val dataTypeFromMapping: XMLStandoffDataTypeClass = xmlTag.tagItem.mapping.dataType.getOrElse(
-                throw InvalidStandoffException(s"no data type provided for $standoffClass, but $dataType required"))
-              if (dataTypeFromMapping.standoffDataTypeClass != dataType) {
-                throw InvalidStandoffException(
-                  s"wrong data type ${dataTypeFromMapping.standoffDataTypeClass} provided for $standoffClass, but $dataType required")
-              }
-            case None =>
-              if (xmlTag.tagItem.mapping.dataType.nonEmpty) {
-                throw InvalidStandoffException(
-                  s"no data type expected for $standoffClass, but ${xmlTag.tagItem.mapping.dataType.get.standoffDataTypeClass} given")
-              }
-          }
+          case None =>
+            if (xmlTag.tagItem.mapping.dataType.nonEmpty) {
+              throw InvalidStandoffException(
+                s"no data type expected for $standoffClass, but ${xmlTag.tagItem.mapping.dataType.get.standoffDataTypeClass} given"
+              )
+            }
+        }
 
       }
 
-    } yield
-      StandoffEntityInfoGetResponseV2(
-        standoffClassInfoMap = standoffClassEntities.standoffClassInfoMap,
-        standoffPropertyInfoMap = standoffPropertyEntities.standoffPropertyInfoMap
-      )
+    } yield StandoffEntityInfoGetResponseV2(
+      standoffClassInfoMap = standoffClassEntities.standoffClassInfoMap,
+      standoffPropertyInfoMap = standoffPropertyEntities.standoffPropertyInfoMap
+    )
 
   }
 
   /**
-    * A [[TaskResult]] containing a page of standoff queried from a text value.
-    *
-    * @param underlyingResult the underlying standoff result.
-    * @param nextTask         the next task, or `None` if there is no more standoff to query in the text value.
-    */
+   * A [[TaskResult]] containing a page of standoff queried from a text value.
+   *
+   * @param underlyingResult the underlying standoff result.
+   * @param nextTask         the next task, or `None` if there is no more standoff to query in the text value.
+   */
   case class StandoffTaskResult(underlyingResult: StandoffTaskUnderlyingResult, nextTask: Option[GetStandoffTask])
       extends TaskResult[StandoffTaskUnderlyingResult]
 
   /**
-    * The underlying result type contained in a [[StandoffTaskResult]].
-    *
-    * @param standoff the standoff that was queried.
-    */
+   * The underlying result type contained in a [[StandoffTaskResult]].
+   *
+   * @param standoff the standoff that was queried.
+   */
   case class StandoffTaskUnderlyingResult(standoff: Vector[StandoffTagV2])
 
   /**
-    * A task that gets a page of standoff from a text value.
-    *
-    * @param resourceIri          the IRI of the resource containing the value.
-    * @param valueIri             the IRI of the value.
-    * @param offset               the start index of the first standoff tag to be returned.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    */
-  case class GetStandoffTask(resourceIri: IRI,
-                             valueIri: IRI,
-                             offset: Int,
-                             featureFactoryConfig: FeatureFactoryConfig,
-                             requestingUser: UserADM)
-      extends Task[StandoffTaskUnderlyingResult] {
-    override def runTask(previousResult: Option[TaskResult[StandoffTaskUnderlyingResult]])(
-        implicit timeout: Timeout,
-        executionContext: ExecutionContext): Future[TaskResult[StandoffTaskUnderlyingResult]] = {
+   * A task that gets a page of standoff from a text value.
+   *
+   * @param resourceIri          the IRI of the resource containing the value.
+   * @param valueIri             the IRI of the value.
+   * @param offset               the start index of the first standoff tag to be returned.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   */
+  case class GetStandoffTask(
+    resourceIri: IRI,
+    valueIri: IRI,
+    offset: Int,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ) extends Task[StandoffTaskUnderlyingResult] {
+    override def runTask(
+      previousResult: Option[TaskResult[StandoffTaskUnderlyingResult]]
+    )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[TaskResult[StandoffTaskUnderlyingResult]] =
       for {
         // Get a page of standoff.
         standoffResponse <- getStandoffV2(
@@ -1072,34 +1127,32 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
             definedPreviousResult.underlyingResult.standoff ++ standoffResponse.standoff
           case None => standoffResponse.standoff.toVector
         }
-      } yield
-        standoffResponse.nextOffset match {
-          case Some(definedNextOffset) =>
-            // There is more standoff to query. Return the collected standoff and the next task.
-            StandoffTaskResult(
-              underlyingResult = StandoffTaskUnderlyingResult(collectedStandoff),
-              nextTask = Some(copy(offset = definedNextOffset))
-            )
+      } yield standoffResponse.nextOffset match {
+        case Some(definedNextOffset) =>
+          // There is more standoff to query. Return the collected standoff and the next task.
+          StandoffTaskResult(
+            underlyingResult = StandoffTaskUnderlyingResult(collectedStandoff),
+            nextTask = Some(copy(offset = definedNextOffset))
+          )
 
-          case None =>
-            // There is no more standoff to query. Just return the collected standoff.
-            StandoffTaskResult(
-              underlyingResult = StandoffTaskUnderlyingResult(collectedStandoff),
-              nextTask = None
-            )
-        }
-    }
+        case None =>
+          // There is no more standoff to query. Just return the collected standoff.
+          StandoffTaskResult(
+            underlyingResult = StandoffTaskUnderlyingResult(collectedStandoff),
+            nextTask = None
+          )
+      }
   }
 
   /**
-    * Returns all pages of standoff markup from a text value, except for the first page.
-    *
-    * @param getRemainingStandoffFromTextValueRequestV2 the request message.
-    * @return the text value's standoff markup.
-    */
+   * Returns all pages of standoff markup from a text value, except for the first page.
+   *
+   * @param getRemainingStandoffFromTextValueRequestV2 the request message.
+   * @return the text value's standoff markup.
+   */
   private def getRemainingStandoffFromTextValueV2(
-      getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2)
-    : Future[GetStandoffResponseV2] = {
+    getRemainingStandoffFromTextValueRequestV2: GetRemainingStandoffFromTextValueRequestV2
+  ): Future[GetStandoffResponseV2] = {
     val firstTask = GetStandoffTask(
       resourceIri = getRemainingStandoffFromTextValueRequestV2.resourceIri,
       valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
@@ -1110,9 +1163,10 @@ class StandoffResponderV2(responderData: ResponderData) extends Responder(respon
 
     for {
       result: TaskResult[StandoffTaskUnderlyingResult] <- ActorUtil.runTasks(firstTask)
-    } yield
-      GetStandoffResponseV2(valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
-                            standoff = result.underlyingResult.standoff,
-                            nextOffset = None)
+    } yield GetStandoffResponseV2(
+      valueIri = getRemainingStandoffFromTextValueRequestV2.valueIri,
+      standoff = result.underlyingResult.standoff,
+      nextOffset = None
+    )
   }
 }

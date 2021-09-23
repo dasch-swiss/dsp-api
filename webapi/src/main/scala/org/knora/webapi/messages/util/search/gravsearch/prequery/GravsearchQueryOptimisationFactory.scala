@@ -33,78 +33,84 @@ import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiHyperEdge
 
 /**
-  * Represents optimisation algorithms that transform Gravsearch input queries.
-  *
-  * @param typeInspectionResult the type inspection result.
-  * @param querySchema the query schema.
-  */
-abstract class GravsearchQueryOptimisationFeature(protected val typeInspectionResult: GravsearchTypeInspectionResult,
-                                                  protected val querySchema: ApiV2Schema) {
+ * Represents optimisation algorithms that transform Gravsearch input queries.
+ *
+ * @param typeInspectionResult the type inspection result.
+ * @param querySchema the query schema.
+ */
+abstract class GravsearchQueryOptimisationFeature(
+  protected val typeInspectionResult: GravsearchTypeInspectionResult,
+  protected val querySchema: ApiV2Schema
+) {
 
   /**
-	 * Performs the optimisation.
-	 *
-	 * @param patterns the query patterns.
-	 * @return the optimised query patterns.
-	 */
+   * Performs the optimisation.
+   *
+   * @param patterns the query patterns.
+   * @return the optimised query patterns.
+   */
   def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern]
 }
 
 /**
-  * A feature factory that constructs Gravsearch query optimisation algorithms.
-  */
+ * A feature factory that constructs Gravsearch query optimisation algorithms.
+ */
 object GravsearchQueryOptimisationFactory extends FeatureFactory {
 
   /**
-	 * Returns a [[GravsearchQueryOptimisationFeature]] implementing one or more optimisations, depending
-	 * on the feature factory configuration.
-	 *
-	 * @param typeInspectionResult the type inspection result.
-	 * @param querySchema the query schema.
-	 * @param featureFactoryConfig the feature factory configuration.
-	 * @return a [[GravsearchQueryOptimisationFeature]] implementing one or more optimisations.
-	 */
+   * Returns a [[GravsearchQueryOptimisationFeature]] implementing one or more optimisations, depending
+   * on the feature factory configuration.
+   *
+   * @param typeInspectionResult the type inspection result.
+   * @param querySchema the query schema.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @return a [[GravsearchQueryOptimisationFeature]] implementing one or more optimisations.
+   */
   def getGravsearchQueryOptimisationFeature(
+    typeInspectionResult: GravsearchTypeInspectionResult,
+    querySchema: ApiV2Schema,
+    featureFactoryConfig: FeatureFactoryConfig
+  ): GravsearchQueryOptimisationFeature =
+    new GravsearchQueryOptimisationFeature(
       typeInspectionResult: GravsearchTypeInspectionResult,
-      querySchema: ApiV2Schema,
-      featureFactoryConfig: FeatureFactoryConfig): GravsearchQueryOptimisationFeature = {
-    new GravsearchQueryOptimisationFeature(typeInspectionResult: GravsearchTypeInspectionResult,
-                                           querySchema: ApiV2Schema) {
-      override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
+      querySchema: ApiV2Schema
+    ) {
+      override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] =
         if (featureFactoryConfig.getToggle("gravsearch-dependency-optimisation").isEnabled) {
           new ReorderPatternsByDependencyOptimisationFeature(typeInspectionResult, querySchema).optimiseQueryPatterns(
             new RemoveEntitiesInferredFromPropertyOptimisationFeature(typeInspectionResult, querySchema)
               .optimiseQueryPatterns(
                 new RemoveRedundantKnoraApiResourceOptimisationFeature(typeInspectionResult, querySchema)
-                  .optimiseQueryPatterns(patterns))
+                  .optimiseQueryPatterns(patterns)
+              )
           )
         } else {
           new RemoveEntitiesInferredFromPropertyOptimisationFeature(typeInspectionResult, querySchema)
             .optimiseQueryPatterns(
               new RemoveRedundantKnoraApiResourceOptimisationFeature(typeInspectionResult, querySchema)
-                .optimiseQueryPatterns(patterns))
+                .optimiseQueryPatterns(patterns)
+            )
         }
-      }
     }
-  }
 }
 
 /**
-  * Removes a statement with rdf:type knora-api:Resource if there is another rdf:type statement with the same subject
-  * and a different type.
-  *
-  * @param typeInspectionResult the type inspection result.
-  * @param querySchema the query schema.
-  */
-class RemoveRedundantKnoraApiResourceOptimisationFeature(typeInspectionResult: GravsearchTypeInspectionResult,
-                                                         querySchema: ApiV2Schema)
-    extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema)
+ * Removes a statement with rdf:type knora-api:Resource if there is another rdf:type statement with the same subject
+ * and a different type.
+ *
+ * @param typeInspectionResult the type inspection result.
+ * @param querySchema the query schema.
+ */
+class RemoveRedundantKnoraApiResourceOptimisationFeature(
+  typeInspectionResult: GravsearchTypeInspectionResult,
+  querySchema: ApiV2Schema
+) extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema)
     with Feature {
 
   /**
-    * If the specified statement has rdf:type with an IRI as object, returns that IRI, otherwise None.
-    */
-  private def getObjOfRdfType(statementPattern: StatementPattern): Option[SmartIri] = {
+   * If the specified statement has rdf:type with an IRI as object, returns that IRI, otherwise None.
+   */
+  private def getObjOfRdfType(statementPattern: StatementPattern): Option[SmartIri] =
     statementPattern.pred match {
       case predicateIriRef: IriRef =>
         if (predicateIriRef.iri.toString == OntologyConstants.Rdf.Type) {
@@ -118,28 +124,26 @@ class RemoveRedundantKnoraApiResourceOptimisationFeature(typeInspectionResult: G
 
       case _ => None
     }
-  }
 
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
     // Make a Set of subjects that have rdf:type statements whose objects are not knora-api:Resource.
     val rdfTypesBySubj: Set[Entity] = patterns
-      .foldLeft(Set.empty[Entity]) {
-        case (acc, queryPattern: QueryPattern) =>
-          queryPattern match {
-            case statementPattern: StatementPattern =>
-              getObjOfRdfType(statementPattern) match {
-                case Some(typeIri) =>
-                  if (!OntologyConstants.KnoraApi.KnoraApiV2ResourceIris.contains(typeIri.toString)) {
-                    acc + statementPattern.subj
-                  } else {
-                    acc
-                  }
+      .foldLeft(Set.empty[Entity]) { case (acc, queryPattern: QueryPattern) =>
+        queryPattern match {
+          case statementPattern: StatementPattern =>
+            getObjOfRdfType(statementPattern) match {
+              case Some(typeIri) =>
+                if (!OntologyConstants.KnoraApi.KnoraApiV2ResourceIris.contains(typeIri.toString)) {
+                  acc + statementPattern.subj
+                } else {
+                  acc
+                }
 
-                case None => acc
-              }
+              case None => acc
+            }
 
-            case _ => acc
-          }
+          case _ => acc
+        }
       }
 
     patterns.filterNot {
@@ -160,41 +164,40 @@ class RemoveRedundantKnoraApiResourceOptimisationFeature(typeInspectionResult: G
 }
 
 /**
-  * Optimises a query by removing `rdf:type` statements that are known to be redundant. A redundant
-  * `rdf:type` statement gives the type of a variable whose type is already restricted by its
-  * use with a property that can only be used with that type (unless the property
-  * statement is in an `OPTIONAL` block).
-  */
-class RemoveEntitiesInferredFromPropertyOptimisationFeature(typeInspectionResult: GravsearchTypeInspectionResult,
-                                                            querySchema: ApiV2Schema)
-    extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema)
+ * Optimises a query by removing `rdf:type` statements that are known to be redundant. A redundant
+ * `rdf:type` statement gives the type of a variable whose type is already restricted by its
+ * use with a property that can only be used with that type (unless the property
+ * statement is in an `OPTIONAL` block).
+ */
+class RemoveEntitiesInferredFromPropertyOptimisationFeature(
+  typeInspectionResult: GravsearchTypeInspectionResult,
+  querySchema: ApiV2Schema
+) extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema)
     with Feature {
 
   /**
-	 * Performs the optimisation.
-	 *
-	 * @param patterns the query patterns.
-	 * @return the optimised query patterns.
-	 */
+   * Performs the optimisation.
+   *
+   * @param patterns the query patterns.
+   * @return the optimised query patterns.
+   */
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
 
     // Collect all entities which are used as subject or object of an OptionalPattern.
-    val optionalEntities: Seq[TypeableEntity] = patterns
-      .collect {
-        case optionalPattern: OptionalPattern => optionalPattern
-      }
-      .flatMap {
-        case optionalPattern: OptionalPattern =>
-          optionalPattern.patterns.flatMap {
-            case pattern: StatementPattern =>
-              GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.subj) ++ GravsearchTypeInspectionUtil
-                .maybeTypeableEntity(pattern.obj)
+    val optionalEntities: Seq[TypeableEntity] = patterns.collect { case optionalPattern: OptionalPattern =>
+      optionalPattern
+    }.flatMap {
+      case optionalPattern: OptionalPattern =>
+        optionalPattern.patterns.flatMap {
+          case pattern: StatementPattern =>
+            GravsearchTypeInspectionUtil.maybeTypeableEntity(pattern.subj) ++ GravsearchTypeInspectionUtil
+              .maybeTypeableEntity(pattern.obj)
 
-            case _ => None
-          }
+          case _ => None
+        }
 
-        case _ => None
-      }
+      case _ => None
+    }
 
     // Remove statements whose predicate is rdf:type, type of subject is inferred from a property,
     // and the subject is not in optionalEntities.
@@ -248,21 +251,22 @@ class RemoveEntitiesInferredFromPropertyOptimisationFeature(typeInspectionResult
 }
 
 /**
-  * Optimises query patterns by reordering them on the basis of dependencies between subjects and objects.
-  */
-class ReorderPatternsByDependencyOptimisationFeature(typeInspectionResult: GravsearchTypeInspectionResult,
-                                                     querySchema: ApiV2Schema)
-    extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema)
+ * Optimises query patterns by reordering them on the basis of dependencies between subjects and objects.
+ */
+class ReorderPatternsByDependencyOptimisationFeature(
+  typeInspectionResult: GravsearchTypeInspectionResult,
+  querySchema: ApiV2Schema
+) extends GravsearchQueryOptimisationFeature(typeInspectionResult, querySchema)
     with Feature {
 
   /**
-	 * Converts a sequence of query patterns into DAG representing dependencies between
-	 * the subjects and objects used, performs a topological sort of the graph, and reorders
-	 * the query patterns according to the topological order.
-	 *
-	 * @param statementPatterns the query patterns to be reordered.
-	 * @return the reordered query patterns.
-	 */
+   * Converts a sequence of query patterns into DAG representing dependencies between
+   * the subjects and objects used, performs a topological sort of the graph, and reorders
+   * the query patterns according to the topological order.
+   *
+   * @param statementPatterns the query patterns to be reordered.
+   * @return the reordered query patterns.
+   */
   private def createAndSortGraph(statementPatterns: Seq[StatementPattern]): Seq[QueryPattern] = {
     @scala.annotation.tailrec
     def makeGraphWithoutCycles(graphComponents: Seq[(String, String)]): Graph[String, DiHyperEdge] = {
@@ -301,29 +305,27 @@ class ReorderPatternsByDependencyOptimisationFeature(typeInspectionResult: Gravs
     }
 
     /**
-		 * Finds topological orders that don't end with an object of rdf:type.
-		 *
-		 * @param orders the orders to be filtered.
-		 * @param statementPatterns the statement patterns that the orders are based on.
-		 * @return the filtered topological orders.
-		 */
+     * Finds topological orders that don't end with an object of rdf:type.
+     *
+     * @param orders the orders to be filtered.
+     * @param statementPatterns the statement patterns that the orders are based on.
+     * @return the filtered topological orders.
+     */
     def findOrdersNotEndingWithObjectOfRdfType(
-        orders: Set[Vector[Graph[String, DiHyperEdge]#NodeT]],
-        statementPatterns: Seq[StatementPattern]): Set[Vector[Graph[String, DiHyperEdge]#NodeT]] = {
+      orders: Set[Vector[Graph[String, DiHyperEdge]#NodeT]],
+      statementPatterns: Seq[StatementPattern]
+    ): Set[Vector[Graph[String, DiHyperEdge]#NodeT]] = {
       type NodeT = Graph[String, DiHyperEdge]#NodeT
 
       // Find the nodes that are objects of rdf:type in the statement patterns.
-      val nodesThatAreObjectsOfRdfType: Set[String] = statementPatterns
-        .filter { statementPattern =>
-          statementPattern.pred match {
-            case iriRef: IriRef => iriRef.iri.toString == OntologyConstants.Rdf.Type
-            case _              => false
-          }
+      val nodesThatAreObjectsOfRdfType: Set[String] = statementPatterns.filter { statementPattern =>
+        statementPattern.pred match {
+          case iriRef: IriRef => iriRef.iri.toString == OntologyConstants.Rdf.Type
+          case _              => false
         }
-        .map { statementPattern =>
-          statementPattern.obj.toSparql
-        }
-        .toSet
+      }.map { statementPattern =>
+        statementPattern.obj.toSparql
+      }.toSet
 
       // Filter out the topological orders that end with any of those nodes.
       orders.filterNot { order: Vector[NodeT] =>
@@ -332,20 +334,22 @@ class ReorderPatternsByDependencyOptimisationFeature(typeInspectionResult: Gravs
     }
 
     /**
-		 * Tries to find the best topological order for the graph, by finding all possible topological orders
-		 * and eliminating those whose last node is the object of rdf:type.
-		 *
-		 * @param graph the graph to be ordered.
-		 * @param statementPatterns the statement patterns that were used to create the graph.
-		 * @return a topological order.
-		 */
-    def findBestTopologicalOrder(graph: Graph[String, DiHyperEdge],
-                                 statementPatterns: Seq[StatementPattern]): Vector[Graph[String, DiHyperEdge]#NodeT] = {
+     * Tries to find the best topological order for the graph, by finding all possible topological orders
+     * and eliminating those whose last node is the object of rdf:type.
+     *
+     * @param graph the graph to be ordered.
+     * @param statementPatterns the statement patterns that were used to create the graph.
+     * @return a topological order.
+     */
+    def findBestTopologicalOrder(
+      graph: Graph[String, DiHyperEdge],
+      statementPatterns: Seq[StatementPattern]
+    ): Vector[Graph[String, DiHyperEdge]#NodeT] = {
       type NodeT = Graph[String, DiHyperEdge]#NodeT
 
       /**
-			 * An ordering for sorting topological orders.
-			 */
+       * An ordering for sorting topological orders.
+       */
       object TopologicalOrderOrdering extends Ordering[Vector[NodeT]] {
         private def orderToString(order: Vector[NodeT]) = order.map(_.value).mkString("|")
 
@@ -385,8 +389,10 @@ class ReorderPatternsByDependencyOptimisationFeature(typeInspectionResult: Gravs
       }
     }
 
-    def sortStatementPatterns(createdGraph: Graph[String, DiHyperEdge],
-                              statementPatterns: Seq[StatementPattern]): Seq[QueryPattern] = {
+    def sortStatementPatterns(
+      createdGraph: Graph[String, DiHyperEdge],
+      statementPatterns: Seq[StatementPattern]
+    ): Seq[QueryPattern] = {
       type NodeT = Graph[String, DiHyperEdge]#NodeT
 
       // Try to find the best topological order for the graph.
@@ -413,11 +419,11 @@ class ReorderPatternsByDependencyOptimisationFeature(typeInspectionResult: Gravs
   }
 
   /**
-	 * Performs the optimisation.
-	 *
-	 * @param patterns the query patterns.
-	 * @return the optimised query patterns.
-	 */
+   * Performs the optimisation.
+   *
+   * @param patterns the query patterns.
+   * @return the optimised query patterns.
+   */
   override def optimiseQueryPatterns(patterns: Seq[QueryPattern]): Seq[QueryPattern] = {
     // Separate the statement patterns from the other patterns.
     val (statementPatterns: Seq[StatementPattern], otherPatterns: Seq[QueryPattern]) =

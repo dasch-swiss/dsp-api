@@ -38,25 +38,25 @@ object StoreADME2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing the 'v1/store' route.
-  *
-  * This spec tests the 'v1/store' route.
-  */
+ * End-to-End (E2E) test specification for testing the 'v1/store' route.
+ *
+ * This spec tests the 'v1/store' route.
+ */
 class StoreADME2ESpec extends E2ESpec(StoreADME2ESpec.config) with TriplestoreJsonProtocol {
 
   implicit def default(implicit system: ActorSystem) = RouteTestTimeout(120.seconds)
 
   /**
-    * The marshaling to Json is done automatically by spray, hence the import of the 'TriplestoreJsonProtocol'.
-    * The Json which spray generates looks like this:
-    *
-    *  [
-    *     {"path": "test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/0803/incunabula"},
-    *     {"path": "test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/00FF/images"}
-    *  ]
-    *
-    * and could have been supplied to the post request instead of the scala object.
-    */
+   * The marshaling to Json is done automatically by spray, hence the import of the 'TriplestoreJsonProtocol'.
+   * The Json which spray generates looks like this:
+   *
+   *  [
+   *     {"path": "test_data/all_data/incunabula-data.ttl", "name": "http://www.knora.org/data/0803/incunabula"},
+   *     {"path": "test_data/demo_data/images-demo-data.ttl", "name": "http://www.knora.org/data/00FF/images"}
+   *  ]
+   *
+   * and could have been supplied to the post request instead of the scala object.
+   */
   /*
     override lazy val rdfDataObjects: List[RdfDataObject] = List(
         RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -69,14 +69,16 @@ class StoreADME2ESpec extends E2ESpec(StoreADME2ESpec.config) with TriplestoreJs
     "succeed with resetting if startup flag is set" in {
 
       /**
-        * This test corresponds to the following curl call:
-        * curl -H "Content-Type: application/json" -X POST -d '[{"path":"../knora-ontologies/knora-base.ttl","name":"http://www.knora.org/ontology/knora-base"}]' http://localhost:3333/admin/store/ResetTriplestoreContent
-        */
+       * This test corresponds to the following curl call:
+       * curl -H "Content-Type: application/json" -X POST -d '[{"path":"../knora-ontologies/knora-base.ttl","name":"http://www.knora.org/ontology/knora-base"}]' http://localhost:3333/admin/store/ResetTriplestoreContent
+       */
       logger.debug("==>>")
       appActor ! SetAllowReloadOverHTTPState(true)
       logger.debug("==>>")
-      val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent",
-                         HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+      val request = Post(
+        baseApiUrl + "/admin/store/ResetTriplestoreContent",
+        HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint)
+      )
       val response = singleAwaitingRequest(request, 300.seconds)
       // log.debug("==>> " + response.toString)
       assert(response.status === StatusCodes.OK)
@@ -84,8 +86,10 @@ class StoreADME2ESpec extends E2ESpec(StoreADME2ESpec.config) with TriplestoreJs
 
     "fail with resetting if startup flag is not set" in {
       appActor ! SetAllowReloadOverHTTPState(false)
-      val request = Post(baseApiUrl + "/admin/store/ResetTriplestoreContent",
-                         HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint))
+      val request = Post(
+        baseApiUrl + "/admin/store/ResetTriplestoreContent",
+        HttpEntity(ContentTypes.`application/json`, rdfDataObjects.toJson.compactPrint)
+      )
       val response = singleAwaitingRequest(request, 300.seconds)
       // log.debug("==>> " + response.toString)
       assert(response.status === StatusCodes.Forbidden)

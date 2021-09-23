@@ -18,9 +18,9 @@
  */
 
 /**
-  * To be able to test UsersResponder, we need to be able to start UsersResponder isolated. Now the UsersResponder
-  * extend ResponderV1 which messes up testing, as we cannot inject the TestActor system.
-  */
+ * To be able to test UsersResponder, we need to be able to start UsersResponder isolated. Now the UsersResponder
+ * extend ResponderV1 which messes up testing, as we cannot inject the TestActor system.
+ */
 package org.knora.webapi.responders.v1
 
 import akka.actor.Status.Failure
@@ -42,8 +42,8 @@ object UsersResponderV1Spec {
 }
 
 /**
-  * This spec is used to test the messages received by the [[UsersResponderV1]] actor.
-  */
+ * This spec is used to test the messages received by the [[UsersResponderV1]] actor.
+ */
 class UsersResponderV1Spec extends CoreSpec(UsersResponderV1Spec.config) with ImplicitSender {
 
   private val timeout = 5.seconds

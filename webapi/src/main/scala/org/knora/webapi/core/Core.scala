@@ -26,8 +26,8 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import scala.concurrent.ExecutionContext
 
 /**
-  * Knora Core abstraction.
-  */
+ * Knora Core abstraction.
+ */
 trait Core {
   implicit val system: ActorSystem
 

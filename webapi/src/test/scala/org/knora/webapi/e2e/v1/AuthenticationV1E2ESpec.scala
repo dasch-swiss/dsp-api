@@ -42,10 +42,10 @@ object AuthenticationV1E2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing authentication.
-  *
-  * This spec tests the 'v1/authentication' and 'v1/session' route.
-  */
+ * End-to-End (E2E) test specification for testing authentication.
+ *
+ * This spec tests the 'v1/authentication' and 'v1/session' route.
+ */
 class AuthenticationV1E2ESpec
     extends E2ESpec(AuthenticationV1E2ESpec.config)
     with SessionJsonProtocol
@@ -123,11 +123,16 @@ class AuthenticationV1E2ESpec
       assert(
         response.headers.contains(
           `Set-Cookie`(
-            HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME,
-                       value = sid,
-                       domain = Some(settings.cookieDomain),
-                       path = Some("/"),
-                       httpOnly = true))))
+            HttpCookie(
+              KNORA_AUTHENTICATION_COOKIE_NAME,
+              value = sid,
+              domain = Some(settings.cookieDomain),
+              path = Some("/"),
+              httpOnly = true
+            )
+          )
+        )
+      )
 
       /* check for sensitive information leakage */
       val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
@@ -165,12 +170,17 @@ class AuthenticationV1E2ESpec
       assert(
         response.headers.contains(
           `Set-Cookie`(
-            HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME,
-                       "",
-                       domain = Some(settings.cookieDomain),
-                       path = Some("/"),
-                       httpOnly = true,
-                       expires = Some(DateTime(1970, 1, 1, 0, 0, 0))))))
+            HttpCookie(
+              KNORA_AUTHENTICATION_COOKIE_NAME,
+              "",
+              domain = Some(settings.cookieDomain),
+              path = Some("/"),
+              httpOnly = true,
+              expires = Some(DateTime(1970, 1, 1, 0, 0, 0))
+            )
+          )
+        )
+      )
     }
 
     "fail authentication with provided session cookie after logout" in {
@@ -219,11 +229,16 @@ class AuthenticationV1E2ESpec
       assert(
         response.headers.contains(
           `Set-Cookie`(
-            HttpCookie(KNORA_AUTHENTICATION_COOKIE_NAME,
-                       value = sid,
-                       domain = Some(settings.cookieDomain),
-                       path = Some("/"),
-                       httpOnly = true))))
+            HttpCookie(
+              KNORA_AUTHENTICATION_COOKIE_NAME,
+              value = sid,
+              domain = Some(settings.cookieDomain),
+              path = Some("/"),
+              httpOnly = true
+            )
+          )
+        )
+      )
 
       /* check for sensitive information leakage */
       val body: String = Await.result(Unmarshal(response.entity).to[String], 1.seconds)
@@ -280,8 +295,8 @@ class AuthenticationV1E2ESpec
 
     "succeed authentication using HTTP Basic Auth headers with correct username and correct password " in {
       /* Correct email / correct password */
-      val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(
-        BasicHttpCredentials(rootEmail, testPass))
+      val request =
+        Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
       val response = singleAwaitingRequest(request)
       //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.OK)
@@ -289,8 +304,8 @@ class AuthenticationV1E2ESpec
 
     "fail authentication using HTTP Basic Auth headers with correct username and wrong password " in {
       /* Correct email / wrong password */
-      val request = Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(
-        BasicHttpCredentials(rootEmail, wrongPass))
+      val request =
+        Get(baseApiUrl + s"/v1/users/$rootIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, wrongPass))
       val response = singleAwaitingRequest(request)
       //log.debug("==>> " + responseAs[String])
       assert(response.status === StatusCodes.Unauthorized)

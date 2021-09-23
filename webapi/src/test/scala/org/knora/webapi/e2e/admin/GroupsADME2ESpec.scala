@@ -43,8 +43,8 @@ object GroupsADME2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing groups endpoint.
-  */
+ * End-to-End (E2E) test specification for testing groups endpoint.
+ */
 class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJsonProtocol with SessionJsonProtocol {
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(30.seconds)
@@ -64,8 +64,8 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
     "used to query for group information" should {
 
       "return all groups" in {
-        val request = Get(baseApiUrl + s"/admin/groups") ~> addCredentials(
-          BasicHttpCredentials(imagesUser01Email, testPass))
+        val request =
+          Get(baseApiUrl + s"/admin/groups") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
@@ -83,7 +83,8 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
       "return the group's information" in {
         val request = Get(baseApiUrl + s"/admin/groups/$groupIriEnc") ~> addCredentials(
-          BasicHttpCredentials(imagesUser01Email, testPass))
+          BasicHttpCredentials(imagesUser01Email, testPass)
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
@@ -105,12 +106,12 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
       "create a group with the provided custom IRI " in {
         val createGroupWithCustomIriRequest: String =
           s"""{   "id": "$customGroupIri",
-                       |    "name": "NewGroupWithCustomIri",
-                       |    "description": "A new group with a custom Iri",
-                       |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "status": true,
-                       |    "selfjoin": false
-                       |}""".stripMargin
+             |    "name": "NewGroupWithCustomIri",
+             |    "description": "A new group with a custom Iri",
+             |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+             |    "status": true,
+             |    "selfjoin": false
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -125,8 +126,8 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
         val request = Post(
           baseApiUrl + s"/admin/groups",
-          HttpEntity(ContentTypes.`application/json`, createGroupWithCustomIriRequest)) ~> addCredentials(
-          BasicHttpCredentials(imagesUser01Email, testPass))
+          HttpEntity(ContentTypes.`application/json`, createGroupWithCustomIriRequest)
+        ) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
 
         response.status should be(StatusCodes.OK)
@@ -150,15 +151,17 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
       "return 'BadRequest' if the supplied IRI for the group is not unique" in {
         val params =
           s"""{             "id": "$customGroupIri",
-                       |    "name": "NewGroupWithDuplicateCustomIri",
-                       |    "description": "A new group with a duplicate custom Iri",
-                       |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "status": true,
-                       |    "selfjoin": false
-                       |}""".stripMargin
+             |    "name": "NewGroupWithDuplicateCustomIri",
+             |    "description": "A new group with a duplicate custom Iri",
+             |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+             |    "status": true,
+             |    "selfjoin": false
+             |}""".stripMargin
 
-        val request = Post(baseApiUrl + s"/admin/groups", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-          BasicHttpCredentials(imagesUser01Email, testPass))
+        val request =
+          Post(baseApiUrl + s"/admin/groups", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+            BasicHttpCredentials(imagesUser01Email, testPass)
+          )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.BadRequest)
 
@@ -176,12 +179,12 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
         val createGroupRequest: String =
           s"""{
-                       |    "name": "NewGroup",
-                       |    "description": "NewGroupDescription",
-                       |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                       |    "status": true,
-                       |    "selfjoin": false
-                       |}""".stripMargin
+             |    "name": "NewGroup",
+             |    "description": "NewGroupDescription",
+             |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+             |    "status": true,
+             |    "selfjoin": false
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -194,9 +197,10 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
           )
         )
 
-        val request = Post(baseApiUrl + "/admin/groups",
-                           HttpEntity(ContentTypes.`application/json`, createGroupRequest)) ~> addCredentials(
-          BasicHttpCredentials(imagesUser01Email, testPass))
+        val request = Post(
+          baseApiUrl + "/admin/groups",
+          HttpEntity(ContentTypes.`application/json`, createGroupRequest)
+        ) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
@@ -229,9 +233,9 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
         val updateGroupRequest: String =
           s"""{
-                       |    "name": "UpdatedGroupName",
-                       |    "description": "UpdatedGroupDescription"
-                       |}""".stripMargin
+             |    "name": "UpdatedGroupName",
+             |    "description": "UpdatedGroupDescription"
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -244,9 +248,10 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
           )
         )
         val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
-        val request = Put(baseApiUrl + "/admin/groups/" + groupIriEnc,
-                          HttpEntity(ContentTypes.`application/json`, updateGroupRequest)) ~> addCredentials(
-          BasicHttpCredentials(imagesUser01Email, testPass))
+        val request = Put(
+          baseApiUrl + "/admin/groups/" + groupIriEnc,
+          HttpEntity(ContentTypes.`application/json`, updateGroupRequest)
+        ) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         logger.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
@@ -275,7 +280,8 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
         val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
         val request = Delete(baseApiUrl + "/admin/groups/" + groupIriEnc) ~> addCredentials(
-          BasicHttpCredentials(imagesUser01Email, testPass))
+          BasicHttpCredentials(imagesUser01Email, testPass)
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         logger.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
@@ -305,8 +311,8 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
         val changeGroupStatusRequest: String =
           s"""{
-                       |    "status": true
-                       |}""".stripMargin
+             |    "status": true
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -320,9 +326,10 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
         )
 
         val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
-        val request = Put(baseApiUrl + "/admin/groups/" + groupIriEnc + "/status",
-                          HttpEntity(ContentTypes.`application/json`, changeGroupStatusRequest)) ~> addCredentials(
-          BasicHttpCredentials(imagesUser01Email, testPass))
+        val request = Put(
+          baseApiUrl + "/admin/groups/" + groupIriEnc + "/status",
+          HttpEntity(ContentTypes.`application/json`, changeGroupStatusRequest)
+        ) ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         logger.debug(s"response: {}", response)
         response.status should be(StatusCodes.OK)
@@ -352,7 +359,8 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
       "return all members of a group" in {
         val request = Get(baseApiUrl + s"/admin/groups/$groupIriEnc/members") ~> addCredentials(
-          BasicHttpCredentials(imagesUser01Email, testPass))
+          BasicHttpCredentials(imagesUser01Email, testPass)
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)

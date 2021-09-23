@@ -236,11 +236,10 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         //println("==>> Reset test case end")
 
         storeManager ! SparqlSelectRequest(countTriplesQuery)
-        expectMsgPF(timeout) {
-          case msg: SparqlSelectResult =>
-            //println(msg)
-            afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
-            (afterLoadCount > 0) should ===(true)
+        expectMsgPF(timeout) { case msg: SparqlSelectResult =>
+          //println(msg)
+          afterLoadCount = msg.results.bindings.head.rowMap("no").toInt
+          (afterLoadCount > 0) should ===(true)
         }
       }
     }
@@ -249,10 +248,9 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         //println("==>> Named Graph test case start")
         storeManager ! SparqlSelectRequest(namedGraphQuery)
         //println(result)
-        expectMsgPF(timeout) {
-          case msg: SparqlSelectResult =>
-            //println(msg)
-            msg.results.bindings.nonEmpty should ===(true)
+        expectMsgPF(timeout) { case msg: SparqlSelectResult =>
+          //println(msg)
+          msg.results.bindings.nonEmpty should ===(true)
         }
         //println("==>> Named Graph test case end")
       }
@@ -262,28 +260,25 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         //println("==>> Update 1 test case start")
 
         storeManager ! SparqlSelectRequest(countTriplesQuery)
-        expectMsgPF(timeout) {
-          case msg: SparqlSelectResult =>
-            //println("vor insert: " + msg)
-            msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
+        expectMsgPF(timeout) { case msg: SparqlSelectResult =>
+          //println("vor insert: " + msg)
+          msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
         }
 
         storeManager ! SparqlUpdateRequest(insertQuery)
         expectMsg(SparqlUpdateResponse())
 
         storeManager ! SparqlSelectRequest(checkInsertQuery)
-        expectMsgPF(timeout) {
-          case msg: SparqlSelectResult =>
-            //println(msg)
-            msg.results.bindings.size should ===(3)
+        expectMsgPF(timeout) { case msg: SparqlSelectResult =>
+          //println(msg)
+          msg.results.bindings.size should ===(3)
         }
 
         storeManager ! SparqlSelectRequest(countTriplesQuery)
-        expectMsgPF(timeout) {
-          case msg: SparqlSelectResult =>
-            //println("nach instert" + msg)
-            afterChangeCount = msg.results.bindings.head.rowMap("no").toInt
-            (afterChangeCount - afterLoadCount) should ===(3)
+        expectMsgPF(timeout) { case msg: SparqlSelectResult =>
+          //println("nach instert" + msg)
+          afterChangeCount = msg.results.bindings.head.rowMap("no").toInt
+          (afterChangeCount - afterLoadCount) should ===(3)
         }
         //println("==>> Update 1 test case end")
       }
@@ -291,27 +286,24 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
         //println("==>> Update 2 test case start")
 
         storeManager ! SparqlSelectRequest(countTriplesQuery)
-        expectMsgPF(timeout) {
-          case msg: SparqlSelectResult =>
-            //println("vor revert: " + msg)
-            msg.results.bindings.head.rowMap("no").toInt should ===(afterChangeCount)
+        expectMsgPF(timeout) { case msg: SparqlSelectResult =>
+          //println("vor revert: " + msg)
+          msg.results.bindings.head.rowMap("no").toInt should ===(afterChangeCount)
         }
 
         storeManager ! SparqlUpdateRequest(revertInsertQuery)
         expectMsg(SparqlUpdateResponse())
 
         storeManager ! SparqlSelectRequest(countTriplesQuery)
-        expectMsgPF(timeout) {
-          case msg: SparqlSelectResult =>
-            //println("nach revert: " + msg)
-            msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
+        expectMsgPF(timeout) { case msg: SparqlSelectResult =>
+          //println("nach revert: " + msg)
+          msg.results.bindings.head.rowMap("no").toInt should ===(afterLoadCount)
         }
 
         storeManager ! SparqlSelectRequest(checkInsertQuery)
-        expectMsgPF(timeout) {
-          case msg: SparqlSelectResult =>
-            //println("check: " + msg)
-            msg.results.bindings.size should ===(0)
+        expectMsgPF(timeout) { case msg: SparqlSelectResult =>
+          //println("check: " + msg)
+          msg.results.bindings.size should ===(0)
         }
 
         //println("==>> Update 2 test case end")
@@ -325,10 +317,9 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
               storeManager ! SparqlSelectRequest(textSearchQueryGraphDBValueHasString)
             case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiValueHasString)
           }
-          expectMsgPF(timeout) {
-            case msg: SparqlSelectResult =>
-              //println(msg)
-              msg.results.bindings.size should ===(3)
+          expectMsgPF(timeout) { case msg: SparqlSelectResult =>
+            //println(msg)
+            msg.results.bindings.size should ===(3)
           }
         }
       }
@@ -340,10 +331,9 @@ class AllTriplestoreSpec extends CoreSpec(AllTriplestoreSpec.config) with Implic
               storeManager ! SparqlSelectRequest(textSearchQueryGraphDBRDFLabel)
             case _ => storeManager ! SparqlSelectRequest(textSearchQueryFusekiDRFLabel)
           }
-          expectMsgPF(timeout) {
-            case msg: SparqlSelectResult =>
-              //println(msg)
-              msg.results.bindings.size should ===(1)
+          expectMsgPF(timeout) { case msg: SparqlSelectResult =>
+            //println(msg)
+            msg.results.bindings.size should ===(1)
           }
         }
       }

@@ -36,15 +36,14 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
-  * A route used to convert XML to standoff.
-  */
+ * A route used to convert XML to standoff.
+ */
 class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   /**
-    * Returns the route.
-    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
-
+   * Returns the route.
+   */
+  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     path("v1" / "mapping") {
       post {
         entity(as[Multipart.FormData]) { formdata: Multipart.FormData => requestContext =>
@@ -88,38 +87,44 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
             allParts: Map[Name, String] <- allPartsFuture
 
             // get the json params and turn them into a case class
-            standoffApiJSONRequest: CreateMappingApiRequestV1 = try {
+            standoffApiJSONRequest: CreateMappingApiRequestV1 =
+              try {
 
-              val jsonString: String = allParts.getOrElse(
-                JSON_PART,
-                throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!"))
+                val jsonString: String = allParts.getOrElse(
+                  JSON_PART,
+                  throw BadRequestException(s"MultiPart POST request was sent without required '$JSON_PART' part!")
+                )
 
-              jsonString.parseJson.convertTo[CreateMappingApiRequestV1]
-            } catch {
-              case e: DeserializationException =>
-                throw BadRequestException("JSON params structure is invalid: " + e.toString)
-            }
+                jsonString.parseJson.convertTo[CreateMappingApiRequestV1]
+              } catch {
+                case e: DeserializationException =>
+                  throw BadRequestException("JSON params structure is invalid: " + e.toString)
+              }
 
             xml: String = allParts
               .getOrElse(
                 XML_PART,
-                throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!"))
+                throw BadRequestException(s"MultiPart POST request was sent without required '$XML_PART' part!")
+              )
               .toString
-          } yield
-            CreateMappingRequestV1(
-              xml = xml,
-              label =
-                stringFormatter.toSparqlEncodedString(standoffApiJSONRequest.label,
-                                                      throw BadRequestException("'label' contains invalid characters")),
-              projectIri = stringFormatter.validateAndEscapeIri(standoffApiJSONRequest.project_id,
-                                                                throw BadRequestException("invalid project IRI")),
-              mappingName = stringFormatter.toSparqlEncodedString(
-                standoffApiJSONRequest.mappingName,
-                throw BadRequestException("'mappingName' contains invalid characters")),
-              featureFactoryConfig = featureFactoryConfig,
-              userProfile = userProfile,
-              apiRequestID = UUID.randomUUID
-            )
+          } yield CreateMappingRequestV1(
+            xml = xml,
+            label = stringFormatter.toSparqlEncodedString(
+              standoffApiJSONRequest.label,
+              throw BadRequestException("'label' contains invalid characters")
+            ),
+            projectIri = stringFormatter.validateAndEscapeIri(
+              standoffApiJSONRequest.project_id,
+              throw BadRequestException("invalid project IRI")
+            ),
+            mappingName = stringFormatter.toSparqlEncodedString(
+              standoffApiJSONRequest.mappingName,
+              throw BadRequestException("'mappingName' contains invalid characters")
+            ),
+            featureFactoryConfig = featureFactoryConfig,
+            userProfile = userProfile,
+            apiRequestID = UUID.randomUUID
+          )
 
           RouteUtilV1.runJsonRouteWithFuture(
             requestMessageFuture,
@@ -131,5 +136,4 @@ class StandoffRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
         }
       }
     }
-  }
 }

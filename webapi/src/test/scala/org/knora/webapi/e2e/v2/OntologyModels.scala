@@ -37,7 +37,7 @@ object CreateClassRequest {
     comment: LangString
   ): CreateClassRequest = {
     val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"
-    val ontologyId         = LocalHost_Ontology + s"/0001/$ontologyName/v2"
+    val ontologyId = LocalHost_Ontology + s"/0001/$ontologyName/v2"
 
     val value = s"""{
                    |  "@id" : "$ontologyId",
@@ -101,8 +101,8 @@ object CreatePropertyRequest {
     comment: LangString
   ): CreatePropertyRequest = {
     val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"
-    val ontologyId         = LocalHost_Ontology + s"/0001/$ontologyName/v2"
-    val value              = s"""{
+    val ontologyId = LocalHost_Ontology + s"/0001/$ontologyName/v2"
+    val value = s"""{
                    |  "@id" : "$ontologyId",
                    |  "@type" : "owl:Ontology",
                    |  "knora-api:lastModificationDate" : {
@@ -151,7 +151,7 @@ sealed trait CardinalityRestriction {
 object CardinalityRestriction {
   case object MaxCardinalityOne extends CardinalityRestriction {
     val cardinality = "owl:maxCardinality"
-    val value       = 1
+    val value = 1
   }
 }
 
@@ -186,10 +186,10 @@ object AddCardinalitiesRequest {
     className: String,
     restrictions: List[Restriction]
   ): AddCardinalitiesRequest = {
-    val LocalHost_Ontology         = "http://0.0.0.0:3333/ontology"
-    val ontologyId                 = LocalHost_Ontology + s"/0001/$ontologyName/v2"
+    val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"
+    val ontologyId = LocalHost_Ontology + s"/0001/$ontologyName/v2"
     val restrictionsString: String = stringifyRestrictions(restrictions)
-    val value                      = s"""
+    val value = s"""
                    |{
                    |  "@id" : "$ontologyId",
                    |  "@type" : "owl:Ontology",

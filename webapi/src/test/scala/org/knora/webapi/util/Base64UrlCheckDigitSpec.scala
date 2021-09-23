@@ -22,8 +22,8 @@ package org.knora.webapi.util
 import org.knora.webapi.CoreSpec
 
 /**
-  * Tests [[Base64UrlCheckDigit]].
-  */
+ * Tests [[Base64UrlCheckDigit]].
+ */
 class Base64UrlCheckDigitSpec extends CoreSpec {
   private val base64UrlCheckDigit = new Base64UrlCheckDigit
   private val correctResourceID = "cmfk1DMHRBiR4-_6HXpEFA"
@@ -49,19 +49,22 @@ class Base64UrlCheckDigitSpec extends CoreSpec {
 
     "reject a string with a missing character" in {
       val resourceIDWithMissingCharacter = "cmfk1DMHRBiR4-6HXpEFA"
-      val resourceIDWithMissingCharacterAndCorrectCheckDigit = resourceIDWithMissingCharacter + correctResourceIDCheckDigit
+      val resourceIDWithMissingCharacterAndCorrectCheckDigit =
+        resourceIDWithMissingCharacter + correctResourceIDCheckDigit
       assert(!base64UrlCheckDigit.isValid(resourceIDWithMissingCharacterAndCorrectCheckDigit))
     }
 
     "reject a string with an incorrect character" in {
       val resourceIDWithIncorrectCharacter = "cmfk1DMHRBir4-_6HXpEFA"
-      val resourceIDWithIncorrectCharacterAndCorrectCheckDigit = resourceIDWithIncorrectCharacter + correctResourceIDCheckDigit
+      val resourceIDWithIncorrectCharacterAndCorrectCheckDigit =
+        resourceIDWithIncorrectCharacter + correctResourceIDCheckDigit
       assert(!base64UrlCheckDigit.isValid(resourceIDWithIncorrectCharacterAndCorrectCheckDigit))
     }
 
     "reject a string with swapped characters" in {
       val resourceIDWithSwappedCharacters = "cmfk1DMHRBiR4_-6HXpEFA"
-      val resourceIDWithSwappedCharactersAndCorrectCheckDigit = resourceIDWithSwappedCharacters + correctResourceIDCheckDigit
+      val resourceIDWithSwappedCharactersAndCorrectCheckDigit =
+        resourceIDWithSwappedCharacters + correctResourceIDCheckDigit
       assert(!base64UrlCheckDigit.isValid(resourceIDWithSwappedCharactersAndCorrectCheckDigit))
     }
   }

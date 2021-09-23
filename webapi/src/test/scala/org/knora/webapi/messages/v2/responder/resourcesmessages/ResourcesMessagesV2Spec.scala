@@ -6,8 +6,8 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.sharedtestdata._
 
 /**
-  * Tests [[ResourceMessagesV2]].
-  */
+ * Tests [[ResourceMessagesV2]].
+ */
 class ResourcesMessagesV2Spec extends CoreSpec() {
   "Get history events of all resources of a project" should {
     "fail if given project IRI is not valid" in {

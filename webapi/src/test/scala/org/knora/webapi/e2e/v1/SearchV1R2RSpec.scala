@@ -32,15 +32,15 @@ import spray.json._
 import scala.concurrent.ExecutionContextExecutor
 
 /**
-  * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
-  * here: http://spray.io/documentation/1.2.2/spray-testkit/
-  */
+ * End-to-end test specification for the search endpoint. This specification uses the Spray Testkit as documented
+ * here: http://spray.io/documentation/1.2.2/spray-testkit/
+ */
 class SearchV1R2RSpec extends R2RSpec {
 
   override def testConfigSource: String =
     """
-          |# akka.loglevel = "DEBUG"
-          |# akka.stdout-loglevel = "DEBUG"
+      |# akka.loglevel = "DEBUG"
+      |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
   private val searchPath = new SearchRouteV1(routeData).knoraApiPath
@@ -56,12 +56,12 @@ class SearchV1R2RSpec extends R2RSpec {
   )
 
   /**
-    * Checks for the number of expected results to be returned.
-    *
-    * @param responseJson the response send back by the search route.
-    * @param expectedNumber the expected number of results for the query.
-    * @return an assertion that the actual amount of results corresponds with the expected number of results.
-    */
+   * Checks for the number of expected results to be returned.
+   *
+   * @param responseJson the response send back by the search route.
+   * @param expectedNumber the expected number of results for the query.
+   * @return an assertion that the actual amount of results corresponds with the expected number of results.
+   */
   def checkNumberOfHits(responseJson: String, expectedNumber: Int): Assertion = {
 
     val response: Map[String, JsValue] = responseAs[String].parseJson.asJsObject.fields
@@ -285,7 +285,9 @@ class SearchV1R2RSpec extends R2RSpec {
 
       val filter = "&show_nrows=25&start_at=0&filter_by_project=http%3A%2F%2Frdfh.ch%2Fprojects%2F0001"
 
-      Get("/v1/search/?searchtype=extended" + props_two_lists_one + props_two_lists_two + filter) ~> searchPath ~> check {
+      Get(
+        "/v1/search/?searchtype=extended" + props_two_lists_one + props_two_lists_two + filter
+      ) ~> searchPath ~> check {
 
         assert(status == StatusCodes.OK, response.toString)
 

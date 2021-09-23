@@ -41,16 +41,16 @@ import org.knora.webapi.responders.{IriLocker, Responder}
 import scala.concurrent.Future
 
 /**
-  * Returns information about Knora projects.
-  */
+ * Returns information about Knora projects.
+ */
 class GroupsResponderADM(responderData: ResponderData) extends Responder(responderData) with GroupsADMJsonProtocol {
 
   // Global lock IRI used for group creation and updating
   private val GROUPS_GLOBAL_LOCK_IRI: IRI = "http://rdfh.ch/groups"
 
   /**
-    * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message
-    */
+   * Receives a message extending [[ProjectsResponderRequestV1]], and returns an appropriate response message
+   */
   def receive(msg: GroupsResponderRequestADM) = msg match {
     case GroupsGetADM(featureFactoryConfig, requestingUser) => groupsGetADM(featureFactoryConfig, requestingUser)
     case GroupsGetRequestADM(featureFactoryConfig, requestingUser) =>
@@ -66,29 +66,35 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     case GroupCreateRequestADM(newGroupInfo, featureFactoryConfig, requestingUser, apiRequestID) =>
       createGroupADM(newGroupInfo, featureFactoryConfig, requestingUser, apiRequestID)
     case GroupChangeRequestADM(groupIri, changeGroupRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
-      changeGroupBasicInformationRequestADM(groupIri,
-                                            changeGroupRequest,
-                                            featureFactoryConfig,
-                                            requestingUser,
-                                            apiRequestID)
-    case GroupChangeStatusRequestADM(groupIri,
-                                     changeGroupRequest,
-                                     featureFactoryConfig,
-                                     requestingUser,
-                                     apiRequestID) =>
+      changeGroupBasicInformationRequestADM(
+        groupIri,
+        changeGroupRequest,
+        featureFactoryConfig,
+        requestingUser,
+        apiRequestID
+      )
+    case GroupChangeStatusRequestADM(
+          groupIri,
+          changeGroupRequest,
+          featureFactoryConfig,
+          requestingUser,
+          apiRequestID
+        ) =>
       changeGroupStatusRequestADM(groupIri, changeGroupRequest, featureFactoryConfig, requestingUser, apiRequestID)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
   /**
-    * Gets all the groups (without built-in groups) and returns them as a sequence of [[GroupADM]].
-    *
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @return all the groups as a sequence of [[GroupADM]].
-    */
-  private def groupsGetADM(featureFactoryConfig: FeatureFactoryConfig,
-                           requestingUser: UserADM): Future[Seq[GroupADM]] = {
+   * Gets all the groups (without built-in groups) and returns them as a sequence of [[GroupADM]].
+   *
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @return all the groups as a sequence of [[GroupADM]].
+   */
+  private def groupsGetADM(
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[Seq[GroupADM]] = {
 
     log.debug("groupsGetADM")
 
@@ -99,7 +105,8 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             triplestore = settings.triplestoreType,
             maybeIri = None
           )
-          .toString())
+          .toString()
+      )
 
       groupsResponse <- (storeManager ? SparqlExtendedConstructRequest(
         sparql = sparqlQuery,
@@ -111,8 +118,10 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       groups: Seq[Future[GroupADM]] = statements.map {
         case (groupIri: SubjectV2, propsMap: Map[SmartIri, Seq[LiteralV2]]) =>
           val projectIri: IRI = propsMap
-            .getOrElse(OntologyConstants.KnoraAdmin.BelongsToProject.toSmartIri,
-                       throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached"))
+            .getOrElse(
+              OntologyConstants.KnoraAdmin.BelongsToProject.toSmartIri,
+              throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached")
+            )
             .head
             .asInstanceOf[IriLiteralV2]
             .value
@@ -128,33 +137,42 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
               case Some(project) => project
               case None =>
                 throw InconsistentRepositoryDataException(
-                  s"Project $projectIri was referenced by $groupIri but was not found in the triplestore.")
+                  s"Project $projectIri was referenced by $groupIri but was not found in the triplestore."
+                )
             }
 
             group = GroupADM(
               id = groupIri.toString,
               name = propsMap
-                .getOrElse(OntologyConstants.KnoraAdmin.GroupName.toSmartIri,
-                           throw InconsistentRepositoryDataException(s"Group $groupIri has no name attached"))
+                .getOrElse(
+                  OntologyConstants.KnoraAdmin.GroupName.toSmartIri,
+                  throw InconsistentRepositoryDataException(s"Group $groupIri has no name attached")
+                )
                 .head
                 .asInstanceOf[StringLiteralV2]
                 .value,
               description = propsMap
-                .getOrElse(OntologyConstants.KnoraAdmin.GroupDescription.toSmartIri,
-                           throw InconsistentRepositoryDataException(s"Group $groupIri has no description attached"))
+                .getOrElse(
+                  OntologyConstants.KnoraAdmin.GroupDescription.toSmartIri,
+                  throw InconsistentRepositoryDataException(s"Group $groupIri has no description attached")
+                )
                 .head
                 .asInstanceOf[StringLiteralV2]
                 .value,
               project = projectADM,
               status = propsMap
-                .getOrElse(OntologyConstants.KnoraAdmin.Status.toSmartIri,
-                           throw InconsistentRepositoryDataException(s"Group $groupIri has no status attached"))
+                .getOrElse(
+                  OntologyConstants.KnoraAdmin.Status.toSmartIri,
+                  throw InconsistentRepositoryDataException(s"Group $groupIri has no status attached")
+                )
                 .head
                 .asInstanceOf[BooleanLiteralV2]
                 .value,
               selfjoin = propsMap
-                .getOrElse(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled.toSmartIri,
-                           throw InconsistentRepositoryDataException(s"Group $groupIri has no status attached"))
+                .getOrElse(
+                  OntologyConstants.KnoraAdmin.HasSelfJoinEnabled.toSmartIri,
+                  throw InconsistentRepositoryDataException(s"Group $groupIri has no status attached")
+                )
                 .head
                 .asInstanceOf[BooleanLiteralV2]
                 .value
@@ -167,13 +185,15 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   }
 
   /**
-    * Gets all the groups and returns them as a [[GroupsGetResponseADM]].
-    *
-    * @param requestingUser the user initiating the request.
-    * @return all the groups as a [[GroupsGetResponseADM]].
-    */
-  private def groupsGetRequestADM(featureFactoryConfig: FeatureFactoryConfig,
-                                  requestingUser: UserADM): Future[GroupsGetResponseADM] = {
+   * Gets all the groups and returns them as a [[GroupsGetResponseADM]].
+   *
+   * @param requestingUser the user initiating the request.
+   * @return all the groups as a [[GroupsGetResponseADM]].
+   */
+  private def groupsGetRequestADM(
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[GroupsGetResponseADM] =
     for {
       maybeGroupsListToReturn <- groupsGetADM(
         featureFactoryConfig = featureFactoryConfig,
@@ -185,19 +205,19 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         case _                                        => throw NotFoundException(s"No groups found")
       }
     } yield result
-  }
 
   /**
-    * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
-    *
-    * @param groupIri       the IRI of the group requested.
-    * @param requestingUser the user initiating the request.
-    * @return information about the group as a [[GroupADM]]
-    */
-  private def groupGetADM(groupIri: IRI,
-                          featureFactoryConfig: FeatureFactoryConfig,
-                          requestingUser: UserADM): Future[Option[GroupADM]] = {
-
+   * Gets the group with the given group IRI and returns the information as a [[GroupADM]].
+   *
+   * @param groupIri       the IRI of the group requested.
+   * @param requestingUser the user initiating the request.
+   * @return information about the group as a [[GroupADM]]
+   */
+  private def groupGetADM(
+    groupIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[Option[GroupADM]] =
     for {
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -205,40 +225,42 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             triplestore = settings.triplestoreType,
             maybeIri = Some(groupIri)
           )
-          .toString())
+          .toString()
+      )
 
       groupResponse <- (storeManager ? SparqlExtendedConstructRequest(
         sparql = sparqlQuery,
         featureFactoryConfig = featureFactoryConfig
       )).mapTo[SparqlExtendedConstructResponse]
 
-      maybeGroup: Option[GroupADM] <- if (groupResponse.statements.isEmpty) {
-        FastFuture.successful(None)
-      } else {
-        statements2GroupADM(
-          statements = groupResponse.statements.head,
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = requestingUser
-        )
-      }
+      maybeGroup: Option[GroupADM] <-
+        if (groupResponse.statements.isEmpty) {
+          FastFuture.successful(None)
+        } else {
+          statements2GroupADM(
+            statements = groupResponse.statements.head,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
+        }
 
       _ = log.debug("groupGetADM - result: {}", maybeGroup)
 
     } yield maybeGroup
-  }
 
   /**
-    * Gets the group with the given group IRI and returns the information as a [[GroupGetResponseADM]].
-    *
-    * @param groupIri             the IRI of the group requested.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user initiating the request.
-    * @return information about the group as a [[GroupGetResponseADM]].
-    */
-  private def groupGetRequestADM(groupIri: IRI,
-                                 featureFactoryConfig: FeatureFactoryConfig,
-                                 requestingUser: UserADM): Future[GroupGetResponseADM] = {
-
+   * Gets the group with the given group IRI and returns the information as a [[GroupGetResponseADM]].
+   *
+   * @param groupIri             the IRI of the group requested.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user initiating the request.
+   * @return information about the group as a [[GroupGetResponseADM]].
+   */
+  private def groupGetRequestADM(
+    groupIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[GroupGetResponseADM] =
     for {
       maybeGroupADM: Option[GroupADM] <- groupGetADM(
         groupIri = groupIri,
@@ -251,18 +273,19 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         case None        => throw NotFoundException(s"Group <$groupIri> not found")
       }
     } yield result
-  }
 
   /**
-    * Gets the groups with the given IRIs and returns a set of [[GroupGetResponseADM]] objects.
-    *
-    * @param groupIris      the IRIs of the groups being requested.
-    * @param requestingUser the user initiating the request.
-    * @return information about the group as a set of [[GroupGetResponseADM]] objects.
-    */
-  private def multipleGroupsGetRequestADM(groupIris: Set[IRI],
-                                          featureFactoryConfig: FeatureFactoryConfig,
-                                          requestingUser: UserADM): Future[Set[GroupGetResponseADM]] = {
+   * Gets the groups with the given IRIs and returns a set of [[GroupGetResponseADM]] objects.
+   *
+   * @param groupIris      the IRIs of the groups being requested.
+   * @param requestingUser the user initiating the request.
+   * @return information about the group as a set of [[GroupGetResponseADM]] objects.
+   */
+  private def multipleGroupsGetRequestADM(
+    groupIris: Set[IRI],
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[Set[GroupGetResponseADM]] = {
     val groupResponseFutures: Set[Future[GroupGetResponseADM]] = groupIris.map { groupIri =>
       groupGetRequestADM(
         groupIri = groupIri,
@@ -275,16 +298,18 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   }
 
   /**
-    * Gets the members with the given group IRI and returns the information as a sequence of [[UserADM]].
-    *
-    * @param groupIri             the IRI of the group.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user initiating the request.
-    * @return A sequence of [[UserADM]]
-    */
-  private def groupMembersGetADM(groupIri: IRI,
-                                 featureFactoryConfig: FeatureFactoryConfig,
-                                 requestingUser: UserADM): Future[Seq[UserADM]] = {
+   * Gets the members with the given group IRI and returns the information as a sequence of [[UserADM]].
+   *
+   * @param groupIri             the IRI of the group.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user initiating the request.
+   * @return A sequence of [[UserADM]]
+   */
+  private def groupMembersGetADM(
+    groupIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[Seq[UserADM]] = {
 
     log.debug("groupMembersGetADM - groupIri: {}", groupIri)
 
@@ -298,7 +323,11 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       _ = maybeGroupADM match {
         case Some(group) =>
           // check if the requesting user is allowed to access the information
-          if (!requestingUser.permissions.isProjectAdmin(group.project.id) && !requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser) {
+          if (
+            !requestingUser.permissions.isProjectAdmin(
+              group.project.id
+            ) && !requestingUser.permissions.isSystemAdmin && !requestingUser.isSystemUser
+          ) {
             // not a project admin and not a system admin
             throw ForbiddenException("Project members can only be retrieved by a project or system admin.")
           }
@@ -312,18 +341,20 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             triplestore = settings.triplestoreType,
             groupIri = groupIri
           )
-          .toString())
+          .toString()
+      )
       //_ = log.debug(s"groupMembersByIRIGetRequestV1 - query: $sparqlQueryString")
 
       groupMembersResponse <- (storeManager ? SparqlSelectRequest(sparqlQueryString)).mapTo[SparqlSelectResult]
       //_ = log.debug(s"groupMembersByIRIGetRequestV1 - result: {}", MessageUtil.toSource(groupMembersResponse))
 
       // get project member IRI from results rows
-      groupMemberIris: Seq[IRI] = if (groupMembersResponse.results.bindings.nonEmpty) {
-        groupMembersResponse.results.bindings.map(_.rowMap("s"))
-      } else {
-        Seq.empty[IRI]
-      }
+      groupMemberIris: Seq[IRI] =
+        if (groupMembersResponse.results.bindings.nonEmpty) {
+          groupMembersResponse.results.bindings.map(_.rowMap("s"))
+        } else {
+          Seq.empty[IRI]
+        }
 
       _ = log.debug("groupMembersGetRequestADM - groupMemberIris: {}", groupMemberIris)
 
@@ -344,17 +375,19 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   }
 
   /**
-    * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
-    * Only project and system admins are allowed to access this information.
-    *
-    * @param groupIri             the IRI of the group.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user initiating the request.
-    * @return A [[GroupMembersGetResponseADM]]
-    */
-  private def groupMembersGetRequestADM(groupIri: IRI,
-                                        featureFactoryConfig: FeatureFactoryConfig,
-                                        requestingUser: UserADM): Future[GroupMembersGetResponseADM] = {
+   * Gets the group members with the given group IRI and returns the information as a [[GroupMembersGetResponseADM]].
+   * Only project and system admins are allowed to access this information.
+   *
+   * @param groupIri             the IRI of the group.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user initiating the request.
+   * @return A [[GroupMembersGetResponseADM]]
+   */
+  private def groupMembersGetRequestADM(
+    groupIri: IRI,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[GroupMembersGetResponseADM] = {
 
     log.debug("groupMembersGetRequestADM - groupIri: {}", groupIri)
 
@@ -373,31 +406,37 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   }
 
   /**
-    * Create a new group.
-    *
-    * @param createRequest        the create request information.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @param apiRequestID         the unique request ID.
-    * @return a [[GroupOperationResponseADM]]
-    */
-  private def createGroupADM(createRequest: CreateGroupApiRequestADM,
-                             featureFactoryConfig: FeatureFactoryConfig,
-                             requestingUser: UserADM,
-                             apiRequestID: UUID): Future[GroupOperationResponseADM] = {
+   * Create a new group.
+   *
+   * @param createRequest        the create request information.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @param apiRequestID         the unique request ID.
+   * @return a [[GroupOperationResponseADM]]
+   */
+  private def createGroupADM(
+    createRequest: CreateGroupApiRequestADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Future[GroupOperationResponseADM] = {
 
     log.debug("createGroupADM - createRequest: {}", createRequest)
 
-    def createGroupTask(createRequest: CreateGroupApiRequestADM,
-                        requestingUser: UserADM,
-                        apiRequestID: UUID): Future[GroupOperationResponseADM] =
+    def createGroupTask(
+      createRequest: CreateGroupApiRequestADM,
+      requestingUser: UserADM,
+      apiRequestID: UUID
+    ): Future[GroupOperationResponseADM] =
       for {
         /* check if username or password are not empty */
         _ <- Future(if (createRequest.name.isEmpty) throw BadRequestException("Group name cannot be empty"))
         _ = if (createRequest.project.isEmpty) throw BadRequestException("Project IRI cannot be empty")
 
         /* check if the requesting user is allowed to create group */
-        _ = if (!requestingUser.permissions.isProjectAdmin(createRequest.project) && !requestingUser.permissions.isSystemAdmin) {
+        _ = if (
+          !requestingUser.permissions.isProjectAdmin(createRequest.project) && !requestingUser.permissions.isSystemAdmin
+        ) {
           // not a project admin and not a system admin
           throw ForbiddenException("A new group can only be created by a project or system admin.")
         }
@@ -417,13 +456,16 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           case Some(p) => p
           case None =>
             throw NotFoundException(
-              s"Cannot create group inside project <${createRequest.project}>. The project was not found.")
+              s"Cannot create group inside project <${createRequest.project}>. The project was not found."
+            )
         }
 
         // check the custom IRI; if not given, create an unused IRI
         customGroupIri: Option[SmartIri] = createRequest.id.map(iri => iri.toSmartIri)
-        groupIri: IRI <- checkOrCreateEntityIri(customGroupIri,
-                                                stringFormatter.makeRandomGroupIri(projectADM.shortcode))
+        groupIri: IRI <- checkOrCreateEntityIri(
+          customGroupIri,
+          stringFormatter.makeRandomGroupIri(projectADM.shortcode)
+        )
 
         /* create the group */
         createNewGroupSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -452,7 +494,8 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         )
 
         createdGroup: GroupADM = maybeCreatedGroup.getOrElse(
-          throw UpdateNotPerformedException(s"Group was not created. Please report this as a possible bug."))
+          throw UpdateNotPerformedException(s"Group was not created. Please report this as a possible bug.")
+        )
 
       } yield GroupOperationResponseADM(group = createdGroup)
 
@@ -467,27 +510,31 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   }
 
   /**
-    * Change group's basic information.
-    *
-    * @param groupIri             the IRI of the group we want to change.
-    * @param changeGroupRequest   the change request.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @param apiRequestID         the unique request ID.
-    * @return a [[GroupOperationResponseADM]].
-    */
-  private def changeGroupBasicInformationRequestADM(groupIri: IRI,
-                                                    changeGroupRequest: ChangeGroupApiRequestADM,
-                                                    featureFactoryConfig: FeatureFactoryConfig,
-                                                    requestingUser: UserADM,
-                                                    apiRequestID: UUID): Future[GroupOperationResponseADM] = {
+   * Change group's basic information.
+   *
+   * @param groupIri             the IRI of the group we want to change.
+   * @param changeGroupRequest   the change request.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @param apiRequestID         the unique request ID.
+   * @return a [[GroupOperationResponseADM]].
+   */
+  private def changeGroupBasicInformationRequestADM(
+    groupIri: IRI,
+    changeGroupRequest: ChangeGroupApiRequestADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Future[GroupOperationResponseADM] = {
 
     /**
-      * The actual change group task run with an IRI lock.
-      */
-    def changeGroupTask(groupIri: IRI,
-                        changeGroupRequest: ChangeGroupApiRequestADM,
-                        requestingUser: UserADM): Future[GroupOperationResponseADM] =
+     * The actual change group task run with an IRI lock.
+     */
+    def changeGroupTask(
+      groupIri: IRI,
+      changeGroupRequest: ChangeGroupApiRequestADM,
+      requestingUser: UserADM
+    ): Future[GroupOperationResponseADM] =
       for {
 
         _ <- Future(
@@ -503,10 +550,13 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         )
 
         groupADM: GroupADM = maybeGroupADM.getOrElse(
-          throw NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
+          throw NotFoundException(s"Group <$groupIri> not found. Aborting update request.")
+        )
 
         /* check if the requesting user is allowed to perform updates */
-        _ = if (!requestingUser.permissions.isProjectAdmin(groupADM.project.id) && !requestingUser.permissions.isSystemAdmin) {
+        _ = if (
+          !requestingUser.permissions.isProjectAdmin(groupADM.project.id) && !requestingUser.permissions.isSystemAdmin
+        ) {
           // not a project admin and not a system admin
           throw ForbiddenException("Group's information can only be changed by a project or system admin.")
         }
@@ -540,27 +590,31 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   }
 
   /**
-    * Change group's basic information.
-    *
-    * @param groupIri             the IRI of the group we want to change.
-    * @param changeGroupRequest   the change request.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user making the request.
-    * @param apiRequestID         the unique request ID.
-    * @return a [[GroupOperationResponseADM]].
-    */
-  private def changeGroupStatusRequestADM(groupIri: IRI,
-                                          changeGroupRequest: ChangeGroupApiRequestADM,
-                                          featureFactoryConfig: FeatureFactoryConfig,
-                                          requestingUser: UserADM,
-                                          apiRequestID: UUID): Future[GroupOperationResponseADM] = {
+   * Change group's basic information.
+   *
+   * @param groupIri             the IRI of the group we want to change.
+   * @param changeGroupRequest   the change request.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user making the request.
+   * @param apiRequestID         the unique request ID.
+   * @return a [[GroupOperationResponseADM]].
+   */
+  private def changeGroupStatusRequestADM(
+    groupIri: IRI,
+    changeGroupRequest: ChangeGroupApiRequestADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM,
+    apiRequestID: UUID
+  ): Future[GroupOperationResponseADM] = {
 
     /**
-      * The actual change group task run with an IRI lock.
-      */
-    def changeGroupStatusTask(groupIri: IRI,
-                              changeGroupRequest: ChangeGroupApiRequestADM,
-                              requestingUser: UserADM): Future[GroupOperationResponseADM] =
+     * The actual change group task run with an IRI lock.
+     */
+    def changeGroupStatusTask(
+      groupIri: IRI,
+      changeGroupRequest: ChangeGroupApiRequestADM,
+      requestingUser: UserADM
+    ): Future[GroupOperationResponseADM] =
       for {
 
         _ <- Future(
@@ -576,10 +630,13 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         )
 
         groupADM: GroupADM = maybeGroupADM.getOrElse(
-          throw NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
+          throw NotFoundException(s"Group <$groupIri> not found. Aborting update request.")
+        )
 
         /* check if the requesting user is allowed to perform updates */
-        _ = if (!requestingUser.permissions.isProjectAdmin(groupADM.project.id) && !requestingUser.permissions.isSystemAdmin) {
+        _ = if (
+          !requestingUser.permissions.isProjectAdmin(groupADM.project.id) && !requestingUser.permissions.isSystemAdmin
+        ) {
           // not a project admin and not a system admin
           throw ForbiddenException("Group's status can only be changed by a project or system admin.")
         }
@@ -618,25 +675,29 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   }
 
   /**
-    * Main group update method.
-    *
-    * @param groupIri             the IRI of the group we are updating.
-    * @param groupUpdatePayload   the payload holding the information which we want to update.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the profile of the user making the request.
-    * @return a [[GroupOperationResponseADM]]
-    */
-  private def updateGroupADM(groupIri: IRI,
-                             groupUpdatePayload: GroupUpdatePayloadADM,
-                             featureFactoryConfig: FeatureFactoryConfig,
-                             requestingUser: UserADM): Future[GroupOperationResponseADM] = {
+   * Main group update method.
+   *
+   * @param groupIri             the IRI of the group we are updating.
+   * @param groupUpdatePayload   the payload holding the information which we want to update.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the profile of the user making the request.
+   * @return a [[GroupOperationResponseADM]]
+   */
+  private def updateGroupADM(
+    groupIri: IRI,
+    groupUpdatePayload: GroupUpdatePayloadADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[GroupOperationResponseADM] = {
 
     log.debug("updateGroupADM - groupIri: {}, groupUpdatePayload: {}", groupIri, groupUpdatePayload)
 
-    val parametersCount: Int = List(groupUpdatePayload.name,
-                                    groupUpdatePayload.description,
-                                    groupUpdatePayload.status,
-                                    groupUpdatePayload.selfjoin).flatten.size
+    val parametersCount: Int = List(
+      groupUpdatePayload.name,
+      groupUpdatePayload.description,
+      groupUpdatePayload.status,
+      groupUpdatePayload.selfjoin
+    ).flatten.size
 
     if (parametersCount == 0) throw BadRequestException("No data would be changed. Aborting update request.")
 
@@ -649,15 +710,17 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       )
 
       groupADM: GroupADM = maybeGroupADM.getOrElse(
-        throw NotFoundException(s"Group <$groupIri> not found. Aborting update request."))
+        throw NotFoundException(s"Group <$groupIri> not found. Aborting update request.")
+      )
 
       /* Verify that the potentially new name is unique */
-      groupByNameAlreadyExists <- if (groupUpdatePayload.name.nonEmpty) {
-        val newName = groupUpdatePayload.name.get
-        groupByNameAndProjectExists(newName, groupADM.project.id)
-      } else {
-        FastFuture.successful(false)
-      }
+      groupByNameAlreadyExists <-
+        if (groupUpdatePayload.name.nonEmpty) {
+          val newName = groupUpdatePayload.name.get
+          groupByNameAndProjectExists(newName, groupADM.project.id)
+        } else {
+          FastFuture.successful(false)
+        }
 
       _ = if (groupByNameAlreadyExists) {
         log.debug("updateGroupADM - about to throw an exception. Group with that name already exists.")
@@ -677,7 +740,8 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             maybeStatus = groupUpdatePayload.status,
             maybeSelfjoin = groupUpdatePayload.selfjoin
           )
-          .toString)
+          .toString
+      )
       //_ = log.debug(s"updateProjectV1 - query: {}",updateProjectSparqlString)
 
       updateGroupResponse <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString)).mapTo[SparqlUpdateResponse]
@@ -690,7 +754,8 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       )
 
       updatedGroup: GroupADM = maybeUpdatedGroup.getOrElse(
-        throw UpdateNotPerformedException("Group was not updated. Please report this as a possible bug."))
+        throw UpdateNotPerformedException("Group was not updated. Please report this as a possible bug.")
+      )
 
       //_ = log.debug("updateProjectV1 - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
 
@@ -702,7 +767,8 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       _ = if (groupUpdatePayload.description.isDefined) {
         if (updatedGroup.description != groupUpdatePayload.description.get)
           throw UpdateNotPerformedException(
-            "Group's 'description' was not updated. Please report this as a possible bug.")
+            "Group's 'description' was not updated. Please report this as a possible bug."
+          )
       }
 
       /*
@@ -719,7 +785,8 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       _ = if (groupUpdatePayload.selfjoin.isDefined) {
         if (updatedGroup.selfjoin != groupUpdatePayload.selfjoin.get)
           throw UpdateNotPerformedException(
-            "Group's 'selfjoin' status was not updated. Please report this as a possible bug.")
+            "Group's 'selfjoin' status was not updated. Please report this as a possible bug."
+          )
       }
 
     } yield GroupOperationResponseADM(group = updatedGroup)
@@ -731,16 +798,18 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   ////////////////////
 
   /**
-    * Helper method that turns SPARQL result rows into a [[GroupADM]].
-    *
-    * @param statements           results from the SPARQL query representing information about the group.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param requestingUser       the user that is making the request.
-    * @return a [[GroupADM]] representing information about the group.
-    */
-  private def statements2GroupADM(statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]]),
-                                  featureFactoryConfig: FeatureFactoryConfig,
-                                  requestingUser: UserADM): Future[Option[GroupADM]] = {
+   * Helper method that turns SPARQL result rows into a [[GroupADM]].
+   *
+   * @param statements           results from the SPARQL query representing information about the group.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param requestingUser       the user that is making the request.
+   * @return a [[GroupADM]] representing information about the group.
+   */
+  private def statements2GroupADM(
+    statements: (SubjectV2, Map[SmartIri, Seq[LiteralV2]]),
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[Option[GroupADM]] = {
 
     log.debug("statements2GroupADM - statements: {}", statements)
 
@@ -766,32 +835,41 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         )).mapTo[Option[ProjectADM]]
 
         project: ProjectADM = maybeProject.getOrElse(
-          throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached."))
+          throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached.")
+        )
 
         groupADM: GroupADM = GroupADM(
           id = groupIri,
           name = propsMap
-            .getOrElse(OntologyConstants.KnoraAdmin.GroupName.toSmartIri,
-                       throw InconsistentRepositoryDataException(s"Group $groupIri has no groupName attached"))
+            .getOrElse(
+              OntologyConstants.KnoraAdmin.GroupName.toSmartIri,
+              throw InconsistentRepositoryDataException(s"Group $groupIri has no groupName attached")
+            )
             .head
             .asInstanceOf[StringLiteralV2]
             .value,
           description = propsMap
-            .getOrElse(OntologyConstants.KnoraAdmin.GroupDescription.toSmartIri,
-                       throw InconsistentRepositoryDataException(s"Group $groupIri has no description attached"))
+            .getOrElse(
+              OntologyConstants.KnoraAdmin.GroupDescription.toSmartIri,
+              throw InconsistentRepositoryDataException(s"Group $groupIri has no description attached")
+            )
             .head
             .asInstanceOf[StringLiteralV2]
             .value,
           project = project,
           status = propsMap
-            .getOrElse(OntologyConstants.KnoraAdmin.Status.toSmartIri,
-                       throw InconsistentRepositoryDataException(s"Group $groupIri has no status attached"))
+            .getOrElse(
+              OntologyConstants.KnoraAdmin.Status.toSmartIri,
+              throw InconsistentRepositoryDataException(s"Group $groupIri has no status attached")
+            )
             .head
             .asInstanceOf[BooleanLiteralV2]
             .value,
           selfjoin = propsMap
-            .getOrElse(OntologyConstants.KnoraAdmin.HasSelfJoinEnabled.toSmartIri,
-                       throw InconsistentRepositoryDataException(s"Group $groupIri has no selfJoin attached"))
+            .getOrElse(
+              OntologyConstants.KnoraAdmin.HasSelfJoinEnabled.toSmartIri,
+              throw InconsistentRepositoryDataException(s"Group $groupIri has no selfJoin attached")
+            )
             .head
             .asInstanceOf[BooleanLiteralV2]
             .value
@@ -803,37 +881,37 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   }
 
   /**
-    * Helper method for checking if a group identified by IRI exists.
-    *
-    * @param groupIri the IRI of the group.
-    * @return a [[Boolean]].
-    */
-  private def groupExists(groupIri: IRI): Future[Boolean] = {
+   * Helper method for checking if a group identified by IRI exists.
+   *
+   * @param groupIri the IRI of the group.
+   * @return a [[Boolean]].
+   */
+  private def groupExists(groupIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString)
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString
+      )
       //_ = log.debug("groupExists - query: {}", askString)
 
       checkGroupExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
       result = checkGroupExistsResponse.result
 
     } yield result
-  }
 
   /**
-    * Helper method for checking if a group identified by name / project IRI exists.
-    *
-    * @param name       the name of the group.
-    * @param projectIri the IRI of the project.
-    * @return a [[Boolean]].
-    */
-  private def groupByNameAndProjectExists(name: String, projectIri: IRI): Future[Boolean] = {
-
+   * Helper method for checking if a group identified by name / project IRI exists.
+   *
+   * @param name       the name of the group.
+   * @param projectIri the IRI of the project.
+   * @return a [[Boolean]].
+   */
+  private def groupByNameAndProjectExists(name: String, projectIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .checkGroupExistsByName(projectIri = projectIri, name = name)
-          .toString)
+          .toString
+      )
       //_ = log.debug("groupExists - query: {}", askString)
 
       checkUserExistsResponse <- (storeManager ? SparqlAskRequest(askString)).mapTo[SparqlAskResponse]
@@ -842,21 +920,20 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       _ = log.debug("groupByNameAndProjectExists - name: {}, projectIri: {}, result: {}", name, projectIri, result)
     } yield result
 
-  }
-
   /**
-    * In the case that the group was deactivated (status = false), the
-    * group members need to be removed from the group.
-    *
-    * @param changedGroup         the group with the new status.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param apiRequestID         the unique request ID.
-    * @return a [[GroupOperationResponseADM]]
-    */
-  private def removeGroupMembersIfNecessary(changedGroup: GroupADM,
-                                            featureFactoryConfig: FeatureFactoryConfig,
-                                            apiRequestID: UUID): Future[GroupOperationResponseADM] = {
-
+   * In the case that the group was deactivated (status = false), the
+   * group members need to be removed from the group.
+   *
+   * @param changedGroup         the group with the new status.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param apiRequestID         the unique request ID.
+   * @return a [[GroupOperationResponseADM]]
+   */
+  private def removeGroupMembersIfNecessary(
+    changedGroup: GroupADM,
+    featureFactoryConfig: FeatureFactoryConfig,
+    apiRequestID: UUID
+  ): Future[GroupOperationResponseADM] =
     if (changedGroup.status) {
       // group active. no need to remove members.
       log.debug("removeGroupMembersIfNecessary - group active. no need to remove members.")
@@ -884,7 +961,5 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
 
       } yield GroupOperationResponseADM(group = changedGroup)
     }
-
-  }
 
 }

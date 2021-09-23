@@ -52,13 +52,13 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
   private val timeout: FiniteDuration = 8.seconds
 
-  private val rootUser          = SharedTestDataADM.rootUser
+  private val rootUser = SharedTestDataADM.rootUser
   private val anythingAdminUser = SharedTestDataADM.anythingAdminUser
-  private val normalUser        = SharedTestDataADM.normalUser
+  private val normalUser = SharedTestDataADM.normalUser
 
   private val incunabulaUser = SharedTestDataADM.incunabulaProjectAdminUser
 
-  private val imagesProject       = SharedTestDataADM.imagesProject
+  private val imagesProject = SharedTestDataADM.imagesProject
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
 
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -402,7 +402,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
       "UPDATE the user's password (by himself)" in {
         val requesterPassword = Password.create("test").fold(error => throw error, value => value)
-        val newPassword       = Password.create("test123456").fold(error => throw error, value => value)
+        val newPassword = Password.create("test123456").fold(error => throw error, value => value)
         responderManager ! UserChangePasswordRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
           userUpdatePasswordPayload = UserUpdatePasswordPayloadADM(
@@ -430,7 +430,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
       "UPDATE the user's password (by a system admin)" in {
         val requesterPassword = Password.create("test").fold(error => throw error, value => value)
-        val newPassword       = Password.create("test654321").fold(error => throw error, value => value)
+        val newPassword = Password.create("test654321").fold(error => throw error, value => value)
 
         responderManager ! UserChangePasswordRequestADM(
           userIri = SharedTestDataADM.normalUser.id,

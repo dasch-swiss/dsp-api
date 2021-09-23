@@ -27,13 +27,13 @@ import org.knora.webapi.messages.v1.responder.ontologymessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 
 /**
-  * Provides a spray-routing function for API routes that deal with resource types.
-  */
+ * Provides a spray-routing function for API routes that deal with resource types.
+ */
 class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   /**
-    * Returns the route.
-    */
+   * Returns the route.
+   */
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
 
     path("v1" / "resourcetypes" / Segment) { iri =>
@@ -47,7 +47,8 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
           // TODO: Check that this is the IRI of a resource type and not just any IRI
           resourceTypeIri = stringFormatter.validateAndEscapeIri(
             iri,
-            throw BadRequestException(s"Invalid resource class IRI: $iri"))
+            throw BadRequestException(s"Invalid resource class IRI: $iri")
+          )
 
         } yield ResourceTypeGetRequestV1(resourceTypeIri, userProfile)
 
@@ -68,8 +69,10 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
           )
           params = requestContext.request.uri.query().toMap
 
-          vocabularyId = params.getOrElse("vocabulary",
-                                          throw BadRequestException("Required param vocabulary is missing"))
+          vocabularyId = params.getOrElse(
+            "vocabulary",
+            throw BadRequestException("Required param vocabulary is missing")
+          )
 
           namedGraphIri = vocabularyId match {
             case "0" => None // if param vocabulary is set to 0, query all named graphs
@@ -77,15 +80,16 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
               Some(
                 stringFormatter.validateAndEscapeIri(
                   vocabularyId,
-                  throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")))
+                  throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")
+                )
+              )
           }
 
-        } yield
-          ResourceTypesForNamedGraphGetRequestV1(
-            namedGraph = namedGraphIri,
-            featureFactoryConfig = featureFactoryConfig,
-            userADM = userADM
-          )
+        } yield ResourceTypesForNamedGraphGetRequestV1(
+          namedGraph = namedGraphIri,
+          featureFactoryConfig = featureFactoryConfig,
+          userADM = userADM
+        )
 
         RouteUtilV1.runJsonRouteWithFuture(
           requestMessage,
@@ -111,40 +115,41 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
           // either the vocabulary or the restype param is set, but not both
           _ = if (vocabularyId.nonEmpty && resourcetypeId.nonEmpty)
             throw BadRequestException("Both vocabulary and restype params are set, only one is allowed")
-        } yield
-          vocabularyId match {
-            case Some("0") => // 0 means that all named graphs should be queried
-              PropertyTypesForNamedGraphGetRequestV1(
-                namedGraph = None,
-                featureFactoryConfig = featureFactoryConfig,
-                userADM = userADM
-              )
+        } yield vocabularyId match {
+          case Some("0") => // 0 means that all named graphs should be queried
+            PropertyTypesForNamedGraphGetRequestV1(
+              namedGraph = None,
+              featureFactoryConfig = featureFactoryConfig,
+              userADM = userADM
+            )
 
-            case Some(vocId) =>
-              val namedGraphIri = stringFormatter.validateAndEscapeIri(
-                vocId,
-                throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId"))
-              PropertyTypesForNamedGraphGetRequestV1(
-                namedGraph = Some(namedGraphIri),
-                featureFactoryConfig = featureFactoryConfig,
-                userADM = userADM
-              )
+          case Some(vocId) =>
+            val namedGraphIri = stringFormatter.validateAndEscapeIri(
+              vocId,
+              throw BadRequestException(s"Invalid vocabulary IRI: $vocabularyId")
+            )
+            PropertyTypesForNamedGraphGetRequestV1(
+              namedGraph = Some(namedGraphIri),
+              featureFactoryConfig = featureFactoryConfig,
+              userADM = userADM
+            )
 
-            case None => // no vocabulary id given, check for restype
-              resourcetypeId match {
-                case Some(restypeId) => // get property types for given resource type
-                  val resourceClassIri = stringFormatter.validateAndEscapeIri(
-                    restypeId,
-                    throw BadRequestException(s"Invalid vocabulary IRI: $restypeId"))
-                  PropertyTypesForResourceTypeGetRequestV1(restypeId, userADM)
-                case None => // no params given, get all property types (behaves like vocbulary=0)
-                  PropertyTypesForNamedGraphGetRequestV1(
-                    namedGraph = None,
-                    featureFactoryConfig = featureFactoryConfig,
-                    userADM = userADM
-                  )
-              }
-          }
+          case None => // no vocabulary id given, check for restype
+            resourcetypeId match {
+              case Some(restypeId) => // get property types for given resource type
+                val resourceClassIri = stringFormatter.validateAndEscapeIri(
+                  restypeId,
+                  throw BadRequestException(s"Invalid vocabulary IRI: $restypeId")
+                )
+                PropertyTypesForResourceTypeGetRequestV1(restypeId, userADM)
+              case None => // no params given, get all property types (behaves like vocbulary=0)
+                PropertyTypesForNamedGraphGetRequestV1(
+                  namedGraph = None,
+                  featureFactoryConfig = featureFactoryConfig,
+                  userADM = userADM
+                )
+            }
+        }
 
         RouteUtilV1.runJsonRouteWithFuture(
           requestMessage,
@@ -162,11 +167,10 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig
           )
-        } yield
-          NamedGraphsGetRequestV1(
-            featureFactoryConfig = featureFactoryConfig,
-            userADM = userADM
-          )
+        } yield NamedGraphsGetRequestV1(
+          featureFactoryConfig = featureFactoryConfig,
+          userADM = userADM
+        )
 
         RouteUtilV1.runJsonRouteWithFuture(
           requestMessage,
@@ -184,11 +188,10 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig
           )
-        } yield
-          LoadOntologiesRequestV1(
-            featureFactoryConfig = featureFactoryConfig,
-            userADM = userADM
-          )
+        } yield LoadOntologiesRequestV1(
+          featureFactoryConfig = featureFactoryConfig,
+          userADM = userADM
+        )
 
         RouteUtilV1.runJsonRouteWithFuture(
           requestMessage,
@@ -209,7 +212,8 @@ class ResourceTypesRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeDa
           // TODO: Check that this is the IRI of a resource type and not just any IRI
           resourceClassIri = stringFormatter.validateAndEscapeIri(
             iri,
-            throw BadRequestException(s"Invalid resource class IRI: $iri"))
+            throw BadRequestException(s"Invalid resource class IRI: $iri")
+          )
         } yield SubClassesGetRequestV1(resourceClassIri, userADM)
 
         RouteUtilV1.runJsonRouteWithFuture(

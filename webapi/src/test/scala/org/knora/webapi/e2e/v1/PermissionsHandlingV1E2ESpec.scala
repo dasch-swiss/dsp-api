@@ -34,8 +34,8 @@ object PermissionsHandlingV1E2ESpec {
 }
 
 /**
-  * End-to-end test specification for testing the handling of permissions.
-  */
+ * End-to-end test specification for testing the handling of permissions.
+ */
 class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.config) with TriplestoreJsonProtocol {
 
   private val rootUser = SharedTestDataV1.rootUser
@@ -61,19 +61,21 @@ class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.
 
       val params =
         """
-                  |{
-                  |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
-                  |    "label": "Testperson",
-                  |    "project_id": "http://rdfh.ch/projects/00FF",
-                  |    "properties": {
-                  |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
-                  |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
-                  |    }
-                  |}
+          |{
+          |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
+          |    "label": "Testperson",
+          |    "project_id": "http://rdfh.ch/projects/00FF",
+          |    "properties": {
+          |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
+          |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
+          |    }
+          |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-        BasicHttpCredentials(imagesUserEmail, password))
+      val request =
+        Post(baseApiUrl + s"/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+          BasicHttpCredentials(imagesUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
 
       assert(response.status === StatusCodes.OK)
@@ -84,19 +86,21 @@ class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.
 
       val params =
         """
-                  |{
-                  |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
-                  |    "label": "Testperson",
-                  |    "project_id": "http://rdfh.ch/projects/00FF",
-                  |    "properties": {
-                  |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
-                  |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
-                  |    }
-                  |}
+          |{
+          |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
+          |    "label": "Testperson",
+          |    "project_id": "http://rdfh.ch/projects/00FF",
+          |    "properties": {
+          |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
+          |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
+          |    }
+          |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-        BasicHttpCredentials(rootUserEmail, password))
+      val request =
+        Post(baseApiUrl + s"/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+          BasicHttpCredentials(rootUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
     }
 
@@ -104,19 +108,21 @@ class PermissionsHandlingV1E2ESpec extends E2ESpec(PermissionsHandlingV1E2ESpec.
 
       val params =
         """
-                  |{
-                  |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
-                  |    "label": "Testperson",
-                  |    "project_id": "http://rdfh.ch/projects/00FF",
-                  |    "properties": {
-                  |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
-                  |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
-                  |    }
-                  |}
+          |{
+          |    "restype_id": "http://www.knora.org/ontology/00FF/images#person",
+          |    "label": "Testperson",
+          |    "project_id": "http://rdfh.ch/projects/00FF",
+          |    "properties": {
+          |        "http://www.knora.org/ontology/00FF/images#lastname": [{"richtext_value":{"utf8str":"Testname"}}],
+          |        "http://www.knora.org/ontology/00FF/images#firstname": [{"richtext_value":{"utf8str":"Name"}}]
+          |    }
+          |}
                 """.stripMargin
 
-      val request = Post(baseApiUrl + s"/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
-        BasicHttpCredentials(incunabulaUserEmail, password))
+      val request =
+        Post(baseApiUrl + s"/v1/resources", HttpEntity(ContentTypes.`application/json`, params)) ~> addCredentials(
+          BasicHttpCredentials(incunabulaUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
     }
   }

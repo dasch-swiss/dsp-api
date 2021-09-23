@@ -61,14 +61,16 @@ object ResourcesResponderV1SpecContextData {
           locdata = None,
           locations = None,
           preview = None,
-          restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
+          restype_iconsrc =
+            Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/book.gif"),
           restype_description = Some("Diese Resource-Klasse beschreibt ein Buch"),
           restype_label = Some("Buch"),
           restype_name = Some("http://www.knora.org/ontology/0803/incunabula#book"),
           restype_id = "http://www.knora.org/ontology/0803/incunabula#book",
           person_id = "http://rdfh.ch/users/91e19f1e01",
           project_id = "http://rdfh.ch/projects/0803"
-        )),
+        )
+      ),
       parent_res_id = Some("http://rdfh.ch/0803/c5058f3a"),
       resinfo = Some(
         ResourceInfoV1(
@@ -78,77 +80,7 @@ object ResourcesResponderV1SpecContextData {
           lastmod = "0000-00-00 00:00:00",
           resclass_has_location = true,
           resclass_name = "object",
-          locdata = Some(LocationV1(
-            protocol = "file",
-            duration = 0,
-            fps = 0,
-            path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
-            ny = Some(3505),
-            nx = Some(2613),
-            origname = Some("ad+s167_druck1=0001.tif"),
-            format_name = "JPEG2000"
-          )),
-          locations = Some(Vector(
-            LocationV1(
-              protocol = "file",
-              duration = 0,
-              fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
-              ny = Some(128),
-              nx = Some(95),
-              origname = Some("ad+s167_druck1=0001.tif"),
-              format_name = "JPEG2000"
-            ),
-            LocationV1(
-              protocol = "file",
-              duration = 0,
-              fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
-              ny = Some(110),
-              nx = Some(82),
-              origname = Some("ad+s167_druck1=0001.tif"),
-              format_name = "JPEG2000"
-            ),
-            LocationV1(
-              protocol = "file",
-              duration = 0,
-              fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
-              ny = Some(219),
-              nx = Some(163),
-              origname = Some("ad+s167_druck1=0001.tif"),
-              format_name = "JPEG2000"
-            ),
-            LocationV1(
-              protocol = "file",
-              duration = 0,
-              fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
-              ny = Some(438),
-              nx = Some(327),
-              origname = Some("ad+s167_druck1=0001.tif"),
-              format_name = "JPEG2000"
-            ),
-            LocationV1(
-              protocol = "file",
-              duration = 0,
-              fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
-              ny = Some(876),
-              nx = Some(653),
-              origname = Some("ad+s167_druck1=0001.tif"),
-              format_name = "JPEG2000"
-            ),
-            LocationV1(
-              protocol = "file",
-              duration = 0,
-              fps = 0,
-              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
-              ny = Some(1753),
-              nx = Some(1307),
-              origname = Some("ad+s167_druck1=0001.tif"),
-              format_name = "JPEG2000"
-            ),
+          locdata = Some(
             LocationV1(
               protocol = "file",
               duration = 0,
@@ -159,25 +91,105 @@ object ResourcesResponderV1SpecContextData {
               origname = Some("ad+s167_druck1=0001.tif"),
               format_name = "JPEG2000"
             )
-          )),
-          preview = Some(LocationV1(
-            protocol = "file",
-            duration = 0,
-            fps = 0,
-            path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
-            ny = Some(128),
-            nx = Some(95),
-            origname = Some("ad+s167_druck1=0001.tif"),
-            format_name = "JPEG2000"
-          )),
-          restype_iconsrc = Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
+          ),
+          locations = Some(
+            Vector(
+              LocationV1(
+                protocol = "file",
+                duration = 0,
+                fps = 0,
+                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
+                ny = Some(128),
+                nx = Some(95),
+                origname = Some("ad+s167_druck1=0001.tif"),
+                format_name = "JPEG2000"
+              ),
+              LocationV1(
+                protocol = "file",
+                duration = 0,
+                fps = 0,
+                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/82,110/0/default.jpg",
+                ny = Some(110),
+                nx = Some(82),
+                origname = Some("ad+s167_druck1=0001.tif"),
+                format_name = "JPEG2000"
+              ),
+              LocationV1(
+                protocol = "file",
+                duration = 0,
+                fps = 0,
+                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/163,219/0/default.jpg",
+                ny = Some(219),
+                nx = Some(163),
+                origname = Some("ad+s167_druck1=0001.tif"),
+                format_name = "JPEG2000"
+              ),
+              LocationV1(
+                protocol = "file",
+                duration = 0,
+                fps = 0,
+                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/327,438/0/default.jpg",
+                ny = Some(438),
+                nx = Some(327),
+                origname = Some("ad+s167_druck1=0001.tif"),
+                format_name = "JPEG2000"
+              ),
+              LocationV1(
+                protocol = "file",
+                duration = 0,
+                fps = 0,
+                path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/653,876/0/default.jpg",
+                ny = Some(876),
+                nx = Some(653),
+                origname = Some("ad+s167_druck1=0001.tif"),
+                format_name = "JPEG2000"
+              ),
+              LocationV1(
+                protocol = "file",
+                duration = 0,
+                fps = 0,
+                path =
+                  s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/1307,1753/0/default.jpg",
+                ny = Some(1753),
+                nx = Some(1307),
+                origname = Some("ad+s167_druck1=0001.tif"),
+                format_name = "JPEG2000"
+              ),
+              LocationV1(
+                protocol = "file",
+                duration = 0,
+                fps = 0,
+                path =
+                  s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/2613,3505/0/default.jpg",
+                ny = Some(3505),
+                nx = Some(2613),
+                origname = Some("ad+s167_druck1=0001.tif"),
+                format_name = "JPEG2000"
+              )
+            )
+          ),
+          preview = Some(
+            LocationV1(
+              protocol = "file",
+              duration = 0,
+              fps = 0,
+              path = s"${settings.externalSipiIIIFGetUrl}/0803/incunabula_0000000002.jp2/full/95,128/0/default.jpg",
+              ny = Some(128),
+              nx = Some(95),
+              origname = Some("ad+s167_druck1=0001.tif"),
+              format_name = "JPEG2000"
+            )
+          ),
+          restype_iconsrc =
+            Some(settings.salsah1BaseUrl + settings.salsah1ProjectIconsBasePath + "incunabula/page.gif"),
           restype_description = Some("Eine Seite ist ein Teil eines Buchs"),
           restype_label = Some("Seite"),
           restype_name = Some("http://www.knora.org/ontology/0803/incunabula#page"),
           restype_id = "http://www.knora.org/ontology/0803/incunabula#page",
           person_id = "http://rdfh.ch/users/91e19f1e01",
           project_id = "http://rdfh.ch/projects/0803"
-        )),
+        )
+      ),
       canonical_res_id = "http://rdfh.ch/0803/8a0b1e75",
       context = ResourceContextCodeV1.RESOURCE_CONTEXT_IS_PARTOF,
       region = None,

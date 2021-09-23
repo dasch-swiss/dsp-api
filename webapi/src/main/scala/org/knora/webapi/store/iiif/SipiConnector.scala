@@ -45,8 +45,8 @@ import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 /**
-  * Makes requests to Sipi.
-  */
+ * Makes requests to Sipi.
+ */
 class SipiConnector extends Actor with ActorLogging {
 
   implicit val system: ActorSystem = context.system
@@ -83,24 +83,26 @@ class SipiConnector extends Actor with ActorLogging {
   }
 
   /**
-    * Represents a response from Sipi's `knora.json` route.
-    *
-    * @param originalFilename the file's original filename, if known.
-    * @param originalMimeType the file's original MIME type.
-    * @param internalMimeType the file's internal MIME type.
-    * @param width            the file's width in pixels, if applicable.
-    * @param height           the file's height in pixels, if applicable.
-    * @param numpages         the number of pages in the file, if applicable.
-    * @param duration         the duration of the file in seconds, if applicable.
-    */
-  case class SipiKnoraJsonResponse(originalFilename: Option[String],
-                                   originalMimeType: Option[String],
-                                   internalMimeType: String,
-                                   width: Option[Int],
-                                   height: Option[Int],
-                                   numpages: Option[Int],
-                                   duration: Option[BigDecimal],
-                                   fps: Option[BigDecimal]) {
+   * Represents a response from Sipi's `knora.json` route.
+   *
+   * @param originalFilename the file's original filename, if known.
+   * @param originalMimeType the file's original MIME type.
+   * @param internalMimeType the file's internal MIME type.
+   * @param width            the file's width in pixels, if applicable.
+   * @param height           the file's height in pixels, if applicable.
+   * @param numpages         the number of pages in the file, if applicable.
+   * @param duration         the duration of the file in seconds, if applicable.
+   */
+  case class SipiKnoraJsonResponse(
+    originalFilename: Option[String],
+    originalMimeType: Option[String],
+    internalMimeType: String,
+    width: Option[Int],
+    height: Option[Int],
+    numpages: Option[Int],
+    duration: Option[BigDecimal],
+    fps: Option[BigDecimal]
+  ) {
     if (originalFilename.contains("")) {
       throw SipiException(s"Sipi returned an empty originalFilename")
     }
@@ -115,11 +117,11 @@ class SipiConnector extends Actor with ActorLogging {
   }
 
   /**
-    * Asks Sipi for metadata about a file.
-    *
-    * @param getFileMetadataRequest the request.
-    * @return a [[GetFileMetadataResponse]] containing the requested metadata.
-    */
+   * Asks Sipi for metadata about a file.
+   *
+   * @param getFileMetadataRequest the request.
+   * @return a [[GetFileMetadataResponse]] containing the requested metadata.
+   */
   private def getFileMetadata(getFileMetadataRequest: GetFileMetadataRequest): Try[GetFileMetadataResponse] = {
     import SipiKnoraJsonResponseProtocol._
 
@@ -129,28 +131,27 @@ class SipiConnector extends Actor with ActorLogging {
     for {
       sipiResponseStr <- doSipiRequest(sipiRequest)
       sipiResponse: SipiKnoraJsonResponse = sipiResponseStr.parseJson.convertTo[SipiKnoraJsonResponse]
-    } yield
-      GetFileMetadataResponse(
-        originalFilename = sipiResponse.originalFilename,
-        originalMimeType = sipiResponse.originalMimeType,
-        internalMimeType = sipiResponse.internalMimeType,
-        width = sipiResponse.width,
-        height = sipiResponse.height,
-        pageCount = sipiResponse.numpages,
-        duration = sipiResponse.duration,
-        fps = sipiResponse.fps
-      )
+    } yield GetFileMetadataResponse(
+      originalFilename = sipiResponse.originalFilename,
+      originalMimeType = sipiResponse.originalMimeType,
+      internalMimeType = sipiResponse.internalMimeType,
+      width = sipiResponse.width,
+      height = sipiResponse.height,
+      pageCount = sipiResponse.numpages,
+      duration = sipiResponse.duration,
+      fps = sipiResponse.fps
+    )
   }
 
   /**
-    * Asks Sipi to move a file from temporary storage to permanent storage.
-    *
-    * @param moveTemporaryFileToPermanentStorageRequestV2 the request.
-    * @return a [[SuccessResponseV2]].
-    */
+   * Asks Sipi to move a file from temporary storage to permanent storage.
+   *
+   * @param moveTemporaryFileToPermanentStorageRequestV2 the request.
+   * @return a [[SuccessResponseV2]].
+   */
   private def moveTemporaryFileToPermanentStorage(
-      moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest)
-    : Try[SuccessResponseV2] = {
+    moveTemporaryFileToPermanentStorageRequestV2: MoveTemporaryFileToPermanentStorageRequest
+  ): Try[SuccessResponseV2] = {
     val token: String = JWTHelper.createToken(
       userIri = moveTemporaryFileToPermanentStorageRequestV2.requestingUser.id,
       secret = settings.jwtSecretKey,
@@ -181,11 +182,11 @@ class SipiConnector extends Actor with ActorLogging {
   }
 
   /**
-    * Asks Sipi to delete a temporary file.
-    *
-    * @param deleteTemporaryFileRequestV2 the request.
-    * @return a [[SuccessResponseV2]].
-    */
+   * Asks Sipi to delete a temporary file.
+   *
+   * @param deleteTemporaryFileRequestV2 the request.
+   * @return a [[SuccessResponseV2]].
+   */
   private def deleteTemporaryFile(deleteTemporaryFileRequestV2: DeleteTemporaryFileRequest): Try[SuccessResponseV2] = {
     val token: String = JWTHelper.createToken(
       userIri = deleteTemporaryFileRequestV2.requestingUser.id,
@@ -211,10 +212,10 @@ class SipiConnector extends Actor with ActorLogging {
   }
 
   /**
-    * Asks Sipi for a text file used internally by Knora.
-    *
-    * @param textFileRequest the request message.
-    */
+   * Asks Sipi for a text file used internally by Knora.
+   *
+   * @param textFileRequest the request message.
+   */
   private def sipiGetTextFileRequest(textFileRequest: SipiGetTextFileRequest): Try[SipiGetTextFileResponse] = {
     val httpRequest = new HttpGet(textFileRequest.fileUrl)
 
@@ -225,11 +226,13 @@ class SipiConnector extends Actor with ActorLogging {
     sipiResponseTry.recover {
       case notFoundException: NotFoundException =>
         throw NotFoundException(
-          s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${notFoundException.message}")
+          s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${notFoundException.message}"
+        )
 
       case badRequestException: BadRequestException =>
         throw SipiException(
-          s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${badRequestException.message}")
+          s"Unable to get file ${textFileRequest.fileUrl} from Sipi as requested by ${textFileRequest.senderName}: ${badRequestException.message}"
+        )
 
       case sipiException: SipiException =>
         throw SipiException(
@@ -245,8 +248,8 @@ class SipiConnector extends Actor with ActorLogging {
   }
 
   /**
-    * Tries to access the IIIF Service.
-    */
+   * Tries to access the IIIF Service.
+   */
   private def iiifGetStatus(): Try[IIIFServiceStatusResponse] = {
     val request = new HttpGet(settings.internalSipiBaseUrl + "/server/test.html")
 
@@ -259,11 +262,11 @@ class SipiConnector extends Actor with ActorLogging {
   }
 
   /**
-    * Makes an HTTP request to Sipi and returns the response.
-    *
-    * @param request the HTTP request.
-    * @return Sipi's response.
-    */
+   * Makes an HTTP request to Sipi and returns the response.
+   *
+   * @param request the HTTP request.
+   * @return Sipi's response.
+   */
   private def doSipiRequest(request: HttpRequest): Try[String] = {
     val httpContext: HttpClientContext = HttpClientContext.create
     var maybeResponse: Option[CloseableHttpResponse] = None

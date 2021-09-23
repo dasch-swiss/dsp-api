@@ -194,16 +194,16 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "throw 'BadRequestException' if 'username' is invalid" in {
       Set(
-        createUserApiRequestADM(username = "don"),                                                  // too short
+        createUserApiRequestADM(username = "don"), // too short
         createUserApiRequestADM(username = "asdfoiasdfasdnlasdkjflasdjfaskdjflaskdjfaddssdskdfjs"), // too long
-        createUserApiRequestADM(username = "_donald"),                                              // starts with _
-        createUserApiRequestADM(username = ".donald"),                                              // starts with .
-        createUserApiRequestADM(username = "donald_"),                                              // ends with _
-        createUserApiRequestADM(username = "donald."),                                              // ends with .
-        createUserApiRequestADM(username = "donald__duck"),                                         // contains multiple _
-        createUserApiRequestADM(username = "donald..duck"),                                         // contains multiple .
-        createUserApiRequestADM(username = "donald#duck"),                                          // contains not only alphanumeric characters
-        createUserApiRequestADM(username = "dönälddück")                                            // contains umlaut characters
+        createUserApiRequestADM(username = "_donald"), // starts with _
+        createUserApiRequestADM(username = ".donald"), // starts with .
+        createUserApiRequestADM(username = "donald_"), // ends with _
+        createUserApiRequestADM(username = "donald."), // ends with .
+        createUserApiRequestADM(username = "donald__duck"), // contains multiple _
+        createUserApiRequestADM(username = "donald..duck"), // contains multiple .
+        createUserApiRequestADM(username = "donald#duck"), // contains not only alphanumeric characters
+        createUserApiRequestADM(username = "dönälddück") // contains umlaut characters
       ).map(request =>
         the[BadRequestException] thrownBy createUserCreatePayloadADM(request) should have message "Invalid username"
       )
@@ -211,9 +211,9 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "throw 'BadRequestException' if 'email' is invalid" in {
       Set(
-        createUserApiRequestADM(email = "don"),  // does not contain @
+        createUserApiRequestADM(email = "don"), // does not contain @
         createUserApiRequestADM(email = "don@"), // ends with @
-        createUserApiRequestADM(email = "@don")  // starts with @
+        createUserApiRequestADM(email = "@don") // starts with @
       ).map(request =>
         the[BadRequestException] thrownBy createUserCreatePayloadADM(request) should have message "Invalid email"
       )

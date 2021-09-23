@@ -41,15 +41,15 @@ object ValuesRouteV2 {
 }
 
 /**
-  * Provides a routing function for API v2 routes that deal with values.
-  */
+ * Provides a routing function for API v2 routes that deal with values.
+ */
 class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   import ValuesRouteV2._
 
   /**
-    * Returns the route.
-    */
+   * Returns the route.
+   */
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     getValue(featureFactoryConfig) ~
       createValue(featureFactoryConfig) ~
@@ -59,62 +59,61 @@ class ValuesRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
   private def getValue(featureFactoryConfig: FeatureFactoryConfig): Route = path(ValuesBasePath / Segment / Segment) {
     (resourceIriStr: IRI, valueUuidStr: String) =>
       get { requestContext =>
-        {
-          val resourceIri: SmartIri =
-            resourceIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
+        val resourceIri: SmartIri =
+          resourceIriStr.toSmartIriWithErr(throw BadRequestException(s"Invalid resource IRI: $resourceIriStr"))
 
-          if (!resourceIri.isKnoraResourceIri) {
-            throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
-          }
-
-          val valueUuid: UUID =
-            stringFormatter.decodeUuidWithErr(valueUuidStr,
-                                              throw BadRequestException(s"Invalid value UUID: $valueUuidStr"))
-
-          val params: Map[String, String] = requestContext.request.uri.query().toMap
-
-          // Was a version date provided?
-          val versionDate: Option[Instant] = params.get("version").map { versionStr =>
-            def errorFun: Nothing = throw BadRequestException(s"Invalid version date: $versionStr")
-
-            // Yes. Try to parse it as an xsd:dateTimeStamp.
-            try {
-              stringFormatter.xsdDateTimeStampToInstant(versionStr, errorFun)
-            } catch {
-              // If that doesn't work, try to parse it as a Knora ARK timestamp.
-              case _: Exception => stringFormatter.arkTimestampToInstant(versionStr, errorFun)
-            }
-          }
-
-          val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
-          val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
-
-          val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
-            requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          } yield
-            ResourcesGetRequestV2(
-              resourceIris = Seq(resourceIri.toString),
-              valueUuid = Some(valueUuid),
-              versionDate = versionDate,
-              targetSchema = targetSchema,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser
-            )
-
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            responderManager = responderManager,
-            log = log,
-            targetSchema = targetSchema,
-            schemaOptions = schemaOptions
-          )
+        if (!resourceIri.isKnoraResourceIri) {
+          throw BadRequestException(s"Invalid resource IRI: $resourceIriStr")
         }
+
+        val valueUuid: UUID =
+          stringFormatter.decodeUuidWithErr(
+            valueUuidStr,
+            throw BadRequestException(s"Invalid value UUID: $valueUuidStr")
+          )
+
+        val params: Map[String, String] = requestContext.request.uri.query().toMap
+
+        // Was a version date provided?
+        val versionDate: Option[Instant] = params.get("version").map { versionStr =>
+          def errorFun: Nothing = throw BadRequestException(s"Invalid version date: $versionStr")
+
+          // Yes. Try to parse it as an xsd:dateTimeStamp.
+          try {
+            stringFormatter.xsdDateTimeStampToInstant(versionStr, errorFun)
+          } catch {
+            // If that doesn't work, try to parse it as a Knora ARK timestamp.
+            case _: Exception => stringFormatter.arkTimestampToInstant(versionStr, errorFun)
+          }
+        }
+
+        val targetSchema: ApiV2Schema = RouteUtilV2.getOntologySchema(requestContext)
+        val schemaOptions: Set[SchemaOption] = RouteUtilV2.getSchemaOptions(requestContext)
+
+        val requestMessageFuture: Future[ResourcesGetRequestV2] = for {
+          requestingUser <- getUserADM(
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig
+          )
+        } yield ResourcesGetRequestV2(
+          resourceIris = Seq(resourceIri.toString),
+          valueUuid = Some(valueUuid),
+          versionDate = versionDate,
+          targetSchema = targetSchema,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
+        )
+
+        RouteUtilV2.runRdfRouteWithFuture(
+          requestMessageF = requestMessageFuture,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log,
+          targetSchema = targetSchema,
+          schemaOptions = schemaOptions
+        )
       }
   }
 

@@ -24,8 +24,8 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 
 /**
-  * Tests [[StringLiteralSequenceV2]].
-  */
+ * Tests [[StringLiteralSequenceV2]].
+ */
 class StringLiteralSequenceV2Spec extends CoreSpec() {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 

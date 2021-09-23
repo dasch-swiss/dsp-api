@@ -82,9 +82,9 @@ class E2ESpec(_system: ActorSystem)
 
   /* needed by the core trait */
 
-  implicit lazy val system: ActorSystem           = _system
-  implicit lazy val settings: KnoraSettingsImpl   = KnoraSettings(system)
-  implicit val materializer: Materializer         = Materializer.matFromSystem(system)
+  implicit lazy val system: ActorSystem = _system
+  implicit lazy val settings: KnoraSettingsImpl = KnoraSettings(system)
+  implicit val materializer: Materializer = Materializer.matFromSystem(system)
   implicit val executionContext: ExecutionContext = system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
   // can be overridden in individual spec
@@ -148,7 +148,7 @@ class E2ESpec(_system: ActorSystem)
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(10.seconds).map(_.data.decodeString("UTF-8"))
-    val responseBodyStr                    = Await.result(responseBodyFuture, 10.seconds)
+    val responseBodyStr = Await.result(responseBodyFuture, 10.seconds)
     JsonLDUtil.parseJsonLD(responseBodyStr)
   }
 
@@ -158,7 +158,7 @@ class E2ESpec(_system: ActorSystem)
   }
 
   protected def doGetRequest(urlPath: String): String = {
-    val request                = Get(s"$baseApiUrl$urlPath")
+    val request = Get(s"$baseApiUrl$urlPath")
     val response: HttpResponse = singleAwaitingRequest(request)
     responseToString(response)
   }
@@ -198,7 +198,7 @@ class E2ESpec(_system: ActorSystem)
       // Per default only read access is allowed in the bazel sandbox.
       // This workaround allows to save test output.
       val testOutputDir: Path = Paths.get(sys.env("TEST_UNDECLARED_OUTPUTS_DIR"))
-      val newOutputFile       = testOutputDir.resolve(file)
+      val newOutputFile = testOutputDir.resolve(file)
       Files.createDirectories(newOutputFile.getParent)
       FileUtil.writeTextFile(
         newOutputFile,

@@ -8,14 +8,18 @@ import org.knora.webapi.messages.v1.responder.usermessages.{UserDataV1, UserProf
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM.IMAGES_ONTOLOGY_IRI
 
 /**
-  * This object holds the same user which are loaded with 'test_data/all_data/admin-data.ttl'. Using this object
-  * in tests, allows easier updating of details as they change over time.
-  */
+ * This object holds the same user which are loaded with 'test_data/all_data/admin-data.ttl'. Using this object
+ * in tests, allows easier updating of details as they change over time.
+ */
 object SharedTestDataV1 {
 
-  /** ***********************************/
-  /** System Admin Data                **/
-  /** ***********************************/
+  /**
+   * **********************************
+   */
+  /** System Admin Data                * */
+  /**
+   * **********************************
+   */
   val SYSTEM_PROJECT_IRI: IRI = OntologyConstants.KnoraAdmin.SystemProject // built-in project
 
   /* represents the user profile of 'root' as found in admin-data.ttl */
@@ -50,11 +54,15 @@ object SharedTestDataV1 {
     sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
-        INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}",
-                                       s"${OntologyConstants.KnoraAdmin.ProjectAdmin}"),
-        IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer",
-                                   s"${OntologyConstants.KnoraAdmin.ProjectMember}",
-                                   s"${OntologyConstants.KnoraAdmin.ProjectAdmin}")
+        INCUNABULA_PROJECT_IRI -> List(
+          s"${OntologyConstants.KnoraAdmin.ProjectMember}",
+          s"${OntologyConstants.KnoraAdmin.ProjectAdmin}"
+        ),
+        IMAGES_PROJECT_IRI -> List(
+          "http://rdfh.ch/groups/00FF/images-reviewer",
+          s"${OntologyConstants.KnoraAdmin.ProjectMember}",
+          s"${OntologyConstants.KnoraAdmin.ProjectAdmin}"
+        )
       ),
       administrativePermissionsPerProject = Map(
         INCUNABULA_PROJECT_IRI -> Set(
@@ -74,9 +82,13 @@ object SharedTestDataV1 {
     SharedTestDataADM.systemProject.asProjectInfoV1
       .copy(ontologies = Seq(OntologyConstants.KnoraBase.KnoraBaseOntologyIri))
 
-  /** ***********************************/
-  /** Images Demo Project Admin Data   **/
-  /** ***********************************/
+  /**
+   * **********************************
+   */
+  /** Images Demo Project Admin Data   * */
+  /**
+   * **********************************
+   */
   val IMAGES_PROJECT_IRI = "http://rdfh.ch/projects/00FF"
 
   /* represents 'user01' as found in admin-data.ttl  */
@@ -96,8 +108,10 @@ object SharedTestDataV1 {
     sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
-        IMAGES_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember,
-                                   OntologyConstants.KnoraAdmin.ProjectAdmin)
+        IMAGES_PROJECT_IRI -> List(
+          OntologyConstants.KnoraAdmin.ProjectMember,
+          OntologyConstants.KnoraAdmin.ProjectAdmin
+        )
       ),
       administrativePermissionsPerProject = Map(
         IMAGES_PROJECT_IRI -> Set(
@@ -152,8 +166,10 @@ object SharedTestDataV1 {
     sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
-        IMAGES_PROJECT_IRI -> List("http://rdfh.ch/groups/00FF/images-reviewer",
-                                   s"${OntologyConstants.KnoraAdmin.ProjectMember}")
+        IMAGES_PROJECT_IRI -> List(
+          "http://rdfh.ch/groups/00FF/images-reviewer",
+          s"${OntologyConstants.KnoraAdmin.ProjectMember}"
+        )
       ),
       administrativePermissionsPerProject = Map(
         IMAGES_PROJECT_IRI -> Set(
@@ -179,9 +195,13 @@ object SharedTestDataV1 {
     selfjoin = false
   )
 
-  /** ***********************************/
-  /** Incunabula Project Admin Data    **/
-  /** ***********************************/
+  /**
+   * **********************************
+   */
+  /** Incunabula Project Admin Data    * */
+  /**
+   * **********************************
+   */
   val INCUNABULA_PROJECT_IRI = "http://rdfh.ch/projects/0803"
 
   /* represents 'testuser' (Incunabula ProjectAdmin) as found in admin-data.ttl  */
@@ -201,8 +221,10 @@ object SharedTestDataV1 {
     sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
-        INCUNABULA_PROJECT_IRI -> List(s"${OntologyConstants.KnoraAdmin.ProjectMember}",
-                                       s"${OntologyConstants.KnoraAdmin.ProjectAdmin}")
+        INCUNABULA_PROJECT_IRI -> List(
+          s"${OntologyConstants.KnoraAdmin.ProjectMember}",
+          s"${OntologyConstants.KnoraAdmin.ProjectAdmin}"
+        )
       ),
       administrativePermissionsPerProject = Map(
         INCUNABULA_PROJECT_IRI -> Set(
@@ -274,9 +296,11 @@ object SharedTestDataV1 {
     shortcode = "0803",
     longname = Some("Bilderfolgen Basler Frühdrucke"),
     description = Some(
-      "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>"),
+      "<p>Das interdisziplinäre Forschungsprojekt \"<b><em>Die Bilderfolgen der Basler Frühdrucke: Spätmittelalterliche Didaxe als Bild-Text-Lektüre</em></b>\" verbindet eine umfassende kunstwissenschaftliche Analyse der Bezüge zwischen den Bildern und Texten in den illustrierten Basler Inkunabeln mit der Digitalisierung der Bestände der Universitätsbibliothek und der Entwicklung einer elektronischen Edition in der Form einer neuartigen Web-0.2-Applikation.\n</p>\n<p>Das Projekt wird durchgeführt vom <a href=\"http://kunsthist.unibas.ch\">Kunsthistorischen Seminar</a> der Universität Basel (Prof. B. Schellewald) und dem <a href=\"http://www.dhlab.unibas.ch\">Digital Humanities Lab</a> der Universität Basel (PD Dr. L. Rosenthaler).\n</p>\n<p>\nDas Kernstück der digitalen Edition besteht aus rund zwanzig reich bebilderten Frühdrucken aus vier verschiedenen Basler Offizinen. Viele davon sind bereits vor 1500 in mehreren Ausgaben erschienen, einige fast gleichzeitig auf Deutsch und Lateinisch. Es handelt sich um eine ausserordentlich vielfältige Produktion; neben dem Heilsspiegel finden sich ein Roman, die Melusine,  die Reisebeschreibungen des Jean de Mandeville, einige Gebets- und Erbauungsbüchlein, theologische Schriften, Fastenpredigten, die Leben der Heiligen Fridolin und Meinrad, das berühmte Narrenschiff  sowie die Exempelsammlung des Ritters vom Thurn.\n</p>\nDie Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durch die Möglichkeiten nichtlinearer Verknüpfung und Kommentierung der Bilder und Texte, für die wissenschaftliche Edition sowie für die Erforschung der Bilder und Texte nutzbar machen. Auch können bereits bestehende und entstehende Online-Editionen damit verknüpft  werden , wodurch die Nutzung von Datenbanken anderer Institutionen im Hinblick auf unser Corpus optimiert wird.\n</p>"
+    ),
     keywords = Some(
-      "Basel, Basler Frühdrucke, Bilderfolgen, Contectualisation of images, Inkunabel, Kunsthistorisches Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Narrenschiff, Sebastian Brant, Wiegendrucke, early print, incunabula, ship of fools"),
+      "Basel, Basler Frühdrucke, Bilderfolgen, Contectualisation of images, Inkunabel, Kunsthistorisches Seminar Universität Basel, Late Middle Ages, Letterpress Printing, Narrenschiff, Sebastian Brant, Wiegendrucke, early print, incunabula, ship of fools"
+    ),
     logo = Some("incunabula_logo.png"),
     institution = None,
     ontologies = Seq(SharedOntologyTestDataADM.INCUNABULA_ONTOLOGY_IRI),
@@ -284,9 +308,13 @@ object SharedTestDataV1 {
     selfjoin = false
   )
 
-  /** **********************************/
-  /** Anything Admin Data             **/
-  /** **********************************/
+  /**
+   * *********************************
+   */
+  /** Anything Admin Data             * */
+  /**
+   * *********************************
+   */
   val ANYTHING_PROJECT_IRI = "http://rdfh.ch/projects/0001"
 
   def anythingAdminUser = UserProfileV1(
@@ -305,8 +333,10 @@ object SharedTestDataV1 {
     sessionId = None,
     permissionData = PermissionsDataADM(
       groupsPerProject = Map(
-        ANYTHING_PROJECT_IRI -> List(OntologyConstants.KnoraAdmin.ProjectMember,
-                                     OntologyConstants.KnoraAdmin.ProjectAdmin)
+        ANYTHING_PROJECT_IRI -> List(
+          OntologyConstants.KnoraAdmin.ProjectMember,
+          OntologyConstants.KnoraAdmin.ProjectAdmin
+        )
       ),
       administrativePermissionsPerProject = Map(
         ANYTHING_PROJECT_IRI -> Set(
@@ -383,9 +413,13 @@ object SharedTestDataV1 {
     selfjoin = false
   )
 
-  /** **********************************/
-  /** BEOL                            **/
-  /** **********************************/
+  /**
+   * *********************************
+   */
+  /** BEOL                            * */
+  /**
+   * *********************************
+   */
   val BEOL_PROJECT_IRI = "http://rdfh.ch/projects/0801"
 
   def beolProjectInfo = ProjectInfoV1(
@@ -419,9 +453,13 @@ object SharedTestDataV1 {
     permissionData = PermissionsDataADM()
   )
 
-  /** **********************************/
-  /** DOKUBIB                         **/
-  /** **********************************/
+  /**
+   * *********************************
+   */
+  /** DOKUBIB                         * */
+  /**
+   * *********************************
+   */
   val DOKUBIB_PROJECT_IRI = "http://rdfh.ch/projects/00FE"
 
   def dokubibProjectInfo = ProjectInfoV1(
@@ -438,9 +476,13 @@ object SharedTestDataV1 {
     selfjoin = false
   )
 
-  /** **********************************/
-  /** WEBERN                          **/
-  /** **********************************/
+  /**
+   * *********************************
+   */
+  /** WEBERN                          * */
+  /**
+   * *********************************
+   */
   val WEBERN_PROJECT_IRI = "http://rdfh.ch/projects/0806"
 
   def webernProjectInfo = ProjectInfoV1(

@@ -26,8 +26,8 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import scala.concurrent.duration._
 
 /**
-  * Causes an internal server error to see if logging is working correctly.
-  */
+ * Causes an internal server error to see if logging is working correctly.
+ */
 class ErrorV1ITSpec extends ITKnoraLiveSpec with TriplestoreJsonProtocol {
 
   "Make a request that causes an internal server error" in {

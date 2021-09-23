@@ -38,27 +38,27 @@ import org.knora.webapi.responders.Responder
 import scala.concurrent.Future
 
 /**
-  * An abstract class with standoff utility methods for v2 responders.
-  */
+ * An abstract class with standoff utility methods for v2 responders.
+ */
 abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Responder(responderData) {
 
   /**
-    * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
-    *
-    * @param queryResultsSeparated query results referring to mappings.
-    * @param featureFactoryConfig  the feature factory configuration.
-    * @param requestingUser        the user making the request.
-    * @return the referred mappings.
-    */
+   * Gets mappings referred to in query results [[Map[IRI, ResourceWithValueRdfData]]].
+   *
+   * @param queryResultsSeparated query results referring to mappings.
+   * @param featureFactoryConfig  the feature factory configuration.
+   * @param requestingUser        the user making the request.
+   * @return the referred mappings.
+   */
   protected def getMappingsFromQueryResultsSeparated(
-      queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
-      featureFactoryConfig: FeatureFactoryConfig,
-      requestingUser: UserADM): Future[Map[IRI, MappingAndXSLTransformation]] = {
+    queryResultsSeparated: Map[IRI, ResourceWithValueRdfData],
+    featureFactoryConfig: FeatureFactoryConfig,
+    requestingUser: UserADM
+  ): Future[Map[IRI, MappingAndXSLTransformation]] = {
 
     // collect the Iris of the mappings referred to in the resources' text values
-    val mappingIris: Set[IRI] = queryResultsSeparated.flatMap {
-      case (_, assertions: ResourceWithValueRdfData) =>
-        ConstructResponseUtilV2.getMappingIrisFromValuePropertyAssertions(assertions.valuePropertyAssertions)
+    val mappingIris: Set[IRI] = queryResultsSeparated.flatMap { case (_, assertions: ResourceWithValueRdfData) =>
+      ConstructResponseUtilV2.getMappingIrisFromValuePropertyAssertions(assertions.valuePropertyAssertions)
     }.toSet
 
     // get all the mappings
@@ -80,29 +80,33 @@ abstract class ResponderWithStandoffV2(responderData: ResponderData) extends Res
         mapping: GetMappingResponseV2 =>
           for {
             // if given, get the default XSL transformation
-            xsltOption: Option[String] <- if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
-              val xslTransformationFuture = for {
-                xslTransformation: GetXSLTransformationResponseV2 <- (responderManager ? GetXSLTransformationRequestV2(
-                  mapping.mapping.defaultXSLTransformation.get,
-                  featureFactoryConfig = featureFactoryConfig,
-                  requestingUser = requestingUser
-                )).mapTo[GetXSLTransformationResponseV2]
-              } yield Some(xslTransformation.xslt)
+            xsltOption: Option[String] <-
+              if (mapping.mapping.defaultXSLTransformation.nonEmpty) {
+                val xslTransformationFuture = for {
+                  xslTransformation: GetXSLTransformationResponseV2 <-
+                    (responderManager ? GetXSLTransformationRequestV2(
+                      mapping.mapping.defaultXSLTransformation.get,
+                      featureFactoryConfig = featureFactoryConfig,
+                      requestingUser = requestingUser
+                    )).mapTo[GetXSLTransformationResponseV2]
+                } yield Some(xslTransformation.xslt)
 
-              xslTransformationFuture.recover {
-                case notFound: NotFoundException =>
-                  throw SipiException(
-                    s"Default XSL transformation <${mapping.mapping.defaultXSLTransformation.get}> not found for mapping <${mapping.mappingIri}>: ${notFound.message}")
+                xslTransformationFuture.recover {
+                  case notFound: NotFoundException =>
+                    throw SipiException(
+                      s"Default XSL transformation <${mapping.mapping.defaultXSLTransformation.get}> not found for mapping <${mapping.mappingIri}>: ${notFound.message}"
+                    )
 
-                case other => throw other
+                  case other => throw other
+                }
+              } else {
+                FastFuture.successful(None)
               }
-            } else {
-              FastFuture.successful(None)
-            }
-          } yield
-            mapping.mappingIri -> MappingAndXSLTransformation(mapping = mapping.mapping,
-                                                              standoffEntities = mapping.standoffEntities,
-                                                              XSLTransformation = xsltOption)
+          } yield mapping.mappingIri -> MappingAndXSLTransformation(
+            mapping = mapping.mapping,
+            standoffEntities = mapping.standoffEntities,
+            XSLTransformation = xsltOption
+          )
 
       }
 

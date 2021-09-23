@@ -37,9 +37,9 @@ import org.knora.webapi.settings._
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 
 /**
-  * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
-  * here: http://spray.io/documentation/1.2.2/spray-testkit/
-  */
+ * End-to-end test specification for the resources endpoint. This specification uses the Spray Testkit as documented
+ * here: http://spray.io/documentation/1.2.2/spray-testkit/
+ */
 class SipiV1R2RSpec extends R2RSpec {
 
   override def testConfigSource: String =
@@ -64,7 +64,8 @@ class SipiV1R2RSpec extends R2RSpec {
   /* we need to run our app with the mocked sipi actor */
   override lazy val appActor: ActorRef = system.actorOf(
     Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME)
+    name = APPLICATION_MANAGER_ACTOR_NAME
+  )
 
   object RequestParams {
 
@@ -76,23 +77,29 @@ class SipiV1R2RSpec extends R2RSpec {
             richtext_value = Some(
               CreateRichtextV1(
                 utf8str = Some("test_page")
-              ))
-          )),
+              )
+            )
+          )
+        ),
         "http://www.knora.org/ontology/0803/incunabula#origname" -> Seq(
           CreateResourceValueV1(
             richtext_value = Some(
               CreateRichtextV1(
                 utf8str = Some("test")
-              ))
-          )),
+              )
+            )
+          )
+        ),
         "http://www.knora.org/ontology/0803/incunabula#partOf" -> Seq(
           CreateResourceValueV1(
             link_value = Some("http://rdfh.ch/0803/5e77e98d2603")
-          )),
+          )
+        ),
         "http://www.knora.org/ontology/0803/incunabula#seqnum" -> Seq(
           CreateResourceValueV1(
             int_value = Some(999)
-          ))
+          )
+        )
       ),
       label = "test",
       project_id = "http://rdfh.ch/projects/0803"
@@ -125,7 +132,8 @@ class SipiV1R2RSpec extends R2RSpec {
       )
 
       Post("/v1/resources", HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> resourcesPath ~> check {
+        BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)
+      ) ~> resourcesPath ~> check {
         assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
       }
     }
@@ -143,8 +151,10 @@ class SipiV1R2RSpec extends R2RSpec {
 
       val resIri = URLEncoder.encode("http://rdfh.ch/0803/8a0b1e75", "UTF-8")
 
-      Put("/v1/filevalue/" + resIri, HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)) ~> addCredentials(
-        BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> valuesPath ~> check {
+      Put(
+        "/v1/filevalue/" + resIri,
+        HttpEntity(MediaTypes.`application/json`, params.toJsValue.compactPrint)
+      ) ~> addCredentials(BasicHttpCredentials(incunabulaProjectAdminEmail, testPass)) ~> valuesPath ~> check {
         assert(status == StatusCodes.OK, "Status code is not set to OK, Knora says:\n" + responseAs[String])
       }
 

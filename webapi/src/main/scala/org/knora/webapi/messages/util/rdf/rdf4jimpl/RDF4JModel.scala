@@ -43,13 +43,12 @@ sealed trait RDF4JResource extends RDF4JNode with RdfResource {
 }
 
 object RDF4JResource {
-  def fromRDF4J(resource: rdf4j.model.Resource): RDF4JResource = {
+  def fromRDF4J(resource: rdf4j.model.Resource): RDF4JResource =
     resource match {
       case iri: rdf4j.model.IRI         => RDF4JIriNode(iri)
       case blankNode: rdf4j.model.BNode => RDF4JBlankNode(blankNode)
       case other                        => throw RdfProcessingException(s"Unexpected resource: $other")
     }
-  }
 }
 
 case class RDF4JBlankNode(resource: rdf4j.model.BNode) extends RDF4JResource with BlankNode {
@@ -80,16 +79,15 @@ case class RDF4JStringWithLanguage(literal: rdf4j.model.Literal) extends RDF4JLi
 }
 
 case class RDF4JStatement(statement: rdf4j.model.Statement) extends Statement {
-  override def subj: RdfResource = {
+  override def subj: RdfResource =
     statement.getSubject match {
       case resource: rdf4j.model.Resource => RDF4JResource.fromRDF4J(resource)
       case other                          => throw RdfProcessingException(s"Unexpected statement subject: $other")
     }
-  }
 
   override def pred: IriNode = RDF4JIriNode(statement.getPredicate)
 
-  override def obj: RdfNode = {
+  override def obj: RdfNode =
     statement.getObject match {
       case resource: rdf4j.model.Resource => RDF4JResource.fromRDF4J(resource)
 
@@ -102,69 +100,63 @@ case class RDF4JStatement(statement: rdf4j.model.Statement) extends Statement {
 
       case other => throw RdfProcessingException(s"Unexpected statement object: $other")
     }
-  }
 
   override def context: Option[IRI] = Option(statement.getContext).map(_.stringValue)
 }
 
 /**
-  * Provides extension methods for converting between Knora RDF API classes and RDF4J classes
-  * (see [[https://docs.scala-lang.org/overviews/core/value-classes.html#extension-methods Extension Methods]]).
-  */
+ * Provides extension methods for converting between Knora RDF API classes and RDF4J classes
+ * (see [[https://docs.scala-lang.org/overviews/core/value-classes.html#extension-methods Extension Methods]]).
+ */
 object RDF4JConversions {
 
   implicit class ConvertibleRDF4JResource(val self: RdfResource) extends AnyVal {
-    def asRDF4JResource: rdf4j.model.Resource = {
+    def asRDF4JResource: rdf4j.model.Resource =
       self match {
         case rdf4jResource: RDF4JResource => rdf4jResource.resource
         case other                        => throw RdfProcessingException(s"$other is not a RDF4J resource")
       }
-    }
   }
 
   implicit class ConvertibleRDF4JIri(val self: IriNode) extends AnyVal {
-    def asRDF4JIri: rdf4j.model.IRI = {
+    def asRDF4JIri: rdf4j.model.IRI =
       self match {
         case rdf4jIriNode: RDF4JIriNode => rdf4jIriNode.resource
         case other                      => throw RdfProcessingException(s"$other is not an RDF4J IRI")
       }
-    }
   }
 
   implicit class ConvertibleRDF4JValue(val self: RdfNode) extends AnyVal {
-    def asRDF4JValue: rdf4j.model.Value = {
+    def asRDF4JValue: rdf4j.model.Value =
       self match {
         case rdf4jResource: RDF4JNode => rdf4jResource.rdf4jValue
         case other                    => throw RdfProcessingException(s"$other is not an RDF4J value")
       }
-    }
   }
 
   implicit class ConvertibleRDF4JStatement(val self: Statement) extends AnyVal {
-    def asRDF4JStatement: rdf4j.model.Statement = {
+    def asRDF4JStatement: rdf4j.model.Statement =
       self match {
         case rdf4JStatement: RDF4JStatement => rdf4JStatement.statement
         case other                          => throw RdfProcessingException(s"$other is not an RDF4J statement")
       }
-    }
   }
 
   implicit class ConvertibleRDF4JModel(val self: RdfModel) extends AnyVal {
-    def asRDF4JModel: rdf4j.model.Model = {
+    def asRDF4JModel: rdf4j.model.Model =
       self match {
         case rdf4JModel: RDF4JModel => rdf4JModel.getModel
         case other                  => throw RdfProcessingException(s"${other.getClass.getName} is not an RDF4J model")
       }
-    }
   }
 
 }
 
 /**
-  * An implementation of [[RdfModel]] that wraps an [[rdf4j.model.Model]].
-  *
-  * @param model the underlying RDF4J model.
-  */
+ * An implementation of [[RdfModel]] that wraps an [[rdf4j.model.Model]].
+ *
+ * @param model the underlying RDF4J model.
+ */
 class RDF4JModel(private val model: rdf4j.model.Model, private val nodeFactory: RDF4JNodeFactory)
     extends RdfModel
     with Feature {
@@ -181,17 +173,16 @@ class RDF4JModel(private val model: rdf4j.model.Model, private val nodeFactory: 
   }
 
   /**
-    * Returns the underlying [[rdf4j.model.Model]].
-    */
+   * Returns the underlying [[rdf4j.model.Model]].
+   */
   def getModel: rdf4j.model.Model = model
 
   override def getNodeFactory: RdfNodeFactory = nodeFactory
 
-  override def addStatement(statement: Statement): Unit = {
+  override def addStatement(statement: Statement): Unit =
     model.add(statement.asRDF4JStatement)
-  }
 
-  override def add(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Unit = {
+  override def add(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Unit =
     context match {
       case Some(definedContext) =>
         model.add(
@@ -208,12 +199,13 @@ class RDF4JModel(private val model: rdf4j.model.Model, private val nodeFactory: 
           obj.asRDF4JValue
         )
     }
-  }
 
-  override def remove(subj: Option[RdfResource],
-                      pred: Option[IriNode],
-                      obj: Option[RdfNode],
-                      context: Option[IRI] = None): Unit = {
+  override def remove(
+    subj: Option[RdfResource],
+    pred: Option[IriNode],
+    obj: Option[RdfNode],
+    context: Option[IRI] = None
+  ): Unit =
     context match {
       case Some(definedContext) =>
         model.remove(
@@ -227,24 +219,24 @@ class RDF4JModel(private val model: rdf4j.model.Model, private val nodeFactory: 
         model.remove(
           subj.map(_.asRDF4JResource).orNull,
           pred.map(_.asRDF4JIri).orNull,
-          obj.map(_.asRDF4JValue).orNull,
+          obj.map(_.asRDF4JValue).orNull
         )
     }
-  }
 
-  override def removeStatement(statement: Statement): Unit = {
+  override def removeStatement(statement: Statement): Unit =
     model.remove(
       statement.subj.asRDF4JResource,
       statement.pred.asRDF4JIri,
       statement.obj.asRDF4JValue,
       statement.context.map(definedContext => valueFactory.createIRI(definedContext)).orNull
     )
-  }
 
-  override def find(subj: Option[RdfResource],
-                    pred: Option[IriNode],
-                    obj: Option[RdfNode],
-                    context: Option[IRI] = None): Iterator[Statement] = {
+  override def find(
+    subj: Option[RdfResource],
+    pred: Option[IriNode],
+    obj: Option[RdfNode],
+    context: Option[IRI] = None
+  ): Iterator[Statement] = {
     val filteredModel: rdf4j.model.Model = context match {
       case Some(definedContext) =>
         model.filter(
@@ -258,91 +250,77 @@ class RDF4JModel(private val model: rdf4j.model.Model, private val nodeFactory: 
         model.filter(
           subj.map(_.asRDF4JResource).orNull,
           pred.map(_.asRDF4JIri).orNull,
-          obj.map(_.asRDF4JValue).orNull,
+          obj.map(_.asRDF4JValue).orNull
         )
     }
 
     new StatementIterator(filteredModel.iterator)
   }
 
-  override def contains(statement: Statement): Boolean = {
+  override def contains(statement: Statement): Boolean =
     model.contains(
       statement.subj.asRDF4JResource,
       statement.pred.asRDF4JIri,
       statement.obj.asRDF4JValue,
       statement.context.map(definedContext => valueFactory.createIRI(definedContext)).orNull
     )
-  }
 
-  override def setNamespace(prefix: String, namespace: IRI): Unit = {
+  override def setNamespace(prefix: String, namespace: IRI): Unit =
     model.setNamespace(new rdf4j.model.impl.SimpleNamespace(prefix, namespace))
-  }
 
-  override def getNamespaces: Map[String, IRI] = {
+  override def getNamespaces: Map[String, IRI] =
     model.getNamespaces.asScala.map { namespace: rdf4j.model.Namespace =>
       namespace.getPrefix -> namespace.getName
     }.toMap
-  }
 
   override def isEmpty: Boolean = model.isEmpty
 
-  override def getSubjects: Set[RdfResource] = {
+  override def getSubjects: Set[RdfResource] =
     model.subjects.asScala.toSet.map(resource => RDF4JResource.fromRDF4J(resource))
-  }
 
-  override def isIsomorphicWith(otherRdfModel: RdfModel): Boolean = {
+  override def isIsomorphicWith(otherRdfModel: RdfModel): Boolean =
     model == otherRdfModel.asRDF4JModel
-  }
 
-  override def getContexts: Set[IRI] = {
+  override def getContexts: Set[IRI] =
     model.contexts.asScala.toSet.filter(_ != null).map { context: rdf4j.model.Resource =>
       context.stringValue
     }
-  }
 
-  override def asRepository: RdfRepository = {
+  override def asRepository: RdfRepository =
     new RDF4JRepository(model)
-  }
 
   override def size: Int = model.size
 
-  override def iterator: Iterator[Statement] = {
+  override def iterator: Iterator[Statement] =
     new StatementIterator(model.iterator)
-  }
 
-  override def clear(): Unit = {
+  override def clear(): Unit =
     model.remove(null, null, null)
-  }
 }
 
 /**
-  * An implementation of [[RdfNodeFactory]] that creates RDF4J node implementation wrappers.
-  */
+ * An implementation of [[RdfNodeFactory]] that creates RDF4J node implementation wrappers.
+ */
 class RDF4JNodeFactory extends RdfNodeFactory {
 
   import RDF4JConversions._
 
   private val valueFactory: rdf4j.model.ValueFactory = rdf4j.model.impl.SimpleValueFactory.getInstance
 
-  override def makeBlankNode: BlankNode = {
+  override def makeBlankNode: BlankNode =
     RDF4JBlankNode(valueFactory.createBNode)
-  }
 
-  override def makeBlankNodeWithID(id: String): BlankNode = {
+  override def makeBlankNodeWithID(id: String): BlankNode =
     RDF4JBlankNode(valueFactory.createBNode(id))
-  }
 
-  override def makeIriNode(iri: IRI): IriNode = {
+  override def makeIriNode(iri: IRI): IriNode =
     RDF4JIriNode(valueFactory.createIRI(iri))
-  }
 
-  override def makeDatatypeLiteral(value: String, datatype: IRI): DatatypeLiteral = {
+  override def makeDatatypeLiteral(value: String, datatype: IRI): DatatypeLiteral =
     RDF4JDatatypeLiteral(valueFactory.createLiteral(value, valueFactory.createIRI(datatype)))
-  }
 
-  override def makeStringWithLanguage(value: String, language: String): StringWithLanguage = {
+  override def makeStringWithLanguage(value: String, language: String): StringWithLanguage =
     RDF4JStringWithLanguage(valueFactory.createLiteral(value, language))
-  }
 
   override def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI]): Statement = {
     val statement: rdf4j.model.Statement = context match {
@@ -367,8 +345,8 @@ class RDF4JNodeFactory extends RdfNodeFactory {
 }
 
 /**
-  * A factory for creating instances of [[RDF4JModel]].
-  */
+ * A factory for creating instances of [[RDF4JModel]].
+ */
 class RDF4JModelFactory(private val nodeFactory: RDF4JNodeFactory) extends RdfModelFactory {
   override def makeEmptyModel: RDF4JModel = new RDF4JModel(
     model = new rdf4j.model.impl.LinkedHashModel,
@@ -377,10 +355,10 @@ class RDF4JModelFactory(private val nodeFactory: RDF4JNodeFactory) extends RdfMo
 }
 
 /**
-  * An [[RdfRepository]] that wraps an [[rdf4j.model.Model]] in an [[rdf4j.repository.sail.SailRepository]].
-  *
-  * @param model the model to be queried.
-  */
+ * An [[RdfRepository]] that wraps an [[rdf4j.model.Model]] in an [[rdf4j.repository.sail.SailRepository]].
+ *
+ * @param model the model to be queried.
+ */
 class RDF4JRepository(model: rdf4j.model.Model) extends RdfRepository {
   // Construct an in-memory SailRepository containing the model.
   val repository = new rdf4j.repository.sail.SailRepository(new rdf4j.sail.memory.MemoryStore())
@@ -408,9 +386,16 @@ class RDF4JRepository(model: rdf4j.model.Model) extends RdfRepository {
         binding.getName -> binding.getValue.stringValue
       }.toMap
 
-      rowBuffer.append(VariableResultsRow(new ErrorHandlingMap[String, String](rowMap, { key: String =>
-        s"No value found for SPARQL query variable '$key' in query result row"
-      })))
+      rowBuffer.append(
+        VariableResultsRow(
+          new ErrorHandlingMap[String, String](
+            rowMap,
+            { key: String =>
+              s"No value found for SPARQL query variable '$key' in query result row"
+            }
+          )
+        )
+      )
     }
 
     tupleQueryResult.close()
@@ -422,7 +407,6 @@ class RDF4JRepository(model: rdf4j.model.Model) extends RdfRepository {
     )
   }
 
-  override def shutDown(): Unit = {
+  override def shutDown(): Unit =
     repository.shutDown()
-  }
 }

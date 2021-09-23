@@ -370,7 +370,8 @@ class GraphTestData {
         target = "http://rdfh.ch/0001/a-thing",
         propertyIri = "http://www.knora.org/ontology/knora-base#hasStandoffLinkTo".toSmartIri,
         source = "http://rdfh.ch/0001/a-thing-with-text-values"
-      )),
+      )
+    ),
     nodes = Vector(
       GraphNodeV2(
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
@@ -393,14 +394,15 @@ class GraphTestData {
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         resourceLabel = "Another thing",
         resourceIri = "http://rdfh.ch/0001/another-thing"
-      )),
+      )
+    ),
     ontologySchema = InternalSchema
   )
 }
 
 /**
-  * Tests [[ResourcesResponderV2]].
-  */
+ * Tests [[ResourcesResponderV2]].
+ */
 class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   import ResourcesResponderV2Spec._
@@ -415,7 +417,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
   /* we need to run our app with the mocked sipi actor */
   override lazy val appActor: ActorRef = system.actorOf(
     Props(new ApplicationActor with ManagersWithMockedSipi).withDispatcher(KnoraDispatchers.KnoraActorDispatcher),
-    name = APPLICATION_MANAGER_ACTOR_NAME)
+    name = APPLICATION_MANAGER_ACTOR_NAME
+  )
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
@@ -489,17 +492,19 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       requestingUser = anythingUserProfile
     )
 
-    expectMsgPF(timeout) {
-      case response: ReadResourcesSequenceV2 => response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
+    expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+      response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
     }
   }
 
-  private def checkCreateResource(inputResourceIri: IRI,
-                                  inputResource: CreateResourceV2,
-                                  outputResource: ReadResourceV2,
-                                  defaultResourcePermissions: String,
-                                  defaultValuePermissions: String,
-                                  requestingUser: UserADM): Unit = {
+  private def checkCreateResource(
+    inputResourceIri: IRI,
+    inputResource: CreateResourceV2,
+    outputResource: ReadResourceV2,
+    defaultResourcePermissions: String,
+    defaultValuePermissions: String,
+    requestingUser: UserADM
+  ): Unit = {
     assert(outputResource.resourceIri == inputResourceIri)
     assert(outputResource.resourceClassIri == inputResource.resourceClassIri)
     assert(outputResource.label == inputResource.label)
@@ -511,18 +516,17 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     assert(outputResource.values.keySet == inputResource.values.keySet)
 
-    inputResource.values.foreach {
-      case (propertyIri: SmartIri, propertyInputValues: Seq[CreateValueInNewResourceV2]) =>
-        val propertyOutputValues = outputResource.values(propertyIri)
+    inputResource.values.foreach { case (propertyIri: SmartIri, propertyInputValues: Seq[CreateValueInNewResourceV2]) =>
+      val propertyOutputValues = outputResource.values(propertyIri)
 
-        assert(propertyOutputValues.size == propertyInputValues.size)
+      assert(propertyOutputValues.size == propertyInputValues.size)
 
-        propertyInputValues.zip(propertyOutputValues).foreach {
-          case (inputValue: CreateValueInNewResourceV2, outputValue: ReadValueV2) =>
-            val expectedPermissions = inputValue.permissions.getOrElse(defaultValuePermissions)
-            assert(outputValue.permissions == expectedPermissions)
-            assert(inputValue.valueContent.wouldDuplicateCurrentVersion(outputValue.valueContent))
-        }
+      propertyInputValues.zip(propertyOutputValues).foreach {
+        case (inputValue: CreateValueInNewResourceV2, outputValue: ReadValueV2) =>
+          val expectedPermissions = inputValue.permissions.getOrElse(defaultValuePermissions)
+          assert(outputValue.permissions == expectedPermissions)
+          assert(inputValue.valueContent.wouldDuplicateCurrentVersion(outputValue.valueContent))
+      }
     }
   }
 
@@ -537,11 +541,10 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     storeManager ! SparqlSelectRequest(sparqlQuery)
 
-    expectMsgPF(timeout) {
-      case sparqlSelectResponse: SparqlSelectResult =>
-        sparqlSelectResponse.results.bindings.map { row =>
-          row.rowMap("standoffTag")
-        }.toSet
+    expectMsgPF(timeout) { case sparqlSelectResponse: SparqlSelectResult =>
+      sparqlSelectResponse.results.bindings.map { row =>
+        row.rowMap("standoffTag")
+      }.toSet
     }
   }
 
@@ -555,14 +558,13 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     storeManager ! SparqlSelectRequest(sparqlQuery)
 
-    expectMsgPF(timeout) {
-      case sparqlSelectResponse: SparqlSelectResult =>
-        val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
+    expectMsgPF(timeout) { case sparqlSelectResponse: SparqlSelectResult =>
+      val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
 
-        stringFormatter.xsdDateTimeStampToInstant(
-          savedDeleteDateStr,
-          throw AssertionException(s"Couldn't parse delete date from triplestore: $savedDeleteDateStr")
-        )
+      stringFormatter.xsdDateTimeStampToInstant(
+        savedDeleteDateStr,
+        throw AssertionException(s"Couldn't parse delete date from triplestore: $savedDeleteDateStr")
+      )
     }
   }
 
@@ -576,9 +578,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       requestingUser = KnoraSystemInstances.Users.SystemUser
     )
 
-    expectMsgPF(timeout) {
-      case mappingResponse: GetMappingResponseV2 =>
-        standardMapping = Some(mappingResponse.mapping)
+    expectMsgPF(timeout) { case mappingResponse: GetMappingResponseV2 =>
+      standardMapping = Some(mappingResponse.mapping)
     }
   }
 
@@ -593,11 +594,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = incunabulaUserProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
-            received = response)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloecklein,
+          received = response
+        )
       }
 
     }
@@ -611,11 +612,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = incunabulaUserProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein,
-            received = response)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloecklein,
+          received = response
+        )
       }
 
     }
@@ -630,11 +631,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = incunabulaUserProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
-            received = response)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForReise,
+          received = response
+        )
       }
 
     }
@@ -649,11 +650,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = incunabulaUserProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
-            received = response)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
+          received = response
+        )
       }
 
     }
@@ -667,11 +668,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = incunabulaUserProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloeckleinAndReise,
-            received = response)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = resourcesResponderV2SpecFullData.expectedPreviewResourceResponseForZeitgloeckleinAndReise,
+          received = response
+        )
       }
 
     }
@@ -686,12 +687,12 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = incunabulaUserProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected =
-              resourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseAndZeitgloeckleinInversedOrder,
-            received = response)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected =
+            resourcesResponderV2SpecFullData.expectedFullResourceResponseForReiseAndZeitgloeckleinInversedOrder,
+          received = response
+        )
       }
 
     }
@@ -708,11 +709,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       // the redundant Iri should be ignored (distinct)
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
-            received = response)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForZeitgloeckleinAndReise,
+          received = response
+        )
       }
 
     }
@@ -729,16 +730,15 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingUserProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceTEIGetResponseV2 =>
-          val expectedBody =
-            """<text><body><p>This is a test that contains marked up elements. This is <hi rend="italic">interesting text</hi> in italics. This is <hi rend="italic">boring text</hi> in italics.</p></body></text>""".stripMargin
+      expectMsgPF(timeout) { case response: ResourceTEIGetResponseV2 =>
+        val expectedBody =
+          """<text><body><p>This is a test that contains marked up elements. This is <hi rend="italic">interesting text</hi> in italics. This is <hi rend="italic">boring text</hi> in italics.</p></body></text>""".stripMargin
 
-          // Compare the original XML with the regenerated XML.
-          val xmlDiff: Diff =
-            DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
+        // Compare the original XML with the regenerated XML.
+        val xmlDiff: Diff =
+          DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
 
-          xmlDiff.hasDifferences should be(false)
+        xmlDiff.hasDifferences should be(false)
       }
 
     }
@@ -755,16 +755,15 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingUserProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceTEIGetResponseV2 =>
-          val expectedBody =
-            """<text><body><p><hi rend="bold">Something</hi> <hi rend="italic">with</hi> a <del>lot</del> of <hi rend="underline">different</hi> <hi rend="sup">markup</hi>. And more <ref target="http://www.google.ch">markup</ref>.</p></body></text>""".stripMargin
+      expectMsgPF(timeout) { case response: ResourceTEIGetResponseV2 =>
+        val expectedBody =
+          """<text><body><p><hi rend="bold">Something</hi> <hi rend="italic">with</hi> a <del>lot</del> of <hi rend="underline">different</hi> <hi rend="sup">markup</hi>. And more <ref target="http://www.google.ch">markup</ref>.</p></body></text>""".stripMargin
 
-          // Compare the original XML with the regenerated XML.
-          val xmlDiff: Diff =
-            DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
+        // Compare the original XML with the regenerated XML.
+        val xmlDiff: Diff =
+          DiffBuilder.compare(Input.fromString(response.body.toXML)).withTest(Input.fromString(expectedBody)).build()
 
-          xmlDiff.hasDifferences should be(false)
+        xmlDiff.hasDifferences should be(false)
       }
 
     }
@@ -781,11 +780,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingUserProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForThingWithHistory,
-            received = response)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = resourcesResponderV2SpecFullData.expectedFullResourceResponseForThingWithHistory,
+          received = response
+        )
       }
 
     }
@@ -801,9 +800,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingUserProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceVersionHistoryResponseV2 =>
-          assert(response == resourcesResponderV2SpecFullData.expectedCompleteVersionHistoryResponse)
+      expectMsgPF(timeout) { case response: ResourceVersionHistoryResponseV2 =>
+        assert(response == resourcesResponderV2SpecFullData.expectedCompleteVersionHistoryResponse)
       }
     }
 
@@ -820,9 +818,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingUserProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceVersionHistoryResponseV2 =>
-          assert(response == resourcesResponderV2SpecFullData.expectedPartialVersionHistoryResponse)
+      expectMsgPF(timeout) { case response: ResourceVersionHistoryResponseV2 =>
+        assert(response == resourcesResponderV2SpecFullData.expectedPartialVersionHistoryResponse)
       }
     }
 
@@ -835,11 +832,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingUserProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuid,
-            received = response)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuid,
+          received = response
+        )
       }
     }
 
@@ -853,12 +850,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingUserProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected =
-              resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuidAndVersionDate,
-            received = response)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = resourcesResponderV2SpecFullData.expectedFullResponseResponseForThingWithValueByUuidAndVersionDate,
+          received = response
+        )
       }
     }
 
@@ -908,8 +904,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = SharedTestDataADM.anythingUser1
       )
 
-      expectMsgPF(timeout) {
-        case response: GraphDataGetResponseV2 => response should ===(graphTestData.graphWithStandoffLink)
+      expectMsgPF(timeout) { case response: GraphDataGetResponseV2 =>
+        response should ===(graphTestData.graphWithStandoffLink)
       }
     }
 
@@ -923,8 +919,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = SharedTestDataADM.anythingUser1
       )
 
-      expectMsgPF(timeout) {
-        case response: GraphDataGetResponseV2 => response should ===(graphTestData.graphWithOneNode)
+      expectMsgPF(timeout) { case response: GraphDataGetResponseV2 =>
+        response should ===(graphTestData.graphWithOneNode)
       }
     }
 
@@ -950,18 +946,17 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       // Check that the response contains the correct metadata.
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
 
-          checkCreateResource(
-            inputResourceIri = resourceIri,
-            inputResource = inputResource,
-            outputResource = outputResource,
-            defaultResourcePermissions = defaultAnythingResourcePermissions,
-            defaultValuePermissions = defaultAnythingValuePermissions,
-            requestingUser = anythingUserProfile
-          )
+        checkCreateResource(
+          inputResourceIri = resourceIri,
+          inputResource = inputResource,
+          outputResource = outputResource,
+          defaultResourcePermissions = defaultAnythingResourcePermissions,
+          defaultValuePermissions = defaultAnythingValuePermissions,
+          requestingUser = anythingUserProfile
+        )
       }
 
       // Get the resource from the triplestore and check it again.
@@ -1247,8 +1242,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
@@ -1295,8 +1290,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
@@ -1337,8 +1332,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
@@ -1383,8 +1378,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
       }
     }
 
@@ -1417,8 +1412,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
 
@@ -1451,8 +1446,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
 
@@ -1477,8 +1472,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
           originalXMLID = None,
           startIndex = 1,
           attributes = Vector(
-            StandoffTagIriAttributeV2(standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
-                                      value = "http://rdfh.ch/0001/nonexistent-thing")),
+            StandoffTagIriAttributeV2(
+              standoffPropertyIri = OntologyConstants.KnoraBase.StandoffTagHasLink.toSmartIri,
+              value = "http://rdfh.ch/0001/nonexistent-thing"
+            )
+          ),
           startParentIndex = Some(0)
         ),
         StandoffTagV2(
@@ -1521,8 +1519,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
 
@@ -1555,8 +1553,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
 
@@ -1589,8 +1587,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
@@ -1623,8 +1621,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[OntologyConstraintException] should ===(true)
       }
     }
 
@@ -1647,8 +1645,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
 
@@ -1683,8 +1681,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
 
@@ -1706,8 +1704,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
 
@@ -1723,8 +1721,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! updateRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
 
@@ -1740,8 +1738,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! updateRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
 
@@ -1770,7 +1768,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       assert(outputResource.label == newLabel)
       assert(
         PermissionUtilADM.parsePermissions(outputResource.permissions) == PermissionUtilADM.parsePermissions(
-          newPermissions))
+          newPermissions
+        )
+      )
       aThingLastModificationDate = outputResource.lastModificationDate.get
       assert(aThingLastModificationDate.isAfter(dateTimeStampBeforeUpdate))
     }
@@ -1787,8 +1787,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! updateRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[EditConflictException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[EditConflictException] should ===(true)
       }
     }
 
@@ -1805,8 +1805,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! updateRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[EditConflictException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[EditConflictException] should ===(true)
       }
     }
 
@@ -1849,8 +1849,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! updateRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
 
@@ -1895,8 +1895,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! deleteRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
     }
 
@@ -1924,8 +1924,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = SharedTestDataADM.anythingUser1
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
 
@@ -1957,8 +1957,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = SharedTestDataADM.anythingUser1
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
 
       val savedDeleteDate: Instant = getDeleteDate(resourceIri)
@@ -1984,9 +1984,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure =>
-          msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
 
@@ -2065,9 +2064,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure =>
-          msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
 
@@ -2207,9 +2205,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         apiRequestID = UUID.randomUUID
       )
 
-      expectMsgPF(timeout) {
-        case updateValueResponse: UpdateValueResponseV2 =>
-          secondValueIriToErase.set(updateValueResponse.valueIri)
+      expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
+        secondValueIriToErase.set(updateValueResponse.valueIri)
       }
 
       val updatedResource = getResource(resourceIri = resourceIri, requestingUser = anythingUserProfile)
@@ -2246,10 +2243,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! eraseRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure =>
-          // println(msg.cause)
-          msg.cause.isInstanceOf[ForbiddenException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        // println(msg.cause)
+        msg.cause.isInstanceOf[ForbiddenException] should ===(true)
       }
     }
 
@@ -2305,10 +2301,9 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! eraseRequest
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure =>
-          // println(msg.cause)
-          msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        // println(msg.cause)
+        msg.cause.isInstanceOf[BadRequestException] should ===(true)
       }
 
       // Delete the link.
@@ -2361,9 +2356,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
         storeManager ! SparqlAskRequest(sparqlQuery)
 
-        expectMsgPF(timeout) {
-          case entityExistsResponse: SparqlAskResponse =>
-            entityExistsResponse.result should be(false)
+        expectMsgPF(timeout) { case entityExistsResponse: SparqlAskResponse =>
+          entityExistsResponse.result should be(false)
         }
       }
 
@@ -2379,9 +2373,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       storeManager ! SparqlSelectRequest(isEntityUsedSparql)
 
-      expectMsgPF(timeout) {
-        case entityUsedResponse: SparqlSelectResult =>
-          assert(entityUsedResponse.results.bindings.isEmpty, s"Link value was not erased")
+      expectMsgPF(timeout) { case entityUsedResponse: SparqlSelectResult =>
+        assert(entityUsedResponse.results.bindings.isEmpty, s"Link value was not erased")
       }
     }
   }
@@ -2409,18 +2402,17 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       // Check that the response contains the correct metadata.
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
 
-          checkCreateResource(
-            inputResourceIri = resourceIri,
-            inputResource = inputResource,
-            outputResource = outputResource,
-            defaultResourcePermissions = defaultAnythingResourcePermissions,
-            defaultValuePermissions = defaultAnythingValuePermissions,
-            requestingUser = anythingUserProfile
-          )
+        checkCreateResource(
+          inputResourceIri = resourceIri,
+          inputResource = inputResource,
+          outputResource = outputResource,
+          defaultResourcePermissions = defaultAnythingResourcePermissions,
+          defaultValuePermissions = defaultAnythingValuePermissions,
+          requestingUser = anythingUserProfile
+        )
       }
 
       // Get the resource from the triplestore and check it again.
@@ -2597,11 +2589,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size should be(11)
       val createValueEvent: Option[ResourceAndValueHistoryEvent] =
-        events.find(
-          event =>
-            event.eventType == ResourceAndValueEventsUtil.CREATE_VALUE_EVENT && event.eventBody
-              .asInstanceOf[ValueEventBody]
-              .valueIri == newValueIri)
+        events.find(event =>
+          event.eventType == ResourceAndValueEventsUtil.CREATE_VALUE_EVENT && event.eventBody
+            .asInstanceOf[ValueEventBody]
+            .valueIri == newValueIri
+        )
       assert(createValueEvent.isDefined)
       val createValuePayloadContent = createValueEvent.get.eventBody
         .asInstanceOf[ValueEventBody]
@@ -2641,11 +2633,11 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val events: Seq[ResourceAndValueHistoryEvent] = response.historyEvents
       events.size should be(12)
       val deleteValueEvent: Option[ResourceAndValueHistoryEvent] =
-        events.find(
-          event =>
-            event.eventType == ResourceAndValueEventsUtil.DELETE_VALUE_EVENT && event.eventBody
-              .asInstanceOf[ValueEventBody]
-              .valueIri == valueToDelete)
+        events.find(event =>
+          event.eventType == ResourceAndValueEventsUtil.DELETE_VALUE_EVENT && event.eventBody
+            .asInstanceOf[ValueEventBody]
+            .valueIri == valueToDelete
+        )
       assert(deleteValueEvent.isDefined)
     }
 
@@ -2703,8 +2695,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingAdminUser
       )
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
 

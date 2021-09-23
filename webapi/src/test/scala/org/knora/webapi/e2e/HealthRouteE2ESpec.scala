@@ -30,8 +30,8 @@ object HealthRouteE2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing route rejections.
-  */
+ * End-to-End (E2E) test specification for testing route rejections.
+ */
 class HealthRouteE2ESpec extends E2ESpec(HealthRouteE2ESpec.config) {
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)

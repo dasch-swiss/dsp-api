@@ -28,29 +28,32 @@ import org.knora.webapi.exceptions.StandoffConversionException
 object XMLUtil {
 
   /**
-    * Applies an XSL transformation to the given XML and returns the result.
-    *
-    * @param xml  the xml to be transformed.
-    * @param xslt the XSL transformation to be applied.
-    * @return the transformation's result.
-    */
+   * Applies an XSL transformation to the given XML and returns the result.
+   *
+   * @param xml  the xml to be transformed.
+   * @param xslt the XSL transformation to be applied.
+   * @return the transformation's result.
+   */
   def applyXSLTransformation(xml: String, xslt: String): String = {
 
     // apply the XSL transformation to xml
     val proc = new net.sf.saxon.s9api.Processor(false)
     val comp = proc.newXsltCompiler()
 
-    val exp: XsltExecutable = try {
-      comp.compile(new StreamSource(new StringReader(xslt)))
-    } catch {
-      case e: Exception => throw StandoffConversionException(s"The provided XSLT could not be parsed: ${e.getMessage}")
-    }
+    val exp: XsltExecutable =
+      try {
+        comp.compile(new StreamSource(new StringReader(xslt)))
+      } catch {
+        case e: Exception =>
+          throw StandoffConversionException(s"The provided XSLT could not be parsed: ${e.getMessage}")
+      }
 
-    val source = try {
-      proc.newDocumentBuilder().build(new StreamSource(new StringReader(xml)))
-    } catch {
-      case e: Exception => throw StandoffConversionException(s"The provided XML could not be parsed: ${e.getMessage}")
-    }
+    val source =
+      try {
+        proc.newDocumentBuilder().build(new StreamSource(new StringReader(xml)))
+      } catch {
+        case e: Exception => throw StandoffConversionException(s"The provided XML could not be parsed: ${e.getMessage}")
+      }
 
     val xmlTransformedStr: StringWriter = new StringWriter()
     val out = proc.newSerializer(xmlTransformedStr)

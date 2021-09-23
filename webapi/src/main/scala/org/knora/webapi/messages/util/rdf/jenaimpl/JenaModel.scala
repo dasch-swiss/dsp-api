@@ -63,7 +63,7 @@ case class JenaStringWithLanguage(node: jena.graph.Node) extends JenaNode with S
 }
 
 object JenaResource {
-  def fromJena(node: jena.graph.Node): Option[RdfResource] = {
+  def fromJena(node: jena.graph.Node): Option[RdfResource] =
     if (node.isURI) {
       Some(JenaIriNode(node))
     } else if (node.isBlank) {
@@ -71,7 +71,6 @@ object JenaResource {
     } else {
       None
     }
-  }
 }
 
 case class JenaStatement(quad: jena.sparql.core.Quad) extends Statement {
@@ -103,80 +102,73 @@ case class JenaStatement(quad: jena.sparql.core.Quad) extends Statement {
     }
   }
 
-  override def context: Option[IRI] = {
+  override def context: Option[IRI] =
     Option(quad.getGraph).map(_.getURI)
-  }
 }
 
 /**
-  * Provides extension methods for converting between Knora RDF API classes and Jena classes
-  * (see [[https://docs.scala-lang.org/overviews/core/value-classes.html#extension-methods Extension Methods]]).
-  */
+ * Provides extension methods for converting between Knora RDF API classes and Jena classes
+ * (see [[https://docs.scala-lang.org/overviews/core/value-classes.html#extension-methods Extension Methods]]).
+ */
 object JenaConversions {
 
   implicit class ConvertibleJenaNode(val self: RdfNode) extends AnyVal {
-    def asJenaNode: jena.graph.Node = {
+    def asJenaNode: jena.graph.Node =
       self match {
         case jenaRdfNode: JenaNode => jenaRdfNode.node
         case other                 => throw RdfProcessingException(s"$other is not a Jena node")
       }
-    }
   }
 
   implicit class ConvertibleJenaQuad(val self: Statement) extends AnyVal {
-    def asJenaQuad: jena.sparql.core.Quad = {
+    def asJenaQuad: jena.sparql.core.Quad =
       self match {
         case jenaStatement: JenaStatement => jenaStatement.quad
         case other                        => throw RdfProcessingException(s"$other is not a Jena statement")
       }
-    }
   }
 
   implicit class ConvertibleJenaModel(val self: RdfModel) extends AnyVal {
-    def asJenaDataset: jena.query.Dataset = {
+    def asJenaDataset: jena.query.Dataset =
       self match {
         case model: JenaModel => model.getDataset
         case other            => throw RdfProcessingException(s"${other.getClass.getName} is not a Jena RDF model")
       }
-    }
   }
 
 }
 
 /**
-  * Generates Jena nodes representing contexts.
-  */
+ * Generates Jena nodes representing contexts.
+ */
 abstract class JenaContextFactory {
 
   /**
-    * Converts a named graph IRI to a [[jena.graph.Node]].
-    */
-  protected def contextIriToNode(context: IRI): jena.graph.Node = {
+   * Converts a named graph IRI to a [[jena.graph.Node]].
+   */
+  protected def contextIriToNode(context: IRI): jena.graph.Node =
     jena.graph.NodeFactory.createURI(context)
-  }
 
   /**
-    * Converts an optional named graph IRI to a [[jena.graph.Node]], converting
-    * `None` to the IRI of Jena's default graph.
-    */
-  protected def contextNodeOrDefaultGraph(context: Option[IRI]): jena.graph.Node = {
+   * Converts an optional named graph IRI to a [[jena.graph.Node]], converting
+   * `None` to the IRI of Jena's default graph.
+   */
+  protected def contextNodeOrDefaultGraph(context: Option[IRI]): jena.graph.Node =
     context.map(contextIriToNode).getOrElse(jena.sparql.core.Quad.defaultGraphIRI)
-  }
 
   /**
-    * Converts an optional named graph IRI to a [[jena.graph.Node]], converting
-    * `None` to a wildcard that will match any graph.
-    */
-  protected def contextNodeOrWildcard(context: Option[IRI]): jena.graph.Node = {
+   * Converts an optional named graph IRI to a [[jena.graph.Node]], converting
+   * `None` to a wildcard that will match any graph.
+   */
+  protected def contextNodeOrWildcard(context: Option[IRI]): jena.graph.Node =
     context.map(contextIriToNode).getOrElse(jena.graph.Node.ANY)
-  }
 }
 
 /**
-  * An implementation of [[RdfModel]] that wraps a [[jena.query.Dataset]].
-  *
-  * @param dataset the underlying Jena dataset.
-  */
+ * An implementation of [[RdfModel]] that wraps a [[jena.query.Dataset]].
+ *
+ * @param dataset the underlying Jena dataset.
+ */
 class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory: JenaNodeFactory)
     extends JenaContextFactory
     with RdfModel
@@ -193,53 +185,52 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
   }
 
   /**
-    * Returns the underlying [[jena.query.Dataset]].
-    */
+   * Returns the underlying [[jena.query.Dataset]].
+   */
   def getDataset: jena.query.Dataset = dataset
 
   override def getNodeFactory: RdfNodeFactory = nodeFactory
 
-  override def addStatement(statement: Statement): Unit = {
+  override def addStatement(statement: Statement): Unit =
     datasetGraph.add(statement.asJenaQuad)
-  }
 
   /**
-    * Converts an optional [[RdfNode]] to a [[jena.graph.Node]], converting
-    * `None` to a wildcard that will match any node.
-    */
-  private def asJenaNodeOrWildcard(node: Option[RdfNode]): jena.graph.Node = {
+   * Converts an optional [[RdfNode]] to a [[jena.graph.Node]], converting
+   * `None` to a wildcard that will match any node.
+   */
+  private def asJenaNodeOrWildcard(node: Option[RdfNode]): jena.graph.Node =
     node.map(_.asJenaNode).getOrElse(jena.graph.Node.ANY)
-  }
 
-  override def add(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Unit = {
+  override def add(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI] = None): Unit =
     datasetGraph.add(
       contextNodeOrDefaultGraph(context),
       subj.asJenaNode,
       pred.asJenaNode,
       obj.asJenaNode
     )
-  }
 
-  override def remove(subj: Option[RdfResource],
-                      pred: Option[IriNode],
-                      obj: Option[RdfNode],
-                      context: Option[IRI] = None): Unit = {
+  override def remove(
+    subj: Option[RdfResource],
+    pred: Option[IriNode],
+    obj: Option[RdfNode],
+    context: Option[IRI] = None
+  ): Unit =
     datasetGraph.deleteAny(
       contextNodeOrWildcard(context),
       asJenaNodeOrWildcard(subj),
       asJenaNodeOrWildcard(pred),
       asJenaNodeOrWildcard(obj)
     )
-  }
 
-  override def removeStatement(statement: Statement): Unit = {
+  override def removeStatement(statement: Statement): Unit =
     datasetGraph.delete(statement.asJenaQuad)
-  }
 
-  override def find(subj: Option[RdfResource],
-                    pred: Option[IriNode],
-                    obj: Option[RdfNode],
-                    context: Option[IRI] = None): Iterator[Statement] = {
+  override def find(
+    subj: Option[RdfResource],
+    pred: Option[IriNode],
+    obj: Option[RdfNode],
+    context: Option[IRI] = None
+  ): Iterator[Statement] =
     new StatementIterator(
       datasetGraph.find(
         contextNodeOrWildcard(context),
@@ -248,11 +239,9 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
         asJenaNodeOrWildcard(obj)
       )
     )
-  }
 
-  override def contains(statement: Statement): Boolean = {
+  override def contains(statement: Statement): Boolean =
     datasetGraph.contains(statement.asJenaQuad)
-  }
 
   override def setNamespace(prefix: String, namespace: IRI): Unit = {
     def setNamespaceInGraph(graph: jena.graph.Graph): Unit = {
@@ -292,12 +281,11 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
 
   override def isEmpty: Boolean = dataset.isEmpty
 
-  override def getSubjects: Set[RdfResource] = {
+  override def getSubjects: Set[RdfResource] =
     datasetGraph.find.asScala.map { quad: jena.sparql.core.Quad =>
       val subj: jena.graph.Node = quad.getSubject
       JenaResource.fromJena(subj).getOrElse(throw RdfProcessingException(s"Unexpected statement subject: $subj"))
     }.toSet
-  }
 
   override def isIsomorphicWith(otherRdfModel: RdfModel): Boolean = {
     // Jena's DatasetGraph doesn't have a method for this, so we have to do it ourselves.
@@ -319,15 +307,13 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
     }
   }
 
-  override def getContexts: Set[IRI] = {
+  override def getContexts: Set[IRI] =
     datasetGraph.listGraphNodes.asScala.toSet.map { node: jena.graph.Node =>
       node.getURI
     }
-  }
 
-  override def asRepository: RdfRepository = {
+  override def asRepository: RdfRepository =
     new JenaRepository(dataset)
-  }
 
   override def size: Int = {
     // Jena's DatasetGraph doesn't have a method for this, so we have to do it ourselves.
@@ -336,10 +322,9 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
     val defaultGraphSize: Int = datasetGraph.getDefaultGraph.size
 
     // Get the sum of the sizes of the named graphs.
-    val sumOfNamedGraphSizes: Int = datasetGraph.listGraphNodes.asScala
-      .map { namedGraphIri =>
-        datasetGraph.getGraph(namedGraphIri)
-      }
+    val sumOfNamedGraphSizes: Int = datasetGraph.listGraphNodes.asScala.map { namedGraphIri =>
+      datasetGraph.getGraph(namedGraphIri)
+    }
       .map(_.size)
       .sum
 
@@ -347,40 +332,35 @@ class JenaModel(private val dataset: jena.query.Dataset, private val nodeFactory
     defaultGraphSize + sumOfNamedGraphSizes
   }
 
-  override def iterator: Iterator[Statement] = {
+  override def iterator: Iterator[Statement] =
     new StatementIterator(datasetGraph.find)
-  }
 
-  override def clear(): Unit = {
+  override def clear(): Unit =
     datasetGraph.clear()
-  }
 }
 
 /**
-  * An implementation of [[RdfNodeFactory]] that creates Jena node implementation wrappers.
-  */
+ * An implementation of [[RdfNodeFactory]] that creates Jena node implementation wrappers.
+ */
 class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
 
   import JenaConversions._
 
   /**
-    * Represents a custom Knora datatype (used in the simple schema), for registration
-    * with Jena's TypeMapper.
-    *
-    * @param iri the IRI of the datatype.
-    */
+   * Represents a custom Knora datatype (used in the simple schema), for registration
+   * with Jena's TypeMapper.
+   *
+   * @param iri the IRI of the datatype.
+   */
   private class KnoraDatatype(iri: IRI) extends jena.datatypes.BaseDatatype(iri) {
-    override def unparse(value: java.lang.Object): String = {
+    override def unparse(value: java.lang.Object): String =
       value.toString
-    }
 
-    override def parse(lexicalForm: String): java.lang.Object = {
+    override def parse(lexicalForm: String): java.lang.Object =
       lexicalForm
-    }
 
-    override def isEqual(value1: jena.graph.impl.LiteralLabel, value2: jena.graph.impl.LiteralLabel): Boolean = {
+    override def isEqual(value1: jena.graph.impl.LiteralLabel, value2: jena.graph.impl.LiteralLabel): Boolean =
       value1.getDatatype == value2.getDatatype && value1.getValue.equals(value2.getValue)
-    }
   }
 
   // Jena's registry of datatypes.
@@ -391,27 +371,22 @@ class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
     typeMapper.registerDatatype(new KnoraDatatype(knoraDatatypeIri))
   }
 
-  override def makeBlankNode: BlankNode = {
+  override def makeBlankNode: BlankNode =
     JenaBlankNode(jena.graph.NodeFactory.createBlankNode)
-  }
 
-  override def makeBlankNodeWithID(id: String): BlankNode = {
+  override def makeBlankNodeWithID(id: String): BlankNode =
     JenaBlankNode(jena.graph.NodeFactory.createBlankNode(id))
-  }
 
-  override def makeIriNode(iri: IRI): IriNode = {
+  override def makeIriNode(iri: IRI): IriNode =
     JenaIriNode(jena.graph.NodeFactory.createURI(iri))
-  }
 
-  override def makeDatatypeLiteral(value: String, datatype: IRI): DatatypeLiteral = {
+  override def makeDatatypeLiteral(value: String, datatype: IRI): DatatypeLiteral =
     JenaDatatypeLiteral(jena.graph.NodeFactory.createLiteral(value, typeMapper.getTypeByName(datatype)))
-  }
 
-  override def makeStringWithLanguage(value: String, language: String): StringWithLanguage = {
+  override def makeStringWithLanguage(value: String, language: String): StringWithLanguage =
     JenaStringWithLanguage(jena.graph.NodeFactory.createLiteral(value, language))
-  }
 
-  override def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI]): Statement = {
+  override def makeStatement(subj: RdfResource, pred: IriNode, obj: RdfNode, context: Option[IRI]): Statement =
     JenaStatement(
       new jena.sparql.core.Quad(
         contextNodeOrDefaultGraph(context),
@@ -420,13 +395,12 @@ class JenaNodeFactory extends JenaContextFactory with RdfNodeFactory {
         obj.asJenaNode
       )
     )
-  }
 
 }
 
 /**
-  * A factory for creating instances of [[JenaModel]].
-  */
+ * A factory for creating instances of [[JenaModel]].
+ */
 class JenaModelFactory(private val nodeFactory: JenaNodeFactory) extends RdfModelFactory {
   override def makeEmptyModel: JenaModel = new JenaModel(
     dataset = jena.query.DatasetFactory.create,
@@ -435,10 +409,10 @@ class JenaModelFactory(private val nodeFactory: JenaNodeFactory) extends RdfMode
 }
 
 /**
-  * An [[RdfRepository]] that wraps a [[jena.query.Dataset]].
-  *
-  * @param dataset the dataset to be queried.
-  */
+ * An [[RdfRepository]] that wraps a [[jena.query.Dataset]].
+ *
+ * @param dataset the dataset to be queried.
+ */
 class JenaRepository(private val dataset: jena.query.Dataset) extends RdfRepository {
   override def doSelect(selectQuery: String): SparqlSelectResult = {
     // Run the query.
@@ -472,9 +446,16 @@ class JenaRepository(private val dataset: jena.query.Dataset) extends RdfReposit
         varName -> varValueStr
       }.toMap
 
-      rowBuffer.append(VariableResultsRow(new ErrorHandlingMap[String, String](rowMap, { key: String =>
-        s"No value found for SPARQL query variable '$key' in query result row"
-      })))
+      rowBuffer.append(
+        VariableResultsRow(
+          new ErrorHandlingMap[String, String](
+            rowMap,
+            { key: String =>
+              s"No value found for SPARQL query variable '$key' in query result row"
+            }
+          )
+        )
+      )
     }
 
     queryExecution.close()
@@ -485,7 +466,6 @@ class JenaRepository(private val dataset: jena.query.Dataset) extends RdfReposit
     )
   }
 
-  override def shutDown(): Unit = {
+  override def shutDown(): Unit =
     dataset.close()
-  }
 }

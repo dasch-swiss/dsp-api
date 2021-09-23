@@ -34,8 +34,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
 /**
-  * Tests [[DateUtilV1]].
-  */
+ * Tests [[DateUtilV1]].
+ */
 class DateUtilV1Spec extends AnyWordSpecLike with Matchers {
   "The DateUtilV1 class" should {
     "convert a date in YYYY-MM-DD format, in the Julian calendar, into a Julian day count, and back again" in {
@@ -56,7 +56,8 @@ class DateUtilV1Spec extends AnyWordSpecLike with Matchers {
           calendar = KnoraCalendarV1.JULIAN,
           dateprecision1 = KnoraPrecisionV1.DAY,
           dateprecision2 = KnoraPrecisionV1.DAY
-        ))
+        )
+      )
 
       val reverseConvertedBundesbriefDateValueV1 =
         DateUtilV1.julianDayNumberValueV1ToDateValueV1(bundesbriefJulianDayCountValueV1)
@@ -110,9 +111,11 @@ class DateUtilV1Spec extends AnyWordSpecLike with Matchers {
 
       val theJulianDayCountValueV1 = DateUtilV1.dateValueV1ToJulianDayNumberValueV1(someDateValueV1)
 
-      val date_string = DateUtilV1.julianDayNumber2DateString(theJulianDayCountValueV1.dateval1,
-                                                              theJulianDayCountValueV1.calendar,
-                                                              theJulianDayCountValueV1.dateprecision1)
+      val date_string = DateUtilV1.julianDayNumber2DateString(
+        theJulianDayCountValueV1.dateval1,
+        theJulianDayCountValueV1.calendar,
+        theJulianDayCountValueV1.dateprecision1
+      )
 
     }
 
@@ -134,7 +137,8 @@ class DateUtilV1Spec extends AnyWordSpecLike with Matchers {
           calendar = KnoraCalendarV1.JULIAN,
           dateprecision1 = KnoraPrecisionV1.DAY,
           dateprecision2 = KnoraPrecisionV1.DAY
-        ))
+        )
+      )
 
     }
 
@@ -156,7 +160,8 @@ class DateUtilV1Spec extends AnyWordSpecLike with Matchers {
           calendar = KnoraCalendarV1.GREGORIAN,
           dateprecision1 = KnoraPrecisionV1.DAY,
           dateprecision2 = KnoraPrecisionV1.DAY
-        ))
+        )
+      )
 
       val reverseConvertedBenBirthdayDateValueV1 =
         DateUtilV1.julianDayNumberValueV1ToDateValueV1(benBirthdayJulianDayCountValueV1)
@@ -182,7 +187,8 @@ class DateUtilV1Spec extends AnyWordSpecLike with Matchers {
           calendar = KnoraCalendarV1.GREGORIAN,
           dateprecision1 = KnoraPrecisionV1.MONTH,
           dateprecision2 = KnoraPrecisionV1.DAY
-        ))
+        )
+      )
 
       val reverseConvertedDateValueV1 = DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayCountValueV1)
       reverseConvertedDateValueV1 should be(dateValueV1)
@@ -206,7 +212,8 @@ class DateUtilV1Spec extends AnyWordSpecLike with Matchers {
           calendar = KnoraCalendarV1.GREGORIAN,
           dateprecision1 = KnoraPrecisionV1.MONTH,
           dateprecision2 = KnoraPrecisionV1.MONTH
-        ))
+        )
+      )
 
       val reverseConvertedDateValueV1 = DateUtilV1.julianDayNumberValueV1ToDateValueV1(julianDayCountValueV1)
 

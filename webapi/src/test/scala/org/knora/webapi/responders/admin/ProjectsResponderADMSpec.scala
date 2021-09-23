@@ -18,9 +18,9 @@
  */
 
 /**
-  * To be able to test UsersResponder, we need to be able to start UsersResponder isolated. Now the UsersResponder
-  * extend ResponderADM which messes up testing, as we cannot inject the TestActor system.
-  */
+ * To be able to test UsersResponder, we need to be able to start UsersResponder isolated. Now the UsersResponder
+ * extend ResponderADM which messes up testing, as we cannot inject the TestActor system.
+ */
 package org.knora.webapi.responders.admin
 
 import java.util.UUID
@@ -60,8 +60,8 @@ object ProjectsResponderADMSpec {
 }
 
 /**
-  * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
-  */
+ * This spec is used to test the messages received by the [[ProjectsResponderADM]] actor.
+ */
 class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config) with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -239,7 +239,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         received.project.shortcode should be(shortCode.toUpperCase) // upper case
         received.project.longname should contain("project longname")
         received.project.description should be(
-          Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+          Seq(StringLiteralV2(value = "project description", language = Some("en")))
+        )
 
         newProjectIri.set(received.project.id)
 
@@ -280,26 +281,34 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         // Check Default Object Access permission of ProjectAdmin
         val hasDOAPForProjectAdmin = receivedDoaps.defaultObjectAccessPermissions.filter {
           doap: DefaultObjectAccessPermissionADM =>
-            doap.forProject == received.project.id && doap.forGroup.contains(OntologyConstants.KnoraAdmin.ProjectAdmin) &&
-            doap.hasPermissions.equals(Set(
-              PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-              PermissionADM.deletePermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-              PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-              PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
-              PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin)
-            ))
+            doap.forProject == received.project.id && doap.forGroup.contains(
+              OntologyConstants.KnoraAdmin.ProjectAdmin
+            ) &&
+            doap.hasPermissions.equals(
+              Set(
+                PermissionADM.changeRightsPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                PermissionADM.deletePermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin),
+                PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectAdmin)
+              )
+            )
         }
         hasDOAPForProjectAdmin.size shouldBe 1
 
         // Check Default Object Access permission of ProjectMember
         val hasDOAPForProjectMember = receivedDoaps.defaultObjectAccessPermissions.filter {
           doap: DefaultObjectAccessPermissionADM =>
-            doap.forProject == received.project.id && doap.forGroup.contains(OntologyConstants.KnoraAdmin.ProjectMember) &&
-            doap.hasPermissions.equals(Set(
-              PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
-              PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectMember),
-              PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectMember)
-            ))
+            doap.forProject == received.project.id && doap.forGroup.contains(
+              OntologyConstants.KnoraAdmin.ProjectMember
+            ) &&
+            doap.hasPermissions.equals(
+              Set(
+                PermissionADM.modifyPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                PermissionADM.viewPermission(OntologyConstants.KnoraAdmin.ProjectMember),
+                PermissionADM.restrictedViewPermission(OntologyConstants.KnoraAdmin.ProjectMember)
+              )
+            )
         }
         hasDOAPForProjectMember.size shouldBe 1
       }
@@ -326,7 +335,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         received.project.shortcode should be("1112")
         received.project.longname should contain("project longname")
         received.project.description should be(
-          Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+          Seq(StringLiteralV2(value = "project description", language = Some("en")))
+        )
 
       }
 
@@ -354,8 +364,13 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
         received.project.longname should contain(stringFormatter.fromSparqlEncodedString(longnameWithSpecialCharacter))
         received.project.description should be(
-          Seq(StringLiteralV2(value = stringFormatter.fromSparqlEncodedString(descriptionWithSpecialCharacter),
-                              language = Some("en"))))
+          Seq(
+            StringLiteralV2(
+              value = stringFormatter.fromSparqlEncodedString(descriptionWithSpecialCharacter),
+              language = Some("en")
+            )
+          )
+        )
         received.project.keywords should contain(stringFormatter.fromSparqlEncodedString(keywordWithSpecialCharacter))
 
       }
@@ -405,8 +420,13 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortname = None,
             longname = Some("updated project longname"),
             description = Some(
-              Seq(StringLiteralV2(value = """updated project description with "quotes" and <html tags>""",
-                                  language = Some("en")))),
+              Seq(
+                StringLiteralV2(
+                  value = """updated project description with "quotes" and <html tags>""",
+                  language = Some("en")
+                )
+              )
+            ),
             keywords = Some(Seq("updated", "keywords")),
             logo = Some("/fu/bar/baz-updated.jpg"),
             status = Some(false),
@@ -421,8 +441,13 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         received.project.shortcode should be("111C")
         received.project.longname should be(Some("updated project longname"))
         received.project.description should be(
-          Seq(StringLiteralV2(value = """updated project description with "quotes" and <html tags>""",
-                              language = Some("en"))))
+          Seq(
+            StringLiteralV2(
+              value = """updated project description with "quotes" and <html tags>""",
+              language = Some("en")
+            )
+          )
+        )
         received.project.keywords.sorted should be(Seq("updated", "keywords").sorted)
         received.project.logo should be(Some("/fu/bar/baz-updated.jpg"))
         received.project.status should be(false)
@@ -439,7 +464,9 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         )
         expectMsg(
           Failure(
-            NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found. Aborting update request.")))
+            NotFoundException(s"Project 'http://rdfh.ch/projects/notexisting' not found. Aborting update request.")
+          )
+        )
       }
 
       "return 'BadRequest' if nothing would be changed during the update" in {
@@ -454,7 +481,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
                     UUID.randomUUID()
                 )
                 expectMsg(Failure(BadRequestException("No data would be changed. Aborting update request.")))
-       */
+         */
       }
     }
 

@@ -28,11 +28,11 @@ import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.{CoreSpec, IRI}
 
 /**
-  * Tests implementations of [[RdfModel]].
-  *
-  * @param featureToggle a feature toggle specifying which implementation of [[RdfModel]] should
-  *                      be used for the test.
-  */
+ * Tests implementations of [[RdfModel]].
+ *
+ * @param featureToggle a feature toggle specifying which implementation of [[RdfModel]] should
+ *                      be used for the test.
+ */
 abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
   private val featureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
     testToggles = Set(featureToggle),
@@ -44,17 +44,19 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(featureFactoryConfig)
 
   /**
-    * Adds a statement, then searches for it by subject and predicate.
-    *
-    * @param subj    the subject.
-    * @param pred    the predicate.
-    * @param obj     the object.
-    * @param context the context.
-    */
-  private def addAndFindBySubjAndPred(subj: RdfResource,
-                                      pred: IriNode,
-                                      obj: RdfNode,
-                                      context: Option[IRI] = None): Unit = {
+   * Adds a statement, then searches for it by subject and predicate.
+   *
+   * @param subj    the subject.
+   * @param pred    the predicate.
+   * @param obj     the object.
+   * @param context the context.
+   */
+  private def addAndFindBySubjAndPred(
+    subj: RdfResource,
+    pred: IriNode,
+    obj: RdfNode,
+    context: Option[IRI] = None
+  ): Unit = {
     val statement: Statement = nodeFactory.makeStatement(subj = subj, pred = pred, obj = obj)
     model.addStatement(statement)
     assert(model.find(subj = Some(subj), pred = Some(pred), obj = None).toSet == Set(statement))
@@ -176,16 +178,16 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
       val graph1LabelStatement = nodeFactory.makeStatement(
         subj = nodeFactory.makeIriNode("http://example.org/6"),
         pred = labelPred,
-        obj = nodeFactory.makeDatatypeLiteral(value = "Lucky's Discount X-Wing Repair",
-                                              datatype = OntologyConstants.Xsd.String),
+        obj = nodeFactory
+          .makeDatatypeLiteral(value = "Lucky's Discount X-Wing Repair", datatype = OntologyConstants.Xsd.String),
         context = Some(context1)
       )
 
       val graph1CommentStatement = nodeFactory.makeStatement(
         subj = nodeFactory.makeIriNode("http://example.org/6"),
         pred = commentPred,
-        obj = nodeFactory.makeDatatypeLiteral(value = "A safe flight or your money back",
-                                              datatype = OntologyConstants.Xsd.String),
+        obj = nodeFactory
+          .makeDatatypeLiteral(value = "A safe flight or your money back", datatype = OntologyConstants.Xsd.String),
         context = Some(context1)
       )
 
@@ -199,15 +201,16 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
       val graph2LabelStatement = nodeFactory.makeStatement(
         subj = nodeFactory.makeIriNode("http://example.org/7"),
         pred = labelPred,
-        obj = nodeFactory.makeDatatypeLiteral(value = "Mos Eisley Used Droids", datatype = OntologyConstants.Xsd.String),
+        obj =
+          nodeFactory.makeDatatypeLiteral(value = "Mos Eisley Used Droids", datatype = OntologyConstants.Xsd.String),
         context = Some(context2)
       )
 
       val graph2CommentStatement = nodeFactory.makeStatement(
         subj = nodeFactory.makeIriNode("http://example.org/7"),
         pred = commentPred,
-        obj = nodeFactory.makeDatatypeLiteral(value = "All droids guaranteed for 10 seconds",
-                                              datatype = OntologyConstants.Xsd.String),
+        obj = nodeFactory
+          .makeDatatypeLiteral(value = "All droids guaranteed for 10 seconds", datatype = OntologyConstants.Xsd.String),
         context = Some(context2)
       )
 
@@ -222,11 +225,17 @@ abstract class RdfModelSpec(featureToggle: FeatureToggle) extends CoreSpec {
       assert(model.find(subj = None, pred = None, obj = None, context = Some(context1)).toSet == graph1)
       assert(model.find(subj = None, pred = None, obj = None, context = Some(context2)).toSet == graph2)
       assert(
-        model.find(subj = None, pred = Some(labelPred), obj = None).toSet == Set(graph1LabelStatement,
-                                                                                 graph2LabelStatement))
+        model.find(subj = None, pred = Some(labelPred), obj = None).toSet == Set(
+          graph1LabelStatement,
+          graph2LabelStatement
+        )
+      )
       assert(
-        model.find(subj = None, pred = Some(commentPred), obj = None).toSet == Set(graph1CommentStatement,
-                                                                                   graph2CommentStatement))
+        model.find(subj = None, pred = Some(commentPred), obj = None).toSet == Set(
+          graph1CommentStatement,
+          graph2CommentStatement
+        )
+      )
 
       model.removeStatement(graph1CommentStatement)
       assert(!model.contains(graph1CommentStatement))

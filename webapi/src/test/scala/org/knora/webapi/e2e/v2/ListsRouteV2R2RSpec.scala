@@ -37,15 +37,15 @@ import spray.json.{JsValue, JsonParser}
 import scala.concurrent.ExecutionContextExecutor
 
 /**
-  * End-to-end test specification for the lists endpoint. This specification uses the Spray Testkit as documented
-  * here: http://spray.io/documentation/1.2.2/spray-testkit/
-  */
+ * End-to-end test specification for the lists endpoint. This specification uses the Spray Testkit as documented
+ * here: http://spray.io/documentation/1.2.2/spray-testkit/
+ */
 class ListsRouteV2R2RSpec extends R2RSpec {
 
   override def testConfigSource: String =
     """
-          |# akka.loglevel = "DEBUG"
-          |# akka.stdout-loglevel = "DEBUG"
+      |# akka.loglevel = "DEBUG"
+      |# akka.stdout-loglevel = "DEBUG"
         """.stripMargin
 
   private val listsPath = new ListsRouteV2(routeData).knoraApiPath

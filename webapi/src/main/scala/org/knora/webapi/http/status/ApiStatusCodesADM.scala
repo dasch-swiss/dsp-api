@@ -23,17 +23,17 @@ import akka.http.scaladsl.model.{StatusCode, StatusCodes}
 import org.knora.webapi.exceptions._
 
 /**
-  * The possible values for the HTTP status code that is returned as part of each Knora ADM response.
-  */
+ * The possible values for the HTTP status code that is returned as part of each Knora ADM response.
+ */
 object ApiStatusCodesADM {
 
   /**
-    * Converts an exception to a similar HTTP status code.
-    *
-    * @param ex an exception.
-    * @return an HTTP status code.
-    */
-  def fromException(ex: Throwable): StatusCode = {
+   * Converts an exception to a similar HTTP status code.
+   *
+   * @param ex an exception.
+   * @return an HTTP status code.
+   */
+  def fromException(ex: Throwable): StatusCode =
     ex match {
       // Subclasses of RequestRejectedException (which must be last in this group)
       case NotFoundException(_)           => StatusCodes.NotFound
@@ -49,6 +49,5 @@ object ApiStatusCodesADM {
       case InternalServerException(_)     => StatusCodes.InternalServerError
       case _                              => StatusCodes.InternalServerError
     }
-  }
 
 }

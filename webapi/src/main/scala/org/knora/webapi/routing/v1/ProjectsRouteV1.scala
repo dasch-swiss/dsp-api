@@ -32,10 +32,9 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
     with ProjectV1JsonProtocol {
 
   /**
-    * Returns the route.
-    */
-  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
-
+   * Returns the route.
+   */
+  override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     path("v1" / "projects") {
       get {
         /* returns all projects */
@@ -45,11 +44,10 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
               requestContext = requestContext,
               featureFactoryConfig = featureFactoryConfig
             ).map(_.asUserProfileV1)
-          } yield
-            ProjectsGetRequestV1(
-              featureFactoryConfig = featureFactoryConfig,
-              userProfile = Some(userProfile)
-            )
+          } yield ProjectsGetRequestV1(
+            featureFactoryConfig = featureFactoryConfig,
+            userProfile = Some(userProfile)
+          )
 
           RouteUtilV1.runJsonRouteWithFuture(
             requestMessage,
@@ -70,12 +68,11 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
                 requestContext = requestContext,
                 featureFactoryConfig = featureFactoryConfig
               ).map(_.asUserProfileV1)
-            } yield
-              ProjectInfoByShortnameGetRequestV1(
-                shortname = shortNameDec,
-                featureFactoryConfig = featureFactoryConfig,
-                userProfileV1 = Some(userProfile)
-              )
+            } yield ProjectInfoByShortnameGetRequestV1(
+              shortname = shortNameDec,
+              featureFactoryConfig = featureFactoryConfig,
+              userProfileV1 = Some(userProfile)
+            )
           } else { // identify project by iri. this is the default case.
             val checkedProjectIri =
               stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid project IRI $value"))
@@ -84,12 +81,11 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
                 requestContext = requestContext,
                 featureFactoryConfig = featureFactoryConfig
               ).map(_.asUserProfileV1)
-            } yield
-              ProjectInfoByIRIGetRequestV1(
-                iri = checkedProjectIri,
-                featureFactoryConfig = featureFactoryConfig,
-                userProfileV1 = Some(userProfile)
-              )
+            } yield ProjectInfoByIRIGetRequestV1(
+              iri = checkedProjectIri,
+              featureFactoryConfig = featureFactoryConfig,
+              userProfileV1 = Some(userProfile)
+            )
           }
 
           RouteUtilV1.runJsonRouteWithFuture(
@@ -102,5 +98,4 @@ class ProjectsRouteV1(routeData: KnoraRouteData)
         }
       }
     }
-  }
 }

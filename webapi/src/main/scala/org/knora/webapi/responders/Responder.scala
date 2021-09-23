@@ -111,7 +111,7 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
   /**
    * Provides logging
    */
-  protected val log: Logger                    = logger
+  protected val log: Logger = logger
   protected val loggingAdapter: LoggingAdapter = akka.event.Logging(system, this.getClass)
 
   /**
@@ -130,18 +130,18 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
   ): Future[Boolean] =
     for {
       isEntityUsedSparql <- Future(
-                              org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-                                .isEntityUsed(
-                                  triplestore = settings.triplestoreType,
-                                  entityIri = entityIri,
-                                  ignoreKnoraConstraints = ignoreKnoraConstraints,
-                                  ignoreRdfSubjectAndObject = ignoreRdfSubjectAndObject
-                                )
-                                .toString()
-                            )
+        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .isEntityUsed(
+            triplestore = settings.triplestoreType,
+            entityIri = entityIri,
+            ignoreKnoraConstraints = ignoreKnoraConstraints,
+            ignoreRdfSubjectAndObject = ignoreRdfSubjectAndObject
+          )
+          .toString()
+      )
 
       isEntityUsedResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isEntityUsedSparql))
-                                                    .mapTo[SparqlSelectResult]
+        .mapTo[SparqlSelectResult]
 
     } yield isEntityUsedResponse.results.bindings.nonEmpty
 
@@ -163,8 +163,8 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
       entityIsUsed: Boolean <- isEntityUsed(entityIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
 
       _ = if (entityIsUsed) {
-            errorFun
-          }
+        errorFun
+      }
     } yield ()
 
   /**
@@ -183,14 +183,14 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
 
           result <- stringFormatter.checkIriExists(entityIriAsString, storeManager)
           _ = if (result) {
-                throw DuplicateValueException(s"IRI: '$entityIriAsString' already exists, try another one.")
-              }
+            throw DuplicateValueException(s"IRI: '$entityIriAsString' already exists, try another one.")
+          }
           // Check that given entityIRI ends with a UUID
           ending: String = entityIriAsString.split('/').last
           _ = stringFormatter.validateBase64EncodedUuid(
-                ending,
-                throw BadRequestException(s"IRI: '$entityIriAsString' must end with a valid base 64 UUID.")
-              )
+            ending,
+            throw BadRequestException(s"IRI: '$entityIriAsString' must end with a valid base 64 UUID.")
+          )
 
         } yield entityIriAsString
 

@@ -36,8 +36,8 @@ object UsersMessagesADMSpec {
 }
 
 /**
-  * This spec is used to test the [[UserADM]] and [[UserIdentifierADM]] classes.
-  */
+ * This spec is used to test the [[UserADM]] and [[UserIdentifierADM]] classes.
+ */
 class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
 
   private val id = SharedTestDataADM.rootUser.id
@@ -93,13 +93,17 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
     }
 
     "return true if user is ProjectAdmin in any project " in {
-      assert(SharedTestDataADM.anythingAdminUser.permissions.isProjectAdminInAnyProject() === true,
-             "user is not ProjectAdmin in any of his projects")
+      assert(
+        SharedTestDataADM.anythingAdminUser.permissions.isProjectAdminInAnyProject() === true,
+        "user is not ProjectAdmin in any of his projects"
+      )
     }
 
     "return false if user is not ProjectAdmin in any project " in {
-      assert(SharedTestDataADM.anythingUser1.permissions.isProjectAdminInAnyProject() === false,
-             "user is ProjectAdmin in one of his projects")
+      assert(
+        SharedTestDataADM.anythingUser1.permissions.isProjectAdminInAnyProject() === false,
+        "user is ProjectAdmin in one of his projects"
+      )
     }
 
     "allow checking the SCrypt passwords" in {
@@ -250,10 +254,8 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
         ChangeUserApiRequestADM(status = Some(true), systemAdmin = Some(true))
       )
 
-      val errorTooManyParametersStatusUpdate = the[BadRequestException] thrownBy ChangeUserApiRequestADM(status =
-                                                                                                           Some(true),
-                                                                                                         systemAdmin =
-                                                                                                           Some(true))
+      val errorTooManyParametersStatusUpdate =
+        the[BadRequestException] thrownBy ChangeUserApiRequestADM(status = Some(true), systemAdmin = Some(true))
       errorTooManyParametersStatusUpdate.getMessage should equal("Too many parameters sent for change request.")
 
       // more than one parameter for systemAdmin update
@@ -261,9 +263,8 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
         ChangeUserApiRequestADM(systemAdmin = Some(true), status = Some(true))
       )
 
-      val errorTooManyParametersSystemAdminUpdate = the[BadRequestException] thrownBy ChangeUserApiRequestADM(
-        systemAdmin = Some(true),
-        status = Some(true))
+      val errorTooManyParametersSystemAdminUpdate =
+        the[BadRequestException] thrownBy ChangeUserApiRequestADM(systemAdmin = Some(true), status = Some(true))
       errorTooManyParametersSystemAdminUpdate.getMessage should equal("Too many parameters sent for change request.")
 
       // more than 5 parameters for basic user information update
@@ -289,7 +290,8 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
         systemAdmin = Some(false)
       )
       errorTooManyParametersBasicInformationUpdate.getMessage should equal(
-        "Too many parameters sent for change request.")
+        "Too many parameters sent for change request."
+      )
     }
   }
 }

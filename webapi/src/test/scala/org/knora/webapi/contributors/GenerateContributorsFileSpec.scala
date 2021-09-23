@@ -25,8 +25,8 @@ import org.knora.webapi.CoreSpec
 import org.knora.webapi.util.FileUtil
 
 /**
-  * Tests [[GenerateContributorsFile]].
-  */
+ * Tests [[GenerateContributorsFile]].
+ */
 class GenerateContributorsFileSpec extends CoreSpec() {
   "The GenerateContributorsFile utility" should {
     "generate a contributors file" ignore { // GitHub returns an HTTP 403 (Forbidden) error when this is run on Travis without a GitHub API key.

@@ -41,8 +41,8 @@ object ProjectsV1E2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing groups endpoint.
-  */
+ * End-to-End (E2E) test specification for testing groups endpoint.
+ */
 class ProjectsV1E2ESpec
     extends E2ESpec(ProjectsV1E2ESpec.config)
     with SessionJsonProtocol
@@ -79,8 +79,8 @@ class ProjectsV1E2ESpec
       }
 
       "return the information for a single project identified by iri" in {
-        val request = Get(baseApiUrl + s"/v1/projects/$projectIriEnc") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass))
+        val request =
+          Get(baseApiUrl + s"/v1/projects/$projectIriEnc") ~> addCredentials(BasicHttpCredentials(rootEmail, testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         // logger.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)
@@ -88,7 +88,8 @@ class ProjectsV1E2ESpec
 
       "return the information for a single project identified by shortname" in {
         val request = Get(baseApiUrl + s"/v1/projects/$projectShortnameEnc?identifier=shortname") ~> addCredentials(
-          BasicHttpCredentials(rootEmail, testPass))
+          BasicHttpCredentials(rootEmail, testPass)
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         // logger.debug(s"response: {}", response)
         assert(response.status === StatusCodes.OK)

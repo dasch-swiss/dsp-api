@@ -31,40 +31,36 @@ object ResponseCheckerV2 {
   private val noPropertyKeys: Set[IRI] = Set(JsonLDKeywords.ID, JsonLDKeywords.TYPE, OntologyConstants.Rdfs.Label)
 
   /**
-    * Converts a single JSON-LD element to a JSON-LD array with one entry.
-    * If given element is already an array, it will be returned unchanged.
-    *
-    * @param element the element to be turned into an array.
-    * @return a JSON-LD array.
-    */
-  private def elementToArray(element: JsonLDValue): JsonLDArray = {
+   * Converts a single JSON-LD element to a JSON-LD array with one entry.
+   * If given element is already an array, it will be returned unchanged.
+   *
+   * @param element the element to be turned into an array.
+   * @return a JSON-LD array.
+   */
+  private def elementToArray(element: JsonLDValue): JsonLDArray =
     element match {
       case obj: JsonLDObject if obj.value.isEmpty => JsonLDArray(Seq.empty[JsonLDValue])
       case array: JsonLDArray                     => array
       case other: JsonLDValue                     => JsonLDArray(Seq(other))
     }
-  }
 
   /**
-    * Compare two value objects.
-    *
-    * @param expectedValue expected value.
-    * @param receivedValue received value.
-    */
-  private def compareValues(expectedValue: JsonLDValue, receivedValue: JsonLDValue): Unit = {
-
+   * Compare two value objects.
+   *
+   * @param expectedValue expected value.
+   * @param receivedValue received value.
+   */
+  private def compareValues(expectedValue: JsonLDValue, receivedValue: JsonLDValue): Unit =
     assert(expectedValue == receivedValue, s"expected $expectedValue, received $receivedValue")
 
-    // TODO: recurse over target resource if it is a LinkValue
-
-  }
+  // TODO: recurse over target resource if it is a LinkValue
 
   /**
-    * Compares the received resource to the expected.
-    *
-    * @param expectedResource the expected resource.
-    * @param receivedResource the received resource.
-    */
+   * Compares the received resource to the expected.
+   *
+   * @param expectedResource the expected resource.
+   * @param receivedResource the received resource.
+   */
   private def compareResources(expectedResource: JsonLDObject, receivedResource: JsonLDObject): Unit = {
     def sortPropertyValues(values: JsonLDArray): JsonLDArray = {
       // Sort by the value object IRI if available, otherwise sort by the value itself.
@@ -100,46 +96,53 @@ object ResponseCheckerV2 {
         .value(JsonLDKeywords.ID)}: expected ${expectedResource.value.keySet -- noPropertyKeys}, received ${receivedResource.value.keySet -- noPropertyKeys}"
     )
 
-    (expectedResource.value -- noPropertyKeys).foreach {
-      case (propIri: IRI, expectedValuesForProp: JsonLDValue) =>
-        // make sure that the property Iri exists in the received resource
-        assert(receivedResource.value.contains(propIri),
-               s"Property $propIri not found in received resource ${receivedResource.value(JsonLDKeywords.ID)}")
+    (expectedResource.value -- noPropertyKeys).foreach { case (propIri: IRI, expectedValuesForProp: JsonLDValue) =>
+      // make sure that the property Iri exists in the received resource
+      assert(
+        receivedResource.value.contains(propIri),
+        s"Property $propIri not found in received resource ${receivedResource.value(JsonLDKeywords.ID)}"
+      )
 
-        val sortedExpectedPropertyValues: JsonLDArray = sortPropertyValues(elementToArray(expectedValuesForProp))
-        val sortedReceivedPropertyValues: JsonLDArray =
-          sortPropertyValues(elementToArray(receivedResource.value(propIri)))
+      val sortedExpectedPropertyValues: JsonLDArray = sortPropertyValues(elementToArray(expectedValuesForProp))
+      val sortedReceivedPropertyValues: JsonLDArray =
+        sortPropertyValues(elementToArray(receivedResource.value(propIri)))
 
-        // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
-        // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
-        assert(sortedExpectedPropertyValues.value.size == sortedReceivedPropertyValues.value.size,
-               "number of values is not equal")
+      // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
+      // https://www.scala-lang.org/api/current/scala/collection/Seq.html#zip[B](that:scala.collection.GenIterable[B]):Seq[(A,B)]
+      assert(
+        sortedExpectedPropertyValues.value.size == sortedReceivedPropertyValues.value.size,
+        "number of values is not equal"
+      )
 
-        sortedExpectedPropertyValues.value.zip(sortedReceivedPropertyValues.value).foreach {
-          case (expectedVal, receivedVal) =>
-            compareValues(expectedVal, receivedVal)
-        }
+      sortedExpectedPropertyValues.value.zip(sortedReceivedPropertyValues.value).foreach {
+        case (expectedVal, receivedVal) =>
+          compareValues(expectedVal, receivedVal)
+      }
 
     }
 
   }
 
   /**
-    * Compares the received to the expected response.
-    *
-    * @param expectedResponse expected response.
-    * @param receivedResponse received response.
-    */
-  def compareParsedJSONLDForResourcesResponse(expectedResponse: JsonLDDocument,
-                                              receivedResponse: JsonLDDocument): Unit = {
+   * Compares the received to the expected response.
+   *
+   * @param expectedResponse expected response.
+   * @param receivedResponse received response.
+   */
+  def compareParsedJSONLDForResourcesResponse(
+    expectedResponse: JsonLDDocument,
+    receivedResponse: JsonLDDocument
+  ): Unit = {
 
     // returns a list even if there is only one element
     val expectedResourcesAsArray: JsonLDArray = elementToArray(
-      expectedResponse.body.value.getOrElse(JsonLDKeywords.GRAPH, expectedResponse.body))
+      expectedResponse.body.value.getOrElse(JsonLDKeywords.GRAPH, expectedResponse.body)
+    )
 
     // returns a list even if there is only one element
     val receivedResourcesAsArray: JsonLDArray = elementToArray(
-      receivedResponse.body.value.getOrElse(JsonLDKeywords.GRAPH, receivedResponse.body))
+      receivedResponse.body.value.getOrElse(JsonLDKeywords.GRAPH, receivedResponse.body)
+    )
 
     // check that the actual amount of resources returned is correct
     // this check is necessary because zip returns a sequence of the length of the smaller of the two lists to be combined.
@@ -161,81 +164,92 @@ object ResponseCheckerV2 {
   }
 
   /**
-    * Compares the received JSON response to the expected JSON.
-    *
-    * @param expectedJSONLD expected answer from Knora API V2 as JSONLD.
-    * @param receivedJSONLD received answer from Knora Api V2 as JSONLD.
-    */
+   * Compares the received JSON response to the expected JSON.
+   *
+   * @param expectedJSONLD expected answer from Knora API V2 as JSONLD.
+   * @param receivedJSONLD received answer from Knora Api V2 as JSONLD.
+   */
   def compareJSONLDForResourcesResponse(expectedJSONLD: String, receivedJSONLD: String): Unit = {
 
     val expectedJsonLDDocument = JsonLDUtil.parseJsonLD(expectedJSONLD)
     val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
-    compareParsedJSONLDForResourcesResponse(expectedResponse = expectedJsonLDDocument,
-                                            receivedResponse = receivedJsonLDDocument)
+    compareParsedJSONLDForResourcesResponse(
+      expectedResponse = expectedJsonLDDocument,
+      receivedResponse = receivedJsonLDDocument
+    )
 
   }
 
   /**
-    * Checks the response to a count query.
-    *
-    * @param receivedJSONLD the response sent back by the search route.
-    * @param expectedNumber the expected number of results for the query.
-    * @return an assertion that the actual amount of results corresponds with the expected number of results.
-    */
+   * Checks the response to a count query.
+   *
+   * @param receivedJSONLD the response sent back by the search route.
+   * @param expectedNumber the expected number of results for the query.
+   * @return an assertion that the actual amount of results corresponds with the expected number of results.
+   */
   def checkCountResponse(receivedJSONLD: String, expectedNumber: Int): Unit = {
 
     val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
     // make sure the indicated amount of results is correct
     val receivedNumber = receivedJsonLDDocument.body.value(numberOfItemsMember).asInstanceOf[JsonLDInt].value
-    assert(receivedNumber == expectedNumber,
-           s"$numberOfItemsMember is incorrect (expected $expectedNumber, received $receivedNumber)")
+    assert(
+      receivedNumber == expectedNumber,
+      s"$numberOfItemsMember is incorrect (expected $expectedNumber, received $receivedNumber)"
+    )
 
   }
 
   /**
-    * Checks the number of results in a search response.
-    *
-    * @param receivedJSONLD the response sent back by the search route.
-    * @param expectedNumber the expected number of results for the query.
-    * @return an assertion that the actual amount of results corresponds with the expected number of results.
-    */
+   * Checks the number of results in a search response.
+   *
+   * @param receivedJSONLD the response sent back by the search route.
+   * @param expectedNumber the expected number of results for the query.
+   * @return an assertion that the actual amount of results corresponds with the expected number of results.
+   */
   def checkSearchResponseNumberOfResults(receivedJSONLD: String, expectedNumber: Int): Unit = {
     val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
     val receivedResourcesAsArray: JsonLDArray = elementToArray(
-      receivedJsonLDDocument.body.value.getOrElse(JsonLDKeywords.GRAPH, receivedJsonLDDocument.body))
+      receivedJsonLDDocument.body.value.getOrElse(JsonLDKeywords.GRAPH, receivedJsonLDDocument.body)
+    )
     val numberOfResultsReceived = receivedResourcesAsArray.value.size
-    assert(numberOfResultsReceived == expectedNumber,
-           s"Expected $expectedNumber results, received $numberOfResultsReceived")
+    assert(
+      numberOfResultsReceived == expectedNumber,
+      s"Expected $expectedNumber results, received $numberOfResultsReceived"
+    )
   }
 
   /**
-    * Checks the response to a mapping creation request.
-    *
-    * @param expectedJSONLD the expected response as JSON-LD.
-    * @param receivedJSONLD the received response as JSON-LD.
-    */
+   * Checks the response to a mapping creation request.
+   *
+   * @param expectedJSONLD the expected response as JSON-LD.
+   * @param receivedJSONLD the received response as JSON-LD.
+   */
   def compareJSONLDForMappingCreationResponse(expectedJSONLD: String, receivedJSONLD: String): Unit = {
     val expectedJsonLDDocument = JsonLDUtil.parseJsonLD(expectedJSONLD)
     val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
-    assert(expectedJsonLDDocument == receivedJsonLDDocument,
-           "Mapping creation response did not match expected response")
+    assert(
+      expectedJsonLDDocument == receivedJsonLDDocument,
+      "Mapping creation response did not match expected response"
+    )
   }
 
   /**
-    * Checks the response to a resource history request.
-    *
-    * @param expectedJSONLD the expected response as JSON-LD.
-    * @param receivedJSONLD the received response as JSON-LD.
-    */
+   * Checks the response to a resource history request.
+   *
+   * @param expectedJSONLD the expected response as JSON-LD.
+   * @param receivedJSONLD the received response as JSON-LD.
+   */
   def compareJSONLDForResourceHistoryResponse(expectedJSONLD: String, receivedJSONLD: String): Unit = {
     val expectedJsonLDDocument = JsonLDUtil.parseJsonLD(expectedJSONLD)
     val receivedJsonLDDocument = JsonLDUtil.parseJsonLD(receivedJSONLD)
 
-    assert(expectedJsonLDDocument == receivedJsonLDDocument,
-           "Resource history response did not match expected response")
+    assert(
+      expectedJsonLDDocument == receivedJsonLDDocument,
+      "Resource history response did not match expected response"
+    )
   }
 
 }

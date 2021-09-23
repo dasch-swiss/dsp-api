@@ -34,8 +34,8 @@ object CacheSerializationSpec {
 }
 
 /**
-  * This spec is used to test [[CacheSerialization]].
-  */
+ * This spec is used to test [[CacheSerialization]].
+ */
 class CacheSerializationSpec extends UnitSpec(CacheSerializationSpec.config) {
 
   implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global

@@ -9,8 +9,8 @@ import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
 /**
-  * This spec is used to test subclasses of the [[UsersResponderRequestV1]] class.
-  */
+ * This spec is used to test subclasses of the [[UsersResponderRequestV1]] class.
+ */
 class PermissionMessagesV1Spec extends AnyWordSpecLike with Matchers {
 
   "querying the user's 'PermissionProfileV1' with 'hasPermissionFor'" should {
@@ -20,9 +20,11 @@ class PermissionMessagesV1Spec extends AnyWordSpecLike with Matchers {
       val projectIri = INCUNABULA_PROJECT_IRI
       val resourceClassIri = s"$INCUNABULA_ONTOLOGY_IRI#book"
 
-      val result = SharedTestDataV1.rootUser.permissionData.hasPermissionFor(ResourceCreateOperation(resourceClassIri),
-                                                                             projectIri,
-                                                                             None)
+      val result = SharedTestDataV1.rootUser.permissionData.hasPermissionFor(
+        ResourceCreateOperation(resourceClassIri),
+        projectIri,
+        None
+      )
 
       result should be(true)
     }

@@ -44,10 +44,10 @@ object SipiADME2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for Sipi access.
-  *
-  * This spec tests the 'admin/files'.
-  */
+ * End-to-End (E2E) test specification for Sipi access.
+ *
+ * This spec tests the 'admin/files'.
+ */
 class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProtocol with TriplestoreJsonProtocol {
 
   private implicit def default(implicit system: ActorSystem) = RouteTestTimeout(30.seconds)
@@ -72,16 +72,16 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProt
     sr.sid
   }
 
-  def sessionLogout(sessionId: String): Unit = {
+  def sessionLogout(sessionId: String): Unit =
     Get(baseApiUrl + "/v1/session?logout") ~> Cookie(KNORA_AUTHENTICATION_COOKIE_NAME, sessionId)
-  }
 
   "The Files Route ('admin/files') using token credentials" should {
 
     "return CR (8) permission code" in {
       /* anything image */
       val request = Get(
-        baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2?email=$anythingAdminEmailEnc&password=$testPass")
+        baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2?email=$anythingAdminEmailEnc&password=$testPass"
+      )
       val response: HttpResponse = singleAwaitingRequest(request)
 
       // println(response.toString)
@@ -144,7 +144,8 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProt
       /* anything image */
       val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(
         KNORA_AUTHENTICATION_COOKIE_NAME,
-        sessionId)
+        sessionId
+      )
       val response: HttpResponse = singleAwaitingRequest(request)
 
       // println(response.toString)
@@ -167,7 +168,8 @@ class SipiADME2ESpec extends E2ESpec(SipiADME2ESpec.config) with SessionJsonProt
       /* anything image */
       val request = Get(baseApiUrl + s"/admin/files/0001/B1D0OkEgfFp-Cew2Seur7Wi.jp2") ~> Cookie(
         KNORA_AUTHENTICATION_COOKIE_NAME,
-        sessionId)
+        sessionId
+      )
       val response: HttpResponse = singleAwaitingRequest(request)
 
       // println(response.toString)

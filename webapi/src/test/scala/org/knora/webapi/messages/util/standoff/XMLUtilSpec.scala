@@ -29,8 +29,8 @@ import org.xmlunit.builder.{DiffBuilder, Input}
 import org.xmlunit.diff.Diff
 
 /**
-  * Tests [[org.knora.webapi.messages.util.standoff.XMLToStandoffUtil]].
-  */
+ * Tests [[org.knora.webapi.messages.util.standoff.XMLToStandoffUtil]].
+ */
 class XMLUtilSpec extends CoreSpec {
 
   "The XML to standoff utility" should {
@@ -39,20 +39,20 @@ class XMLUtilSpec extends CoreSpec {
 
       val xml =
         """<?xml version="1.0"?>
-                  |<text><i>test</i></text>
+          |<text><i>test</i></text>
                 """.stripMargin
 
       val xslt =
         """<?xml version="1.0" encoding="UTF-8"?>
-                  |
-                  |<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
-                  |
-                  |    <xsl:output method="html" encoding="utf-8" indent="yes"/>
-                  |
-                  |    <xsl:template match="text"><div><xsl:apply-templates/></div></xsl:template>
-                  |
-                  |    <xsl:template match="i"><em><xsl:apply-templates/></em></xsl:template>
-                  |</xsl:transform>
+          |
+          |<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+          |
+          |    <xsl:output method="html" encoding="utf-8" indent="yes"/>
+          |
+          |    <xsl:template match="text"><div><xsl:apply-templates/></div></xsl:template>
+          |
+          |    <xsl:template match="i"><em><xsl:apply-templates/></em></xsl:template>
+          |</xsl:transform>
                 """.stripMargin
 
       val expected =
@@ -73,21 +73,21 @@ class XMLUtilSpec extends CoreSpec {
 
       val xml =
         """<?xml version="1.0"?>
-                  |<text><i>test</i></text>
+          |<text><i>test</i></text>
                 """.stripMargin
 
       // closing root tag is invalid
       val xsltInvalid =
         """<?xml version="1.0" encoding="UTF-8"?>
-                  |
-                  |<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
-                  |
-                  |    <xsl:output method="html" encoding="utf-8" indent="yes"/>
-                  |
-                  |    <xsl:template match="text"><div><xsl:apply-templates/></div></xsl:template>
-                  |
-                  |    <xsl:template match="i"><em><xsl:apply-templates/></em></xsl:template>
-                  |</xsl:transform
+          |
+          |<xsl:transform xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="2.0">
+          |
+          |    <xsl:output method="html" encoding="utf-8" indent="yes"/>
+          |
+          |    <xsl:template match="text"><div><xsl:apply-templates/></div></xsl:template>
+          |
+          |    <xsl:template match="i"><em><xsl:apply-templates/></em></xsl:template>
+          |</xsl:transform
                 """.stripMargin
 
       assertThrows[StandoffConversionException] {

@@ -17,63 +17,60 @@ object MetadataRouteV2 {
 }
 
 /**
-  * Provides a routing function for API v2 routes that deal with metadata.
-  */
+ * Provides a routing function for API v2 routes that deal with metadata.
+ */
 class MetadataRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   import MetadataRouteV2._
 
   /**
-    * Returns the route.
-    */
+   * Returns the route.
+   */
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     getMetadata(featureFactoryConfig) ~
       setMetadata(featureFactoryConfig)
 
   /**
-    * Route to get metadata.
-    */
+   * Route to get metadata.
+   */
   private def getMetadata(featureFactoryConfig: FeatureFactoryConfig): Route = path(MetadataBasePath / Segment) {
     projectIri =>
       get { requestContext =>
-        {
-          // Make the request message.
-          val requestMessageFuture: Future[MetadataGetRequestV2] = for {
-            requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-
-            project <- getProjectADM(
-              projectIri = projectIri,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser
-            )
-          } yield
-            MetadataGetRequestV2(
-              projectADM = project,
-              featureFactoryConfig = featureFactoryConfig,
-              requestingUser = requestingUser
-            )
-
-          // Send it to the responder.
-          RouteUtilV2.runRdfRouteWithFuture(
-            requestMessageF = requestMessageFuture,
+        // Make the request message.
+        val requestMessageFuture: Future[MetadataGetRequestV2] = for {
+          requestingUser <- getUserADM(
             requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            responderManager = responderManager,
-            log = log,
-            targetSchema = InternalSchema,
-            schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+            featureFactoryConfig = featureFactoryConfig
           )
-        }
+
+          project <- getProjectADM(
+            projectIri = projectIri,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser
+          )
+        } yield MetadataGetRequestV2(
+          projectADM = project,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
+        )
+
+        // Send it to the responder.
+        RouteUtilV2.runRdfRouteWithFuture(
+          requestMessageF = requestMessageFuture,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log,
+          targetSchema = InternalSchema,
+          schemaOptions = RouteUtilV2.getSchemaOptions(requestContext)
+        )
       }
   }
 
   /**
-    * Route to set a project's metadata, replacing any existing metadata for the project.
-    */
+   * Route to set a project's metadata, replacing any existing metadata for the project.
+   */
   private def setMetadata(featureFactoryConfig: FeatureFactoryConfig): Route = path(MetadataBasePath / Segment) {
     projectIri =>
       put {
@@ -98,14 +95,13 @@ class MetadataRouteV2(routeData: KnoraRouteData) extends KnoraRoute(routeData) w
                 featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser
               )
-            } yield
-              MetadataPutRequestV2(
-                rdfModel = requestModel,
-                projectADM = project,
-                featureFactoryConfig = featureFactoryConfig,
-                requestingUser = requestingUser,
-                apiRequestID = UUID.randomUUID
-              )
+            } yield MetadataPutRequestV2(
+              rdfModel = requestModel,
+              projectADM = project,
+              featureFactoryConfig = featureFactoryConfig,
+              requestingUser = requestingUser,
+              apiRequestID = UUID.randomUUID
+            )
 
             // Send it to the responder.
             RouteUtilV2.runRdfRouteWithFuture(

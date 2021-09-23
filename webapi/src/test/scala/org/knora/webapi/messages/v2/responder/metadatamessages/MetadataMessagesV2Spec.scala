@@ -27,8 +27,8 @@ import org.knora.webapi.messages.util.rdf.{RdfFeatureFactory, RdfFormatUtil, Rdf
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 /**
-  * Tests [[MetadataPutRequestV2]].
-  */
+ * Tests [[MetadataPutRequestV2]].
+ */
 class MetadataMessagesV2Spec extends CoreSpec() {
   private val rdfFormatUtil: RdfFormatUtil = RdfFeatureFactory.getRdfFormatUtil(defaultFeatureFactoryConfig)
 

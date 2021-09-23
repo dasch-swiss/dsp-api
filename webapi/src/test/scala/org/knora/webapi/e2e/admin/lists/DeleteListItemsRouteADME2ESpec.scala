@@ -43,8 +43,8 @@ object DeleteListItemsRouteADME2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing  endpoint.
-  */
+ * End-to-End (E2E) test specification for testing  endpoint.
+ */
 class DeleteListItemsRouteADME2ESpec
     extends E2ESpec(DeleteListItemsRouteADME2ESpec.config)
     with SessionJsonProtocol
@@ -92,7 +92,8 @@ class DeleteListItemsRouteADME2ESpec
       "return forbidden exception when requesting user is not system or project admin" in {
         val encodedNodeUrl = java.net.URLEncoder.encode(SharedListsTestDataADM.otherTreeListInfo.id, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
-          BasicHttpCredentials(anythingUserCreds.user.email, anythingUserCreds.password))
+          BasicHttpCredentials(anythingUserCreds.user.email, anythingUserCreds.password)
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.Forbidden)
       }
@@ -100,7 +101,8 @@ class DeleteListItemsRouteADME2ESpec
       "delete first of two child node and remaining child" in {
         val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList0141", "utf-8")
         val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
-          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
+          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password)
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         val node = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
@@ -115,7 +117,8 @@ class DeleteListItemsRouteADME2ESpec
       "delete a middle node and shift its siblings" in {
         val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList02", "utf-8")
         val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
-          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
+          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password)
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         val node = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
@@ -145,7 +148,8 @@ class DeleteListItemsRouteADME2ESpec
       "delete the single child of a node" in {
         val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList031", "utf-8")
         val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
-          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
+          BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password)
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         val node = AkkaHttpUtils.httpResponseToJson(response).fields("node").convertTo[ListNodeADM]
@@ -158,7 +162,8 @@ class DeleteListItemsRouteADME2ESpec
     "delete a list entirely with all its children" in {
       val encodedNodeUrl = java.net.URLEncoder.encode("http://rdfh.ch/lists/0001/notUsedList", "utf-8")
       val request = Delete(baseApiUrl + s"/admin/lists/" + encodedNodeUrl) ~> addCredentials(
-        BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password))
+        BasicHttpCredentials(anythingAdminUserCreds.user.email, anythingAdminUserCreds.password)
+      )
       val response: HttpResponse = singleAwaitingRequest(request)
       response.status should be(StatusCodes.OK)
       val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")

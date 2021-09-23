@@ -34,8 +34,8 @@ object ProjectsMessagesADMSpec {
 }
 
 /**
-  * This spec is used to test subclasses of the [[ProjectsResponderRequestADM]] trait.
-  */
+ * This spec is used to test subclasses of the [[ProjectsResponderRequestADM]] trait.
+ */
 class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -183,9 +183,15 @@ class ProjectsMessagesADMSpec extends CoreSpec(ProjectsMessagesADMSpec.config) {
 
   "The ProjectIdentifierADM class" should {
     "return without throwing when the project IRI is valid" in {
-      ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.incunabulaProject.id)).value shouldBe SharedTestDataADM.incunabulaProject.id
-      ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.defaultSharedOntologiesProject.id)).value shouldBe SharedTestDataADM.defaultSharedOntologiesProject.id
-      ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.systemProject.id)).value shouldBe SharedTestDataADM.systemProject.id
+      ProjectIdentifierADM(maybeIri =
+        Some(SharedTestDataADM.incunabulaProject.id)
+      ).value shouldBe SharedTestDataADM.incunabulaProject.id
+      ProjectIdentifierADM(maybeIri =
+        Some(SharedTestDataADM.defaultSharedOntologiesProject.id)
+      ).value shouldBe SharedTestDataADM.defaultSharedOntologiesProject.id
+      ProjectIdentifierADM(maybeIri =
+        Some(SharedTestDataADM.systemProject.id)
+      ).value shouldBe SharedTestDataADM.systemProject.id
     }
 
     "return a 'BadRequestException' when the project IRI is invalid" in {

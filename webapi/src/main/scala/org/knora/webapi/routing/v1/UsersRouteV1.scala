@@ -30,16 +30,16 @@ import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilV1}
 
 /**
-  * Provides a spray-routing function for API routes that deal with lists.
-  */
+ * Provides a spray-routing function for API routes that deal with lists.
+ */
 class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with Authenticator {
 
   private val schemes = Array("http", "https")
   private val urlValidator = new UrlValidator(schemes)
 
   /**
-    * Returns the route.
-    */
+   * Returns the route.
+   */
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route = {
 
     path("v1" / "users") {
@@ -73,28 +73,28 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
                   requestContext = requestContext,
                   featureFactoryConfig = featureFactoryConfig
                 ).map(_.asUserProfileV1)
-              } yield
-                UserProfileByEmailGetRequestV1(
-                  email = value,
-                  userProfileType = UserProfileTypeV1.RESTRICTED,
-                  featureFactoryConfig = featureFactoryConfig,
-                  userProfile = userProfile
-                )
+              } yield UserProfileByEmailGetRequestV1(
+                email = value,
+                userProfileType = UserProfileTypeV1.RESTRICTED,
+                featureFactoryConfig = featureFactoryConfig,
+                userProfile = userProfile
+              )
             } else {
               for {
                 userProfile <- getUserADM(
                   requestContext = requestContext,
                   featureFactoryConfig = featureFactoryConfig
                 ).map(_.asUserProfileV1)
-                userIri = stringFormatter.validateAndEscapeIri(value,
-                                                               throw BadRequestException(s"Invalid user IRI $value"))
-              } yield
-                UserProfileByIRIGetRequestV1(
-                  userIri = userIri,
-                  userProfileType = UserProfileTypeV1.RESTRICTED,
-                  featureFactoryConfig = featureFactoryConfig,
-                  userProfile = userProfile
+                userIri = stringFormatter.validateAndEscapeIri(
+                  value,
+                  throw BadRequestException(s"Invalid user IRI $value")
                 )
+              } yield UserProfileByIRIGetRequestV1(
+                userIri = userIri,
+                userProfileType = UserProfileTypeV1.RESTRICTED,
+                featureFactoryConfig = featureFactoryConfig,
+                userProfile = userProfile
+              )
             }
 
             RouteUtilV1.runJsonRouteWithFuture(
@@ -103,7 +103,7 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
               settings,
               responderManager,
               log
-          )
+            )
           }
         }
       } ~
@@ -118,13 +118,13 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
               ).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
                 userIri,
-                throw BadRequestException(s"Invalid user IRI $userIri"))
-            } yield
-              UserProjectMembershipsGetRequestV1(
-                userIri = checkedUserIri,
-                userProfileV1 = userProfile,
-                apiRequestID = UUID.randomUUID()
+                throw BadRequestException(s"Invalid user IRI $userIri")
               )
+            } yield UserProjectMembershipsGetRequestV1(
+              userIri = checkedUserIri,
+              userProfileV1 = userProfile,
+              apiRequestID = UUID.randomUUID()
+            )
 
             RouteUtilV1.runJsonRouteWithFuture(
               requestMessage,
@@ -146,13 +146,13 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
               ).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
                 userIri,
-                throw BadRequestException(s"Invalid user IRI $userIri"))
-            } yield
-              UserProjectAdminMembershipsGetRequestV1(
-                userIri = checkedUserIri,
-                userProfileV1 = userProfile,
-                apiRequestID = UUID.randomUUID()
+                throw BadRequestException(s"Invalid user IRI $userIri")
               )
+            } yield UserProjectAdminMembershipsGetRequestV1(
+              userIri = checkedUserIri,
+              userProfileV1 = userProfile,
+              apiRequestID = UUID.randomUUID()
+            )
 
             RouteUtilV1.runJsonRouteWithFuture(
               requestMessage,
@@ -174,13 +174,13 @@ class UsersRouteV1(routeData: KnoraRouteData) extends KnoraRoute(routeData) with
               ).map(_.asUserProfileV1)
               checkedUserIri = stringFormatter.validateAndEscapeIri(
                 userIri,
-                throw BadRequestException(s"Invalid user IRI $userIri"))
-            } yield
-              UserGroupMembershipsGetRequestV1(
-                userIri = checkedUserIri,
-                userProfileV1 = userProfile,
-                apiRequestID = UUID.randomUUID()
+                throw BadRequestException(s"Invalid user IRI $userIri")
               )
+            } yield UserGroupMembershipsGetRequestV1(
+              userIri = checkedUserIri,
+              userProfileV1 = userProfile,
+              apiRequestID = UUID.randomUUID()
+            )
 
             RouteUtilV1.runJsonRouteWithFuture(
               requestMessage,

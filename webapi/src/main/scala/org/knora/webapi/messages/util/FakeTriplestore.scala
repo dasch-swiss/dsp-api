@@ -28,8 +28,8 @@ import org.knora.webapi.util.FileUtil
 import scala.jdk.CollectionConverters._
 
 /**
-  * A fake triplestore for use in performance testing. This feature is activated in `application.conf`.
-  */
+ * A fake triplestore for use in performance testing. This feature is activated in `application.conf`.
+ */
 object FakeTriplestore {
 
   private var fakeTriplestoreDir: Option[Path] = None
@@ -38,9 +38,8 @@ object FakeTriplestore {
 
   var data = Map.empty[String, String]
 
-  def init(dataDir: Path): Unit = {
+  def init(dataDir: Path): Unit =
     fakeTriplestoreDir = Some(dataDir)
-  }
 
   def clear(): Unit = {
     FileUtils.deleteDirectory(fakeTriplestoreDir.get.toFile)
@@ -58,23 +57,28 @@ object FakeTriplestore {
             .newDirectoryStream(queryDir)
             .asScala
             .filter(_.getFileName.toString.endsWith(".rq"))
-            .head)
+            .head
+        )
         val result = FileUtil.readTextFile(
           Files
             .newDirectoryStream(queryDir)
             .asScala
             .filter(_.getFileName.toString.endsWith(".json"))
-            .head)
+            .head
+        )
         sparql -> result
       }
       .toMap
 
-    data = new ErrorHandlingMap(dataToWrap, { key: String =>
-      s"No result has been stored in the fake triplestore for this query: $key"
-    })
+    data = new ErrorHandlingMap(
+      dataToWrap,
+      { key: String =>
+        s"No result has been stored in the fake triplestore for this query: $key"
+      }
+    )
   }
 
-  def add(sparql: String, result: String, log: LoggingAdapter): Unit = {
+  def add(sparql: String, result: String, log: LoggingAdapter): Unit =
     this.synchronized {
       log.info("Collecting data for fake triplestore")
       val paddedQueryNum = f"$queryNum%04d"
@@ -86,5 +90,4 @@ object FakeTriplestore {
       FileUtil.writeTextFile(resultFile, result)
       queryNum += 1
     }
-  }
 }

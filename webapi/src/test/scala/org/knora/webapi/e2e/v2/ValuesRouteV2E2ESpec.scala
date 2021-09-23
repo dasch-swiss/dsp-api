@@ -137,9 +137,11 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     val stillImageFileValueUuid: IRI = "goZ7JFRNSeqF-dNxsqAS7Q"
   }
 
-  private def getResourceWithValues(resourceIri: IRI,
-                                    propertyIrisForGravsearch: Seq[SmartIri],
-                                    userEmail: String): JsonLDDocument = {
+  private def getResourceWithValues(
+    resourceIri: IRI,
+    propertyIrisForGravsearch: Seq[SmartIri],
+    userEmail: String
+  ): JsonLDDocument = {
     // Make a Gravsearch query from a template.
     val gravsearchQuery: String = org.knora.webapi.messages.twirl.queries.gravsearch.txt
       .getResourceWithSpecifiedProperties(
@@ -150,64 +152,74 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
     // Run the query.
 
-    val request = Post(baseApiUrl + "/v2/searchextended",
-                       HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)) ~> addCredentials(
-      BasicHttpCredentials(userEmail, password))
+    val request = Post(
+      baseApiUrl + "/v2/searchextended",
+      HttpEntity(SparqlQueryConstants.`application/sparql-query`, gravsearchQuery)
+    ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
     val response: HttpResponse = singleAwaitingRequest(request)
     assert(response.status == StatusCodes.OK, response.toString)
     responseToJsonLDDocument(response)
   }
 
-  private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray = {
+  private def getValuesFromResource(resource: JsonLDDocument, propertyIriInResult: SmartIri): JsonLDArray =
     resource.requireArray(propertyIriInResult.toString)
-  }
 
-  private def getValueFromResource(resource: JsonLDDocument,
-                                   propertyIriInResult: SmartIri,
-                                   expectedValueIri: IRI): JsonLDObject = {
+  private def getValueFromResource(
+    resource: JsonLDDocument,
+    propertyIriInResult: SmartIri,
+    expectedValueIri: IRI
+  ): JsonLDObject = {
     val resourceIri: IRI = resource.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
     val propertyValues: JsonLDArray =
       getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
 
     val matchingValues: Seq[JsonLDObject] = propertyValues.value.collect {
       case jsonLDObject: JsonLDObject
-          if jsonLDObject.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri) == expectedValueIri =>
+          if jsonLDObject.requireStringWithValidation(
+            JsonLDKeywords.ID,
+            stringFormatter.validateAndEscapeIri
+          ) == expectedValueIri =>
         jsonLDObject
     }
 
     if (matchingValues.isEmpty) {
       throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>")
+        s"Property <$propertyIriInResult> of resource <$resourceIri> does not have value <$expectedValueIri>"
+      )
     }
 
     if (matchingValues.size > 1) {
       throw AssertionException(
-        s"Property <$propertyIriInResult> of resource <$resourceIri> has more than one value with the IRI <$expectedValueIri>")
+        s"Property <$propertyIriInResult> of resource <$resourceIri> has more than one value with the IRI <$expectedValueIri>"
+      )
     }
 
     matchingValues.head
   }
 
-  private def parseResourceLastModificationDate(resource: JsonLDDocument): Option[Instant] = {
+  private def parseResourceLastModificationDate(resource: JsonLDDocument): Option[Instant] =
     resource.maybeObject(OntologyConstants.KnoraApiV2Complex.LastModificationDate).map { jsonLDObject =>
       jsonLDObject.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.validateAndEscapeIri) should ===(
-        OntologyConstants.Xsd.DateTimeStamp)
+        OntologyConstants.Xsd.DateTimeStamp
+      )
       jsonLDObject.requireStringWithValidation(JsonLDKeywords.VALUE, stringFormatter.xsdDateTimeStampToInstant)
     }
-  }
 
   private def getResourceLastModificationDate(resourceIri: IRI, userEmail: String): Option[Instant] = {
-    val request = Get(baseApiUrl + s"/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}") ~> addCredentials(
-      BasicHttpCredentials(userEmail, password))
+    val request = Get(
+      baseApiUrl + s"/v2/resourcespreview/${URLEncoder.encode(resourceIri, "UTF-8")}"
+    ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
     val response: HttpResponse = singleAwaitingRequest(request)
     assert(response.status == StatusCodes.OK, response.toString)
     val resource: JsonLDDocument = responseToJsonLDDocument(response)
     parseResourceLastModificationDate(resource)
   }
 
-  private def checkLastModDate(resourceIri: IRI,
-                               maybePreviousLastModDate: Option[Instant],
-                               maybeUpdatedLastModDate: Option[Instant]): Unit = {
+  private def checkLastModDate(
+    resourceIri: IRI,
+    maybePreviousLastModDate: Option[Instant],
+    maybeUpdatedLastModDate: Option[Instant]
+  ): Unit =
     maybeUpdatedLastModDate match {
       case Some(updatedLastModDate) =>
         maybePreviousLastModDate match {
@@ -217,14 +229,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       case None => throw AssertionException(s"Resource $resourceIri has no knora-api:lastModificationDate")
     }
-  }
 
-  private def getValue(resourceIri: IRI,
-                       maybePreviousLastModDate: Option[Instant],
-                       propertyIriForGravsearch: SmartIri,
-                       propertyIriInResult: SmartIri,
-                       expectedValueIri: IRI,
-                       userEmail: String): JsonLDObject = {
+  private def getValue(
+    resourceIri: IRI,
+    maybePreviousLastModDate: Option[Instant],
+    propertyIriForGravsearch: SmartIri,
+    propertyIriInResult: SmartIri,
+    expectedValueIri: IRI,
+    userEmail: String
+  ): JsonLDObject = {
     val resource: JsonLDDocument = getResourceWithValues(
       resourceIri = resourceIri,
       propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
@@ -252,418 +265,426 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     )
   }
 
-  private def createTextValueWithoutStandoffRequest(resourceIri: IRI, valueAsString: String): String = {
+  private def createTextValueWithoutStandoffRequest(resourceIri: IRI, valueAsString: String): String =
     s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasText" : {
-           |    "@type" : "knora-api:TextValue",
-           |    "knora-api:valueAsString" : "$valueAsString"
-           |  },
-           |  "@context" : {
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-  }
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasText" : {
+       |    "@type" : "knora-api:TextValue",
+       |    "knora-api:valueAsString" : "$valueAsString"
+       |  },
+       |  "@context" : {
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
 
   private val textValue1AsXmlWithStandardMapping: String =
     """<?xml version="1.0" encoding="UTF-8"?>
-          |<text>
-          |   This text links to another <a class="salsah-link" href="http://rdfh.ch/0001/another-thing">resource</a>.
-          |   And this <strong id="link_id">strong value</strong> is linked by this <a class="internal-link" href="#link_id">link</a>
-          |</text>""".stripMargin
+      |<text>
+      |   This text links to another <a class="salsah-link" href="http://rdfh.ch/0001/another-thing">resource</a>.
+      |   And this <strong id="link_id">strong value</strong> is linked by this <a class="internal-link" href="#link_id">link</a>
+      |</text>""".stripMargin
 
   private val standardMappingIri: IRI = "http://rdfh.ch/standoff/mappings/StandardMapping"
 
   private val geometryValue1 =
     """{"status":"active","lineColor":"#ff3333","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
 
-  private def createTextValueWithStandoffRequest(resourceIri: IRI, textValueAsXml: String, mappingIri: String)(
-      implicit stringFormatter: StringFormatter): String = {
+  private def createTextValueWithStandoffRequest(resourceIri: IRI, textValueAsXml: String, mappingIri: String)(implicit
+    stringFormatter: StringFormatter
+  ): String =
     s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasText" : {
-           |    "@type" : "knora-api:TextValue",
-           |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(textValueAsXml)},
-           |    "knora-api:textValueHasMapping" : {
-           |      "@id": "$mappingIri"
-           |    }
-           |  },
-           |  "@context" : {
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-  }
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasText" : {
+       |    "@type" : "knora-api:TextValue",
+       |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(textValueAsXml)},
+       |    "knora-api:textValueHasMapping" : {
+       |      "@id": "$mappingIri"
+       |    }
+       |  },
+       |  "@context" : {
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
 
-  private def createDateValueWithDayPrecisionRequest(resourceIri: IRI,
-                                                     dateValueHasCalendar: String,
-                                                     dateValueHasStartYear: Int,
-                                                     dateValueHasStartMonth: Int,
-                                                     dateValueHasStartDay: Int,
-                                                     dateValueHasStartEra: String,
-                                                     dateValueHasEndYear: Int,
-                                                     dateValueHasEndMonth: Int,
-                                                     dateValueHasEndDay: Int,
-                                                     dateValueHasEndEra: String): String = {
+  private def createDateValueWithDayPrecisionRequest(
+    resourceIri: IRI,
+    dateValueHasCalendar: String,
+    dateValueHasStartYear: Int,
+    dateValueHasStartMonth: Int,
+    dateValueHasStartDay: Int,
+    dateValueHasStartEra: String,
+    dateValueHasEndYear: Int,
+    dateValueHasEndMonth: Int,
+    dateValueHasEndDay: Int,
+    dateValueHasEndEra: String
+  ): String =
     s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasDate" : {
-           |    "@type" : "knora-api:DateValue",
-           |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-           |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-           |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-           |    "knora-api:dateValueHasStartDay" : $dateValueHasStartDay,
-           |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-           |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-           |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
-           |    "knora-api:dateValueHasEndDay" : $dateValueHasEndDay,
-           |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-           |  },
-           |  "@context" : {
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-  }
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasDate" : {
+       |    "@type" : "knora-api:DateValue",
+       |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
+       |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
+       |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
+       |    "knora-api:dateValueHasStartDay" : $dateValueHasStartDay,
+       |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
+       |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
+       |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
+       |    "knora-api:dateValueHasEndDay" : $dateValueHasEndDay,
+       |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
+       |  },
+       |  "@context" : {
+       |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
 
-  private def createIslamicDateValueWithDayPrecisionRequest(resourceIri: IRI,
-                                                            dateValueHasCalendar: String,
-                                                            dateValueHasStartYear: Int,
-                                                            dateValueHasStartMonth: Int,
-                                                            dateValueHasStartDay: Int,
-                                                            dateValueHasEndYear: Int,
-                                                            dateValueHasEndMonth: Int,
-                                                            dateValueHasEndDay: Int): String = {
+  private def createIslamicDateValueWithDayPrecisionRequest(
+    resourceIri: IRI,
+    dateValueHasCalendar: String,
+    dateValueHasStartYear: Int,
+    dateValueHasStartMonth: Int,
+    dateValueHasStartDay: Int,
+    dateValueHasEndYear: Int,
+    dateValueHasEndMonth: Int,
+    dateValueHasEndDay: Int
+  ): String =
     s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasDate" : {
-           |    "@type" : "knora-api:DateValue",
-           |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-           |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-           |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-           |    "knora-api:dateValueHasStartDay" : $dateValueHasStartDay,
-           |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-           |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
-           |    "knora-api:dateValueHasEndDay" : $dateValueHasEndDay
-           |  },
-           |  "@context" : {
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-  }
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasDate" : {
+       |    "@type" : "knora-api:DateValue",
+       |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
+       |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
+       |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
+       |    "knora-api:dateValueHasStartDay" : $dateValueHasStartDay,
+       |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
+       |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
+       |    "knora-api:dateValueHasEndDay" : $dateValueHasEndDay
+       |  },
+       |  "@context" : {
+       |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
 
-  private def createDateValueWithMonthPrecisionRequest(resourceIri: IRI,
-                                                       dateValueHasCalendar: String,
-                                                       dateValueHasStartYear: Int,
-                                                       dateValueHasStartMonth: Int,
-                                                       dateValueHasStartEra: String,
-                                                       dateValueHasEndYear: Int,
-                                                       dateValueHasEndMonth: Int,
-                                                       dateValueHasEndEra: String): String = {
+  private def createDateValueWithMonthPrecisionRequest(
+    resourceIri: IRI,
+    dateValueHasCalendar: String,
+    dateValueHasStartYear: Int,
+    dateValueHasStartMonth: Int,
+    dateValueHasStartEra: String,
+    dateValueHasEndYear: Int,
+    dateValueHasEndMonth: Int,
+    dateValueHasEndEra: String
+  ): String =
     s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasDate" : {
-           |    "@type" : "knora-api:DateValue",
-           |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-           |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-           |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-           |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-           |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-           |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
-           |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-           |  },
-           |  "@context" : {
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-  }
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasDate" : {
+       |    "@type" : "knora-api:DateValue",
+       |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
+       |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
+       |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
+       |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
+       |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
+       |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
+       |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
+       |  },
+       |  "@context" : {
+       |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
 
-  private def createDateValueWithYearPrecisionRequest(resourceIri: IRI,
-                                                      dateValueHasCalendar: String,
-                                                      dateValueHasStartYear: Int,
-                                                      dateValueHasStartEra: String,
-                                                      dateValueHasEndYear: Int,
-                                                      dateValueHasEndEra: String): String = {
+  private def createDateValueWithYearPrecisionRequest(
+    resourceIri: IRI,
+    dateValueHasCalendar: String,
+    dateValueHasStartYear: Int,
+    dateValueHasStartEra: String,
+    dateValueHasEndYear: Int,
+    dateValueHasEndEra: String
+  ): String =
     s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasDate" : {
-           |    "@type" : "knora-api:DateValue",
-           |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-           |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-           |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-           |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-           |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-           |  },
-           |  "@context" : {
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-  }
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasDate" : {
+       |    "@type" : "knora-api:DateValue",
+       |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
+       |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
+       |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
+       |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
+       |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
+       |  },
+       |  "@context" : {
+       |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
 
-  private def updateTextValueWithoutStandoffRequest(resourceIri: IRI, valueIri: IRI, valueAsString: String): String = {
+  private def updateTextValueWithoutStandoffRequest(resourceIri: IRI, valueIri: IRI, valueAsString: String): String =
     s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasText" : {
-           |    "@id" : "$valueIri",
-           |    "@type" : "knora-api:TextValue",
-           |    "knora-api:valueAsString" : "$valueAsString"
-           |  },
-           |  "@context" : {
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-  }
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasText" : {
+       |    "@id" : "$valueIri",
+       |    "@type" : "knora-api:TextValue",
+       |    "knora-api:valueAsString" : "$valueAsString"
+       |  },
+       |  "@context" : {
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
 
   private val textValue2AsXmlWithStandardMapping: String =
     """<?xml version="1.0" encoding="UTF-8"?>
-          |<text>
-          |   This updated text links to another <a class="salsah-link" href="http://rdfh.ch/0001/another-thing">resource</a>.
-          |</text>""".stripMargin
+      |<text>
+      |   This updated text links to another <a class="salsah-link" href="http://rdfh.ch/0001/another-thing">resource</a>.
+      |</text>""".stripMargin
 
-  private def updateTextValueWithCommentRequest(resourceIri: IRI,
-                                                valueIri: IRI,
-                                                valueAsString: String,
-                                                valueHasComment: String): String = {
+  private def updateTextValueWithCommentRequest(
+    resourceIri: IRI,
+    valueIri: IRI,
+    valueAsString: String,
+    valueHasComment: String
+  ): String =
     s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasText" : {
-           |    "@id" : "$valueIri",
-           |    "@type" : "knora-api:TextValue",
-           |    "knora-api:valueAsString" : "$valueAsString",
-           |    "knora-api:valueHasComment" : "$valueHasComment"
-           |  },
-           |  "@context" : {
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-  }
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasText" : {
+       |    "@id" : "$valueIri",
+       |    "@type" : "knora-api:TextValue",
+       |    "knora-api:valueAsString" : "$valueAsString",
+       |    "knora-api:valueHasComment" : "$valueHasComment"
+       |  },
+       |  "@context" : {
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
 
-  private def updateDateValueWithDayPrecisionRequest(resourceIri: IRI,
-                                                     valueIri: IRI,
-                                                     dateValueHasCalendar: String,
-                                                     dateValueHasStartYear: Int,
-                                                     dateValueHasStartMonth: Int,
-                                                     dateValueHasStartDay: Int,
-                                                     dateValueHasStartEra: String,
-                                                     dateValueHasEndYear: Int,
-                                                     dateValueHasEndMonth: Int,
-                                                     dateValueHasEndDay: Int,
-                                                     dateValueHasEndEra: String): String = {
+  private def updateDateValueWithDayPrecisionRequest(
+    resourceIri: IRI,
+    valueIri: IRI,
+    dateValueHasCalendar: String,
+    dateValueHasStartYear: Int,
+    dateValueHasStartMonth: Int,
+    dateValueHasStartDay: Int,
+    dateValueHasStartEra: String,
+    dateValueHasEndYear: Int,
+    dateValueHasEndMonth: Int,
+    dateValueHasEndDay: Int,
+    dateValueHasEndEra: String
+  ): String =
     s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasDate" : {
-           |    "@id" : "$valueIri",
-           |    "@type" : "knora-api:DateValue",
-           |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-           |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-           |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-           |    "knora-api:dateValueHasStartDay" : $dateValueHasStartDay,
-           |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-           |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-           |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
-           |    "knora-api:dateValueHasEndDay" : $dateValueHasEndDay,
-           |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-           |  },
-           |  "@context" : {
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-  }
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasDate" : {
+       |    "@id" : "$valueIri",
+       |    "@type" : "knora-api:DateValue",
+       |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
+       |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
+       |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
+       |    "knora-api:dateValueHasStartDay" : $dateValueHasStartDay,
+       |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
+       |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
+       |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
+       |    "knora-api:dateValueHasEndDay" : $dateValueHasEndDay,
+       |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
+       |  },
+       |  "@context" : {
+       |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
 
-  private def updateDateValueWithMonthPrecisionRequest(resourceIri: IRI,
-                                                       valueIri: IRI,
-                                                       dateValueHasCalendar: String,
-                                                       dateValueHasStartYear: Int,
-                                                       dateValueHasStartMonth: Int,
-                                                       dateValueHasStartEra: String,
-                                                       dateValueHasEndYear: Int,
-                                                       dateValueHasEndMonth: Int,
-                                                       dateValueHasEndEra: String): String = {
+  private def updateDateValueWithMonthPrecisionRequest(
+    resourceIri: IRI,
+    valueIri: IRI,
+    dateValueHasCalendar: String,
+    dateValueHasStartYear: Int,
+    dateValueHasStartMonth: Int,
+    dateValueHasStartEra: String,
+    dateValueHasEndYear: Int,
+    dateValueHasEndMonth: Int,
+    dateValueHasEndEra: String
+  ): String =
     s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasDate" : {
-           |    "@id" : "$valueIri",
-           |    "@type" : "knora-api:DateValue",
-           |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-           |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-           |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
-           |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-           |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-           |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
-           |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-           |  },
-           |  "@context" : {
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-  }
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasDate" : {
+       |    "@id" : "$valueIri",
+       |    "@type" : "knora-api:DateValue",
+       |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
+       |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
+       |    "knora-api:dateValueHasStartMonth" : $dateValueHasStartMonth,
+       |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
+       |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
+       |    "knora-api:dateValueHasEndMonth" : $dateValueHasEndMonth,
+       |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
+       |  },
+       |  "@context" : {
+       |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
 
-  private def updateDateValueWithYearPrecisionRequest(resourceIri: IRI,
-                                                      valueIri: IRI,
-                                                      dateValueHasCalendar: String,
-                                                      dateValueHasStartYear: Int,
-                                                      dateValueHasStartEra: String,
-                                                      dateValueHasEndYear: Int,
-                                                      dateValueHasEndEra: String): String = {
+  private def updateDateValueWithYearPrecisionRequest(
+    resourceIri: IRI,
+    valueIri: IRI,
+    dateValueHasCalendar: String,
+    dateValueHasStartYear: Int,
+    dateValueHasStartEra: String,
+    dateValueHasEndYear: Int,
+    dateValueHasEndEra: String
+  ): String =
     s"""{
-           |  "@id" : "$resourceIri",
-           |  "@type" : "anything:Thing",
-           |  "anything:hasDate" : {
-           |    "@id" : "$valueIri",
-           |    "@type" : "knora-api:DateValue",
-           |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
-           |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
-           |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
-           |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
-           |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
-           |  },
-           |  "@context" : {
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
-  }
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasDate" : {
+       |    "@id" : "$valueIri",
+       |    "@type" : "knora-api:DateValue",
+       |    "knora-api:dateValueHasCalendar" : "$dateValueHasCalendar",
+       |    "knora-api:dateValueHasStartYear" : $dateValueHasStartYear,
+       |    "knora-api:dateValueHasStartEra" : "$dateValueHasStartEra",
+       |    "knora-api:dateValueHasEndYear" : $dateValueHasEndYear,
+       |    "knora-api:dateValueHasEndEra" : "$dateValueHasEndEra"
+       |  },
+       |  "@context" : {
+       |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+       |  }
+       |}""".stripMargin
 
   private val geometryValue2 =
     """{"status":"active","lineColor":"#ff3344","lineWidth":2,"points":[{"x":0.08098591549295775,"y":0.16741071428571427},{"x":0.7394366197183099,"y":0.7299107142857143}],"type":"rectangle","original_index":0}"""
 
-  private def updateLinkValueRequest(resourceIri: IRI,
-                                     valueIri: IRI,
-                                     targetResourceIri: IRI,
-                                     comment: Option[String] = None): String = {
+  private def updateLinkValueRequest(
+    resourceIri: IRI,
+    valueIri: IRI,
+    targetResourceIri: IRI,
+    comment: Option[String] = None
+  ): String =
     comment match {
       case Some(definedComment) =>
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasOtherThingValue" : {
-                   |    "@id" : "$valueIri",
-                   |    "@type" : "knora-api:LinkValue",
-                   |    "knora-api:linkValueHasTargetIri" : {
-                   |      "@id" : "$targetResourceIri"
-                   |    },
-                   |    "knora-api:valueHasComment" : "$definedComment"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasOtherThingValue" : {
+           |    "@id" : "$valueIri",
+           |    "@type" : "knora-api:LinkValue",
+           |    "knora-api:linkValueHasTargetIri" : {
+           |      "@id" : "$targetResourceIri"
+           |    },
+           |    "knora-api:valueHasComment" : "$definedComment"
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       case None =>
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasOtherThingValue" : {
-                   |    "@id" : "$valueIri",
-                   |    "@type" : "knora-api:LinkValue",
-                   |    "knora-api:linkValueHasTargetIri" : {
-                   |      "@id" : "$targetResourceIri"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasOtherThingValue" : {
+           |    "@id" : "$valueIri",
+           |    "@type" : "knora-api:LinkValue",
+           |    "knora-api:linkValueHasTargetIri" : {
+           |      "@id" : "$targetResourceIri"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
     }
-  }
 
-  private def deleteIntValueRequest(resourceIri: IRI, valueIri: IRI, maybeDeleteComment: Option[String]): String = {
+  private def deleteIntValueRequest(resourceIri: IRI, valueIri: IRI, maybeDeleteComment: Option[String]): String =
     maybeDeleteComment match {
       case Some(deleteComment) =>
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "$valueIri",
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:deleteComment" : "$deleteComment"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
-
-      case None =>
-        s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "$valueIri",
-                   |    "@type" : "knora-api:IntValue"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
-    }
-  }
-
-  private def updateIntValueWithCustomNewValueVersionIriRequest(resourceIri: IRI,
-                                                                valueIri: IRI,
-                                                                intValue: Int,
-                                                                newValueVersionIri: IRI): String = {
-    s"""{
            |  "@id" : "$resourceIri",
            |  "@type" : "anything:Thing",
            |  "anything:hasInteger" : {
            |    "@id" : "$valueIri",
            |    "@type" : "knora-api:IntValue",
-           |    "knora-api:newValueVersionIri" : {
-           |      "@id" : "$newValueVersionIri"
-           |    },
-           |    "knora-api:intValueAsInt" : $intValue
+           |    "knora-api:deleteComment" : "$deleteComment"
            |  },
            |  "@context" : {
            |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
            |  }
            |}""".stripMargin
-  }
+
+      case None =>
+        s"""{
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@id" : "$valueIri",
+           |    "@type" : "knora-api:IntValue"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
+    }
+
+  private def updateIntValueWithCustomNewValueVersionIriRequest(
+    resourceIri: IRI,
+    valueIri: IRI,
+    intValue: Int,
+    newValueVersionIri: IRI
+  ): String =
+    s"""{
+       |  "@id" : "$resourceIri",
+       |  "@type" : "anything:Thing",
+       |  "anything:hasInteger" : {
+       |    "@id" : "$valueIri",
+       |    "@type" : "knora-api:IntValue",
+       |    "knora-api:newValueVersionIri" : {
+       |      "@id" : "$newValueVersionIri"
+       |    },
+       |    "knora-api:intValueAsInt" : $intValue
+       |  },
+       |  "@context" : {
+       |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+       |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+       |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+       |  }
+       |}""".stripMargin
 
   /**
-    * Gets a value from a resource by UUID, compares the response to the expected response, and
-    * adds the response to the client test data.
-    *
-    * @param resourceIri  the resource IRI.
-    * @param valueUuid    the value UUID.
-    * @param fileBasename the basename of the test data file.
-    */
+   * Gets a value from a resource by UUID, compares the response to the expected response, and
+   * adds the response to the client test data.
+   *
+   * @param resourceIri  the resource IRI.
+   * @param valueUuid    the value UUID.
+   * @param fileBasename the basename of the test data file.
+   */
   private def testValue(resourceIri: IRI, valueUuid: String, fileBasename: String): Unit = {
     val resourceIriEncoded = URLEncoder.encode(resourceIri, "UTF-8")
     val request = Get(s"$baseApiUrl/v2/values/$resourceIriEncoded/$valueUuid") ~> addCredentials(
-      BasicHttpCredentials(SharedTestDataADM.anythingUser1.email, SharedTestDataADM.testPass))
+      BasicHttpCredentials(SharedTestDataADM.anythingUser1.email, SharedTestDataADM.testPass)
+    )
     val response: HttpResponse = singleAwaitingRequest(request)
     val responseStr = responseToString(response)
     assert(response.status == StatusCodes.OK, responseStr)
@@ -705,13 +726,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         "link-value" -> TestDing.linkValueUuid
       )
 
-      testDingValues.foreach {
-        case (valueTypeName, valueUuid) =>
-          testValue(
-            resourceIri = TestDing.iri,
-            valueUuid = valueUuid,
-            fileBasename = s"get-$valueTypeName-response"
-          )
+      testDingValues.foreach { case (valueTypeName, valueUuid) =>
+        testValue(
+          resourceIri = TestDing.iri,
+          valueUuid = valueUuid,
+          fileBasename = s"get-$valueTypeName-response"
+        )
       }
 
       testValue(
@@ -727,7 +747,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val timestamp = "20190212T090510Z"
 
       val request = Get(baseApiUrl + s"/v2/values/$resourceIri/$valueUuid?version=$timestamp") ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+        BasicHttpCredentials(anythingUserEmail, password)
+      )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -750,17 +771,17 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -773,8 +794,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseStr: String = responseToString(response)
       assert(response.status == StatusCodes.OK, responseStr)
@@ -785,9 +808,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
       valueType should ===(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri)
-      integerValueUUID =
-        responseJsonDoc.body.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
-                                                         stringFormatter.validateBase64EncodedUuid)
+      integerValueUUID = responseJsonDoc.body.requireStringWithValidation(
+        OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
+        stringFormatter.validateBase64EncodedUuid
+      )
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -819,19 +843,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "$customValueIri",
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@id" : "$customValueIri",
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -844,8 +868,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -861,22 +887,24 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       // duplicate value IRI
       val params =
         s"""{
-                   |  "@id" : "${AThing.iri}",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "$customValueIri",
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : 43
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "${AThing.iri}",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@id" : "$customValueIri",
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : 43
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
 
@@ -892,19 +920,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue,
-                   |    "knora-api:valueHasUUID" : "$intValueCustomUUID"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue,
+           |    "knora-api:valueHasUUID" : "$intValueCustomUUID"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -917,8 +945,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
 
       assert(response.status == StatusCodes.OK, response.toString)
@@ -964,8 +994,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
 
       assert(response.status == StatusCodes.BadRequest, response.toString)
@@ -978,22 +1010,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue,
-                   |    "knora-api:valueCreationDate" : {
-                   |        "@type" : "xsd:dateTimeStamp",
-                   |        "@value" : "$customCreationDate"
-                   |      }
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue,
+           |    "knora-api:valueCreationDate" : {
+           |        "@type" : "xsd:dateTimeStamp",
+           |        "@value" : "$customCreationDate"
+           |      }
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -1006,8 +1038,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -1034,24 +1068,24 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "$customValueIri",
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue,
-                   |    "knora-api:valueHasUUID" : "$customValueUUID",
-                   |    "knora-api:valueCreationDate" : {
-                   |        "@type" : "xsd:dateTimeStamp",
-                   |        "@value" : "$customCreationDate"
-                   |      }
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@id" : "$customValueIri",
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue,
+           |    "knora-api:valueHasUUID" : "$customValueUUID",
+           |    "knora-api:valueCreationDate" : {
+           |        "@type" : "xsd:dateTimeStamp",
+           |        "@value" : "$customCreationDate"
+           |      }
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -1064,8 +1098,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -1090,17 +1126,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : $intValue,
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : $intValue,
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
+           |  }
+           |}""".stripMargin
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.BadRequest, responseAsString)
@@ -1115,18 +1153,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue,
-                   |    "knora-api:hasPermissions" : "$customPermissions"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue,
+           |    "knora-api:hasPermissions" : "$customPermissions"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -1139,8 +1177,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -1188,8 +1228,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -1223,8 +1265,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         valueAsString = valueAsString
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
     }
@@ -1239,8 +1283,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         valueAsString = valueAsString
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
     }
@@ -1268,8 +1314,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -1317,8 +1365,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -1353,8 +1403,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         valueHasComment = "Adding a comment"
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
     }
@@ -1372,8 +1424,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         valueHasComment = "Updated comment"
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -1406,18 +1460,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasText" : {
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:valueAsString" : "$valueAsString",
-                   |    "knora-api:valueHasComment" : "$valueHasComment"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasText" : {
+           |    "@type" : "knora-api:TextValue",
+           |    "knora-api:valueAsString" : "$valueAsString",
+           |    "knora-api:valueHasComment" : "$valueHasComment"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -1430,8 +1484,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -1479,8 +1535,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseStr = responseToString(response)
       assert(response.status == StatusCodes.OK, responseStr)
@@ -1516,430 +1574,430 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val textValueAsXml: String =
         """<?xml version="1.0" encoding="UTF-8"?>
-                  |<text>
-                  |   <p>This <a class="internal-link" href="#link_id">ref</a> is a link to an out of page tag.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>Many lines to force to create a page.</p>
-                  |   <p>This <strong id="link_id">strong value</strong> is linked by an out of page anchor link at the top.</p>
-                  |</text>
+          |<text>
+          |   <p>This <a class="internal-link" href="#link_id">ref</a> is a link to an out of page tag.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>Many lines to force to create a page.</p>
+          |   <p>This <strong id="link_id">strong value</strong> is linked by an out of page anchor link at the top.</p>
+          |</text>
                 """.stripMargin
 
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
@@ -1951,8 +2009,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         mappingIri = standardMappingIri
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -1985,9 +2045,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val textValueAsXml: String =
         """<?xml version="1.0" encoding="UTF-8"?>
-                  |<text>
-                  |   This text links to <a href="http://www.knora.org">a web site</a>.
-                  |</text>
+          |<text>
+          |   This text links to <a href="http://www.knora.org">a web site</a>.
+          |</text>
                 """.stripMargin
 
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText".toSmartIri
@@ -1999,8 +2059,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         mappingIri = standardMappingIri
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2027,8 +2089,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val resourceIri = AThing.iri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUserEmail)
       val jsonLDEntity = FileUtil.readTextFile(Paths.get("test_data/valuesE2EV2/CreateValueWithEscape.jsonld"))
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2050,7 +2114,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val expectedText =
         """<p>
-                  | test</p>""".stripMargin
+          | test</p>""".stripMargin
 
       assert(savedTextValueAsXml.contains(expectedText))
     }
@@ -2062,16 +2126,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val mappingParams =
         s"""{
-                   |    "knora-api:mappingHasName": "HTMLMapping",
-                   |    "knora-api:attachedToProject": {
-                   |      "@id": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}"
-                   |    },
-                   |    "rdfs:label": "HTML mapping",
-                   |    "@context": {
-                   |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
-                   |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
-                   |    }
-                   |}""".stripMargin
+           |    "knora-api:mappingHasName": "HTMLMapping",
+           |    "knora-api:attachedToProject": {
+           |      "@id": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}"
+           |    },
+           |    "rdfs:label": "HTML mapping",
+           |    "@context": {
+           |        "rdfs": "${OntologyConstants.Rdfs.RdfsPrefixExpansion}",
+           |        "knora-api": "${OntologyConstants.KnoraApiV2Complex.KnoraApiV2PrefixExpansion}"
+           |    }
+           |}""".stripMargin
 
       val formDataMapping = Multipart.FormData(
         Multipart.FormData.BodyPart(
@@ -2087,8 +2151,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       // create standoff from XML
       val mappingRequest = Post(baseApiUrl + "/v2/mapping", formDataMapping) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+        BasicHttpCredentials(anythingUserEmail, password)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val mappingResponse: HttpResponse = singleAwaitingRequest(mappingRequest)
       assert(mappingResponse.status == StatusCodes.OK, mappingResponse.toString)
 
@@ -2100,9 +2164,9 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val textValueAsXml =
         """<?xml version="1.0" encoding="UTF-8"?>
-                  |<text documentType="html">
-                  |    <p>This an <span data-description="an &quot;event&quot;" data-date="GREGORIAN:2017-01-27 CE" class="event">event</span>.</p>
-                  |</text>""".stripMargin
+          |<text documentType="html">
+          |    <p>This an <span data-description="an &quot;event&quot;" data-date="GREGORIAN:2017-01-27 CE" class="event">event</span>.</p>
+          |</text>""".stripMargin
 
       val jsonLDEntity = createTextValueWithStandoffRequest(
         resourceIri = resourceIri,
@@ -2110,8 +2174,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         mappingIri = s"${SharedTestDataADM.ANYTHING_PROJECT_IRI}/mappings/HTMLMapping"
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2141,8 +2207,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         valueAsString = valueAsString
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
     }
@@ -2155,21 +2223,21 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDecimal" : {
-                   |    "@type" : "knora-api:DecimalValue",
-                   |    "knora-api:decimalValueAsDecimal" : {
-                   |      "@type" : "xsd:decimal",
-                   |      "@value" : "$decimalValueAsDecimal"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasDecimal" : {
+           |    "@type" : "knora-api:DecimalValue",
+           |    "knora-api:decimalValueAsDecimal" : {
+           |      "@type" : "xsd:decimal",
+           |      "@value" : "$decimalValueAsDecimal"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -2182,8 +2250,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2250,8 +2320,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2272,15 +2344,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===(
-        "GREGORIAN:2018-10-05 CE:2018-10-06 CE")
+        "GREGORIAN:2018-10-05 CE:2018-10-06 CE"
+      )
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
-        dateValueHasCalendar)
+        dateValueHasCalendar
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth)
+        dateValueHasStartMonth
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra)
+        dateValueHasStartEra
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasEndDay)
@@ -2321,8 +2397,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2343,15 +2421,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===(
-        "GREGORIAN:2018-10 CE:2018-11 CE")
+        "GREGORIAN:2018-10 CE:2018-11 CE"
+      )
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
-        dateValueHasCalendar)
+        dateValueHasCalendar
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth)
+        dateValueHasStartMonth
+      )
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra)
+        dateValueHasStartEra
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
@@ -2388,8 +2470,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2410,14 +2494,17 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===(
-        "GREGORIAN:2018 CE:2019 CE")
+        "GREGORIAN:2018 CE:2019 CE"
+      )
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
-        dateValueHasCalendar)
+        dateValueHasCalendar
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra)
+        dateValueHasStartEra
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
@@ -2447,8 +2534,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasStartEra
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2470,13 +2559,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-10-05 CE")
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
-        dateValueHasCalendar)
+        dateValueHasCalendar
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth)
+        dateValueHasStartMonth
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra)
+        dateValueHasStartEra
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasStartDay)
@@ -2503,8 +2595,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasStartEra
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2526,13 +2620,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-10 CE")
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
-        dateValueHasCalendar)
+        dateValueHasCalendar
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth)
+        dateValueHasStartMonth
+      )
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra)
+        dateValueHasStartEra
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
@@ -2556,8 +2653,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasStartEra
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2579,12 +2678,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018 CE")
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
-        dateValueHasCalendar)
+        dateValueHasCalendar
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra)
+        dateValueHasStartEra
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
@@ -2611,8 +2712,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndDay = dateValueHasStartDay
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2634,10 +2737,12 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("ISLAMIC:1407-01-26")
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
-        dateValueHasCalendar)
+        dateValueHasCalendar
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth)
+        dateValueHasStartMonth
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
@@ -2667,8 +2772,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndDay = dateValueHasEndDay
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2689,12 +2796,15 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===(
-        "ISLAMIC:1407-01-15:1407-01-26")
+        "ISLAMIC:1407-01-15:1407-01-26"
+      )
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
-        dateValueHasCalendar)
+        dateValueHasCalendar
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth)
+        dateValueHasStartMonth
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
@@ -2709,17 +2819,17 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasBoolean" : {
-                   |    "@type" : "knora-api:BooleanValue",
-                   |    "knora-api:booleanValueAsBoolean" : $booleanValue
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasBoolean" : {
+           |    "@type" : "knora-api:BooleanValue",
+           |    "knora-api:booleanValueAsBoolean" : $booleanValue
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -2732,8 +2842,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2765,17 +2877,17 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasGeometry" : {
-                   |    "@type" : "knora-api:GeomValue",
-                   |    "knora-api:geometryValueAsGeometry" : ${stringFormatter.toJsonEncodedString(geometryValue1)}
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasGeometry" : {
+           |    "@type" : "knora-api:GeomValue",
+           |    "knora-api:geometryValueAsGeometry" : ${stringFormatter.toJsonEncodedString(geometryValue1)}
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -2788,8 +2900,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2823,25 +2937,25 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInterval" : {
-                   |    "@type" : "knora-api:IntervalValue",
-                   |    "knora-api:intervalValueHasStart" : {
-                   |      "@type" : "xsd:decimal",
-                   |      "@value" : "$intervalStart"
-                   |    },
-                   |    "knora-api:intervalValueHasEnd" : {
-                   |      "@type" : "xsd:decimal",
-                   |      "@value" : "$intervalEnd"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInterval" : {
+           |    "@type" : "knora-api:IntervalValue",
+           |    "knora-api:intervalValueHasStart" : {
+           |      "@type" : "xsd:decimal",
+           |      "@value" : "$intervalStart"
+           |    },
+           |    "knora-api:intervalValueHasEnd" : {
+           |      "@type" : "xsd:decimal",
+           |      "@value" : "$intervalEnd"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -2854,8 +2968,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2900,21 +3016,21 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasTimeStamp" : {
-                   |    "@type" : "knora-api:TimeValue",
-                   |    "knora-api:timeValueAsTimeStamp" : {
-                   |      "@type" : "xsd:dateTimeStamp",
-                   |      "@value" : "$timeStamp"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasTimeStamp" : {
+           |    "@type" : "knora-api:TimeValue",
+           |    "knora-api:timeValueAsTimeStamp" : {
+           |      "@type" : "xsd:dateTimeStamp",
+           |      "@value" : "$timeStamp"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -2927,8 +3043,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -2965,20 +3083,20 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasListItem" : {
-                   |    "@type" : "knora-api:ListValue",
-                   |    "knora-api:listValueAsListNode" : {
-                   |      "@id" : "$listNode"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasListItem" : {
+           |    "@type" : "knora-api:ListValue",
+           |    "knora-api:listValueAsListNode" : {
+           |      "@id" : "$listNode"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -2991,8 +3109,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -3013,8 +3133,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val savedListValueHasListNode: IRI =
-        savedValue.requireIriInObject(OntologyConstants.KnoraApiV2Complex.ListValueAsListNode,
-                                      stringFormatter.validateAndEscapeIri)
+        savedValue.requireIriInObject(
+          OntologyConstants.KnoraApiV2Complex.ListValueAsListNode,
+          stringFormatter.validateAndEscapeIri
+        )
       savedListValueHasListNode should ===(listNode)
     }
 
@@ -3026,18 +3148,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasColor" : {
-                   |    "@type" : "knora-api:ColorValue",
-                   |    "knora-api:colorValueAsColor" : "$color"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasColor" : {
+           |    "@type" : "knora-api:ColorValue",
+           |    "knora-api:colorValueAsColor" : "$color"
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -3050,8 +3172,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -3083,21 +3207,21 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasUri" : {
-                   |    "@type" : "knora-api:UriValue",
-                   |    "knora-api:uriValueAsUri" : {
-                   |      "@type" : "xsd:anyURI",
-                   |      "@value" : "$uri"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasUri" : {
+           |    "@type" : "knora-api:UriValue",
+           |    "knora-api:uriValueAsUri" : {
+           |      "@type" : "xsd:anyURI",
+           |      "@value" : "$uri"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -3110,8 +3234,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -3148,18 +3274,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasGeoname" : {
-                   |    "@type" : "knora-api:GeonameValue",
-                   |    "knora-api:geonameValueAsGeonameCode" : "$geonameCode"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasGeoname" : {
+           |    "@type" : "knora-api:GeonameValue",
+           |    "knora-api:geonameValueAsGeonameCode" : "$geonameCode"
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -3172,8 +3298,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -3206,20 +3334,20 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity: String =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasOtherThingValue" : {
-                   |    "@type" : "knora-api:LinkValue",
-                   |    "knora-api:linkValueHasTargetIri" : {
-                   |      "@id" : "${TestDing.iri}"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasOtherThingValue" : {
+           |    "@type" : "knora-api:LinkValue",
+           |    "knora-api:linkValueHasTargetIri" : {
+           |      "@id" : "${TestDing.iri}"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -3232,8 +3360,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -3244,8 +3374,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val valueType: SmartIri =
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
       valueType should ===(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri)
-      linkValueUUID = responseJsonDoc.body.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
-                                                                       stringFormatter.validateBase64EncodedUuid)
+      linkValueUUID = responseJsonDoc.body.requireStringWithValidation(
+        OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
+        stringFormatter.validateBase64EncodedUuid
+      )
 
       val savedValue: JsonLDObject = getValue(
         resourceIri = resourceIri,
@@ -3270,26 +3402,26 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   | "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasOtherThingValue" : {
-                   |    "@id" : "$customValueIri",
-                   |    "@type" : "knora-api:LinkValue",
-                   |    "knora-api:valueHasUUID": "$customValueUUID",
-                   |    "knora-api:linkValueHasTargetIri" : {
-                   |      "@id" : "$targetResourceIri"
-                   |    },
-                   |    "knora-api:valueCreationDate" : {
-                   |        "@type" : "xsd:dateTimeStamp",
-                   |        "@value" : "$customCreationDate"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           | "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasOtherThingValue" : {
+           |    "@id" : "$customValueIri",
+           |    "@type" : "knora-api:LinkValue",
+           |    "knora-api:valueHasUUID": "$customValueUUID",
+           |    "knora-api:linkValueHasTargetIri" : {
+           |      "@id" : "$targetResourceIri"
+           |    },
+           |    "knora-api:valueCreationDate" : {
+           |        "@type" : "xsd:dateTimeStamp",
+           |        "@value" : "$customCreationDate"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -3302,8 +3434,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -3330,18 +3464,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "${intValueIri.get}",
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@id" : "${intValueIri.get}",
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -3354,8 +3488,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseStr: String = responseToString(response)
       assert(response.status == StatusCodes.OK, responseStr)
@@ -3367,8 +3503,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.TYPE, stringFormatter.toSmartIriWithErr)
       valueType should ===(OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri)
       val newIntegerValueUUID: UUID =
-        responseJsonDoc.body.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
-                                                         stringFormatter.validateBase64EncodedUuid)
+        responseJsonDoc.body.requireStringWithValidation(
+          OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
+          stringFormatter.validateBase64EncodedUuid
+        )
       assert(newIntegerValueUUID == integerValueUUID) // The new version should have the same UUID.
 
       val savedValue: JsonLDObject = getValue(
@@ -3404,23 +3542,23 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "${intValueForRsyncIri.get}",
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue,
-                   |    "knora-api:valueCreationDate" : {
-                   |        "@type" : "xsd:dateTimeStamp",
-                   |        "@value" : "$valueCreationDate"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@id" : "${intValueForRsyncIri.get}",
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue,
+           |    "knora-api:valueCreationDate" : {
+           |        "@type" : "xsd:dateTimeStamp",
+           |        "@value" : "$valueCreationDate"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#",
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -3433,8 +3571,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -3480,8 +3620,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         newValueVersionIri = newValueVersionIri
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
 
       assert(response.status == StatusCodes.OK, response.toString)
@@ -3516,8 +3658,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         newValueVersionIri = newValueVersionIri
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.BadRequest, responseAsString)
@@ -3535,8 +3679,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         newValueVersionIri = newValueVersionIri
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.BadRequest, responseAsString)
@@ -3554,8 +3700,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         newValueVersionIri = newValueVersionIri
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.BadRequest, responseAsString)
@@ -3573,8 +3721,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         newValueVersionIri = newValueVersionIri
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.BadRequest, responseAsString)
@@ -3586,21 +3736,23 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "${intValueIri.get}",
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@id" : "${intValueIri.get}",
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
+           |  }
+           |}""".stripMargin
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.BadRequest, responseAsString)
@@ -3615,19 +3767,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "${intValueWithCustomPermissionsIri.get}",
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:intValueAsInt" : $intValue,
-                   |    "knora-api:hasPermissions" : "$customPermissions"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@id" : "${intValueWithCustomPermissionsIri.get}",
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:intValueAsInt" : $intValue,
+           |    "knora-api:hasPermissions" : "$customPermissions"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -3640,8 +3792,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -3675,18 +3829,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "${intValueIri.get}",
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:hasPermissions" : "$customPermissions"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@id" : "${intValueIri.get}",
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:hasPermissions" : "$customPermissions"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -3699,8 +3853,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -3732,22 +3888,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasDecimal" : {
-                   |    "@id" : "${decimalValueIri.get}",
-                   |    "@type" : "knora-api:DecimalValue",
-                   |    "knora-api:decimalValueAsDecimal" : {
-                   |      "@type" : "xsd:decimal",
-                   |      "@value" : "$decimalValue"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasDecimal" : {
+           |    "@id" : "${decimalValueIri.get}",
+           |    "@type" : "knora-api:DecimalValue",
+           |    "knora-api:decimalValueAsDecimal" : {
+           |      "@type" : "xsd:decimal",
+           |      "@value" : "$decimalValue"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -3760,8 +3916,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -3798,22 +3956,23 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasText" : {
-                   |    "@id" : "${textValueWithStandoffIri.get}",
-                   |    "@type" : "knora-api:TextValue",
-                   |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(
-             textValue2AsXmlWithStandardMapping)},
-                   |    "knora-api:textValueHasMapping" : {
-                   |      "@id": "$standardMappingIri"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasText" : {
+           |    "@id" : "${textValueWithStandoffIri.get}",
+           |    "@type" : "knora-api:TextValue",
+           |    "knora-api:textValueAsXml" : ${stringFormatter.toJsonEncodedString(
+          textValue2AsXmlWithStandardMapping
+        )},
+           |    "knora-api:textValueHasMapping" : {
+           |      "@id": "$standardMappingIri"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -3826,8 +3985,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -3859,8 +4020,8 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       val jsonLDEntityWithResourceValueIri = jsonLDEntity.replace("VALUE_IRI", textValueWithEscapeIri.get)
       val request = Put(
         baseApiUrl + "/v2/values",
-        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntityWithResourceValueIri)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntityWithResourceValueIri)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -3882,7 +4043,7 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val expectedText =
         """<p>
-                  | test update</p>""".stripMargin
+          | test update</p>""".stripMargin
 
       assert(savedTextValueAsXml.contains(expectedText))
     }
@@ -3901,8 +4062,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         valueHasComment = valueHasComment
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -3967,8 +4130,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -3989,15 +4154,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===(
-        "GREGORIAN:2018-10-05 CE:2018-12-06 CE")
+        "GREGORIAN:2018-10-05 CE:2018-12-06 CE"
+      )
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
-        dateValueHasCalendar)
+        dateValueHasCalendar
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth)
+        dateValueHasStartMonth
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra)
+        dateValueHasStartEra
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasEndDay)
@@ -4039,8 +4208,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4061,15 +4232,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===(
-        "GREGORIAN:2018-09 CE:2018-12 CE")
+        "GREGORIAN:2018-09 CE:2018-12 CE"
+      )
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
-        dateValueHasCalendar)
+        dateValueHasCalendar
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth)
+        dateValueHasStartMonth
+      )
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra)
+        dateValueHasStartEra
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasEndMonth)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
@@ -4107,8 +4282,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4129,14 +4306,17 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===(
-        "GREGORIAN:2018 CE:2020 CE")
+        "GREGORIAN:2018 CE:2020 CE"
+      )
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
-        dateValueHasCalendar)
+        dateValueHasCalendar
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra)
+        dateValueHasStartEra
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasEndYear)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
@@ -4167,8 +4347,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasStartEra
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4190,13 +4372,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-10-06 CE")
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
-        dateValueHasCalendar)
+        dateValueHasCalendar
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth)
+        dateValueHasStartMonth
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(dateValueHasStartDay)
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra)
+        dateValueHasStartEra
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(dateValueHasStartDay)
@@ -4224,8 +4409,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasStartEra
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4247,13 +4434,16 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2018-07 CE")
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
-        dateValueHasCalendar)
+        dateValueHasCalendar
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(
-        dateValueHasStartMonth)
+        dateValueHasStartMonth
+      )
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra)
+        dateValueHasStartEra
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(dateValueHasStartMonth)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
@@ -4278,8 +4468,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         dateValueHasEndEra = dateValueHasStartEra
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4301,12 +4493,14 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.ValueAsString) should ===("GREGORIAN:2019 CE")
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasCalendar) should ===(
-        dateValueHasCalendar)
+        dateValueHasCalendar
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartYear) should ===(dateValueHasStartYear)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartMonth) should ===(None)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasStartDay) should ===(None)
       savedValue.requireString(OntologyConstants.KnoraApiV2Complex.DateValueHasStartEra) should ===(
-        dateValueHasStartEra)
+        dateValueHasStartEra
+      )
       savedValue.requireInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndYear) should ===(dateValueHasStartYear)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndMonth) should ===(None)
       savedValue.maybeInt(OntologyConstants.KnoraApiV2Complex.DateValueHasEndDay) should ===(None)
@@ -4321,18 +4515,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasBoolean" : {
-                   |    "@id" : "${booleanValueIri.get}",
-                   |    "@type" : "knora-api:BooleanValue",
-                   |    "knora-api:booleanValueAsBoolean" : $booleanValue
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasBoolean" : {
+           |    "@id" : "${booleanValueIri.get}",
+           |    "@type" : "knora-api:BooleanValue",
+           |    "knora-api:booleanValueAsBoolean" : $booleanValue
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -4345,8 +4539,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4378,18 +4574,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasGeometry" : {
-                   |    "@id" : "${geometryValueIri.get}",
-                   |    "@type" : "knora-api:GeomValue",
-                   |    "knora-api:geometryValueAsGeometry" : ${stringFormatter.toJsonEncodedString(geometryValue2)}
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasGeometry" : {
+           |    "@id" : "${geometryValueIri.get}",
+           |    "@type" : "knora-api:GeomValue",
+           |    "knora-api:geometryValueAsGeometry" : ${stringFormatter.toJsonEncodedString(geometryValue2)}
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -4402,8 +4598,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4437,26 +4635,26 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInterval" : {
-                   |    "@id" : "${intervalValueIri.get}",
-                   |    "@type" : "knora-api:IntervalValue",
-                   |    "knora-api:intervalValueHasStart" : {
-                   |      "@type" : "xsd:decimal",
-                   |      "@value" : "$intervalStart"
-                   |    },
-                   |    "knora-api:intervalValueHasEnd" : {
-                   |      "@type" : "xsd:decimal",
-                   |      "@value" : "$intervalEnd"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInterval" : {
+           |    "@id" : "${intervalValueIri.get}",
+           |    "@type" : "knora-api:IntervalValue",
+           |    "knora-api:intervalValueHasStart" : {
+           |      "@type" : "xsd:decimal",
+           |      "@value" : "$intervalStart"
+           |    },
+           |    "knora-api:intervalValueHasEnd" : {
+           |      "@type" : "xsd:decimal",
+           |      "@value" : "$intervalEnd"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -4469,8 +4667,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4515,22 +4715,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasTimeStamp" : {
-                   |    "@id" : "${timeValueIri.get}",
-                   |    "@type" : "knora-api:TimeValue",
-                   |    "knora-api:timeValueAsTimeStamp" : {
-                   |      "@type" : "xsd:dateTimeStamp",
-                   |      "@value" : "$timeStamp"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasTimeStamp" : {
+           |    "@id" : "${timeValueIri.get}",
+           |    "@type" : "knora-api:TimeValue",
+           |    "knora-api:timeValueAsTimeStamp" : {
+           |      "@type" : "xsd:dateTimeStamp",
+           |      "@value" : "$timeStamp"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -4543,8 +4743,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4581,21 +4783,21 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasListItem" : {
-                   |    "@id" : "${listValueIri.get}",
-                   |    "@type" : "knora-api:ListValue",
-                   |    "knora-api:listValueAsListNode" : {
-                   |      "@id" : "$listNode"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasListItem" : {
+           |    "@id" : "${listValueIri.get}",
+           |    "@type" : "knora-api:ListValue",
+           |    "knora-api:listValueAsListNode" : {
+           |      "@id" : "$listNode"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -4608,8 +4810,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4630,8 +4834,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
       )
 
       val savedListValueHasListNode: IRI =
-        savedValue.requireIriInObject(OntologyConstants.KnoraApiV2Complex.ListValueAsListNode,
-                                      stringFormatter.validateAndEscapeIri)
+        savedValue.requireIriInObject(
+          OntologyConstants.KnoraApiV2Complex.ListValueAsListNode,
+          stringFormatter.validateAndEscapeIri
+        )
       savedListValueHasListNode should ===(listNode)
     }
 
@@ -4643,19 +4849,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasColor" : {
-                   |    "@id" : "${colorValueIri.get}",
-                   |    "@type" : "knora-api:ColorValue",
-                   |    "knora-api:colorValueAsColor" : "$color"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasColor" : {
+           |    "@id" : "${colorValueIri.get}",
+           |    "@type" : "knora-api:ColorValue",
+           |    "knora-api:colorValueAsColor" : "$color"
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -4668,8 +4874,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4701,22 +4909,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasUri" : {
-                   |    "@id" : "${uriValueIri.get}",
-                   |    "@type" : "knora-api:UriValue",
-                   |    "knora-api:uriValueAsUri" : {
-                   |      "@type" : "xsd:anyURI",
-                   |      "@value" : "$uri"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasUri" : {
+           |    "@id" : "${uriValueIri.get}",
+           |    "@type" : "knora-api:UriValue",
+           |    "knora-api:uriValueAsUri" : {
+           |      "@type" : "xsd:anyURI",
+           |      "@value" : "$uri"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -4729,8 +4937,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4767,19 +4977,19 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasGeoname" : {
-                   |    "@id" : "${geonameValueIri.get}",
-                   |    "@type" : "knora-api:GeonameValue",
-                   |    "knora-api:geonameValueAsGeonameCode" : "$geonameCode"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasGeoname" : {
+           |    "@id" : "${geonameValueIri.get}",
+           |    "@type" : "knora-api:GeonameValue",
+           |    "knora-api:geonameValueAsGeonameCode" : "$geonameCode"
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -4792,8 +5002,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4842,8 +5054,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4857,8 +5071,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       // When you change a link value's target, it gets a new UUID.
       val newLinkValueUUID: UUID =
-        responseJsonDoc.body.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
-                                                         stringFormatter.validateBase64EncodedUuid)
+        responseJsonDoc.body.requireStringWithValidation(
+          OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
+          stringFormatter.validateBase64EncodedUuid
+        )
       assert(newLinkValueUUID != linkValueUUID)
       linkValueUUID = newLinkValueUUID
 
@@ -4886,8 +5102,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         targetResourceIri = linkTargetIri
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
     }
@@ -4907,8 +5125,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         comment = Some(comment)
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4922,8 +5142,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       // Since we only changed metadata, the UUID should be the same.
       val newLinkValueUUID: UUID =
-        responseJsonDoc.body.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
-                                                         stringFormatter.validateBase64EncodedUuid)
+        responseJsonDoc.body.requireStringWithValidation(
+          OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
+          stringFormatter.validateBase64EncodedUuid
+        )
       assert(newLinkValueUUID == linkValueUUID)
 
       val savedValue: JsonLDObject = getValue(
@@ -4954,8 +5176,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         comment = Some(comment)
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -4969,8 +5193,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       // Since we only changed metadata, the UUID should be the same.
       val newLinkValueUUID: UUID =
-        responseJsonDoc.body.requireStringWithValidation(OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
-                                                         stringFormatter.validateBase64EncodedUuid)
+        responseJsonDoc.body.requireStringWithValidation(
+          OntologyConstants.KnoraApiV2Complex.ValueHasUUID,
+          stringFormatter.validateBase64EncodedUuid
+        )
       assert(newLinkValueUUID == linkValueUUID)
 
       val savedValue: JsonLDObject = getValue(
@@ -4998,8 +5224,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         comment = Some(comment)
       )
 
-      val request = Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request =
+        Put(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.BadRequest, response.toString)
     }
@@ -5013,24 +5241,26 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "$resourceIri",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasOtherThingValue" : {
-                   |    "@type" : "knora-api:LinkValue",
-                   |    "knora-api:linkValueHasTargetIri" : {
-                   |      "@id" : "${TestDing.iri}"
-                   |    },
-                   |    "knora-api:valueHasComment" : "$comment"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "$resourceIri",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasOtherThingValue" : {
+           |    "@type" : "knora-api:LinkValue",
+           |    "knora-api:linkValueHasTargetIri" : {
+           |      "@id" : "${TestDing.iri}"
+           |    },
+           |    "knora-api:valueHasComment" : "$comment"
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
-      val request = Post(baseApiUrl + "/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
       val responseJsonDoc: JsonLDDocument = responseToJsonLDDocument(response)
@@ -5077,9 +5307,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values/delete",
-                         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values/delete",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
     }
@@ -5089,22 +5320,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
 
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "${AThing.iri}",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "${intValueForRsyncIri.get}",
-                   |    "@type" : "knora-api:IntValue",
-                   |    "knora-api:deleteDate" : {
-                   |      "@type" : "xsd:dateTimeStamp",
-                   |      "@value" : "$deleteDate"
-                   |    }
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "${AThing.iri}",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@id" : "${intValueForRsyncIri.get}",
+           |    "@type" : "knora-api:IntValue",
+           |    "knora-api:deleteDate" : {
+           |      "@type" : "xsd:dateTimeStamp",
+           |      "@value" : "$deleteDate"
+           |    }
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -5117,9 +5348,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values/delete",
-                         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values/delete",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
     }
@@ -5127,21 +5359,22 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "not delete an integer value if the simple schema is submitted" in {
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "${AThing.iri}",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasInteger" : {
-                   |    "@id" : "${intValueIri.get}",
-                   |    "@type" : "knora-api:IntValue"
-                   |  },
-                   |  "@context" : {
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "${AThing.iri}",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasInteger" : {
+           |    "@id" : "${intValueIri.get}",
+           |    "@type" : "knora-api:IntValue"
+           |  },
+           |  "@context" : {
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/simple/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/simple/v2#"
+           |  }
+           |}""".stripMargin
 
-      val request = Post(baseApiUrl + "/v2/values/delete",
-                         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values/delete",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       val responseAsString = responseToString(response)
       assert(response.status == StatusCodes.BadRequest, responseAsString)
@@ -5157,9 +5390,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         maybeDeleteComment = None
       )
 
-      val deleteRequest = Post(baseApiUrl + "/v2/values/delete",
-                               HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(SharedTestDataADM.anythingUser2.email, password))
+      val deleteRequest = Post(
+        baseApiUrl + "/v2/values/delete",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.anythingUser2.email, password))
       val deleteResponse: HttpResponse = singleAwaitingRequest(deleteRequest)
       assert(deleteResponse.status == StatusCodes.OK, deleteResponse.toString)
 
@@ -5175,18 +5409,18 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
     "delete a link between two resources" in {
       val jsonLDEntity =
         s"""{
-                   |  "@id" : "${AThing.iri}",
-                   |  "@type" : "anything:Thing",
-                   |  "anything:hasOtherThingValue" : {
-                   |    "@id": "${linkValueIri.get}",
-                   |    "@type" : "knora-api:LinkValue"
-                   |  },
-                   |  "@context" : {
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-                   |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-                   |  }
-                   |}""".stripMargin
+           |  "@id" : "${AThing.iri}",
+           |  "@type" : "anything:Thing",
+           |  "anything:hasOtherThingValue" : {
+           |    "@id": "${linkValueIri.get}",
+           |    "@type" : "knora-api:LinkValue"
+           |  },
+           |  "@context" : {
+           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+           |  }
+           |}""".stripMargin
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -5199,9 +5433,10 @@ class ValuesRouteV2E2ESpec extends E2ESpec {
         )
       )
 
-      val request = Post(baseApiUrl + "/v2/values/delete",
-                         HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)) ~> addCredentials(
-        BasicHttpCredentials(anythingUserEmail, password))
+      val request = Post(
+        baseApiUrl + "/v2/values/delete",
+        HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLDEntity)
+      ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val response: HttpResponse = singleAwaitingRequest(request)
       assert(response.status == StatusCodes.OK, response.toString)
     }

@@ -33,8 +33,8 @@ import org.knora.webapi.{ApiV2Complex, CoreSpec, SchemaOptions}
 import scala.concurrent.duration._
 
 /**
-  * Tests [[SearchResponderV2]].
-  */
+ * Tests [[SearchResponderV2]].
+ */
 class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -66,12 +66,11 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = SharedTestDataADM.anonymousUser
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(
-            expected = searchResponderV2SpecFullData.fulltextSearchForNarr,
-            received = response
-          )
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = searchResponderV2SpecFullData.fulltextSearchForNarr,
+          received = response
+        )
       }
     }
 
@@ -90,10 +89,11 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = SharedTestDataADM.anythingUser1
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(expected = searchResponderV2SpecFullData.fulltextSearchForDinge,
-                                                 received = response)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = searchResponderV2SpecFullData.fulltextSearchForDinge,
+          received = response
+        )
       }
 
     }
@@ -113,17 +113,16 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = SharedTestDataADM.anythingUser1
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          val hasImageFileValues: Boolean =
-            response.resources.flatMap(_.values.values.flatten).exists { readValueV2: ReadValueV2 =>
-              readValueV2.valueContent match {
-                case _: StillImageFileValueContentV2 => true
-                case _                               => false
-              }
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        val hasImageFileValues: Boolean =
+          response.resources.flatMap(_.values.values.flatten).exists { readValueV2: ReadValueV2 =>
+            readValueV2.valueContent match {
+              case _: StillImageFileValueContentV2 => true
+              case _                               => false
             }
+          }
 
-          assert(hasImageFileValues)
+        assert(hasImageFileValues)
       }
 
     }
@@ -139,11 +138,11 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       // extended search sort by resource Iri by default if no order criterion is indicated
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          compareReadResourcesSequenceV2Response(expected =
-                                                   searchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse,
-                                                 received = response)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = searchResponderV2SpecFullData.booksWithTitleZeitgloeckleinResponse,
+          received = response
+        )
       }
 
     }
@@ -159,10 +158,9 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       // extended search sort by resource Iri by default if no order criterion is indicated
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          // TODO: do better testing once JSON-LD can be converted back into case classes
-          assert(response.resources.size == 18, s"18 books were expected, but ${response.resources.size} given.")
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        // TODO: do better testing once JSON-LD can be converted back into case classes
+        assert(response.resources.size == 18, s"18 books were expected, but ${response.resources.size} given.")
       }
 
     }
@@ -179,9 +177,8 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = SharedTestDataADM.anonymousUser
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          assert(response.resources.size == 3, s"3 results were expected, but ${response.resources.size} given")
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        assert(response.resources.size == 3, s"3 results were expected, but ${response.resources.size} given")
       }
 
     }
@@ -198,9 +195,8 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = SharedTestDataADM.anonymousUser
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 =>
-          assert(response.resources.size == 3, s"3 results were expected, but ${response.resources.size} given")
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        assert(response.resources.size == 3, s"3 results were expected, but ${response.resources.size} given")
       }
 
     }
@@ -215,9 +211,8 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = SharedTestDataADM.anonymousUser
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceCountV2 =>
-          assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
+      expectMsgPF(timeout) { case response: ResourceCountV2 =>
+        assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
       }
 
     }
@@ -232,9 +227,8 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = SharedTestDataADM.anonymousUser
       )
 
-      expectMsgPF(timeout) {
-        case response: ResourceCountV2 =>
-          assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
+      expectMsgPF(timeout) { case response: ResourceCountV2 =>
+        assert(response.numberOfResources == 3, s"3 results were expected, but ${response.numberOfResources} given")
       }
 
     }
@@ -251,8 +245,8 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = SharedTestDataADM.incunabulaProjectAdminUser
       )
 
-      expectMsgPF(timeout) {
-        case response: ReadResourcesSequenceV2 => response.resources.size should ===(19)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        response.resources.size should ===(19)
       }
     }
 

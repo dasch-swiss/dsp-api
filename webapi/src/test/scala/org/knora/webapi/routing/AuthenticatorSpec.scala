@@ -57,7 +57,8 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           system,
           responderManager,
           timeout,
-          executionContext)
+          executionContext
+        )
         resF map { res =>
           assert(res == AuthenticatorSpec.rootUser)
         }
@@ -70,7 +71,8 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
           system,
           responderManager,
           timeout,
-          executionContext)
+          executionContext
+        )
         resF map { res =>
           assertThrows(BadCredentialsException)
         }
@@ -78,12 +80,14 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
 
       "fail when not providing anything " in {
         an[BadRequestException] should be thrownBy {
-          Authenticator invokePrivate getUserByIdentifier(UserIdentifierADM(),
-                                                          defaultFeatureFactoryConfig,
-                                                          system,
-                                                          responderManager,
-                                                          timeout,
-                                                          executionContext)
+          Authenticator invokePrivate getUserByIdentifier(
+            UserIdentifierADM(),
+            defaultFeatureFactoryConfig,
+            system,
+            responderManager,
+            timeout,
+            executionContext
+          )
         }
       }
     }
@@ -91,13 +95,17 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
     "called, the 'authenticateCredentialsV2' method" should {
       "succeed with correct email/password" in {
         val correctPasswordCreds =
-          KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)),
-                                     AuthenticatorSpec.rootUserPassword)
-        val resF = Authenticator invokePrivate authenticateCredentialsV2(Some(correctPasswordCreds),
-                                                                         defaultFeatureFactoryConfig,
-                                                                         system,
-                                                                         responderManager,
-                                                                         executionContext)
+          KnoraPasswordCredentialsV2(
+            UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)),
+            AuthenticatorSpec.rootUserPassword
+          )
+        val resF = Authenticator invokePrivate authenticateCredentialsV2(
+          Some(correctPasswordCreds),
+          defaultFeatureFactoryConfig,
+          system,
+          responderManager,
+          executionContext
+        )
         resF map { res =>
           assert(res)
         }
@@ -105,24 +113,30 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
       "fail with unknown email" in {
         val wrongPasswordCreds =
           KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some("wrongemail@example.com")), "wrongpassword")
-        val resF = Authenticator invokePrivate authenticateCredentialsV2(Some(wrongPasswordCreds),
-                                                                         defaultFeatureFactoryConfig,
-                                                                         system,
-                                                                         responderManager,
-                                                                         executionContext)
+        val resF = Authenticator invokePrivate authenticateCredentialsV2(
+          Some(wrongPasswordCreds),
+          defaultFeatureFactoryConfig,
+          system,
+          responderManager,
+          executionContext
+        )
         resF map { res =>
           assertThrows(BadCredentialsException)
         }
       }
       "fail with wrong password" in {
         val wrongPasswordCreds =
-          KnoraPasswordCredentialsV2(UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)),
-                                     "wrongpassword")
-        val resF = Authenticator invokePrivate authenticateCredentialsV2(Some(wrongPasswordCreds),
-                                                                         defaultFeatureFactoryConfig,
-                                                                         system,
-                                                                         responderManager,
-                                                                         executionContext)
+          KnoraPasswordCredentialsV2(
+            UserIdentifierADM(maybeEmail = Some(AuthenticatorSpec.rootUserEmail)),
+            "wrongpassword"
+          )
+        val resF = Authenticator invokePrivate authenticateCredentialsV2(
+          Some(wrongPasswordCreds),
+          defaultFeatureFactoryConfig,
+          system,
+          responderManager,
+          executionContext
+        )
         resF map { res =>
           assertThrows(BadCredentialsException)
         }
@@ -130,11 +144,13 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
       "succeed with correct token" in {
         val token = JWTHelper.createToken("myuseriri", settings.jwtSecretKey, settings.jwtLongevity)
         val tokenCreds = KnoraTokenCredentialsV2(token)
-        val resF = Authenticator invokePrivate authenticateCredentialsV2(Some(tokenCreds),
-                                                                         defaultFeatureFactoryConfig,
-                                                                         system,
-                                                                         responderManager,
-                                                                         executionContext)
+        val resF = Authenticator invokePrivate authenticateCredentialsV2(
+          Some(tokenCreds),
+          defaultFeatureFactoryConfig,
+          system,
+          responderManager,
+          executionContext
+        )
         resF map { res =>
           assert(res)
         }
@@ -143,22 +159,26 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         val token = JWTHelper.createToken("myuseriri", settings.jwtSecretKey, settings.jwtLongevity)
         val tokenCreds = KnoraTokenCredentialsV2(token)
         CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.token, tokenCreds.token)
-        val resF = Authenticator invokePrivate authenticateCredentialsV2(Some(tokenCreds),
-                                                                         defaultFeatureFactoryConfig,
-                                                                         system,
-                                                                         responderManager,
-                                                                         executionContext)
+        val resF = Authenticator invokePrivate authenticateCredentialsV2(
+          Some(tokenCreds),
+          defaultFeatureFactoryConfig,
+          system,
+          responderManager,
+          executionContext
+        )
         resF map { res =>
           assertThrows(BadCredentialsException)
         }
       }
       "fail with wrong token" in {
         val tokenCreds = KnoraTokenCredentialsV2("123456")
-        val resF = Authenticator invokePrivate authenticateCredentialsV2(Some(tokenCreds),
-                                                                         defaultFeatureFactoryConfig,
-                                                                         system,
-                                                                         responderManager,
-                                                                         executionContext)
+        val resF = Authenticator invokePrivate authenticateCredentialsV2(
+          Some(tokenCreds),
+          defaultFeatureFactoryConfig,
+          system,
+          responderManager,
+          executionContext
+        )
         resF map { res =>
           assertThrows(BadCredentialsException)
         }

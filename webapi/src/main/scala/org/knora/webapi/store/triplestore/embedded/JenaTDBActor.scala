@@ -56,14 +56,14 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
  */
 class JenaTDBActor extends Actor with ActorLogging {
 
-  private val system                                              = context.system
+  private val system = context.system
   private implicit val executionContext: ExecutionContextExecutor = system.dispatcher
-  private val settings                                            = KnoraSettings(system)
+  private val settings = KnoraSettings(system)
 
-  private val persist          = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.persisted")
+  private val persist = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.persisted")
   private val loadExistingData = settings.tripleStoreConfig.getBoolean("embedded-jena-tdb.loadExistingData")
-  private val storagePath      = Paths.get(settings.tripleStoreConfig.getString("embedded-jena-tdb.storage-path"))
-  private val tdbStoragePath   = Paths.get(storagePath.toString + "/db")
+  private val storagePath = Paths.get(settings.tripleStoreConfig.getString("embedded-jena-tdb.storage-path"))
+  private val tdbStoragePath = Paths.get(storagePath.toString + "/db")
 
   private val tsType = settings.triplestoreType
 
@@ -155,9 +155,9 @@ class JenaTDBActor extends Actor with ActorLogging {
       //println("# Content of dataset at beginning of query")
       //SSE.write(this.dataset)
 
-      val query: Query          = QueryFactory.create(queryString)
+      val query: Query = QueryFactory.create(queryString)
       val qExec: QueryExecution = QueryExecutionFactory.create(query, this.dataset)
-      val resultSet: ResultSet  = qExec.execSelect()
+      val resultSet: ResultSet = qExec.execSelect()
 
       /*
             Attention: the ResultSet can be only used once, i.e. it is not there anymore after use!
@@ -399,7 +399,7 @@ class JenaTDBActor extends Actor with ActorLogging {
     try {
       // get index.
       val dgt: DatasetGraphText = dataset.asDatasetGraph().asInstanceOf[DatasetGraphText]
-      val textIndex             = dgt.getTextIndex
+      val textIndex = dgt.getTextIndex
 
       // get entity definitions from index
       val entityDefinition = textIndex.getDocDef
@@ -412,7 +412,7 @@ class JenaTDBActor extends Actor with ActorLogging {
         for (prop: Node <- entityDefinition.getPredicates(field).asScala) {
           val quadIter: Iterator[Quad] = dgt.find(Node.ANY, Node.ANY, prop, Node.ANY).asScala
           while (quadIter.hasNext) {
-            val quad: Quad     = quadIter.next()
+            val quad: Quad = quadIter.next()
             val entity: Entity = TextQueryFuncs.entityFromQuad(entityDefinition, quad)
             if (entity != null) {
               textIndex.addEntity(entity)
@@ -443,8 +443,8 @@ class JenaTDBActor extends Actor with ActorLogging {
 
     // Define which fields should be indexed by lucene
     val knoraBase = "http://www.knora.org/ontology/knora-base#"
-    val rdfs      = "http://www.w3.org/2000/01/rdf-schema#"
-    val entDef    = new EntityDefinition("uri", "text", ResourceFactory.createProperty(knoraBase, "valueHasString"))
+    val rdfs = "http://www.w3.org/2000/01/rdf-schema#"
+    val entDef = new EntityDefinition("uri", "text", ResourceFactory.createProperty(knoraBase, "valueHasString"))
     entDef.setPrimaryPredicate(ResourceFactory.createProperty(rdfs, "label"))
     entDef.setPrimaryPredicate(ResourceFactory.createProperty(knoraBase, "valueHasComment"))
 

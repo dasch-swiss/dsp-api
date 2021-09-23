@@ -32,24 +32,24 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * A tagging trait for messages that can be sent to Knora API v2 responders.
-  */
+ * A tagging trait for messages that can be sent to Knora API v2 responders.
+ */
 trait KnoraRequestV2
 
 /**
-  * A trait for request messages that are constructed as an [[RdfModel]].
-  */
+ * A trait for request messages that are constructed as an [[RdfModel]].
+ */
 trait KnoraRdfModelRequestV2 {
 
   /**
-    * An [[RdfModel]] representing the request.
-    */
+   * An [[RdfModel]] representing the request.
+   */
   val rdfModel: RdfModel
 
   /**
-    * Returns a Turtle representation of the graph.
-    */
-  def toTurtle(featureFactoryConfig: FeatureFactoryConfig): String = {
+   * Returns a Turtle representation of the graph.
+   */
+  def toTurtle(featureFactoryConfig: FeatureFactoryConfig): String =
     RdfFeatureFactory
       .getRdfFormatUtil(featureFactoryConfig)
       .format(
@@ -57,35 +57,36 @@ trait KnoraRdfModelRequestV2 {
         rdfFormat = Turtle,
         prettyPrint = false
       )
-  }
 }
 
 /**
-  * A trait for objects that can generate case class instances based on JSON-LD input.
-  *
-  * @tparam C the type of the case class that can be generated.
-  */
+ * A trait for objects that can generate case class instances based on JSON-LD input.
+ *
+ * @tparam C the type of the case class that can be generated.
+ */
 trait KnoraJsonLDRequestReaderV2[C] {
 
   /**
-    * Converts JSON-LD input into a case class instance.
-    *
-    * @param jsonLDDocument       the JSON-LD input.
-    * @param apiRequestID         the UUID of the API request.
-    * @param requestingUser       the user making the request.
-    * @param responderManager     a reference to the responder manager.
-    * @param storeManager         a reference to the store manager.
-    * @param featureFactoryConfig the feature factory configuration.
-    * @param settings             the application settings.
-    * @param log                  a logging adapter.
-    * @return a case class instance representing the input.
-    */
-  def fromJsonLD(jsonLDDocument: JsonLDDocument,
-                 apiRequestID: UUID,
-                 requestingUser: UserADM,
-                 responderManager: ActorRef,
-                 storeManager: ActorRef,
-                 featureFactoryConfig: FeatureFactoryConfig,
-                 settings: KnoraSettingsImpl,
-                 log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
+   * Converts JSON-LD input into a case class instance.
+   *
+   * @param jsonLDDocument       the JSON-LD input.
+   * @param apiRequestID         the UUID of the API request.
+   * @param requestingUser       the user making the request.
+   * @param responderManager     a reference to the responder manager.
+   * @param storeManager         a reference to the store manager.
+   * @param featureFactoryConfig the feature factory configuration.
+   * @param settings             the application settings.
+   * @param log                  a logging adapter.
+   * @return a case class instance representing the input.
+   */
+  def fromJsonLD(
+    jsonLDDocument: JsonLDDocument,
+    apiRequestID: UUID,
+    requestingUser: UserADM,
+    responderManager: ActorRef,
+    storeManager: ActorRef,
+    featureFactoryConfig: FeatureFactoryConfig,
+    settings: KnoraSettingsImpl,
+    log: LoggingAdapter
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[C]
 }

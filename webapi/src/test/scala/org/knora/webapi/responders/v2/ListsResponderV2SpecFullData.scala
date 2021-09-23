@@ -27,7 +27,9 @@ class ListsResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
           StringLiteralV2(
             value = "Tree list node 11",
             language = Some("en")
-          ))),
+          )
+        )
+      ),
       position = 1,
       hasRootNode = "http://rdfh.ch/lists/0001/treeList",
       comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2])

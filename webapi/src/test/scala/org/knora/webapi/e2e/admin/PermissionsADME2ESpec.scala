@@ -41,10 +41,10 @@ object PermissionsADME2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing the 'v1/permissions' route.
-  *
-  * This spec tests the 'v1/store' route.
-  */
+ * End-to-End (E2E) test specification for testing the 'v1/permissions' route.
+ *
+ * This spec tests the 'v1/store' route.
+ */
 class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with TriplestoreJsonProtocol {
   // Directory path for generated client test data
   private val clientTestDataPath: Seq[String] = Seq("admin", "permissions")
@@ -60,7 +60,8 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
         val groupIri = java.net.URLEncoder.encode(OntologyConstants.KnoraAdmin.ProjectMember, "utf-8")
         val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri/$groupIri") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
+        )
 
         val response = singleAwaitingRequest(request, 1.seconds)
         logger.debug("==>> " + response.toString)
@@ -89,7 +90,8 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/ap/$projectIri") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
+        )
 
         val response = singleAwaitingRequest(request, 1.seconds)
         logger.debug("==>> " + response.toString)
@@ -114,7 +116,8 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/doap/$projectIri") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
+        )
 
         val response = singleAwaitingRequest(request, 1.seconds)
         logger.debug("==>> " + response.toString)
@@ -139,7 +142,8 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val projectIri = java.net.URLEncoder.encode(SharedTestDataV1.imagesProjectInfo.id, "utf-8")
 
         val request = Get(baseApiUrl + s"/admin/permissions/$projectIri") ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
+        )
 
         val response = singleAwaitingRequest(request, 1.seconds)
         logger.debug("==>> " + response.toString)
@@ -164,10 +168,10 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       "create an administrative access permission" in {
         val createAdministrativePermissionRequest: String =
           s"""{
-               |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-               |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-               |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
-               |}""".stripMargin
+             |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
+             |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -182,8 +186,8 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
         val request = Post(
           baseApiUrl + s"/admin/permissions/ap",
-          HttpEntity(ContentTypes.`application/json`, createAdministrativePermissionRequest)) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+          HttpEntity(ContentTypes.`application/json`, createAdministrativePermissionRequest)
+        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
 
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
@@ -199,8 +203,10 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           .convertTo[String]
         assert(projectIri == "http://rdfh.ch/projects/0001")
         val permissions = result
-          .getOrElse("hasPermissions",
-                     throw DeserializationException("The expected field 'hasPermissions' is missing."))
+          .getOrElse(
+            "hasPermissions",
+            throw DeserializationException("The expected field 'hasPermissions' is missing.")
+          )
           .toString()
 
         assert(permissions.contains("ProjectAdminGroupAllPermission"))
@@ -218,11 +224,11 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val customAPIri = "http://rdfh.ch/permissions/0001/u0PRnDl3kgcbrehZnRlEfA"
         val createAdministrativePermissionWithCustomIriRequest: String =
           s"""{
-               |    "id": "$customAPIri",
-               |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-               |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-               |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
-               |}""".stripMargin
+             |    "id": "$customAPIri",
+             |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
+             |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |	"hasPermissions":[{"additionalInformation":null,"name":"ProjectAdminGroupAllPermission","permissionCode":null}]
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -237,19 +243,19 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
         val createAdministrativePermissionWithCustomIriResponse: String =
           s"""{
-               |    "administrative_permission": {
-               |        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
-               |        "forProject": "http://rdfh.ch/projects/0001",
-               |        "hasPermissions": [
-               |            {
-               |                "additionalInformation": null,
-               |                "name": "ProjectAdminGroupAllPermission",
-               |                "permissionCode": null
-               |            }
-               |        ],
-               |        "iri": "$customAPIri"
-               |    }
-               |}""".stripMargin
+             |    "administrative_permission": {
+             |        "forGroup": "http://rdfh.ch/groups/0001/thing-searcher",
+             |        "forProject": "http://rdfh.ch/projects/0001",
+             |        "hasPermissions": [
+             |            {
+             |                "additionalInformation": null,
+             |                "name": "ProjectAdminGroupAllPermission",
+             |                "permissionCode": null
+             |            }
+             |        ],
+             |        "iri": "$customAPIri"
+             |    }
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -281,21 +287,24 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
              |}
              |""".stripMargin
 
-        val request = Post(baseApiUrl + s"/admin/projects", HttpEntity(ContentTypes.`application/json`, projectPayload)) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val request = Post(
+          baseApiUrl + s"/admin/projects",
+          HttpEntity(ContentTypes.`application/json`, projectPayload)
+        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
 
         val permissionPayload =
           s"""{
-              |    "forGroup":"http://www.knora.org/ontology/knora-admin#KnownUser",
-              |    "forProject":"$projectIri",
-              |	   "hasPermissions":[{"additionalInformation":null,"name":"ProjectResourceCreateAllPermission","permissionCode":null}]
-              |}""".stripMargin
+             |    "forGroup":"http://www.knora.org/ontology/knora-admin#KnownUser",
+             |    "forProject":"$projectIri",
+             |	   "hasPermissions":[{"additionalInformation":null,"name":"ProjectResourceCreateAllPermission","permissionCode":null}]
+             |}""".stripMargin
 
-        val permissionRequest = Post(baseApiUrl + s"/admin/permissions/ap",
-                                     HttpEntity(ContentTypes.`application/json`, permissionPayload)) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val permissionRequest = Post(
+          baseApiUrl + s"/admin/permissions/ap",
+          HttpEntity(ContentTypes.`application/json`, permissionPayload)
+        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
 
         val permissionResponse: HttpResponse = singleAwaitingRequest(permissionRequest)
         assert(permissionResponse.status === StatusCodes.OK)
@@ -305,12 +314,12 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
       "create a default object access permission" in {
         val createDefaultObjectAccessPermissionRequest: String =
           s"""{
-               |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
-               |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-               |    "forProperty":null,
-               |    "forResourceClass":null,
-               |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
-               |}""".stripMargin
+             |    "forGroup":"${SharedTestDataADM.thingSearcherGroup.id}",
+             |    "forProject":"${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "forProperty":null,
+             |    "forResourceClass":null,
+             |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -325,8 +334,8 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
 
         val request = Post(
           baseApiUrl + s"/admin/permissions/doap",
-          HttpEntity(ContentTypes.`application/json`, createDefaultObjectAccessPermissionRequest)) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+          HttpEntity(ContentTypes.`application/json`, createDefaultObjectAccessPermissionRequest)
+        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
@@ -341,8 +350,10 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           .convertTo[String]
         assert(projectIri == "http://rdfh.ch/projects/0001")
         val permissions = result
-          .getOrElse("hasPermissions",
-                     throw DeserializationException("The expected field 'hasPermissions' is missing."))
+          .getOrElse(
+            "hasPermissions",
+            throw DeserializationException("The expected field 'hasPermissions' is missing.")
+          )
           .toString()
 
         assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
@@ -363,13 +374,13 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val createDefaultObjectAccessPermissionWithCustomIriRequest: String =
           s"""{
 
-                 |    "id": "$customDOAPIri",
-                 |    "forGroup":null,
-                 |    "forProject":"${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-                 |    "forProperty":null,
-                 |    "forResourceClass":"${SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS}",
-                 |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
-                 |}""".stripMargin
+             |    "id": "$customDOAPIri",
+             |    "forGroup":null,
+             |    "forProject":"${SharedTestDataADM.IMAGES_PROJECT_IRI}",
+             |    "forProperty":null,
+             |    "forResourceClass":"${SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS}",
+             |    "hasPermissions":[{"additionalInformation":"http://www.knora.org/ontology/knora-admin#ProjectMember","name":"D","permissionCode":7}]
+             |}""".stripMargin
 
         clientTestDataCollector.addFile(
           TestDataFileContent(
@@ -382,10 +393,10 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           )
         )
 
-        val request = Post(baseApiUrl + s"/admin/permissions/doap",
-                           HttpEntity(ContentTypes.`application/json`,
-                                      createDefaultObjectAccessPermissionWithCustomIriRequest)) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val request = Post(
+          baseApiUrl + s"/admin/permissions/doap",
+          HttpEntity(ContentTypes.`application/json`, createDefaultObjectAccessPermissionWithCustomIriRequest)
+        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
 
@@ -396,8 +407,10 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           .convertTo[String]
         assert(permissionIri == customDOAPIri)
         val forResourceClassIRI = result
-          .getOrElse("forResourceClass",
-                     throw DeserializationException("The expected field 'forResourceClass' is missing."))
+          .getOrElse(
+            "forResourceClass",
+            throw DeserializationException("The expected field 'forResourceClass' is missing.")
+          )
           .convertTo[String]
         assert(forResourceClassIRI == SharedOntologyTestDataADM.IMAGES_BILD_RESOURCE_CLASS)
         val projectIri = result
@@ -405,8 +418,10 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           .convertTo[String]
         assert(projectIri == "http://rdfh.ch/projects/00FF")
         val permissions = result
-          .getOrElse("hasPermissions",
-                     throw DeserializationException("The expected field 'hasPermissions' is missing."))
+          .getOrElse(
+            "hasPermissions",
+            throw DeserializationException("The expected field 'hasPermissions' is missing.")
+          )
           .toString()
 
         assert(permissions.contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
@@ -443,9 +458,10 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             text = updatePermissionGroup
           )
         )
-        val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/group",
-                          HttpEntity(ContentTypes.`application/json`, updatePermissionGroup)) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val request = Put(
+          baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/group",
+          HttpEntity(ContentTypes.`application/json`, updatePermissionGroup)
+        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
@@ -484,9 +500,10 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             text = updatePermissionGroup
           )
         )
-        val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/group",
-                          HttpEntity(ContentTypes.`application/json`, updatePermissionGroup)) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val request = Put(
+          baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/group",
+          HttpEntity(ContentTypes.`application/json`, updatePermissionGroup)
+        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
         val result =
@@ -525,15 +542,18 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             text = updateHasPermissions
           )
         )
-        val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/hasPermissions",
-                          HttpEntity(ContentTypes.`application/json`, updateHasPermissions)) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val request = Put(
+          baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/hasPermissions",
+          HttpEntity(ContentTypes.`application/json`, updateHasPermissions)
+        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
         val result = AkkaHttpUtils.httpResponseToJson(response).fields("administrative_permission").asJsObject.fields
         val permissions = result
-          .getOrElse("hasPermissions",
-                     throw DeserializationException("The expected field 'hasPermissions' is missing."))
+          .getOrElse(
+            "hasPermissions",
+            throw DeserializationException("The expected field 'hasPermissions' is missing.")
+          )
           .asInstanceOf[JsArray]
           .elements
         permissions.size should be(1)
@@ -567,16 +587,19 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             text = updateHasPermissions
           )
         )
-        val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/hasPermissions",
-                          HttpEntity(ContentTypes.`application/json`, updateHasPermissions)) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val request = Put(
+          baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/hasPermissions",
+          HttpEntity(ContentTypes.`application/json`, updateHasPermissions)
+        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
         val result =
           AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
         val permissions = result
-          .getOrElse("hasPermissions",
-                     throw DeserializationException("The expected field 'hasPermissions' is missing."))
+          .getOrElse(
+            "hasPermissions",
+            throw DeserializationException("The expected field 'hasPermissions' is missing.")
+          )
           .asInstanceOf[JsArray]
           .elements
         permissions.size should be(1)
@@ -584,7 +607,8 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
           permissions.head.asJsObject
             .fields("additionalInformation")
             .toString
-            .contains("http://www.knora.org/ontology/knora-admin#ProjectMember"))
+            .contains("http://www.knora.org/ontology/knora-admin#ProjectMember")
+        )
         clientTestDataCollector.addFile(
           TestDataFileContent(
             filePath = TestDataFilePath(
@@ -615,16 +639,19 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             text = updateResourceClass
           )
         )
-        val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/resourceClass",
-                          HttpEntity(ContentTypes.`application/json`, updateResourceClass)) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val request = Put(
+          baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/resourceClass",
+          HttpEntity(ContentTypes.`application/json`, updateResourceClass)
+        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
         val result =
           AkkaHttpUtils.httpResponseToJson(response).fields("default_object_access_permission").asJsObject.fields
         val forResourceClassIRI = result
-          .getOrElse("forResourceClass",
-                     throw DeserializationException("The expected field 'forResourceClass' is missing."))
+          .getOrElse(
+            "forResourceClass",
+            throw DeserializationException("The expected field 'forResourceClass' is missing.")
+          )
           .convertTo[String]
         assert(forResourceClassIRI == resourceClassIri)
 
@@ -658,9 +685,10 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
             text = updateResourceClass
           )
         )
-        val request = Put(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/property",
-                          HttpEntity(ContentTypes.`application/json`, updateResourceClass)) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+        val request = Put(
+          baseApiUrl + s"/admin/permissions/" + encodedPermissionIri + "/property",
+          HttpEntity(ContentTypes.`application/json`, updateResourceClass)
+        ) ~> addCredentials(BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
         val response: HttpResponse = singleAwaitingRequest(request)
         assert(response.status === StatusCodes.OK)
         val result =
@@ -688,7 +716,8 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val permissionIri = customDOAPIri
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")
@@ -708,7 +737,8 @@ class PermissionsADME2ESpec extends E2ESpec(PermissionsADME2ESpec.config) with T
         val permissionIri = "http://rdfh.ch/permissions/00FF/a2"
         val encodedPermissionIri = java.net.URLEncoder.encode(permissionIri, "utf-8")
         val request = Delete(baseApiUrl + s"/admin/permissions/" + encodedPermissionIri) ~> addCredentials(
-          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass))
+          BasicHttpCredentials(SharedTestDataADM.rootUser.email, SharedTestDataADM.testPass)
+        )
         val response: HttpResponse = singleAwaitingRequest(request)
         response.status should be(StatusCodes.OK)
         val deletedStatus = AkkaHttpUtils.httpResponseToJson(response).fields("deleted")

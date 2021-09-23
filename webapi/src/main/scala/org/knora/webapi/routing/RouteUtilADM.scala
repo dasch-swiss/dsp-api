@@ -33,30 +33,31 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * Convenience methods for Knora Admin routes.
-  */
+ * Convenience methods for Knora Admin routes.
+ */
 object RouteUtilADM {
 
   /**
-    * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
-    *
-    * @param requestMessageF      a future containing a [[KnoraRequestADM]] message that should be sent to the responder manager.
-    * @param requestContext       the akka-http [[RequestContext]].
-    * @param featureFactoryConfig the per-request feature factory configuration.
-    * @param settings             the application's settings.
-    * @param responderManager     a reference to the responder manager.
-    * @param log                  a logging adapter.
-    * @param timeout              a timeout for `ask` messages.
-    * @param executionContext     an execution context for futures.
-    * @return a [[Future]] containing a [[RouteResult]].
-    */
+   * Sends a message to a responder and completes the HTTP request by returning the response as JSON.
+   *
+   * @param requestMessageF      a future containing a [[KnoraRequestADM]] message that should be sent to the responder manager.
+   * @param requestContext       the akka-http [[RequestContext]].
+   * @param featureFactoryConfig the per-request feature factory configuration.
+   * @param settings             the application's settings.
+   * @param responderManager     a reference to the responder manager.
+   * @param log                  a logging adapter.
+   * @param timeout              a timeout for `ask` messages.
+   * @param executionContext     an execution context for futures.
+   * @return a [[Future]] containing a [[RouteResult]].
+   */
   def runJsonRoute(
-      requestMessageF: Future[KnoraRequestADM],
-      requestContext: RequestContext,
-      featureFactoryConfig: FeatureFactoryConfig,
-      settings: KnoraSettingsImpl,
-      responderManager: ActorRef,
-      log: LoggingAdapter)(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
+    requestMessageF: Future[KnoraRequestADM],
+    requestContext: RequestContext,
+    featureFactoryConfig: FeatureFactoryConfig,
+    settings: KnoraSettingsImpl,
+    responderManager: ActorRef,
+    log: LoggingAdapter
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[RouteResult] = {
 
     val httpResponse: Future[HttpResponse] = for {
 
@@ -83,16 +84,15 @@ object RouteUtilADM {
       }
 
       jsonResponse = knoraResponse.toJsValue.asJsObject
-    } yield
-      featureFactoryConfig.addHeaderToHttpResponse(
-        HttpResponse(
-          status = StatusCodes.OK,
-          entity = HttpEntity(
-            ContentTypes.`application/json`,
-            jsonResponse.compactPrint
-          )
+    } yield featureFactoryConfig.addHeaderToHttpResponse(
+      HttpResponse(
+        status = StatusCodes.OK,
+        entity = HttpEntity(
+          ContentTypes.`application/json`,
+          jsonResponse.compactPrint
         )
       )
+    )
 
     requestContext.complete(httpResponse)
   }

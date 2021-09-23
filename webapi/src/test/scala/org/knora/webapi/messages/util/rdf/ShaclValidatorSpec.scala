@@ -31,20 +31,20 @@ import org.knora.webapi.messages.util.rdf._
 object ShaclValidatorSpec {
   val config: String =
     """
-          |app {
-          |    shacl {
-          |        shapes-dir = "test_data/shacl"
-          |    }
-          |}
-          |""".stripMargin
+      |app {
+      |    shacl {
+      |        shapes-dir = "test_data/shacl"
+      |    }
+      |}
+      |""".stripMargin
 }
 
 /**
-  * Tests implementations of [[ShaclValidator]].
-  *
-  * @param featureToggle a feature toggle specifying which implementation of [[ShaclValidator]] should
-  *                      be used for the test.
-  */
+ * Tests implementations of [[ShaclValidator]].
+ *
+ * @param featureToggle a feature toggle specifying which implementation of [[ShaclValidator]] should
+ *                      be used for the test.
+ */
 abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
     extends CoreSpec(ConfigFactory.parseString(ShaclValidatorSpec.config)) {
   private val featureFactoryConfig: FeatureFactoryConfig = new TestFeatureFactoryConfig(
@@ -69,13 +69,13 @@ abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
     "accept valid RDF" in {
       val validRdfStr =
         """
-                  |@prefix ex: <http://example.com/ns#> .
-                  |@prefix foaf: <http://xmlns.com/foaf/0.1/> .
-                  |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-                  |
-                  |ex:sally a foaf:Person ;
-                  |  foaf:age "30"^^xsd:int .
-                  |""".stripMargin
+          |@prefix ex: <http://example.com/ns#> .
+          |@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+          |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+          |
+          |ex:sally a foaf:Person ;
+          |  foaf:age "30"^^xsd:int .
+          |""".stripMargin
 
       val validRdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(
         rdfStr = validRdfStr,
@@ -96,13 +96,13 @@ abstract class ShaclValidatorSpec(featureToggle: FeatureToggle)
     "reject invalid RDF" in {
       val invalidRdfStr =
         """
-                  |@prefix ex: <http://example.com/ns#> .
-                  |@prefix foaf: <http://xmlns.com/foaf/0.1/> .
-                  |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-                  |
-                  |ex:sally a foaf:Person ;
-                  |  foaf:age 20, "30"^^xsd:int .
-                  |""".stripMargin
+          |@prefix ex: <http://example.com/ns#> .
+          |@prefix foaf: <http://xmlns.com/foaf/0.1/> .
+          |@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+          |
+          |ex:sally a foaf:Person ;
+          |  foaf:age 20, "30"^^xsd:int .
+          |""".stripMargin
 
       val invalidRdfModel: RdfModel = rdfFormatUtil.parseToRdfModel(
         rdfStr = invalidRdfStr,

@@ -618,8 +618,8 @@ case class UserADM(
    */
   def isSelf(identifier: UserIdentifierADM): Boolean = {
 
-    val iriEquals      = identifier.toIriOption.contains(id)
-    val emailEquals    = identifier.toEmailOption.contains(email)
+    val iriEquals = identifier.toIriOption.contains(id)
+    val emailEquals = identifier.toEmailOption.contains(email)
     val usernameEquals = identifier.toUsernameOption.contains(username)
 
     iriEquals || emailEquals || usernameEquals
@@ -638,8 +638,8 @@ case class UserADM(
   def fullname: String = givenName + " " + familyName
 
   def getDigest: String = {
-    val md    = java.security.MessageDigest.getInstance("SHA-1")
-    val time  = System.currentTimeMillis().toString
+    val md = java.security.MessageDigest.getInstance("SHA-1")
+    val time = System.currentTimeMillis().toString
     val value = (time + this.toString).getBytes("UTF-8")
     md.digest(value).map("%02x".format(_)).mkString
   }
@@ -730,10 +730,10 @@ object UserInformationTypeADM extends Enumeration {
 
   type UserInformationTypeADM = Value
 
-  val PUBLIC: Value     = Value(0, "public")     // a temporary type which only returns firstname and lastname
-  val SHORT: Value      = Value(1, "short")      // only basic user information (restricted and additionally without groups
+  val PUBLIC: Value = Value(0, "public") // a temporary type which only returns firstname and lastname
+  val SHORT: Value = Value(1, "short") // only basic user information (restricted and additionally without groups
   val RESTRICTED: Value = Value(2, "restricted") // without sensitive information
-  val FULL: Value       = Value(3, "full")       // everything, including sensitive information
+  val FULL: Value = Value(3, "full") // everything, including sensitive information
 
   val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
 
@@ -758,8 +758,8 @@ object UserIdentifierType extends Enumeration {
 
   type UserIdentifierType
 
-  val IRI: Value      = Value(0, "iri")
-  val EMAIL: Value    = Value(1, "email")
+  val IRI: Value = Value(0, "iri")
+  val EMAIL: Value = Value(1, "email")
   val USERNAME: Value = Value(3, "username")
 }
 
@@ -1020,7 +1020,7 @@ object UsersADMJsonProtocol
     "newPassword"
   )
   implicit val usersGetResponseADMFormat: RootJsonFormat[UsersGetResponseADM] = jsonFormat1(UsersGetResponseADM)
-  implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM]  = jsonFormat1(UserResponseADM)
+  implicit val userProfileResponseADMFormat: RootJsonFormat[UserResponseADM] = jsonFormat1(UserResponseADM)
   implicit val userProjectMembershipsGetResponseADMFormat: RootJsonFormat[UserProjectMembershipsGetResponseADM] =
     jsonFormat1(UserProjectMembershipsGetResponseADM)
   implicit val userProjectAdminMembershipsGetResponseADMFormat

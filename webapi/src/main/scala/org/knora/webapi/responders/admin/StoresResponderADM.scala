@@ -43,37 +43,40 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import scala.concurrent.Future
 
 /**
-  * This responder is used by [[org.knora.webapi.routing.admin.StoreRouteADM]], for piping through HTTP requests to the
-  * 'Store Module'
-  */
+ * This responder is used by [[org.knora.webapi.routing.admin.StoreRouteADM]], for piping through HTTP requests to the
+ * 'Store Module'
+ */
 class StoresResponderADM(responderData: ResponderData) extends Responder(responderData) {
 
   /**
-    * A user representing the Knora API server, used in those cases where a user is required.
-    */
+   * A user representing the Knora API server, used in those cases where a user is required.
+   */
   private val systemUser = KnoraSystemInstances.Users.SystemUser
 
   /**
-    * Receives a message extending [[StoreResponderRequestADM]], and returns an appropriate response message.
-    */
+   * Receives a message extending [[StoreResponderRequestADM]], and returns an appropriate response message.
+   */
   def receive(msg: StoreResponderRequestADM) = msg match {
-    case ResetTriplestoreContentRequestADM(rdfDataObjects: Seq[RdfDataObject],
-                                           prependDefaults: Boolean,
-                                           featureFactoryConfig: FeatureFactoryConfig) =>
+    case ResetTriplestoreContentRequestADM(
+          rdfDataObjects: Seq[RdfDataObject],
+          prependDefaults: Boolean,
+          featureFactoryConfig: FeatureFactoryConfig
+        ) =>
       resetTriplestoreContent(rdfDataObjects, prependDefaults, featureFactoryConfig)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
   /**
-    * This method send a [[ResetRepositoryContent]] message to the [[org.knora.webapi.store.triplestore.TriplestoreManager]].
-    *
-    * @param rdfDataObjects the payload consisting of a list of [[RdfDataObject]] send inside the message.
-    * @return a future containing a [[ResetTriplestoreContentResponseADM]].
-    */
+   * This method send a [[ResetRepositoryContent]] message to the [[org.knora.webapi.store.triplestore.TriplestoreManager]].
+   *
+   * @param rdfDataObjects the payload consisting of a list of [[RdfDataObject]] send inside the message.
+   * @return a future containing a [[ResetTriplestoreContentResponseADM]].
+   */
   private def resetTriplestoreContent(
-      rdfDataObjects: Seq[RdfDataObject],
-      prependDefaults: Boolean = true,
-      featureFactoryConfig: FeatureFactoryConfig): Future[ResetTriplestoreContentResponseADM] = {
+    rdfDataObjects: Seq[RdfDataObject],
+    prependDefaults: Boolean = true,
+    featureFactoryConfig: FeatureFactoryConfig
+  ): Future[ResetTriplestoreContentResponseADM] = {
 
     log.debug(s"resetTriplestoreContent - called")
 
@@ -81,7 +84,8 @@ class StoresResponderADM(responderData: ResponderData) extends Responder(respond
       value: Boolean <- (appActor ? GetAllowReloadOverHTTPState()).mapTo[Boolean]
       _ = if (!value) {
         throw ForbiddenException(
-          "The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?")
+          "The ResetTriplestoreContent operation is not allowed. Did you start the server with the right flag?"
+        )
       }
 
       resetResponse <- (storeManager ? ResetRepositoryContent(rdfDataObjects, prependDefaults))

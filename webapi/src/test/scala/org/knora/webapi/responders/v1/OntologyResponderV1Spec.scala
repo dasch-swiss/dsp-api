@@ -30,8 +30,8 @@ import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDat
 import scala.concurrent.duration._
 
 /**
-  * Static data for testing [[OntologyResponderV1]].
-  */
+ * Static data for testing [[OntologyResponderV1]].
+ */
 object OntologyResponderV1Spec {
 
   // A test user that prefers responses in German.
@@ -43,8 +43,8 @@ object OntologyResponderV1Spec {
 }
 
 /**
-  * Tests [[OntologyResponderV1]].
-  */
+ * Tests [[OntologyResponderV1]].
+ */
 class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
   // The default timeout for receiving reply messages from actors.
@@ -85,7 +85,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
           occurrence = "1",
           vocabulary = "http://www.knora.org/ontology/0803/incunabula",
           description = Some(
-            "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."),
+            "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."
+          ),
           label = Some("ist ein Teil von"),
           name = "http://www.knora.org/ontology/0803/incunabula#partOf",
           id = "http://www.knora.org/ontology/0803/incunabula#partOf"
@@ -241,7 +242,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
           occurrence = "0-n",
           vocabulary = "http://www.knora.org/ontology/0803/incunabula",
           description = Some(
-            "Ein Verlag ist ein Medienunternehmen, das Werke der Literatur, Kunst, Musik oder Wissenschaft vervielf\u00E4ltigt und verbreitet. Der Verkauf kann \u00FCber den Handel (Kunst-, Buchhandel etc.) oder durch den Verlag selbst erfolgen. Das Wort \u201Everlegen\u201C bedeutet im Mittelhochdeutschen \u201EGeld ausgeben\u201C oder \u201Eetwas auf seine Rechnung nehmen\u201C. (Wikipedia http://de.wikipedia.org/wiki/Verlag)"),
+            "Ein Verlag ist ein Medienunternehmen, das Werke der Literatur, Kunst, Musik oder Wissenschaft vervielf\u00E4ltigt und verbreitet. Der Verkauf kann \u00FCber den Handel (Kunst-, Buchhandel etc.) oder durch den Verlag selbst erfolgen. Das Wort \u201Everlegen\u201C bedeutet im Mittelhochdeutschen \u201EGeld ausgeben\u201C oder \u201Eetwas auf seine Rechnung nehmen\u201C. (Wikipedia http://de.wikipedia.org/wiki/Verlag)"
+          ),
           label = Some("Verleger"),
           name = "http://www.knora.org/ontology/0803/incunabula#publisher",
           id = "http://www.knora.org/ontology/0803/incunabula#publisher"
@@ -752,7 +754,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         valuetype_id = "http://www.knora.org/ontology/knora-base#LinkValue",
         vocabulary = "http://www.knora.org/ontology/0803/incunabula",
         description = Some(
-          "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."),
+          "Diese Property bezeichnet eine Verbindung zu einer anderen Resource, in dem ausgesagt wird, dass die vorliegende Resource ein integraler Teil der anderen Resource ist. Zum Beispiel ist eine Buchseite ein integraler Bestandteil genau eines Buches."
+        ),
         label = Some("is a part of"),
         name = "http://www.knora.org/ontology/0803/incunabula#partOf",
         id = "http://www.knora.org/ontology/0803/incunabula#partOf"
@@ -923,7 +926,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         valuetype_id = "http://www.knora.org/ontology/knora-base#TextValue",
         vocabulary = "http://www.knora.org/ontology/0803/incunabula",
         description = Some(
-          "Publishing is the process of production and dissemination of literature or information \u2013 the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)"),
+          "Publishing is the process of production and dissemination of literature or information \u2013 the activity of making information available for public view. In some cases authors may be their own publishers, meaning: originators and developers of content also provide media to deliver and display the content. (Wikipedia http://en.wikipedia.org/wiki/Publisher)"
+        ),
         label = Some("Publisher"),
         name = "http://www.knora.org/ontology/0803/incunabula#publisher",
         id = "http://www.knora.org/ontology/0803/incunabula#publisher"
@@ -962,10 +966,14 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
     }
   }
 
-  private def checkResourceTypesForNamedGraphResponseV1(received: ResourceTypesForNamedGraphResponseV1,
-                                                        expected: ResourceTypesForNamedGraphResponseV1) = {
-    assert(received.resourcetypes.size == expected.resourcetypes.size,
-           s"${expected.resourcetypes.size} were expected, but ${received.resourcetypes.size} given.")
+  private def checkResourceTypesForNamedGraphResponseV1(
+    received: ResourceTypesForNamedGraphResponseV1,
+    expected: ResourceTypesForNamedGraphResponseV1
+  ) = {
+    assert(
+      received.resourcetypes.size == expected.resourcetypes.size,
+      s"${expected.resourcetypes.size} were expected, but ${received.resourcetypes.size} given."
+    )
 
     received.resourcetypes.sortBy(_.id).zip(expected.resourcetypes.sortBy(_.id)).foreach {
       case (receivedResType, expectedResType) =>
@@ -981,18 +989,19 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
 
   }
 
-  private def checkPropertyTypesForNamedGraphIncunabula(received: PropertyTypesForNamedGraphResponseV1,
-                                                        expected: PropertyTypesForNamedGraphResponseV1) = {
+  private def checkPropertyTypesForNamedGraphIncunabula(
+    received: PropertyTypesForNamedGraphResponseV1,
+    expected: PropertyTypesForNamedGraphResponseV1
+  ) = {
     assert(received.properties.size == expected.properties.size, s"Sizes of properties did not match")
 
     val sortedReceivedProperties = received.properties.sortBy(_.id)
     val sortedExpectedProperties = expected.properties.sortBy(_.id)
 
-    sortedReceivedProperties.zip(sortedExpectedProperties).foreach {
-      case (receivedProp, expectedProp) =>
-        assert(receivedProp.id == expectedProp.id, "The properties' IRIs did not match.")
-        assert(receivedProp.valuetype_id == expectedProp.valuetype_id, "The properties' valuetypes did not match.")
-        assert(receivedProp.attributes == expectedProp.attributes, "The properties' attributes did not match.")
+    sortedReceivedProperties.zip(sortedExpectedProperties).foreach { case (receivedProp, expectedProp) =>
+      assert(receivedProp.id == expectedProp.id, "The properties' IRIs did not match.")
+      assert(receivedProp.valuetype_id == expectedProp.valuetype_id, "The properties' valuetypes did not match.")
+      assert(receivedProp.attributes == expectedProp.attributes, "The properties' attributes did not match.")
     }
 
   }
@@ -1005,9 +1014,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#page"
       )
 
-      expectMsgPF(timeout) {
-        case msg: ResourceTypeResponseV1 =>
-          checkResourceTypeResponseV1(received = msg, expected = page)
+      expectMsgPF(timeout) { case msg: ResourceTypeResponseV1 =>
+        checkResourceTypeResponseV1(received = msg, expected = page)
       }
     }
 
@@ -1018,9 +1026,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#book"
       )
 
-      expectMsgPF(timeout) {
-        case msg: ResourceTypeResponseV1 =>
-          checkResourceTypeResponseV1(received = msg, expected = book)
+      expectMsgPF(timeout) { case msg: ResourceTypeResponseV1 =>
+        checkResourceTypeResponseV1(received = msg, expected = book)
       }
     }
 
@@ -1031,9 +1038,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         resourceTypeIri = "http://www.knora.org/ontology/knora-base#Region"
       )
 
-      expectMsgPF(timeout) {
-        case msg: ResourceTypeResponseV1 =>
-          checkResourceTypeResponseV1(received = msg, expected = region)
+      expectMsgPF(timeout) { case msg: ResourceTypeResponseV1 =>
+        checkResourceTypeResponseV1(received = msg, expected = region)
       }
     }
 
@@ -1044,9 +1050,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         resourceTypeIri = "http://www.knora.org/ontology/knora-base#LinkObj"
       )
 
-      expectMsgPF(timeout) {
-        case msg: ResourceTypeResponseV1 =>
-          checkResourceTypeResponseV1(received = msg, expected = linkObject)
+      expectMsgPF(timeout) { case msg: ResourceTypeResponseV1 =>
+        checkResourceTypeResponseV1(received = msg, expected = linkObject)
       }
     }
 
@@ -1058,8 +1063,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         resourceTypeIri = "http://www.knora.org/ontology/0803/incunabula#image"
       )
 
-      expectMsgPF(timeout) {
-        case msg: akka.actor.Status.Failure => msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+        msg.cause.isInstanceOf[NotFoundException] should ===(true)
       }
     }
 
@@ -1069,13 +1074,16 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         userProfile = OntologyResponderV1Spec.userProfileWithGerman // irrelevant
       )
 
-      expectMsgPF(timeout) {
-        case msg: EntityInfoGetResponseV1 =>
-          val titleContent = msg.propertyInfoMap("http://www.knora.org/ontology/0803/incunabula#title")
-          titleContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label,
-                                          preferredLangs = Some(("de", "en"))) should ===(Some("Titel"))
-          titleContent.getPredicateObject(predicateIri = OntologyConstants.Rdfs.Label,
-                                          preferredLangs = Some(("fr", "en"))) should ===(Some("Titre"))
+      expectMsgPF(timeout) { case msg: EntityInfoGetResponseV1 =>
+        val titleContent = msg.propertyInfoMap("http://www.knora.org/ontology/0803/incunabula#title")
+        titleContent.getPredicateObject(
+          predicateIri = OntologyConstants.Rdfs.Label,
+          preferredLangs = Some(("de", "en"))
+        ) should ===(Some("Titel"))
+        titleContent.getPredicateObject(
+          predicateIri = OntologyConstants.Rdfs.Label,
+          preferredLangs = Some(("fr", "en"))
+        ) should ===(Some("Titre"))
       }
     }
 
@@ -1098,9 +1106,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         userADM = OntologyResponderV1Spec.userProfileWithEnglish
       )
 
-      expectMsgPF(timeout) {
-        case msg: ResourceTypesForNamedGraphResponseV1 =>
-          checkResourceTypesForNamedGraphResponseV1(received = msg, expected = resourceTypesForNamedGraphIncunabula)
+      expectMsgPF(timeout) { case msg: ResourceTypesForNamedGraphResponseV1 =>
+        checkResourceTypesForNamedGraphResponseV1(received = msg, expected = resourceTypesForNamedGraphIncunabula)
       }
 
     }
@@ -1112,9 +1119,8 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         userADM = OntologyResponderV1Spec.userProfileWithEnglish
       )
 
-      expectMsgPF(timeout) {
-        case msg: PropertyTypesForNamedGraphResponseV1 =>
-          checkPropertyTypesForNamedGraphIncunabula(received = msg, expected = propertyTypesForNamedGraphIncunabula)
+      expectMsgPF(timeout) { case msg: PropertyTypesForNamedGraphResponseV1 =>
+        checkPropertyTypesForNamedGraphIncunabula(received = msg, expected = propertyTypesForNamedGraphIncunabula)
       }
     }
 
@@ -1125,10 +1131,9 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
         userADM = OntologyResponderV1Spec.userProfileWithEnglish
       )
 
-      expectMsgPF(timeout) {
-        case msg: PropertyTypesForNamedGraphResponseV1 =>
-          // simply checks that no error occurred when getting the property definitions for all vocabularies
-          ()
+      expectMsgPF(timeout) { case msg: PropertyTypesForNamedGraphResponseV1 =>
+        // simply checks that no error occurred when getting the property definitions for all vocabularies
+        ()
       }
     }
   }

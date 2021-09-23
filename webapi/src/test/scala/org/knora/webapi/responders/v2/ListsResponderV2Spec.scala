@@ -38,8 +38,8 @@ object ListsResponderV2Spec {
 }
 
 /**
-  * Tests [[ListsResponderV2]].
-  */
+ * Tests [[ListsResponderV2]].
+ */
 class ListsResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   import ListsResponderV2Spec._
@@ -66,9 +66,8 @@ class ListsResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = userProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: ListGetResponseV2 =>
-          assert(response == listsResponderV2SpecFullData.treeList)
+      expectMsgPF(timeout) { case response: ListGetResponseV2 =>
+        assert(response == listsResponderV2SpecFullData.treeList)
 
       }
     }
@@ -81,9 +80,8 @@ class ListsResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = userProfile
       )
 
-      expectMsgPF(timeout) {
-        case response: NodeGetResponseV2 =>
-          assert(response == listsResponderV2SpecFullData.treeNode)
+      expectMsgPF(timeout) { case response: NodeGetResponseV2 =>
+        assert(response == listsResponderV2SpecFullData.treeNode)
       }
 
     }

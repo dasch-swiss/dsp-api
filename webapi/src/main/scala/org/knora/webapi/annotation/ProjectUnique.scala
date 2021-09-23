@@ -20,9 +20,8 @@
 package org.knora.webapi.annotation
 
 /**
-  * Creates the ProjectUnique annotation.
-  *
-  * Marks values which need to be unique on the level of the PROJECT.
-  *
-  */
+ * Creates the ProjectUnique annotation.
+ *
+ * Marks values which need to be unique on the level of the PROJECT.
+ */
 class ProjectUnique() extends scala.annotation.StaticAnnotation

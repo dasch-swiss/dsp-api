@@ -33,8 +33,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 /**
-  * Tests [[StandoffTagUtilV2]].
-  */
+ * Tests [[StandoffTagUtilV2]].
+ */
 class StandoffTagUtilV2Spec extends CoreSpec {
   private implicit val timeout: Timeout = 10.seconds
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -205,7 +205,8 @@ class StandoffTagUtilV2Spec extends CoreSpec {
         StandoffTagStringAttributeV2(
           standoffPropertyIri = "http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType".toSmartIri,
           value = "letter"
-        )),
+        )
+      ),
       startIndex = 0,
       endIndex = None,
       dataType = None,
@@ -248,7 +249,8 @@ class StandoffTagUtilV2Spec extends CoreSpec {
         StandoffTagInternalReferenceAttributeV2(
           standoffPropertyIri = "http://www.knora.org/ontology/knora-base#standoffTagHasInternalReference".toSmartIri,
           value = "first"
-        )),
+        )
+      ),
       startIndex = 3,
       endIndex = None,
       dataType = Some(StandoffDataTypeClasses.StandoffInternalReferenceTag),
@@ -268,7 +270,8 @@ class StandoffTagUtilV2Spec extends CoreSpec {
         StandoffTagStringAttributeV2(
           standoffPropertyIri = "http://www.knora.org/ontology/standoff#standoffRootTagHasDocumentType".toSmartIri,
           value = "letter"
-        )),
+        )
+      ),
       startIndex = 0,
       endIndex = None,
       dataType = None,
@@ -335,11 +338,13 @@ class StandoffTagUtilV2Spec extends CoreSpec {
 
       val standoffTagsV1: Vector[StandoffTagV2] = Await.result(
         StandoffTagUtilV2.createStandoffTagsV2FromSelectResults(sparqlResultsV1, responderManager, anythingUserProfile),
-        10.seconds)
+        10.seconds
+      )
 
       val standoffTagsV2: Vector[StandoffTagV2] = Await.result(
         StandoffTagUtilV2.createStandoffTagsV2FromSelectResults(sparqlResultsV2, responderManager, anythingUserProfile),
-        10.seconds)
+        10.seconds
+      )
 
       assert(standoffTagsV1 == expectedStandoffTagsV1)
       assert(standoffTagsV2 == expectedStandoffTagsV2)

@@ -25,10 +25,10 @@ import scala.concurrent.ExecutionContextExecutor
 
 object OntologyV2R2RSpec {
   private val anythingUserProfile = SharedTestDataADM.anythingAdminUser
-  private val anythingUsername    = anythingUserProfile.email
+  private val anythingUsername = anythingUserProfile.email
 
   private val superUserProfile = SharedTestDataADM.superUser
-  private val superUsername    = superUserProfile.email
+  private val superUsername = superUserProfile.email
 
   private val password = SharedTestDataADM.testPass
 }
@@ -49,7 +49,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   private val ontologiesPath = DSPApiDirectives.handleErrors(system)(new OntologiesRouteV2(routeData).knoraApiPath)
-  private val resourcesPath  = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV2(routeData).knoraApiPath)
+  private val resourcesPath = DSPApiDirectives.handleErrors(system)(new ResourcesRouteV2(routeData).knoraApiPath)
 
   implicit def default(implicit system: ActorSystem): RouteTestTimeout = RouteTestTimeout(settings.defaultTimeout)
 
@@ -112,7 +112,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         // Per default only read access is allowed in the bazel sandbox.
         // This workaround allows to save test output.
         val testOutputDir = Paths.get(sys.env("TEST_UNDECLARED_OUTPUTS_DIR"))
-        val file          = makeFile(mediaType)
+        val file = makeFile(mediaType)
         val newOutputFile = testOutputDir.resolve(file)
         Files.createDirectories(newOutputFile.getParent)
         FileUtil.writeTextFile(newOutputFile, responseStr)
@@ -149,9 +149,9 @@ class OntologyV2R2RSpec extends R2RSpec {
   }
 
   // URL-encoded IRIs for use as URL segments in HTTP GET tests.
-  private val anythingProjectSegment   = URLEncoder.encode(SharedTestDataADM.ANYTHING_PROJECT_IRI, "UTF-8")
+  private val anythingProjectSegment = URLEncoder.encode(SharedTestDataADM.ANYTHING_PROJECT_IRI, "UTF-8")
   private val incunabulaProjectSegment = URLEncoder.encode(SharedTestDataADM.INCUNABULA_PROJECT_IRI, "UTF-8")
-  private val beolProjectSegment       = URLEncoder.encode(SharedTestDataADM.BEOL_PROJECT_IRI, "UTF-8")
+  private val beolProjectSegment = URLEncoder.encode(SharedTestDataADM.BEOL_PROJECT_IRI, "UTF-8")
   private val knoraApiSimpleOntologySegment =
     URLEncoder.encode(OntologyConstants.KnoraApiV2Simple.KnoraApiOntologyIri, "UTF-8")
   private val knoraApiWithValueObjectsOntologySegment =
@@ -333,15 +333,15 @@ class OntologyV2R2RSpec extends R2RSpec {
     RdfMediaTypes.`application/rdf+xml`
   )
 
-  private val fooIri                  = new MutableTestIri
-  private val barIri                  = new MutableTestIri
+  private val fooIri = new MutableTestIri
+  private val barIri = new MutableTestIri
   private var fooLastModDate: Instant = Instant.now
   private var barLastModDate: Instant = Instant.now
 
   private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
   private var freetestLastModDate: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
 
-  private val uselessIri                  = new MutableTestIri
+  private val uselessIri = new MutableTestIri
   private var uselessLastModDate: Instant = Instant.now
 
   private def getPropertyIrisFromResourceClassResponse(responseJsonDoc: JsonLDDocument): Set[SmartIri] = {
@@ -381,7 +381,7 @@ class OntologyV2R2RSpec extends R2RSpec {
                   val existingFile: Path = httpGetTest.makeFile(mediaType)
 
                   if (Files.exists(existingFile)) {
-                    val parsedResponse: RdfModel     = parseRdfXml(responseStr)
+                    val parsedResponse: RdfModel = parseRdfXml(responseStr)
                     val parsedExistingFile: RdfModel = parseRdfXml(httpGetTest.readFile(mediaType))
 
                     if (parsedResponse != parsedExistingFile) {
@@ -470,8 +470,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        val metadata        = responseJsonDoc.body
-        val ontologyIri     = metadata.value("@id").asInstanceOf[JsonLDString].value
+        val metadata = responseJsonDoc.body
+        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
         assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/foo/v2")
         fooIri.set(ontologyIri)
         assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))
@@ -498,7 +498,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     "create an empty ontology called 'bar' with a comment" in {
-      val label   = "The bar ontology"
+      val label = "The bar ontology"
       val comment = "some comment"
 
       val params =
@@ -532,8 +532,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        val metadata        = responseJsonDoc.body
-        val ontologyIri     = metadata.value("@id").asInstanceOf[JsonLDString].value
+        val metadata = responseJsonDoc.body
+        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
         assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/bar/v2")
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
@@ -562,7 +562,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     "create an empty ontology called 'test' with a comment that has a special character" in {
-      val label   = "The test ontology"
+      val label = "The test ontology"
       val comment = "some \\\"test\\\" comment"
 
       val params =
@@ -585,8 +585,8 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
-        val metadata        = responseJsonDoc.body
-        val ontologyIri     = metadata.value("@id").asInstanceOf[JsonLDString].value
+        val metadata = responseJsonDoc.body
+        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
         assert(ontologyIri == "http://0.0.0.0:3333/ontology/0001/test/v2")
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
@@ -597,7 +597,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     "change the metadata of 'foo'" in {
-      val newLabel   = "The modified foo ontology"
+      val newLabel = "The modified foo ontology"
       val newComment = "new comment"
 
       val params =
@@ -632,8 +632,8 @@ class OntologyV2R2RSpec extends R2RSpec {
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
-        val metadata        = responseJsonDoc.body
-        val ontologyIri     = metadata.value("@id").asInstanceOf[JsonLDString].value
+        val metadata = responseJsonDoc.body
+        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
         assert(ontologyIri == fooIri.get)
         assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(newLabel))
         assert(metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(newComment))
@@ -672,8 +672,8 @@ class OntologyV2R2RSpec extends R2RSpec {
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
-        val metadata        = responseJsonDoc.body
-        val ontologyIri     = metadata.value("@id").asInstanceOf[JsonLDString].value
+        val metadata = responseJsonDoc.body
+        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
         assert(ontologyIri == barIri.get)
         assert(
           metadata.value(OntologyConstants.Rdfs.Comment) == JsonLDString(
@@ -693,7 +693,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     "delete the comment from 'foo'" in {
-      val fooIriEncoded        = URLEncoder.encode(fooIri.get, "UTF-8")
+      val fooIriEncoded = URLEncoder.encode(fooIri.get, "UTF-8")
       val lastModificationDate = URLEncoder.encode(fooLastModDate.toString, "UTF-8")
 
       Delete(s"/v2/ontologies/comment/$fooIriEncoded?lastModificationDate=$lastModificationDate") ~> addCredentials(
@@ -701,8 +701,8 @@ class OntologyV2R2RSpec extends R2RSpec {
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
-        val metadata        = responseJsonDoc.body
-        val ontologyIri     = metadata.value("@id").asInstanceOf[JsonLDString].value
+        val metadata = responseJsonDoc.body
+        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
         assert(ontologyIri == fooIri.get)
         assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString("The modified foo ontology"))
         assert(!metadata.value.contains(OntologyConstants.Rdfs.Comment))
@@ -744,7 +744,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     "delete the 'foo' ontology" in {
-      val fooIriEncoded        = URLEncoder.encode(fooIri.get, "UTF-8")
+      val fooIriEncoded = URLEncoder.encode(fooIri.get, "UTF-8")
       val lastModificationDate = URLEncoder.encode(fooLastModDate.toString, "UTF-8")
 
       Delete(s"/v2/ontologies/$fooIriEncoded?lastModificationDate=$lastModificationDate") ~> addCredentials(
@@ -1789,7 +1789,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     "delete the property anything:hasOtherNothing" in {
-      val propertySegment      = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothing", "UTF-8")
+      val propertySegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherNothing", "UTF-8")
       val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
 
       Delete(
@@ -2141,7 +2141,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     "delete the property anything:hasNothingness" in {
-      val propertySegment      = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasNothingness", "UTF-8")
+      val propertySegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasNothingness", "UTF-8")
       val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
 
       Delete(
@@ -2222,7 +2222,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     "delete the property anything:hasEmptiness" in {
-      val propertySegment      = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasEmptiness", "UTF-8")
+      val propertySegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#hasEmptiness", "UTF-8")
       val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
 
       Delete(
@@ -2259,7 +2259,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     "delete the class anything:Nothing" in {
-      val classSegment         = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing", "UTF-8")
+      val classSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing", "UTF-8")
       val lastModificationDate = URLEncoder.encode(anythingLastModDate.toString, "UTF-8")
 
       Delete(s"/v2/ontologies/classes/$classSegment?lastModificationDate=$lastModificationDate") ~> addCredentials(
@@ -2306,8 +2306,8 @@ class OntologyV2R2RSpec extends R2RSpec {
       ) ~> ontologiesPath ~> check {
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = responseToJsonLDDocument(response)
-        val metadata        = responseJsonDoc.body
-        val ontologyIri     = metadata.value("@id").asInstanceOf[JsonLDString].value
+        val metadata = responseJsonDoc.body
+        val ontologyIri = metadata.value("@id").asInstanceOf[JsonLDString].value
         assert(ontologyIri == "http://api.knora.org/ontology/shared/useless/v2")
         uselessIri.set(ontologyIri)
         assert(metadata.value(OntologyConstants.Rdfs.Label) == JsonLDString(label))

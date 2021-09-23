@@ -22,14 +22,14 @@ package org.knora.webapi.messages.traits
 import spray.json.JsValue
 
 /**
-  * A trait for classes that can convert themselves into JSON using the spray-json library.
-  */
+ * A trait for classes that can convert themselves into JSON using the spray-json library.
+ */
 trait Jsonable {
 
   /**
-    * Converts this [[Jsonable]] into a [[JsValue]].
-    *
-    * @return a [[JsValue]].
-    */
+   * Converts this [[Jsonable]] into a [[JsValue]].
+   *
+   * @return a [[JsValue]].
+   */
   def toJsValue: JsValue
 }

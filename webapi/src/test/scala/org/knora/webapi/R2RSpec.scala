@@ -100,7 +100,7 @@ class R2RSpec
 
   // The main application actor forwards messages to the responder manager and the store manager.
   val responderManager: ActorRef = appActor
-  val storeManager: ActorRef     = appActor
+  val storeManager: ActorRef = appActor
 
   val routeData: KnoraRouteData = KnoraRouteData(
     system = system,
@@ -130,7 +130,7 @@ class R2RSpec
 
   protected def responseToJsonLDDocument(httpResponse: HttpResponse): JsonLDDocument = {
     val responseBodyFuture: Future[String] = httpResponse.entity.toStrict(5.seconds).map(_.data.decodeString("UTF-8"))
-    val responseBodyStr                    = Await.result(responseBodyFuture, 5.seconds)
+    val responseBodyStr = Await.result(responseBodyFuture, 5.seconds)
     JsonLDUtil.parseJsonLD(responseBodyStr)
   }
 
@@ -172,7 +172,7 @@ class R2RSpec
       // Per default only read access is allowed in the bazel sandbox.
       // This workaround allows to save test output.
       val testOutputDir: Path = Paths.get(sys.env("TEST_UNDECLARED_OUTPUTS_DIR"))
-      val newOutputFile       = testOutputDir.resolve(file)
+      val newOutputFile = testOutputDir.resolve(file)
       Files.createDirectories(newOutputFile.getParent)
       FileUtil.writeTextFile(
         newOutputFile,

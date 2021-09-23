@@ -30,8 +30,8 @@ object RejectingRouteE2ESpec {
 }
 
 /**
-  * End-to-End (E2E) test specification for testing route rejections.
-  */
+ * End-to-End (E2E) test specification for testing route rejections.
+ */
 class RejectingRouteE2ESpec extends E2ESpec(RejectingRouteE2ESpec.config) {
 
   implicit def default(implicit system: ActorSystem) = RouteTestTimeout(settings.defaultTimeout)

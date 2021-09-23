@@ -48,16 +48,16 @@ import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import scala.concurrent.Future
 
 /**
-  * Responds to requests for information about binary representations of resources, and returns responses in Knora API
-  * ADM format.
-  */
+ * Responds to requests for information about binary representations of resources, and returns responses in Knora API
+ * ADM format.
+ */
 class SipiResponderADM(responderData: ResponderData) extends Responder(responderData) {
 
   /**
-    * Receives a message of type [[SipiResponderRequestADM]], and returns an appropriate response message, or
-    * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
-    * method first returns `Failure` to the sender, then throws an exception.
-    */
+   * Receives a message of type [[SipiResponderRequestADM]], and returns an appropriate response message, or
+   * [[Status.Failure]]. If a serious error occurs (i.e. an error that isn't the client's fault), this
+   * method first returns `Failure` to the sender, then throws an exception.
+   */
   def receive(msg: SipiResponderRequestADM) = msg match {
     case sipiFileInfoGetRequestADM: SipiFileInfoGetRequestADM => getFileInfoForSipiADM(sipiFileInfoGetRequestADM)
     case other                                                => handleUnexpectedMessage(other, log, this.getClass.getName)
@@ -67,15 +67,16 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
   // Methods for generating complete responses.
 
   /**
-    * Returns a [[SipiFileInfoGetResponseADM]] containing the permissions and path for a file.
-    *
-    * @param request the request.
-    * @return a [[SipiFileInfoGetResponseADM]].
-    */
+   * Returns a [[SipiFileInfoGetResponseADM]] containing the permissions and path for a file.
+   *
+   * @param request the request.
+   * @return a [[SipiFileInfoGetResponseADM]].
+   */
   private def getFileInfoForSipiADM(request: SipiFileInfoGetRequestADM): Future[SipiFileInfoGetResponseADM] = {
 
     log.debug(
-      s"SipiResponderADM - getFileInfoForSipiADM: projectID: ${request.projectID}, filename: ${request.filename}, user: ${request.requestingUser.username}")
+      s"SipiResponderADM - getFileInfoForSipiADM: projectID: ${request.projectID}, filename: ${request.filename}, user: ${request.requestingUser.username}"
+    )
 
     for {
       sparqlQuery <- Future(
@@ -84,7 +85,8 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
             triplestore = settings.triplestoreType,
             filename = request.filename
           )
-          .toString())
+          .toString()
+      )
 
       queryResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
         sparql = sparqlQuery,
@@ -100,7 +102,8 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
         case iriSubject: IriSubjectV2 => iriSubject
         case _ =>
           throw InconsistentRepositoryDataException(
-            s"The subject of the file value with filename ${request.filename} is not an IRI")
+            s"The subject of the file value with filename ${request.filename} is not an IRI"
+          )
       }
 
       assertions: Seq[(String, String)] = queryResponse.statements(fileValueIriSubject).toSeq.flatMap {
@@ -117,7 +120,8 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
       )
 
       _ = log.debug(
-        s"SipiResponderADM - getFileInfoForSipiADM - maybePermissionCode: $maybeEntityPermission, requestingUser: ${request.requestingUser.username}")
+        s"SipiResponderADM - getFileInfoForSipiADM - maybePermissionCode: $maybeEntityPermission, requestingUser: ${request.requestingUser.username}"
+      )
 
       permissionCode: Int = maybeEntityPermission
         .map(_.toInt)
@@ -137,7 +141,8 @@ class SipiResponderADM(responderData: ResponderData) extends Responder(responder
 
         case _ =>
           FastFuture.successful(
-            SipiFileInfoGetResponseADM(permissionCode = permissionCode, restrictedViewSettings = None))
+            SipiFileInfoGetResponseADM(permissionCode = permissionCode, restrictedViewSettings = None)
+          )
       }
 
       _ = println(s"SipiResponderADM returning permission code $permissionCode")

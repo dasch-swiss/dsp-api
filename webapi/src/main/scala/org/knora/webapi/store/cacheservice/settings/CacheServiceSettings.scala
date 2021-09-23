@@ -23,8 +23,8 @@ package org.knora.webapi.store.cacheservice.settings
 import com.typesafe.config.Config
 
 /**
-  * Holds the Cache Service specific settings.
-  */
+ * Holds the Cache Service specific settings.
+ */
 class CacheServiceSettings(config: Config) {
   val cacheServiceEnabled: Boolean = config.getBoolean("app.cache-service.enabled")
   val cacheServiceRedisHost: String = config.getString("app.cache-service.redis.host")

@@ -32,25 +32,25 @@ import org.knora.webapi.messages.v1.responder.valuemessages.{
 }
 
 /**
-  * Utility functions for converting dates.
-  */
+ * Utility functions for converting dates.
+ */
 object DateUtilV1 {
 
   /**
-    * Represents a date with a specified precision as a range of possible dates.
-    *
-    * @param start     the earliest possible value for the date.
-    * @param end       the latest possible value for the date.
-    * @param precision the precision that was used to calculate the date range.
-    */
+   * Represents a date with a specified precision as a range of possible dates.
+   *
+   * @param start     the earliest possible value for the date.
+   * @param end       the latest possible value for the date.
+   * @param precision the precision that was used to calculate the date range.
+   */
   case class DateRange(start: GregorianCalendar, end: GregorianCalendar, precision: KnoraPrecisionV1.Value)
 
   /**
-    * Converts a [[DateValueV1]] to a [[JulianDayNumberValueV1]].
-    *
-    * @param dateValueV1 the [[DateValueV1]] to be converted.
-    * @return a [[JulianDayNumberValueV1]].
-    */
+   * Converts a [[DateValueV1]] to a [[JulianDayNumberValueV1]].
+   *
+   * @param dateValueV1 the [[DateValueV1]] to be converted.
+   * @return a [[JulianDayNumberValueV1]].
+   */
   def dateValueV1ToJulianDayNumberValueV1(dateValueV1: DateValueV1): JulianDayNumberValueV1 = {
     // Get the start and end date ranges of the DateValueV1.
 
@@ -69,18 +69,22 @@ object DateUtilV1 {
   }
 
   /**
-    * Converts a [[JulianDayNumberValueV1]] to a [[DateValueV1]].
-    *
-    * @param julianDayNumberValueV1 the [[JulianDayNumberValueV1]] to be converted.
-    * @return a [[DateValueV1]].
-    */
+   * Converts a [[JulianDayNumberValueV1]] to a [[DateValueV1]].
+   *
+   * @param julianDayNumberValueV1 the [[JulianDayNumberValueV1]] to be converted.
+   * @return a [[DateValueV1]].
+   */
   def julianDayNumberValueV1ToDateValueV1(julianDayNumberValueV1: JulianDayNumberValueV1): DateValueV1 = {
-    val dateval1 = julianDayNumber2DateString(julianDayNumberValueV1.dateval1,
-                                              julianDayNumberValueV1.calendar,
-                                              julianDayNumberValueV1.dateprecision1)
-    val dateval2 = julianDayNumber2DateString(julianDayNumberValueV1.dateval2,
-                                              julianDayNumberValueV1.calendar,
-                                              julianDayNumberValueV1.dateprecision2)
+    val dateval1 = julianDayNumber2DateString(
+      julianDayNumberValueV1.dateval1,
+      julianDayNumberValueV1.calendar,
+      julianDayNumberValueV1.dateprecision1
+    )
+    val dateval2 = julianDayNumber2DateString(
+      julianDayNumberValueV1.dateval2,
+      julianDayNumberValueV1.calendar,
+      julianDayNumberValueV1.dateprecision2
+    )
     val dateEra1 = dateval1.split(StringFormatter.EraSeparator)
     val dateEra2 = dateval2.split(StringFormatter.EraSeparator)
 
@@ -97,21 +101,21 @@ object DateUtilV1 {
   }
 
   /**
-    * Converts a date string to a date interval and a precision depending on its precision:
-    *
-    * Possible date string formats:
-    *
-    * YYYY:        (YYYY-01-01, YYYY-12-31) year precision
-    * YYYY-MM:     (YYYY-MM-01, YYYY-MM-LAST-DAY-OF-MONTH) month precision
-    * YYYY-MM-DD:  (YYYY-MM-DD, YYYY-MM-DD) day precision
-    *
-    * A date string can optionally end with a space and an era, which can be AD, BC, CE, or BCE. If no
-    * era is given, AD/CE is assumed.
-    *
-    * @param dateString   A string representation of the given date conforming to the expected format.
-    * @param calendarType a [[KnoraCalendarV1.Value]] specifying the calendar.
-    * @return A tuple containing two calendar dates (interval) and a precision.
-    */
+   * Converts a date string to a date interval and a precision depending on its precision:
+   *
+   * Possible date string formats:
+   *
+   * YYYY:        (YYYY-01-01, YYYY-12-31) year precision
+   * YYYY-MM:     (YYYY-MM-01, YYYY-MM-LAST-DAY-OF-MONTH) month precision
+   * YYYY-MM-DD:  (YYYY-MM-DD, YYYY-MM-DD) day precision
+   *
+   * A date string can optionally end with a space and an era, which can be AD, BC, CE, or BCE. If no
+   * era is given, AD/CE is assumed.
+   *
+   * @param dateString   A string representation of the given date conforming to the expected format.
+   * @param calendarType a [[KnoraCalendarV1.Value]] specifying the calendar.
+   * @return A tuple containing two calendar dates (interval) and a precision.
+   */
   def dateString2DateRange(dateString: String, calendarType: KnoraCalendarV1.Value): DateRange = {
     val changeDate: Date = getGregorianCalendarChangeDate(calendarType)
 
@@ -157,14 +161,28 @@ object DateUtilV1 {
           intervalStart.set(Calendar.ERA, era)
           intervalStart.setLenient(false) // set leniency to false in order to check for invalid dates
           intervalStart.setGregorianChange(changeDate)
-          intervalStart.set(dateSegments(0).toInt, 0, 1, 12, 0, 0) // January 1st of the given year. Attention: in java.util.Calendar, month count starts with 0
+          intervalStart.set(
+            dateSegments(0).toInt,
+            0,
+            1,
+            12,
+            0,
+            0
+          ) // January 1st of the given year. Attention: in java.util.Calendar, month count starts with 0
           intervalStart.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
           val intervalEnd = new GregorianCalendar
           intervalEnd.set(Calendar.ERA, era)
           intervalEnd.setLenient(false) // set leniency to false in order to check for invalid dates
           intervalEnd.setGregorianChange(changeDate)
-          intervalEnd.set(dateSegments(0).toInt, 11, 31, 12, 0, 0) // December 31st of the given year. Attention: in java.util.Calendar, month count starts with 0
+          intervalEnd.set(
+            dateSegments(0).toInt,
+            11,
+            31,
+            12,
+            0,
+            0
+          ) // December 31st of the given year. Attention: in java.util.Calendar, month count starts with 0
           intervalEnd.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
           DateRange(intervalStart, intervalEnd, KnoraPrecisionV1.YEAR)
@@ -184,7 +202,14 @@ object DateUtilV1 {
           intervalStart.set(Calendar.ERA, era)
           intervalStart.setLenient(false) // set leniency to false in order to check for invalid dates
           intervalStart.setGregorianChange(changeDate)
-          intervalStart.set(dateSegments(0).toInt, dateSegments(1).toInt - 1, 1, 12, 0, 0) // Attention: in java.util.Calendar, month count starts with 0; first day of the given month in the given year
+          intervalStart.set(
+            dateSegments(0).toInt,
+            dateSegments(1).toInt - 1,
+            1,
+            12,
+            0,
+            0
+          ) // Attention: in java.util.Calendar, month count starts with 0; first day of the given month in the given year
           intervalStart.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
           val intervalEnd = new GregorianCalendar
@@ -197,7 +222,8 @@ object DateUtilV1 {
             intervalStart.getActualMaximum(daysInMonth),
             12,
             0,
-            0) // Attention: in java.util.Calendar, month count starts with 0; last day of the given month in the given year
+            0
+          ) // Attention: in java.util.Calendar, month count starts with 0; last day of the given month in the given year
           intervalEnd.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
           DateRange(intervalStart, intervalEnd, KnoraPrecisionV1.MONTH)
@@ -216,7 +242,11 @@ object DateUtilV1 {
           exactDate.set(Calendar.ERA, era)
           exactDate.setLenient(false) // set leniency to false in order to check for invalid dates
           exactDate.setGregorianChange(changeDate)
-          exactDate.set(dateSegments(0).toInt, dateSegments(1).toInt - 1, dateSegments(2).toInt) // Attention: in java.util.Calendar, month count starts with 0
+          exactDate.set(
+            dateSegments(0).toInt,
+            dateSegments(1).toInt - 1,
+            dateSegments(2).toInt
+          ) // Attention: in java.util.Calendar, month count starts with 0
           exactDate.get(0) // call method `get` in order to format the date; if it is invalid an exception is thrown
 
           DateRange(exactDate, exactDate, KnoraPrecisionV1.DAY)
@@ -229,18 +259,19 @@ object DateUtilV1 {
         }
 
       case _ =>
-        throw BadRequestException(s"Invalid date format: $dateString") // should never be fulfilled due to previous regex checking
+        throw BadRequestException(
+          s"Invalid date format: $dateString"
+        ) // should never be fulfilled due to previous regex checking
     }
   }
 
   /**
-    * Converts era property of java.calendar to a string format.
-    *
-    * @param era java.calendar era property.
-    * @return string format of era.
-    */
-  def eraToString(era: Int): String = {
-
+   * Converts era property of java.calendar to a string format.
+   *
+   * @param era java.calendar era property.
+   * @return string format of era.
+   */
+  def eraToString(era: Int): String =
     era match {
 
       case 1     => StringFormatter.Era_CE
@@ -248,19 +279,20 @@ object DateUtilV1 {
       case other => throw AssertionException(s"A valid era should be 0 or 1, but $other given")
 
     }
-  }
 
   /**
-    * Converts a Julian Day Number to a string in `YYYY[-MM[-DD] ]` format.
-    *
-    * @param julianDay    a Julian Day Number.
-    * @param calendarType the type of calendar to be used.
-    * @param precision    the desired precision of the resulting string.
-    * @return a string in `YYYY[-MM[-DD] ]` format.
-    */
-  def julianDayNumber2DateString(julianDay: Int,
-                                 calendarType: KnoraCalendarV1.Value,
-                                 precision: KnoraPrecisionV1.Value): String = {
+   * Converts a Julian Day Number to a string in `YYYY[-MM[-DD] ]` format.
+   *
+   * @param julianDay    a Julian Day Number.
+   * @param calendarType the type of calendar to be used.
+   * @param precision    the desired precision of the resulting string.
+   * @return a string in `YYYY[-MM[-DD] ]` format.
+   */
+  def julianDayNumber2DateString(
+    julianDay: Int,
+    calendarType: KnoraCalendarV1.Value,
+    precision: KnoraPrecisionV1.Value
+  ): String = {
     val gregorianCalendar = convertJulianDayNumberToJavaGregorianCalendar(julianDay, calendarType)
     val year = gregorianCalendar.get(Calendar.YEAR)
     val month = gregorianCalendar.get(Calendar.MONTH) + 1
@@ -284,11 +316,11 @@ object DateUtilV1 {
   }
 
   /**
-    * Converts a [[GregorianCalendar]] to a Julian Day Number.
-    *
-    * @param date a [[GregorianCalendar]].
-    * @return a Julian Day Number.
-    */
+   * Converts a [[GregorianCalendar]] to a Julian Day Number.
+   *
+   * @param date a [[GregorianCalendar]].
+   * @return a Julian Day Number.
+   */
   def convertDateToJulianDayNumber(date: GregorianCalendar): Int = {
     val conv = new JDateTime
     conv.loadFrom(date)
@@ -296,14 +328,16 @@ object DateUtilV1 {
   }
 
   /**
-    * Converts a Julian Day Number to a [[GregorianCalendar]].
-    *
-    * @param julianDay    a Julian Day Number.
-    * @param calendarType the type of calendar to be used to configure the [[GregorianCalendar]].
-    * @return a [[GregorianCalendar]].
-    */
-  def convertJulianDayNumberToJavaGregorianCalendar(julianDay: Int,
-                                                    calendarType: KnoraCalendarV1.Value): GregorianCalendar = {
+   * Converts a Julian Day Number to a [[GregorianCalendar]].
+   *
+   * @param julianDay    a Julian Day Number.
+   * @param calendarType the type of calendar to be used to configure the [[GregorianCalendar]].
+   * @return a [[GregorianCalendar]].
+   */
+  def convertJulianDayNumberToJavaGregorianCalendar(
+    julianDay: Int,
+    calendarType: KnoraCalendarV1.Value
+  ): GregorianCalendar = {
     val conv = new JDateTime(julianDay.toDouble)
     val gregorianCalendar = new GregorianCalendar
 
@@ -314,7 +348,7 @@ object DateUtilV1 {
     gregorianCalendar
   }
 
-  private def getGregorianCalendarChangeDate(calendarType: KnoraCalendarV1.Value): Date = {
+  private def getGregorianCalendarChangeDate(calendarType: KnoraCalendarV1.Value): Date =
     // https://docs.oracle.com/javase/7/docs/api/java/util/GregorianCalendar.html#setGregorianChange%28java.util.Date%29
     calendarType match {
       case KnoraCalendarV1.JULIAN => new Date(java.lang.Long.MAX_VALUE) // for Julian: if calendar given in Julian cal
@@ -322,14 +356,13 @@ object DateUtilV1 {
         new Date(java.lang.Long.MIN_VALUE) //for Gregorian: if calendar given in Gregorian cal
       case _ => throw BadRequestException(s"Invalid calendar name: $calendarType")
     }
-  }
 
   /**
-    * Creates a [[JulianDayNumberValueV1]] from a date String (e.g. "GREGORIAN:2015-12-03").
-    *
-    * @param dateStr the date String to be processed.
-    * @return a [[JulianDayNumberValueV1]] representing the date.
-    */
+   * Creates a [[JulianDayNumberValueV1]] from a date String (e.g. "GREGORIAN:2015-12-03").
+   *
+   * @param dateStr the date String to be processed.
+   * @return a [[JulianDayNumberValueV1]] representing the date.
+   */
   def createJDNValueV1FromDateString(dateStr: String): JulianDayNumberValueV1 = {
     val stringFormatter = StringFormatter.getGeneralInstance
     val datestring = stringFormatter.validateDate(dateStr, throw BadRequestException(s"Invalid date format: $dateStr"))

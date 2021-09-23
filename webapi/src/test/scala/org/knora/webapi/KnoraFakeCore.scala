@@ -30,8 +30,8 @@ import org.knora.webapi.settings.APPLICATION_MANAGER_ACTOR_NAME
 import scala.concurrent.duration.FiniteDuration
 
 /**
-  * A fake Knora service that Sipi can use to get file permissions.
-  */
+ * A fake Knora service that Sipi can use to get file permissions.
+ */
 trait KnoraFakeCore {
   this: Core =>
 
@@ -40,13 +40,13 @@ trait KnoraFakeCore {
     system.actorOf(Props(new ApplicationActor with LiveManagers), name = APPLICATION_MANAGER_ACTOR_NAME)
 
   /**
-    * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
-    */
+   * Timeout definition (need to be high enough to allow reloading of data so that checkActorSystem doesn't timeout)
+   */
   implicit private val timeout: FiniteDuration = settings.defaultTimeout
 
   /**
-    * Faked `webapi` routes
-    */
+   * Faked `webapi` routes
+   */
   private val apiRoutes = {
     path("admin" / "files" / Segments(2)) { projectIDAndFile =>
       get {
@@ -63,19 +63,19 @@ trait KnoraFakeCore {
   }
 
   /**
-    * Starts the Faked Knora API server.
-    */
+   * Starts the Faked Knora API server.
+   */
   def startService(): Unit = {
     Http().newServerAt(settings.internalKnoraApiHost, settings.internalKnoraApiPort).bindFlow(Route.toFlow(apiRoutes))
     println(
-      s"Faked Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}.")
+      s"Faked Knora API Server started at http://${settings.internalKnoraApiHost}:${settings.internalKnoraApiPort}."
+    )
   }
 
   /**
-    * Stops Knora.
-    */
-  def stopService(): Unit = {
+   * Stops Knora.
+   */
+  def stopService(): Unit =
     system.terminate()
-  }
 
 }
