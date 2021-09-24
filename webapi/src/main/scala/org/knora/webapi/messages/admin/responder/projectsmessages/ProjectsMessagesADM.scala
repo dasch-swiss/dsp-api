@@ -723,7 +723,7 @@ object ProjectIdentifierType extends Enumeration {
 
   type ProjectIdentifierType
 
-  val IRI: Value       = Value(0, "iri")
+  val IRI: Value = Value(0, "iri")
   val SHORTCODE: Value = Value(1, "shortcode")
   val SHORTNAME: Value = Value(2, "shortname")
 }
