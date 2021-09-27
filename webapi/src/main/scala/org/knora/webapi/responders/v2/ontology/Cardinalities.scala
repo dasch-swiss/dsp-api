@@ -170,7 +170,7 @@ object Cardinalities {
           throw BadRequestException(msg)
         }
       )
-    } yield CanDoResponseV2(propertyIsUsed)
+    } yield CanDoResponseV2(!propertyIsUsed)
   }
 
   /**
