@@ -78,7 +78,20 @@ class OntologyV2R2RSpec extends R2RSpec {
   private val clientTestDataPath: Seq[String] = Seq("v2", "ontologies")
 
   // Collects client test data
-  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+  // TODO: redefine below method somewhere else if can be reused over other test files
+  private def CollectClientTestData(filename: String, payload: String) = {
+    val clientTestDataCollector = new ClientTestDataCollector(settings)
+    clientTestDataCollector.addFile(
+      TestDataFileContent(
+        filePath = TestDataFilePath(
+          directoryPath = clientTestDataPath,
+          filename = filename,
+          fileExtension = "json"
+        ),
+        text = payload
+      )
+    )
+  }
 
   /**
    * Represents an HTTP GET test that requests ontology information.
@@ -124,16 +137,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     def storeClientTestData(responseStr: String): Unit =
       maybeClientTestDataBasename match {
         case Some(clientTestDataBasename) =>
-          clientTestDataCollector.addFile(
-            TestDataFileContent(
-              filePath = TestDataFilePath(
-                directoryPath = clientTestDataPath,
-                filename = clientTestDataBasename,
-                fileExtension = "json"
-              ),
-              text = responseStr
-            )
-          )
+          CollectClientTestData(clientTestDataBasename, responseStr)
 
         case None => ()
       }
@@ -453,16 +457,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-empty-foo-ontology-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("create-empty-foo-ontology-request", params)
 
       Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password)
@@ -484,16 +479,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
         fooLastModDate = lastModDate
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-empty-foo-ontology-response",
-              fileExtension = "json"
-            ),
-            text = responseStr
-          )
-        )
+        CollectClientTestData("create-empty-foo-ontology-response", responseStr)
       }
     }
 
@@ -515,16 +501,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |    }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-ontology-with-comment-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("create-ontology-with-comment-request", params)
 
       Post("/v2/ontologies", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password)
@@ -548,16 +525,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         )
         barLastModDate = lastModDate
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-ontology-with-comment-response",
-              fileExtension = "json"
-            ),
-            text = responseStr
-          )
-        )
+        CollectClientTestData("create-ontology-with-comment-response", responseStr)
       }
     }
 
@@ -616,16 +584,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "update-ontology-metadata-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("update-ontology-metadata-request", params)
 
       Put("/v2/ontologies/metadata", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password)
@@ -726,16 +685,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       ) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "can-do-response",
-              fileExtension = "json"
-            ),
-            text = responseStr
-          )
-        )
+        CollectClientTestData("can-do-response", responseStr)
 
         assert(status == StatusCodes.OK, responseStr)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
@@ -753,16 +703,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         val responseStr = responseAs[String]
         assert(status == StatusCodes.OK, responseStr)
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "delete-ontology-response",
-              fileExtension = "json"
-            ),
-            text = responseStr
-          )
-        )
+        CollectClientTestData("delete-ontology-response", responseStr)
       }
     }
 
@@ -819,16 +760,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-value-property-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("create-value-property-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -850,16 +782,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-value-property-response",
-              fileExtension = "json"
-            ),
-            text = responseStr
-          )
-        )
+        CollectClientTestData("create-value-property-response", responseStr)
       }
     }
 
@@ -896,16 +819,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "change-property-label-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("change-property-label-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -963,16 +877,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "change-property-comment-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("change-property-comment-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1083,16 +988,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "change-property-guielement-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("change-property-guielement-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1160,16 +1056,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "remove-property-guielement-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("remove-property-guielement-request", params)
 
       Put(
         "/v2/ontologies/properties/guielement",
@@ -1246,16 +1133,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-class-with-cardinalities-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("create-class-with-cardinalities-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1319,16 +1197,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}
             """.stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-class-without-cardinalities-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("create-class-without-cardinalities-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1355,16 +1224,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-class-without-cardinalities-response",
-              fileExtension = "json"
-            ),
-            text = responseStr
-          )
-        )
+        CollectClientTestData("create-class-without-cardinalities-response", responseStr)
       }
     }
 
@@ -1398,16 +1258,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "change-class-label-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("change-class-label-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1462,16 +1313,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "change-class-comment-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("change-class-comment-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1539,16 +1381,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}
             """.stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "create-link-property-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("create-link-property-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1570,16 +1403,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "create-link-property-response",
-              fileExtension = "json"
-            ),
-            text = responseStr
-          )
-        )
+        CollectClientTestData("create-link-property-response", responseStr)
       }
     }
 
@@ -1615,16 +1439,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |}
             """.stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "add-cardinalities-to-class-nothing-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("add-cardinalities-to-class-nothing-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -1665,16 +1480,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         assert(newAnythingLastModDate.isAfter(anythingLastModDate))
         anythingLastModDate = newAnythingLastModDate
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "add-cardinalities-to-class-nothing-response",
-              fileExtension = "json"
-            ),
-            text = responseStr
-          )
-        )
+        CollectClientTestData("add-cardinalities-to-class-nothing-response", responseStr)
       }
     }
 
@@ -1741,16 +1547,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "remove-property-cardinality-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("remove-property-cardinality-request", params)
 
       Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password)
@@ -1963,16 +1760,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "change-gui-order-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("change-gui-order-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -2101,16 +1889,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "replace-class-cardinalities-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("replace-class-cardinalities-request", params)
 
       // Convert the submitted JSON-LD to an InputOntologyV2, without SPARQL-escaping, so we can compare it to the response.
       val paramsAsInput: InputOntologyV2 = InputOntologyV2.fromJsonLD(JsonLDUtil.parseJsonLD(params)).unescape
@@ -2187,16 +1966,7 @@ class OntologyV2R2RSpec extends R2RSpec {
            |  }
            |}""".stripMargin
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "remove-class-cardinalities-request",
-            fileExtension = "json"
-          ),
-          text = params
-        )
-      )
+      CollectClientTestData("remove-class-cardinalities-request", params)
 
       Put("/v2/ontologies/cardinalities", HttpEntity(RdfMediaTypes.`application/ld+json`, params)) ~> addCredentials(
         BasicHttpCredentials(anythingUsername, password)
@@ -2896,16 +2666,7 @@ class OntologyV2R2RSpec extends R2RSpec {
          |}
             """.stripMargin
 
-    clientTestDataCollector.addFile(
-      TestDataFileContent(
-        filePath = TestDataFilePath(
-          directoryPath = clientTestDataPath,
-          filename = "candeletecardinalities-false-request",
-          fileExtension = "json"
-        ),
-        text = cardinalityCantBeDeletedPayload
-      )
-    )
+    CollectClientTestData("candeletecardinalities-false-request", cardinalityCantBeDeletedPayload)
 
     // Expect cardinality can't be deleted - endpoint should return CanDo response with value false
     Post(
@@ -2923,20 +2684,10 @@ class OntologyV2R2RSpec extends R2RSpec {
             .value
         )
 
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "candeletecardinalities-false-response",
-              fileExtension = "json"
-            ),
-            text = responseStr
-          )
-        )
+        CollectClientTestData("candeletecardinalities-false-response", responseStr)
       }
 
-    // Prepare the JsonLD payload to check if a cardinality can be deleted and
-    // then to also actually delete it.
+    // Prepare the JsonLD payload to check if a cardinality can be deleted and then to also actually delete it.
     val params =
       s"""
          |{
@@ -2968,16 +2719,7 @@ class OntologyV2R2RSpec extends R2RSpec {
          |}
             """.stripMargin
 
-    clientTestDataCollector.addFile(
-      TestDataFileContent(
-        filePath = TestDataFilePath(
-          directoryPath = clientTestDataPath,
-          filename = "candeletecardinalities-true-request",
-          fileExtension = "json"
-        ),
-        text = params
-      )
-    )
+    CollectClientTestData("candeletecardinalities-true-request", params)
 
     // Successfully check if the cardinality can be deleted
     Post(
@@ -2991,16 +2733,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
       assert(responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
 
-      clientTestDataCollector.addFile(
-        TestDataFileContent(
-          filePath = TestDataFilePath(
-            directoryPath = clientTestDataPath,
-            filename = "candeletecardinalities-true-response",
-            fileExtension = "json"
-          ),
-          text = responseStr
-        )
-      )
+      CollectClientTestData("candeletecardinalities-true-response", responseStr)
     }
 
     // Successfully remove the (unused) text value cardinality from the class.
