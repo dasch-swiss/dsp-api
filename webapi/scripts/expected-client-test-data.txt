@@ -193,10 +193,10 @@ test-data/v2/ontologies/add-cardinalities-to-class-nothing-response.json
 test-data/v2/ontologies/all-ontology-metadata-response.json
 test-data/v2/ontologies/anything-ontology.json
 test-data/v2/ontologies/can-do-response.json
-test-data/v2/ontologies/candeletecardinalities-false-request
-test-data/v2/ontologies/candeletecardinalities-false-response
-test-data/v2/ontologies/candeletecardinalities-true-request
-test-data/v2/ontologies/candeletecardinalities-true-response
+test-data/v2/ontologies/candeletecardinalities-false-request.json
+test-data/v2/ontologies/candeletecardinalities-false-response.json
+test-data/v2/ontologies/candeletecardinalities-true-request.json
+test-data/v2/ontologies/candeletecardinalities-true-response.json
 test-data/v2/ontologies/change-class-comment-request.json
 test-data/v2/ontologies/change-class-label-request.json
 test-data/v2/ontologies/change-gui-order-request.json
