@@ -2864,7 +2864,7 @@ class OntologyV2R2RSpec extends R2RSpec {
       assert(resourceIri.toSmartIri.isKnoraDataIri)
     }
 
-    // payload
+    // payload to test cardinality can't be deleted
     val cardinalityCantBeDeletedPayload =
       s"""
          |{
@@ -2896,14 +2896,24 @@ class OntologyV2R2RSpec extends R2RSpec {
          |}
             """.stripMargin
 
-    // Expect cardinality can't be deleted - endpoint should return false
+    clientTestDataCollector.addFile(
+      TestDataFileContent(
+        filePath = TestDataFilePath(
+          directoryPath = clientTestDataPath,
+          filename = "candeletecardinalities-false-request",
+          fileExtension = "json"
+        ),
+        text = cardinalityCantBeDeletedPayload
+      )
+    )
+
+    // Expect cardinality can't be deleted - endpoint should return CanDo response with value false
     Post(
       "/v2/ontologies/candeletecardinalities",
       HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityCantBeDeletedPayload)
     ) ~>
       addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
-        println(StatusCodes.OK, response.toString)
         assert(status == StatusCodes.OK, response.toString)
         val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
         assert(
@@ -2911,6 +2921,17 @@ class OntologyV2R2RSpec extends R2RSpec {
             .value(OntologyConstants.KnoraApiV2Complex.CanDo)
             .asInstanceOf[JsonLDBoolean]
             .value
+        )
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "candeletecardinalities-false-response",
+              fileExtension = "json"
+            ),
+            text = responseStr
+          )
         )
       }
 
@@ -2947,6 +2968,17 @@ class OntologyV2R2RSpec extends R2RSpec {
          |}
             """.stripMargin
 
+    clientTestDataCollector.addFile(
+      TestDataFileContent(
+        filePath = TestDataFilePath(
+          directoryPath = clientTestDataPath,
+          filename = "candeletecardinalities-true-request",
+          fileExtension = "json"
+        ),
+        text = params
+      )
+    )
+
     // Successfully check if the cardinality can be deleted
     Post(
       "/v2/ontologies/candeletecardinalities",
@@ -2958,6 +2990,17 @@ class OntologyV2R2RSpec extends R2RSpec {
       assert(status == StatusCodes.OK, response.toString)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
       assert(responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+
+      clientTestDataCollector.addFile(
+        TestDataFileContent(
+          filePath = TestDataFilePath(
+            directoryPath = clientTestDataPath,
+            filename = "candeletecardinalities-true-response",
+            fileExtension = "json"
+          ),
+          text = responseStr
+        )
+      )
     }
 
     // Successfully remove the (unused) text value cardinality from the class.
