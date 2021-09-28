@@ -129,9 +129,6 @@ object Cardinalities {
 
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
       propertyIsUsed: Boolean <- isPropertyUsedInResources(settings, storeManager, submittedPropertyToDelete)
-//      _ = if (propertyIsUsed) {
-//        throw BadRequestException("Property is used in data. The cardinality cannot be deleted.")
-//      }
 
       // Make an update class definition in which the cardinality to delete is removed
 

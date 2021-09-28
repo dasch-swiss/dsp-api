@@ -2864,6 +2864,56 @@ class OntologyV2R2RSpec extends R2RSpec {
       assert(resourceIri.toSmartIri.isKnoraDataIri)
     }
 
+    // payload
+    val cardinalityCantBeDeletedPayload =
+      s"""
+         |{
+         |  "@id" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}",
+         |  "@type" : "owl:Ontology",
+         |  "knora-api:lastModificationDate" : {
+         |    "@type" : "xsd:dateTimeStamp",
+         |    "@value" : "$freetestLastModDate"
+         |  },
+         |  "@graph" : [ {
+         |    "@id" : "freetest:FreeTest",
+         |    "@type" : "owl:Class",
+         |    "rdfs:subClassOf" :  {
+         |      "@type": "owl:Restriction",
+         |      "owl:minCardinality" : 1,
+         |      "owl:onProperty" : {
+         |        "@id" : "freetest:hasText"
+         |      }
+         |    }
+         |  } ],
+         |  "@context" : {
+         |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "owl" : "http://www.w3.org/2002/07/owl#",
+         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+         |    "freetest" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}#"
+         |  }
+         |}
+            """.stripMargin
+
+    // Expect cardinality can't be deleted - endpoint should return false
+    Post(
+      "/v2/ontologies/candeletecardinalities",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityCantBeDeletedPayload)
+    ) ~>
+      addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        val responseStr = responseAs[String]
+        println(StatusCodes.OK, response.toString)
+        assert(status == StatusCodes.OK, response.toString)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+        assert(
+          !responseJsonDoc.body
+            .value(OntologyConstants.KnoraApiV2Complex.CanDo)
+            .asInstanceOf[JsonLDBoolean]
+            .value
+        )
+      }
+
     // Prepare the JsonLD payload to check if a cardinality can be deleted and
     // then to also actually delete it.
     val params =
