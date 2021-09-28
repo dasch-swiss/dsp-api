@@ -79,7 +79,7 @@ class OntologyV2R2RSpec extends R2RSpec {
 
   // Collects client test data
   // TODO: redefine below method somewhere else if can be reused over other test files
-  private def CollectClientTestData(filename: String, payload: String) = {
+  private def CollectClientTestData(filename: String, payload: String): Unit = {
     val clientTestDataCollector = new ClientTestDataCollector(settings)
     clientTestDataCollector.addFile(
       TestDataFileContent(
