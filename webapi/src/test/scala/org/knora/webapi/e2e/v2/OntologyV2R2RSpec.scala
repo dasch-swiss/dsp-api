@@ -77,21 +77,22 @@ class OntologyV2R2RSpec extends R2RSpec {
   // Directory path for generated client test data
   private val clientTestDataPath: Seq[String] = Seq("v2", "ontologies")
 
+  // an instance of ClientTestDataCollector
+  private val clientTestDataCollector = new ClientTestDataCollector(settings)
+
   // Collects client test data
   // TODO: redefine below method somewhere else if can be reused over other test files
-  private def CollectClientTestData(filename: String, payload: String): Unit = {
-    val clientTestDataCollector = new ClientTestDataCollector(settings)
+  private def CollectClientTestData(fileName: String, fileContent: String): Unit =
     clientTestDataCollector.addFile(
       TestDataFileContent(
         filePath = TestDataFilePath(
           directoryPath = clientTestDataPath,
-          filename = filename,
+          filename = fileName,
           fileExtension = "json"
         ),
-        text = payload
+        text = fileContent
       )
     )
-  }
 
   /**
    * Represents an HTTP GET test that requests ontology information.
