@@ -162,7 +162,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           case None        => None
         }
 
-        val project: ProjectCreatePayloadADM =
+        val projectCreatePayload: ProjectCreatePayloadADM =
           ProjectCreatePayloadADM.create(
             id = stringFormatter
               .validateAndEscapeOptionalProjectIri(apiRequest.id, throw BadRequestException(s"Invalid user IRI")),
@@ -181,7 +181,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
             featureFactoryConfig = featureFactoryConfig
           )
         } yield ProjectCreateRequestADM(
-          createRequest = project,
+          createRequest = projectCreatePayload,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()

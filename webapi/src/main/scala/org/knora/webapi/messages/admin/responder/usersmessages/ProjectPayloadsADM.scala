@@ -2,24 +2,10 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 
 import org.knora.webapi.IRI
 
-trait ProjectCreatePayloadTraitADM {
-  def create(
-    id: Option[IRI],
-    shortname: Shortname,
-    shortcode: Shortcode,
-    longname: Option[Longname],
-    description: Description,
-    keywords: Keywords,
-    logo: Option[Logo],
-    status: Status,
-    selfjoin: Selfjoin
-  ): ProjectCreatePayloadADM
-}
-
 /**
  * Project payload
  */
-sealed abstract case class ProjectCreatePayloadADM(
+sealed abstract case class ProjectCreatePayloadADM private (
   id: Option[IRI],
   shortname: Shortname,
   shortcode: Shortcode,
@@ -31,10 +17,10 @@ sealed abstract case class ProjectCreatePayloadADM(
   selfjoin: Selfjoin
 )
 
-object ProjectCreatePayloadADM extends ProjectCreatePayloadTraitADM {
+object ProjectCreatePayloadADM {
 
   /** The create constructor */
-  override def create(
+  def create(
     id: Option[IRI] = None,
     shortname: Shortname,
     shortcode: Shortcode,

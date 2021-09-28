@@ -2,24 +2,10 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 
 import org.knora.webapi.IRI
 
-trait UserCreatePayloadTraitADM {
-  def create(
-    id: Option[IRI],
-    username: Username,
-    email: Email,
-    givenName: GivenName,
-    familyName: FamilyName,
-    password: Password,
-    status: Status,
-    lang: LanguageCode,
-    systemAdmin: SystemAdmin
-  ): UserCreatePayloadADM
-}
-
 /**
  * User entity representing the payload for the create user request
  */
-sealed abstract case class UserCreatePayloadADM(
+sealed abstract case class UserCreatePayloadADM private (
   id: Option[IRI],
   username: Option[Username],
   email: Option[Email],
@@ -34,10 +20,10 @@ sealed abstract case class UserCreatePayloadADM(
   systemAdmin: Option[SystemAdmin]
 )
 
-object UserCreatePayloadADM extends UserCreatePayloadTraitADM {
+object UserCreatePayloadADM {
 
   /** The create constructor needs all attributes but id which is optional */
-  override def create(
+  def create(
     id: Option[IRI] = None,
     username: Username,
     email: Email,

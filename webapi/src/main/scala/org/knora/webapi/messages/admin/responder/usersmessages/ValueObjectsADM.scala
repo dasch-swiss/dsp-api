@@ -7,17 +7,17 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 import scala.util.matching.Regex
 
-trait ValueObject[T, K] {
-  val stringFormatter = StringFormatter.getGeneralInstance
-  def create(value: K): Either[Throwable, T]
-}
+//trait ValueObject[T, K] {
+//  val stringFormatter = StringFormatter.getGeneralInstance
+//  def create(value: K): Either[Throwable, T]
+//}
 
 /**
  * Username value object.
  */
-sealed abstract case class Username(value: String)
+sealed abstract case class Username private (value: String)
 
-object Username extends ValueObject[Username, String] {
+object Username {
 
   /**
    * A regex that matches a valid username
@@ -29,7 +29,7 @@ object Username extends ValueObject[Username, String] {
   private val UsernameRegex: Regex =
     """^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$""".r
 
-  override def create(value: String): Either[Throwable, Username] =
+  def create(value: String): Either[Throwable, Username] =
     if (value.isEmpty) {
       Left(BadRequestException("Missing username"))
     } else {
@@ -45,13 +45,12 @@ object Username extends ValueObject[Username, String] {
 /**
  * Email value object.
  */
-sealed abstract case class Email(value: String)
+sealed abstract case class Email private (value: String)
 
-object Email extends ValueObject[Email, String] {
-
+object Email {
   private val EmailRegex: Regex = """^.+@.+$""".r // TODO use proper validation
 
-  override def create(value: String): Either[Throwable, Email] =
+  def create(value: String): Either[Throwable, Email] =
     if (value.isEmpty) {
       Left(BadRequestException("Missing email"))
     } else {
@@ -65,13 +64,12 @@ object Email extends ValueObject[Email, String] {
 /**
  * Password value object.
  */
-sealed abstract case class Password(value: String)
+sealed abstract case class Password private (value: String)
 
-object Password extends ValueObject[Password, String] {
-
+object Password {
   private val PasswordRegex: Regex = """^[\s\S]*$""".r //TODO: add password validation
 
-  override def create(value: String): Either[Throwable, Password] =
+  def create(value: String): Either[Throwable, Password] =
     if (value.isEmpty) {
       Left(BadRequestException("Missing password"))
     } else {
@@ -85,11 +83,11 @@ object Password extends ValueObject[Password, String] {
 /**
  * GivenName value object.
  */
-sealed abstract case class GivenName(value: String)
+sealed abstract case class GivenName private (value: String)
 
-object GivenName extends ValueObject[GivenName, String] {
+object GivenName {
   // TODO use proper validation for value
-  override def create(value: String): Either[Throwable, GivenName] =
+  def create(value: String): Either[Throwable, GivenName] =
     if (value.isEmpty) {
       Left(BadRequestException("Missing given name"))
     } else {
@@ -100,11 +98,11 @@ object GivenName extends ValueObject[GivenName, String] {
 /**
  * FamilyName value object.
  */
-sealed abstract case class FamilyName(value: String)
+sealed abstract case class FamilyName private (value: String)
 
-object FamilyName extends ValueObject[FamilyName, String] {
+object FamilyName {
   // TODO use proper validation for value
-  override def create(value: String): Either[Throwable, FamilyName] =
+  def create(value: String): Either[Throwable, FamilyName] =
     if (value.isEmpty) {
       Left(BadRequestException("Missing family name"))
     } else {
@@ -115,10 +113,10 @@ object FamilyName extends ValueObject[FamilyName, String] {
 /**
  * LanguageCode value object.
  */
-sealed abstract case class LanguageCode(value: String)
+sealed abstract case class LanguageCode private (value: String)
 
-object LanguageCode extends ValueObject[LanguageCode, String] {
-  override def create(value: String): Either[Throwable, LanguageCode] =
+object LanguageCode {
+  def create(value: String): Either[Throwable, LanguageCode] =
     if (value.isEmpty) {
       Left(BadRequestException("Missing language code"))
     } else if (!LanguageCodes.SupportedLanguageCodes.contains(value)) {
@@ -131,31 +129,32 @@ object LanguageCode extends ValueObject[LanguageCode, String] {
 /**
  * Status value object.
  */
-sealed abstract case class Status(value: Boolean)
+sealed abstract case class Status private (value: Boolean)
 
-object Status extends ValueObject[Status, Boolean] {
-  override def create(value: Boolean): Either[Throwable, Status] =
+object Status {
+  def create(value: Boolean): Either[Throwable, Status] =
     Right(new Status(value) {})
 }
 
 /**
  * SystemAdmin value object.
  */
-sealed abstract case class SystemAdmin(value: Boolean)
+sealed abstract case class SystemAdmin private (value: Boolean)
 
-object SystemAdmin extends ValueObject[SystemAdmin, Boolean] {
-  override def create(value: Boolean): Either[Throwable, SystemAdmin] =
+object SystemAdmin {
+  def create(value: Boolean): Either[Throwable, SystemAdmin] =
     Right(new SystemAdmin(value) {})
 }
 
 /**
  * Project shortcode value object.
  */
-sealed abstract case class Shortcode(value: String)
+sealed abstract case class Shortcode private (value: String)
 
-object Shortcode extends ValueObject[Shortcode, String] {
+object Shortcode {
+  val stringFormatter = StringFormatter.getGeneralInstance
 
-  override def create(value: String): Either[Throwable, Shortcode] =
+  def create(value: String): Either[Throwable, Shortcode] =
     if (value.isEmpty) {
       Left(BadRequestException("Missing shortcode"))
     } else {
@@ -167,11 +166,12 @@ object Shortcode extends ValueObject[Shortcode, String] {
 /**
  * Project shortname value object.
  */
-sealed abstract case class Shortname(value: String)
+sealed abstract case class Shortname private (value: String)
 
-object Shortname extends ValueObject[Shortname, String] {
+object Shortname {
+  val stringFormatter = StringFormatter.getGeneralInstance
 
-  override def create(value: String): Either[Throwable, Shortname] =
+  def create(value: String): Either[Throwable, Shortname] =
     if (value.isEmpty) {
       Left(BadRequestException("Missing shortname"))
     } else {
@@ -183,11 +183,10 @@ object Shortname extends ValueObject[Shortname, String] {
 /**
  * Project longname value object.
  */
-sealed abstract case class Longname(value: String)
+sealed abstract case class Longname private (value: String)
 
-object Longname extends ValueObject[Longname, String] {
-
-  override def create(value: String): Either[Throwable, Longname] =
+object Longname {
+  def create(value: String): Either[Throwable, Longname] =
     if (value.isEmpty) {
       Left(BadRequestException("Missing long name"))
     } else {
@@ -198,11 +197,10 @@ object Longname extends ValueObject[Longname, String] {
 /**
  * Project description value object.
  */
-sealed abstract case class Description(value: Seq[StringLiteralV2])
+sealed abstract case class Description private (value: Seq[StringLiteralV2])
 
-object Description extends ValueObject[Description, Seq[StringLiteralV2]] {
-
-  override def create(value: Seq[StringLiteralV2]): Either[Throwable, Description] =
+object Description {
+  def create(value: Seq[StringLiteralV2]): Either[Throwable, Description] =
     if (value.isEmpty) {
       Left(BadRequestException("Missing description"))
     } else {
@@ -213,11 +211,10 @@ object Description extends ValueObject[Description, Seq[StringLiteralV2]] {
 /**
  * Project keywords value object.
  */
-sealed abstract case class Keywords(value: Seq[String])
+sealed abstract case class Keywords private (value: Seq[String])
 
-object Keywords extends ValueObject[Keywords, Seq[String]] {
-
-  override def create(value: Seq[String]): Either[Throwable, Keywords] =
+object Keywords {
+  def create(value: Seq[String]): Either[Throwable, Keywords] =
     if (value.isEmpty) {
       Left(BadRequestException("Missing keywords"))
     } else {
@@ -228,11 +225,10 @@ object Keywords extends ValueObject[Keywords, Seq[String]] {
 /**
  * Project logo value object.
  */
-sealed abstract case class Logo(value: String)
+sealed abstract case class Logo private (value: String)
 
-object Logo extends ValueObject[Logo, String] {
-
-  override def create(value: String): Either[Throwable, Logo] =
+object Logo {
+  def create(value: String): Either[Throwable, Logo] =
     if (value.isEmpty) {
       Left(BadRequestException("Missing logo"))
     } else {
@@ -243,9 +239,9 @@ object Logo extends ValueObject[Logo, String] {
 /**
  * selfjoin value object.
  */
-sealed abstract case class Selfjoin(value: Boolean)
+sealed abstract case class Selfjoin private (value: Boolean)
 
-object Selfjoin extends ValueObject[Selfjoin, Boolean] {
-  override def create(value: Boolean): Either[Throwable, Selfjoin] =
+object Selfjoin {
+  def create(value: Boolean): Either[Throwable, Selfjoin] =
     Right(new Selfjoin(value) {})
 }
