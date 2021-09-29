@@ -21,7 +21,6 @@ package org.knora.webapi.messages.admin.responder.projectsmessages
 
 import java.nio.file.Path
 import java.util.UUID
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.apache.commons.lang3.builder.HashCodeBuilder
 import org.knora.webapi.IRI
@@ -29,7 +28,7 @@ import org.knora.webapi.annotation.{ApiMayChange, ServerUnique}
 import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, OntologyConstraintException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
+import org.knora.webapi.messages.admin.responder.usersmessages.{ProjectCreatePayloadADM, UserADM}
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
@@ -365,13 +364,13 @@ case class ProjectDataGetRequestADM(
 /**
  * Requests the creation of a new project.
  *
- * @param createRequest        the [[CreateProjectApiRequestADM]] information for creation a new project.
+ * @param createRequest        the [[ProjectCreatePayloadADM]] information for creation a new project.
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  * @param apiRequestID         the ID of the API request.
  */
 case class ProjectCreateRequestADM(
-  createRequest: CreateProjectApiRequestADM,
+  createRequest: ProjectCreatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID

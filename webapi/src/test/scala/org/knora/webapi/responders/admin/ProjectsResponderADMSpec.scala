@@ -24,12 +24,12 @@
 package org.knora.webapi.responders.admin
 
 import java.util.UUID
-
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, NotFoundException}
+
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{
   AdministrativePermissionADM,
@@ -44,7 +44,18 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{
   PermissionByIriGetRequestADM
 }
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
+import org.knora.webapi.messages.admin.responder.usersmessages.{
+  Description,
+  Keywords,
+  Logo,
+  Longname,
+  ProjectCreatePayloadADM,
+  Selfjoin,
+  Shortcode,
+  Shortname,
+  Status,
+  UserInformationTypeADM
+}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
@@ -219,16 +230,19 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       "CREATE a project and return the project info if the supplied shortname is unique" in {
         val shortCode = "111c"
         responderManager ! ProjectCreateRequestADM(
-          CreateProjectApiRequestADM(
-            shortname = "newproject",
-            shortcode = shortCode, // lower case
-            longname = Some("project longname"),
-            description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
-            keywords = Seq("keywords"),
-            logo = Some("/fu/bar/baz.jpg"),
-            status = true,
-            selfjoin = false
-          ).validateAndEscape,
+          createRequest = ProjectCreatePayloadADM
+            .create(
+              shortname = Shortname.create("newproject").fold(error => throw error, value => value),
+              shortcode = Shortcode.create(shortCode).fold(error => throw error, value => value), // lower case
+              longname = Some(Longname.create("project longname").fold(error => throw error, value => value)),
+              description = Description
+                .create(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+                .fold(error => throw error, value => value),
+              keywords = Keywords.create(Seq("keywords")).fold(error => throw error, value => value),
+              logo = Some(Logo.create("/fu/bar/baz.jpg").fold(error => throw error, value => value)),
+              status = Status.create(true).fold(error => throw error, value => value),
+              selfjoin = Selfjoin.create(false).fold(error => throw error, value => value)
+            ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -315,16 +329,19 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
       "CREATE a project and return the project info if the supplied shortname and shortcode is unique" in {
         responderManager ! ProjectCreateRequestADM(
-          CreateProjectApiRequestADM(
-            shortname = "newproject2",
-            shortcode = "1112",
-            longname = Some("project longname"),
-            description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
-            keywords = Seq("keywords"),
-            logo = Some("/fu/bar/baz.jpg"),
-            status = true,
-            selfjoin = false
-          ).validateAndEscape,
+          createRequest = ProjectCreatePayloadADM
+            .create(
+              shortname = Shortname.create("newproject2").fold(error => throw error, value => value),
+              shortcode = Shortcode.create("1112").fold(error => throw error, value => value), // lower case
+              longname = Some(Longname.create("project longname").fold(error => throw error, value => value)),
+              description = Description
+                .create(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+                .fold(error => throw error, value => value),
+              keywords = Keywords.create(Seq("keywords")).fold(error => throw error, value => value),
+              logo = Some(Logo.create("/fu/bar/baz.jpg").fold(error => throw error, value => value)),
+              status = Status.create(true).fold(error => throw error, value => value),
+              selfjoin = Selfjoin.create(false).fold(error => throw error, value => value)
+            ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -346,16 +363,19 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         val descriptionWithSpecialCharacter = "project \\\"description\\\""
         val keywordWithSpecialCharacter = "new \\\"keyword\\\""
         responderManager ! ProjectCreateRequestADM(
-          CreateProjectApiRequestADM(
-            shortname = "project_with_character",
-            shortcode = "1312",
-            longname = Some(longnameWithSpecialCharacter),
-            description = Seq(StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))),
-            keywords = Seq(keywordWithSpecialCharacter),
-            logo = Some("/fu/bar/baz.jpg"),
-            status = true,
-            selfjoin = false
-          ).validateAndEscape,
+          createRequest = ProjectCreatePayloadADM
+            .create(
+              shortname = Shortname.create("project_with_character").fold(error => throw error, value => value),
+              shortcode = Shortcode.create("1312").fold(error => throw error, value => value), // lower case
+              longname = Some(Longname.create(longnameWithSpecialCharacter).fold(error => throw error, value => value)),
+              description = Description
+                .create(Seq(StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))))
+                .fold(error => throw error, value => value),
+              keywords = Keywords.create(Seq(keywordWithSpecialCharacter)).fold(error => throw error, value => value),
+              logo = Some(Logo.create("/fu/bar/baz.jpg").fold(error => throw error, value => value)),
+              status = Status.create(true).fold(error => throw error, value => value),
+              selfjoin = Selfjoin.create(false).fold(error => throw error, value => value)
+            ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -377,16 +397,19 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
       "return a 'DuplicateValueException' during creation if the supplied project shortname is not unique" in {
         responderManager ! ProjectCreateRequestADM(
-          CreateProjectApiRequestADM(
-            shortname = "newproject",
-            shortcode = "111C",
-            longname = Some("project longname"),
-            description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
-            keywords = Seq("keywords"),
-            logo = Some("/fu/bar/baz.jpg"),
-            status = true,
-            selfjoin = false
-          ).validateAndEscape,
+          createRequest = ProjectCreatePayloadADM
+            .create(
+              shortname = Shortname.create("newproject").fold(error => throw error, value => value),
+              shortcode = Shortcode.create("111C").fold(error => throw error, value => value), // lower case
+              longname = Some(Longname.create("project longname").fold(error => throw error, value => value)),
+              description = Description
+                .create(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+                .fold(error => throw error, value => value),
+              keywords = Keywords.create(Seq("keywords")).fold(error => throw error, value => value),
+              logo = Some(Logo.create("/fu/bar/baz.jpg").fold(error => throw error, value => value)),
+              status = Status.create(true).fold(error => throw error, value => value),
+              selfjoin = Selfjoin.create(false).fold(error => throw error, value => value)
+            ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
@@ -396,16 +419,19 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
       "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the shortcode is not" in {
         responderManager ! ProjectCreateRequestADM(
-          CreateProjectApiRequestADM(
-            shortname = "newproject3",
-            shortcode = "111C",
-            longname = Some("project longname"),
-            description = Seq(StringLiteralV2(value = "project description", language = Some("en"))),
-            keywords = Seq("keywords"),
-            logo = Some("/fu/bar/baz.jpg"),
-            status = true,
-            selfjoin = false
-          ).validateAndEscape,
+          createRequest = ProjectCreatePayloadADM
+            .create(
+              shortname = Shortname.create("newproject3").fold(error => throw error, value => value),
+              shortcode = Shortcode.create("111C").fold(error => throw error, value => value), // lower case
+              longname = Some(Longname.create("project longname").fold(error => throw error, value => value)),
+              description = Description
+                .create(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
+                .fold(error => throw error, value => value),
+              keywords = Keywords.create(Seq("keywords")).fold(error => throw error, value => value),
+              logo = Some(Logo.create("/fu/bar/baz.jpg").fold(error => throw error, value => value)),
+              status = Status.create(true).fold(error => throw error, value => value),
+              selfjoin = Selfjoin.create(false).fold(error => throw error, value => value)
+            ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
           UUID.randomUUID()
