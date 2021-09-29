@@ -28,7 +28,7 @@ import org.knora.webapi.annotation.{ApiMayChange, ServerUnique}
 import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, OntologyConstraintException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.{ProjectCreatePayloadADM, UserADM}
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralV2, TriplestoreJsonProtocol}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1

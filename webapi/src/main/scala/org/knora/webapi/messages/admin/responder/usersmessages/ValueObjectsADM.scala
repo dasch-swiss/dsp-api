@@ -7,11 +7,6 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 import scala.util.matching.Regex
 
-//trait ValueObject[T, K] {
-//  val stringFormatter = StringFormatter.getGeneralInstance
-//  def create(value: K): Either[Throwable, T]
-//}
-
 /**
  * Username value object.
  */

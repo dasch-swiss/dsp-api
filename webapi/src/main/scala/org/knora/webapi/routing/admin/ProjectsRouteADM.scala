@@ -43,7 +43,6 @@ import org.knora.webapi.messages.admin.responder.usersmessages.{
   Keywords,
   Logo,
   Longname,
-  ProjectCreatePayloadADM,
   Selfjoin,
   Shortcode,
   Shortname,

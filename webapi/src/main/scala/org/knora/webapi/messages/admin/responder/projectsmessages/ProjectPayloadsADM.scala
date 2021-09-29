@@ -1,6 +1,9 @@
-package org.knora.webapi.messages.admin.responder.usersmessages
+package org.knora.webapi.messages.admin.responder.projectsmessages
 
 import org.knora.webapi.IRI
+import org.knora.webapi.messages.admin.responder.usersmessages._
+
+// TODO: https://github.com/dasch-swiss/dsp-api/pull/1909#discussion_r718330669
 
 /**
  * Project payload
