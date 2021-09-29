@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
- * Copyright © 2015-2021 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 Data and Service Center for the Humanities (DaSCH)
  *
  * This file is part of Knora.
  *
