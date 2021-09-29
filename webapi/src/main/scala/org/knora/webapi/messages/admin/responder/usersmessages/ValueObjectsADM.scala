@@ -7,6 +7,8 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 import scala.util.matching.Regex
 
+// TODO: this si so far shared value object file, consider to slice it
+
 /**
  * Username value object.
  */
@@ -239,4 +241,18 @@ sealed abstract case class Selfjoin private (value: Boolean)
 object Selfjoin {
   def create(value: Boolean): Either[Throwable, Selfjoin] =
     Right(new Selfjoin(value) {})
+}
+
+/**
+ * Group Name value object.
+ */
+sealed abstract case class Name private (value: String)
+
+object Name {
+  def create(value: String): Either[Throwable, Name] =
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing long name"))
+    } else {
+      Right(new Name(value) {})
+    }
 }

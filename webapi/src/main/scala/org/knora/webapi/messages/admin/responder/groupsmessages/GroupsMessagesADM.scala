@@ -187,7 +187,7 @@ case class GroupMembersGetRequestADM(groupIri: IRI, featureFactoryConfig: Featur
  * @param apiRequestID         the ID of the API request.
  */
 case class GroupCreateRequestADM(
-  createRequest: CreateGroupApiRequestADM,
+  createRequest: GroupCreatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
