@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2021 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 Data and Service Center for the Humanities (DaSCH)
  *
  * This file is part of Knora.
  *
@@ -752,10 +752,9 @@ class ValuesResponderV2(responderData: ResponderData) extends Responder(responde
               value = otherValueContentV2,
               newValueIri = newValueIri,
               newValueUUID = newValueUUID,
-              linkUpdates =
-                Seq.empty[
-                  SparqlTemplateLinkUpdate
-                ], // This is empty because we have to generate SPARQL for standoff links separately.
+              linkUpdates = Seq.empty[
+                SparqlTemplateLinkUpdate
+              ], // This is empty because we have to generate SPARQL for standoff links separately.
               valueCreator = requestingUser.id,
               valuePermissions = valueToCreate.permissions,
               creationDate = valueCreationDate,

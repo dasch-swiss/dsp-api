@@ -223,7 +223,6 @@ test-webapi: docker-build ## runs all dsp-api tests.
 .PHONY: test-unit
 test-unit: docker-build ## runs the dsp-api unit tests.
 	bazel test \
-	//webapi/src/test/scala/org/knora/webapi/contributors/... \
 	//webapi/src/test/scala/org/knora/webapi/http/... \
 	//webapi/src/test/scala/org/knora/webapi/messages/... \
 	//webapi/src/test/scala/org/knora/webapi/other/... \
