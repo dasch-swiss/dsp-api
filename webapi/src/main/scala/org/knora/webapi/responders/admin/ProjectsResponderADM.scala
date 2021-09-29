@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2021 the contributors (see Contributors.md).
+ * Copyright © 2015-2021 Data and Service Center for the Humanities (DaSCH)
  *
  * This file is part of Knora.
  *
@@ -22,7 +22,6 @@ package org.knora.webapi.responders.admin
 import java.io.{BufferedInputStream, BufferedOutputStream}
 import java.nio.file.{Files, Path}
 import java.util.UUID
-
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -33,13 +32,13 @@ import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{
+  ProjectCreatePayloadADM,
   UserADM,
   UserGetADM,
   UserIdentifierADM,
   UserInformationTypeADM
 }
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
-
 import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceGetProjectADM,
   CacheServicePutProjectADM,
@@ -1004,7 +1003,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * @throws BadRequestException     in the case when the shortcode is invalid.
    */
   private def projectCreateRequestADM(
-    createProjectRequest: CreateProjectApiRequestADM,
+    createProjectRequest: ProjectCreatePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
@@ -1084,25 +1083,25 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       } yield ()
 
     def projectCreateTask(
-      createProjectRequest: CreateProjectApiRequestADM,
+      createProjectRequest: ProjectCreatePayloadADM,
       requestingUser: UserADM
     ): Future[ProjectOperationResponseADM] =
       for {
 
         // check if the supplied shortname is unique
-        shortnameExists <- projectByShortnameExists(createProjectRequest.shortname)
+        shortnameExists <- projectByShortnameExists(createProjectRequest.shortname.value)
         _ = if (shortnameExists) {
           throw DuplicateValueException(
-            s"Project with the shortname: '${createProjectRequest.shortname}' already exists"
+            s"Project with the shortname: '${createProjectRequest.shortname.value}' already exists"
           )
         }
 
         // check if the optionally supplied shortcode is valid and unique
-        shortcodeExists <- projectByShortcodeExists(createProjectRequest.shortcode)
+        shortcodeExists <- projectByShortcodeExists(createProjectRequest.shortcode.value)
 
         _ = if (shortcodeExists) {
           throw DuplicateValueException(
-            s"Project with the shortcode: '${createProjectRequest.shortcode}' already exists"
+            s"Project with the shortcode: '${createProjectRequest.shortcode.value}' already exists"
           )
         }
 
@@ -1116,8 +1115,18 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         customProjectIri: Option[SmartIri] = createProjectRequest.id.map(iri => iri.toSmartIri)
         newProjectIRI: IRI <- checkOrCreateEntityIri(
           customProjectIri,
-          stringFormatter.makeRandomProjectIri(createProjectRequest.shortcode)
+          stringFormatter.makeRandomProjectIri(createProjectRequest.shortcode.value)
         )
+
+        maybeLongname = createProjectRequest.longname match {
+          case Some(value) => Some(value.value)
+          case None        => None
+        }
+
+        maybeLogo = createProjectRequest.logo match {
+          case Some(value) => Some(value.value)
+          case None        => None
+        }
 
         createNewProjectSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .createNewProject(
@@ -1125,18 +1134,18 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
             triplestore = settings.triplestoreType,
             projectIri = newProjectIRI,
             projectClassIri = OntologyConstants.KnoraAdmin.KnoraProject,
-            shortname = createProjectRequest.shortname,
-            shortcode = createProjectRequest.shortcode,
-            maybeLongname = createProjectRequest.longname,
-            maybeDescriptions = if (createProjectRequest.description.nonEmpty) {
-              Some(createProjectRequest.description)
+            shortname = createProjectRequest.shortname.value,
+            shortcode = createProjectRequest.shortcode.value,
+            maybeLongname = maybeLongname,
+            maybeDescriptions = if (createProjectRequest.description.value.nonEmpty) {
+              Some(createProjectRequest.description.value)
             } else None,
-            maybeKeywords = if (createProjectRequest.keywords.nonEmpty) {
-              Some(createProjectRequest.keywords)
+            maybeKeywords = if (createProjectRequest.keywords.value.nonEmpty) {
+              Some(createProjectRequest.keywords.value)
             } else None,
-            maybeLogo = createProjectRequest.logo,
-            status = createProjectRequest.status,
-            hasSelfJoinEnabled = createProjectRequest.selfjoin
+            maybeLogo = maybeLogo,
+            status = createProjectRequest.status.value,
+            hasSelfJoinEnabled = createProjectRequest.selfjoin.value
           )
           .toString
 
