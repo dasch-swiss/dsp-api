@@ -764,46 +764,13 @@ object UserIdentifierType extends Enumeration {
 }
 
 /**
- * The UserIdentifierADM factory object, making sure that all necessary checks are performed and all inputs
- * validated and escaped.
- */
-object UserIdentifierADM {
-  def apply(maybeIri: Option[String] = None, maybeEmail: Option[String] = None, maybeUsername: Option[String] = None)(
-    implicit sf: StringFormatter
-  ): UserIdentifierADM = {
-
-    val parametersCount: Int = List(
-      maybeIri,
-      maybeEmail,
-      maybeUsername
-    ).flatten.size
-
-    // something needs to be set
-    if (parametersCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
-
-    if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
-
-    new UserIdentifierADM(
-      maybeIri =
-        sf.validateAndEscapeOptionalUserIri(maybeIri, throw BadRequestException(s"Invalid user IRI $maybeIri")),
-      maybeEmail =
-        sf.validateAndEscapeOptionalEmail(maybeEmail, throw BadRequestException(s"Invalid email $maybeEmail")),
-      maybeUsername = sf.validateAndEscapeOptionalUsername(
-        maybeUsername,
-        throw BadRequestException(s"Invalid username $maybeUsername")
-      )
-    )
-  }
-}
-
-/**
  * Represents the user's identifier. It can be an IRI, email, or username.
  *
  * @param maybeIri      the user's IRI.
  * @param maybeEmail    the user's email.
  * @param maybeUsername the user's username.
  */
-class UserIdentifierADM private (
+sealed abstract case class UserIdentifierADM private (
   maybeIri: Option[IRI] = None,
   maybeEmail: Option[String] = None,
   maybeUsername: Option[String] = None
@@ -875,6 +842,39 @@ class UserIdentifierADM private (
   override def toString: IRI =
     s"UserIdentifierADM(${this.value})"
 
+}
+
+/**
+ * The UserIdentifierADM factory object, making sure that all necessary checks are performed and all inputs
+ * validated and escaped.
+ */
+object UserIdentifierADM {
+  def apply(maybeIri: Option[String] = None, maybeEmail: Option[String] = None, maybeUsername: Option[String] = None)(
+    implicit sf: StringFormatter
+  ): UserIdentifierADM = {
+
+    val parametersCount: Int = List(
+      maybeIri,
+      maybeEmail,
+      maybeUsername
+    ).flatten.size
+
+    // something needs to be set
+    if (parametersCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
+
+    if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
+
+    new UserIdentifierADM(
+      maybeIri =
+        sf.validateAndEscapeOptionalUserIri(maybeIri, throw BadRequestException(s"Invalid user IRI $maybeIri")),
+      maybeEmail =
+        sf.validateAndEscapeOptionalEmail(maybeEmail, throw BadRequestException(s"Invalid email $maybeEmail")),
+      maybeUsername = sf.validateAndEscapeOptionalUsername(
+        maybeUsername,
+        throw BadRequestException(s"Invalid username $maybeUsername")
+      )
+    ) {}
+  }
 }
 
 /**

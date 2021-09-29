@@ -765,20 +765,18 @@ object Authenticator {
       authenticated <- authenticateCredentialsV2(credentials = credentials, featureFactoryConfig = featureFactoryConfig)
 
       user: UserADM <- credentials match {
-        case Some(passCreds: KnoraPasswordCredentialsV2) => {
+        case Some(passCreds: KnoraPasswordCredentialsV2) =>
           // log.debug("getUserADMThroughCredentialsV2 - used identifier: {}", passCreds.identifier)
           getUserByIdentifier(
             identifier = passCreds.identifier,
             featureFactoryConfig = featureFactoryConfig
           )
-        }
         case Some(tokenCreds: KnoraTokenCredentialsV2) => {
           val userIri: IRI = JWTHelper.extractUserIriFromToken(tokenCreds.token, settings.jwtSecretKey) match {
             case Some(iri) => iri
-            case None => {
+            case None      =>
               // should not happen, as the token is already validated
               throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
-            }
           }
           // log.debug("getUserADMThroughCredentialsV2 - used token")
           getUserByIdentifier(
@@ -786,24 +784,21 @@ object Authenticator {
             featureFactoryConfig = featureFactoryConfig
           )
         }
-        case Some(sessionCreds: KnoraSessionCredentialsV2) => {
+        case Some(sessionCreds: KnoraSessionCredentialsV2) =>
           val userIri: IRI = JWTHelper.extractUserIriFromToken(sessionCreds.token, settings.jwtSecretKey) match {
             case Some(iri) => iri
-            case None => {
+            case None      =>
               // should not happen, as the token is already validated
               throw AuthenticationException("No IRI found inside token. Please report this as a possible bug.")
-            }
           }
           // log.debug("getUserADMThroughCredentialsV2 - used session token")
           getUserByIdentifier(
             identifier = UserIdentifierADM(maybeIri = Some(userIri)),
             featureFactoryConfig = featureFactoryConfig
           )
-        }
-        case None => {
+        case None =>
           // log.debug("getUserADMThroughCredentialsV2 - no credentials supplied")
           throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
-        }
       }
 
     } yield user
