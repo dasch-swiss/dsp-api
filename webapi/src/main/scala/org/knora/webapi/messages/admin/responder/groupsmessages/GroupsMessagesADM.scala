@@ -20,7 +20,6 @@
 package org.knora.webapi.messages.admin.responder.groupsmessages
 
 import java.util.UUID
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
@@ -29,6 +28,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -47,7 +47,8 @@ import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 case class CreateGroupApiRequestADM(
   id: Option[IRI] = None,
   name: String,
-  description: Option[String],
+//  description: Option[Seq[StringLiteralV2]],
+  description: Seq[StringLiteralV2],
   project: IRI,
   status: Boolean,
   selfjoin: Boolean
@@ -75,7 +76,8 @@ case class CreateGroupApiRequestADM(
  */
 case class ChangeGroupApiRequestADM(
   name: Option[String] = None,
-  description: Option[String] = None,
+//  description: Option[String] = None,
+  description: Option[Seq[StringLiteralV2]] = None,
   status: Option[Boolean] = None,
   selfjoin: Option[Boolean] = None
 ) extends GroupsADMJsonProtocol {
@@ -325,7 +327,7 @@ case class GroupShortADM(id: IRI, name: String, description: String, status: Boo
  */
 case class GroupUpdatePayloadADM(
   name: Option[String] = None,
-  description: Option[String] = None,
+  description: Option[Seq[StringLiteralV2]] = None,
   status: Option[Boolean] = None,
   selfjoin: Option[Boolean] = None
 )

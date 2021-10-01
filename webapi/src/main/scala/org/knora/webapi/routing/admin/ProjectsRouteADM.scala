@@ -164,7 +164,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
         val projectCreatePayload: ProjectCreatePayloadADM =
           ProjectCreatePayloadADM.create(
             id = stringFormatter
-              .validateAndEscapeOptionalProjectIri(apiRequest.id, throw BadRequestException(s"Invalid user IRI")),
+              .validateAndEscapeOptionalProjectIri(apiRequest.id, throw BadRequestException(s"Invalid project IRI")),
             shortname = Shortname.create(apiRequest.shortname).fold(error => throw error, value => value),
             shortcode = Shortcode.create(apiRequest.shortcode).fold(error => throw error, value => value),
             longname = maybeLongname,

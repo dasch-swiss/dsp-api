@@ -18,6 +18,7 @@
  *@
 
 @import org.knora.webapi.IRI
+@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 @*
  * Creates a new group.
@@ -38,7 +39,7 @@
   groupIri: IRI,
   groupClassIri: IRI,
   name: String,
-  maybeDescription: Option[String],
+  description: Seq[StringLiteralV2],
   projectIri: IRI,
   status: Boolean,
   hasSelfJoinEnabled: Boolean)
@@ -56,8 +57,14 @@ INSERT {
 
             knora-admin:groupName "@name"^^xsd:string ;
 
-            @if(maybeDescription.nonEmpty) {
-                knora-admin:groupDescription """@maybeDescription.get"""^^xsd:string ;
+            @if(description.nonEmpty) {
+                @for(d <- description) {
+                    @if(d.language.nonEmpty) {
+                        knora-admin:projectDescription """@d.value"""@@@{d.language.get} ;
+                    } else {
+                        knora-admin:projectDescription """@d.value"""^^xsd:string ;
+                    }
+                }
             }
 
             knora-admin:belongsToProject ?projectIri ;

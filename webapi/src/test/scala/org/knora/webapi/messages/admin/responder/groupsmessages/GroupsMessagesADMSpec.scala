@@ -22,6 +22,7 @@ package org.knora.webapi.messages.admin.responder.groupsmessages
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 object GroupsMessagesADMSpec {
@@ -44,7 +45,7 @@ class GroupsMessagesADMSpec extends CoreSpec(GroupsMessagesADMSpec.config) {
         CreateGroupApiRequestADM(
           id = Some("invalid-group-IRI"),
           name = "NewGroupWithInvalidCustomIri",
-          description = Some("A new group with an invalid custom Iri"),
+          description = Seq(StringLiteralV2("A new group created with an invalid custom IRI")),
           project = SharedTestDataADM.IMAGES_PROJECT_IRI,
           status = true,
           selfjoin = false

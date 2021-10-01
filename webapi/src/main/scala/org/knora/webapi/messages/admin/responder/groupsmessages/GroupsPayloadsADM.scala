@@ -10,7 +10,7 @@ sealed abstract case class GroupCreatePayloadADM private (
   //  TODO: shouldn't IRI be a value object too - since it's just String synonym?
   id: Option[IRI],
   name: Name,
-  description: Option[Description],
+  description: Description,
   project: IRI,
   status: Status,
   selfjoin: Selfjoin
@@ -22,7 +22,7 @@ object GroupCreatePayloadADM {
   def create(
     id: Option[IRI],
     name: Name,
-    description: Option[Description],
+    description: Description,
     project: IRI,
     status: Status,
     selfjoin: Selfjoin

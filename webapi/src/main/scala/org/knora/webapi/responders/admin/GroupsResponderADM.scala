@@ -415,7 +415,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    * @return a [[GroupOperationResponseADM]]
    */
   private def createGroupADM(
-    createRequest: CreateGroupApiRequestADM,
+    createRequest: GroupCreatePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
@@ -424,13 +424,13 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     log.debug("createGroupADM - createRequest: {}", createRequest)
 
     def createGroupTask(
-      createRequest: CreateGroupApiRequestADM,
+      createRequest: GroupCreatePayloadADM,
       requestingUser: UserADM,
       apiRequestID: UUID
     ): Future[GroupOperationResponseADM] =
       for {
         /* check if username or password are not empty */
-        _ <- Future(if (createRequest.name.isEmpty) throw BadRequestException("Group name cannot be empty"))
+        _ <- Future(if (createRequest.name.value.isEmpty) throw BadRequestException("Group name cannot be empty"))
         _ = if (createRequest.project.isEmpty) throw BadRequestException("Project IRI cannot be empty")
 
         /* check if the requesting user is allowed to create group */
@@ -441,9 +441,9 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           throw ForbiddenException("A new group can only be created by a project or system admin.")
         }
 
-        nameExists <- groupByNameAndProjectExists(name = createRequest.name, projectIri = createRequest.project)
+        nameExists <- groupByNameAndProjectExists(name = createRequest.name.value, projectIri = createRequest.project)
         _ = if (nameExists) {
-          throw DuplicateValueException(s"Group with the name '${createRequest.name}' already exists")
+          throw DuplicateValueException(s"Group with the name '${createRequest.name.value}' already exists")
         }
 
         maybeProjectADM: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
@@ -472,13 +472,14 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           .createNewGroup(
             adminNamedGraphIri = OntologyConstants.NamedGraphs.AdminNamedGraph,
             triplestore = settings.triplestoreType,
-            groupIri = groupIri,
+            groupIri,
             groupClassIri = OntologyConstants.KnoraAdmin.UserGroup,
-            name = createRequest.name,
-            maybeDescription = createRequest.description,
+            name = createRequest.name.value,
+//            maybeDescription = createRequest.description,
+            description = createRequest.description.value,
             projectIri = createRequest.project,
-            status = createRequest.status,
-            hasSelfJoinEnabled = createRequest.selfjoin
+            status = createRequest.status.value,
+            hasSelfJoinEnabled = createRequest.selfjoin.value
           )
           .toString
         //_ = log.debug(s"createGroupV1 - createNewGroup: $createNewGroupSparqlString")
