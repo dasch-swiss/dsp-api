@@ -26,7 +26,6 @@ import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionsADMJsonProtocol, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages._
@@ -140,7 +139,7 @@ sealed trait UsersResponderRequestADM extends KnoraRequestADM
  * @param requestingUser         the user that is making the request.
  */
 case class UsersGetADM(
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends UsersResponderRequestADM
@@ -154,7 +153,7 @@ case class UsersGetADM(
  * @param requestingUser         the user initiating the request.
  */
 case class UsersGetRequestADM(
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends UsersResponderRequestADM
@@ -169,7 +168,7 @@ case class UsersGetRequestADM(
  */
 case class UserGetADM(
   identifier: UserIdentifierADM,
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends UsersResponderRequestADM {}
@@ -184,7 +183,7 @@ case class UserGetADM(
  */
 case class UserGetRequestADM(
   identifier: UserIdentifierADM,
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends UsersResponderRequestADM {}
@@ -505,7 +504,7 @@ case class UserADM(
   projects: Seq[ProjectADM] = Seq.empty[ProjectADM],
   sessionId: Option[String] = None,
   permissions: PermissionsDataADM = PermissionsDataADM()
-) extends Ordered[UserADM] {
+) extends Ordered[UserADM] { self =>
 
   /**
    * Allows to sort collections of UserADM. Sorting is done by the id.
@@ -546,15 +545,12 @@ case class UserADM(
    */
   def ofType(userTemplateType: UserInformationTypeADM): UserADM =
     userTemplateType match {
-      case UserInformationTypeADM.PUBLIC =>
-        UserADM(
-          id = id,
+      case UserInformationTypeADM.Public =>
+        self.copy(
           username = "",
           email = "",
           password = None,
           token = None,
-          givenName = givenName,
-          familyName = familyName,
           status = false,
           lang = "",
           groups = Seq.empty[GroupADM],
@@ -562,54 +558,23 @@ case class UserADM(
           sessionId = None,
           permissions = PermissionsDataADM()
         )
-      case UserInformationTypeADM.SHORT =>
-        UserADM(
-          id = id,
-          username = username,
-          email = email,
+      case UserInformationTypeADM.Short =>
+        self.copy(
           password = None,
           token = None,
-          givenName = givenName,
-          familyName = familyName,
-          status = status,
-          lang = lang,
           groups = Seq.empty[GroupADM],
           projects = Seq.empty[ProjectADM],
           sessionId = None,
           permissions = PermissionsDataADM()
         )
-      case UserInformationTypeADM.RESTRICTED =>
-        UserADM(
-          id = id,
-          username = username,
-          email = email,
+      case UserInformationTypeADM.Restricted =>
+        self.copy(
           password = None,
           token = None,
-          givenName = givenName,
-          familyName = familyName,
-          status = status,
-          lang = lang,
-          groups = groups,
-          projects = projects,
-          sessionId = None,
-          permissions = permissions
+          sessionId = None
         )
-      case UserInformationTypeADM.FULL =>
-        UserADM(
-          id = id,
-          username = username,
-          email = email,
-          password = password,
-          token = token,
-          givenName = givenName,
-          familyName = familyName,
-          status = status,
-          lang = lang,
-          groups = groups,
-          projects = projects,
-          sessionId = sessionId,
-          permissions = permissions
-        )
+      case UserInformationTypeADM.Full =>
+        self
       case _ => throw BadRequestException(s"The requested userTemplateType: $userTemplateType is invalid.")
     }
 
@@ -725,30 +690,14 @@ case class UserADM(
  * sensitive information to the outside world. Since in API Admin [[UserADM]] is returned with some responses,
  * we use 'restricted' in those cases.
  */
-object UserInformationTypeADM extends Enumeration {
-  /* TODO: Extend to incorporate user privacy wishes */
+sealed trait UserInformationTypeADM
+object UserInformationTypeADM {
+  case object Public extends UserInformationTypeADM
+  case object Short extends UserInformationTypeADM
+  case object Restricted extends UserInformationTypeADM
+  case object Full extends UserInformationTypeADM
 
-  type UserInformationTypeADM = Value
-
-  val PUBLIC: Value = Value(0, "public") // a temporary type which only returns firstname and lastname
-  val SHORT: Value = Value(1, "short") // only basic user information (restricted and additionally without groups
-  val RESTRICTED: Value = Value(2, "restricted") // without sensitive information
-  val FULL: Value = Value(3, "full") // everything, including sensitive information
-
-  val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
-
-  /**
-   * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-   * [[InconsistentRepositoryDataException]].
-   *
-   * @param name the name of the value.
-   * @return the requested value.
-   */
-  def lookup(name: String): Value =
-    valueMap.get(name) match {
-      case Some(value) => value
-      case None        => throw InconsistentRepositoryDataException(s"User profile type not supported: $name")
-    }
+  // throw InconsistentRepositoryDataException(s"User profile type not supported: $name")
 }
 
 /**

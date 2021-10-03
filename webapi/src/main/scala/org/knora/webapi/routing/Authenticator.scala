@@ -482,7 +482,7 @@ trait Authenticator extends InstrumentationSupport {
         _ = log.debug("Authenticator - getUserADM - user: {}", user)
 
         /* we return the complete UserADM */
-      } yield user.ofType(UserInformationTypeADM.FULL)
+      } yield user.ofType(UserInformationTypeADM.Full)
     }
   }
 }
@@ -824,7 +824,7 @@ object Authenticator extends InstrumentationSupport {
     for {
       maybeUserADM <- (responderManager ? UserGetADM(
         identifier = identifier,
-        userInformationTypeADM = UserInformationTypeADM.FULL,
+        userInformationTypeADM = UserInformationTypeADM.Full,
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )).mapTo[Option[UserADM]]
