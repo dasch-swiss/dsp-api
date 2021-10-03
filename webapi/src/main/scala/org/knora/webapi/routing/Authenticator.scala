@@ -20,7 +20,6 @@
 package org.knora.webapi.routing
 
 import java.util.{Base64, UUID}
-
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.model.headers.{HttpCookie, HttpCookiePair}
 import akka.http.scaladsl.model.{headers, _}
@@ -32,10 +31,16 @@ import com.typesafe.scalalogging.Logger
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{AuthenticationException, BadCredentialsException, BadRequestException}
 import org.knora.webapi.feature.FeatureFactoryConfig
+import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.{
+  KnoraJWTTokenCredentialsV2,
+  KnoraPasswordCredentialsV2,
+  KnoraSessionCredentialsV2
+}
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.util.cache.CacheUtil
@@ -52,7 +57,7 @@ import scala.util.{Failure, Success, Try}
  * to extract credentials, authenticate provided credentials, and look up cached credentials through the use of the
  * session id. All private methods used in this trait can be found in the companion object.
  */
-trait Authenticator {
+trait Authenticator extends InstrumentationSupport {
 
   // Import companion object
 
@@ -141,7 +146,7 @@ trait Authenticator {
 
     for {
       // will throw exception if not valid and thus trigger the correct response
-      authenticated <- authenticateCredentialsV2(
+      _ <- authenticateCredentialsV2(
         credentials = Some(credentials),
         featureFactoryConfig = featureFactoryConfig
       )
@@ -194,7 +199,7 @@ trait Authenticator {
          |    <section class="container">
          |        <div class="login">
          |            <h1>Knora Login</h1>
-         |            <form name="myform" action="${apiUrl}/v2/login" method="post">
+         |            <form name="myform" action="$apiUrl/v2/login" method="post">
          |                <p>
          |                    <input type="text" name="username" value="" placeholder="Username">
          |                </p>
@@ -288,7 +293,7 @@ trait Authenticator {
 
     for {
       // will throw exception if not valid
-      authenticated <- authenticateCredentialsV2(
+      _ <- authenticateCredentialsV2(
         credentials = credentials,
         featureFactoryConfig = featureFactoryConfig
       )
@@ -324,8 +329,8 @@ trait Authenticator {
     val cookieDomain = Some(settings.cookieDomain)
 
     credentials match {
-      case Some(sessionCreds: KnoraSessionCredentialsV2) => {
-        CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, sessionCreds.token, sessionCreds.token)
+      case Some(KnoraSessionCredentialsV2(sessionToken)) =>
+        CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, sessionToken, sessionToken)
 
         HttpResponse(
           headers = List(
@@ -349,10 +354,8 @@ trait Authenticator {
             ).compactPrint
           )
         )
-
-      }
-      case Some(tokenCreds: KnoraTokenCredentialsV2) => {
-        CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.token, tokenCreds.token)
+      case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
+        CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, jwtToken, jwtToken)
 
         HttpResponse(
           headers = List(
@@ -376,8 +379,7 @@ trait Authenticator {
             ).compactPrint
           )
         )
-      }
-      case _ => {
+      case _ =>
         // nothing to do
         HttpResponse(
           status = StatusCodes.OK,
@@ -389,7 +391,6 @@ trait Authenticator {
             ).compactPrint
           )
         )
-      }
     }
   }
 
@@ -491,7 +492,7 @@ trait Authenticator {
  * the private methods directly with scalatest as described in [[https://groups.google.com/forum/#!topic/scalatest-users/FeaO\_\_f1dN4]]
  * and [[http://doc.scalatest.org/2.2.6/index.html#org.scalatest.PrivateMethodTester]]
  */
-object Authenticator {
+object Authenticator extends InstrumentationSupport {
 
   val BAD_CRED_PASSWORD_MISMATCH = "bad credentials: user found, but password did not match"
   val BAD_CRED_USER_NOT_FOUND = "bad credentials: user not found"
@@ -505,7 +506,7 @@ object Authenticator {
 
   val sessionStore: scala.collection.mutable.Map[String, UserADM] = scala.collection.mutable.Map()
   implicit val timeout: Timeout = Duration(5, SECONDS)
-  val log = Logger(LoggerFactory.getLogger(this.getClass))
+  val log: Logger = Logger(LoggerFactory.getLogger(this.getClass))
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
@@ -531,7 +532,7 @@ object Authenticator {
       settings <- FastFuture.successful(KnoraSettings(system))
 
       result <- credentials match {
-        case Some(passCreds: KnoraPasswordCredentialsV2) => {
+        case Some(passCreds: KnoraPasswordCredentialsV2) =>
           for {
             user <- getUserByIdentifier(
               identifier = passCreds.identifier,
@@ -549,25 +550,21 @@ object Authenticator {
               throw BadCredentialsException(BAD_CRED_NOT_VALID)
             }
           } yield true
-        }
-        case Some(tokenCreds: KnoraTokenCredentialsV2) => {
-          if (!JWTHelper.validateToken(tokenCreds.token, settings.jwtSecretKey)) {
+        case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
+          if (!JWTHelper.validateToken(jwtToken, settings.jwtSecretKey)) {
             log.debug("authenticateCredentialsV2 - token was not valid")
             throw BadCredentialsException(BAD_CRED_NOT_VALID)
           }
           FastFuture.successful(true)
-        }
-        case Some(sessionCreds: KnoraSessionCredentialsV2) => {
-          if (!JWTHelper.validateToken(sessionCreds.token, settings.jwtSecretKey)) {
+        case Some(KnoraSessionCredentialsV2(sessionToken)) =>
+          if (!JWTHelper.validateToken(sessionToken, settings.jwtSecretKey)) {
             log.debug("authenticateCredentialsV2 - session token was not valid")
             throw BadCredentialsException(BAD_CRED_NOT_VALID)
           }
           FastFuture.successful(true)
-        }
-        case None => {
+        case None =>
           log.debug("authenticateCredentialsV2 - no credentials supplied")
           throw BadCredentialsException(BAD_CRED_NONE_SUPPLIED)
-        }
       }
 
     } yield result
@@ -643,8 +640,8 @@ object Authenticator {
 
     val maybeToken: Option[String] = params get "token" map (_.head)
 
-    val maybeTokenCreds: Option[KnoraTokenCredentialsV2] = if (maybeToken.nonEmpty) {
-      Some(KnoraTokenCredentialsV2(maybeToken.get))
+    val maybeTokenCreds: Option[KnoraJWTTokenCredentialsV2] = if (maybeToken.nonEmpty) {
+      Some(KnoraJWTTokenCredentialsV2(maybeToken.get))
     } else {
       None
     }
@@ -722,8 +719,8 @@ object Authenticator {
             None
         }
 
-        val maybeTokenCreds: Option[KnoraTokenCredentialsV2] = if (maybeToken.nonEmpty) {
-          Some(KnoraTokenCredentialsV2(maybeToken.get))
+        val maybeTokenCreds: Option[KnoraJWTTokenCredentialsV2] = if (maybeToken.nonEmpty) {
+          Some(KnoraJWTTokenCredentialsV2(maybeToken.get))
         } else {
           None
         }
@@ -771,8 +768,8 @@ object Authenticator {
             identifier = passCreds.identifier,
             featureFactoryConfig = featureFactoryConfig
           )
-        case Some(tokenCreds: KnoraTokenCredentialsV2) => {
-          val userIri: IRI = JWTHelper.extractUserIriFromToken(tokenCreds.token, settings.jwtSecretKey) match {
+        case Some(KnoraJWTTokenCredentialsV2(jwtToken)) =>
+          val userIri: IRI = JWTHelper.extractUserIriFromToken(jwtToken, settings.jwtSecretKey) match {
             case Some(iri) => iri
             case None      =>
               // should not happen, as the token is already validated
@@ -783,9 +780,8 @@ object Authenticator {
             identifier = UserIdentifierADM(maybeIri = Some(userIri)),
             featureFactoryConfig = featureFactoryConfig
           )
-        }
-        case Some(sessionCreds: KnoraSessionCredentialsV2) =>
-          val userIri: IRI = JWTHelper.extractUserIriFromToken(sessionCreds.token, settings.jwtSecretKey) match {
+        case Some(KnoraSessionCredentialsV2(sessionToken)) =>
+          val userIri: IRI = JWTHelper.extractUserIriFromToken(sessionToken, settings.jwtSecretKey) match {
             case Some(iri) => iri
             case None      =>
               // should not happen, as the token is already validated
@@ -824,9 +820,8 @@ object Authenticator {
     responderManager: ActorRef,
     timeout: Timeout,
     executionContext: ExecutionContext
-  ): Future[UserADM] = {
-
-    val userADMFuture = for {
+  ): Future[UserADM] = tracedFuture("authenticator-get-user-by-identifier") {
+    for {
       maybeUserADM <- (responderManager ? UserGetADM(
         identifier = identifier,
         userInformationTypeADM = UserInformationTypeADM.FULL,
@@ -836,15 +831,12 @@ object Authenticator {
 
       user = maybeUserADM match {
         case Some(u) => u
-        case None => {
+        case None =>
           log.debug(s"getUserByIdentifier - supplied identifier not found - throwing exception")
           throw BadCredentialsException(s"$BAD_CRED_USER_NOT_FOUND")
-        }
       }
       // _ = log.debug(s"getUserByIdentifier - user: $user")
     } yield user
-
-    userADMFuture
   }
 }
 

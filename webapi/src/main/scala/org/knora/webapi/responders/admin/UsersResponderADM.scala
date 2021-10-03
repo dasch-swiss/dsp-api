@@ -59,7 +59,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   /**
    * Receives a message extending [[UsersResponderRequestADM]], and returns an appropriate message.
    */
-  def receive(msg: UsersResponderRequestADM) = msg match {
+  def receive(msg: UsersResponderRequestADM): Future[Equals] = msg match {
     case UsersGetADM(userInformationTypeADM, featureFactoryConfig, requestingUser) =>
       getAllUserADM(userInformationTypeADM, featureFactoryConfig, requestingUser)
     case UsersGetRequestADM(userInformationTypeADM, featureFactoryConfig, requestingUser) =>
@@ -310,7 +310,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     skipCache: Boolean = false
-  ): Future[Option[UserADM]] = tracedFuture("admin-get-user") {
+  ): Future[Option[UserADM]] = tracedFuture("admin-user-get-single-user") {
 
     log.debug(
       s"getSingleUserADM - id: {}, type: {}, requester: {}, skipCache: {}",
@@ -1812,7 +1812,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def getUserFromCacheOrTriplestore(
     identifier: UserIdentifierADM,
     featureFactoryConfig: FeatureFactoryConfig
-  ): Future[Option[UserADM]] =
+  ): Future[Option[UserADM]] = tracedFuture("admin-user-get-user-from-cache-or-triplestore") {
     if (cacheServiceSettings.cacheServiceEnabled) {
       // caching enabled
       getUserFromCache(identifier).flatMap {
@@ -1840,6 +1840,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       log.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
       getUserFromTriplestore(identifier = identifier, featureFactoryConfig = featureFactoryConfig)
     }
+  }
 
   /**
    * Tries to retrieve a [[UserADM]] from the triplestore.
@@ -2158,17 +2159,18 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   /**
    * Tries to retrieve a [[UserADM]] from the cache.
    */
-  private def getUserFromCache(identifier: UserIdentifierADM): Future[Option[UserADM]] = {
-    val result = (storeManager ? CacheServiceGetUserADM(identifier)).mapTo[Option[UserADM]]
-    result.map {
-      case Some(user) =>
-        log.debug("getUserFromCache - cache hit for: {}", identifier)
-        Some(user)
-      case None =>
-        log.debug("getUserFromCache - no cache hit for: {}", identifier)
-        None
+  private def getUserFromCache(identifier: UserIdentifierADM): Future[Option[UserADM]] =
+    tracedFuture("admin-user-get-user-from-cache") {
+      val result = (storeManager ? CacheServiceGetUserADM(identifier)).mapTo[Option[UserADM]]
+      result.map {
+        case Some(user) =>
+          log.debug("getUserFromCache - cache hit for: {}", identifier)
+          Some(user)
+        case None =>
+          log.debug("getUserFromCache - no cache hit for: {}", identifier)
+          None
+      }
     }
-  }
 
   /**
    * Writes the user profile to cache.

@@ -76,18 +76,20 @@ object KnoraCredentialsV2 {
       extends KnoraCredentialsV2
 
   /**
-   * Represents token credentials that a user can supply withing the authorization header or as URL parameters.
+   * Represents JWT token credentials that a user can supply withing the authorization header or as URL parameters.
    *
-   * @param token the supplied json web token.
+   * @param jwtToken the supplied json web token.
    */
-  case class KnoraTokenCredentialsV2(token: String) extends KnoraCredentialsV2
+  case class KnoraJWTTokenCredentialsV2(jwtToken: String) extends KnoraCredentialsV2
 
   /**
    * Represents session credentials that a user can supply within the cookie header.
+   * The session token is contents wise the same as the jwt token. The session ID
+   * equals the JWT token.
    *
-   * @param token the supplied session token.
+   * @param sessionToken the supplied session token.
    */
-  case class KnoraSessionCredentialsV2(token: String) extends KnoraCredentialsV2
+  case class KnoraSessionCredentialsV2(sessionToken: String) extends KnoraCredentialsV2
 }
 
 /**

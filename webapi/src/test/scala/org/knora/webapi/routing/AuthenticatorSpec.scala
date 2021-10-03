@@ -25,7 +25,10 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadCredentialsException, BadRequestException}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserADM, UserIdentifierADM}
-import org.knora.webapi.messages.v2.routing.authenticationmessages.{KnoraPasswordCredentialsV2, KnoraTokenCredentialsV2}
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.{
+  KnoraJWTTokenCredentialsV2,
+  KnoraPasswordCredentialsV2
+}
 import org.knora.webapi.routing.Authenticator.AUTHENTICATION_INVALIDATION_CACHE_NAME
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.cache.CacheUtil
@@ -143,7 +146,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
       }
       "succeed with correct token" in {
         val token = JWTHelper.createToken("myuseriri", settings.jwtSecretKey, settings.jwtLongevity)
-        val tokenCreds = KnoraTokenCredentialsV2(token)
+        val tokenCreds = KnoraJWTTokenCredentialsV2(token)
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(tokenCreds),
           defaultFeatureFactoryConfig,
@@ -157,8 +160,8 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
       }
       "fail with invalidated token" in {
         val token = JWTHelper.createToken("myuseriri", settings.jwtSecretKey, settings.jwtLongevity)
-        val tokenCreds = KnoraTokenCredentialsV2(token)
-        CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.token, tokenCreds.token)
+        val tokenCreds = KnoraJWTTokenCredentialsV2(token)
+        CacheUtil.put(AUTHENTICATION_INVALIDATION_CACHE_NAME, tokenCreds.jwtToken, tokenCreds.jwtToken)
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(tokenCreds),
           defaultFeatureFactoryConfig,
@@ -171,7 +174,7 @@ class AuthenticatorSpec extends CoreSpec("AuthenticationTestSystem") with Implic
         }
       }
       "fail with wrong token" in {
-        val tokenCreds = KnoraTokenCredentialsV2("123456")
+        val tokenCreds = KnoraJWTTokenCredentialsV2("123456")
         val resF = Authenticator invokePrivate authenticateCredentialsV2(
           Some(tokenCreds),
           defaultFeatureFactoryConfig,

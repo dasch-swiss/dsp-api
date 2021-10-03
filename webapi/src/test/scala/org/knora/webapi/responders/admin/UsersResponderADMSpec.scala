@@ -30,7 +30,7 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupMembersGet
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserChangeRequestADM, _}
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraPasswordCredentialsV2
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
