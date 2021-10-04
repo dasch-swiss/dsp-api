@@ -19,21 +19,20 @@
 
 package org.knora.webapi.messages.admin.responder.permissionsmessages
 
-import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException, InconsistentRepositoryDataException}
+import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.OntologyConstants.KnoraBase.EntityPermissionAbbreviations
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataType.PermissionProfileType
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionsMessagesUtilADM.PermissionTypeAndCodes
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType.Restricted
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsADMJsonProtocol
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtocol
 import org.knora.webapi.messages.traits.Jsonable
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import spray.json._
+
+import java.util.UUID
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -778,7 +777,7 @@ case class PermissionDeleteRequestADM(permissionIri: IRI, requestingUser: UserAD
 case class PermissionsForProjectGetResponseADM(allPermissions: Set[PermissionInfoADM])
     extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
-  def toJsValue = permissionsForProjectGetResponseADMFormat.write(this)
+  def toJsValue: JsValue = permissionsForProjectGetResponseADMFormat.write(this)
 }
 
 // All administrative Permissions for project
@@ -791,7 +790,7 @@ case class AdministrativePermissionsForProjectGetResponseADM(
   administrativePermissions: Seq[AdministrativePermissionADM]
 ) extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
-  def toJsValue = administrativePermissionsForProjectGetResponseADMFormat.write(this)
+  def toJsValue: JsValue = administrativePermissionsForProjectGetResponseADMFormat.write(this)
 }
 
 // All Default Object Access Permissions for project
@@ -804,7 +803,7 @@ case class DefaultObjectAccessPermissionsForProjectGetResponseADM(
   defaultObjectAccessPermissions: Seq[DefaultObjectAccessPermissionADM]
 ) extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
-  def toJsValue = defaultObjectAccessPermissionsForProjectGetResponseADMFormat.write(this)
+  def toJsValue: JsValue = defaultObjectAccessPermissionsForProjectGetResponseADMFormat.write(this)
 }
 
 abstract class PermissionGetResponseADM(permissionItem: PermissionItemADM)
@@ -818,7 +817,7 @@ abstract class PermissionGetResponseADM(permissionItem: PermissionItemADM)
  */
 case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermission: DefaultObjectAccessPermissionADM)
     extends PermissionGetResponseADM(defaultObjectAccessPermission) {
-  def toJsValue = defaultObjectAccessPermissionGetResponseADMFormat.write(this)
+  def toJsValue: JsValue = defaultObjectAccessPermissionGetResponseADMFormat.write(this)
 }
 
 /**
@@ -828,7 +827,7 @@ case class DefaultObjectAccessPermissionGetResponseADM(defaultObjectAccessPermis
  */
 case class AdministrativePermissionGetResponseADM(administrativePermission: AdministrativePermissionADM)
     extends PermissionGetResponseADM(administrativePermission) {
-  def toJsValue = administrativePermissionGetResponseADMFormat.write(this)
+  def toJsValue: JsValue = administrativePermissionGetResponseADMFormat.write(this)
 }
 
 /**
@@ -851,7 +850,7 @@ case class DefaultObjectAccessPermissionCreateResponseADM(
   defaultObjectAccessPermission: DefaultObjectAccessPermissionADM
 ) extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
-  def toJsValue = defaultObjectAccessPermissionCreateResponseADMFormat.write(this)
+  def toJsValue: JsValue = defaultObjectAccessPermissionCreateResponseADMFormat.write(this)
 }
 
 /**
@@ -871,7 +870,7 @@ case class PermissionDeleteResponseADM(permissionIri: IRI, deleted: Boolean)
     extends KnoraResponseADM
     with PermissionsADMJsonProtocol {
 
-  def toJsValue = permissionDeleteResponseADMFormat.write(this)
+  def toJsValue: JsValue = permissionDeleteResponseADMFormat.write(this)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -897,14 +896,14 @@ case class PermissionsDataADM(
   def ofType(permissionProfileType: PermissionProfileType): PermissionsDataADM =
     permissionProfileType match {
 
-      case PermissionDataType.RESTRICTED =>
+      case PermissionProfileType.Restricted =>
         PermissionsDataADM(
           groupsPerProject = groupsPerProject,
           administrativePermissionsPerProject =
             Map.empty[IRI, Set[PermissionADM]] // remove administrative permission information
         )
 
-      case PermissionDataType.FULL =>
+      case PermissionProfileType.Full =>
         PermissionsDataADM(
           groupsPerProject = groupsPerProject,
           administrativePermissionsPerProject = administrativePermissionsPerProject
@@ -953,19 +952,17 @@ case class PermissionsDataADM(
       true
     } else {
       operation match {
-        case ResourceCreateOperation(resourceClassIri) => {
+        case ResourceCreateOperation(resourceClassIri) =>
           this.administrativePermissionsPerProject.get(insideProject) match {
-            case Some(set) => {
+            case Some(set) =>
               set(PermissionADM.ProjectResourceCreateAllPermission) || set(
                 PermissionADM.projectResourceCreateRestrictedPermission(resourceClassIri)
               )
-            }
             case None => {
               // println("FALSE: No administrative permissions defined for this project.")
               false
             }
           }
-        }
       }
     }
 
@@ -1018,7 +1015,7 @@ case class PermissionsDataADM(
  */
 case class PermissionInfoADM(iri: IRI, permissionType: IRI) extends Jsonable with PermissionsADMJsonProtocol {
 
-  def toJsValue = permissionInfoADMFormat.write(this)
+  def toJsValue: JsValue = permissionInfoADMFormat.write(this)
 }
 
 abstract class PermissionItemADM extends Jsonable with PermissionsADMJsonProtocol
@@ -1037,7 +1034,7 @@ case class ObjectAccessPermissionADM(
   hasPermissions: Set[PermissionADM]
 ) extends PermissionItemADM {
 
-  def toJsValue = objectAccessPermissionADMFormat.write(this)
+  def toJsValue: JsValue = objectAccessPermissionADMFormat.write(this)
 }
 
 /**
@@ -1051,7 +1048,7 @@ case class ObjectAccessPermissionADM(
 case class AdministrativePermissionADM(iri: IRI, forProject: IRI, forGroup: IRI, hasPermissions: Set[PermissionADM])
     extends PermissionItemADM {
 
-  def toJsValue = administrativePermissionADMFormat.write(this)
+  def toJsValue: JsValue = administrativePermissionADMFormat.write(this)
 }
 
 /**
@@ -1084,7 +1081,7 @@ case class DefaultObjectAccessPermissionADM(
       forProperty
     )
 
-  def toJsValue = defaultObjectAccessPermissionADMFormat.write(this)
+  def toJsValue: JsValue = defaultObjectAccessPermissionADMFormat.write(this)
 }
 
 /**
@@ -1097,7 +1094,7 @@ case class PermissionADM(name: String, additionalInformation: Option[IRI] = None
     extends Jsonable
     with PermissionsADMJsonProtocol {
 
-  def toJsValue = permissionADMFormat.write(this)
+  def toJsValue: JsValue = permissionADMFormat.write(this)
 
   override def toString: String = name
 }
@@ -1213,41 +1210,26 @@ case class ResourceCreateOperation(resourceClass: IRI) extends OperationADM
  *
  * Used in the 'ofType' method.
  */
-object PermissionDataType extends Enumeration {
-  /* TODO: Extend to incorporate user privacy wishes */
-
-  type PermissionProfileType = Value
-
-  val RESTRICTED: PermissionProfileType = Value(0, "restricted")
-  // only group memberships
-  val FULL: PermissionProfileType = Value(1, "full") // everything
-
-  val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
-
-  /**
-   * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-   * [[InconsistentRepositoryDataException]].
-   *
-   * @param name the name of the value.
-   * @return the requested value.
-   */
-  def lookup(name: String): Value =
-    valueMap.get(name) match {
-      case Some(value) => value
-      case None        => throw InconsistentRepositoryDataException(s"Permission profile type not supported: $name")
-    }
+sealed trait PermissionProfileType
+object PermissionProfileType {
+  case object Restricted extends PermissionProfileType
+  case object Full extends PermissionProfileType
 }
 
 /**
  * The permission type.
  */
-object PermissionType extends Enumeration {
-
-  type PermissionType = Value
-
-  val OAP: PermissionType = Value(0, "ObjectAccessPermission")
-  val AP: PermissionType = Value(1, "AdministrativePermission")
-  val DOAP: PermissionType = Value(2, "DefaultObjectAccessPermission")
+sealed trait PermissionType
+object PermissionType {
+  case object OAP extends PermissionType {
+    override def toString: String = "ObjectAccessPermission"
+  }
+  case object AP extends PermissionType {
+    override def toString: String = "AdministrativePermission"
+  }
+  case object DOAP extends PermissionType {
+    override def toString: String = "DefaultObjectAccessPermission"
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1260,20 +1242,30 @@ trait PermissionsADMJsonProtocol
     with TriplestoreJsonProtocol {
 
   implicit object PermissionProfileTypeFormat extends JsonFormat[PermissionProfileType] {
+    import PermissionProfileType._
 
     /**
      * Not implemented.
      */
-    def read(jsonVal: JsValue) = ???
+    def read(jsonVal: JsValue): PermissionProfileType = ???
 
     /**
-     * Converts a [[PermissionDataType]] into [[JsValue]] for formatting as JSON.
+     * Converts a [[PermissionProfileType]] into [[JsValue]] for formatting as JSON.
      *
-     * @param permissionProfileType the [[PermissionDataType]] to be converted.
+     * @param permissionProfileType the [[PermissionProfileType]] to be converted.
      * @return a [[JsValue]].
      */
-    def write(permissionProfileType: PermissionDataType.Value): JsValue =
-      JsObject(Map("permission_profile_type" -> permissionProfileType.toString.toJson))
+    def write(permissionProfileType: PermissionProfileType): JsValue =
+      permissionProfileType match {
+        case Full =>
+          JsObject {
+            Map("permission_profile_type" -> "full".toJson)
+          }
+        case Restricted =>
+          JsObject {
+            Map("permission_profile_type" -> "restricted".toJson)
+          }
+      }
   }
 
   implicit val permissionADMFormat: JsonFormat[PermissionADM] =
