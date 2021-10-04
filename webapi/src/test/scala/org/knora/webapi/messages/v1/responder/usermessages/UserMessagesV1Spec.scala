@@ -20,7 +20,7 @@
 package org.knora.webapi.messages.v1.responder.usermessages
 
 import org.knora.webapi.messages.admin.responder.permissionsmessages
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionDataType
+import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionProfileType
 import org.knora.webapi.sharedtestdata.SharedTestDataV1
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
@@ -73,7 +73,7 @@ class UserMessagesV1Spec extends AnyWordSpecLike with Matchers {
         ),
         groups = groups,
         projects_info = projects_info,
-        permissionData = permissionData.ofType(PermissionDataType.RESTRICTED),
+        permissionData = permissionData.ofType(PermissionProfileType.Restricted),
         sessionId = sessionId
       )
 
