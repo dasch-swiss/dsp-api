@@ -130,7 +130,7 @@ def dependencies():
             "org.scalatest:scalatest-matchers-core_2.13:3.2.2",
             "org.scalatest:scalatest-shouldmatchers_2.13:3.2.2",
             "org.scalatest:scalatest-compatible:3.2.2",
-            "org.testcontainers:testcontainers:1.15.3",
+            "org.testcontainers:testcontainers:1.16.0",
             "junit:junit:4.13.2",
             "io.gatling.highcharts:gatling-charts-highcharts:3.2.1",
             "io.gatling:gatling-test-framework:3.2.1",
