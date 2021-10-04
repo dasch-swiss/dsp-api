@@ -21,7 +21,7 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, InconsistentRepositoryDataException}
+import org.knora.webapi.exceptions.{BadRequestException, DataConversionException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionsADMJsonProtocol, PermissionsDataADM}
@@ -703,13 +703,11 @@ object UserInformationTypeADM {
 /**
  * Represents the type of a user identifier.
  */
-object UserIdentifierType extends Enumeration {
-
-  type UserIdentifierType
-
-  val IRI: Value = Value(0, "iri")
-  val EMAIL: Value = Value(1, "email")
-  val USERNAME: Value = Value(3, "username")
+sealed trait UserIdentifierType
+object UserIdentifierType {
+  case object Iri extends UserIdentifierType
+  case object Email extends UserIdentifierType
+  case object Username extends UserIdentifierType
 }
 
 /**
@@ -734,13 +732,13 @@ sealed abstract case class UserIdentifierADM private (
 
   // validate and escape
 
-  def hasType: UserIdentifierType.Value =
+  def hasType: UserIdentifierType =
     if (maybeIri.isDefined) {
-      UserIdentifierType.IRI
+      UserIdentifierType.Iri
     } else if (maybeEmail.isDefined) {
-      UserIdentifierType.EMAIL
+      UserIdentifierType.Email
     } else {
-      UserIdentifierType.USERNAME
+      UserIdentifierType.Username
     }
 
   /**

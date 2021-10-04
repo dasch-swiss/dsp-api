@@ -69,14 +69,14 @@ object CacheServiceInMemImpl extends CacheService with LazyLogging {
     // The data is stored under the IRI key.
     // Additionally, the USERNAME and EMAIL keys point to the IRI key
     val resultFuture: Future[Option[UserADM]] = identifier.hasType match {
-      case UserIdentifierType.IRI => FastFuture.successful(cache.get(identifier.toIri).map(_.asInstanceOf[UserADM]))
-      case UserIdentifierType.USERNAME => {
+      case UserIdentifierType.Iri => FastFuture.successful(cache.get(identifier.toIri).map(_.asInstanceOf[UserADM]))
+      case UserIdentifierType.Username => {
         cache.get(identifier.toUsername) match {
           case Some(iriKey) => FastFuture.successful(cache.get(iriKey).map(_.asInstanceOf[UserADM]))
           case None         => FastFuture.successful(None)
         }
       }
-      case UserIdentifierType.EMAIL =>
+      case UserIdentifierType.Email =>
         cache.get(identifier.toEmail) match {
           case Some(iriKey) => FastFuture.successful(cache.get(iriKey).map(_.asInstanceOf[UserADM]))
           case None         => FastFuture.successful(None)

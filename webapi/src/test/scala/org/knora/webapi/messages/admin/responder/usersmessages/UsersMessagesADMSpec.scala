@@ -180,13 +180,13 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
     "return the identifier type" in {
 
       val iriIdentifier = UserIdentifierADM(maybeIri = Some("http://rdfh.ch/users/root"))
-      iriIdentifier.hasType should be(UserIdentifierType.IRI)
+      iriIdentifier.hasType should be(UserIdentifierType.Iri)
 
       val emailIdentifier = UserIdentifierADM(maybeEmail = Some("root@example.com"))
-      emailIdentifier.hasType should be(UserIdentifierType.EMAIL)
+      emailIdentifier.hasType should be(UserIdentifierType.Email)
 
       val usernameIdentifier = UserIdentifierADM(maybeUsername = Some("root"))
-      usernameIdentifier.hasType should be(UserIdentifierType.USERNAME)
+      usernameIdentifier.hasType should be(UserIdentifierType.Username)
     }
 
     "check whether a user identified by email is the same as a user identified by username" in {
