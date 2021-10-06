@@ -236,7 +236,7 @@ object Status {
 }
 
 /**
- * cDescription value object.
+ * Description value object.
  */
 sealed abstract case class Description private (value: Seq[StringLiteralV2])
 object Description {
