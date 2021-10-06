@@ -29,7 +29,16 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupMembersGetRequestADM, GroupMembersGetResponseADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects._
+import org.knora.webapi.messages.admin.responder.valueObjects.{
+  Username,
+  Email,
+  GivenName,
+  FamilyName,
+  Password,
+  Status,
+  LanguageCode,
+  SystemAdmin
+}
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator

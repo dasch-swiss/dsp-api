@@ -31,7 +31,16 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{Permission
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserChangeRequestADM, _}
-import org.knora.webapi.messages.admin.responder.valueObjects._
+import org.knora.webapi.messages.admin.responder.valueObjects.{
+  Username,
+  Email,
+  GivenName,
+  FamilyName,
+  Password,
+  Status,
+  LanguageCode,
+  SystemAdmin
+}
 import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceGetUserADM,
   CacheServicePutUserADM,
@@ -40,7 +49,6 @@ import org.knora.webapi.messages.store.cacheservicemessages.{
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
-import org.knora.webapi.messages.v1.responder.usermessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
