@@ -23,21 +23,21 @@
 @**
  * Updates an existing group with the provided values.
  *
- * @param dataNamedGraph the named graph to update.
- * @param triplestore      the name of the triplestore being used. The template uses this value to exclude inferred
-                           results from the WHERE clause of the update.
- * @param groupIri         the IRI of the group we want to update.
- * @param maybeName        the new optional value for name.
- * @param maybeDescription the new optional value for description.
- * @param maybeProject     the new optional value for project.
- * @param maybeStatus      the new optional value for status.
- * @param maybeSelfjoin    the new optional value for selfjoin.
+ * @param dataNamedGraph    the named graph to update.
+ * @param triplestore       the name of the triplestore being used. The template uses this value to exclude inferred
+                            results from the WHERE clause of the update.
+ * @param groupIri          the IRI of the group we want to update.
+ * @param maybeName         the new optional value for name.
+ * @param maybeDescriptions the new optional value for descriptions.
+ * @param maybeProject      the new optional value for project.
+ * @param maybeStatus       the new optional value for status.
+ * @param maybeSelfjoin     the new optional value for selfjoin.
  *@
 @(adminNamedGraphIri: IRI,
   triplestore: String,
   groupIri: IRI,
   maybeName: Option[String],
-  maybeDescription: Option[Seq[StringLiteralV2]],
+  maybeDescriptions: Option[Seq[StringLiteralV2]],
   maybeProject: Option[IRI],
   maybeStatus: Option[Boolean],
   maybeSelfjoin: Option[Boolean])
@@ -56,8 +56,8 @@ DELETE {
         ?group knora-admin:groupName ?currentName .
     }
 
-    @if(maybeDescription.nonEmpty) {
-        ?group knora-admin:groupDescription ?currentDescription .
+    @if(maybeDescriptions.nonEmpty) {
+        ?group knora-admin:groupDescriptions ?currentDescriptions .
     }
 
     @if(maybeProject.nonEmpty) {
@@ -82,12 +82,12 @@ DELETE {
         ?group knora-admin:groupName "@maybeName.get"^^xsd:string .
     }
 
-    @if(maybeDescription.nonEmpty) {
-        @for(description <- maybeDescription.get) {
-            @if(description.language.nonEmpty) {
-                ?group knora-admin:groupDescription """@description.value"""@@@{description.language.get} .
+    @if(maybeDescriptions.nonEmpty) {
+        @for(d <- maybeDescriptions.get) {
+            @if(d.language.nonEmpty) {
+                ?group knora-admin:groupDescriptions """@d.value"""@@@{d.language.get} .
             } else {
-                ?group knora-admin:groupDescription """@description.value"""^^xsd:string .
+                ?group knora-admin:groupDescriptions """@d.value"""^^xsd:string .
             }
         }
     }
@@ -128,7 +128,7 @@ WHERE {
 
     ?group knora-admin:groupName ?currentName .
 
-    optional {?group knora-admin:groupDescription ?currentDescription .}
+    optional {?group knora-admin:groupDescriptions ?currentDescriptions .}
 
     ?group knora-admin:belongsToProject ?currentProject .
 

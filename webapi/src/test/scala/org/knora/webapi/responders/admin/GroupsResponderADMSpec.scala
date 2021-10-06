@@ -105,7 +105,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
           createRequest = GroupCreatePayloadADM.create(
             id = None,
             name = Name.create("NewGroup").fold(e => throw e, v => v),
-            description = Description
+            descriptions = Description
               .create(
                 Seq(
                   StringLiteralV2(value = """NewGroupDescription with "quotes" and <html tag>""", language = Some("en"))
@@ -125,7 +125,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         val newGroupInfo = received.group
 
         newGroupInfo.name should equal("NewGroup")
-        newGroupInfo.description should equal(
+        newGroupInfo.descriptions should equal(
           Seq(StringLiteralV2("""NewGroupDescription with "quotes" and <html tag>""", Some("en")))
         )
         newGroupInfo.project should equal(imagesProject)
@@ -141,7 +141,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
           createRequest = GroupCreatePayloadADM.create(
             id = Some(imagesReviewerGroup.id),
             name = Name.create("NewGroup").fold(e => throw e, v => v),
-            description = Description
+            descriptions = Description
               .create(Seq(StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
               .fold(e => throw e, v => v),
             project = SharedTestDataADM.IMAGES_PROJECT_IRI,
@@ -163,7 +163,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
           createRequest = GroupCreatePayloadADM.create(
             id = Some(""),
             name = Name.create("OtherNewGroup").fold(e => throw e, v => v),
-            description = Description
+            descriptions = Description
               .create(Seq(StringLiteralV2(value = "OtherNewGroupDescription", language = Some("en"))))
               .fold(e => throw e, v => v),
             project = "",
@@ -195,7 +195,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         val updatedGroupInfo = received.group
 
         updatedGroupInfo.name should equal("UpdatedGroupName")
-        updatedGroupInfo.description should equal(
+        updatedGroupInfo.descriptions should equal(
           Seq(StringLiteralV2("""UpdatedDescription with "quotes" and <html tag>""", Some("en")))
         )
         updatedGroupInfo.project should equal(imagesProject)

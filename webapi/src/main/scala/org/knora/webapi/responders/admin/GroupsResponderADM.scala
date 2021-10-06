@@ -151,10 +151,10 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                 .head
                 .asInstanceOf[StringLiteralV2]
                 .value,
-              description = propsMap
+              descriptions = propsMap
                 .getOrElse(
                   OntologyConstants.KnoraAdmin.GroupDescription.toSmartIri,
-                  throw InconsistentRepositoryDataException(s"Group $groupIri has no description attached")
+                  throw InconsistentRepositoryDataException(s"Group $groupIri has no descriptions attached")
                 )
                 .map(l =>
                   l.asStringLiteral(
@@ -477,7 +477,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             groupIri,
             groupClassIri = OntologyConstants.KnoraAdmin.UserGroup,
             name = createRequest.name.value,
-            description = createRequest.description.value,
+            descriptions = createRequest.descriptions.value,
             projectIri = createRequest.project,
             status = createRequest.status.value,
             hasSelfJoinEnabled = createRequest.selfjoin.value
@@ -565,7 +565,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         /* create the update request */
         groupUpdatePayload = GroupUpdatePayloadADM(
           name = changeGroupRequest.name,
-          description = changeGroupRequest.description,
+          descriptions = changeGroupRequest.descriptions,
           status = changeGroupRequest.status,
           selfjoin = changeGroupRequest.selfjoin
         )
@@ -695,7 +695,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
 
     val parametersCount: Int = List(
       groupUpdatePayload.name,
-      groupUpdatePayload.description,
+      groupUpdatePayload.descriptions,
       groupUpdatePayload.status,
       groupUpdatePayload.selfjoin
     ).flatten.size
@@ -736,7 +736,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             triplestore = settings.triplestoreType,
             groupIri,
             maybeName = groupUpdatePayload.name,
-            maybeDescription = groupUpdatePayload.description,
+            maybeDescriptions = groupUpdatePayload.descriptions,
             maybeProject = None, // maybe later we want to allow moving of a group to another project
             maybeStatus = groupUpdatePayload.status,
             maybeSelfjoin = groupUpdatePayload.selfjoin
@@ -765,10 +765,10 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           throw UpdateNotPerformedException("Group's 'name' was not updated. Please report this as a possible bug.")
       }
 
-      _ = if (groupUpdatePayload.description.isDefined) {
-        if (updatedGroup.description != groupUpdatePayload.description.get)
+      _ = if (groupUpdatePayload.descriptions.isDefined) {
+        if (updatedGroup.descriptions != groupUpdatePayload.descriptions.get)
           throw UpdateNotPerformedException(
-            "Group's 'description' was not updated. Please report this as a possible bug."
+            "Group's 'descriptions' was not updated. Please report this as a possible bug."
           )
       }
 
@@ -849,10 +849,10 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             .head
             .asInstanceOf[StringLiteralV2]
             .value,
-          description = propsMap
+          descriptions = propsMap
             .getOrElse(
               OntologyConstants.KnoraAdmin.GroupDescription.toSmartIri,
-              throw InconsistentRepositoryDataException(s"Group $groupIri has no description attached")
+              throw InconsistentRepositoryDataException(s"Group $groupIri has no descriptions attached")
             )
             .map(l =>
               l.asStringLiteral(

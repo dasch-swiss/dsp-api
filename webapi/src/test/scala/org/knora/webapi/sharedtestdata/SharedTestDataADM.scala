@@ -327,7 +327,7 @@ object SharedTestDataADM {
   def imagesProjectAdminGroup: GroupADM = GroupADM(
     id = "-",
     name = "ProjectAdmin",
-    description = Seq(StringLiteralV2(value = "Default Project Admin Group", language = None)),
+    descriptions = Seq(StringLiteralV2(value = "Default Project Admin Group", language = None)),
     project = imagesProject,
     status = true,
     selfjoin = false
@@ -337,7 +337,7 @@ object SharedTestDataADM {
   def imagesProjectMemberGroup: GroupADM = GroupADM(
     id = "-",
     name = "ProjectMember",
-    description = Seq(StringLiteralV2(value = "Default Project Member Group", language = None)),
+    descriptions = Seq(StringLiteralV2(value = "Default Project Member Group", language = None)),
     project = imagesProject,
     status = true,
     selfjoin = false
@@ -347,7 +347,7 @@ object SharedTestDataADM {
   def imagesReviewerGroup: GroupADM = GroupADM(
     id = "http://rdfh.ch/groups/00FF/images-reviewer",
     name = "Image reviewer",
-    description = Seq(StringLiteralV2(value = "A group for image reviewers.", language = None)),
+    descriptions = Seq(StringLiteralV2(value = "A group for image reviewers.", language = None)),
     project = imagesProject,
     status = true,
     selfjoin = false
@@ -604,7 +604,7 @@ object SharedTestDataADM {
   def thingSearcherGroup: GroupADM = GroupADM(
     id = "http://rdfh.ch/groups/0001/thing-searcher",
     name = "Thing searcher",
-    description = Seq(StringLiteralV2(value = "A group for thing searchers.", language = Some("en"))),
+    descriptions = Seq(StringLiteralV2(value = "A group for thing searchers.", language = Some("en"))),
     project = anythingProject,
     status = true,
     selfjoin = true

@@ -45,7 +45,7 @@ class GroupsMessagesADMSpec extends CoreSpec(GroupsMessagesADMSpec.config) {
         CreateGroupApiRequestADM(
           id = Some("invalid-group-IRI"),
           name = "NewGroupWithInvalidCustomIri",
-          description = Seq(StringLiteralV2("A new group created with an invalid custom IRI")),
+          descriptions = Seq(StringLiteralV2("A new group created with an invalid custom IRI")),
           project = SharedTestDataADM.IMAGES_PROJECT_IRI,
           status = true,
           selfjoin = false
