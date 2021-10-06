@@ -30,7 +30,8 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, Group
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
-import org.knora.webapi.messages.admin.responder.usersmessages.{Password, UserChangeRequestADM, _}
+import org.knora.webapi.messages.admin.responder.usersmessages.{UserChangeRequestADM, _}
+import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceGetUserADM,
   CacheServicePutUserADM,

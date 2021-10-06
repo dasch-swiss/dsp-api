@@ -28,8 +28,7 @@ import javax.ws.rs.Path
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.{Description, Longname, Name, Selfjoin, Status}
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.admin.responder.valueObjects.{Description, Name, Selfjoin, Status}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 object GroupsRouteADM {

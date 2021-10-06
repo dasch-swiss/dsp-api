@@ -30,6 +30,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTy
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import spray.json._
 

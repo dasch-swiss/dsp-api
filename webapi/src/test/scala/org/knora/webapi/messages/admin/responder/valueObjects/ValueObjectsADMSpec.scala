@@ -22,7 +22,7 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.admin.responder.usersmessages.{CreateUserApiRequestADM, UserCreatePayloadADM}
 import org.knora.webapi.{IRI, UnitSpec}
 import org.scalatest.enablers.Messaging.messagingNatureOfThrowable
 

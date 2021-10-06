@@ -1,7 +1,16 @@
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.admin.responder.valueObjects.{
+  Shortname,
+  Longname,
+  Shortcode,
+  Description,
+  Keywords,
+  Logo,
+  Status,
+  Selfjoin
+}
 
 // TODO: https://github.com/dasch-swiss/dsp-api/pull/1909#discussion_r718330669
 

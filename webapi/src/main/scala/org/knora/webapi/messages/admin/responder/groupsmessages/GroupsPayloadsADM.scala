@@ -1,7 +1,7 @@
 package org.knora.webapi.messages.admin.responder.groupsmessages
 
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.admin.responder.valueObjects.{Name, Description, Selfjoin, Status}
 
 /**
  * Group payload
