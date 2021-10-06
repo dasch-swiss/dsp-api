@@ -28,6 +28,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi.E2ESpec
 import org.knora.webapi.e2e.{ClientTestDataCollector, TestDataFileContent, TestDataFilePath}
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.messages.v1.responder.sessionmessages.SessionJsonProtocol
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.{AkkaHttpUtils, MutableTestIri}
@@ -107,7 +108,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
         val createGroupWithCustomIriRequest: String =
           s"""{   "id": "$customGroupIri",
              |    "name": "NewGroupWithCustomIri",
-             |    "description": "A new group with a custom Iri",
+             |    "description": [{"value": "A new group with a custom Iri", "language": "en"}],
              |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
              |    "status": true,
              |    "selfjoin": false
@@ -152,7 +153,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
         val params =
           s"""{             "id": "$customGroupIri",
              |    "name": "NewGroupWithDuplicateCustomIri",
-             |    "description": "A new group with a duplicate custom Iri",
+             |    "description": [{"value": "A new group with a duplicate custom Iri", "language": "en"}],
              |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
              |    "status": true,
              |    "selfjoin": false
@@ -180,7 +181,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
         val createGroupRequest: String =
           s"""{
              |    "name": "NewGroup",
-             |    "description": "NewGroupDescription",
+             |    "description": [{"value": "NewGroupDescription", "language": "en"}],
              |    "project": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
              |    "status": true,
              |    "selfjoin": false
@@ -208,7 +209,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
         val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
 
         groupInfo.name should be("NewGroup")
-        groupInfo.description should be("NewGroupDescription")
+        groupInfo.description should be(Seq(StringLiteralV2("NewGroupDescription", Some("en"))))
         groupInfo.project should be(SharedTestDataADM.imagesProject)
         groupInfo.status should be(true)
         groupInfo.selfjoin should be(false)
@@ -234,7 +235,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
         val updateGroupRequest: String =
           s"""{
              |    "name": "UpdatedGroupName",
-             |    "description": "UpdatedGroupDescription"
+             |    "description": [{"value": "UpdatedGroupDescription", "language": "en"}]
              |}""".stripMargin
 
         clientTestDataCollector.addFile(
@@ -259,7 +260,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
         val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
 
         groupInfo.name should be("UpdatedGroupName")
-        groupInfo.description should be("UpdatedGroupDescription")
+        groupInfo.description should be(Seq(StringLiteralV2("UpdatedGroupDescription", Some("en"))))
         groupInfo.project should be(SharedTestDataADM.imagesProject)
         groupInfo.status should be(true)
         groupInfo.selfjoin should be(false)
@@ -289,7 +290,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
         val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
 
         groupInfo.name should be("UpdatedGroupName")
-        groupInfo.description should be("UpdatedGroupDescription")
+        groupInfo.description should be(Seq(StringLiteralV2("UpdatedGroupDescription", Some("en"))))
         groupInfo.project should be(SharedTestDataADM.imagesProject)
         groupInfo.status should be(false)
         groupInfo.selfjoin should be(false)
@@ -337,7 +338,7 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
         val groupInfo: GroupADM = AkkaHttpUtils.httpResponseToJson(response).fields("group").convertTo[GroupADM]
 
         groupInfo.name should be("UpdatedGroupName")
-        groupInfo.description should be("UpdatedGroupDescription")
+        groupInfo.description should be(Seq(StringLiteralV2("UpdatedGroupDescription", Some("en"))))
         groupInfo.project should be(SharedTestDataADM.imagesProject)
         groupInfo.status should be(true)
         groupInfo.selfjoin should be(false)

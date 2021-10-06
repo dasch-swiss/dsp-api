@@ -73,7 +73,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         )
 
         val response = expectMsgType[GroupsGetResponseADM](timeout)
-        // println(response.users)
         response.groups.nonEmpty should be(true)
         response.groups.size should be(2)
       }
@@ -109,7 +108,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       "CREATE the group and return the group's info if the supplied group name is unique" in {
         responderManager ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM.create(
-            id = Some(""),
+            id = None,
             name = Name.create("NewGroup").fold(e => throw e, v => v),
             description = Description
               .create(
@@ -131,7 +130,9 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         val newGroupInfo = received.group
 
         newGroupInfo.name should equal("NewGroup")
-        newGroupInfo.description should equal("""NewGroupDescription with "quotes" and <html tag>""")
+        newGroupInfo.description should equal(
+          Seq(StringLiteralV2("""NewGroupDescription with "quotes" and <html tag>""", Some("en")))
+        )
         newGroupInfo.project should equal(imagesProject)
         newGroupInfo.status should equal(true)
         newGroupInfo.selfjoin should equal(false)
@@ -143,7 +144,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       "return a 'DuplicateValueException' if the supplied group name is not unique" in {
         responderManager ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM.create(
-            id = Some(""),
+            id = Some(imagesReviewerGroup.id),
             name = Name.create("NewGroup").fold(e => throw e, v => v),
             description = Description
               .create(Seq(StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
@@ -162,27 +163,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         }
       }
 
-      "return 'BadRequestException' if group name or project IRI are missing" in {
-
-        /* missing group name */
-        responderManager ! GroupCreateRequestADM(
-          createRequest = GroupCreatePayloadADM.create(
-            id = Some(""),
-            name = Name.create("").fold(e => throw e, v => v),
-            description = Description
-              .create(Seq(StringLiteralV2(value = "NoNameGroupDescription", language = Some("en"))))
-              .fold(e => throw e, v => v),
-            project = SharedTestDataADM.IMAGES_PROJECT_IRI,
-            status = Status.create(true).fold(e => throw e, v => v),
-            selfjoin = Selfjoin.create(false).fold(e => throw e, v => v)
-          ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID
-        )
-        expectMsg(Failure(BadRequestException("Group name cannot be empty")))
-
-        /* missing project */
+      "return 'BadRequestException' if project IRI are missing" in {
         responderManager ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM.create(
             id = Some(""),
@@ -207,7 +188,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
           changeGroupRequest = ChangeGroupApiRequestADM(
             Some("UpdatedGroupName"),
             Some(
-              Seq(StringLiteralV2(value = """UpdatedDescription with "quotes" and <html tag>""", language = Some("en")))
+              Seq(StringLiteralV2(value = """UpdatedDescription with "quotes" and <html tag>""", Some("en")))
             )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -219,7 +200,9 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         val updatedGroupInfo = received.group
 
         updatedGroupInfo.name should equal("UpdatedGroupName")
-        updatedGroupInfo.description should equal("""UpdatedDescription with "quotes" and <html tag>""")
+        updatedGroupInfo.description should equal(
+          Seq(StringLiteralV2("""UpdatedDescription with "quotes" and <html tag>""", Some("en")))
+        )
         updatedGroupInfo.project should equal(imagesProject)
         updatedGroupInfo.status should equal(true)
         updatedGroupInfo.selfjoin should equal(false)
@@ -262,7 +245,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       "return 'BadRequest' if nothing would be changed during the update" in {
         an[BadRequestException] should be thrownBy ChangeGroupApiRequestADM(None, None, None, None)
       }
-
     }
 
     "used to query members" should {
@@ -323,9 +305,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
           msg.cause.isInstanceOf[NotFoundException] should ===(true)
         }
-
       }
     }
   }
-
 }

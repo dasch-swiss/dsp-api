@@ -156,9 +156,11 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                   OntologyConstants.KnoraAdmin.GroupDescription.toSmartIri,
                   throw InconsistentRepositoryDataException(s"Group $groupIri has no description attached")
                 )
-                .head
-                .asInstanceOf[StringLiteralV2]
-                .value,
+                .map(l =>
+                  l.asStringLiteral(
+                    throw InconsistentRepositoryDataException(s"Expected StringLiteralV2 but got ${l.getClass}")
+                  )
+                ),
               project = projectADM,
               status = propsMap
                 .getOrElse(
@@ -339,7 +341,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
         org.knora.webapi.messages.twirl.queries.sparql.v1.txt
           .getGroupMembersByIri(
             triplestore = settings.triplestoreType,
-            groupIri = groupIri
+            groupIri
           )
           .toString()
       )
@@ -475,19 +477,17 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             groupIri,
             groupClassIri = OntologyConstants.KnoraAdmin.UserGroup,
             name = createRequest.name.value,
-//            maybeDescription = createRequest.description,
             description = createRequest.description.value,
             projectIri = createRequest.project,
             status = createRequest.status.value,
             hasSelfJoinEnabled = createRequest.selfjoin.value
           )
           .toString
-        //_ = log.debug(s"createGroupV1 - createNewGroup: $createNewGroupSparqlString")
-        createGroupResponse <- (storeManager ? SparqlUpdateRequest(createNewGroupSparqlString))
+
+        _ <- (storeManager ? SparqlUpdateRequest(createNewGroupSparqlString))
           .mapTo[SparqlUpdateResponse]
 
-        /* Verify that the group was created */
-        /* Verify that the project was updated. */
+        /* Verify that the group was created and updated  */
         maybeCreatedGroup <- groupGetADM(
           groupIri = groupIri,
           featureFactoryConfig = featureFactoryConfig,
@@ -729,12 +729,12 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       }
 
       /* Update group */
-      updateProjectSparqlString <- Future(
+      updateGroupSparqlString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
           .updateGroup(
             adminNamedGraphIri = "http://www.knora.org/data/admin",
             triplestore = settings.triplestoreType,
-            groupIri = groupIri,
+            groupIri,
             maybeName = groupUpdatePayload.name,
             maybeDescription = groupUpdatePayload.description,
             maybeProject = None, // maybe later we want to allow moving of a group to another project
@@ -745,7 +745,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       )
       //_ = log.debug(s"updateProjectV1 - query: {}",updateProjectSparqlString)
 
-      updateGroupResponse <- (storeManager ? SparqlUpdateRequest(updateProjectSparqlString)).mapTo[SparqlUpdateResponse]
+      _ <- (storeManager ? SparqlUpdateRequest(updateGroupSparqlString)).mapTo[SparqlUpdateResponse]
 
       /* Verify that the project was updated. */
       maybeUpdatedGroup <- groupGetADM(
@@ -854,9 +854,11 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
               OntologyConstants.KnoraAdmin.GroupDescription.toSmartIri,
               throw InconsistentRepositoryDataException(s"Group $groupIri has no description attached")
             )
-            .head
-            .asInstanceOf[StringLiteralV2]
-            .value,
+            .map(l =>
+              l.asStringLiteral(
+                throw InconsistentRepositoryDataException(s"Expected StringLiteralV2 but got ${l.getClass}")
+              )
+            ),
           project = project,
           status = propsMap
             .getOrElse(
@@ -910,7 +912,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
     for {
       askString <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-          .checkGroupExistsByName(projectIri = projectIri, name = name)
+          .checkGroupExistsByName(projectIri, name)
           .toString
       )
       //_ = log.debug("groupExists - query: {}", askString)
@@ -962,5 +964,4 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
 
       } yield GroupOperationResponseADM(group = changedGroup)
     }
-
 }

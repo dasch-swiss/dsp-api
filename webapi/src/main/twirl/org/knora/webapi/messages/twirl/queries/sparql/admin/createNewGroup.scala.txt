@@ -53,25 +53,25 @@ PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
 INSERT {
     GRAPH ?adminNamedGraphIri {
-        ?groupIri rdf:type ?groupClassIri ;
+        ?groupIri rdf:type ?groupClassIri .
 
-            knora-admin:groupName "@name"^^xsd:string ;
+            ?groupIri knora-admin:groupName "@name"^^xsd:string .
 
             @if(description.nonEmpty) {
                 @for(d <- description) {
                     @if(d.language.nonEmpty) {
-                        knora-admin:projectDescription """@d.value"""@@@{d.language.get} ;
+                        ?groupIri knora-admin:groupDescription """@d.value"""@@@{d.language.get} .
                     } else {
-                        knora-admin:projectDescription """@d.value"""^^xsd:string ;
+                        ?groupIri knora-admin:groupDescription """@d.value"""^^xsd:string .
                     }
                 }
             }
 
-            knora-admin:belongsToProject ?projectIri ;
+            ?groupIri knora-admin:belongsToProject ?projectIri .
 
-            knora-admin:status "@status"^^xsd:boolean ;
+            ?groupIri knora-admin:status "@status"^^xsd:boolean .
 
-            knora-admin:hasSelfJoinEnabled "@hasSelfJoinEnabled"^^xsd:boolean.
+            ?groupIri knora-admin:hasSelfJoinEnabled "@hasSelfJoinEnabled"^^xsd:boolean .
     }
 }
 @*

@@ -57,13 +57,7 @@ DELETE {
     }
 
     @if(maybeDescription.nonEmpty) {
-        @for(description <- maybeDescription.get) {
-            @if(description.language.nonEmpty) {
-                knora-admin:projectDescription """@description.value"""@@@{description.language.get} ;
-            } else {
-                knora-admin:projectDescription """@description.value"""^^xsd:string ;
-            }
-        }
+        ?group knora-admin:groupDescription ?currentDescription .
     }
 
     @if(maybeProject.nonEmpty) {
@@ -89,7 +83,13 @@ DELETE {
     }
 
     @if(maybeDescription.nonEmpty) {
-        ?group knora-admin:groupDescription """@maybeDescription.get"""^^xsd:string .
+        @for(description <- maybeDescription.get) {
+            @if(description.language.nonEmpty) {
+                ?group knora-admin:groupDescription """@description.value"""@@@{description.language.get} .
+            } else {
+                ?group knora-admin:groupDescription """@description.value"""^^xsd:string .
+            }
+        }
     }
 
     @if(maybeProject.nonEmpty) {

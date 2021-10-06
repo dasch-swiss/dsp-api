@@ -251,7 +251,7 @@ sealed abstract case class Name private (value: String)
 object Name {
   def create(value: String): Either[Throwable, Name] =
     if (value.isEmpty) {
-      Left(BadRequestException("Missing long name"))
+      Left(BadRequestException("Missing Name"))
     } else {
       Right(new Name(value) {})
     }

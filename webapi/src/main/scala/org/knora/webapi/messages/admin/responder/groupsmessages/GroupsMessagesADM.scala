@@ -47,7 +47,6 @@ import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 case class CreateGroupApiRequestADM(
   id: Option[IRI] = None,
   name: String,
-//  description: Option[Seq[StringLiteralV2]],
   description: Seq[StringLiteralV2],
   project: IRI,
   status: Boolean,
@@ -76,7 +75,6 @@ case class CreateGroupApiRequestADM(
  */
 case class ChangeGroupApiRequestADM(
   name: Option[String] = None,
-//  description: Option[String] = None,
   description: Option[Seq[StringLiteralV2]] = None,
   status: Option[Boolean] = None,
   selfjoin: Option[Boolean] = None
@@ -183,7 +181,7 @@ case class GroupMembersGetRequestADM(groupIri: IRI, featureFactoryConfig: Featur
 /**
  * Requests the creation of a new group.
  *
- * @param createRequest        the [[CreateGroupApiRequestADM]] information for creating the new group.
+ * @param createRequest        the [[GroupCreatePayloadADM]] information for creating the new group.
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user initiating the request.
  * @param apiRequestID         the ID of the API request.
@@ -288,8 +286,14 @@ case class GroupOperationResponseADM(group: GroupADM) extends KnoraResponseADM w
  * @param status      the group's status.
  * @param selfjoin    the group's self-join status.
  */
-case class GroupADM(id: IRI, name: String, description: String, project: ProjectADM, status: Boolean, selfjoin: Boolean)
-    extends Ordered[GroupADM] {
+case class GroupADM(
+  id: IRI,
+  name: String,
+  description: Seq[StringLiteralV2],
+  project: ProjectADM,
+  status: Boolean,
+  selfjoin: Boolean
+) extends Ordered[GroupADM] {
 
   /**
    * Allows to sort collections of GroupADM. Sorting is done by the id.
@@ -315,7 +319,7 @@ case class GroupADM(id: IRI, name: String, description: String, project: Project
  * @param status      the group's status.
  * @param selfjoin    the group's self-join status.
  */
-case class GroupShortADM(id: IRI, name: String, description: String, status: Boolean, selfjoin: Boolean)
+case class GroupShortADM(id: IRI, name: String, description: Seq[StringLiteralV2], status: Boolean, selfjoin: Boolean)
 
 /**
  * Payload used for updating of an existing group.
