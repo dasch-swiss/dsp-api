@@ -90,7 +90,7 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
     // The data is stored under the IRI key.
     // Additionally, the USERNAME and EMAIL keys point to the IRI key
     val resultFuture: Future[Option[UserADM]] = identifier.hasType match {
-      case UserIdentifierType.IRI =>
+      case UserIdentifierType.Iri =>
         for {
           maybeBytes: Option[Array[Byte]] <- getBytesValue(identifier.toIriOption)
           maybeUser: Option[UserADM] <- maybeBytes match {
@@ -99,7 +99,7 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
           }
         } yield maybeUser
 
-      case UserIdentifierType.USERNAME =>
+      case UserIdentifierType.Username =>
         for {
           maybeIriKey: Option[String] <- getStringValue(identifier.toUsernameOption)
           maybeBytes: Option[Array[Byte]] <- getBytesValue(maybeIriKey)
@@ -109,7 +109,7 @@ class CacheServiceRedisImpl(s: CacheServiceSettings) extends CacheService with L
           }
         } yield maybeUser
 
-      case UserIdentifierType.EMAIL =>
+      case UserIdentifierType.Email =>
         for {
           maybeIriKey: Option[String] <- getStringValue(identifier.toEmailOption)
           maybeBytes: Option[Array[Byte]] <- getBytesValue(maybeIriKey)

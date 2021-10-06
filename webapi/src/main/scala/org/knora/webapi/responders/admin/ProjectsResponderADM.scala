@@ -363,7 +363,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       maybeUserFutures: Seq[Future[Option[UserADM]]] = userIris.map { userIri =>
         (responderManager ? UserGetADM(
           identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-          userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
+          userInformationTypeADM = UserInformationTypeADM.Restricted,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )).mapTo[Option[UserADM]]
@@ -438,7 +438,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       maybeUserFutures: Seq[Future[Option[UserADM]]] = userIris.map { userIri =>
         (responderManager ? UserGetADM(
           identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-          userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
+          userInformationTypeADM = UserInformationTypeADM.Restricted,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )).mapTo[Option[UserADM]]

@@ -553,10 +553,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         members.size should be(4)
 
         members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.RESTRICTED),
-          SharedTestDataADM.imagesUser02.ofType(UserInformationTypeADM.RESTRICTED),
-          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.RESTRICTED),
-          SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.RESTRICTED)
+          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.Restricted),
+          SharedTestDataADM.imagesUser02.ofType(UserInformationTypeADM.Restricted),
+          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.Restricted),
+          SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.Restricted)
         ).map(_.id)
       }
 
@@ -572,10 +572,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         members.size should be(4)
 
         members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.SHORT),
-          SharedTestDataADM.imagesUser02.ofType(UserInformationTypeADM.SHORT),
-          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.SHORT),
-          SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.SHORT)
+          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.Short),
+          SharedTestDataADM.imagesUser02.ofType(UserInformationTypeADM.Short),
+          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.Short),
+          SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.Short)
         ).map(_.id)
       }
 
@@ -591,10 +591,10 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         members.size should be(4)
 
         members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.SHORT),
-          SharedTestDataADM.imagesUser02.ofType(UserInformationTypeADM.SHORT),
-          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.SHORT),
-          SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.SHORT)
+          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.Short),
+          SharedTestDataADM.imagesUser02.ofType(UserInformationTypeADM.Short),
+          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.Short),
+          SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.Short)
         ).map(_.id)
       }
 
@@ -637,8 +637,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         members.size should be(2)
 
         members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.SHORT),
-          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.SHORT)
+          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.Short),
+          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.Short)
         ).map(_.id)
       }
 
@@ -654,8 +654,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         members.size should be(2)
 
         members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.SHORT),
-          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.SHORT)
+          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.Short),
+          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.Short)
         ).map(_.id)
       }
 
@@ -671,8 +671,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         members.size should be(2)
 
         members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.SHORT),
-          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.SHORT)
+          SharedTestDataADM.imagesUser01.ofType(UserInformationTypeADM.Short),
+          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.Short)
         ).map(_.id)
       }
 

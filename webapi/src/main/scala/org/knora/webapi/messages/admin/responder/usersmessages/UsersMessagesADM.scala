@@ -21,12 +21,11 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, DataConversionException, InconsistentRepositoryDataException}
+import org.knora.webapi.exceptions.{BadRequestException, DataConversionException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionsADMJsonProtocol, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages._
@@ -140,7 +139,7 @@ sealed trait UsersResponderRequestADM extends KnoraRequestADM
  * @param requestingUser         the user that is making the request.
  */
 case class UsersGetADM(
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends UsersResponderRequestADM
@@ -154,7 +153,7 @@ case class UsersGetADM(
  * @param requestingUser         the user initiating the request.
  */
 case class UsersGetRequestADM(
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends UsersResponderRequestADM
@@ -169,7 +168,7 @@ case class UsersGetRequestADM(
  */
 case class UserGetADM(
   identifier: UserIdentifierADM,
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends UsersResponderRequestADM {}
@@ -184,7 +183,7 @@ case class UserGetADM(
  */
 case class UserGetRequestADM(
   identifier: UserIdentifierADM,
-  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.SHORT,
+  userInformationTypeADM: UserInformationTypeADM = UserInformationTypeADM.Short,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
 ) extends UsersResponderRequestADM {}
@@ -505,7 +504,7 @@ case class UserADM(
   projects: Seq[ProjectADM] = Seq.empty[ProjectADM],
   sessionId: Option[String] = None,
   permissions: PermissionsDataADM = PermissionsDataADM()
-) extends Ordered[UserADM] {
+) extends Ordered[UserADM] { self =>
 
   /**
    * Allows to sort collections of UserADM. Sorting is done by the id.
@@ -546,15 +545,12 @@ case class UserADM(
    */
   def ofType(userTemplateType: UserInformationTypeADM): UserADM =
     userTemplateType match {
-      case UserInformationTypeADM.PUBLIC =>
-        UserADM(
-          id = id,
+      case UserInformationTypeADM.Public =>
+        self.copy(
           username = "",
           email = "",
           password = None,
           token = None,
-          givenName = givenName,
-          familyName = familyName,
           status = false,
           lang = "",
           groups = Seq.empty[GroupADM],
@@ -562,54 +558,23 @@ case class UserADM(
           sessionId = None,
           permissions = PermissionsDataADM()
         )
-      case UserInformationTypeADM.SHORT =>
-        UserADM(
-          id = id,
-          username = username,
-          email = email,
+      case UserInformationTypeADM.Short =>
+        self.copy(
           password = None,
           token = None,
-          givenName = givenName,
-          familyName = familyName,
-          status = status,
-          lang = lang,
           groups = Seq.empty[GroupADM],
           projects = Seq.empty[ProjectADM],
           sessionId = None,
           permissions = PermissionsDataADM()
         )
-      case UserInformationTypeADM.RESTRICTED =>
-        UserADM(
-          id = id,
-          username = username,
-          email = email,
+      case UserInformationTypeADM.Restricted =>
+        self.copy(
           password = None,
           token = None,
-          givenName = givenName,
-          familyName = familyName,
-          status = status,
-          lang = lang,
-          groups = groups,
-          projects = projects,
-          sessionId = None,
-          permissions = permissions
+          sessionId = None
         )
-      case UserInformationTypeADM.FULL =>
-        UserADM(
-          id = id,
-          username = username,
-          email = email,
-          password = password,
-          token = token,
-          givenName = givenName,
-          familyName = familyName,
-          status = status,
-          lang = lang,
-          groups = groups,
-          projects = projects,
-          sessionId = sessionId,
-          permissions = permissions
-        )
+      case UserInformationTypeADM.Full =>
+        self
       case _ => throw BadRequestException(s"The requested userTemplateType: $userTemplateType is invalid.")
     }
 
@@ -725,75 +690,24 @@ case class UserADM(
  * sensitive information to the outside world. Since in API Admin [[UserADM]] is returned with some responses,
  * we use 'restricted' in those cases.
  */
-object UserInformationTypeADM extends Enumeration {
-  /* TODO: Extend to incorporate user privacy wishes */
+sealed trait UserInformationTypeADM
+object UserInformationTypeADM {
+  case object Public extends UserInformationTypeADM
+  case object Short extends UserInformationTypeADM
+  case object Restricted extends UserInformationTypeADM
+  case object Full extends UserInformationTypeADM
 
-  type UserInformationTypeADM = Value
-
-  val PUBLIC: Value = Value(0, "public") // a temporary type which only returns firstname and lastname
-  val SHORT: Value = Value(1, "short") // only basic user information (restricted and additionally without groups
-  val RESTRICTED: Value = Value(2, "restricted") // without sensitive information
-  val FULL: Value = Value(3, "full") // everything, including sensitive information
-
-  val valueMap: Map[String, Value] = values.map(v => (v.toString, v)).toMap
-
-  /**
-   * Given the name of a value in this enumeration, returns the value. If the value is not found, throws an
-   * [[InconsistentRepositoryDataException]].
-   *
-   * @param name the name of the value.
-   * @return the requested value.
-   */
-  def lookup(name: String): Value =
-    valueMap.get(name) match {
-      case Some(value) => value
-      case None        => throw InconsistentRepositoryDataException(s"User profile type not supported: $name")
-    }
+  // throw InconsistentRepositoryDataException(s"User profile type not supported: $name")
 }
 
 /**
  * Represents the type of a user identifier.
  */
-object UserIdentifierType extends Enumeration {
-
-  type UserIdentifierType
-
-  val IRI: Value = Value(0, "iri")
-  val EMAIL: Value = Value(1, "email")
-  val USERNAME: Value = Value(3, "username")
-}
-
-/**
- * The UserIdentifierADM factory object, making sure that all necessary checks are performed and all inputs
- * validated and escaped.
- */
-object UserIdentifierADM {
-  def apply(maybeIri: Option[String] = None, maybeEmail: Option[String] = None, maybeUsername: Option[String] = None)(
-    implicit sf: StringFormatter
-  ): UserIdentifierADM = {
-
-    val parametersCount: Int = List(
-      maybeIri,
-      maybeEmail,
-      maybeUsername
-    ).flatten.size
-
-    // something needs to be set
-    if (parametersCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
-
-    if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
-
-    new UserIdentifierADM(
-      maybeIri =
-        sf.validateAndEscapeOptionalUserIri(maybeIri, throw BadRequestException(s"Invalid user IRI $maybeIri")),
-      maybeEmail =
-        sf.validateAndEscapeOptionalEmail(maybeEmail, throw BadRequestException(s"Invalid email $maybeEmail")),
-      maybeUsername = sf.validateAndEscapeOptionalUsername(
-        maybeUsername,
-        throw BadRequestException(s"Invalid username $maybeUsername")
-      )
-    )
-  }
+sealed trait UserIdentifierType
+object UserIdentifierType {
+  case object Iri extends UserIdentifierType
+  case object Email extends UserIdentifierType
+  case object Username extends UserIdentifierType
 }
 
 /**
@@ -803,7 +717,7 @@ object UserIdentifierADM {
  * @param maybeEmail    the user's email.
  * @param maybeUsername the user's username.
  */
-class UserIdentifierADM private (
+sealed abstract case class UserIdentifierADM private (
   maybeIri: Option[IRI] = None,
   maybeEmail: Option[String] = None,
   maybeUsername: Option[String] = None
@@ -818,13 +732,13 @@ class UserIdentifierADM private (
 
   // validate and escape
 
-  def hasType: UserIdentifierType.Value =
+  def hasType: UserIdentifierType =
     if (maybeIri.isDefined) {
-      UserIdentifierType.IRI
+      UserIdentifierType.Iri
     } else if (maybeEmail.isDefined) {
-      UserIdentifierType.EMAIL
+      UserIdentifierType.Email
     } else {
-      UserIdentifierType.USERNAME
+      UserIdentifierType.Username
     }
 
   /**
@@ -875,6 +789,39 @@ class UserIdentifierADM private (
   override def toString: IRI =
     s"UserIdentifierADM(${this.value})"
 
+}
+
+/**
+ * The UserIdentifierADM factory object, making sure that all necessary checks are performed and all inputs
+ * validated and escaped.
+ */
+object UserIdentifierADM {
+  def apply(maybeIri: Option[String] = None, maybeEmail: Option[String] = None, maybeUsername: Option[String] = None)(
+    implicit sf: StringFormatter
+  ): UserIdentifierADM = {
+
+    val parametersCount: Int = List(
+      maybeIri,
+      maybeEmail,
+      maybeUsername
+    ).flatten.size
+
+    // something needs to be set
+    if (parametersCount == 0) throw BadRequestException("Empty user identifier is not allowed.")
+
+    if (parametersCount > 1) throw BadRequestException("Only one option allowed for user identifier.")
+
+    new UserIdentifierADM(
+      maybeIri =
+        sf.validateAndEscapeOptionalUserIri(maybeIri, throw BadRequestException(s"Invalid user IRI $maybeIri")),
+      maybeEmail =
+        sf.validateAndEscapeOptionalEmail(maybeEmail, throw BadRequestException(s"Invalid email $maybeEmail")),
+      maybeUsername = sf.validateAndEscapeOptionalUsername(
+        maybeUsername,
+        throw BadRequestException(s"Invalid username $maybeUsername")
+      )
+    ) {}
+  }
 }
 
 /**

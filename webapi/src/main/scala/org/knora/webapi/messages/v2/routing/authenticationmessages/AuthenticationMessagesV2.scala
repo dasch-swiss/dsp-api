@@ -60,31 +60,37 @@ case class LoginApiRequestPayloadV2(
 }
 
 /**
- * An abstract knora credentials class.
+ * Sum type representing the different credential types
  */
-sealed abstract class KnoraCredentialsV2()
+sealed trait KnoraCredentialsV2
 
-/**
- * Represents id/password credentials that a user can supply within the authorization header or as URL parameters.
- *
- * @param identifier the supplied id.
- * @param password   the supplied password.
- */
-case class KnoraPasswordCredentialsV2(identifier: UserIdentifierADM, password: String) extends KnoraCredentialsV2
+object KnoraCredentialsV2 {
 
-/**
- * Represents token credentials that a user can supply withing the authorization header or as URL parameters.
- *
- * @param token the supplied json web token.
- */
-case class KnoraTokenCredentialsV2(token: String) extends KnoraCredentialsV2
+  /**
+   * Represents id/password credentials that a user can supply within the authorization header or as URL parameters.
+   *
+   * @param identifier the supplied id.
+   * @param password   the supplied password.
+   */
+  final case class KnoraPasswordCredentialsV2(identifier: UserIdentifierADM, password: String)
+      extends KnoraCredentialsV2
 
-/**
- * Represents session credentials that a user can supply within the cookie header.
- *
- * @param token the supplied session token.
- */
-case class KnoraSessionCredentialsV2(token: String) extends KnoraCredentialsV2
+  /**
+   * Represents JWT token credentials that a user can supply withing the authorization header or as URL parameters.
+   *
+   * @param jwtToken the supplied json web token.
+   */
+  case class KnoraJWTTokenCredentialsV2(jwtToken: String) extends KnoraCredentialsV2
+
+  /**
+   * Represents session credentials that a user can supply within the cookie header.
+   * The session token is contents wise the same as the jwt token. The session ID
+   * equals the JWT token.
+   *
+   * @param sessionToken the supplied session token.
+   */
+  case class KnoraSessionCredentialsV2(sessionToken: String) extends KnoraCredentialsV2
+}
 
 /**
  * Represents a response Knora returns when communicating with the 'v2/authentication' route during the 'login' operation.

@@ -29,7 +29,6 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.{Password, UserChangeRequestADM, _}
 import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceGetUserADM,
@@ -59,7 +58,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   /**
    * Receives a message extending [[UsersResponderRequestADM]], and returns an appropriate message.
    */
-  def receive(msg: UsersResponderRequestADM) = msg match {
+  def receive(msg: UsersResponderRequestADM): Future[Equals] = msg match {
     case UsersGetADM(userInformationTypeADM, featureFactoryConfig, requestingUser) =>
       getAllUserADM(userInformationTypeADM, featureFactoryConfig, requestingUser)
     case UsersGetRequestADM(userInformationTypeADM, featureFactoryConfig, requestingUser) =>
@@ -310,7 +309,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     skipCache: Boolean = false
-  ): Future[Option[UserADM]] = tracedFuture("admin-get-user") {
+  ): Future[Option[UserADM]] = tracedFuture("admin-user-get-single-user") {
 
     log.debug(
       s"getSingleUserADM - id: {}, type: {}, requester: {}, skipCache: {}",
@@ -340,7 +339,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           maybeUserADM.map(user => user.ofType(userInformationType))
         } else {
           // return only public information
-          maybeUserADM.map(user => user.ofType(UserInformationTypeADM.PUBLIC))
+          maybeUserADM.map(user => user.ofType(UserInformationTypeADM.Public))
         }
 
       _ =
@@ -426,7 +425,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // get current user information
         currentUserInformation: Option[UserADM] <- getSingleUserADM(
           identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-          userInformationType = UserInformationTypeADM.FULL,
+          userInformationType = UserInformationTypeADM.Full,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -685,7 +684,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     for {
       maybeUser <- getSingleUserADM(
         identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-        userInformationType = UserInformationTypeADM.FULL,
+        userInformationType = UserInformationTypeADM.Full,
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
@@ -1169,7 +1168,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     for {
       maybeUserADM: Option[UserADM] <- getSingleUserADM(
         identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-        userInformationType = UserInformationTypeADM.FULL,
+        userInformationType = UserInformationTypeADM.Full,
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
       )
@@ -1240,7 +1239,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // check if user exists
         maybeUser <- getSingleUserADM(
           UserIdentifierADM(maybeIri = Some(userIri)),
-          UserInformationTypeADM.FULL,
+          UserInformationTypeADM.Full,
           featureFactoryConfig = featureFactoryConfig,
           KnoraSystemInstances.Users.SystemUser,
           skipCache = true
@@ -1428,7 +1427,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         identifier = UserIdentifierADM(maybeIri = Some(userIri)),
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser,
-        userInformationType = UserInformationTypeADM.FULL,
+        userInformationType = UserInformationTypeADM.Full,
         skipCache = true
       )
 
@@ -1523,7 +1522,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         identifier = UserIdentifierADM(maybeIri = Some(userIri)),
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser,
-        userInformationType = UserInformationTypeADM.FULL,
+        userInformationType = UserInformationTypeADM.Full,
         skipCache = true
       )
 
@@ -1591,7 +1590,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           )
       }
 
-    } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.RESTRICTED))
+    } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
   }
 
   /**
@@ -1628,7 +1627,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         identifier = UserIdentifierADM(maybeIri = Some(userIri)),
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser,
-        userInformationType = UserInformationTypeADM.FULL,
+        userInformationType = UserInformationTypeADM.Full,
         skipCache = true
       )
 
@@ -1657,7 +1656,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         identifier = UserIdentifierADM(maybeIri = Some(userIri)),
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = requestingUser,
-        userInformationType = UserInformationTypeADM.FULL,
+        userInformationType = UserInformationTypeADM.Full,
         skipCache = true
       )
 
@@ -1669,7 +1668,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       _ = if (updatedUserADM.password.get != password.value)
         throw UpdateNotPerformedException("User's password was not updated. Please report this as a possible bug.")
 
-    } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.RESTRICTED))
+    } yield UserOperationResponseADM(updatedUserADM.ofType(UserInformationTypeADM.Restricted))
   }
 
   /**
@@ -1776,7 +1775,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
           identifier = UserIdentifierADM(maybeIri = Some(userIri)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser,
-          userInformationType = UserInformationTypeADM.FULL,
+          userInformationType = UserInformationTypeADM.Full,
           skipCache = true
         )
 
@@ -1788,7 +1787,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
         // create the user operation response
         _ = log.debug("createNewUserADM - created new user: {}", newUserADM)
-        userOperationResponseADM = UserOperationResponseADM(newUserADM.ofType(UserInformationTypeADM.RESTRICTED))
+        userOperationResponseADM = UserOperationResponseADM(newUserADM.ofType(UserInformationTypeADM.Restricted))
 
       } yield userOperationResponseADM
     for {
@@ -1812,7 +1811,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   private def getUserFromCacheOrTriplestore(
     identifier: UserIdentifierADM,
     featureFactoryConfig: FeatureFactoryConfig
-  ): Future[Option[UserADM]] =
+  ): Future[Option[UserADM]] = tracedFuture("admin-user-get-user-from-cache-or-triplestore") {
     if (cacheServiceSettings.cacheServiceEnabled) {
       // caching enabled
       getUserFromCache(identifier).flatMap {
@@ -1829,7 +1828,8 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
                 "getUserFromCacheOrTriplestore - not found in cache but found in triplestore. need to write to cache."
               )
               // writing user to cache and afterwards returning the user found in the triplestore
-              writeUserADMToCache(user).map(res => Some(user))
+              writeUserADMToCache(user)
+              FastFuture.successful(Some(user))
           }
         case Some(user) =>
           log.debug("getUserFromCacheOrTriplestore - found in cache. returning user.")
@@ -1840,6 +1840,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       log.debug("getUserFromCacheOrTriplestore - caching disabled. getting from triplestore.")
       getUserFromTriplestore(identifier = identifier, featureFactoryConfig = featureFactoryConfig)
     }
+  }
 
   /**
    * Tries to retrieve a [[UserADM]] from the triplestore.
@@ -2158,17 +2159,18 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
   /**
    * Tries to retrieve a [[UserADM]] from the cache.
    */
-  private def getUserFromCache(identifier: UserIdentifierADM): Future[Option[UserADM]] = {
-    val result = (storeManager ? CacheServiceGetUserADM(identifier)).mapTo[Option[UserADM]]
-    result.map {
-      case Some(user) =>
-        log.debug("getUserFromCache - cache hit for: {}", identifier)
-        Some(user)
-      case None =>
-        log.debug("getUserFromCache - no cache hit for: {}", identifier)
-        None
+  private def getUserFromCache(identifier: UserIdentifierADM): Future[Option[UserADM]] =
+    tracedFuture("admin-user-get-user-from-cache") {
+      val result = (storeManager ? CacheServiceGetUserADM(identifier)).mapTo[Option[UserADM]]
+      result.map {
+        case Some(user) =>
+          log.debug("getUserFromCache - cache hit for: {}", identifier)
+          Some(user)
+        case None =>
+          log.debug("getUserFromCache - no cache hit for: {}", identifier)
+          None
+      }
     }
-  }
 
   /**
    * Writes the user profile to cache.

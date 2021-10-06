@@ -30,7 +30,7 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupMembersGet
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserChangeRequestADM, _}
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraPasswordCredentialsV2
+import org.knora.webapi.messages.v2.routing.authenticationmessages.KnoraCredentialsV2.KnoraPasswordCredentialsV2
 import org.knora.webapi.routing.Authenticator
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
@@ -112,27 +112,27 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
       "return a profile if the user (root user) is known" in {
         responderManager ! UserGetADM(
           identifier = UserIdentifierADM(maybeIri = Some(rootUser.id)),
-          userInformationTypeADM = UserInformationTypeADM.FULL,
+          userInformationTypeADM = UserInformationTypeADM.Full,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(Some(rootUser.ofType(UserInformationTypeADM.FULL)))
+        expectMsg(Some(rootUser.ofType(UserInformationTypeADM.Full)))
       }
 
       "return a profile if the user (incunabula user) is known" in {
         responderManager ! UserGetADM(
           identifier = UserIdentifierADM(maybeIri = Some(incunabulaUser.id)),
-          userInformationTypeADM = UserInformationTypeADM.FULL,
+          userInformationTypeADM = UserInformationTypeADM.Full,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.FULL)))
+        expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.Full)))
       }
 
       "return 'NotFoundException' when the user is unknown" in {
         responderManager ! UserGetRequestADM(
           identifier = UserIdentifierADM(maybeIri = Some("http://rdfh.ch/users/notexisting")),
-          userInformationTypeADM = UserInformationTypeADM.FULL,
+          userInformationTypeADM = UserInformationTypeADM.Full,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -142,7 +142,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
       "return 'None' when the user is unknown" in {
         responderManager ! UserGetADM(
           identifier = UserIdentifierADM(maybeIri = Some("http://rdfh.ch/users/notexisting")),
-          userInformationTypeADM = UserInformationTypeADM.FULL,
+          userInformationTypeADM = UserInformationTypeADM.Full,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -155,27 +155,27 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
       "return a profile if the user (root user) is known" in {
         responderManager ! UserGetADM(
           identifier = UserIdentifierADM(maybeEmail = Some(rootUser.email)),
-          userInformationTypeADM = UserInformationTypeADM.FULL,
+          userInformationTypeADM = UserInformationTypeADM.Full,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(Some(rootUser.ofType(UserInformationTypeADM.FULL)))
+        expectMsg(Some(rootUser.ofType(UserInformationTypeADM.Full)))
       }
 
       "return a profile if the user (incunabula user) is known" in {
         responderManager ! UserGetADM(
           identifier = UserIdentifierADM(maybeEmail = Some(incunabulaUser.email)),
-          userInformationTypeADM = UserInformationTypeADM.FULL,
+          userInformationTypeADM = UserInformationTypeADM.Full,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.FULL)))
+        expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.Full)))
       }
 
       "return 'NotFoundException' when the user is unknown" in {
         responderManager ! UserGetRequestADM(
           identifier = UserIdentifierADM(maybeEmail = Some("userwrong@example.com")),
-          userInformationTypeADM = UserInformationTypeADM.FULL,
+          userInformationTypeADM = UserInformationTypeADM.Full,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -185,7 +185,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
       "return 'None' when the user is unknown" in {
         responderManager ! UserGetADM(
           identifier = UserIdentifierADM(maybeEmail = Some("userwrong@example.com")),
-          userInformationTypeADM = UserInformationTypeADM.FULL,
+          userInformationTypeADM = UserInformationTypeADM.Full,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -198,27 +198,27 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
       "return a profile if the user (root user) is known" in {
         responderManager ! UserGetADM(
           identifier = UserIdentifierADM(maybeUsername = Some(rootUser.username)),
-          userInformationTypeADM = UserInformationTypeADM.FULL,
+          userInformationTypeADM = UserInformationTypeADM.Full,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(Some(rootUser.ofType(UserInformationTypeADM.FULL)))
+        expectMsg(Some(rootUser.ofType(UserInformationTypeADM.Full)))
       }
 
       "return a profile if the user (incunabula user) is known" in {
         responderManager ! UserGetADM(
           identifier = UserIdentifierADM(maybeUsername = Some(incunabulaUser.username)),
-          userInformationTypeADM = UserInformationTypeADM.FULL,
+          userInformationTypeADM = UserInformationTypeADM.Full,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
-        expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.FULL)))
+        expectMsg(Some(incunabulaUser.ofType(UserInformationTypeADM.Full)))
       }
 
       "return 'NotFoundException' when the user is unknown" in {
         responderManager ! UserGetRequestADM(
           identifier = UserIdentifierADM(maybeUsername = Some("userwrong")),
-          userInformationTypeADM = UserInformationTypeADM.FULL,
+          userInformationTypeADM = UserInformationTypeADM.Full,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -228,7 +228,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
       "return 'None' when the user is unknown" in {
         responderManager ! UserGetADM(
           identifier = UserIdentifierADM(maybeUsername = Some("userwrong")),
-          userInformationTypeADM = UserInformationTypeADM.FULL,
+          userInformationTypeADM = UserInformationTypeADM.Full,
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )
@@ -656,7 +656,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         )
         val received: ProjectMembersGetResponseADM = expectMsgType[ProjectMembersGetResponseADM](timeout)
 
-        received.members should not contain normalUser.ofType(UserInformationTypeADM.RESTRICTED)
+        received.members should not contain normalUser.ofType(UserInformationTypeADM.Restricted)
       }
 
       "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {
@@ -732,7 +732,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
 
-        received.members should contain(normalUser.ofType(UserInformationTypeADM.RESTRICTED))
+        received.members should contain(normalUser.ofType(UserInformationTypeADM.Restricted))
       }
 
       "DELETE user from project admin group" in {
@@ -770,7 +770,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         )
         val received: ProjectAdminMembersGetResponseADM = expectMsgType[ProjectAdminMembersGetResponseADM](timeout)
 
-        received.members should not contain normalUser.ofType(UserInformationTypeADM.RESTRICTED)
+        received.members should not contain normalUser.ofType(UserInformationTypeADM.Restricted)
       }
 
       "return a 'ForbiddenException' if the user requesting update is not the project or system admin" in {

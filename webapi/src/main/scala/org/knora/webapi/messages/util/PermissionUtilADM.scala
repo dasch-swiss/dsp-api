@@ -27,7 +27,6 @@ import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{BadRequestException, InconsistentRepositoryDataException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupGetResponseADM, MultipleGroupsGetRequestADM}
-import org.knora.webapi.messages.admin.responder.permissionsmessages.PermissionType.PermissionType
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionADM, PermissionType}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.store.triplestoremessages.SparqlExtendedConstructResponse.ConstructPredicateObjects
@@ -539,6 +538,7 @@ object PermissionUtilADM extends LazyLogging {
                   )
                   .toSet
                 buildPermissionObject(abbreviation, groups)
+              case PermissionType.DOAP => ???
             }
           }
         }.toSet
@@ -653,7 +653,8 @@ object PermissionUtilADM extends LazyLogging {
           Set.empty[PermissionADM]
         }
 
-      case PermissionType.AP => ???
+      case PermissionType.AP   => ???
+      case PermissionType.DOAP => ???
     }
 
   /**
@@ -722,6 +723,7 @@ object PermissionUtilADM extends LazyLogging {
         } else {
           throw InconsistentRepositoryDataException("Permissions cannot be empty")
         }
+      case PermissionType.DOAP => ???
     }
 
   /**

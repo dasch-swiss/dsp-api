@@ -23,7 +23,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataType, PermissionsDataADM}
+import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionProfileType, PermissionsDataADM}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.scrypt.SCryptPasswordEncoder
@@ -86,10 +86,10 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
         groups = groups,
         projects = projects,
         sessionId = sessionId,
-        permissions = permissions.ofType(PermissionDataType.RESTRICTED)
+        permissions = permissions.ofType(PermissionProfileType.Restricted)
       )
 
-      assert(rootUser.ofType(UserInformationTypeADM.RESTRICTED) === rootUserRestricted)
+      assert(rootUser.ofType(UserInformationTypeADM.Restricted) === rootUserRestricted)
     }
 
     "return true if user is ProjectAdmin in any project " in {
@@ -180,13 +180,13 @@ class UsersMessagesADMSpec extends CoreSpec(UsersMessagesADMSpec.config) {
     "return the identifier type" in {
 
       val iriIdentifier = UserIdentifierADM(maybeIri = Some("http://rdfh.ch/users/root"))
-      iriIdentifier.hasType should be(UserIdentifierType.IRI)
+      iriIdentifier.hasType should be(UserIdentifierType.Iri)
 
       val emailIdentifier = UserIdentifierADM(maybeEmail = Some("root@example.com"))
-      emailIdentifier.hasType should be(UserIdentifierType.EMAIL)
+      emailIdentifier.hasType should be(UserIdentifierType.Email)
 
       val usernameIdentifier = UserIdentifierADM(maybeUsername = Some("root"))
-      usernameIdentifier.hasType should be(UserIdentifierType.USERNAME)
+      usernameIdentifier.hasType should be(UserIdentifierType.Username)
     }
 
     "check whether a user identified by email is the same as a user identified by username" in {

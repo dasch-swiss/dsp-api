@@ -47,7 +47,7 @@ class CacheServiceManager(cs: CacheService)
    */
   protected implicit val ec: ExecutionContext = context.system.dispatchers.lookup(KnoraDispatchers.KnoraActorDispatcher)
 
-  def receive = {
+  def receive: Receive = {
     case CacheServicePutUserADM(value)         => future2Message(sender(), putUserADM(value), log)
     case CacheServiceGetUserADM(identifier)    => future2Message(sender(), getUserADM(identifier), log)
     case CacheServicePutProjectADM(value)      => future2Message(sender(), putProjectADM(value), log)
@@ -82,7 +82,7 @@ class CacheServiceManager(cs: CacheService)
    * @param identifier the project identifier.
    */
   private def getUserADM(identifier: UserIdentifierADM): Future[Option[UserADM]] =
-    tracedFuture("cache-service-read-user") {
+    tracedFuture("cache-service-get-user") {
       cs.getUserADM(identifier)
     }
 
@@ -109,7 +109,7 @@ class CacheServiceManager(cs: CacheService)
   private def getProjectADM(
     identifier: ProjectIdentifierADM
   )(implicit ec: ExecutionContext): Future[Option[ProjectADM]] =
-    tracedFuture("redis-read-project") {
+    tracedFuture("cache-read-project") {
       cs.getProjectADM(identifier)
     }
 
@@ -140,7 +140,7 @@ class CacheServiceManager(cs: CacheService)
    * @param keys the keys.
    */
   private def removeValues(keys: Set[String]): Future[Boolean] =
-    tracedFuture("redis-remove-values") {
+    tracedFuture("cache-remove-values") {
       cs.removeValues(keys)
     }
 
@@ -148,7 +148,7 @@ class CacheServiceManager(cs: CacheService)
    * Flushes (removes) all stored content from the Redis store.
    */
   private def flushDB(requestingUser: UserADM): Future[CacheServiceFlushDBACK] =
-    tracedFuture("redis-flush-db") {
+    tracedFuture("cache-flush") {
       cs.flushDB(requestingUser)
     }
 
