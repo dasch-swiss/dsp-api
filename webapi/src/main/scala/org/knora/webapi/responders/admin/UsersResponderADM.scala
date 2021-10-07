@@ -29,18 +29,8 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, GroupGetADM}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
-import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserChangeRequestADM, _}
-import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Username,
-  Email,
-  GivenName,
-  FamilyName,
-  Password,
-  Status,
-  LanguageCode,
-  SystemAdmin
-}
+import org.knora.webapi.messages.admin.responder.valueObjects.{Username, Email, Password, Status, SystemAdmin}
 import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceGetUserADM,
   CacheServicePutUserADM,
