@@ -363,7 +363,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       maybeUsersFutures: Seq[Future[Option[UserADM]]] = groupMemberIris.map { userIri =>
         (responderManager ? UserGetADM(
           UserIdentifierADM(maybeIri = Some(userIri)),
-          userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
+          userInformationTypeADM = UserInformationTypeADM.Restricted,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )).mapTo[Option[UserADM]]

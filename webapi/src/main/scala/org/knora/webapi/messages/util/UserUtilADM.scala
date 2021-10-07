@@ -69,7 +69,7 @@ object UserUtilADM {
       for {
         userResponse: UserResponseADM <- (responderManager ? UserGetRequestADM(
           identifier = UserIdentifierADM(maybeIri = Some(requestedUserIri)),
-          userInformationTypeADM = UserInformationTypeADM.FULL,
+          userInformationTypeADM = UserInformationTypeADM.Full,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )).mapTo[UserResponseADM]

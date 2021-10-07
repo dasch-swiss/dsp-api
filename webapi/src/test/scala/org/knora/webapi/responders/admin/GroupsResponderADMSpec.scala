@@ -254,8 +254,8 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         val received: GroupMembersGetResponseADM = expectMsgType[GroupMembersGetResponseADM](timeout)
 
         received.members.map(_.id) should contain allElementsOf Seq(
-          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.RESTRICTED),
-          SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.RESTRICTED)
+          SharedTestDataADM.multiuserUser.ofType(UserInformationTypeADM.Restricted),
+          SharedTestDataADM.imagesReviewerUser.ofType(UserInformationTypeADM.Restricted)
         ).map(_.id)
       }
 

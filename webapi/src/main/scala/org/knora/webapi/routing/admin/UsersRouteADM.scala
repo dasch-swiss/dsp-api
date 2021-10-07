@@ -186,7 +186,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           )
         } yield UserGetRequestADM(
           identifier = UserIdentifierADM(maybeIri = Some(userIri)),
-          userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
+          userInformationTypeADM = UserInformationTypeADM.Restricted,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
@@ -215,7 +215,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           )
         } yield UserGetRequestADM(
           identifier = UserIdentifierADM(maybeEmail = Some(userIri)),
-          userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
+          userInformationTypeADM = UserInformationTypeADM.Restricted,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
@@ -244,7 +244,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           )
         } yield UserGetRequestADM(
           identifier = UserIdentifierADM(maybeUsername = Some(userIri)),
-          userInformationTypeADM = UserInformationTypeADM.RESTRICTED,
+          userInformationTypeADM = UserInformationTypeADM.Restricted,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
