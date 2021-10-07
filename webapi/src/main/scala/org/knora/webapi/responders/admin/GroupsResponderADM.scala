@@ -153,7 +153,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
                 .value,
               descriptions = propsMap
                 .getOrElse(
-                  OntologyConstants.KnoraAdmin.GroupDescription.toSmartIri,
+                  OntologyConstants.KnoraAdmin.GroupDescriptions.toSmartIri,
                   throw InconsistentRepositoryDataException(s"Group $groupIri has no descriptions attached")
                 )
                 .map(l =>
@@ -839,6 +839,8 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached.")
         )
 
+        _ = println("MMMMMM", project)
+
         groupADM: GroupADM = GroupADM(
           id = groupIri,
           name = propsMap
@@ -851,7 +853,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             .value,
           descriptions = propsMap
             .getOrElse(
-              OntologyConstants.KnoraAdmin.GroupDescription.toSmartIri,
+              OntologyConstants.KnoraAdmin.GroupDescriptions.toSmartIri,
               throw InconsistentRepositoryDataException(s"Group $groupIri has no descriptions attached")
             )
             .map(l =>
@@ -892,7 +894,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
   private def groupExists(groupIri: IRI): Future[Boolean] =
     for {
       askString <- Future(
-        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri = groupIri).toString
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt.checkGroupExistsByIri(groupIri).toString
       )
       //_ = log.debug("groupExists - query: {}", askString)
 

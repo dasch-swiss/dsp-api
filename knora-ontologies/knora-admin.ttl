@@ -165,9 +165,9 @@
 
 
 
-###  http://www.knora.org/ontology/knora-admin#groupDescription
+###  http://www.knora.org/ontology/knora-admin#groupDescriptions
 
-:groupDescription rdf:type owl:DatatypeProperty ;
+:groupDescriptions rdf:type owl:DatatypeProperty ;
 
              rdfs:subPropertyOf knora-base:objectCannotBeMarkedAsDeleted ;
 
@@ -568,7 +568,7 @@
                              owl:cardinality "1"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;
-                             owl:onProperty :groupDescription ;
+                             owl:onProperty :groupDescriptions ;
                              owl:maxCardinality "1"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;

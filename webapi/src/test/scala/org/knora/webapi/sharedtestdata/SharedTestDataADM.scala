@@ -347,7 +347,7 @@ object SharedTestDataADM {
   def imagesReviewerGroup: GroupADM = GroupADM(
     id = "http://rdfh.ch/groups/00FF/images-reviewer",
     name = "Image reviewer",
-    descriptions = Seq(StringLiteralV2(value = "A group for image reviewers.", language = Some("en"))),
+    descriptions = Seq(StringLiteralV2(value = "A group for image reviewers.", language = None)),
     project = imagesProject,
     status = true,
     selfjoin = false

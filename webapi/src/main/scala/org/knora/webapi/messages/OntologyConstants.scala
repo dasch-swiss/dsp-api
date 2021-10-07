@@ -490,7 +490,7 @@ object OntologyConstants {
     /* Group */
     val UserGroup: IRI = KnoraAdminPrefixExpansion + "UserGroup"
     val GroupName: IRI = KnoraAdminPrefixExpansion + "groupName"
-    val GroupDescription: IRI = KnoraAdminPrefixExpansion + "groupDescription"
+    val GroupDescriptions: IRI = KnoraAdminPrefixExpansion + "groupDescriptions"
     val BelongsToProject: IRI = KnoraAdminPrefixExpansion + "belongsToProject"
 
     /* Built-In Groups */
