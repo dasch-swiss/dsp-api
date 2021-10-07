@@ -839,8 +839,6 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           throw InconsistentRepositoryDataException(s"Group $groupIri has no project attached.")
         )
 
-        _ = println("MMMMMM", project)
-
         groupADM: GroupADM = GroupADM(
           id = groupIri,
           name = propsMap
