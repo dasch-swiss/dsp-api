@@ -20,14 +20,15 @@
 package org.knora.webapi.routing.admin
 
 import java.util.UUID
-
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
+
 import javax.ws.rs.Path
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages._
+import org.knora.webapi.messages.admin.responder.valueObjects.{Description, Name, Selfjoin, Status}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 object GroupsRouteADM {
@@ -91,13 +92,24 @@ class GroupsRouteADM(routeData: KnoraRouteData)
     post {
       /* create a new group */
       entity(as[CreateGroupApiRequestADM]) { apiRequest => requestContext =>
+        val groupCreatePayloadADM: GroupCreatePayloadADM = GroupCreatePayloadADM.create(
+          id = stringFormatter
+            .validateAndEscapeOptionalIri(apiRequest.id, throw BadRequestException(s"Invalid group IRI")),
+          name = Name.create(apiRequest.name).fold(e => throw e, v => v),
+          descriptions = Description.create(apiRequest.descriptions).fold(e => throw e, v => v),
+          project = stringFormatter
+            .validateAndEscapeProjectIri(apiRequest.project, throw BadRequestException(s"Invalid project IRI")),
+          status = Status.create(apiRequest.status).fold(e => throw e, v => v),
+          selfjoin = Selfjoin.create(apiRequest.selfjoin).fold(e => throw e, v => v)
+        )
+
         val requestMessage = for {
           requestingUser <- getUserADM(
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig
           )
         } yield GroupCreateRequestADM(
-          createRequest = apiRequest,
+          createRequest = groupCreatePayloadADM,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()

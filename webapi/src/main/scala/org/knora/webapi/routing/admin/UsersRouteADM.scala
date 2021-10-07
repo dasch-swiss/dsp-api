@@ -27,6 +27,16 @@ import org.knora.webapi.exceptions.{BadRequestException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePasswordPayloadADM, _}
+import org.knora.webapi.messages.admin.responder.valueObjects.{
+  Username,
+  Email,
+  GivenName,
+  FamilyName,
+  Password,
+  Status,
+  LanguageCode,
+  SystemAdmin
+}
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 

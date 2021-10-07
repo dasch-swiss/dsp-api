@@ -74,7 +74,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
       /* return all lists */
       parameters("projectIri".?) { maybeProjectIri: Option[IRI] => requestContext =>
         val projectIri =
-          stringFormatter.toOptionalIri(
+          stringFormatter.validateAndEscapeOptionalIri(
             maybeProjectIri,
             throw BadRequestException(s"Invalid param project IRI: $maybeProjectIri")
           )

@@ -31,26 +31,23 @@ import akka.stream.IOResult
 import akka.stream.scaladsl.{FileIO, Source}
 import akka.util.ByteString
 import io.swagger.annotations._
-
 import javax.ws.rs.Path
 import org.knora.webapi.IRI
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.{
+import org.knora.webapi.messages.admin.responder.valueObjects.{
   Description,
   Keywords,
   Logo,
   Longname,
-  ProjectCreatePayloadADM,
   Selfjoin,
   Shortcode,
   Shortname,
   Status
 }
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
-
 import scala.concurrent.Future
 import scala.util.Try
 
@@ -165,7 +162,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
         val projectCreatePayload: ProjectCreatePayloadADM =
           ProjectCreatePayloadADM.create(
             id = stringFormatter
-              .validateAndEscapeOptionalProjectIri(apiRequest.id, throw BadRequestException(s"Invalid user IRI")),
+              .validateAndEscapeOptionalProjectIri(apiRequest.id, throw BadRequestException(s"Invalid project IRI")),
             shortname = Shortname.create(apiRequest.shortname).fold(error => throw error, value => value),
             shortcode = Shortcode.create(apiRequest.shortcode).fold(error => throw error, value => value),
             longname = maybeLongname,

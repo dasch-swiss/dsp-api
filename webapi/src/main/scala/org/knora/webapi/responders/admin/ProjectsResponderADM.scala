@@ -32,7 +32,6 @@ import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{
-  ProjectCreatePayloadADM,
   UserADM,
   UserGetADM,
   UserIdentifierADM,

@@ -33,28 +33,24 @@ import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{
   AdministrativePermissionADM,
-  AdministrativePermissionGetResponseADM,
   AdministrativePermissionsForProjectGetRequestADM,
   AdministrativePermissionsForProjectGetResponseADM,
   DefaultObjectAccessPermissionADM,
-  DefaultObjectAccessPermissionGetResponseADM,
   DefaultObjectAccessPermissionsForProjectGetRequestADM,
   DefaultObjectAccessPermissionsForProjectGetResponseADM,
-  PermissionADM,
-  PermissionByIriGetRequestADM
+  PermissionADM
 }
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.usersmessages.{
+import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
+import org.knora.webapi.messages.admin.responder.valueObjects.{
   Description,
   Keywords,
   Logo,
   Longname,
-  ProjectCreatePayloadADM,
   Selfjoin,
   Shortcode,
   Shortname,
-  Status,
-  UserInformationTypeADM
+  Status
 }
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
