@@ -38,7 +38,7 @@ docs-clean: ## cleans the project directory
 #################################
 
 .PHONY: build
-build: ## build all targets (excluding docs)
+build: docker-build ## build all targets (excluding docs)
 	@bazel build //...
 
 .PHOBY: check-for-outdated-deps
@@ -344,6 +344,7 @@ metadata-maximal: ## add maximal metadata set to dokubib project
 
 clean-docker: ## cleans the docker installation
 	@docker system prune -af
+	@docker volume prune -f
 
 .PHONY: clean-local-tmp
 clean-local-tmp:
