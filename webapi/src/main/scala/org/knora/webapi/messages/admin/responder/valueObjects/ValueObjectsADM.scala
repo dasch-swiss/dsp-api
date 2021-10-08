@@ -200,18 +200,31 @@ object Logo {
     }
 }
 
-/** Groups value objects */
+/** Lists value objects */
 
 /**
- * Group Name value object.
+ * Labels value object.
  */
-sealed abstract case class Name private (value: String)
-object Name {
-  def create(value: String): Either[Throwable, Name] =
+sealed abstract case class Labels private (value: Seq[StringLiteralV2])
+object Labels {
+  def create(value: Seq[StringLiteralV2]): Either[Throwable, Labels] =
     if (value.isEmpty) {
-      Left(BadRequestException("Missing Name"))
+      Left(BadRequestException("Missing labels"))
     } else {
-      Right(new Name(value) {})
+      Right(new Labels(value) {})
+    }
+}
+
+/**
+ * Comments value object.
+ */
+sealed abstract case class Comments private (value: Seq[StringLiteralV2])
+object Comments {
+  def create(value: Seq[StringLiteralV2]): Either[Throwable, Comments] =
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing comments"))
+    } else {
+      Right(new Comments(value) {})
     }
 }
 
@@ -245,5 +258,18 @@ object Description {
       Left(BadRequestException("Missing description"))
     } else {
       Right(new Description(value) {})
+    }
+}
+
+/**
+ * Name value object.
+ */
+sealed abstract case class Name private (value: String)
+object Name {
+  def create(value: String): Either[Throwable, Name] =
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing Name"))
+    } else {
+      Right(new Name(value) {})
     }
 }
