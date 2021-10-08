@@ -144,7 +144,7 @@ object ResourcesResponderV1Spec {
         ),
         PropertyGetV1(
           "http://www.knora.org/ontology/knora-base#isRegionOf",
-          Some("is Region von"),
+          Some("ist Region von"),
           Some("http://www.knora.org/ontology/knora-base#LinkValue"),
           Some("textval"),
           None,
