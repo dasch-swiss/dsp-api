@@ -25,42 +25,42 @@
 
 <http://rdfh.ch/groups/0113/lumieres-lausanne-user> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Utilisateur"^^xsd:string ;
-                                               knora-admin:groupDescription """Statut permanent. Attribué à toute personne désireuse de s'enregistrer. N'est membre d'aucun autre groupe (étudiant, chercheur). Par rapport au visiteur anonyme sans login, accès supplémentaire à la gestion des collections, aux transcriptions/documents joints/projets slmt si autorisation."""^^xsd:string ;
+                                               knora-admin:groupDescriptions """Statut permanent. Attribué à toute personne désireuse de s'enregistrer. N'est membre d'aucun autre groupe (étudiant, chercheur). Par rapport au visiteur anonyme sans login, accès supplémentaire à la gestion des collections, aux transcriptions/documents joints/projets slmt si autorisation."""^^xsd:string ;
                                                knora-admin:belongsToProject <http://rdfh.ch/projects/0113> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0113/lumieres-lausanne-student> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Etudiant"^^xsd:string ;
-                                               knora-admin:groupDescription """Statut temporaire. Uniquement les étudiants UNIL liés à un séminaire donné dans le cadre du projet Lumières.Lausanne. Ont reçu les consignes ainsi qu'une initiation (obligatoire). A la fin du séminaire, leur statut est changé en statut "Utilisateur", sauf demande particulière."""^^xsd:string ;
+                                               knora-admin:groupDescriptions """Statut temporaire. Uniquement les étudiants UNIL liés à un séminaire donné dans le cadre du projet Lumières.Lausanne. Ont reçu les consignes ainsi qu'une initiation (obligatoire). A la fin du séminaire, leur statut est changé en statut "Utilisateur", sauf demande particulière."""^^xsd:string ;
                                                knora-admin:belongsToProject <http://rdfh.ch/projects/0113> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0113/lumieres-lausanne-researcher> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Chercheur"^^xsd:string ;
-                                               knora-admin:groupDescription "Statut permanent. Doctorants, professeurs, autres chercheurs qui ont reçu préalablement l'autorisation d'un directeur. Ont reçu les consignes (obligatoire), et si possible une initiation."^^xsd:string ;
+                                               knora-admin:groupDescriptions "Statut permanent. Doctorants, professeurs, autres chercheurs qui ont reçu préalablement l'autorisation d'un directeur. Ont reçu les consignes (obligatoire), et si possible une initiation."^^xsd:string ;
                                                knora-admin:belongsToProject <http://rdfh.ch/projects/0113> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0113/lumieres-lausanne-phdstudent> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Doctorant"^^xsd:string ;
-                                               knora-admin:groupDescription "Statut temporaire. Doctorants et étudiants-assistants directement liés au Projet Lumières.Lausanne. Ont reçu les consignes ainsi qu'une initiation (obligatoire). Une fois leur mandat terminé, passent en statut Chercheur."^^xsd:string ;
+                                               knora-admin:groupDescriptions "Statut temporaire. Doctorants et étudiants-assistants directement liés au Projet Lumières.Lausanne. Ont reçu les consignes ainsi qu'une initiation (obligatoire). Une fois leur mandat terminé, passent en statut Chercheur."^^xsd:string ;
                                                knora-admin:belongsToProject <http://rdfh.ch/projects/0113> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0113/lumieres-lausanne-director> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Directeur"^^xsd:string ;
-                                               knora-admin:groupDescription "Béla Kapossy, Béatrice Lovis."^^xsd:string ;
+                                               knora-admin:groupDescriptions "Béla Kapossy, Béatrice Lovis."^^xsd:string ;
                                                knora-admin:belongsToProject <http://rdfh.ch/projects/0113> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
 
 <http://rdfh.ch/groups/0113/lumieres-lausanne-administrator> rdf:type knora-admin:UserGroup ;
                                                knora-admin:groupName "Administrateur"^^xsd:string ;
-                                               knora-admin:groupDescription "Béatrice Lovis."^^xsd:string ;
+                                               knora-admin:groupDescriptions "Béatrice Lovis."^^xsd:string ;
                                                knora-admin:belongsToProject <http://rdfh.ch/projects/0113> ;
                                                knora-admin:status "true"^^xsd:boolean ;
                                                knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .

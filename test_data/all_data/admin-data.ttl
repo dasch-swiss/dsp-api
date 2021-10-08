@@ -204,7 +204,7 @@
 
                                                knora-admin:groupName "Image reviewer"^^xsd:string ;
 
-                                               knora-admin:groupDescription "A group for image reviewers."^^xsd:string ;
+                                               knora-admin:groupDescriptions "A group for image reviewers."^^xsd:string ;
 
                                                knora-admin:belongsToProject <http://rdfh.ch/projects/00FF> ;
 
@@ -433,7 +433,7 @@ Die Internetpublikation macht das digitalisierte Korpus dieser Frühdrucke  durc
 
 <http://rdfh.ch/groups/0001/thing-searcher> rdf:type knora-admin:UserGroup ;
   knora-admin:groupName "Thing searcher"^^xsd:string ;
-  knora-admin:groupDescription "A group for thing searchers."^^xsd:string ;
+  knora-admin:groupDescriptions "A group for thing searchers."^^xsd:string ;
   knora-admin:belongsToProject <http://rdfh.ch/projects/0001> ;
   knora-admin:status "true"^^xsd:boolean ;
   knora-admin:hasSelfJoinEnabled "true"^^xsd:boolean .

@@ -18,6 +18,7 @@
  *@
 
 @import org.knora.webapi.IRI
+@import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 @*
  * Creates a new group.
@@ -28,7 +29,7 @@
  * @param groupIri the Iri of the new group
  * @param groupClassIri the IRI of the OWL class that the new group should belong to.
  * @param name the new group's name.
- * @param description the new group's description.
+ * @param descriptions the new group's descriptions.
  * @param projectIri the new group's project association.
  * @param isActiveGroup the new group's status.
  * @param hasSelfJoinEnabled the new group's self-join status.
@@ -38,7 +39,7 @@
   groupIri: IRI,
   groupClassIri: IRI,
   name: String,
-  maybeDescription: Option[String],
+  descriptions: Seq[StringLiteralV2],
   projectIri: IRI,
   status: Boolean,
   hasSelfJoinEnabled: Boolean)
@@ -52,19 +53,25 @@ PREFIX foaf: <http://xmlns.com/foaf/0.1/>
 
 INSERT {
     GRAPH ?adminNamedGraphIri {
-        ?groupIri rdf:type ?groupClassIri ;
+        ?groupIri rdf:type ?groupClassIri .
 
-            knora-admin:groupName "@name"^^xsd:string ;
+            ?groupIri knora-admin:groupName "@name"^^xsd:string .
 
-            @if(maybeDescription.nonEmpty) {
-                knora-admin:groupDescription """@maybeDescription.get"""^^xsd:string ;
+            @if(descriptions.nonEmpty) {
+                @for(d <- descriptions) {
+                    @if(d.language.nonEmpty) {
+                        ?groupIri knora-admin:groupDescriptions """@d.value"""@@@{d.language.get} .
+                    } else {
+                        ?groupIri knora-admin:groupDescriptions """@d.value"""^^xsd:string .
+                    }
+                }
             }
 
-            knora-admin:belongsToProject ?projectIri ;
+            ?groupIri knora-admin:belongsToProject ?projectIri .
 
-            knora-admin:status "@status"^^xsd:boolean ;
+            ?groupIri knora-admin:status "@status"^^xsd:boolean .
 
-            knora-admin:hasSelfJoinEnabled "@hasSelfJoinEnabled"^^xsd:boolean.
+            ?groupIri knora-admin:hasSelfJoinEnabled "@hasSelfJoinEnabled"^^xsd:boolean .
     }
 }
 @*

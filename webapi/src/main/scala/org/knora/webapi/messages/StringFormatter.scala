@@ -1673,7 +1673,7 @@ class StringFormatter private (
    *                    IRI.
    * @return the same optional string.
    */
-  def toOptionalIri(maybeString: Option[String], errorFun: => Nothing): Option[IRI] =
+  def validateAndEscapeOptionalIri(maybeString: Option[String], errorFun: => Nothing): Option[IRI] =
     maybeString match {
       case Some(s) => Some(validateAndEscapeIri(s, errorFun))
       case None    => None

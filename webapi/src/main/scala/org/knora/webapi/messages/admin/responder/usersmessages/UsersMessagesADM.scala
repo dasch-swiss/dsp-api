@@ -29,6 +29,16 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, P
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.v1.responder.projectmessages.ProjectInfoV1
 import org.knora.webapi.messages.v1.responder.usermessages._
+import org.knora.webapi.messages.admin.responder.valueObjects.{
+  Username,
+  Email,
+  GivenName,
+  FamilyName,
+  Password,
+  Status,
+  LanguageCode,
+  SystemAdmin
+}
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import spray.json._
 

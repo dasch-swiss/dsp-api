@@ -20,7 +20,6 @@
 package org.knora.webapi.messages.admin.responder.groupsmessages
 
 import java.util.UUID
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
@@ -29,6 +28,7 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -37,17 +37,17 @@ import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
 /**
  * Represents an API request payload that asks the Knora API server to create a new group.
  *
- * @param id          the optional IRI of the group to be created (unique).
- * @param name        the name of the group to be created (unique).
- * @param description the description of the group to be created.
- * @param project     the project inside which the group will be created.
- * @param status      the status of the group to be created (active = true, inactive = false).
- * @param selfjoin    the status of self-join of the group to be created.
+ * @param id            the optional IRI of the group to be created (unique).
+ * @param name          the name of the group to be created (unique).
+ * @param descriptions  the descriptions of the group to be created.
+ * @param project       the project inside which the group will be created.
+ * @param status        the status of the group to be created (active = true, inactive = false).
+ * @param selfjoin      the status of self-join of the group to be created.
  */
 case class CreateGroupApiRequestADM(
   id: Option[IRI] = None,
   name: String,
-  description: Option[String],
+  descriptions: Seq[StringLiteralV2],
   project: IRI,
   status: Boolean,
   selfjoin: Boolean
@@ -65,24 +65,24 @@ case class CreateGroupApiRequestADM(
  * Represents an API request payload that asks the Knora API server to update
  * an existing group. There are two change cases that are covered with this
  * data structure:
- * (1) change of name, description, and selfjoin
+ * (1) change of name, descriptions, and selfjoin
  * (2) change of status
  *
- * @param name        the new group's name.
- * @param description the new group's description.
- * @param status      the new group's status.
- * @param selfjoin    the new group's self-join status.
+ * @param name          the new group's name.
+ * @param descriptions  the new group's descriptions.
+ * @param status        the new group's status.
+ * @param selfjoin      the new group's self-join status.
  */
 case class ChangeGroupApiRequestADM(
   name: Option[String] = None,
-  description: Option[String] = None,
+  descriptions: Option[Seq[StringLiteralV2]] = None,
   status: Option[Boolean] = None,
   selfjoin: Option[Boolean] = None
 ) extends GroupsADMJsonProtocol {
 
   private val parametersCount = List(
     name,
-    description,
+    descriptions,
     status,
     selfjoin
   ).flatten.size
@@ -181,13 +181,13 @@ case class GroupMembersGetRequestADM(groupIri: IRI, featureFactoryConfig: Featur
 /**
  * Requests the creation of a new group.
  *
- * @param createRequest        the [[CreateGroupApiRequestADM]] information for creating the new group.
+ * @param createRequest        the [[GroupCreatePayloadADM]] information for creating the new group.
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user initiating the request.
  * @param apiRequestID         the ID of the API request.
  */
 case class GroupCreateRequestADM(
-  createRequest: CreateGroupApiRequestADM,
+  createRequest: GroupCreatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -279,15 +279,21 @@ case class GroupOperationResponseADM(group: GroupADM) extends KnoraResponseADM w
 /**
  * The information describing a group.
  *
- * @param id          the IRI if the group.
- * @param name        the name of the group.
- * @param description the description of the group.
- * @param project     the project this group belongs to.
- * @param status      the group's status.
- * @param selfjoin    the group's self-join status.
+ * @param id            the IRI if the group.
+ * @param name          the name of the group.
+ * @param descriptions  the descriptions of the group.
+ * @param project       the project this group belongs to.
+ * @param status        the group's status.
+ * @param selfjoin      the group's self-join status.
  */
-case class GroupADM(id: IRI, name: String, description: String, project: ProjectADM, status: Boolean, selfjoin: Boolean)
-    extends Ordered[GroupADM] {
+case class GroupADM(
+  id: IRI,
+  name: String,
+  descriptions: Seq[StringLiteralV2],
+  project: ProjectADM,
+  status: Boolean,
+  selfjoin: Boolean
+) extends Ordered[GroupADM] {
 
   /**
    * Allows to sort collections of GroupADM. Sorting is done by the id.
@@ -298,7 +304,7 @@ case class GroupADM(id: IRI, name: String, description: String, project: Project
     GroupShortADM(
       id = id,
       name = name,
-      description = description,
+      descriptions = descriptions,
       status = status,
       selfjoin = selfjoin
     )
@@ -307,25 +313,25 @@ case class GroupADM(id: IRI, name: String, description: String, project: Project
 /**
  * The information describing a group (without project).
  *
- * @param id          the IRI if the group.
- * @param name        the name of the group.
- * @param description the description of the group.
- * @param status      the group's status.
- * @param selfjoin    the group's self-join status.
+ * @param id            the IRI if the group.
+ * @param name          the name of the group.
+ * @param descriptions  the descriptions of the group.
+ * @param status        the group's status.
+ * @param selfjoin      the group's self-join status.
  */
-case class GroupShortADM(id: IRI, name: String, description: String, status: Boolean, selfjoin: Boolean)
+case class GroupShortADM(id: IRI, name: String, descriptions: Seq[StringLiteralV2], status: Boolean, selfjoin: Boolean)
 
 /**
  * Payload used for updating of an existing group.
  *
- * @param name        the name of the group.
- * @param description the description of the group.
- * @param status      the group's status.
- * @param selfjoin    the group's self-join status.
+ * @param name          the name of the group.
+ * @param descriptions  the descriptions of the group.
+ * @param status        the group's status.
+ * @param selfjoin      the group's self-join status.
  */
 case class GroupUpdatePayloadADM(
   name: Option[String] = None,
-  description: Option[String] = None,
+  descriptions: Option[Seq[StringLiteralV2]] = None,
   status: Option[Boolean] = None,
   selfjoin: Option[Boolean] = None
 )
@@ -348,9 +354,9 @@ trait GroupsADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol wi
   implicit val groupMembersResponseADMFormat: RootJsonFormat[GroupMembersGetResponseADM] =
     jsonFormat(GroupMembersGetResponseADM, "members")
   implicit val createGroupApiRequestADMFormat: RootJsonFormat[CreateGroupApiRequestADM] =
-    jsonFormat(CreateGroupApiRequestADM, "id", "name", "description", "project", "status", "selfjoin")
+    jsonFormat(CreateGroupApiRequestADM, "id", "name", "descriptions", "project", "status", "selfjoin")
   implicit val changeGroupApiRequestADMFormat: RootJsonFormat[ChangeGroupApiRequestADM] =
-    jsonFormat(ChangeGroupApiRequestADM, "name", "description", "status", "selfjoin")
+    jsonFormat(ChangeGroupApiRequestADM, "name", "descriptions", "status", "selfjoin")
   implicit val groupOperationResponseADMFormat: RootJsonFormat[GroupOperationResponseADM] =
     jsonFormat(GroupOperationResponseADM, "group")
 }
