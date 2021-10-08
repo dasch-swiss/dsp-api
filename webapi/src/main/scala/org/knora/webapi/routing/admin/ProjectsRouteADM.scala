@@ -159,20 +159,32 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           case None        => None
         }
 
-        val projectCreatePayload: ProjectCreatePayloadADM =
-          ProjectCreatePayloadADM.create(
-            id = stringFormatter
-              .validateAndEscapeOptionalProjectIri(apiRequest.id, throw BadRequestException(s"Invalid project IRI")),
-            shortname = Shortname.create(apiRequest.shortname).fold(error => throw error, value => value),
-            shortcode = Shortcode.create(apiRequest.shortcode).fold(error => throw error, value => value),
-            longname = maybeLongname,
-            description = Description.create(apiRequest.description).fold(error => throw error, value => value),
-            keywords = Keywords.create(apiRequest.keywords).fold(error => throw error, value => value),
-            logo = maybeLogo,
-            status = Status.create(apiRequest.status).fold(error => throw error, value => value),
-            selfjoin = Selfjoin.create(apiRequest.selfjoin).fold(error => throw error, value => value)
+        // zio prelude: validation
+        val id = stringFormatter
+          .validateAndEscapeOptionalProjectIri(apiRequest.id, throw BadRequestException(s"Invalid project IRI"))
+
+        val projectCreatePayload: Either[Throwable, ProjectCreatePayloadADM] =
+          for {
+            shortname <- Shortname.create(apiRequest.shortname)
+            shortcode <- Shortcode.create(apiRequest.shortcode)
+            description <- Description.create(apiRequest.description)
+            keywords <- Keywords.create(apiRequest.keywords)
+            status <- Status.create(apiRequest.status)
+            selfjoin <- Selfjoin.create(apiRequest.selfjoin)
+          } yield ProjectCreatePayloadADM(
+            id,
+            shortname,
+            shortcode,
+            maybeLongname,
+            description,
+            keywords,
+            maybeLogo,
+            status,
+            selfjoin
           )
+
         val requestMessage: Future[ProjectCreateRequestADM] = for {
+          projectCreatePayload <- toFuture(projectCreatePayload)
           requestingUser <- getUserADM(
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig

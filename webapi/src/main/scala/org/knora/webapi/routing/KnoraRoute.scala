@@ -159,4 +159,9 @@ abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(r
       )).mapTo[ProjectGetResponseADM]
     } yield projectInfoResponse.project
   }
+
+  /**
+   * Helper method converting an [[Either]] to a [[Future]].
+   */
+  def toFuture[A](either: Either[Throwable, A]): Future[A] = either.fold(Future.failed, Future.successful)
 }
