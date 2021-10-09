@@ -55,7 +55,7 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       givenName = GivenName.create(createUserApiRequestADM.givenName).fold(error => throw error, value => value),
       familyName = FamilyName.create(createUserApiRequestADM.familyName).fold(error => throw error, value => value),
       password = Password.create(createUserApiRequestADM.password).fold(error => throw error, value => value),
-      status = Status.create(createUserApiRequestADM.status).fold(error => throw error, value => value),
+      status = Status.make(createUserApiRequestADM.status).fold(error => throw error.head, value => value),
       lang = LanguageCode.create(createUserApiRequestADM.lang).fold(error => throw error, value => value),
       systemAdmin = SystemAdmin.create(createUserApiRequestADM.systemAdmin).fold(error => throw error, value => value)
     )

@@ -32,6 +32,8 @@ scala_library(
         "@maven//:com_typesafe_play_twirl_api_2_13",
         "@maven//:com_typesafe_scala_logging_scala_logging_2_13",
         "@maven//:commons_validator_commons_validator",
+        "@maven//:dev_zio_zio_2_13",
+        "@maven//:dev_zio_zio_prelude_2_13",
         "@maven//:io_spray_spray_json_2_13",
         "@maven//:io_swagger_swagger_annotations",
         "@maven//:io_swagger_swagger_jaxrs",

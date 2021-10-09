@@ -21,32 +21,23 @@ package org.knora.webapi
 
 import akka.actor.{ActorRef, ActorSystem}
 import akka.dispatch.MessageDispatcher
+import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.LazyLogging
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.store.triplestoremessages.{
-  CheckTriplestoreRequest,
-  CheckTriplestoreResponse,
-  RdfDataObject,
-  ResetRepositoryContent,
-  TriplestoreStatus
-}
+import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.wordspec.{AnyWordSpecLike, AsyncWordSpecLike}
+import org.scalatest.wordspec.AsyncWordSpecLike
+import zio.Console.printLine
+import zio.Schedule.{Decision, WithState}
+import zio.{Schedule, _}
 
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
-import akka.pattern.ask
-import org.knora.webapi.messages.store.triplestoremessages.TriplestoreStatus.TriplestoreStatus
-import zio.Schedule.Decision
-import zio.clock.Clock
-import zio.console.{Console, putStrLn}
-import zio.duration._
-import zio.{BootstrapRuntime, IO, Runtime, Schedule, Task, ZIO}
 
 object IntegrationSpec {
 
@@ -107,7 +98,7 @@ abstract class IntegrationSpec(_config: Config)
 
       value <-
         if (checkResult.triplestoreStatus == TriplestoreStatus.ServiceAvailable) {
-          ZIO.effectTotal(logger.info("... triplestore is ready."))
+          ZIO.succeed(logger.info("... triplestore is ready."))
         } else {
           ZIO.fail(
             new Exception(
@@ -117,8 +108,12 @@ abstract class IntegrationSpec(_config: Config)
         }
     } yield value
 
-    implicit val rt: Runtime[Clock with Console] = Runtime.default
-    rt.unsafeRun(checkTriplestore.retry(ScheduleUtil.schedule))
+    implicit val rt: Runtime[Has[Clock] with Has[Console]] = Runtime.default
+    rt.unsafeRun(
+      checkTriplestore
+        .retry(ScheduleUtil.schedule)
+        .foldZIO(ex => printLine("Exception Failed"), v => printLine(s"Succeeded with $v"))
+    )
   }
 
   protected def loadTestData(
@@ -139,22 +134,22 @@ object ScheduleUtil {
   /**
    * Retry every second for 60 times, i.e., 60 seconds in total.
    */
-  def schedule[A]: Schedule[Console, Any, (Long, Long)] = Schedule.spaced(1.second) && Schedule
+  def schedule[A]: WithState[(Long, Long), Has[Console], Any, (Long, Long)] = Schedule.spaced(1.second) && Schedule
     .recurs(60)
     .onDecision({
-      case Decision.Done(_)                 => putStrLn(s"done trying").orDie
-      case Decision.Continue(attempt, _, _) => putStrLn(s"attempt #$attempt").orDie
+      case (_, _, Decision.Done)              => printLine(s"done trying").orDie
+      case (_, attempt, Decision.Continue(_)) => printLine(s"attempt #$attempt").orDie
     })
 }
 
 //// ZIO helpers ////
 object LegacyRuntime {
 
+  val runtime: Runtime[Has[Clock] with Has[Console]] = Runtime.default
+
   /**
    * Transforms a [[Task]] into a [[Future]].
    */
   def fromTask[Res](body: => Task[Res]): Future[Res] =
-    MyRuntime.unsafeRunToFuture(body)
+    runtime.unsafeRunToFuture(body)
 }
-
-object MyRuntime extends BootstrapRuntime
