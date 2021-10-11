@@ -172,10 +172,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
 
         val requestMessage: Future[ProjectCreateRequestADM] = for {
           projectCreatePayload <- toFuture(projectCreatePayload)
-          requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
         } yield ProjectCreateRequestADM(
           createRequest = projectCreatePayload,
           featureFactoryConfig = featureFactoryConfig,
