@@ -2737,7 +2737,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
   }
 
-  "determine that link-property can not be deleted" in {
+  "verify that link-property can not be deleted" in {
 
     // payload representing a link-property to test that cardinality can't be deleted
     val cardinalityOnLinkPropertyWhichCantBeDeletedPayload = AddCardinalitiesRequest.make(
