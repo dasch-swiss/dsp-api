@@ -757,7 +757,7 @@
 
             rdfs:comment "Region of interest within a digital object (e.g. an image)"@en ;
 
-            rdfs:label "is Region von"@de ,
+            rdfs:label "ist Region von"@de ,
                        "is region of"@en ,
                        "est région de"@fr ,
                        "è regione di"@it ;
@@ -778,7 +778,7 @@
 
                 rdfs:comment "Region of interest within a digital object (e.g. an image)"@en ;
 
-                rdfs:label "is Region von"@de ,
+                rdfs:label "ist Region von"@de ,
                            "is region of"@en ,
                            "est région de"@fr ,
                            "è regione di"@it ;
