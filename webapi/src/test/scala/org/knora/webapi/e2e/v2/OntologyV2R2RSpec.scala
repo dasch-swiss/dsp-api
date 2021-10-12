@@ -2792,7 +2792,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
   }
 
-  "determine that a class's cardinalities cannot be changed" in {
+  "verify that a class's cardinalities cannot be changed" in {
     val classSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing", "UTF-8")
 
     Get(s"/v2/ontologies/canreplacecardinalities/$classSegment") ~> addCredentials(
