@@ -41,6 +41,7 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.{
 }
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.settings.{KnoraDispatchers, KnoraSettings, KnoraSettingsImpl}
+import zio.prelude.Validation
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -159,4 +160,16 @@ abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(r
       )).mapTo[ProjectGetResponseADM]
     } yield projectInfoResponse.project
   }
+
+  /**
+   * Helper method converting an [[Either]] to a [[Future]].
+   */
+  def toFuture[A](either: Either[Throwable, A]): Future[A] = either.fold(Future.failed, Future.successful)
+
+  /**
+   * Helper method converting an [[zio.prelude.Validation]] to a [[Future]].
+   * FIXME: only the first error is returned, which defeats the purpose, but don't know better at the moment.
+   */
+  def toFuture[A](validation: Validation[Throwable, A]): Future[A] =
+    validation.fold(errors => Future.failed(errors.head), Future.successful)
 }

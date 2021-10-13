@@ -257,7 +257,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             givenName = GivenName.create("Donald").fold(error => throw error, value => value),
             familyName = FamilyName.create("Duck").fold(error => throw error, value => value),
             password = Password.create("test").fold(error => throw error, value => value),
-            status = Status.create(true).fold(error => throw error, value => value),
+            status = Status.make(true).fold(error => throw error.head, value => value),
             lang = LanguageCode.create("en").fold(error => throw error, value => value),
             systemAdmin = SystemAdmin.create(false).fold(error => throw error, value => value)
           ),
@@ -284,7 +284,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             givenName = GivenName.create("Donald").fold(error => throw error, value => value),
             familyName = FamilyName.create("Duck").fold(error => throw error, value => value),
             password = Password.create("test").fold(error => throw error, value => value),
-            status = Status.create(true).fold(error => throw error, value => value),
+            status = Status.make(true).fold(error => throw error.head, value => value),
             lang = LanguageCode.create("en").fold(error => throw error, value => value),
             systemAdmin = SystemAdmin.create(false).fold(error => throw error, value => value)
           ),
@@ -305,7 +305,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
             givenName = GivenName.create("Donald").fold(error => throw error, value => value),
             familyName = FamilyName.create("Duck").fold(error => throw error, value => value),
             password = Password.create("test").fold(error => throw error, value => value),
-            status = Status.create(true).fold(error => throw error, value => value),
+            status = Status.make(true).fold(error => throw error.head, value => value),
             lang = LanguageCode.create("en").fold(error => throw error, value => value),
             systemAdmin = SystemAdmin.create(false).fold(error => throw error, value => value)
           ),
@@ -469,7 +469,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
       "UPDATE the user's status, (deleting) making him inactive " in {
         responderManager ! UserChangeStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
-          status = Status.create(false).fold(error => throw error, value => value),
+          status = Status.make(false).fold(error => throw error.head, value => value),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
@@ -480,7 +480,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
         responderManager ! UserChangeStatusRequestADM(
           userIri = SharedTestDataADM.normalUser.id,
-          status = Status.create(true).fold(error => throw error, value => value),
+          status = Status.make(true).fold(error => throw error.head, value => value),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
@@ -557,7 +557,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
         /* Status is updated by other normal user */
         responderManager ! UserChangeStatusRequestADM(
           userIri = SharedTestDataADM.superUser.id,
-          status = Status.create(false).fold(error => throw error, value => value),
+          status = Status.make(false).fold(error => throw error.head, value => value),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.normalUser,
           UUID.randomUUID
@@ -585,7 +585,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
         responderManager ! UserChangeStatusRequestADM(
           userIri = KnoraSystemInstances.Users.SystemUser.id,
-          status = Status.create(false).fold(error => throw error, value => value),
+          status = Status.make(false).fold(error => throw error.head, value => value),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()
@@ -598,7 +598,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
         responderManager ! UserChangeStatusRequestADM(
           userIri = KnoraSystemInstances.Users.AnonymousUser.id,
-          status = Status.create(false).fold(error => throw error, value => value),
+          status = Status.make(false).fold(error => throw error.head, value => value),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.superUser,
           UUID.randomUUID()

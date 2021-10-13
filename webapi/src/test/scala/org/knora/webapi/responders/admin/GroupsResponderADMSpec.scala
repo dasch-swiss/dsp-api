@@ -106,15 +106,15 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             id = None,
             name = Name.create("NewGroup").fold(e => throw e, v => v),
             descriptions = Description
-              .create(
+              .make(
                 Seq(
                   StringLiteralV2(value = """NewGroupDescription with "quotes" and <html tag>""", language = Some("en"))
                 )
               )
-              .fold(e => throw e, v => v),
+              .fold(e => throw e.head, v => v),
             project = SharedTestDataADM.IMAGES_PROJECT_IRI,
-            status = Status.create(true).fold(e => throw e, v => v),
-            selfjoin = Selfjoin.create(false).fold(e => throw e, v => v)
+            status = Status.make(true).fold(e => throw e.head, v => v),
+            selfjoin = Selfjoin.make(false).fold(e => throw e.head, v => v)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -142,11 +142,11 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             id = Some(imagesReviewerGroup.id),
             name = Name.create("NewGroup").fold(e => throw e, v => v),
             descriptions = Description
-              .create(Seq(StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
-              .fold(e => throw e, v => v),
+              .make(Seq(StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
+              .fold(e => throw e.head, v => v),
             project = SharedTestDataADM.IMAGES_PROJECT_IRI,
-            status = Status.create(true).fold(e => throw e, v => v),
-            selfjoin = Selfjoin.create(false).fold(e => throw e, v => v)
+            status = Status.make(true).fold(e => throw e.head, v => v),
+            selfjoin = Selfjoin.make(false).fold(e => throw e.head, v => v)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -164,11 +164,11 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             id = Some(""),
             name = Name.create("OtherNewGroup").fold(e => throw e, v => v),
             descriptions = Description
-              .create(Seq(StringLiteralV2(value = "OtherNewGroupDescription", language = Some("en"))))
-              .fold(e => throw e, v => v),
+              .make(Seq(StringLiteralV2(value = "OtherNewGroupDescription", language = Some("en"))))
+              .fold(e => throw e.head, v => v),
             project = "",
-            status = Status.create(true).fold(e => throw e, v => v),
-            selfjoin = Selfjoin.create(false).fold(e => throw e, v => v)
+            status = Status.make(true).fold(e => throw e.head, v => v),
+            selfjoin = Selfjoin.make(false).fold(e => throw e.head, v => v)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
