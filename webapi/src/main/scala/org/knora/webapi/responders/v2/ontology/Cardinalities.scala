@@ -132,9 +132,19 @@ object Cardinalities {
 
       // Make an update class definition in which the cardinality to delete is removed
 
+      submittedPropertyToDeleteIsLinkProperty: Boolean = cacheData
+        .ontologies(submittedPropertyToDelete.getOntologyFromEntity)
+        .properties(submittedPropertyToDelete)
+        .isLinkProp
+
       newClassDefinitionWithRemovedCardinality =
         currentClassDefinition.copy(
-          directCardinalities = currentClassDefinition.directCardinalities - submittedPropertyToDelete
+          directCardinalities =
+            if (submittedPropertyToDeleteIsLinkProperty) {
+              // if we want to remove a link property, then we also need to remove the corresponding link property value
+              currentClassDefinition.directCardinalities - submittedPropertyToDelete - submittedPropertyToDelete.fromLinkPropToLinkValueProp
+            } else
+              currentClassDefinition.directCardinalities - submittedPropertyToDelete
         )
 
       // FIXME: Refactor. From here on is copy-paste from `changeClassCardinalities`, which I don't fully understand
@@ -153,10 +163,19 @@ object Cardinalities {
 
       (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
         OntologyHelpers
-          .checkCardinalitiesBeforeAdding(
+          .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
             internalClassDef = newClassDefinitionWithRemovedCardinality,
             allBaseClassIris = allBaseClassIris.toSet,
-            cacheData = cacheData
+            cacheData = cacheData,
+            // since we only want to delete (and have already removed what we want), the rest of the link properties
+            // need to be marked as wanting to keep.
+            existingLinkPropsToKeep =
+              newClassDefinitionWithRemovedCardinality.directCardinalities.keySet // gets all keys from the map as a set
+                .map(propertyIri =>
+                  cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri)
+                ) // turn the propertyIri into a ReadPropertyInfoV2
+                .filter(_.isLinkProp) // we are only interested in link properties
+                .map(_.entityInfoContent.propertyIri) // turn whatever is left back to a propertyIri
           )
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.
@@ -255,9 +274,19 @@ object Cardinalities {
 
       // Make an update class definition in which the cardinality to delete is removed
 
+      submittedPropertyToDeleteIsLinkProperty: Boolean = cacheData
+        .ontologies(submittedPropertyToDelete.getOntologyFromEntity)
+        .properties(submittedPropertyToDelete)
+        .isLinkProp
+
       newClassDefinitionWithRemovedCardinality =
         currentClassDefinition.copy(
-          directCardinalities = currentClassDefinition.directCardinalities - submittedPropertyToDelete
+          directCardinalities =
+            if (submittedPropertyToDeleteIsLinkProperty) {
+              // if we want to remove a link property, then we also need to remove the corresponding link property value
+              currentClassDefinition.directCardinalities - submittedPropertyToDelete - submittedPropertyToDelete.fromLinkPropToLinkValueProp
+            } else
+              currentClassDefinition.directCardinalities - submittedPropertyToDelete
         )
 
       // FIXME: Refactor. From here on is copy-paste from `changeClassCardinalities`, which I don't fully understand
@@ -276,10 +305,19 @@ object Cardinalities {
 
       (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
         OntologyHelpers
-          .checkCardinalitiesBeforeAdding(
+          .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
             internalClassDef = newClassDefinitionWithRemovedCardinality,
             allBaseClassIris = allBaseClassIris.toSet,
-            cacheData = cacheData
+            cacheData = cacheData,
+            // since we only want to delete (and have already removed what we want), the rest of the link properties
+            // need to be marked as wanting to keep.
+            existingLinkPropsToKeep =
+              newClassDefinitionWithRemovedCardinality.directCardinalities.keySet // gets all keys from the map as a set
+                .map(propertyIri =>
+                  cacheData.ontologies(propertyIri.getOntologyFromEntity).properties(propertyIri)
+                ) // turn the propertyIri into a ReadPropertyInfoV2
+                .filter(_.isLinkProp) // we are only interested in link properties
+                .map(_.entityInfoContent.propertyIri) // turn whatever is left back to a propertyIri
           )
 
       // Check that the class definition doesn't refer to any non-shared ontologies in other projects.

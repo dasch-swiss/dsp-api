@@ -954,7 +954,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
         // Check that the cardinalities are valid, and add any inherited cardinalities.
         (internalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
           OntologyHelpers
-            .checkCardinalitiesBeforeAdding(
+            .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
               internalClassDef = internalClassDef,
               allBaseClassIris = allBaseClassIris.toSet,
               cacheData = cacheData
@@ -1394,7 +1394,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
           OntologyHelpers
-            .checkCardinalitiesBeforeAdding(
+            .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
               internalClassDef = newInternalClassDef,
               allBaseClassIris = allBaseClassIris.toSet,
               cacheData = cacheData,
@@ -1654,7 +1654,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
 
         (newInternalClassDefWithLinkValueProps, cardinalitiesForClassWithInheritance) =
           OntologyHelpers
-            .checkCardinalitiesBeforeAdding(
+            .checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
               internalClassDef = newInternalClassDef,
               allBaseClassIris = allBaseClassIris.toSet,
               cacheData = cacheData

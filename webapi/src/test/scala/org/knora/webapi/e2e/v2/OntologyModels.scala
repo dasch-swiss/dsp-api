@@ -153,6 +153,14 @@ object CardinalityRestriction {
     val cardinality = "owl:maxCardinality"
     val value = 1
   }
+  case object MinCardinalityOne extends CardinalityRestriction {
+    val cardinality = "owl:minCardinality"
+    val value = 1
+  }
+  case object MinCardinalityZero extends CardinalityRestriction {
+    val cardinality = "owl:minCardinality"
+    val value = 0
+  }
 }
 
 final case class Property(ontology: String, property: String)
