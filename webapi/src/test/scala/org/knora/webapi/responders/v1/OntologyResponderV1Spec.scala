@@ -387,7 +387,7 @@ class OntologyResponderV1Spec extends CoreSpec() with ImplicitSender {
           occurrence = "1",
           vocabulary = "http://www.knora.org/ontology/knora-base",
           description = Some("Region of interest within a digital object (e.g. an image)"),
-          label = Some("is Region von"),
+          label = Some("ist Region von"),
           name = "http://www.knora.org/ontology/knora-base#isRegionOf",
           id = "http://www.knora.org/ontology/knora-base#isRegionOf"
         ),
