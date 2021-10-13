@@ -20,15 +20,16 @@
 package org.knora.webapi.routing.admin.lists
 
 import java.util.UUID
-
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
+
 import javax.ws.rs.Path
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.{Feature, FeatureFactoryConfig}
 import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, Name, Position}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 import scala.concurrent.Future
@@ -129,13 +130,40 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
     post {
       /* create a list */
       entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
+        val maybeName: Option[Name] = apiRequest.name match {
+          case Some(value) => Some(Name.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val maybePosition: Option[Position] = apiRequest.position match {
+          case Some(value) => Some(Position.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val nodeCreatePayloadADM: NodeCreatePayloadADM = NodeCreatePayloadADM.create(
+          id = stringFormatter.validateAndEscapeOptionalIri(
+            apiRequest.id,
+            throw BadRequestException(s"Invalid custom node IRI")
+          ),
+          parentNodeIri = stringFormatter.validateAndEscapeOptionalIri(
+            apiRequest.parentNodeIri,
+            throw BadRequestException(s"Invalid parent node IRI")
+          ),
+          projectIri = stringFormatter
+            .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI")),
+          name = maybeName,
+          position = maybePosition,
+          labels = Labels.create(apiRequest.labels).fold(e => throw e, v => v),
+          comments = Comments.create(apiRequest.comments).fold(e => throw e, v => v)
+        )
+
         val requestMessage: Future[ListCreateRequestADM] = for {
           requestingUser <- getUserADM(
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig
           )
         } yield ListCreateRequestADM(
-          createRootNode = apiRequest.escape,
+          createRootNode = nodeCreatePayloadADM,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
@@ -275,7 +303,34 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
       post {
         /* add node to existing list node. the existing list node can be either the root or a child */
         entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
-          val _ = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+//          val _ = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+
+          val maybeName: Option[Name] = apiRequest.name match {
+            case Some(value) => Some(Name.create(value).fold(e => throw e, v => v))
+            case None        => None
+          }
+
+          val maybePosition: Option[Position] = apiRequest.position match {
+            case Some(value) => Some(Position.create(value).fold(e => throw e, v => v))
+            case None        => None
+          }
+
+          val nodeCreatePayloadADM: NodeCreatePayloadADM = NodeCreatePayloadADM.create(
+            id = stringFormatter.validateAndEscapeOptionalIri(
+              apiRequest.id,
+              throw BadRequestException(s"Invalid custom node IRI")
+            ),
+            parentNodeIri = stringFormatter.validateAndEscapeOptionalIri(
+              apiRequest.parentNodeIri,
+              throw BadRequestException(s"Invalid parent node IRI")
+            ),
+            projectIri = stringFormatter
+              .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI")),
+            name = maybeName,
+            position = maybePosition,
+            labels = Labels.create(apiRequest.labels).fold(e => throw e, v => v),
+            comments = Comments.create(apiRequest.comments).fold(e => throw e, v => v)
+          )
 
           val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
             requestingUser <- getUserADM(
@@ -283,7 +338,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
               featureFactoryConfig = featureFactoryConfig
             )
           } yield ListChildNodeCreateRequestADM(
-            createChildNodeRequest = apiRequest.escape,
+            createChildNodeRequest = nodeCreatePayloadADM,
             featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()

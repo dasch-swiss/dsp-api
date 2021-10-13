@@ -228,6 +228,19 @@ object Comments {
     }
 }
 
+/**
+ * Position value object.
+ */
+sealed abstract case class Position private (value: Int)
+object Position {
+  def create(value: Int): Either[Throwable, Position] =
+    if (value <= 0) { // TODO: what should be the criteria
+      Left(BadRequestException("Missing shouldn't be <= 0"))
+    } else {
+      Right(new Position(value) {})
+    }
+}
+
 /** Shared value objects */
 
 /**

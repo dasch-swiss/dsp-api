@@ -20,7 +20,6 @@
 package org.knora.webapi.responders.admin
 
 import java.util.UUID
-
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -31,6 +30,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtil
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.admin.responder.valueObjects.Name
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
@@ -847,12 +847,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    * @return a [newListNodeIri]
    */
   private def createNode(
-    createNodeRequest: CreateNodeApiRequestADM,
+    createNodeRequest: NodeCreatePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig
   ): Future[IRI] = {
 
     def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
-      if (createNodeRequest.position.exists(_ > children.size)) {
+      if (createNodeRequest.position.get.value > children.size) {
         val givenPosition = createNodeRequest.position.get
         throw BadRequestException(
           s"Invalid position given $givenPosition, maximum allowed position is = ${children.size}."
@@ -862,7 +862,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       val position = if (createNodeRequest.position.isEmpty || createNodeRequest.position.exists(_.equals(-1))) {
         children.size
       } else {
-        createNodeRequest.position.get
+        createNodeRequest.position.get.value
       }
       position
     }
@@ -935,9 +935,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       }
 
       /* verify that the list node name is unique for the project */
-      projectUniqueNodeName <- listNodeNameIsProjectUnique(createNodeRequest.projectIri, createNodeRequest.name)
+      projectUniqueNodeName <- listNodeNameIsProjectUnique(
+        createNodeRequest.projectIri,
+        Some(createNodeRequest.name.get.value) //TODO: dirty solution?
+      )
       _ = if (!projectUniqueNodeName) {
-        val escapedName = createNodeRequest.name.get
+        val escapedName = createNodeRequest.name.get.value
         val unescapedName = stringFormatter.fromSparqlEncodedString(escapedName)
         throw BadRequestException(
           s"The node name ${unescapedName} is already used by a list inside the project ${createNodeRequest.projectIri}."
@@ -975,9 +978,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           parentNodeIri = createNodeRequest.parentNodeIri,
           rootNodeIri = rootNodeIri,
           position = position,
-          maybeName = createNodeRequest.name,
-          maybeLabels = createNodeRequest.labels,
-          maybeComments = createNodeRequest.comments
+          maybeName = Some(createNodeRequest.name.get.value), //TODO: instead of this should be SPARQL updated?
+          maybeLabels = createNodeRequest.labels.value,
+          maybeComments = createNodeRequest.comments.value
         )
         .toString
 
@@ -994,7 +997,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    * @return a [[RootNodeInfoGetResponseADM]]
    */
   private def listCreateRequestADM(
-    createRootRequest: CreateNodeApiRequestADM,
+    createRootRequest: NodeCreatePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     apiRequestID: UUID
   ): Future[ListGetResponseADM] = {
@@ -1003,7 +1006,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * The actual task run with an IRI lock.
      */
     def listCreateTask(
-      createRootRequest: CreateNodeApiRequestADM,
+      createRootRequest: NodeCreatePayloadADM,
       featureFactoryConfig: FeatureFactoryConfig,
       apiRequestID: UUID
     ): Future[ListGetResponseADM] =
@@ -1135,7 +1138,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    * @return a [[ChildNodeInfoGetResponseADM]]
    */
   private def listChildNodeCreateRequestADM(
-    createChildNodeRequest: CreateNodeApiRequestADM,
+    createChildNodeRequest: NodeCreatePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     apiRequestID: UUID
   ): Future[ChildNodeInfoGetResponseADM] = {
@@ -1144,7 +1147,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * The actual task run with an IRI lock.
      */
     def listChildNodeCreateTask(
-      createChildNodeRequest: CreateNodeApiRequestADM,
+      createChildNodeRequest: NodeCreatePayloadADM,
       featureFactoryConfig: FeatureFactoryConfig,
       apiRequestID: UUID
     ): Future[ChildNodeInfoGetResponseADM] =

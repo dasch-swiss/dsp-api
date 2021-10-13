@@ -316,13 +316,13 @@ case class NodePathGetRequestADM(iri: IRI, featureFactoryConfig: FeatureFactoryC
 /**
  * Requests the creation of a new list.
  *
- * @param createRootNode       the [[CreateNodeApiRequestADM]] information used for creating the root node of the list.
+ * @param createRootNode       the [[NodeCreatePayloadADM]] information used for creating the root node of the list.
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user creating the new list.
  * @param apiRequestID         the ID of the API request.
  */
 case class ListCreateRequestADM(
-  createRootNode: CreateNodeApiRequestADM,
+  createRootNode: NodeCreatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -373,7 +373,7 @@ case class NodeInfoChangeRequestADM(
  * @param apiRequestID           the ID of the API request.
  */
 case class ListChildNodeCreateRequestADM(
-  createChildNodeRequest: CreateNodeApiRequestADM,
+  createChildNodeRequest: NodeCreatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
