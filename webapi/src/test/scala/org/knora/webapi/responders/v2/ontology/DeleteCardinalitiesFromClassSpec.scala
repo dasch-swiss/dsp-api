@@ -42,7 +42,12 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
       path = "test_data/ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
-    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest")
+    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
+    RdfDataObject(
+      path = "test_data/ontologies/anything-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/anything"
+    ),
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
   // start fuseki http connector actor
@@ -61,6 +66,15 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
     "detect that property is in use, when used in a resource" in {
       val FreetestOntologyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
       val internalPropertyIri = FreetestOntologyIri.makeEntityIri("hasText").toOntologySchema(InternalSchema)
+      println(s"internalPropertyIri: $internalPropertyIri")
+
+      val resF = Cardinalities.isPropertyUsedInResources(settings, fusekiActor, internalPropertyIri)
+      resF map { res => println(res); assert(res, "property is used in resource (instance of resource class)") }
+    }
+
+    "detect that link property is in use, when used in a resource" in {
+      val FreetestOntologyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2".toSmartIri
+      val internalPropertyIri = FreetestOntologyIri.makeEntityIri("isPartOfOtherThing").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
 
       val resF = Cardinalities.isPropertyUsedInResources(settings, fusekiActor, internalPropertyIri)
