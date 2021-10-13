@@ -913,7 +913,7 @@ object OntologyHelpers {
    *                                will be kept after the update.
    * @return the updated class definition, and the cardinalities resulting from inheritance.
    */
-  def checkCardinalitiesBeforeAdding(
+  def checkCardinalitiesBeforeAddingAndIfNecessaryAddLinkValueProperties(
     internalClassDef: ClassInfoContentV2,
     allBaseClassIris: Set[SmartIri],
     cacheData: OntologyCacheData,
@@ -938,7 +938,7 @@ object OntologyHelpers {
     val existingLinkValuePropsToKeep = existingLinkPropsToKeep.map(_.fromLinkPropToLinkValueProp)
     val newLinkPropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities
       .filter(_.isLinkProp)
-      .map(_.entityInfoContent.propertyIri) -- existingLinkValuePropsToKeep
+      .map(_.entityInfoContent.propertyIri) -- existingLinkPropsToKeep
     val newLinkValuePropsInClass: Set[SmartIri] = propertyDefsForDirectCardinalities
       .filter(_.isLinkValueProp)
       .map(_.entityInfoContent.propertyIri) -- existingLinkValuePropsToKeep
