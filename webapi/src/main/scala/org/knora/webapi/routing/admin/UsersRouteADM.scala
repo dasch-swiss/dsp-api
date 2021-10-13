@@ -145,7 +145,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             givenName = GivenName.create(apiRequest.givenName).fold(error => throw error, value => value),
             familyName = FamilyName.create(apiRequest.familyName).fold(error => throw error, value => value),
             password = Password.create(apiRequest.password).fold(error => throw error, value => value),
-            status = Status.create(apiRequest.status).fold(error => throw error, value => value),
+            status = Status.make(apiRequest.status).fold(error => throw error.head, value => value),
             lang = LanguageCode.create(apiRequest.lang).fold(error => throw error, value => value),
             systemAdmin = SystemAdmin.create(apiRequest.systemAdmin).fold(error => throw error, value => value)
           )
@@ -414,7 +414,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           }
 
           val newStatus = apiRequest.status match {
-            case Some(status) => Status.create(status).fold(error => throw error, value => value)
+            case Some(status) => Status.make(status).fold(error => throw error.head, value => value)
             case None         => throw BadRequestException("The status is missing.")
           }
 
@@ -464,7 +464,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
 
         /* update existing user's status to false */
-        val status = Status.create(false).fold(error => throw error, value => value)
+        val status = Status.make(false).fold(error => throw error.head, value => value)
 
         val requestMessage: Future[UserChangeStatusRequestADM] = for {
           requestingUser <- getUserADM(

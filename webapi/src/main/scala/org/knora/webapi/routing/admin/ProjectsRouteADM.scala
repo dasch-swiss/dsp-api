@@ -19,8 +19,6 @@
 
 package org.knora.webapi.routing.admin
 
-import java.nio.file.Files
-import java.util.UUID
 import akka.Done
 import akka.http.scaladsl.model.headers.{ContentDispositionTypes, `Content-Disposition`}
 import akka.http.scaladsl.model.{ContentTypes, HttpEntity}
@@ -31,7 +29,6 @@ import akka.stream.IOResult
 import akka.stream.scaladsl.{FileIO, Source}
 import akka.util.ByteString
 import io.swagger.annotations._
-import javax.ws.rs.Path
 import org.knora.webapi.IRI
 import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions.BadRequestException
@@ -48,6 +45,11 @@ import org.knora.webapi.messages.admin.responder.valueObjects.{
   Status
 }
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import zio.prelude.Validation
+
+import java.nio.file.Files
+import java.util.UUID
+import javax.ws.rs.Path
 import scala.concurrent.Future
 import scala.util.Try
 
@@ -149,34 +151,28 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
   private def addProject(featureFactoryConfig: FeatureFactoryConfig): Route = path(ProjectsBasePath) {
     post {
       entity(as[CreateProjectApiRequestADM]) { apiRequest => requestContext =>
-        val maybeLongname: Option[Longname] = apiRequest.longname match {
-          case Some(value) => Some(Longname.create(value).fold(error => throw error, value => value))
-          case None        => None
-        }
+        // zio prelude: validation
+        val id = Validation(
+          stringFormatter
+            .validateAndEscapeOptionalProjectIri(apiRequest.id, throw BadRequestException(s"Invalid project IRI"))
+        )
+        val shortname = Shortname.make(apiRequest.shortname)
+        val shortcode = Shortcode.make(apiRequest.shortcode)
+        val longname = Longname.make(apiRequest.longname)
+        val description = Description.make(apiRequest.description)
+        val keywords = Keywords.make(apiRequest.keywords)
+        val logo = Logo.make(apiRequest.logo)
+        val status = Status.make(apiRequest.status)
+        val selfjoin = Selfjoin.make(apiRequest.selfjoin)
 
-        val maybeLogo: Option[Logo] = apiRequest.logo match {
-          case Some(value) => Some(Logo.create(value).fold(error => throw error, value => value))
-          case None        => None
-        }
-
-        val projectCreatePayload: ProjectCreatePayloadADM =
-          ProjectCreatePayloadADM.create(
-            id = stringFormatter
-              .validateAndEscapeOptionalProjectIri(apiRequest.id, throw BadRequestException(s"Invalid project IRI")),
-            shortname = Shortname.create(apiRequest.shortname).fold(error => throw error, value => value),
-            shortcode = Shortcode.create(apiRequest.shortcode).fold(error => throw error, value => value),
-            longname = maybeLongname,
-            description = Description.create(apiRequest.description).fold(error => throw error, value => value),
-            keywords = Keywords.create(apiRequest.keywords).fold(error => throw error, value => value),
-            logo = maybeLogo,
-            status = Status.create(apiRequest.status).fold(error => throw error, value => value),
-            selfjoin = Selfjoin.create(apiRequest.selfjoin).fold(error => throw error, value => value)
+        val projectCreatePayload: Validation[Throwable, ProjectCreatePayloadADM] =
+          Validation.validateWith(id, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)(
+            ProjectCreatePayloadADM
           )
+
         val requestMessage: Future[ProjectCreateRequestADM] = for {
-          requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+          projectCreatePayload <- toFuture(projectCreatePayload)
+          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
         } yield ProjectCreateRequestADM(
           createRequest = projectCreatePayload,
           featureFactoryConfig = featureFactoryConfig,
