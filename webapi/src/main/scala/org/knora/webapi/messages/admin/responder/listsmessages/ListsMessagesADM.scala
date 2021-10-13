@@ -54,7 +54,7 @@ case class CreateListApiRequestADM(
   projectIri: IRI,
   name: Option[String] = None,
   labels: Seq[StringLiteralV2],
-  comments: Seq[StringLiteralV2]
+  comments: Seq[StringLiteralV2] // descriptions
 ) extends ListADMJsonProtocol {
 
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies

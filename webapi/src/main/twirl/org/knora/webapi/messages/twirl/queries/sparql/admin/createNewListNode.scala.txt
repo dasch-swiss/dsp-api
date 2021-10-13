@@ -47,7 +47,7 @@
   position: Option[Int],
   maybeName: Option[String],
   maybeLabels: Seq[StringLiteralV2],
-  maybeComments: Seq[StringLiteralV2]
+  maybeComments: Seq[StringLiteralV2] //this can be changed to maybeDescriptions
 )
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -91,6 +91,7 @@ INSERT {
         @if(maybeComments.nonEmpty) {
             @for(comment <- maybeComments) {
                 @if(comment.language.nonEmpty) {
+                // rdfs:comment can't be changed to descriptions because it breaks the data
                     ?nodeIri rdfs:comment """@comment.value"""@@@{comment.language.get} .
                 } else {
                     ?nodeIri rdfs:comment """@comment.value"""^^xsd:string .

@@ -2,7 +2,6 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, Name, Position}
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 ///**
 // * List payload
@@ -40,11 +39,11 @@ sealed abstract case class NodeCreatePayloadADM private (
 
 object NodeCreatePayloadADM {
   def create(
-    id: Option[IRI],
-    parentNodeIri: Option[IRI],
+    id: Option[IRI] = None,
+    parentNodeIri: Option[IRI] = None,
     projectIri: IRI,
-    name: Option[Name],
-    position: Option[Position],
+    name: Option[Name] = None,
+    position: Option[Position] = None,
     labels: Labels,
     comments: Comments
   ): NodeCreatePayloadADM = new NodeCreatePayloadADM(id, parentNodeIri, projectIri, name, position, labels, comments) {}

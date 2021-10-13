@@ -4,6 +4,7 @@ import org.knora.webapi.LanguageCodes
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.INVALID_POSITION
 
 import scala.util.matching.Regex
 
@@ -234,8 +235,8 @@ object Comments {
 sealed abstract case class Position private (value: Int)
 object Position {
   def create(value: Int): Either[Throwable, Position] =
-    if (value <= 0) { // TODO: what should be the criteria
-      Left(BadRequestException("Missing shouldn't be <= 0"))
+    if (value < -1) { // TODO: what should be the criteria?
+      Left(BadRequestException(INVALID_POSITION))
     } else {
       Right(new Position(value) {})
     }
