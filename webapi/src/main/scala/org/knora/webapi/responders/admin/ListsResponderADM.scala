@@ -858,7 +858,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 //
 //    def createChild()
 
-    println("ZZZZZ", createNodeRequest)
+    println("ZZZZZ-createNode", createNodeRequest)
 
     def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
       if (createNodeRequest.position.exists(_.value > children.size)) {
@@ -946,7 +946,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       /* verify that the list node name is unique for the project */
       projectUniqueNodeName <- listNodeNameIsProjectUnique(
         createNodeRequest.projectIri,
-        createNodeRequest.name //TODO: dirty solution?
+        createNodeRequest.name
       )
       _ = if (!projectUniqueNodeName) {
         val escapedName = createNodeRequest.name.get.value
@@ -987,7 +987,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           parentNodeIri = createNodeRequest.parentNodeIri,
           rootNodeIri = rootNodeIri,
           position = position,
-          maybeName = Some(createNodeRequest.name.get.value), //TODO: instead of this should be SPARQL updated?
+          maybeName = createNodeRequest.name.map(_.value), //TODO: still not sure if that's correct
           maybeLabels = createNodeRequest.labels.value,
           maybeComments = createNodeRequest.comments.value
         )
@@ -1011,7 +1011,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     apiRequestID: UUID
   ): Future[ListGetResponseADM] = {
 
-    println("XXXXXXX")
+    println("XXXXX-listCreateRequestADM")
 
     /**
      * The actual task run with an IRI lock.
@@ -1082,7 +1082,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       }
 
       if (changeNodeRequest.name.nonEmpty) {
-//        println("ZZZZZ", changeNodeRequest.name, updatedNode.getName)
         if (updatedNode.getName.nonEmpty && updatedNode.getName.get != changeNodeRequest.name.get.value)
           throw UpdateNotPerformedException("List's 'name' was not updated. Please report this as a possible bug.")
       }
