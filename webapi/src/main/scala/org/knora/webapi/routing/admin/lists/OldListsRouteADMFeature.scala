@@ -157,6 +157,8 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           comments = Comments.create(apiRequest.comments).fold(e => throw e, v => v)
         )
 
+        println("YYYYY", nodeCreatePayloadADM)
+
         val requestMessage: Future[ListCreateRequestADM] = for {
           requestingUser <- getUserADM(
             requestContext = requestContext,
@@ -250,11 +252,46 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
       entity(as[ChangeNodeInfoApiRequestADM]) { apiRequest => requestContext =>
         val listIri =
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+
+        val maybeName: Option[Name] = apiRequest.name match {
+          case Some(value) => Some(Name.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val maybePosition: Option[Position] = apiRequest.position match {
+          case Some(value) => Some(Position.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val maybeLabels: Option[Labels] = apiRequest.labels match {
+          case Some(value) => Some(Labels.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val maybeComments: Option[Comments] = apiRequest.comments match {
+          case Some(value) => Some(Comments.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val changeNodeInfoPayloadADM: ChangeNodeInfoPayloadADM = ChangeNodeInfoPayloadADM(
+          listIri,
+          projectIri = stringFormatter
+            .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI")),
+          hasRootNode = stringFormatter.validateAndEscapeOptionalIri(
+            apiRequest.hasRootNode,
+            throw BadRequestException(s"Invalid root node IRI")
+          ),
+          position = maybePosition,
+          name = maybeName,
+          labels = maybeLabels,
+          comments = maybeComments
+        )
+
         val requestMessage: Future[NodeInfoChangeRequestADM] = for {
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
         } yield NodeInfoChangeRequestADM(
           listIri = listIri,
-          changeNodeRequest = apiRequest,
+          changeNodeRequest = changeNodeInfoPayloadADM,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()

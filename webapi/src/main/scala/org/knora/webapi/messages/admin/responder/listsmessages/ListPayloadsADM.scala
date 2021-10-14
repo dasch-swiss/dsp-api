@@ -23,6 +23,27 @@ import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels,
 //    comments: Comments
 //  ): ListCreatePayloadADM = new ListCreatePayloadADM(id, projectIri, name, labels, comments) {}
 //}
+//sealed trait NodeCreatePayloadADM
+//object NodeCreatePayloadADM {
+//  final case class CreateRootNodePayloadADM(
+//    id: Option[IRI] = None,
+//    parentNodeIri: Option[IRI] = None,
+//    projectIri: IRI,
+//    name: Option[Name] = None,
+//    position: Option[Position] = None,
+//    labels: Labels,
+//    comments: Comments
+//  ) extends NodeCreatePayloadADM
+//  final case class CreateChildNodePayloadADM(
+//    id: Option[IRI] = None,
+//    parentNodeIri: Option[IRI] = None,
+//    projectIri: IRI,
+//    name: Option[Name] = None,
+//    position: Option[Position] = None,
+//    labels: Labels,
+//    comments: Option[Comments] = None
+//  ) extends NodeCreatePayloadADM
+//}
 
 /**
  * Node creation payload
@@ -49,7 +70,7 @@ object NodeCreatePayloadADM {
   ): NodeCreatePayloadADM = new NodeCreatePayloadADM(id, parentNodeIri, projectIri, name, position, labels, comments) {}
 }
 
-sealed abstract case class NodeChangePayloadADM private (
+final case class ChangeNodeInfoPayloadADM(
   listIri: IRI,
   projectIri: IRI,
   hasRootNode: Option[IRI] = None,
@@ -59,15 +80,14 @@ sealed abstract case class NodeChangePayloadADM private (
   comments: Option[Comments] = None
 )
 
-object NodeChangePayloadADM {
-  def create(
-    listIri: IRI,
-    projectIri: IRI,
-    hasRootNode: Option[IRI],
-    position: Option[Position],
-    name: Option[Name],
-    labels: Option[Labels],
-    comments: Option[Comments]
-  ): NodeChangePayloadADM =
-    new NodeChangePayloadADM(listIri, projectIri, hasRootNode, position, name, labels, comments) {}
-}
+final case class ChangeNodeNamePayloadADM(
+  name: Name
+)
+
+final case class ChangeNodeLabelsPayloadADM(
+  labels: Labels
+)
+
+final case class ChangeNodeCommentsPayloadADM(
+  comments: Comments
+)

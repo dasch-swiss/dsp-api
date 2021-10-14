@@ -107,7 +107,7 @@ class OldListsRouteADMFeatureE2ESpec
           Get(baseApiUrl + s"/admin/lists") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
         val response: HttpResponse = singleAwaitingRequest(request)
 
-        // println(s"response: ${response.toString}")
+//        println(s"response: ${response.toString}")
 
         response.status should be(StatusCodes.OK)
 
@@ -299,7 +299,7 @@ class OldListsRouteADMFeatureE2ESpec
              |    "id": "${SharedTestDataADM.customListIRI}",
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXX", "language": "en"}]
              |}""".stripMargin
 
         clientTestDataCollector.addFile(

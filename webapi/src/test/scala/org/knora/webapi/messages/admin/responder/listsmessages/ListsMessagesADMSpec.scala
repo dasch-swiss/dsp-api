@@ -413,20 +413,28 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       val caught = intercept[ForbiddenException](
         NodeInfoChangeRequestADM(
           listIri = exampleListIri,
-          changeNodeRequest = ChangeNodeInfoApiRequestADM(
+          changeNodeRequest = ChangeNodeInfoPayloadADM(
             listIri = exampleListIri,
             projectIri = IMAGES_PROJECT_IRI,
             labels = Some(
-              Seq(
-                StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                StringLiteralV2(value = "Changed list", language = Some("en"))
-              )
+              Labels
+                .create(
+                  Seq(
+                    StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                    StringLiteralV2(value = "Changed List", language = Some("en"))
+                  )
+                )
+                .fold(e => throw e, v => v)
             ),
             comments = Some(
-              Seq(
-                StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                StringLiteralV2(value = "New comment", language = Some("en"))
-              )
+              Comments
+                .create(
+                  Seq(
+                    StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
+                    StringLiteralV2(value = "New Comment", language = Some("en"))
+                  )
+                )
+                .fold(e => throw e, v => v)
             )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,

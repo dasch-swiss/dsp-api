@@ -347,7 +347,7 @@ case class ListCreateRequestADM(
  */
 case class NodeInfoChangeRequestADM(
   listIri: IRI,
-  changeNodeRequest: ChangeNodeInfoApiRequestADM,
+  changeNodeRequest: ChangeNodeInfoPayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -401,7 +401,7 @@ case class ListChildNodeCreateRequestADM(
  */
 case class NodeNameChangeRequestADM(
   nodeIri: IRI,
-  changeNodeNameRequest: ChangeNodeNameApiRequestADM,
+  changeNodeNameRequest: ChangeNodeNamePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -418,7 +418,7 @@ case class NodeNameChangeRequestADM(
  */
 case class NodeLabelsChangeRequestADM(
   nodeIri: IRI,
-  changeNodeLabelsRequest: ChangeNodeLabelsApiRequestADM,
+  changeNodeLabelsRequest: ChangeNodeLabelsPayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -435,7 +435,7 @@ case class NodeLabelsChangeRequestADM(
  */
 case class NodeCommentsChangeRequestADM(
   nodeIri: IRI,
-  changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM,
+  changeNodeCommentsRequest: ChangeNodeCommentsPayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID

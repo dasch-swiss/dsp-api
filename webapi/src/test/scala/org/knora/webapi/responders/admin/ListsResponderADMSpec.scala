@@ -261,21 +261,29 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "update basic list information" in {
         val changeNodeInfoRequest = NodeInfoChangeRequestADM(
           listIri = newListIri.get,
-          changeNodeRequest = ChangeNodeInfoApiRequestADM(
+          changeNodeRequest = ChangeNodeInfoPayloadADM(
             listIri = newListIri.get,
             projectIri = IMAGES_PROJECT_IRI,
-            name = Some("updated name"),
+            name = Some(Name.create("updated name").fold(e => throw e, v => v)),
             labels = Some(
-              Seq(
-                StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                StringLiteralV2(value = "Changed List", language = Some("en"))
-              )
+              Labels
+                .create(
+                  Seq(
+                    StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                    StringLiteralV2(value = "Changed List", language = Some("en"))
+                  )
+                )
+                .fold(e => throw e, v => v)
             ),
             comments = Some(
-              Seq(
-                StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                StringLiteralV2(value = "New Comment", language = Some("en"))
-              )
+              Comments
+                .create(
+                  Seq(
+                    StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
+                    StringLiteralV2(value = "New Comment", language = Some("en"))
+                  )
+                )
+                .fold(e => throw e, v => v)
             )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -311,10 +319,10 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "not update basic list information if name is duplicate" in {
         responderManager ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
-          changeNodeRequest = ChangeNodeInfoApiRequestADM(
+          changeNodeRequest = ChangeNodeInfoPayloadADM(
             listIri = newListIri.get,
             projectIri = IMAGES_PROJECT_IRI,
-            name = Some("sommer")
+            name = Some(Name.create("sommer").fold(e => throw e, v => v))
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,

@@ -36,6 +36,7 @@ import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
+import org.knora.webapi.messages.admin.responder.valueObjects.Name
 
 import scala.annotation.tailrec
 import scala.concurrent.Future
@@ -850,6 +851,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     featureFactoryConfig: FeatureFactoryConfig
   ): Future[IRI] = {
 
+//    val payload = createNodeRequest match {
+//      case value: NodeCreatePayloadADM.CreateRootNodePayloadADM => value
+//      case value: NodeCreatePayloadADM.CreateChildNodePayloadADM => value
+//    }
+//
+//    def createChild()
+
     def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
       if (createNodeRequest.position.get.value > children.size) {
         val givenPosition = createNodeRequest.position.get
@@ -936,7 +944,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       /* verify that the list node name is unique for the project */
       projectUniqueNodeName <- listNodeNameIsProjectUnique(
         createNodeRequest.projectIri,
-        Some(createNodeRequest.name.get.value) //TODO: dirty solution?
+        createNodeRequest.name //TODO: dirty solution?
       )
       _ = if (!projectUniqueNodeName) {
         val escapedName = createNodeRequest.name.get.value
@@ -983,6 +991,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         )
         .toString
 
+      _ = println("XXXXX", createNewListSparqlString)
+
       _ <- (storeManager ? SparqlUpdateRequest(createNewListSparqlString)).mapTo[SparqlUpdateResponse]
     } yield newListNodeIri
   }
@@ -1000,6 +1010,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     featureFactoryConfig: FeatureFactoryConfig,
     apiRequestID: UUID
   ): Future[ListGetResponseADM] = {
+
+    println("XXXXXXX")
 
     /**
      * The actual task run with an IRI lock.
@@ -1052,7 +1064,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def nodeInfoChangeRequest(
     nodeIri: IRI,
-    changeNodeRequest: ChangeNodeInfoApiRequestADM,
+    changeNodeRequest: ChangeNodeInfoPayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     apiRequestID: UUID
   ): Future[NodeInfoGetResponseADM] = {
@@ -1060,12 +1072,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit = {
 
       if (changeNodeRequest.labels.nonEmpty) {
-        if (updatedNode.getLabels.stringLiterals.diff(changeNodeRequest.labels.get).nonEmpty)
+        if (updatedNode.getLabels.stringLiterals.diff(changeNodeRequest.labels.get.value).nonEmpty)
           throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
       }
 
       if (changeNodeRequest.comments.nonEmpty) {
-        if (updatedNode.getComments.stringLiterals.diff(changeNodeRequest.comments.get).nonEmpty)
+        if (updatedNode.getComments.stringLiterals.diff(changeNodeRequest.comments.get.value).nonEmpty)
           throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
       }
 
@@ -1080,7 +1092,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     def nodeInfoChangeTask(
       nodeIri: IRI,
-      changeNodeRequest: ChangeNodeInfoApiRequestADM,
+      changeNodeRequest: ChangeNodeInfoPayloadADM,
       featureFactoryConfig: FeatureFactoryConfig,
       apiRequestID: UUID
     ): Future[NodeInfoGetResponseADM] =
@@ -1196,7 +1208,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def nodeNameChangeRequest(
     nodeIri: IRI,
-    changeNodeNameRequest: ChangeNodeNameApiRequestADM,
+    changeNodeNameRequest: ChangeNodeNamePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
@@ -1211,7 +1223,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     def nodeNameChangeTask(
       nodeIri: IRI,
-      changeNodeNameRequest: ChangeNodeNameApiRequestADM,
+      changeNodeNameRequest: ChangeNodeNamePayloadADM,
       featureFactoryConfig: FeatureFactoryConfig,
       requestingUser: UserADM,
       apiRequestID: UUID
@@ -1226,7 +1238,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         changeNodeNameSparqlString <- getUpdateNodeInfoSparqlStatement(
-          changeNodeInfoRequest = ChangeNodeInfoApiRequestADM(
+          changeNodeInfoRequest = ChangeNodeInfoPayloadADM(
             listIri = nodeIri,
             projectIri = projectIri,
             name = Some(changeNodeNameRequest.name)
@@ -1282,14 +1294,14 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def nodeLabelsChangeRequest(
     nodeIri: IRI,
-    changeNodeLabelsRequest: ChangeNodeLabelsApiRequestADM,
+    changeNodeLabelsRequest: ChangeNodeLabelsPayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[NodeInfoGetResponseADM] = {
 
     def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit =
-      if (updatedNode.getLabels.stringLiterals.diff(changeNodeLabelsRequest.labels).nonEmpty)
+      if (updatedNode.getLabels.stringLiterals.diff(changeNodeLabelsRequest.labels.value).nonEmpty)
         throw UpdateNotPerformedException("Node's 'labels' were not updated. Please report this as a possible bug.")
 
     /**
@@ -1297,7 +1309,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     def nodeLabelsChangeTask(
       nodeIri: IRI,
-      changeNodeLabelsRequest: ChangeNodeLabelsApiRequestADM,
+      changeNodeLabelsRequest: ChangeNodeLabelsPayloadADM,
       featureFactoryConfig: FeatureFactoryConfig,
       requestingUser: UserADM,
       apiRequestID: UUID
@@ -1312,7 +1324,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
         }
         changeNodeLabelsSparqlString <- getUpdateNodeInfoSparqlStatement(
-          changeNodeInfoRequest = ChangeNodeInfoApiRequestADM(
+          changeNodeInfoRequest = ChangeNodeInfoPayloadADM(
             listIri = nodeIri,
             projectIri = projectIri,
             labels = Some(changeNodeLabelsRequest.labels)
@@ -1367,13 +1379,13 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def nodeCommentsChangeRequest(
     nodeIri: IRI,
-    changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM,
+    changeNodeCommentsRequest: ChangeNodeCommentsPayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
   ): Future[NodeInfoGetResponseADM] = {
     def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit =
-      if (updatedNode.getComments.stringLiterals.diff(changeNodeCommentsRequest.comments).nonEmpty)
+      if (updatedNode.getComments.stringLiterals.diff(changeNodeCommentsRequest.comments.value).nonEmpty)
         throw UpdateNotPerformedException("Node's 'comments' were not updated. Please report this as a possible bug.")
 
     /**
@@ -1381,7 +1393,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     def nodeCommentsChangeTask(
       nodeIri: IRI,
-      changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM,
+      changeNodeCommentsRequest: ChangeNodeCommentsPayloadADM,
       featureFactoryConfig: FeatureFactoryConfig,
       requestingUser: UserADM,
       apiRequestID: UUID
@@ -1397,7 +1409,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(
-          changeNodeInfoRequest = ChangeNodeInfoApiRequestADM(
+          changeNodeInfoRequest = ChangeNodeInfoPayloadADM(
             listIri = nodeIri,
             projectIri = projectIri,
             comments = Some(changeNodeCommentsRequest.comments)
@@ -2081,15 +2093,15 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    * @param listNodeName the list node name.
    * @return a [[Boolean]].
    */
-  private def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[String]): Future[Boolean] =
+  private def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[Name]): Future[Boolean] =
     listNodeName match {
       case Some(name) =>
         for {
           askString <- Future(
             org.knora.webapi.messages.twirl.queries.sparql.admin.txt
               .checkListNodeNameIsProjectUnique(
-                projectIri = projectIri,
-                listNodeName = name
+                projectIri,
+                listNodeName = name.value
               )
               .toString
           )
@@ -2111,7 +2123,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    * @return a [[String]].
    */
   private def getUpdateNodeInfoSparqlStatement(
-    changeNodeInfoRequest: ChangeNodeInfoApiRequestADM,
+    changeNodeInfoRequest: ChangeNodeInfoPayloadADM,
     featureFactoryConfig: FeatureFactoryConfig
   ): Future[String] =
     for {
@@ -2157,11 +2169,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           nodeIri = changeNodeInfoRequest.listIri,
           hasOldName = hasOldName,
           isRootNode = isRootNode,
-          maybeName = changeNodeInfoRequest.name,
+          maybeName = changeNodeInfoRequest.name.map(_.value),
           projectIri = changeNodeInfoRequest.projectIri,
           listClassIri = OntologyConstants.KnoraBase.ListNode,
-          maybeLabels = changeNodeInfoRequest.labels,
-          maybeComments = changeNodeInfoRequest.comments
+          maybeLabels = changeNodeInfoRequest.labels.map(_.value),
+          maybeComments = changeNodeInfoRequest.comments.map(_.value)
         )
         .toString
     } yield changeNodeInfoSparqlString
