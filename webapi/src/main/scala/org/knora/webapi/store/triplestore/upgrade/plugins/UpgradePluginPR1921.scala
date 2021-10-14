@@ -30,48 +30,48 @@ import org.knora.webapi.store.triplestore.upgrade.UpgradePlugin
  */
 class UpgradePluginPR1921(featureFactoryConfig: FeatureFactoryConfig, log: Logger) extends UpgradePlugin {
   private val nodeFactory: RdfNodeFactory = RdfFeatureFactory.getRdfNodeFactory(featureFactoryConfig)
-  // Group descriptions without language attribute get DEFAULT_LANG attribute
+  // Group descriptions without language attribute get language attribute defined in DEFAULT_LANG
   private val DEFAULT_LANG = "en"
 
   override def transform(model: RdfModel): Unit = {
     val statementsToRemove: collection.mutable.Set[Statement] = collection.mutable.Set.empty
     val statementsToAdd: collection.mutable.Set[Statement] = collection.mutable.Set.empty
 
-    def replaceSimpleStringWithRdfLiteral(statement: Statement, languageTag: String): Unit = {
-      val descriptionWithLanguage: RdfLiteral =
-        nodeFactory.makeStringWithLanguage(statement.obj.stringValue, languageTag)
+    val newPredicateLabel: IriNode =
+      nodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions")
 
-      val newPredicateName: IriNode =
-        nodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions")
+    def updateGroupDescription(statement: Statement, languageTag: Option[String]): Unit =
+      languageTag match {
+        // the group description did not have a language attribute
+        case Some(lang) =>
+          val groupDescriptionWithLanguage: RdfLiteral =
+            nodeFactory.makeStringWithLanguage(statement.obj.stringValue, lang)
 
-      statementsToRemove += statement
+          statementsToRemove += statement
 
-      statementsToAdd += nodeFactory.makeStatement(
-        subj = statement.subj,
-        pred = newPredicateName,
-        obj = descriptionWithLanguage,
-        context = statement.context
-      )
+          statementsToAdd += nodeFactory.makeStatement(
+            subj = statement.subj,
+            pred = newPredicateLabel,
+            obj = groupDescriptionWithLanguage,
+            context = statement.context
+          )
 
-      log.warn(s"Updated <${statement.subj}> <${statement.pred}> to <${descriptionWithLanguage}>")
-    }
+          log.warn(
+            s"Updated <${statement.subj}> <${statement.pred}> to <${newPredicateLabel.stringValue}> with <${groupDescriptionWithLanguage}>"
+          )
 
-    def replaceOldPredicateNameOnly(statement: Statement): Unit = {
+        // the group description did already have a language attribute
+        case None =>
+          statementsToRemove += statement
 
-      val newPredicateName: IriNode =
-        nodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions")
-
-      statementsToRemove += statement
-
-      statementsToAdd += nodeFactory.makeStatement(
-        subj = statement.subj,
-        pred = newPredicateName,
-        obj = statement.obj,
-        context = statement.context
-      )
-
-      log.warn(s"Updated <${statement.pred}> to <${newPredicateName.stringValue}>")
-    }
+          statementsToAdd += nodeFactory.makeStatement(
+            subj = statement.subj,
+            pred = newPredicateLabel,
+            obj = statement.obj,
+            context = statement.context
+          )
+          log.warn(s"Updated <${statement.pred}> to <${newPredicateLabel.stringValue}>")
+      }
 
     for (statement: Statement <- model) {
       statement.pred match {
@@ -83,9 +83,9 @@ class UpgradePluginPR1921(featureFactoryConfig: FeatureFactoryConfig, log: Logge
               case stringWithLanguage: StringLiteralV2 =>
                 ()
               case _ =>
-                replaceSimpleStringWithRdfLiteral(
+                updateGroupDescription(
                   statement = statement,
-                  languageTag = DEFAULT_LANG
+                  languageTag = Some(DEFAULT_LANG)
                 )
             }
           }
@@ -93,13 +93,13 @@ class UpgradePluginPR1921(featureFactoryConfig: FeatureFactoryConfig, log: Logge
           if (predicate.stringValue == "http://www.knora.org/ontology/knora-admin#groupDescription") {
             statement.obj match {
               case stringWithLanguage: StringWithLanguage =>
-                replaceOldPredicateNameOnly(statement)
+                updateGroupDescription(statement, None)
               case stringWithLanguage: StringLiteralV2 =>
-                replaceOldPredicateNameOnly(statement)
+                updateGroupDescription(statement, None)
               case _ =>
-                replaceSimpleStringWithRdfLiteral(
+                updateGroupDescription(
                   statement = statement,
-                  languageTag = DEFAULT_LANG
+                  languageTag = Some(DEFAULT_LANG)
                 )
             }
           }

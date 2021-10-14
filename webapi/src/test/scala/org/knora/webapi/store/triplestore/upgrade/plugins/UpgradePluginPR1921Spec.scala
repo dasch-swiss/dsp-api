@@ -45,14 +45,13 @@ class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
     }
 
   "Upgrade plugin PR921" should {
+    // Parse the input file.
+    val model: RdfModel = trigFileToModel("test_data/upgrade/pr1921.trig")
+    // Use the plugin to transform the input.
+    val plugin = new UpgradePluginPR1921(defaultFeatureFactoryConfig, logger)
+    plugin.transform(model)
+
     "replace simple strings in group descriptions with language strings" in {
-      // Parse the input file.
-      val model: RdfModel = trigFileToModel("test_data/upgrade/pr1921.trig")
-
-      // Use the plugin to transform the input.
-      val plugin = new UpgradePluginPR1921(defaultFeatureFactoryConfig, logger)
-      plugin.transform(model)
-
       // Check that a group description without language attribute gets a language attribute. String is marked as string.
       checkLiteral(
         model = model,
@@ -92,7 +91,8 @@ class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
           language = "en"
         )
       )
-
+    }
+    "not change group descriptions which have language attributes" in {
       // Check that a group description with a language attribute is not changed.
       checkLiteral(
         model = model,
