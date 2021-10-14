@@ -205,7 +205,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         labels.head should be(StringLiteralV2(value = "Neue Liste", language = Some("de")))
 
         val comments: Seq[StringLiteralV2] = listInfo.comments.stringLiterals
-        comments.isEmpty should be(true)
+        comments.isEmpty should be(false)
 
         val children = received.list.children
         children.size should be(0)
@@ -316,12 +316,13 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "not update basic list information if name is duplicate" in {
+        val name = Some(Name.create("sommer").fold(e => throw e, v => v))
         responderManager ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = NodeInfoChangePayloadADM(
             listIri = newListIri.get,
             projectIri = IMAGES_PROJECT_IRI,
-            name = Some(Name.create("sommer").fold(e => throw e, v => v))
+            name = name
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -330,7 +331,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         expectMsg(
           Failure(
             DuplicateValueException(
-              "The name sommer is already used by a list inside the project http://rdfh.ch/projects/00FF."
+              s"The name ${name.value} is already used by a list inside the project http://rdfh.ch/projects/00FF."
             )
           )
         )
@@ -491,13 +492,13 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "not create a node if given new position is out of range" in {
-        val givenPosition = 20
+        val givenPosition = Some(Position.create(20).fold(e => throw e, v => v))
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = NodeCreatePayloadADM(
             parentNodeIri = Some(newListIri.get),
             projectIri = IMAGES_PROJECT_IRI,
             name = Some(Name.create("fourth").fold(e => throw e, v => v)),
-            position = Some(Position.create(givenPosition).fold(e => throw e, v => v)),
+            position = givenPosition,
             labels = Labels
               .create(Seq(StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))))
               .fold(e => throw e, v => v),
@@ -511,7 +512,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
         expectMsg(
-          Failure(BadRequestException(s"Invalid position given ${givenPosition}, maximum allowed position is = 2."))
+          Failure(
+            BadRequestException(s"Invalid position given ${givenPosition.value}, maximum allowed position is = 2.")
+          )
         )
       }
     }

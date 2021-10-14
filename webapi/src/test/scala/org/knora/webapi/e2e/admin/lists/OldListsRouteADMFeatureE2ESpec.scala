@@ -299,7 +299,7 @@ class OldListsRouteADMFeatureE2ESpec
              |    "id": "${SharedTestDataADM.customListIRI}",
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
-             |    "comments": [{ "value": "XXX", "language": "en"}]
+             |    "comments": []
              |}""".stripMargin
 
         clientTestDataCollector.addFile(

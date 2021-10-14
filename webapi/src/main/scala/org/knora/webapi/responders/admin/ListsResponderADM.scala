@@ -858,15 +858,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 //
 //    def createChild()
 
+    println("ZZZZZ", createNodeRequest)
+
     def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
-      if (createNodeRequest.position.get.value > children.size) {
+      if (createNodeRequest.position.exists(_.value > children.size)) {
         val givenPosition = createNodeRequest.position.get
         throw BadRequestException(
           s"Invalid position given $givenPosition, maximum allowed position is = ${children.size}."
         )
       }
 
-      val position = if (createNodeRequest.position.isEmpty || createNodeRequest.position.exists(_.equals(-1))) {
+      val position = if (createNodeRequest.position.isEmpty || createNodeRequest.position.exists(_.value.equals(-1))) {
         children.size
       } else {
         createNodeRequest.position.get.value
@@ -991,8 +993,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         )
         .toString
 
-      _ = println("XXXXX", createNewListSparqlString)
-
       _ <- (storeManager ? SparqlUpdateRequest(createNewListSparqlString)).mapTo[SparqlUpdateResponse]
     } yield newListNodeIri
   }
@@ -1082,7 +1082,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       }
 
       if (changeNodeRequest.name.nonEmpty) {
-        if (updatedNode.getName.nonEmpty && updatedNode.getName.get != changeNodeRequest.name.get)
+//        println("ZZZZZ", changeNodeRequest.name, updatedNode.getName)
+        if (updatedNode.getName.nonEmpty && updatedNode.getName.get != changeNodeRequest.name.get.value)
           throw UpdateNotPerformedException("List's 'name' was not updated. Please report this as a possible bug.")
       }
     }
