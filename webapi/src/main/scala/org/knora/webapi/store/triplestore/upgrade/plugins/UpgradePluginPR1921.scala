@@ -41,16 +41,36 @@ class UpgradePluginPR1921(featureFactoryConfig: FeatureFactoryConfig, log: Logge
       val descriptionWithLanguage: RdfLiteral =
         nodeFactory.makeStringWithLanguage(statement.obj.stringValue, languageTag)
 
+      val newPredicateName: IriNode =
+        nodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions")
+
       statementsToRemove += statement
 
       statementsToAdd += nodeFactory.makeStatement(
         subj = statement.subj,
-        pred = statement.pred,
+        pred = newPredicateName,
         obj = descriptionWithLanguage,
         context = statement.context
       )
 
       log.warn(s"Updated <${statement.subj}> <${statement.pred}> to <${descriptionWithLanguage}>")
+    }
+
+    def replaceOldPredicateNameOnly(statement: Statement): Unit = {
+
+      val newPredicateName: IriNode =
+        nodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions")
+
+      statementsToRemove += statement
+
+      statementsToAdd += nodeFactory.makeStatement(
+        subj = statement.subj,
+        pred = newPredicateName,
+        obj = statement.obj,
+        context = statement.context
+      )
+
+      log.warn(s"Updated <${statement.pred}> to <${newPredicateName.stringValue}>")
     }
 
     for (statement: Statement <- model) {
@@ -70,6 +90,19 @@ class UpgradePluginPR1921(featureFactoryConfig: FeatureFactoryConfig, log: Logge
             }
           }
 
+          if (predicate.stringValue == "http://www.knora.org/ontology/knora-admin#groupDescription") {
+            statement.obj match {
+              case stringWithLanguage: StringWithLanguage =>
+                replaceOldPredicateNameOnly(statement)
+              case stringWithLanguage: StringLiteralV2 =>
+                replaceOldPredicateNameOnly(statement)
+              case _ =>
+                replaceSimpleStringWithRdfLiteral(
+                  statement = statement,
+                  languageTag = DEFAULT_LANG
+                )
+            }
+          }
         case _ => ()
       }
     }

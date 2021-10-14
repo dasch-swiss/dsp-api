@@ -71,6 +71,28 @@ class UpgradePluginPR1921Spec extends UpgradePluginSpec with LazyLogging {
           nodeFactory.makeStringWithLanguage("A group description without language attribute.", language = "en")
       )
 
+      // Check that a group description with old predicate name and without language attribute gets a language attribute. String is marked as string.
+      checkLiteral(
+        model = model,
+        subj = nodeFactory.makeIriNode("http://rdfh.ch/groups/0105/group-without-language-attribute-3"),
+        pred = nodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions"),
+        expectedObj = nodeFactory.makeStringWithLanguage(
+          "A group description with old predicate name and without language attribute.",
+          language = "en"
+        )
+      )
+
+      // Check that a group description with old predicate name and without language attribute gets a language attribute. String is not marked as string.
+      checkLiteral(
+        model = model,
+        subj = nodeFactory.makeIriNode("http://rdfh.ch/groups/0105/group-without-language-attribute-4"),
+        pred = nodeFactory.makeIriNode("http://www.knora.org/ontology/knora-admin#groupDescriptions"),
+        expectedObj = nodeFactory.makeStringWithLanguage(
+          "A group description with old predicate name and without language attribute.",
+          language = "en"
+        )
+      )
+
       // Check that a group description with a language attribute is not changed.
       checkLiteral(
         model = model,
