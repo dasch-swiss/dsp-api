@@ -140,7 +140,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           case None        => None
         }
 
-        val nodeCreatePayloadADM: NodeCreatePayloadADM = NodeCreatePayloadADM.create(
+        val nodeCreatePayloadADM: NodeCreatePayloadADM = NodeCreatePayloadADM(
           id = stringFormatter.validateAndEscapeOptionalIri(
             apiRequest.id,
             throw BadRequestException(s"Invalid custom node IRI")
@@ -352,7 +352,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
             case None        => None
           }
 
-          val nodeCreatePayloadADM: NodeCreatePayloadADM = NodeCreatePayloadADM.create(
+          val nodeCreatePayloadADM: NodeCreatePayloadADM = NodeCreatePayloadADM(
             id = stringFormatter.validateAndEscapeOptionalIri(
               apiRequest.id,
               throw BadRequestException(s"Invalid custom node IRI")

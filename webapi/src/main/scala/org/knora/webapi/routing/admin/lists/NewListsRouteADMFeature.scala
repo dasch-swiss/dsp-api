@@ -161,22 +161,12 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
           case None        => None
         }
 
-//        val listCreatePayloadADM: ListCreatePayloadADM = ListCreatePayloadADM.create(
-//          id = stringFormatter
-//            .validateAndEscapeOptionalIri(apiRequest.id, throw BadRequestException(s"Invalid custom list IRI")),
-//          projectIri = stringFormatter
-//            .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI")),
-//          name = maybeName,
-//          labels = Labels.create(apiRequest.labels).fold(e => throw e, v => v),
-//          comments = Comments.create(apiRequest.comments).fold(e => throw e, v => v)
-//        )
-
         val maybePosition: Option[Position] = apiRequest.position match {
           case Some(value) => Some(Position.create(value).fold(e => throw e, v => v))
           case None        => None
         }
 
-        val nodeCreatePayloadADM: NodeCreatePayloadADM = NodeCreatePayloadADM.create(
+        val nodeCreatePayloadADM: NodeCreatePayloadADM = NodeCreatePayloadADM(
           id = stringFormatter.validateAndEscapeOptionalIri(
             apiRequest.id,
             throw BadRequestException(s"Invalid custom node IRI")

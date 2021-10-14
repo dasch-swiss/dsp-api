@@ -48,7 +48,7 @@ import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels,
 /**
  * Node creation payload
  */
-sealed abstract case class NodeCreatePayloadADM private (
+final case class NodeCreatePayloadADM(
   id: Option[IRI] = None,
   parentNodeIri: Option[IRI] = None,
   projectIri: IRI,
@@ -57,18 +57,6 @@ sealed abstract case class NodeCreatePayloadADM private (
   labels: Labels,
   comments: Comments
 )
-
-object NodeCreatePayloadADM {
-  def create(
-    id: Option[IRI] = None,
-    parentNodeIri: Option[IRI] = None,
-    projectIri: IRI,
-    name: Option[Name] = None,
-    position: Option[Position] = None,
-    labels: Labels,
-    comments: Comments
-  ): NodeCreatePayloadADM = new NodeCreatePayloadADM(id, parentNodeIri, projectIri, name, position, labels, comments) {}
-}
 
 final case class ChangeNodeInfoPayloadADM(
   listIri: IRI,

@@ -146,17 +146,16 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     "throw 'ForbiddenException' if user requesting `ListCreateApiRequestADM` is not system or project admin" in {
       val caught = intercept[ForbiddenException](
         ListCreateRequestADM(
-          createRootNode = NodeCreatePayloadADM
-            .create(
-              projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
-              labels = Labels
-                .create(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))))
-                .fold(e => throw e, v => v),
-              // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
-              comments = Comments
-                .create(Seq(StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
-                .fold(e => throw e, v => v)
-            ),
+          createRootNode = NodeCreatePayloadADM(
+            projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            labels = Labels
+              .create(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))))
+              .fold(e => throw e, v => v),
+            // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
+            comments = Comments
+              .create(Seq(StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
+              .fold(e => throw e, v => v)
+          ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser02,
           apiRequestID = UUID.randomUUID()
@@ -365,18 +364,17 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     "throw 'ForbiddenException' if user requesting `createChildNodeRequest` is not system or project admin" in {
       val caught = intercept[ForbiddenException](
         ListChildNodeCreateRequestADM(
-          createChildNodeRequest = NodeCreatePayloadADM
-            .create(
-              parentNodeIri = Some(exampleListIri),
-              projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
-              labels = Labels
-                .create(Seq(StringLiteralV2(value = "New child node", language = Some("en"))))
-                .fold(e => throw e, v => v),
-              // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
-              comments = Comments
-                .create(Seq(StringLiteralV2(value = "New child comment", language = Some("en"))))
-                .fold(e => throw e, v => v)
-            ),
+          createChildNodeRequest = NodeCreatePayloadADM(
+            parentNodeIri = Some(exampleListIri),
+            projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            labels = Labels
+              .create(Seq(StringLiteralV2(value = "New child node", language = Some("en"))))
+              .fold(e => throw e, v => v),
+            // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
+            comments = Comments
+              .create(Seq(StringLiteralV2(value = "New child comment", language = Some("en"))))
+              .fold(e => throw e, v => v)
+          ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser02,
           apiRequestID = UUID.randomUUID()
@@ -388,19 +386,18 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     "throw 'BadRequestException' if invalid position given in payload of `createChildNodeRequest`" in {
       val caught = intercept[BadRequestException](
         ListChildNodeCreateRequestADM(
-          createChildNodeRequest = NodeCreatePayloadADM
-            .create(
-              parentNodeIri = Some(exampleListIri),
-              projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
-              position = Some(Position.create(-3).fold(e => throw e, v => v)),
-              labels = Labels
-                .create(Seq(StringLiteralV2(value = "New child node", language = Some("en"))))
-                .fold(e => throw e, v => v),
-              // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
-              comments = Comments
-                .create(Seq(StringLiteralV2(value = "New child comment", language = Some("en"))))
-                .fold(e => throw e, v => v)
-            ),
+          createChildNodeRequest = NodeCreatePayloadADM(
+            parentNodeIri = Some(exampleListIri),
+            projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            position = Some(Position.create(-3).fold(e => throw e, v => v)),
+            labels = Labels
+              .create(Seq(StringLiteralV2(value = "New child node", language = Some("en"))))
+              .fold(e => throw e, v => v),
+            // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
+            comments = Comments
+              .create(Seq(StringLiteralV2(value = "New child comment", language = Some("en"))))
+              .fold(e => throw e, v => v)
+          ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID()
