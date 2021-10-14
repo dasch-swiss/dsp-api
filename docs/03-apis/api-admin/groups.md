@@ -42,7 +42,7 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 - Required permission: SystemAdmin / hasProjectAllAdminPermission
 / hasProjectAllGroupAdminPermission
 - Required information: name (unique inside project), project IRI
-- Optional information: group description
+- Optional information: group descriptions
 - Returns information about the newly created group
 - TypeScript Docs: groupFormats - CreateGroupApiRequestV1
 - POST: `/admin/groups`
@@ -51,7 +51,10 @@ License along with DSP. If not, see <http://www.gnu.org/licenses/>.
 ```json
     {
       "name": "NewGroup",
-      "description": "NewGroupDescription",
+      "descriptions": [
+        {"value": "NewGroupDescription", "language": "en"},
+        {"value": "NeueGruppenBeschreibung", "language": "de"}
+      ],
       "project": "http://rdfh.ch/projects/00FF",
       "status": true,
       "selfjoin": false
@@ -65,7 +68,7 @@ specified by the `id` in the request body as below:
     { 
       "id": "http://rdfh.ch/groups/00FF/a95UWs71KUklnFOe1rcw1w",  
       "name": "GroupWithCustomIRI",
-      "description": "A new group with a custom IRI",
+      "descriptions": [{"value": "A new group with a custom IRI", "language": "en"}],
       "project": "http://rdfh.ch/projects/00FF",
       "status": true,
       "selfjoin": false
@@ -77,7 +80,7 @@ specified by the `id` in the request body as below:
 - Required permission: SystemAdmin / hasProjectAllAdminPermission
 / hasProjectAllGroupAdminPermission /
 hasProjectRestrictedGroupAdminPermission (for this group)
-- Changeable information: `name`, `description`, `selfjoin`
+- Changeable information: `name`, `descriptions`, `selfjoin`
 - TypeScript Docs: groupFormats - ChangeGroupApiRequestADM
 - PUT: `/admin/groups/<groupIri>`
 - BODY:
@@ -85,7 +88,7 @@ hasProjectRestrictedGroupAdminPermission (for this group)
 ```json
 {
   "name": "UpdatedGroupName",
-  "description": "UpdatedGroupDescription",
+  "descriptions": [{"value": "UpdatedGroupDescription", "language": "en"}],
   "selfjoin": false
 }
 ```
@@ -117,7 +120,7 @@ Example Group Information stored in admin named graph: :
 <http://rdfh.ch/groups/[shortcode]/[UUID]>
      rdf:type knora-admin:UserGroup ;
      knora-admin:groupName "Name of the group" ;
-     knora-admin:groupDescriptions "A description of the group" ;
+     knora-admin:groupDescriptions "A description of the group"@en ;
      knora-admin:belongsToProject <http://rdfh.ch/projects/[UUID]> ;
      knora-admin:status "true"^^xsd:boolean ;
      knora-admin:hasSelfJoinEnabled "false"^^xsd:boolean .
