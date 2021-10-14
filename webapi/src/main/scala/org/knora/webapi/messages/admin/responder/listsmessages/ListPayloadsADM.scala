@@ -3,26 +3,6 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, Name, Position}
 
-///**
-// * List payload
-// */
-//sealed abstract case class ListCreatePayloadADM private (
-//  id: Option[IRI] = None,
-//  projectIri: IRI,
-//  name: Option[Name] = None,
-//  labels: Labels,
-//  comments: Comments
-//)
-//
-//object ListCreatePayloadADM {
-//  def create(
-//    id: Option[IRI],
-//    projectIri: IRI,
-//    name: Option[Name],
-//    labels: Labels,
-//    comments: Comments
-//  ): ListCreatePayloadADM = new ListCreatePayloadADM(id, projectIri, name, labels, comments) {}
-//}
 //sealed trait NodeCreatePayloadADM
 //object NodeCreatePayloadADM {
 //  final case class CreateRootNodePayloadADM(
@@ -58,7 +38,10 @@ final case class NodeCreatePayloadADM(
   comments: Comments
 )
 
-final case class ChangeNodeInfoPayloadADM(
+/**
+ * Node Info update payload
+ */
+final case class NodeInfoChangePayloadADM(
   listIri: IRI,
   projectIri: IRI,
   hasRootNode: Option[IRI] = None,
@@ -68,14 +51,23 @@ final case class ChangeNodeInfoPayloadADM(
   comments: Option[Comments] = None
 )
 
-final case class ChangeNodeNamePayloadADM(
+/**
+ * Node Name update payload
+ */
+final case class NodeNameChangePayloadADM(
   name: Name
 )
 
-final case class ChangeNodeLabelsPayloadADM(
+/**
+ * Node Labels update payload
+ */
+final case class NodeLabelsChangePayloadADM(
   labels: Labels
 )
 
-final case class ChangeNodeCommentsPayloadADM(
+/**
+ * Node Comments update payload
+ */
+final case class NodeCommentsChangePayloadADM(
   comments: Comments
 )

@@ -1064,7 +1064,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def nodeInfoChangeRequest(
     nodeIri: IRI,
-    changeNodeRequest: ChangeNodeInfoPayloadADM,
+    changeNodeRequest: NodeInfoChangePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     apiRequestID: UUID
   ): Future[NodeInfoGetResponseADM] = {
@@ -1092,7 +1092,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     def nodeInfoChangeTask(
       nodeIri: IRI,
-      changeNodeRequest: ChangeNodeInfoPayloadADM,
+      changeNodeRequest: NodeInfoChangePayloadADM,
       featureFactoryConfig: FeatureFactoryConfig,
       apiRequestID: UUID
     ): Future[NodeInfoGetResponseADM] =
@@ -1208,7 +1208,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def nodeNameChangeRequest(
     nodeIri: IRI,
-    changeNodeNameRequest: ChangeNodeNamePayloadADM,
+    changeNodeNameRequest: NodeNameChangePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
@@ -1223,7 +1223,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     def nodeNameChangeTask(
       nodeIri: IRI,
-      changeNodeNameRequest: ChangeNodeNamePayloadADM,
+      changeNodeNameRequest: NodeNameChangePayloadADM,
       featureFactoryConfig: FeatureFactoryConfig,
       requestingUser: UserADM,
       apiRequestID: UUID
@@ -1238,7 +1238,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         changeNodeNameSparqlString <- getUpdateNodeInfoSparqlStatement(
-          changeNodeInfoRequest = ChangeNodeInfoPayloadADM(
+          changeNodeInfoRequest = NodeInfoChangePayloadADM(
             listIri = nodeIri,
             projectIri = projectIri,
             name = Some(changeNodeNameRequest.name)
@@ -1294,7 +1294,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def nodeLabelsChangeRequest(
     nodeIri: IRI,
-    changeNodeLabelsRequest: ChangeNodeLabelsPayloadADM,
+    changeNodeLabelsRequest: NodeLabelsChangePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
@@ -1309,7 +1309,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     def nodeLabelsChangeTask(
       nodeIri: IRI,
-      changeNodeLabelsRequest: ChangeNodeLabelsPayloadADM,
+      changeNodeLabelsRequest: NodeLabelsChangePayloadADM,
       featureFactoryConfig: FeatureFactoryConfig,
       requestingUser: UserADM,
       apiRequestID: UUID
@@ -1324,7 +1324,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
         }
         changeNodeLabelsSparqlString <- getUpdateNodeInfoSparqlStatement(
-          changeNodeInfoRequest = ChangeNodeInfoPayloadADM(
+          changeNodeInfoRequest = NodeInfoChangePayloadADM(
             listIri = nodeIri,
             projectIri = projectIri,
             labels = Some(changeNodeLabelsRequest.labels)
@@ -1379,7 +1379,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def nodeCommentsChangeRequest(
     nodeIri: IRI,
-    changeNodeCommentsRequest: ChangeNodeCommentsPayloadADM,
+    changeNodeCommentsRequest: NodeCommentsChangePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
@@ -1393,7 +1393,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     def nodeCommentsChangeTask(
       nodeIri: IRI,
-      changeNodeCommentsRequest: ChangeNodeCommentsPayloadADM,
+      changeNodeCommentsRequest: NodeCommentsChangePayloadADM,
       featureFactoryConfig: FeatureFactoryConfig,
       requestingUser: UserADM,
       apiRequestID: UUID
@@ -1409,7 +1409,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(
-          changeNodeInfoRequest = ChangeNodeInfoPayloadADM(
+          changeNodeInfoRequest = NodeInfoChangePayloadADM(
             listIri = nodeIri,
             projectIri = projectIri,
             comments = Some(changeNodeCommentsRequest.comments)
@@ -2123,7 +2123,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    * @return a [[String]].
    */
   private def getUpdateNodeInfoSparqlStatement(
-    changeNodeInfoRequest: ChangeNodeInfoPayloadADM,
+    changeNodeInfoRequest: NodeInfoChangePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig
   ): Future[String] =
     for {

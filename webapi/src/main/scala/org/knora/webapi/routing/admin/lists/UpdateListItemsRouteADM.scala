@@ -90,8 +90,8 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           val nodeIri =
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
-          val namePayload: ChangeNodeNamePayloadADM =
-            ChangeNodeNamePayloadADM(Name.create(apiRequest.name).fold(e => throw e, v => v))
+          val namePayload: NodeNameChangePayloadADM =
+            NodeNameChangePayloadADM(Name.create(apiRequest.name).fold(e => throw e, v => v))
 
           val requestMessage: Future[NodeNameChangeRequestADM] = for {
             requestingUser <- getUserADM(requestContext, featureFactoryConfig)
@@ -150,8 +150,8 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           val nodeIri =
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
-          val labelsPayload: ChangeNodeLabelsPayloadADM =
-            ChangeNodeLabelsPayloadADM(Labels.create(apiRequest.labels).fold(e => throw e, v => v))
+          val labelsPayload: NodeLabelsChangePayloadADM =
+            NodeLabelsChangePayloadADM(Labels.create(apiRequest.labels).fold(e => throw e, v => v))
 
           val requestMessage: Future[NodeLabelsChangeRequestADM] = for {
             requestingUser <- getUserADM(requestContext, featureFactoryConfig)
@@ -209,8 +209,8 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           val nodeIri =
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
-          val commentsPayload: ChangeNodeCommentsPayloadADM =
-            ChangeNodeCommentsPayloadADM(Comments.create(apiRequest.comments).fold(e => throw e, v => v))
+          val commentsPayload: NodeCommentsChangePayloadADM =
+            NodeCommentsChangePayloadADM(Comments.create(apiRequest.comments).fold(e => throw e, v => v))
 
           val requestMessage: Future[NodeCommentsChangeRequestADM] = for {
             requestingUser <- getUserADM(requestContext, featureFactoryConfig)

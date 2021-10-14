@@ -410,7 +410,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       val caught = intercept[ForbiddenException](
         NodeInfoChangeRequestADM(
           listIri = exampleListIri,
-          changeNodeRequest = ChangeNodeInfoPayloadADM(
+          changeNodeRequest = NodeInfoChangePayloadADM(
             listIri = exampleListIri,
             projectIri = IMAGES_PROJECT_IRI,
             labels = Some(

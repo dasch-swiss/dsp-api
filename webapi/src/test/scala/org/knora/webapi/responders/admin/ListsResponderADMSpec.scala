@@ -260,7 +260,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "update basic list information" in {
         val changeNodeInfoRequest = NodeInfoChangeRequestADM(
           listIri = newListIri.get,
-          changeNodeRequest = ChangeNodeInfoPayloadADM(
+          changeNodeRequest = NodeInfoChangePayloadADM(
             listIri = newListIri.get,
             projectIri = IMAGES_PROJECT_IRI,
             name = Some(Name.create("updated name").fold(e => throw e, v => v)),
@@ -318,7 +318,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "not update basic list information if name is duplicate" in {
         responderManager ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
-          changeNodeRequest = ChangeNodeInfoPayloadADM(
+          changeNodeRequest = NodeInfoChangePayloadADM(
             listIri = newListIri.get,
             projectIri = IMAGES_PROJECT_IRI,
             name = Some(Name.create("sommer").fold(e => throw e, v => v))

@@ -273,7 +273,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           case None        => None
         }
 
-        val changeNodeInfoPayloadADM: ChangeNodeInfoPayloadADM = ChangeNodeInfoPayloadADM(
+        val changeNodeInfoPayloadADM: NodeInfoChangePayloadADM = NodeInfoChangePayloadADM(
           listIri,
           projectIri = stringFormatter
             .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI")),
