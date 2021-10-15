@@ -24,6 +24,10 @@ import com.typesafe.config.ConfigFactory
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
+import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
+  ChildNodeCreatePayloadADM,
+  RootNodeCreatePayloadADM
+}
 import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, Name, Position}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1.IMAGES_PROJECT_IRI
@@ -146,12 +150,11 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     "throw 'ForbiddenException' if user requesting `ListCreateApiRequestADM` is not system or project admin" in {
       val caught = intercept[ForbiddenException](
         ListCreateRequestADM(
-          createRootNode = NodeCreatePayloadADM(
+          createRootNode = RootNodeCreatePayloadADM(
             projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
             labels = Labels
               .create(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))))
               .fold(e => throw e, v => v),
-            // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
             comments = Comments
               .create(Seq(StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
               .fold(e => throw e, v => v)
@@ -364,16 +367,17 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     "throw 'ForbiddenException' if user requesting `createChildNodeRequest` is not system or project admin" in {
       val caught = intercept[ForbiddenException](
         ListChildNodeCreateRequestADM(
-          createChildNodeRequest = NodeCreatePayloadADM(
+          createChildNodeRequest = ChildNodeCreatePayloadADM(
             parentNodeIri = Some(exampleListIri),
             projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
             labels = Labels
               .create(Seq(StringLiteralV2(value = "New child node", language = Some("en"))))
               .fold(e => throw e, v => v),
-            // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
-            comments = Comments
-              .create(Seq(StringLiteralV2(value = "New child comment", language = Some("en"))))
-              .fold(e => throw e, v => v)
+            comments = Some(
+              Comments
+                .create(Seq(StringLiteralV2(value = "New child comment", language = Some("en"))))
+                .fold(e => throw e, v => v)
+            )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser02,
@@ -386,17 +390,18 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     "throw 'BadRequestException' if invalid position given in payload of `createChildNodeRequest`" in {
       val caught = intercept[BadRequestException](
         ListChildNodeCreateRequestADM(
-          createChildNodeRequest = NodeCreatePayloadADM(
+          createChildNodeRequest = ChildNodeCreatePayloadADM(
             parentNodeIri = Some(exampleListIri),
             projectIri = SharedTestDataADM.IMAGES_PROJECT_IRI,
             position = Some(Position.create(-3).fold(e => throw e, v => v)),
             labels = Labels
               .create(Seq(StringLiteralV2(value = "New child node", language = Some("en"))))
               .fold(e => throw e, v => v),
-            // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
-            comments = Comments
-              .create(Seq(StringLiteralV2(value = "New child comment", language = Some("en"))))
-              .fold(e => throw e, v => v)
+            comments = Some(
+              Comments
+                .create(Seq(StringLiteralV2(value = "New child comment", language = Some("en"))))
+                .fold(e => throw e, v => v)
+            )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,

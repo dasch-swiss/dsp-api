@@ -26,8 +26,16 @@ import io.swagger.annotations._
 
 import javax.ws.rs.Path
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.feature.{Feature, FeatureFactoryConfig}
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.{
+  LIST_CREATE_PERMISSION_ERROR,
+  LIST_NODE_CREATE_PERMISSION_ERROR
+}
+import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
+  ChildNodeCreatePayloadADM,
+  RootNodeCreatePayloadADM
+}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, Name, Position}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
@@ -140,7 +148,10 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           case None        => None
         }
 
-        val nodeCreatePayloadADM: NodeCreatePayloadADM = NodeCreatePayloadADM(
+        val projectIri = stringFormatter
+          .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI"))
+
+        val createRootNodePayloadADM: RootNodeCreatePayloadADM = RootNodeCreatePayloadADM(
           id = stringFormatter.validateAndEscapeOptionalIri(
             apiRequest.id,
             throw BadRequestException(s"Invalid custom node IRI")
@@ -149,23 +160,28 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
             apiRequest.parentNodeIri,
             throw BadRequestException(s"Invalid parent node IRI")
           ),
-          projectIri = stringFormatter
-            .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI")),
+          projectIri,
           name = maybeName,
           position = maybePosition,
           labels = Labels.create(apiRequest.labels).fold(e => throw e, v => v),
           comments = Comments.create(apiRequest.comments).fold(e => throw e, v => v)
         )
 
-        println("XXXXX", nodeCreatePayloadADM)
+        println("XXXXX", createRootNodePayloadADM)
 
         val requestMessage: Future[ListCreateRequestADM] = for {
           requestingUser <- getUserADM(
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig
           )
+
+          // check if the requesting user is allowed to perform operation
+          _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+            // not project or a system admin
+            throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+          }
         } yield ListCreateRequestADM(
-          createRootNode = nodeCreatePayloadADM,
+          createRootNode = createRootNodePayloadADM,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
@@ -273,10 +289,12 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           case None        => None
         }
 
+        val projectIri = stringFormatter
+          .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI"))
+
         val changeNodeInfoPayloadADM: NodeInfoChangePayloadADM = NodeInfoChangePayloadADM(
           listIri,
-          projectIri = stringFormatter
-            .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI")),
+          projectIri,
           hasRootNode = stringFormatter.validateAndEscapeOptionalIri(
             apiRequest.hasRootNode,
             throw BadRequestException(s"Invalid root node IRI")
@@ -289,6 +307,11 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
         val requestMessage: Future[NodeInfoChangeRequestADM] = for {
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          // check if the requesting user is allowed to perform operation
+          _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+            // not project or a system admin
+            throw ForbiddenException(LIST_NODE_CREATE_PERMISSION_ERROR)
+          }
         } yield NodeInfoChangeRequestADM(
           listIri = listIri,
           changeNodeRequest = changeNodeInfoPayloadADM,
@@ -340,7 +363,8 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
       post {
         /* add node to existing list node. the existing list node can be either the root or a child */
         entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
-//          val _ = stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+          val projectIri = stringFormatter
+            .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI"))
 
           val maybeName: Option[Name] = apiRequest.name match {
             case Some(value) => Some(Name.create(value).fold(e => throw e, v => v))
@@ -352,7 +376,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
             case None        => None
           }
 
-          val nodeCreatePayloadADM: NodeCreatePayloadADM = NodeCreatePayloadADM(
+          val createChildNodeRequest: ChildNodeCreatePayloadADM = ChildNodeCreatePayloadADM(
             id = stringFormatter.validateAndEscapeOptionalIri(
               apiRequest.id,
               throw BadRequestException(s"Invalid custom node IRI")
@@ -361,12 +385,11 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
               apiRequest.parentNodeIri,
               throw BadRequestException(s"Invalid parent node IRI")
             ),
-            projectIri = stringFormatter
-              .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI")),
+            projectIri,
             name = maybeName,
             position = maybePosition,
             labels = Labels.create(apiRequest.labels).fold(e => throw e, v => v),
-            comments = Comments.create(apiRequest.comments).fold(e => throw e, v => v)
+            comments = Some(Comments.create(apiRequest.comments).fold(e => throw e, v => v))
           )
 
           val requestMessage: Future[ListChildNodeCreateRequestADM] = for {
@@ -374,8 +397,16 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
               requestContext = requestContext,
               featureFactoryConfig = featureFactoryConfig
             )
+
+            // check if the requesting user is allowed to perform operation
+            _ = if (
+              !requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin
+            ) {
+              // not project or a system admin
+              throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+            }
           } yield ListChildNodeCreateRequestADM(
-            createChildNodeRequest = nodeCreatePayloadADM,
+            createChildNodeRequest = createChildNodeRequest,
             featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,
             apiRequestID = UUID.randomUUID()

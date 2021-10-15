@@ -20,19 +20,22 @@
 package org.knora.webapi.responders.admin
 
 import java.util.UUID
-
 import akka.actor.Status.Failure
 import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, UpdateNotPerformedException}
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
+  ChildNodeCreatePayloadADM,
+  RootNodeCreatePayloadADM
+}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.messages.admin.responder.valueObjects.{Name, Comments, Labels, Position}
+import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, Name, Position}
 
 import scala.concurrent.duration._
 
@@ -177,13 +180,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
     "used to modify lists" should {
       "create a list" in {
         responderManager ! ListCreateRequestADM(
-          createRootNode = NodeCreatePayloadADM(
+          createRootNode = RootNodeCreatePayloadADM(
             projectIri = IMAGES_PROJECT_IRI,
             name = Some(Name.create("neuelistename").fold(e => throw e, v => v)),
             labels = Labels
               .create(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))))
               .fold(e => throw e, v => v),
-            // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
             comments = Comments
               .create(Seq(StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
               .fold(e => throw e, v => v)
@@ -219,13 +221,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val commentWithSpecialCharacter = "Neue \\\"Kommentar\\\""
         val nameWithSpecialCharacter = "a new \\\"name\\\""
         responderManager ! ListCreateRequestADM(
-          createRootNode = NodeCreatePayloadADM(
+          createRootNode = RootNodeCreatePayloadADM(
             projectIri = IMAGES_PROJECT_IRI,
             name = Some(Name.create(nameWithSpecialCharacter).fold(e => throw e, v => v)),
             labels = Labels
               .create(Seq(StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
               .fold(e => throw e, v => v),
-            // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
             comments = Comments
               .create(Seq(StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
               .fold(e => throw e, v => v)
@@ -339,17 +340,18 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "add child to list - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = NodeCreatePayloadADM(
+          createChildNodeRequest = ChildNodeCreatePayloadADM(
             parentNodeIri = Some(newListIri.get),
             projectIri = IMAGES_PROJECT_IRI,
             name = Some(Name.create("first").fold(e => throw e, v => v)),
             labels = Labels
               .create(Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
               .fold(e => throw e, v => v),
-            // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
-            comments = Comments
-              .create(Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
-              .fold(e => throw e, v => v)
+            comments = Some(
+              Comments
+                .create(Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
+                .fold(e => throw e, v => v)
+            )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -390,7 +392,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "add second child to list in first position - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = NodeCreatePayloadADM(
+          createChildNodeRequest = ChildNodeCreatePayloadADM(
             parentNodeIri = Some(newListIri.get),
             projectIri = IMAGES_PROJECT_IRI,
             name = Some(Name.create("second").fold(e => throw e, v => v)),
@@ -398,10 +400,11 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             labels = Labels
               .create(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
               .fold(e => throw e, v => v),
-            // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
-            comments = Comments
-              .create(Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
-              .fold(e => throw e, v => v)
+            comments = Some(
+              Comments
+                .create(Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
+                .fold(e => throw e, v => v)
+            )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -442,17 +445,18 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "add child to second child node" in {
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = NodeCreatePayloadADM(
+          createChildNodeRequest = ChildNodeCreatePayloadADM(
             parentNodeIri = Some(secondChildIri.get),
             projectIri = IMAGES_PROJECT_IRI,
             name = Some(Name.create("third").fold(e => throw e, v => v)),
             labels = Labels
               .create(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
               .fold(e => throw e, v => v),
-            // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
-            comments = Comments
-              .create(Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
-              .fold(e => throw e, v => v)
+            comments = Some(
+              Comments
+                .create(Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
+                .fold(e => throw e, v => v)
+            )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -494,7 +498,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "not create a node if given new position is out of range" in {
         val givenPosition = Some(Position.create(20).fold(e => throw e, v => v))
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = NodeCreatePayloadADM(
+          createChildNodeRequest = ChildNodeCreatePayloadADM(
             parentNodeIri = Some(newListIri.get),
             projectIri = IMAGES_PROJECT_IRI,
             name = Some(Name.create("fourth").fold(e => throw e, v => v)),
@@ -502,10 +506,11 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
             labels = Labels
               .create(Seq(StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))))
               .fold(e => throw e, v => v),
-            // TODO: remove/change if comments become optional for child nodes Seq.empty[StringLiteralV2]
-            comments = Comments
-              .create(Seq(StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))))
-              .fold(e => throw e, v => v)
+            comments = Some(
+              Comments
+                .create(Seq(StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))))
+                .fold(e => throw e, v => v)
+            )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,

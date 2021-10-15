@@ -20,13 +20,13 @@
 package org.knora.webapi.messages.admin.responder.listsmessages
 
 import java.util.UUID
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
+import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.ChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{
@@ -326,15 +326,7 @@ case class ListCreateRequestADM(
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
-) extends ListsResponderRequestADM {
-  // check if the requesting user is allowed to perform operation
-  if (
-    !requestingUser.permissions.isProjectAdmin(createRootNode.projectIri) && !requestingUser.permissions.isSystemAdmin
-  ) {
-    // not project or a system admin
-    throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
-  }
-}
+) extends ListsResponderRequestADM
 
 /**
  * Request updating basic information of an existing node.
@@ -351,18 +343,7 @@ case class NodeInfoChangeRequestADM(
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
-) extends ListsResponderRequestADM {
-  // check if the requesting user is allowed to perform operation
-  if (
-    !requestingUser.permissions.isProjectAdmin(
-      changeNodeRequest.projectIri
-    ) && !requestingUser.permissions.isSystemAdmin
-  ) {
-    // not project or a system admin
-    throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
-  }
-
-}
+) extends ListsResponderRequestADM
 
 /**
  * Request the creation of a new list node, root or child.
@@ -373,22 +354,11 @@ case class NodeInfoChangeRequestADM(
  * @param apiRequestID           the ID of the API request.
  */
 case class ListChildNodeCreateRequestADM(
-  createChildNodeRequest: NodeCreatePayloadADM,
+  createChildNodeRequest: ChildNodeCreatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
-) extends ListsResponderRequestADM {
-  // check if the requesting user is allowed to perform operation
-  if (
-    !requestingUser.permissions.isProjectAdmin(
-      createChildNodeRequest.projectIri
-    ) && !requestingUser.permissions.isSystemAdmin
-  ) {
-    // not project or a system admin
-    throw ForbiddenException(LIST_NODE_CREATE_PERMISSION_ERROR)
-  }
-
-}
+) extends ListsResponderRequestADM
 
 /**
  * Request updating the name of an existing node.

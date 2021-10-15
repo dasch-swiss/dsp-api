@@ -204,13 +204,16 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
   private def updateNodeComments(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(ListsBasePath / Segment / "comments") { iri =>
       put {
-        /* update labels of an existing list node (either root or child) */
+        /* update comments of an existing list node (either root or child) */
         entity(as[ChangeNodeCommentsApiRequestADM]) { apiRequest => requestContext =>
           val nodeIri =
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
-          val commentsPayload: NodeCommentsChangePayloadADM =
-            NodeCommentsChangePayloadADM(Comments.create(apiRequest.comments).fold(e => throw e, v => v))
+          val commentsPayload: NodeCommentsChangePayloadADM = if (apiRequest.comments.isEmpty) {
+            NodeCommentsChangePayloadADM(None)
+          } else {
+            NodeCommentsChangePayloadADM(Some(Comments.create(apiRequest.comments).fold(e => throw e, v => v)))
+          }
 
           val requestMessage: Future[NodeCommentsChangeRequestADM] = for {
             requestingUser <- getUserADM(requestContext, featureFactoryConfig)

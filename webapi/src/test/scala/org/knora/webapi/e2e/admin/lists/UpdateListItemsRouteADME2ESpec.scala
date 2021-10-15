@@ -233,7 +233,7 @@ class UpdateListItemsRouteADME2ESpec
           HttpEntity(ContentTypes.`application/json`, deleteCommentsLabels)
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: ${response.toString}")
+        log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
