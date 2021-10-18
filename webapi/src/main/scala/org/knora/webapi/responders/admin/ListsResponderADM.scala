@@ -424,7 +424,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                     .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
                     .map(_.head.asInstanceOf[StringLiteralV2].value),
                   labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-                  comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
+                  comments = Some(StringLiteralSequenceV2(comments.toVector.sortBy(_.language))),
                   position = positionOption.getOrElse(
                     throw InconsistentRepositoryDataException(
                       s"Required position property missing for list node $nodeIri."
@@ -603,7 +603,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                       .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
                       .map(_.head.asInstanceOf[StringLiteralV2].value),
                     labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-                    comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
+                    comments = Some(StringLiteralSequenceV2(comments.toVector.sortBy(_.language))),
                     position = positionOption.getOrElse(
                       throw InconsistentRepositoryDataException(
                         s"Required position property missing for list node $nodeIri."
@@ -702,7 +702,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         id = nodeIri,
         name = nameOption,
         labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-        comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
+        comments = Some(StringLiteralSequenceV2(comments.toVector.sortBy(_.language))),
         children = children.map(_.sorted),
         position = position,
         hasRootNode = hasRootNode
@@ -964,7 +964,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       dataNamedGraph: IRI = stringFormatter.projectDataNamedGraphV2(project)
 
       // if parent node is known, find the root node of the list and the position of the new child node
-      (position: Option[Int], rootNodeIri: Option[IRI]) <-
+      (newPosition: Option[Int], rootNodeIri: Option[IRI]) <-
         if (parentNodeIri.nonEmpty) {
           getRootNodeAndPositionOfNewChild(
             parentNodeIri = parentNodeIri.get,
@@ -992,7 +992,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
               comments
             ) => {
           org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-            .createNewRootListNode(
+            .createNewListNode(
               dataNamedGraph = dataNamedGraph,
               triplestore = settings.triplestoreType,
               listClassIri = OntologyConstants.KnoraBase.ListNode,
@@ -1003,7 +1003,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
               position = position.map(_.value),
               maybeName = name.map(_.value),
               maybeLabels = labels.value,
-              maybeComments = comments.value
+              maybeComments = Some(comments.value)
             )
             .toString
         }
@@ -1017,7 +1017,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
               comments
             ) => {
           org.knora.webapi.messages.twirl.queries.sparql.admin.txt
-            .createNewChildListNode(
+            .createNewListNode(
               dataNamedGraph = dataNamedGraph,
               triplestore = settings.triplestoreType,
               listClassIri = OntologyConstants.KnoraBase.ListNode,
@@ -1025,7 +1025,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
               nodeIri = newListNodeIri,
               parentNodeIri = parentNodeIri,
               rootNodeIri = rootNodeIri,
-              position = position.map(_.value),
+              position = newPosition,
               maybeName = name.map(_.value),
               maybeLabels = labels.value,
               maybeComments = comments.map(_.value)

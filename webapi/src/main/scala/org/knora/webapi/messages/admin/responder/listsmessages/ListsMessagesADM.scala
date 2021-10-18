@@ -694,10 +694,10 @@ case class ListChildNodeInfoADM(
   id: IRI,
   name: Option[String],
   labels: StringLiteralSequenceV2,
-  comments: StringLiteralSequenceV2,
+  comments: Option[StringLiteralSequenceV2],
   position: Int,
   hasRootNode: IRI
-) extends ListNodeInfoADM(id, name, labels, comments) {
+) extends ListNodeInfoADM(id, name, labels, comments.get) {
 
   /**
    * Sorts the whole hierarchy.
@@ -709,7 +709,7 @@ case class ListChildNodeInfoADM(
       id = id,
       name = name,
       labels = labels.sortByStringValue,
-      comments = comments.sortByStringValue,
+      comments = comments.map(_.sortByStringValue),
       position = position,
       hasRootNode = hasRootNode
     )
@@ -722,14 +722,14 @@ case class ListChildNodeInfoADM(
 
     val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
 
-    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments.get)
 
     val unescapedName: Option[String] = name match {
       case None        => None
       case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
     }
 
-    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
+    copy(name = unescapedName, labels = unescapedLabels, comments = Some(unescapedComments))
   }
 
   /**
@@ -750,7 +750,7 @@ case class ListChildNodeInfoADM(
    * @return the comment in the preferred language.
    */
   def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] =
-    comments.getPreferredLanguage(userLang, fallbackLang)
+    comments.get.getPreferredLanguage(userLang, fallbackLang)
 }
 
 /**
@@ -893,11 +893,11 @@ case class ListChildNodeADM(
   id: IRI,
   name: Option[String],
   labels: StringLiteralSequenceV2,
-  comments: StringLiteralSequenceV2,
+  comments: Option[StringLiteralSequenceV2],
   position: Int,
   hasRootNode: IRI,
   children: Seq[ListChildNodeADM]
-) extends ListNodeADM(id, name, labels, comments, children) {
+) extends ListNodeADM(id, name, labels, comments.get, children) {
 
   /**
    * Sorts the whole hierarchy.
@@ -909,7 +909,7 @@ case class ListChildNodeADM(
       id = id,
       name = name,
       labels = labels.sortByStringValue,
-      comments = comments.sortByStringValue,
+      comments = comments.map(_.sortByStringValue),
       position = position,
       hasRootNode = hasRootNode,
       children = children.sortBy(_.position).map(_.sorted)
@@ -922,14 +922,14 @@ case class ListChildNodeADM(
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
-    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
+    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments.get)
 
     val unescapedName: Option[String] = name match {
       case None        => None
       case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
     }
 
-    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
+    copy(name = unescapedName, labels = unescapedLabels, comments = Some(unescapedComments))
   }
 
   /**
@@ -950,7 +950,7 @@ case class ListChildNodeADM(
    * @return the comment in the preferred language.
    */
   def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] =
-    comments.getPreferredLanguage(userLang, fallbackLang)
+    comments.get.getPreferredLanguage(userLang, fallbackLang)
 }
 
 /**
@@ -1032,7 +1032,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
               "id" -> child.id.toJson,
               "name" -> child.name.toJson,
               "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
-              "comments" -> JsArray(child.comments.stringLiterals.map(_.toJson)),
+              "comments" -> JsArray(child.comments.get.stringLiterals.map(_.toJson)),
               "position" -> child.position.toJson,
               "hasRootNode" -> child.hasRootNode.toJson
             )
@@ -1040,7 +1040,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
             JsObject(
               "id" -> child.id.toJson,
               "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
-              "comments" -> JsArray(child.comments.stringLiterals.map(_.toJson)),
+              "comments" -> JsArray(child.comments.get.stringLiterals.map(_.toJson)),
               "position" -> child.position.toJson,
               "hasRootNode" -> child.hasRootNode.toJson
             )
@@ -1098,7 +1098,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           id = id,
           name = name,
           labels = StringLiteralSequenceV2(labels.toVector),
-          comments = StringLiteralSequenceV2(comments.toVector),
+          comments = Some(StringLiteralSequenceV2(comments.toVector)),
           position = maybePosition.getOrElse(throw DeserializationException("The position is not defined.")),
           hasRootNode = maybeHasRootNode.getOrElse(throw DeserializationException("The root node is not defined."))
         )
@@ -1152,7 +1152,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
             "id" -> child.id.toJson,
             "name" -> child.name.toJson,
             "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
-            "comments" -> JsArray(child.comments.stringLiterals.map(_.toJson)),
+            "comments" -> JsArray(child.comments.get.stringLiterals.map(_.toJson)),
             "position" -> child.position.toJson,
             "hasRootNode" -> child.hasRootNode.toJson,
             "children" -> JsArray(child.children.map(write).toVector)
@@ -1217,7 +1217,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           id = id,
           name = name,
           labels = StringLiteralSequenceV2(labels.toVector),
-          comments = StringLiteralSequenceV2(comments.toVector),
+          comments = Some(StringLiteralSequenceV2(comments.toVector)),
           position = maybePosition.getOrElse(throw DeserializationException("The position is not defined.")),
           hasRootNode = maybeHasRootNode.getOrElse(throw DeserializationException("The root node is not defined.")),
           children = children

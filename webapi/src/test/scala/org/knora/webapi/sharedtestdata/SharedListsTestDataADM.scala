@@ -22,7 +22,7 @@ object SharedListsTestDataADM {
     id = "http://rdfh.ch/lists/00FF/526f26ed04",
     name = Some("sommer"),
     labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
-    comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
+    comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
     position = 0,
     hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
   )
@@ -32,7 +32,7 @@ object SharedListsTestDataADM {
       id = "http://rdfh.ch/lists/00FF/526f26ed04",
       name = Some("sommer"),
       labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
-      comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
+      comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
       children = Seq.empty[ListChildNodeADM],
       position = 0,
       hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
@@ -41,7 +41,7 @@ object SharedListsTestDataADM {
       id = "http://rdfh.ch/lists/00FF/eda2792605",
       name = Some("winter"),
       labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Winter"))),
-      comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
+      comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
       children = Seq.empty[ListChildNodeADM],
       position = 1,
       hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
@@ -86,7 +86,7 @@ object SharedListsTestDataADM {
     id = "http://rdfh.ch/lists/0001/treeList01",
     name = Some("Tree list node 01"),
     labels = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Tree list node 01", language = Some("en")))),
-    comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
+    comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
     position = 0,
     hasRootNode = "http://rdfh.ch/lists/0001/treeList"
   )
@@ -95,7 +95,7 @@ object SharedListsTestDataADM {
       id = "http://rdfh.ch/lists/0001/treeList01",
       name = Some("Tree list node 01"),
       labels = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Tree list node 01", language = Some("en")))),
-      comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
+      comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
       children = Seq.empty[ListChildNodeADM],
       position = 0,
       hasRootNode = "http://rdfh.ch/lists/0001/treeList"
@@ -109,7 +109,7 @@ object SharedListsTestDataADM {
           StringLiteralV2(value = "Tree list node 02", language = Some("en"))
         )
       ),
-      comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
+      comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
       children = Seq.empty[ListChildNodeADM],
       position = 1,
       hasRootNode = "http://rdfh.ch/lists/0001/treeList"
@@ -118,13 +118,13 @@ object SharedListsTestDataADM {
       id = "http://rdfh.ch/lists/0001/treeList03",
       name = Some("Tree list node 03"),
       labels = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Tree list node 03", language = Some("en")))),
-      comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
+      comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
       children = Seq(
         ListChildNodeADM(
           id = "http://rdfh.ch/lists/0001/treeList10",
           name = Some("Tree list node 10"),
           labels = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Tree list node 10", language = Some("en")))),
-          comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
+          comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
           children = Seq.empty[ListChildNodeADM],
           position = 0,
           hasRootNode = "http://rdfh.ch/lists/0001/treeList"
@@ -133,7 +133,7 @@ object SharedListsTestDataADM {
           id = "http://rdfh.ch/lists/0001/treeList11",
           name = Some("Tree list node 11"),
           labels = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Tree list node 11", language = Some("en")))),
-          comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
+          comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
           children = Seq.empty[ListChildNodeADM],
           position = 1,
           hasRootNode = "http://rdfh.ch/lists/0001/treeList"

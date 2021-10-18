@@ -222,6 +222,7 @@ class UpdateListItemsRouteADME2ESpec
         )
       }
       "delete node comments" in {
+
         val deleteCommentsLabels =
           s"""{
              |    "comments": []
@@ -364,7 +365,7 @@ class UpdateListItemsRouteADME2ESpec
 
         val receivedNodeInfo: ListChildNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
-        val comments: Seq[StringLiteralV2] = receivedNodeInfo.comments.stringLiterals
+        val comments: Seq[StringLiteralV2] = receivedNodeInfo.comments.get.stringLiterals
         comments.size should be(1)
         comments should contain(StringLiteralV2(value = "nya kommentarer för nod", language = Some("se")))
 

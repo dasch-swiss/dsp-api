@@ -21,10 +21,6 @@
 @import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 @*
-TODO: since root and child node have now separated sparql templates these could be improved
-*@
-
-@*
  * Creates a new root list node.
  *
  * @param dataNamedGraph    the name of the graph into which the new list node will be created.
@@ -51,7 +47,7 @@ TODO: since root and child node have now separated sparql templates these could 
   position: Option[Int],
   maybeName: Option[String],
   maybeLabels: Seq[StringLiteralV2],
-  maybeComments: Seq[StringLiteralV2]
+  maybeComments: Option[Seq[StringLiteralV2]]
 )
 
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
@@ -93,11 +89,13 @@ INSERT {
         }
 
         @if(maybeComments.nonEmpty) {
-            @for(comment <- maybeComments) {
-                @if(comment.language.nonEmpty) {
-                    ?nodeIri rdfs:comment """@comment.value"""@@@{comment.language.get} .
-                } else {
-                    ?nodeIri rdfs:comment """@comment.value"""^^xsd:string .
+            @if(maybeComments.get.nonEmpty) {
+                @for(comment <- maybeComments.get) {
+                    @if(comment.language.nonEmpty) {
+                        ?nodeIri rdfs:comment """@comment.value"""@@@{comment.language.get} .
+                    } else {
+                        ?nodeIri rdfs:comment """@comment.value"""^^xsd:string .
+                    }
                 }
             }
         }

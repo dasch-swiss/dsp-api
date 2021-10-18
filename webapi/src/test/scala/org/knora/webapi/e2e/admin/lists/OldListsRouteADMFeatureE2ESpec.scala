@@ -847,7 +847,7 @@ class OldListsRouteADMFeatureE2ESpec
         labels.sorted should be(Seq(StringLiteralV2(value = label, language = Some("en"))))
 
         // check comments
-        val comments = childNodeInfo.comments.stringLiterals
+        val comments = childNodeInfo.comments.get.stringLiterals
         comments.size should be(1)
         comments.sorted should be(Seq(StringLiteralV2(value = comment, language = Some("en"))))
 
@@ -918,7 +918,7 @@ class OldListsRouteADMFeatureE2ESpec
         labels.sorted should be(Seq(StringLiteralV2(value = label, language = Some("en"))))
 
         // check comments
-        val comments = childNodeInfo.comments.stringLiterals
+        val comments = childNodeInfo.comments.get.stringLiterals
         comments.size should be(1)
         comments.sorted should be(Seq(StringLiteralV2(value = comment, language = Some("en"))))
 
@@ -995,7 +995,7 @@ class OldListsRouteADMFeatureE2ESpec
         labels.sorted should be(Seq(StringLiteralV2(value = label, language = Some("en"))))
 
         // check comments
-        val comments = childNodeInfo.comments.stringLiterals
+        val comments = childNodeInfo.comments.get.stringLiterals
         comments.size should be(1)
         comments.sorted should be(Seq(StringLiteralV2(value = comment, language = Some("en"))))
 
@@ -1068,7 +1068,7 @@ class OldListsRouteADMFeatureE2ESpec
         labels.sorted should be(Seq(StringLiteralV2(value = label, language = Some("en"))))
 
         // check comments
-        val comments = childNodeInfo.comments.stringLiterals
+        val comments = childNodeInfo.comments.get.stringLiterals
         comments.size should be(1)
         comments.sorted should be(Seq(StringLiteralV2(value = comment, language = Some("en"))))
 
