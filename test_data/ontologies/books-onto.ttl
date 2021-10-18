@@ -29,21 +29,14 @@
     salsah-gui:guiElement             salsah-gui:SimpleText ;
     salsah-gui:guiAttribute           "size=80", "maxlength=255" .
 
-
-#:hasPage
-#    rdf:type                          owl:ObjectProperty ;
-#    rdfs:subPropertyOf                knora-base:hasLinkTo ;
-#    rdfs:label                        "Seite im Buch"@de, "Page in the book"@en ;
-#    knora-base:subjectClassConstraint :Book ;
-#    knora-base:objectClassConstraint  :Page ;
-#    salsah-gui:guiElement             salsah-gui:Searchbox .
-#
-#
-#:hasPageValue
-#    rdf:type                         owl:ObjectProperty ;
-#    rdfs:subPropertyOf               knora-base:hasLinkToValue ;
-#    rdfs:label                       "Seite im Buch"@de, "Page in the book"@en ;
-#    knora-base:objectClassConstraint knora-base:LinkValue .
+:hasTextType
+    rdf:type                          owl:ObjectProperty ;
+    rdfs:subPropertyOf                knora-base:hasValue ;
+    rdfs:label                        "Hat Textsorte"@de, "Has text type"@en ;
+    knora-base:subjectClassConstraint :Book ;
+    knora-base:objectClassConstraint  knora-base:ListValue ;
+    salsah-gui:guiElement             salsah-gui:List ;
+    salsah-gui:guiAttribute           "hlist=<http://rdfh.ch/lists/0001/ynm02>" .
 
 
 :Book

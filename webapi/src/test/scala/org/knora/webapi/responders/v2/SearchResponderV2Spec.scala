@@ -21,15 +21,20 @@ package org.knora.webapi.responders.v2
 
 import akka.testkit.ImplicitSender
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.searchmessages._
-import org.knora.webapi.messages.v2.responder.valuemessages.{ReadValueV2, StillImageFileValueContentV2}
+import org.knora.webapi.messages.v2.responder.valuemessages.{
+  HierarchicalListValueContentV2,
+  ReadValueV2,
+  StillImageFileValueContentV2
+}
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
-import org.knora.webapi.{ApiV2Complex, CoreSpec, SchemaOptions}
+import org.knora.webapi.{ApiV2Complex, CoreSpec, IRI, SchemaOptions}
 
+import java.util.UUID
 import scala.concurrent.duration._
 
 /**
@@ -38,14 +43,13 @@ import scala.concurrent.duration._
 class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-  private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
-
   override lazy val rdfDataObjects = List(
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
-
+  private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
+  private val anythingUserProfile = SharedTestDataADM.anythingUser2
   // The default timeout for receiving reply messages from actors.
   private val timeout = 10.seconds
 
@@ -247,6 +251,28 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         response.resources.size should ===(19)
+      }
+    }
+
+    "search for list label" in {
+      responderManager ! FulltextSearchRequestV2(
+        searchValue = "non fiction",
+        offset = 0,
+        limitToProject = None,
+        limitToResourceClass = None,
+        limitToStandoffClass = None,
+        returnFiles = false,
+        targetSchema = ApiV2Complex,
+        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.anythingUser1
+      )
+
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = searchResponderV2SpecFullData.fulltextSearchForListNodeLabel,
+          received = response
+        )
       }
     }
 
