@@ -181,7 +181,7 @@ abstract class CoreSpec(_system: ActorSystem)
     }
 
     logger.info("Flush Redis cache started ...")
-    Try(Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 5 seconds)) match {
+    Try(Await.result(appActor ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser), 15 seconds)) match {
       case Success(res) => logger.info("... flushing Redis cache done.")
       case Failure(e)   => logger.error(s"Flushing Redis cache failed: ${e.getMessage}")
     }

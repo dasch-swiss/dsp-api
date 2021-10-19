@@ -102,7 +102,7 @@ WHERE {
 
         ?valueObjectType rdfs:subClassOf *knora-base:Value .
 
-        FILTER(?valueObjectType != knora-base:LinkValue && ?valueObjectType != knora-base:ListValue)
+        FILTER(?valueObjectType != knora-base:LinkValue)
 
         ?containingResource ?property ?matchingSubject .
 

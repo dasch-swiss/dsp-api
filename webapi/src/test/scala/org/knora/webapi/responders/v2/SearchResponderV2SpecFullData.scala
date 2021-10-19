@@ -2043,9 +2043,10 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
   val fulltextSearchForListNodeLabel: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
     resources = Vector(
       ReadResourceV2(
-        label = "A book with a list value",
+        label = "instance of a book with a list value",
         resourceIri = "http://rdfh.ch/0001/book-instance-02",
-        permissions = "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
         userPermission = ChangeRightsPermission,
         attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
         resourceClassIri = "http://www.knora.org/ontology/0001/books#Book".toSmartIri,
@@ -2055,16 +2056,17 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
           "http://www.knora.org/ontology/0001/books#hasTextType".toSmartIri -> Vector(
             ReadOtherValueV2(
               valueContent = HierarchicalListValueContentV2(
-                ontologySchema = ApiV2Complex,
-                valueHasListNode = "http://rdfh.ch/lists/0001/ynm02-02"
+                ontologySchema = InternalSchema,
+                valueHasListNode = "http://rdfh.ch/lists/0001/ynm02-03"
               ),
-              valueIri = "http://rdfh.ch/lists/0001/ynm02",
-              valueHasUUID = stringFormatter.decodeUuid("ynm02-02"),
-              permissions = "CR knora-admin:Creator",
-              userPermission = ChangeRightsPermission,
+              valueIri = "http://rdfh.ch/0001/book-instance-02/values/has-list-value-01",
+              valueHasUUID = stringFormatter.decodeUuid("d34d34d3-4d34-d34d-3496-2b2dfef6a5b9"),
+              permissions =
+                "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+              userPermission = ModifyPermission,
               previousValueIri = None,
-              valueCreationDate = Instant.parse("2019-03-02T15:05:54Z"),
-              attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+              valueCreationDate = Instant.parse("2018-05-29T16:42:04.381Z"),
+              attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
               deletionInfo = None
             )
           )

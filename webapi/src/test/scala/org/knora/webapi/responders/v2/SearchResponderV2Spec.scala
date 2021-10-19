@@ -44,9 +44,12 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   override lazy val rdfDataObjects = List(
-    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
+    /*    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
-    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything"),
+    RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),*/
+    RdfDataObject(path = "test_data/ontologies/books-onto.ttl", name = "http://www.knora.org/ontology/0001/anything"),
+    RdfDataObject(path = "test_data/all_data/books-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
   private val searchResponderV2SpecFullData = new SearchResponderV2SpecFullData
   private val anythingUserProfile = SharedTestDataADM.anythingUser2
@@ -55,7 +58,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
   "The search responder v2" should {
 
-    "perform a fulltext search for 'Narr'" in {
+    /*"perform a fulltext search for 'Narr'" in {
 
       responderManager ! FulltextSearchRequestV2(
         searchValue = "Narr",
@@ -252,9 +255,10 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         response.resources.size should ===(19)
       }
-    }
+    }*/
 
     "search for list label" in {
+
       responderManager ! FulltextSearchRequestV2(
         searchValue = "non fiction",
         offset = 0,
