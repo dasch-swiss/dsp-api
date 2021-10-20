@@ -96,11 +96,11 @@ class GroupsRouteADM(routeData: KnoraRouteData)
           id = stringFormatter
             .validateAndEscapeOptionalIri(apiRequest.id, throw BadRequestException(s"Invalid custom group IRI")),
           name = Name.create(apiRequest.name).fold(e => throw e, v => v),
-          descriptions = Description.create(apiRequest.descriptions).fold(e => throw e, v => v),
+          descriptions = Description.make(apiRequest.descriptions).fold(e => throw e.head, v => v),
           project = stringFormatter
             .validateAndEscapeProjectIri(apiRequest.project, throw BadRequestException(s"Invalid project IRI")),
-          status = Status.create(apiRequest.status).fold(e => throw e, v => v),
-          selfjoin = Selfjoin.create(apiRequest.selfjoin).fold(e => throw e, v => v)
+          status = Status.make(apiRequest.status).fold(e => throw e.head, v => v),
+          selfjoin = Selfjoin.make(apiRequest.selfjoin).fold(e => throw e.head, v => v)
         )
 
         val requestMessage = for {

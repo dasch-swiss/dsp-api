@@ -28,10 +28,11 @@ def dependencies():
             "com.typesafe:config:1.3.3",
 
             # ZIO
-            "dev.zio:zio_2.13:1.0.9",
+            "dev.zio:zio_2.13:2.0.0-M3",
             "dev.zio:zio-json_2.13:0.1.5",
-            "dev.zio:zio-test_2.13:1.0.9",
-            "dev.zio:zio-test-junit_2.13:1.0.9",
+            "dev.zio:zio-test_2.13:2.0.0-M3",
+            "dev.zio:zio-test-junit_2.13:2.0.0-M3",
+            "dev.zio:zio-prelude_2.13:1.0.0-RC6",
 
             # CORS support
             "ch.megard:akka-http-cors_2.13:1.0.0",
@@ -186,6 +187,8 @@ BASE_TEST_DEPENDENCIES = [
     "@maven//:com_typesafe_akka_akka_http_testkit_2_13",
     "@maven//:com_typesafe_akka_akka_stream_2_13",
     "@maven//:com_typesafe_config",
+    "@maven//:dev_zio_zio_2_13",
+    "@maven//:dev_zio_zio_prelude_2_13",
     "@maven//:org_scalatest_scalatest_2_13",
     "@maven//:org_scalatest_scalatest_core_2_13",
     "@maven//:org_scalatest_scalatest_wordspec_2_13",

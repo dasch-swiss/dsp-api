@@ -569,7 +569,7 @@
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :groupDescriptions ;
-                             owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                             owl:minCardinality "1"^^xsd:nonNegativeInteger
                            ] ,
                            [ rdf:type owl:Restriction ;
                              owl:onProperty :status ;

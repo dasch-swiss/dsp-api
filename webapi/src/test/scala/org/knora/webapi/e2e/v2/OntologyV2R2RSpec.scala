@@ -71,7 +71,12 @@ class OntologyV2R2RSpec extends R2RSpec {
       path = "test_data/ontologies/freetest-onto.ttl",
       name = "http://www.knora.org/ontology/0001/freetest"
     ),
-    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest")
+    RdfDataObject(path = "test_data/all_data/freetest-data.ttl", name = "http://www.knora.org/data/0001/freetest"),
+    RdfDataObject(
+      path = "test_data/ontologies/anything-onto.ttl",
+      name = "http://www.knora.org/ontology/0001/anything"
+    ),
+    RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
   )
 
   // Directory path for generated client test data
@@ -2636,43 +2641,24 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
 
     // payload to test cardinality can't be deleted
-    val cardinalityCantBeDeletedPayload =
-      s"""
-         |{
-         |  "@id" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}",
-         |  "@type" : "owl:Ontology",
-         |  "knora-api:lastModificationDate" : {
-         |    "@type" : "xsd:dateTimeStamp",
-         |    "@value" : "$freetestLastModDate"
-         |  },
-         |  "@graph" : [ {
-         |    "@id" : "freetest:FreeTest",
-         |    "@type" : "owl:Class",
-         |    "rdfs:subClassOf" :  {
-         |      "@type": "owl:Restriction",
-         |      "owl:minCardinality" : 1,
-         |      "owl:onProperty" : {
-         |        "@id" : "freetest:hasText"
-         |      }
-         |    }
-         |  } ],
-         |  "@context" : {
-         |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-         |    "owl" : "http://www.w3.org/2002/07/owl#",
-         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-         |    "freetest" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}#"
-         |  }
-         |}
-            """.stripMargin
+    val cardinalityCantBeDeletedPayload = AddCardinalitiesRequest.make(
+      ontologyName = "freetest",
+      lastModificationDate = freetestLastModDate,
+      className = "FreeTest",
+      restrictions = List(
+        Restriction(
+          CardinalityRestriction.MinCardinalityOne,
+          onProperty = Property(ontology = "freetest", property = "hasText")
+        )
+      )
+    )
 
-    CollectClientTestData("candeletecardinalities-false-request", cardinalityCantBeDeletedPayload)
+    CollectClientTestData("candeletecardinalities-false-request", cardinalityCantBeDeletedPayload.value)
 
     // Expect cardinality can't be deleted - endpoint should return CanDo response with value false
     Post(
       "/v2/ontologies/candeletecardinalities",
-      HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityCantBeDeletedPayload)
+      HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityCantBeDeletedPayload.value)
     ) ~>
       addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
         val responseStr = responseAs[String]
@@ -2751,7 +2737,62 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
   }
 
-  "determine that a class's cardinalities cannot be changed" in {
+  "verify that link-property can not be deleted" in {
+
+    // payload representing a link-property to test that cardinality can't be deleted
+    val cardinalityOnLinkPropertyWhichCantBeDeletedPayload = AddCardinalitiesRequest.make(
+      ontologyName = "anything",
+      lastModificationDate = anythingLastModDate,
+      className = "Thing",
+      restrictions = List(
+        Restriction(
+          CardinalityRestriction.MinCardinalityZero,
+          onProperty = Property(ontology = "anything", property = "isPartOfOtherThing")
+        )
+      )
+    )
+    println(cardinalityOnLinkPropertyWhichCantBeDeletedPayload)
+
+    val params =
+      s"""
+         |{
+         |	"@id": "http://0.0.0.0:3333/ontology/0001/anything/v2",
+         |	"@type": "http://www.w3.org/2002/07/owl#Ontology",
+         |	"http://api.knora.org/ontology/knora-api/v2#lastModificationDate": {
+         |		"@type": "http://www.w3.org/2001/XMLSchema#dateTimeStamp",
+         |		"@value": "$anythingLastModDate"
+         |	},
+         |	"@graph": [{
+         |		"@id": "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing",
+         |		"@type": "http://www.w3.org/2002/07/owl#Class",
+         |		"http://www.w3.org/2000/01/rdf-schema#subClassOf": {
+         |			"@type": "http://www.w3.org/2002/07/owl#Restriction",
+         |			"http://www.w3.org/2002/07/owl#onProperty": {
+         |				"@id": "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing"
+         |			},
+         |			"http://www.w3.org/2002/07/owl#minCardinality": 0,
+         |			"http://api.knora.org/ontology/salsah-gui/v2#guiOrder": 21
+         |		}
+         |	}]
+         |}
+         |""".stripMargin
+    println(params)
+
+    Post(
+      "/v2/ontologies/candeletecardinalities",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityOnLinkPropertyWhichCantBeDeletedPayload.value)
+    ) ~> addCredentials(
+      BasicHttpCredentials(anythingUsername, password)
+    ) ~> ontologiesPath ~> check {
+      val responseStr = responseAs[String]
+      println(responseStr)
+      assert(status == StatusCodes.OK, response.toString)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+      assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
+    }
+  }
+
+  "verify that a class's cardinalities cannot be changed" in {
     val classSegment = URLEncoder.encode("http://0.0.0.0:3333/ontology/0001/anything/v2#Thing", "UTF-8")
 
     Get(s"/v2/ontologies/canreplacecardinalities/$classSegment") ~> addCredentials(
