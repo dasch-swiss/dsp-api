@@ -221,9 +221,8 @@ class UpdateListItemsRouteADME2ESpec
           )
         )
       }
-      "delete node comments" in {
-//        this should fail because in root nodes comments are required - change on line 240
-//        add another test which allow delete comments for child node
+      "not delete root node comments" in {
+        // TODO: add another test which allow delete comments for child node
 
         val deleteCommentsLabels =
           s"""{
@@ -238,14 +237,14 @@ class UpdateListItemsRouteADME2ESpec
         val response: HttpResponse = singleAwaitingRequest(request)
         log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
-//        response.status should be(StatusCodes.BadRequest)
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
 
         receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
 
         val comments: Seq[StringLiteralV2] = receivedListInfo.comments.stringLiterals
-        comments.size should be(0)
+        comments.size should be(1)
+        comments(0).toString should be("nya kommentarer")
       }
     }
 

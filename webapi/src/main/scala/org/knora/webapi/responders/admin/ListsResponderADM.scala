@@ -1426,7 +1426,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     apiRequestID: UUID
   ): Future[NodeInfoGetResponseADM] = {
     def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit =
-      if (updatedNode.getComments.stringLiterals.diff(changeNodeCommentsRequest.comments.get.value).nonEmpty)
+      if (updatedNode.getComments.stringLiterals == changeNodeCommentsRequest.comments.map(_.value))
         throw UpdateNotPerformedException("Node's 'comments' were not updated. Please report this as a possible bug.")
 
     /**
