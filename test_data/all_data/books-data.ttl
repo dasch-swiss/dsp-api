@@ -45,7 +45,7 @@
                                                                           knora-base:valueHasUUID "list_value"^^xsd:string;
                                                                           knora-base:isDeleted false;
                                                                           knora-base:attachedToUser <http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ>;
-                                                                          knora-base:valueHasString "non fiction";
+                                                                          knora-base:valueHasString "http://rdfh.ch/lists/0001/ynm02-03";
                                                                           knora-base:valueHasOrder 0;
                                                                           knora-base:valueHasListNode <http://rdfh.ch/lists/0001/ynm02-03>;
                                                                           knora-base:valueCreationDate "2018-05-29T16:42:04.381Z"^^xsd:dateTime;
