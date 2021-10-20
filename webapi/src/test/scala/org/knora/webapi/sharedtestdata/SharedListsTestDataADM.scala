@@ -22,7 +22,7 @@ object SharedListsTestDataADM {
     id = "http://rdfh.ch/lists/00FF/526f26ed04",
     name = Some("sommer"),
     labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
-    comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
+    comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
     position = 0,
     hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
   )
@@ -86,7 +86,7 @@ object SharedListsTestDataADM {
     id = "http://rdfh.ch/lists/0001/treeList01",
     name = Some("Tree list node 01"),
     labels = StringLiteralSequenceV2(Vector(StringLiteralV2(value = "Tree list node 01", language = Some("en")))),
-    comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
+    comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
     position = 0,
     hasRootNode = "http://rdfh.ch/lists/0001/treeList"
   )

@@ -249,7 +249,7 @@ case class NodeGetResponseV2(node: ListNodeInfoADM, userLang: String, fallbackLa
           makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, child.labels, userLang, fallbackLang)
 
         val comment: Map[IRI, JsonLDString] =
-          makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, child.comments.get, userLang, fallbackLang)
+          makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, child.comments, userLang, fallbackLang)
 
         val position: Map[IRI, JsonLDInt] = Map(
           OntologyConstants.KnoraBase.ListNodePosition.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDInt(

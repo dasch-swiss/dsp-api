@@ -32,7 +32,7 @@ class ListsResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
       ),
       position = 1,
       hasRootNode = "http://rdfh.ch/lists/0001/treeList",
-      comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2]))
+      comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
     ),
     userLang = "de",
     fallbackLang = "en"

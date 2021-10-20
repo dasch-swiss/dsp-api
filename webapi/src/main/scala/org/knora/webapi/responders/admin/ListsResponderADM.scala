@@ -424,7 +424,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
                     .get(OntologyConstants.KnoraBase.ListNodeName.toSmartIri)
                     .map(_.head.asInstanceOf[StringLiteralV2].value),
                   labels = StringLiteralSequenceV2(labels.toVector.sortBy(_.language)),
-                  comments = Some(StringLiteralSequenceV2(comments.toVector.sortBy(_.language))),
+                  comments = StringLiteralSequenceV2(comments.toVector.sortBy(_.language)),
                   position = positionOption.getOrElse(
                     throw InconsistentRepositoryDataException(
                       s"Required position property missing for list node $nodeIri."

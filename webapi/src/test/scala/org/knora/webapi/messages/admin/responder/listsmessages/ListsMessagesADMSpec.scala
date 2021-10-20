@@ -82,7 +82,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
         id = "http://rdfh.ch/lists/00FF/526f26ed04",
         name = Some("sommer"),
         labels = StringLiteralSequenceV2(Vector(StringLiteralV2("Sommer"))),
-        comments = Some(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
+        comments = StringLiteralSequenceV2(Vector.empty[StringLiteralV2]),
         position = 0,
         hasRootNode = "http://rdfh.ch/lists/00FF/d19af9ab"
       )

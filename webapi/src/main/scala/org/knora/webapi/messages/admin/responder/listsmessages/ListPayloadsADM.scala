@@ -59,5 +59,5 @@ final case class NodeLabelsChangePayloadADM(
  * Node Comments update payload
  */
 final case class NodeCommentsChangePayloadADM(
-  comments: Option[Comments]
+  comments: Option[Comments] = None
 )
