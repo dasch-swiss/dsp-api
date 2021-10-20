@@ -222,9 +222,7 @@ class UpdateListItemsRouteADME2ESpec
         )
       }
       "not delete root node comments" in {
-        // TODO: add another test which allow delete comments for child node
-
-        val deleteCommentsLabels =
+        val deleteComments =
           s"""{
              |    "comments": []
              |}""".stripMargin
@@ -232,7 +230,7 @@ class UpdateListItemsRouteADME2ESpec
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
-          HttpEntity(ContentTypes.`application/json`, deleteCommentsLabels)
+          HttpEntity(ContentTypes.`application/json`, deleteComments)
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         log.debug(s"response: ${response.toString}")
@@ -244,7 +242,7 @@ class UpdateListItemsRouteADME2ESpec
 
         val comments: Seq[StringLiteralV2] = receivedListInfo.comments.stringLiterals
         comments.size should be(1)
-        comments(0).toString should be("nya kommentarer")
+        comments should contain(StringLiteralV2(value = "nya kommentarer", language = Some("se")))
       }
     }
 
@@ -382,6 +380,41 @@ class UpdateListItemsRouteADME2ESpec
           )
         )
       }
+
+//      "delete child node comments" in {
+////        this test should pass, but deleting comments for both root and child nodes are not working now using PUT and []
+////        TODO: implement DELETE method (only for child)
+//        val deleteNodeComments =
+//          s"""{
+//             |    "comments": []
+//             |}""".stripMargin
+//
+//        clientTestDataCollector.addFile(
+//          TestDataFileContent(
+//            filePath = TestDataFilePath(
+//              directoryPath = clientTestDataPath,
+//              filename = "update-childNode-comments-request",
+//              fileExtension = "json"
+//            ),
+//            text = deleteNodeComments
+//          )
+//        )
+//
+//        val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
+//
+//        val request = Put(
+//          baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
+//          HttpEntity(ContentTypes.`application/json`, deleteNodeComments)
+//        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+//        val response: HttpResponse = singleAwaitingRequest(request)
+//
+//        response.status should be(StatusCodes.OK)
+//
+//        val receivedNodeInfo: ListChildNodeInfoADM =
+//          AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
+//        val comments: Seq[StringLiteralV2] = receivedNodeInfo.comments.stringLiterals
+//        comments.size should be(0)
+//      }
 
       "not update the position of a node if given IRI is invalid" in {
         val parentIri = "http://rdfh.ch/lists/0001/notUsedList01"
