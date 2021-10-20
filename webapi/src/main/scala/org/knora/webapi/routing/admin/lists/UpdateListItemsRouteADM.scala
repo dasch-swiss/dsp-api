@@ -28,7 +28,7 @@ import javax.ws.rs.Path
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.{Feature, FeatureFactoryConfig}
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.{Name, Labels, Comments}
+import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 import scala.concurrent.Future
@@ -91,13 +91,12 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
           val namePayload: NodeNameChangePayloadADM =
-            NodeNameChangePayloadADM(Name.create(apiRequest.name).fold(e => throw e, v => v))
+            NodeNameChangePayloadADM(ListName.create(apiRequest.name).fold(e => throw e, v => v))
 
           val requestMessage: Future[NodeNameChangeRequestADM] = for {
             requestingUser <- getUserADM(requestContext, featureFactoryConfig)
           } yield NodeNameChangeRequestADM(
             nodeIri = nodeIri,
-//            payload for name
             changeNodeNameRequest = namePayload,
             featureFactoryConfig = featureFactoryConfig,
             requestingUser = requestingUser,

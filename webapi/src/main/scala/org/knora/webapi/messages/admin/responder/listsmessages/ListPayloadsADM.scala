@@ -1,7 +1,7 @@
 package org.knora.webapi.messages.admin.responder.listsmessages
 
 import org.knora.webapi.IRI
-import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, Name, Position}
+import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName, Position}
 
 /**
  * Root and Child Node creation payloads
@@ -12,7 +12,7 @@ object NodeCreatePayloadADM {
     id: Option[IRI] = None,
     parentNodeIri: Option[IRI] = None,
     projectIri: IRI,
-    name: Option[Name] = None,
+    name: Option[ListName] = None,
     position: Option[Position] = None,
     labels: Labels,
     comments: Comments
@@ -21,7 +21,7 @@ object NodeCreatePayloadADM {
     id: Option[IRI] = None,
     parentNodeIri: Option[IRI] = None,
     projectIri: IRI,
-    name: Option[Name] = None,
+    name: Option[ListName] = None,
     position: Option[Position] = None,
     labels: Labels,
     comments: Option[Comments] = None
@@ -36,7 +36,7 @@ final case class NodeInfoChangePayloadADM(
   projectIri: IRI,
   hasRootNode: Option[IRI] = None,
   position: Option[Position] = None,
-  name: Option[Name] = None,
+  name: Option[ListName] = None,
   labels: Option[Labels] = None,
   comments: Option[Comments] = None
 )
@@ -45,7 +45,7 @@ final case class NodeInfoChangePayloadADM(
  * Node Name update payload
  */
 final case class NodeNameChangePayloadADM(
-  name: Name
+  name: ListName
 )
 
 /**

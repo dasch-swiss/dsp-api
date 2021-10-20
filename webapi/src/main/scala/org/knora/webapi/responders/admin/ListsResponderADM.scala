@@ -40,7 +40,7 @@ import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.messages.admin.responder.valueObjects.Name
+import org.knora.webapi.messages.admin.responder.valueObjects.ListName
 
 import scala.annotation.tailrec
 import scala.concurrent.Future
@@ -2134,7 +2134,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    * @param listNodeName the list node name.
    * @return a [[Boolean]].
    */
-  private def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[Name]): Future[Boolean] =
+  private def listNodeNameIsProjectUnique(projectIri: IRI, listNodeName: Option[ListName]): Future[Boolean] =
     listNodeName match {
       case Some(name) =>
         for {

@@ -34,7 +34,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayload
   RootNodeCreatePayloadADM
 }
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, Name, Position}
+import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName, Position}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 import scala.concurrent.Future
@@ -171,8 +171,8 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
           throw BadRequestException(s"Invalid parent node IRI")
         )
 
-        val maybeName: Option[Name] = apiRequest.name match {
-          case Some(value) => Some(Name.create(value).fold(e => throw e, v => v))
+        val maybeName: Option[ListName] = apiRequest.name match {
+          case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
           case None        => None
         }
 
@@ -346,8 +346,8 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
         val projectIri = stringFormatter
           .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI"))
 
-        val maybeName: Option[Name] = apiRequest.name match {
-          case Some(value) => Some(Name.create(value).fold(e => throw e, v => v))
+        val maybeName: Option[ListName] = apiRequest.name match {
+          case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
           case None        => None
         }
 

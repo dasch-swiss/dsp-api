@@ -101,6 +101,7 @@ case class CreateNodeApiRequestADM(
   labels: Seq[StringLiteralV2],
   comments: Seq[StringLiteralV2]
 ) extends ListADMJsonProtocol {
+//  TODO: are below checks necessary anymore?
 
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
   stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list node IRI"))

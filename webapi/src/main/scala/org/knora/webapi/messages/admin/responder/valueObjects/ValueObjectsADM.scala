@@ -4,7 +4,6 @@ import org.knora.webapi.LanguageCodes
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException}
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.INVALID_POSITION
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
@@ -213,47 +212,6 @@ object Logo { self =>
     value match {
       case None    => Validation.succeed(None)
       case Some(v) => self.make(v).map(Some(_))
-    }
-}
-
-/** Lists value objects */
-
-/**
- * Labels value object.
- */
-sealed abstract case class Labels private (value: Seq[StringLiteralV2])
-object Labels {
-  def create(value: Seq[StringLiteralV2]): Either[Throwable, Labels] =
-    if (value.isEmpty) {
-      Left(BadRequestException("Missing labels"))
-    } else {
-      Right(new Labels(value) {})
-    }
-}
-
-/**
- * Comments value object.
- */
-sealed abstract case class Comments private (value: Seq[StringLiteralV2])
-object Comments {
-  def create(value: Seq[StringLiteralV2]): Either[Throwable, Comments] =
-    if (value.isEmpty) {
-      Left(BadRequestException("Missing comments"))
-    } else {
-      Right(new Comments(value) {})
-    }
-}
-
-/**
- * Position value object.
- */
-sealed abstract case class Position private (value: Int)
-object Position {
-  def create(value: Int): Either[Throwable, Position] =
-    if (value < -1) { // TODO: what should be the criteria?
-      Left(BadRequestException(INVALID_POSITION))
-    } else {
-      Right(new Position(value) {})
     }
 }
 
