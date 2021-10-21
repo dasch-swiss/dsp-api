@@ -60,3 +60,5 @@ dependencies.txt
 /.vscode
 /cleandeps.sh
 /.metals
+/sipi/images/082E/*
+/sipi/images/originals/082E/*
