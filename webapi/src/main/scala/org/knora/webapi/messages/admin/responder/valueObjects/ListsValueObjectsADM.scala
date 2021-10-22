@@ -1,8 +1,24 @@
 package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.INVALID_POSITION
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.{
+  INVALID_POSITION,
+  PROJECT_IRI_MISSING_ERROR
+}
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+
+/**
+ * ListName value object.
+ */
+sealed abstract case class ProjectIRI private (value: String)
+object ProjectIRI {
+  def create(value: String): Either[Throwable, ProjectIRI] =
+    if (value.isEmpty) {
+      Left(BadRequestException(PROJECT_IRI_MISSING_ERROR))
+    } else {
+      Right(new ProjectIRI(value) {})
+    }
+}
 
 /**
  * ListName value object.

@@ -520,7 +520,9 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         )
         expectMsg(
           Failure(
-            BadRequestException(s"Invalid position given ${givenPosition.value}, maximum allowed position is = 2.")
+            BadRequestException(
+              s"Invalid position given ${givenPosition.map(_.value)}, maximum allowed position is = 2."
+            )
           )
         )
       }
