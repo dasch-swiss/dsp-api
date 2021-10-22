@@ -13,6 +13,10 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtil
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 //TODO: sprawdzic na koncu wszystkie czeki w messangerze czy poktrywaja sie tu i tak samo tresci bledow
 //TODO: possible to somehow merge all IRI related value objects? what about diff exception messages
+// either use below checks in route to throw custom exceptions for one IRI value object
+// or bring these matches here
+//case Some(value) => Some(Comments.create(value).fold(e => throw e, v => v))
+//case None        => None
 
 /**
  * List ListIRI value object.
@@ -69,6 +73,26 @@ object ProjectIRI {
         throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
       )
       Right(new ProjectIRI(validatedValue) {})
+    }
+}
+
+/**
+ * List RootNodeIRI value object.
+ */
+sealed abstract case class RootNodeIRI private (value: String)
+object RootNodeIRI {
+  val stringFormatter = StringFormatter.getGeneralInstance
+
+  def create(value: String): Either[Throwable, RootNodeIRI] =
+    //      TODO: if id i only optional empty condition shouldn't exist
+    if (value.isEmpty) {
+      Left(BadRequestException(s"Missing root node IRI"))
+    } else {
+      val validatedValue = stringFormatter.validateAndEscapeIri(
+        value,
+        throw BadRequestException(s"Invalid root node IRI")
+      )
+      Right(new RootNodeIRI(validatedValue) {})
     }
 }
 
