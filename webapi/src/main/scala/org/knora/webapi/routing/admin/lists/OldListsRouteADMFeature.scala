@@ -41,6 +41,7 @@ import org.knora.webapi.messages.admin.responder.valueObjects.{
   Comments,
   CustomID,
   Labels,
+  ListIRI,
   ListName,
   Position,
   ProjectIRI
@@ -271,8 +272,8 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
     put {
       /* update existing list node (either root or child) */
       entity(as[ChangeNodeInfoApiRequestADM]) { apiRequest => requestContext =>
-        val listIri =
-          stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+        val listIri = ListIRI.create(apiRequest.listIri).fold(e => throw e, v => v)
+        val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
 
         val maybeName: Option[ListName] = apiRequest.name match {
           case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
@@ -293,8 +294,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           case Some(value) => Some(Comments.create(value).fold(e => throw e, v => v))
           case None        => None
         }
-
-        val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
 
         val changeNodeInfoPayloadADM: NodeInfoChangePayloadADM = NodeInfoChangePayloadADM(
           listIri,
@@ -319,7 +318,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
             throw ForbiddenException(LIST_NODE_CREATE_PERMISSION_ERROR)
           }
         } yield NodeInfoChangeRequestADM(
-          listIri = listIri,
+          listIri = listIri.value,
           changeNodeRequest = changeNodeInfoPayloadADM,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
@@ -374,6 +373,11 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
             case None        => None
           }
 
+          val maybeParentNodeIri: Option[ListIRI] = apiRequest.parentNodeIri match {
+            case Some(value) => Some(ListIRI.create(value).fold(e => throw e, v => v))
+            case None        => None
+          }
+
           val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
 
           val maybeName: Option[ListName] = apiRequest.name match {
@@ -388,10 +392,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
           val createChildNodeRequest: ChildNodeCreatePayloadADM = ChildNodeCreatePayloadADM(
             id = maybeId,
-            parentNodeIri = stringFormatter.validateAndEscapeOptionalIri(
-              apiRequest.parentNodeIri,
-              throw BadRequestException(s"Invalid parent node IRI")
-            ),
+            parentNodeIri = maybeParentNodeIri,
             projectIri,
             name = maybeName,
             position = maybePosition,

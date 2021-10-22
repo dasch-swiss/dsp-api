@@ -97,7 +97,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       val listCreatePayloadADM = createRootNodeCreatePayloadADM(request)
 
       listCreatePayloadADM.id should equal(request.id)
-      listCreatePayloadADM.projectIri should equal(request.projectIri)
+      listCreatePayloadADM.projectIri.value should equal(request.projectIri)
       listCreatePayloadADM.name.map(_.value) should equal(request.name)
       listCreatePayloadADM.labels.value should equal(request.labels)
       listCreatePayloadADM.comments.value should equal(request.comments)
@@ -114,14 +114,14 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
       val otherRootNodeCreatePayloadADM = createRootNodeCreatePayloadADM(otherRequest)
 
-      otherRootNodeCreatePayloadADM.id should equal(otherRequest.id)
-      otherRootNodeCreatePayloadADM.projectIri should equal(otherRequest.projectIri)
+      otherRootNodeCreatePayloadADM.id.map(_.value) should equal(otherRequest.id)
+      otherRootNodeCreatePayloadADM.projectIri.value should equal(otherRequest.projectIri)
       otherRootNodeCreatePayloadADM.name.map(_.value) should equal(otherRequest.name)
       otherRootNodeCreatePayloadADM.labels.value should equal(otherRequest.labels)
       otherRootNodeCreatePayloadADM.comments.value should equal(otherRequest.comments)
 
-      otherRootNodeCreatePayloadADM.id should not equal request.id
-      otherRootNodeCreatePayloadADM.projectIri should not equal request.projectIri
+      otherRootNodeCreatePayloadADM.id.map(_.value) should not equal request.id
+      otherRootNodeCreatePayloadADM.projectIri.value should not equal request.projectIri
       otherRootNodeCreatePayloadADM.name.get.value should not equal request.name
       otherRootNodeCreatePayloadADM.labels.value should not equal request.labels
       otherRootNodeCreatePayloadADM.comments.value should not equal request.comments
@@ -142,6 +142,11 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       case None        => None
     }
 
+    val maybeParentNodeIri: Option[ListIRI] = createNodeApiRequestADM.parentNodeIri match {
+      case Some(value) => Some(ListIRI.create(value).fold(e => throw e, v => v))
+      case None        => None
+    }
+
     val maybeName: Option[ListName] = createNodeApiRequestADM.name match {
       case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
       case None        => None
@@ -154,10 +159,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     ChildNodeCreatePayloadADM(
       id = maybeId,
-      parentNodeIri = stringFormatter.validateAndEscapeOptionalIri(
-        createNodeApiRequestADM.parentNodeIri,
-        throw BadRequestException(s"Invalid parent node IRI")
-      ),
+      parentNodeIri = maybeParentNodeIri,
       projectIri = ProjectIRI.create(createNodeApiRequestADM.projectIri).fold(e => throw e, v => v),
       name = maybeName,
       position = maybePosition,
@@ -198,7 +200,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
       childNodeCreatePayloadADM.id should equal(request.id)
       childNodeCreatePayloadADM.parentNodeIri should equal(request.parentNodeIri)
-      childNodeCreatePayloadADM.projectIri should equal(request.projectIri)
+      childNodeCreatePayloadADM.projectIri.value should equal(request.projectIri)
       childNodeCreatePayloadADM.name.map(_.value) should equal(request.name)
       childNodeCreatePayloadADM.position.map(_.value) should equal(request.position)
       childNodeCreatePayloadADM.labels.value should equal(request.labels)
@@ -217,18 +219,18 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
       val otherChildNodeCreatePayloadADM = createChildNodeCreatePayloadADM(otherRequest)
 
-      otherChildNodeCreatePayloadADM.id should equal(otherRequest.id)
+      otherChildNodeCreatePayloadADM.id.map(_.value) should equal(otherRequest.id)
       otherChildNodeCreatePayloadADM.parentNodeIri should equal(otherRequest.parentNodeIri)
-      otherChildNodeCreatePayloadADM.projectIri should equal(otherRequest.projectIri)
+      otherChildNodeCreatePayloadADM.projectIri.value should equal(otherRequest.projectIri)
       otherChildNodeCreatePayloadADM.name.map(_.value) should equal(otherRequest.name)
       otherChildNodeCreatePayloadADM.position.map(_.value) should equal(otherRequest.position)
       otherChildNodeCreatePayloadADM.labels.value should equal(otherRequest.labels)
 //      TODO: bring below back after separating ChildNodeCreateApiRequestADM from CreateNodeApiRequestADM
 //      otherChildNodeCreatePayloadADM.comments.map(_.value) should equal(otherRequest.comments)
 
-      otherChildNodeCreatePayloadADM.id should not equal request.id
+      otherChildNodeCreatePayloadADM.id.map(_.value) should not equal request.id
 //      otherChildNodeCreatePayloadADM.parentNodeIri should equal(otherRequest.parentNodeIri)
-      otherChildNodeCreatePayloadADM.projectIri should not equal request.projectIri
+      otherChildNodeCreatePayloadADM.projectIri.value should not equal request.projectIri
       otherChildNodeCreatePayloadADM.name.get.value should not equal request.name
 //      otherChildNodeCreatePayloadADM.position.map(_.value) should equal(otherRequest.position)
       otherChildNodeCreatePayloadADM.labels.value should not equal request.labels

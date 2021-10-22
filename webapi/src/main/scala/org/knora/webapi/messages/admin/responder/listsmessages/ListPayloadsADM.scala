@@ -5,6 +5,7 @@ import org.knora.webapi.messages.admin.responder.valueObjects.{
   Comments,
   CustomID,
   Labels,
+  ListIRI,
   ListName,
   Position,
   ProjectIRI
@@ -24,7 +25,7 @@ object NodeCreatePayloadADM {
   ) extends NodeCreatePayloadADM
   final case class ChildNodeCreatePayloadADM(
     id: Option[CustomID] = None,
-    parentNodeIri: Option[IRI] = None,
+    parentNodeIri: Option[ListIRI] = None,
     projectIri: ProjectIRI,
     name: Option[ListName] = None,
     position: Option[Position] = None,
@@ -37,7 +38,7 @@ object NodeCreatePayloadADM {
  * Node Info update payload
  */
 final case class NodeInfoChangePayloadADM(
-  listIri: IRI,
+  listIri: ListIRI,
   projectIri: ProjectIRI,
   hasRootNode: Option[IRI] = None,
   position: Option[Position] = None,

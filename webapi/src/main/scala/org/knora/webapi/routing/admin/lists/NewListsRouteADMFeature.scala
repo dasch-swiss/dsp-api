@@ -38,6 +38,7 @@ import org.knora.webapi.messages.admin.responder.valueObjects.{
   Comments,
   CustomID,
   Labels,
+  ListIRI,
   ListName,
   Position,
   ProjectIRI
@@ -173,10 +174,10 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
           case None        => None
         }
 
-        val parentNodeIri = stringFormatter.validateAndEscapeOptionalIri(
-          apiRequest.parentNodeIri,
-          throw BadRequestException(s"Invalid parent node IRI")
-        )
+        val maybeParentNodeIri: Option[ListIRI] = apiRequest.parentNodeIri match {
+          case Some(value) => Some(ListIRI.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
 
         val maybeName: Option[ListName] = apiRequest.name match {
           case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
@@ -202,7 +203,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
 
         val createChildNodePayloadADM: ChildNodeCreatePayloadADM = ChildNodeCreatePayloadADM(
           id = maybeId,
-          parentNodeIri,
+          parentNodeIri = maybeParentNodeIri,
           projectIri,
           name = maybeName,
           position = maybePosition,
@@ -340,9 +341,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
     put {
       /* update existing list node (either root or child) */
       entity(as[ChangeNodeInfoApiRequestADM]) { apiRequest => requestContext =>
-        val listIri =
-          stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
-
+        val listIri = ListIRI.create(apiRequest.listIri).fold(e => throw e, v => v)
         val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
 
         val maybeName: Option[ListName] = apiRequest.name match {
@@ -389,7 +388,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
           }
         } yield NodeInfoChangeRequestADM(
           //TODO: why "listIri" property is doubled - here and inside "changeNodeRequest"
-          listIri = listIri,
+          listIri = listIri.value,
           changeNodeRequest = changeNodeInfoPayloadADM,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,

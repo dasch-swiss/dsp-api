@@ -28,7 +28,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayload
   ChildNodeCreatePayloadADM,
   ListCreatePayloadADM
 }
-import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ProjectIRI, Position}
+import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListIRI, ProjectIRI, Position}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import spray.json._
@@ -348,7 +348,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       val caught = intercept[BadRequestException](
         ListChildNodeCreateRequestADM(
           createChildNodeRequest = ChildNodeCreatePayloadADM(
-            parentNodeIri = Some(exampleListIri),
+            parentNodeIri = Some(ListIRI.create(exampleListIri).fold(e => throw e, v => v)),
             projectIri = ProjectIRI.create(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             position = Some(Position.create(-3).fold(e => throw e, v => v)),
             labels = Labels

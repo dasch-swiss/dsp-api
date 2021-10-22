@@ -5,20 +5,44 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.{
   INVALID_POSITION,
+  LIST_NODE_IRI_INVALID_ERROR,
+  LIST_NODE_IRI_MISSING_ERROR,
   PROJECT_IRI_INVALID_ERROR,
   PROJECT_IRI_MISSING_ERROR
 }
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+//TODO: sprawdzic na koncu wszystkie czeki w messangerze czy poktrywaja sie tu i tak samo tresci bledow
+//TODO: possible to somehow merge all IRI related value objects? what about diff exception messages
+
+/**
+ * List ListIRI value object.
+ */
+sealed abstract case class ListIRI private (value: String)
+object ListIRI {
+  val stringFormatter = StringFormatter.getGeneralInstance
+
+  def create(value: String): Either[Throwable, ListIRI] =
+    if (value.isEmpty) {
+      Left(BadRequestException(LIST_NODE_IRI_MISSING_ERROR))
+    } else {
+      val validatedValue = stringFormatter.validateAndEscapeIri(
+        value,
+        throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR)
+      )
+      Right(new ListIRI(validatedValue) {})
+    }
+}
 
 /**
  * List CustomID value object.
  */
-sealed abstract case class CustomID private (value: IRI)
+sealed abstract case class CustomID private (value: String)
 object CustomID {
   val stringFormatter = StringFormatter.getGeneralInstance
 
-  def create(value: IRI): Either[Throwable, CustomID] =
+  def create(value: String): Either[Throwable, CustomID] =
     if (value.isEmpty) {
+//      TODO: if id i only optional empty condition shouldn't exist
       Left(BadRequestException("Invalid custom node IRI"))
     } else {
       val validatedValue = stringFormatter.validateAndEscapeIri(
@@ -32,11 +56,11 @@ object CustomID {
 /**
  * List ProjectIRI value object.
  */
-sealed abstract case class ProjectIRI private (value: IRI)
+sealed abstract case class ProjectIRI private (value: String)
 object ProjectIRI {
   val stringFormatter = StringFormatter.getGeneralInstance
 
-  def create(value: IRI): Either[Throwable, ProjectIRI] =
+  def create(value: String): Either[Throwable, ProjectIRI] =
     if (value.isEmpty) {
       Left(BadRequestException(PROJECT_IRI_MISSING_ERROR))
     } else {

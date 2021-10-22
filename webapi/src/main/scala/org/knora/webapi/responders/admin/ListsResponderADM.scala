@@ -40,7 +40,7 @@ import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.messages.admin.responder.valueObjects.{ListName, ProjectIRI}
+import org.knora.webapi.messages.admin.responder.valueObjects.{ListIRI, ListName, ProjectIRI}
 
 import scala.annotation.tailrec
 import scala.concurrent.Future
@@ -968,7 +968,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       (newPosition: Option[Int], rootNodeIri: Option[IRI]) <-
         if (parentNodeIri.nonEmpty) {
           getRootNodeAndPositionOfNewChild(
-            parentNodeIri = parentNodeIri.get,
+            parentNodeIri = parentNodeIri.get.value,
             dataNamedGraph = dataNamedGraph,
             featureFactoryConfig = featureFactoryConfig
           )
@@ -1022,7 +1022,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
               listClassIri = OntologyConstants.KnoraBase.ListNode,
               projectIri = projectIri.value,
               nodeIri = newListNodeIri,
-              parentNodeIri = parentNodeIri,
+              parentNodeIri = parentNodeIri.map(_.value),
               rootNodeIri = rootNodeIri,
               position = newPosition,
               maybeName = name.map(_.value),
@@ -1279,7 +1279,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         changeNodeNameSparqlString <- getUpdateNodeInfoSparqlStatement(
           changeNodeInfoRequest = NodeInfoChangePayloadADM(
-            listIri = nodeIri,
+            listIri = ListIRI.create(nodeIri).fold(e => throw e, v => v),
             projectIri = ProjectIRI.create(projectIri).fold(e => throw e, v => v),
             name = Some(changeNodeNameRequest.name)
           ),
@@ -1365,7 +1365,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
         changeNodeLabelsSparqlString <- getUpdateNodeInfoSparqlStatement(
           changeNodeInfoRequest = NodeInfoChangePayloadADM(
-            listIri = nodeIri,
+            listIri = ListIRI.create(nodeIri).fold(e => throw e, v => v),
             projectIri = ProjectIRI.create(projectIri).fold(e => throw e, v => v),
             labels = Some(changeNodeLabelsRequest.labels)
           ),
@@ -1450,7 +1450,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(
           changeNodeInfoRequest = NodeInfoChangePayloadADM(
-            listIri = nodeIri,
+            listIri = ListIRI.create(nodeIri).fold(e => throw e, v => v),
             projectIri = ProjectIRI.create(projectIri).fold(e => throw e, v => v),
             comments = changeNodeCommentsRequest.comments
           ),
@@ -2183,7 +2183,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
       /* Verify that the node with Iri exists. */
       maybeNode <- listNodeGetADM(
-        nodeIri = changeNodeInfoRequest.listIri,
+        nodeIri = changeNodeInfoRequest.listIri.value,
         shallow = true,
         featureFactoryConfig = featureFactoryConfig,
         requestingUser = KnoraSystemInstances.Users.SystemUser
@@ -2206,7 +2206,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         .updateListInfo(
           dataNamedGraph = dataNamedGraph,
           triplestore = settings.triplestoreType,
-          nodeIri = changeNodeInfoRequest.listIri,
+          nodeIri = changeNodeInfoRequest.listIri.value,
           hasOldName = hasOldName,
           isRootNode = isRootNode,
           maybeName = changeNodeInfoRequest.name.map(_.value),

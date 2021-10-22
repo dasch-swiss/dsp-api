@@ -35,7 +35,14 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Strin
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName, Position, ProjectIRI}
+import org.knora.webapi.messages.admin.responder.valueObjects.{
+  Comments,
+  Labels,
+  ListIRI,
+  ListName,
+  Position,
+  ProjectIRI
+}
 
 import scala.concurrent.duration._
 
@@ -262,7 +269,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val changeNodeInfoRequest = NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = NodeInfoChangePayloadADM(
-            listIri = newListIri.get,
+            listIri = ListIRI.create(newListIri.get).fold(e => throw e, v => v),
             projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             name = Some(ListName.create("updated name").fold(e => throw e, v => v)),
             labels = Some(
@@ -322,7 +329,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         responderManager ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = NodeInfoChangePayloadADM(
-            listIri = newListIri.get,
+            listIri = ListIRI.create(newListIri.get).fold(e => throw e, v => v),
             projectIri = projectIRI,
             name = name
           ),
@@ -342,7 +349,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "add child to list - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ChildNodeCreatePayloadADM(
-            parentNodeIri = Some(newListIri.get),
+            parentNodeIri = Some(ListIRI.create(newListIri.get).fold(e => throw e, v => v)),
             projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             name = Some(ListName.create("first").fold(e => throw e, v => v)),
             labels = Labels
@@ -396,7 +403,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "add second child to list in first position - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ChildNodeCreatePayloadADM(
-            parentNodeIri = Some(newListIri.get),
+            parentNodeIri = Some(ListIRI.create(newListIri.get).fold(e => throw e, v => v)),
             projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             name = Some(ListName.create("second").fold(e => throw e, v => v)),
             position = Some(Position.create(0).fold(e => throw e, v => v)),
@@ -449,7 +456,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "add child to second child node" in {
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ChildNodeCreatePayloadADM(
-            parentNodeIri = Some(secondChildIri.get),
+            parentNodeIri = Some(ListIRI.create(secondChildIri.get).fold(e => throw e, v => v)),
             projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             name = Some(ListName.create("third").fold(e => throw e, v => v)),
             labels = Labels
@@ -502,7 +509,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val givenPosition = Some(Position.create(20).fold(e => throw e, v => v))
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ChildNodeCreatePayloadADM(
-            parentNodeIri = Some(newListIri.get),
+            parentNodeIri = Some(ListIRI.create(newListIri.get).fold(e => throw e, v => v)),
             projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             name = Some(ListName.create("fourth").fold(e => throw e, v => v)),
             position = givenPosition,
