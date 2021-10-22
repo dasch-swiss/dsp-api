@@ -37,7 +37,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayload
   ListCreatePayloadADM
 }
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName, Position}
+import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName, Position, ProjectIRI}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 import scala.concurrent.Future
@@ -148,8 +148,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           case None        => None
         }
 
-        val projectIri = stringFormatter
-          .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI"))
+        val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
 
         val createRootNodePayloadADM: ListCreatePayloadADM = ListCreatePayloadADM(
           id = stringFormatter.validateAndEscapeOptionalIri(
@@ -171,7 +170,9 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           )
 
           // check if the requesting user is allowed to perform operation
-          _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+          _ = if (
+            !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
+          ) {
             // not project or a system admin
             throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
           }
@@ -284,8 +285,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           case None        => None
         }
 
-        val projectIri = stringFormatter
-          .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI"))
+        val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
 
         val changeNodeInfoPayloadADM: NodeInfoChangePayloadADM = NodeInfoChangePayloadADM(
           listIri,
@@ -303,7 +303,9 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         val requestMessage: Future[NodeInfoChangeRequestADM] = for {
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
           // check if the requesting user is allowed to perform operation
-          _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+          _ = if (
+            !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
+          ) {
             // not project or a system admin
             throw ForbiddenException(LIST_NODE_CREATE_PERMISSION_ERROR)
           }
@@ -358,8 +360,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
       post {
         /* add node to existing list node. the existing list node can be either the root or a child */
         entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
-          val projectIri = stringFormatter
-            .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI"))
+          val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
 
           val maybeName: Option[ListName] = apiRequest.name match {
             case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
@@ -395,7 +396,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 
             // check if the requesting user is allowed to perform operation
             _ = if (
-              !requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin
+              !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
             ) {
               // not project or a system admin
               throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)

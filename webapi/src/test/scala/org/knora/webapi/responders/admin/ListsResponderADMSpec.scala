@@ -35,7 +35,7 @@ import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, Strin
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName, Position}
+import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName, Position, ProjectIRI}
 
 import scala.concurrent.duration._
 
@@ -181,7 +181,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "create a list" in {
         responderManager ! ListCreateRequestADM(
           createRootNode = ListCreatePayloadADM(
-            projectIri = IMAGES_PROJECT_IRI,
+            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             name = Some(ListName.create("neuelistename").fold(e => throw e, v => v)),
             labels = Labels
               .create(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))))
@@ -222,7 +222,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val nameWithSpecialCharacter = "a new \\\"name\\\""
         responderManager ! ListCreateRequestADM(
           createRootNode = ListCreatePayloadADM(
-            projectIri = IMAGES_PROJECT_IRI,
+            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             name = Some(ListName.create(nameWithSpecialCharacter).fold(e => throw e, v => v)),
             labels = Labels
               .create(Seq(StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
@@ -263,7 +263,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           listIri = newListIri.get,
           changeNodeRequest = NodeInfoChangePayloadADM(
             listIri = newListIri.get,
-            projectIri = IMAGES_PROJECT_IRI,
+            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             name = Some(ListName.create("updated name").fold(e => throw e, v => v)),
             labels = Some(
               Labels
@@ -318,11 +318,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "not update basic list information if name is duplicate" in {
         val name = Some(ListName.create("sommer").fold(e => throw e, v => v))
+        val projectIRI = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v)
         responderManager ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
           changeNodeRequest = NodeInfoChangePayloadADM(
             listIri = newListIri.get,
-            projectIri = IMAGES_PROJECT_IRI,
+            projectIri = projectIRI,
             name = name
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -332,7 +333,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         expectMsg(
           Failure(
             DuplicateValueException(
-              s"The name ${name.value} is already used by a list inside the project http://rdfh.ch/projects/00FF."
+              s"The name ${name.value} is already used by a list inside the project ${projectIRI.value}."
             )
           )
         )
@@ -342,7 +343,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ChildNodeCreatePayloadADM(
             parentNodeIri = Some(newListIri.get),
-            projectIri = IMAGES_PROJECT_IRI,
+            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             name = Some(ListName.create("first").fold(e => throw e, v => v)),
             labels = Labels
               .create(Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
@@ -396,7 +397,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ChildNodeCreatePayloadADM(
             parentNodeIri = Some(newListIri.get),
-            projectIri = IMAGES_PROJECT_IRI,
+            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             name = Some(ListName.create("second").fold(e => throw e, v => v)),
             position = Some(Position.create(0).fold(e => throw e, v => v)),
             labels = Labels
@@ -449,7 +450,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ChildNodeCreatePayloadADM(
             parentNodeIri = Some(secondChildIri.get),
-            projectIri = IMAGES_PROJECT_IRI,
+            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             name = Some(ListName.create("third").fold(e => throw e, v => v)),
             labels = Labels
               .create(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
@@ -502,7 +503,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ChildNodeCreatePayloadADM(
             parentNodeIri = Some(newListIri.get),
-            projectIri = IMAGES_PROJECT_IRI,
+            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             name = Some(ListName.create("fourth").fold(e => throw e, v => v)),
             position = givenPosition,
             labels = Labels

@@ -63,11 +63,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
         createNodeApiRequestADM.id,
         throw BadRequestException(s"Invalid custom node IRI")
       ),
-      projectIri = stringFormatter
-        .validateAndEscapeProjectIri(
-          createNodeApiRequestADM.projectIri,
-          throw BadRequestException(s"Invalid project IRI")
-        ),
+      projectIri = ProjectIRI.create(createNodeApiRequestADM.projectIri).fold(e => throw e, v => v),
       name = maybeName,
       labels = Labels.create(createNodeApiRequestADM.labels).fold(e => throw e, v => v),
       comments = Comments.create(createNodeApiRequestADM.comments).fold(e => throw e, v => v)
@@ -168,11 +164,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
         createNodeApiRequestADM.parentNodeIri,
         throw BadRequestException(s"Invalid parent node IRI")
       ),
-      projectIri = stringFormatter
-        .validateAndEscapeProjectIri(
-          createNodeApiRequestADM.projectIri,
-          throw BadRequestException(s"Invalid project IRI")
-        ),
+      projectIri = ProjectIRI.create(createNodeApiRequestADM.projectIri).fold(e => throw e, v => v),
       name = maybeName,
       position = maybePosition,
       labels = Labels.create(createNodeApiRequestADM.labels).fold(e => throw e, v => v),

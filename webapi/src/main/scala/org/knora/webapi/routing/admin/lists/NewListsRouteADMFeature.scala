@@ -34,7 +34,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayload
   ListCreatePayloadADM
 }
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName, Position}
+import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName, Position, ProjectIRI}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 import scala.concurrent.Future
@@ -183,9 +183,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
 
         val labels = Labels.create(apiRequest.labels).fold(e => throw e, v => v)
         val comments = Comments.create(apiRequest.comments).fold(e => throw e, v => v)
-
-        val projectIri = stringFormatter
-          .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI"))
+        val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
 
         val createRootNodePayloadADM: ListCreatePayloadADM = ListCreatePayloadADM(
           id,
@@ -207,13 +205,10 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
 
         val requestMessage = for {
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
-          // check if the requesting user is allowed to perform operation
-          _ = println(
-            "77777",
-            requestingUser.permissions.isProjectAdmin(projectIri),
-            requestingUser.permissions.isSystemAdmin
-          )
-          _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+
+          _ = if (
+            !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
+          ) {
             // not project or a system admin
             throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
           }
@@ -341,8 +336,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
         val listIri =
           stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
 
-        val projectIri = stringFormatter
-          .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI"))
+        val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
 
         val maybeName: Option[ListName] = apiRequest.name match {
           case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
@@ -380,7 +374,9 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
         val requestMessage: Future[NodeInfoChangeRequestADM] = for {
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
           // check if the requesting user is allowed to perform operation
-          _ = if (!requestingUser.permissions.isProjectAdmin(projectIri) && !requestingUser.permissions.isSystemAdmin) {
+          _ = if (
+            !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
+          ) {
             // not project or a system admin
             throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
           }

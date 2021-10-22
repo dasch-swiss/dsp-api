@@ -67,7 +67,7 @@ case class CreateNodeApiRequestADM(
 //  TODO: are below checks necessary anymore? CORRECT! but move all checks to value objects
 
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list node IRI"))
+  stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list IRI"))
 
   if (parentNodeIri.nonEmpty && !stringFormatter.isKnoraListIriStr(parentNodeIri.get)) {
     throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR)

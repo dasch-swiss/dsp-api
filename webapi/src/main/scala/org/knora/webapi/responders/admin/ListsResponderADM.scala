@@ -40,7 +40,7 @@ import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.messages.admin.responder.valueObjects.ListName
+import org.knora.webapi.messages.admin.responder.valueObjects.{ListName, ProjectIRI}
 
 import scala.annotation.tailrec
 import scala.concurrent.Future
@@ -937,7 +937,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     for {
       /* Verify that the project exists by retrieving it. We need the project information so that we can calculate the data graph and IRI for the new node.  */
       maybeProject <- (responderManager ? ProjectGetADM(
-        identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
+        identifier = ProjectIdentifierADM(maybeIri = Some(projectIri.value)),
         featureFactoryConfig = featureFactoryConfig,
         KnoraSystemInstances.Users.SystemUser
       )).mapTo[Option[ProjectADM]]
@@ -949,7 +949,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
       /* verify that the list node name is unique for the project */
       projectUniqueNodeName <- listNodeNameIsProjectUnique(
-        projectIri,
+        projectIri.value,
         name
       )
       _ = if (!projectUniqueNodeName) {
@@ -957,7 +957,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         val escapedName = name.get.value
         val unescapedName = stringFormatter.fromSparqlEncodedString(escapedName)
         throw BadRequestException(
-          s"The node name ${unescapedName} is already used by a list inside the project ${projectIri}."
+          s"The node name ${unescapedName} is already used by a list inside the project ${projectIri.value}."
         )
       }
 
@@ -995,7 +995,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
               dataNamedGraph = dataNamedGraph,
               triplestore = settings.triplestoreType,
               listClassIri = OntologyConstants.KnoraBase.ListNode,
-              projectIri = projectIri,
+              projectIri = projectIri.value,
               nodeIri = newListNodeIri,
               parentNodeIri = None,
               rootNodeIri = rootNodeIri,
@@ -1020,7 +1020,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
               dataNamedGraph = dataNamedGraph,
               triplestore = settings.triplestoreType,
               listClassIri = OntologyConstants.KnoraBase.ListNode,
-              projectIri = projectIri,
+              projectIri = projectIri.value,
               nodeIri = newListNodeIri,
               parentNodeIri = parentNodeIri,
               rootNodeIri = rootNodeIri,
@@ -1280,7 +1280,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         changeNodeNameSparqlString <- getUpdateNodeInfoSparqlStatement(
           changeNodeInfoRequest = NodeInfoChangePayloadADM(
             listIri = nodeIri,
-            projectIri = projectIri,
+            projectIri = ProjectIRI.create(projectIri).fold(e => throw e, v => v),
             name = Some(changeNodeNameRequest.name)
           ),
           featureFactoryConfig = featureFactoryConfig
@@ -1366,7 +1366,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         changeNodeLabelsSparqlString <- getUpdateNodeInfoSparqlStatement(
           changeNodeInfoRequest = NodeInfoChangePayloadADM(
             listIri = nodeIri,
-            projectIri = projectIri,
+            projectIri = ProjectIRI.create(projectIri).fold(e => throw e, v => v),
             labels = Some(changeNodeLabelsRequest.labels)
           ),
           featureFactoryConfig = featureFactoryConfig
@@ -1451,7 +1451,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(
           changeNodeInfoRequest = NodeInfoChangePayloadADM(
             listIri = nodeIri,
-            projectIri = projectIri,
+            projectIri = ProjectIRI.create(projectIri).fold(e => throw e, v => v),
             comments = changeNodeCommentsRequest.comments
           ),
           featureFactoryConfig = featureFactoryConfig
@@ -2168,16 +2168,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
   ): Future[String] =
     for {
       // get the data graph of the project.
-      dataNamedGraph <- getDataNamedGraph(changeNodeInfoRequest.projectIri, featureFactoryConfig)
+      dataNamedGraph <- getDataNamedGraph(changeNodeInfoRequest.projectIri.value, featureFactoryConfig)
 
       /* verify that the list name is unique for the project */
       nodeNameUnique: Boolean <- listNodeNameIsProjectUnique(
-        changeNodeInfoRequest.projectIri,
+        changeNodeInfoRequest.projectIri.value,
         changeNodeInfoRequest.name
       )
       _ = if (!nodeNameUnique) {
         throw DuplicateValueException(
-          s"The name ${changeNodeInfoRequest.name.get} is already used by a list inside the project ${changeNodeInfoRequest.projectIri}."
+          s"The name ${changeNodeInfoRequest.name.get} is already used by a list inside the project ${changeNodeInfoRequest.projectIri.value}."
         )
       }
 
@@ -2210,7 +2210,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           hasOldName = hasOldName,
           isRootNode = isRootNode,
           maybeName = changeNodeInfoRequest.name.map(_.value),
-          projectIri = changeNodeInfoRequest.projectIri,
+          projectIri = changeNodeInfoRequest.projectIri.value,
           listClassIri = OntologyConstants.KnoraBase.ListNode,
           maybeLabels = changeNodeInfoRequest.labels.map(_.value),
           maybeComments = changeNodeInfoRequest.comments.map(_.value)
