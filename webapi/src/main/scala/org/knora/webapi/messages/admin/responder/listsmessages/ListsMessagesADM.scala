@@ -22,7 +22,7 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
@@ -40,44 +40,7 @@ import spray.json._
 // API requests
 
 /**
- * Represents an API request payload that asks the Knora API server to create a new list. At least one
- * label needs to be supplied.
- *
- * @param id         the optional custom list IRI.
- * @param projectIri the IRI of the project the list belongs to.
- * @param name       the optional name of the list.
- * @param labels     the list's labels.
- * @param comments   the list's comments.
- */
-case class CreateListApiRequestADM(
-  id: Option[IRI] = None,
-  projectIri: IRI,
-  name: Option[String] = None,
-  labels: Seq[StringLiteralV2],
-  comments: Seq[StringLiteralV2] // descriptions
-) extends ListADMJsonProtocol {
-
-  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-
-  stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list IRI"))
-
-  if (projectIri.isEmpty) {
-    throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
-  }
-
-  if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-    throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
-  }
-
-  if (labels.isEmpty) {
-    throw BadRequestException(LABEL_MISSING_ERROR)
-  }
-
-  def toJsValue: JsValue = createListApiRequestADMFormat.write(this)
-}
-// TODO: naming is wrong, below are used for both creating LIST and NODES, root node should be changed to LIST child node to NODE
-/**
- * Represents an API request payload that asks the Knora API server to create a new node.
+ * Represents an API request payload that asks the Knora API server to create a new list or child node.
  * If the IRI of the parent node is given, the new node is attached to the parent node as a sublist node.
  * If a specific position is given, insert the child node there. Otherwise, the newly created list node will be appended
  * to the end of the list of children.
@@ -1358,8 +1321,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
   }
 
-  implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] =
-    jsonFormat(CreateListApiRequestADM, "id", "projectIri", "name", "labels", "comments")
   implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateNodeApiRequestADM] =
     jsonFormat(CreateNodeApiRequestADM, "id", "parentNodeIri", "projectIri", "name", "position", "labels", "comments")
   implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeNodeInfoApiRequestADM] = jsonFormat(

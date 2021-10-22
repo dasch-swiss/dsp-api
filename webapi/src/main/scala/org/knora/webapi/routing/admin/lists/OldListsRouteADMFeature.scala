@@ -34,7 +34,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtil
 }
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
   ChildNodeCreatePayloadADM,
-  RootNodeCreatePayloadADM
+  ListCreatePayloadADM
 }
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName, Position}
@@ -124,7 +124,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         name = "body",
         value = "\"list\" to create",
         required = true,
-        dataTypeClass = classOf[CreateListApiRequestADM],
+        dataTypeClass = classOf[CreateNodeApiRequestADM],
         paramType = "body"
       )
     )
@@ -151,7 +151,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         val projectIri = stringFormatter
           .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI"))
 
-        val createRootNodePayloadADM: RootNodeCreatePayloadADM = RootNodeCreatePayloadADM(
+        val createRootNodePayloadADM: ListCreatePayloadADM = ListCreatePayloadADM(
           id = stringFormatter.validateAndEscapeOptionalIri(
             apiRequest.id,
             throw BadRequestException(s"Invalid custom node IRI")

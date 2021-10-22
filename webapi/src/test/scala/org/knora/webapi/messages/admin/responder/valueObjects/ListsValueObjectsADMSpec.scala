@@ -23,7 +23,7 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
   ChildNodeCreatePayloadADM,
-  RootNodeCreatePayloadADM
+  ListCreatePayloadADM
 }
 import org.knora.webapi.messages.admin.responder.listsmessages.{CreateNodeApiRequestADM, NodeCreatePayloadADM}
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
@@ -47,7 +47,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
    */
   private def createRootNodeCreatePayloadADM(
     createNodeApiRequestADM: CreateNodeApiRequestADM
-  ): RootNodeCreatePayloadADM = {
+  ): ListCreatePayloadADM = {
     val maybeName: Option[ListName] = createNodeApiRequestADM.name match {
       case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
       case None        => None
@@ -58,7 +58,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       case None        => None
     }
 
-    RootNodeCreatePayloadADM(
+    ListCreatePayloadADM(
       id = stringFormatter.validateAndEscapeOptionalIri(
         createNodeApiRequestADM.id,
         throw BadRequestException(s"Invalid custom node IRI")
@@ -75,7 +75,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   }
 
   /**
-   * Convenience method returning the [[RootNodeCreatePayloadADM]] object
+   * Convenience method returning the [[ListCreatePayloadADM]] object
    *
    * @param id            the optional custom IRI of the list node.
    * @param parentNodeIri the optional IRI of the parent node.
@@ -84,7 +84,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
    * @param position      the optional position of the node.
    * @param labels        labels of the list node.
    * @param comments      comments of the list node.
-   * @return            a [[RootNodeCreatePayloadADM]]
+   * @return            a [[ListCreatePayloadADM]]
    */
   private def createRootNodeApiRequestADM(
     id: Option[IRI] = None,
@@ -96,18 +96,18 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     comments: Seq[StringLiteralV2] = Seq(StringLiteralV2(value = "New comment", language = Some("en")))
   ): CreateNodeApiRequestADM = CreateNodeApiRequestADM(id, parentNodeIri, projectIri, name, position, labels, comments)
 
-  "When the RootNodeCreatePayloadADM case class is created it" should {
-    "create a valid RootNodeCreatePayloadADM" in {
+  "When the ListCreatePayloadADM case class is created it" should {
+    "create a valid ListCreatePayloadADM" in {
 
       val request = createRootNodeApiRequestADM()
 
-      val rootNodeCreatePayloadADM = createRootNodeCreatePayloadADM(request)
+      val listCreatePayloadADM = createRootNodeCreatePayloadADM(request)
 
-      rootNodeCreatePayloadADM.id should equal(request.id)
-      rootNodeCreatePayloadADM.projectIri should equal(request.projectIri)
-      rootNodeCreatePayloadADM.name.map(_.value) should equal(request.name)
-      rootNodeCreatePayloadADM.labels.value should equal(request.labels)
-      rootNodeCreatePayloadADM.comments.value should equal(request.comments)
+      listCreatePayloadADM.id should equal(request.id)
+      listCreatePayloadADM.projectIri should equal(request.projectIri)
+      listCreatePayloadADM.name.map(_.value) should equal(request.name)
+      listCreatePayloadADM.labels.value should equal(request.labels)
+      listCreatePayloadADM.comments.value should equal(request.comments)
 
       val otherRequest = createRootNodeApiRequestADM(
         id = Some("http://rdfh.ch/lists/otherlistcustomid"),

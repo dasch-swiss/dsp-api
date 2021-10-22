@@ -31,7 +31,7 @@ import org.knora.webapi.feature.{Feature, FeatureFactoryConfig}
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.LIST_CREATE_PERMISSION_ERROR
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
   ChildNodeCreatePayloadADM,
-  RootNodeCreatePayloadADM
+  ListCreatePayloadADM
 }
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName, Position}
@@ -140,7 +140,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
         name = "body",
         value = "\"list\" item to create",
         required = true,
-        dataTypeClass = classOf[CreateListApiRequestADM],
+        dataTypeClass = classOf[CreateNodeApiRequestADM],
         paramType = "body"
       ),
       new ApiImplicitParam(
@@ -187,7 +187,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
         val projectIri = stringFormatter
           .validateAndEscapeProjectIri(apiRequest.projectIri, throw BadRequestException(s"Invalid project IRI"))
 
-        val createRootNodePayloadADM: RootNodeCreatePayloadADM = RootNodeCreatePayloadADM(
+        val createRootNodePayloadADM: ListCreatePayloadADM = ListCreatePayloadADM(
           id,
           projectIri,
           name = maybeName,

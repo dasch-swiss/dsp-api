@@ -4,11 +4,11 @@ import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName, Position}
 
 /**
- * Root and Child Node creation payloads
+ * List (parent node, former root node) and Node (former child node) creation payloads
  */
 sealed trait NodeCreatePayloadADM
 object NodeCreatePayloadADM {
-  final case class RootNodeCreatePayloadADM(
+  final case class ListCreatePayloadADM(
     id: Option[IRI] = None,
     projectIri: IRI,
     name: Option[ListName] = None,

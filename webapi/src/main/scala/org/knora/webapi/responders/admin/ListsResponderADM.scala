@@ -29,7 +29,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
   ChildNodeCreatePayloadADM,
-  RootNodeCreatePayloadADM
+  ListCreatePayloadADM
 }
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
@@ -857,29 +857,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
     println("ZZZZZ-createNode", createNodeRequest)
 
-    val id = createNodeRequest match {
-      case root: NodeCreatePayloadADM.RootNodeCreatePayloadADM   => root.id
-      case child: NodeCreatePayloadADM.ChildNodeCreatePayloadADM => child.id
-    }
-
-    val parentNodeIri = createNodeRequest match {
-      case _: NodeCreatePayloadADM.RootNodeCreatePayloadADM      => None
-      case child: NodeCreatePayloadADM.ChildNodeCreatePayloadADM => child.parentNodeIri
-    }
-
-    val projectIri = createNodeRequest match {
-      case root: NodeCreatePayloadADM.RootNodeCreatePayloadADM   => root.projectIri
-      case child: NodeCreatePayloadADM.ChildNodeCreatePayloadADM => child.projectIri
-    }
-
-    val name = createNodeRequest match {
-      case root: NodeCreatePayloadADM.RootNodeCreatePayloadADM   => root.name
-      case child: NodeCreatePayloadADM.ChildNodeCreatePayloadADM => child.name
-    }
-
-    val position = createNodeRequest match {
-      case _: NodeCreatePayloadADM.RootNodeCreatePayloadADM      => None
-      case child: NodeCreatePayloadADM.ChildNodeCreatePayloadADM => child.position
+    val (id, parentNodeIri, projectIri, name, position) = createNodeRequest match {
+      case parent: NodeCreatePayloadADM.ListCreatePayloadADM =>
+        (parent.id, None, parent.projectIri, parent.name, None)
+      case node: NodeCreatePayloadADM.ChildNodeCreatePayloadADM =>
+        (node.id, node.parentNodeIri, node.projectIri, node.name, node.position)
     }
 
     def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
@@ -1001,7 +983,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
       // Create the new list node depending on type
       createNewListSparqlString: String = createNodeRequest match {
-        case NodeCreatePayloadADM.RootNodeCreatePayloadADM(
+        case NodeCreatePayloadADM.ListCreatePayloadADM(
               _,
               projectIri,
               name,

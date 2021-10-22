@@ -28,7 +28,7 @@ import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
   ChildNodeCreatePayloadADM,
-  RootNodeCreatePayloadADM
+  ListCreatePayloadADM
 }
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
@@ -180,7 +180,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
     "used to modify lists" should {
       "create a list" in {
         responderManager ! ListCreateRequestADM(
-          createRootNode = RootNodeCreatePayloadADM(
+          createRootNode = ListCreatePayloadADM(
             projectIri = IMAGES_PROJECT_IRI,
             name = Some(ListName.create("neuelistename").fold(e => throw e, v => v)),
             labels = Labels
@@ -221,7 +221,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val commentWithSpecialCharacter = "Neue \\\"Kommentar\\\""
         val nameWithSpecialCharacter = "a new \\\"name\\\""
         responderManager ! ListCreateRequestADM(
-          createRootNode = RootNodeCreatePayloadADM(
+          createRootNode = ListCreatePayloadADM(
             projectIri = IMAGES_PROJECT_IRI,
             name = Some(ListName.create(nameWithSpecialCharacter).fold(e => throw e, v => v)),
             labels = Labels
