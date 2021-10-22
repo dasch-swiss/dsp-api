@@ -156,13 +156,8 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
             apiRequest.id,
             throw BadRequestException(s"Invalid custom node IRI")
           ),
-          parentNodeIri = stringFormatter.validateAndEscapeOptionalIri(
-            apiRequest.parentNodeIri,
-            throw BadRequestException(s"Invalid parent node IRI")
-          ),
           projectIri,
           name = maybeName,
-          position = maybePosition,
           labels = Labels.create(apiRequest.labels).fold(e => throw e, v => v),
           comments = Comments.create(apiRequest.comments).fold(e => throw e, v => v)
         )

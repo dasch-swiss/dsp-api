@@ -857,16 +857,34 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
     println("ZZZZZ-createNode", createNodeRequest)
 
-    val (id, parentNodeIri, projectIri, name, position) = createNodeRequest match {
-      case RootNodeCreatePayloadADM(id, parentNodeIri, projectIri, name, position, _, _) =>
-        (id, parentNodeIri, projectIri, name, position)
-      case ChildNodeCreatePayloadADM(id, parentNodeIri, projectIri, name, position, _, _) =>
-        (id, parentNodeIri, projectIri, name, position)
+    val id = createNodeRequest match {
+      case root: NodeCreatePayloadADM.RootNodeCreatePayloadADM   => root.id
+      case child: NodeCreatePayloadADM.ChildNodeCreatePayloadADM => child.id
+    }
+
+    val parentNodeIri = createNodeRequest match {
+      case _: NodeCreatePayloadADM.RootNodeCreatePayloadADM      => None
+      case child: NodeCreatePayloadADM.ChildNodeCreatePayloadADM => child.parentNodeIri
+    }
+
+    val projectIri = createNodeRequest match {
+      case root: NodeCreatePayloadADM.RootNodeCreatePayloadADM   => root.projectIri
+      case child: NodeCreatePayloadADM.ChildNodeCreatePayloadADM => child.projectIri
+    }
+
+    val name = createNodeRequest match {
+      case root: NodeCreatePayloadADM.RootNodeCreatePayloadADM   => root.name
+      case child: NodeCreatePayloadADM.ChildNodeCreatePayloadADM => child.name
+    }
+
+    val position = createNodeRequest match {
+      case _: NodeCreatePayloadADM.RootNodeCreatePayloadADM      => None
+      case child: NodeCreatePayloadADM.ChildNodeCreatePayloadADM => child.position
     }
 
     def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
       if (position.exists(_.value > children.size)) {
-        val givenPosition = position.get
+        val givenPosition = position.map(_.value)
         throw BadRequestException(
           s"Invalid position given $givenPosition, maximum allowed position is = ${children.size}."
         )
@@ -953,6 +971,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         name
       )
       _ = if (!projectUniqueNodeName) {
+//        TODO: all Option.get occurrences should be replaced by map
         val escapedName = name.get.value
         val unescapedName = stringFormatter.fromSparqlEncodedString(escapedName)
         throw BadRequestException(
@@ -984,10 +1003,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       createNewListSparqlString: String = createNodeRequest match {
         case NodeCreatePayloadADM.RootNodeCreatePayloadADM(
               _,
-              parentNodeIri,
               projectIri,
               name,
-              position,
               labels,
               comments
             ) => {
@@ -998,9 +1015,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
               listClassIri = OntologyConstants.KnoraBase.ListNode,
               projectIri = projectIri,
               nodeIri = newListNodeIri,
-              parentNodeIri = parentNodeIri,
+              parentNodeIri = None,
               rootNodeIri = rootNodeIri,
-              position = position.map(_.value),
+              position = None,
               maybeName = name.map(_.value),
               maybeLabels = labels.value,
               maybeComments = Some(comments.value)

@@ -35,6 +35,8 @@ import org.scalatest.enablers.Messaging.messagingNatureOfThrowable
  */
 class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
+//  TODO: these test should be simplified - UNIT TESTS about value objects only
+
   private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
 
   /**
@@ -61,17 +63,12 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
         createNodeApiRequestADM.id,
         throw BadRequestException(s"Invalid custom node IRI")
       ),
-      parentNodeIri = stringFormatter.validateAndEscapeOptionalIri(
-        createNodeApiRequestADM.parentNodeIri,
-        throw BadRequestException(s"Invalid parent node IRI")
-      ),
       projectIri = stringFormatter
         .validateAndEscapeProjectIri(
           createNodeApiRequestADM.projectIri,
           throw BadRequestException(s"Invalid project IRI")
         ),
       name = maybeName,
-      position = maybePosition,
       labels = Labels.create(createNodeApiRequestADM.labels).fold(e => throw e, v => v),
       comments = Comments.create(createNodeApiRequestADM.comments).fold(e => throw e, v => v)
     )
@@ -107,10 +104,8 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       val rootNodeCreatePayloadADM = createRootNodeCreatePayloadADM(request)
 
       rootNodeCreatePayloadADM.id should equal(request.id)
-      rootNodeCreatePayloadADM.parentNodeIri should equal(request.parentNodeIri)
       rootNodeCreatePayloadADM.projectIri should equal(request.projectIri)
       rootNodeCreatePayloadADM.name.map(_.value) should equal(request.name)
-      rootNodeCreatePayloadADM.position.map(_.value) should equal(request.position)
       rootNodeCreatePayloadADM.labels.value should equal(request.labels)
       rootNodeCreatePayloadADM.comments.value should equal(request.comments)
 
@@ -127,20 +122,16 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       val otherRootNodeCreatePayloadADM = createRootNodeCreatePayloadADM(otherRequest)
 
       otherRootNodeCreatePayloadADM.id should equal(otherRequest.id)
-      otherRootNodeCreatePayloadADM.parentNodeIri should equal(otherRequest.parentNodeIri)
       otherRootNodeCreatePayloadADM.projectIri should equal(otherRequest.projectIri)
       otherRootNodeCreatePayloadADM.name.map(_.value) should equal(otherRequest.name)
-      otherRootNodeCreatePayloadADM.position.map(_.value) should equal(otherRequest.position)
       otherRootNodeCreatePayloadADM.labels.value should equal(otherRequest.labels)
       otherRootNodeCreatePayloadADM.comments.value should equal(otherRequest.comments)
 
       otherRootNodeCreatePayloadADM.id should not equal request.id
-//      otherRootNodeCreatePayloadADM.parentNodeIri should equal(otherRequest.parentNodeIri)
-      otherRootNodeCreatePayloadADM.projectIri should not equal (request.projectIri)
-      otherRootNodeCreatePayloadADM.name.get.value should not equal (request.name)
-//      otherRootNodeCreatePayloadADM.position.get.value should equal(otherRequest.position)
-      otherRootNodeCreatePayloadADM.labels.value should not equal (request.labels)
-      otherRootNodeCreatePayloadADM.comments.value should not equal (request.comments)
+      otherRootNodeCreatePayloadADM.projectIri should not equal request.projectIri
+      otherRootNodeCreatePayloadADM.name.get.value should not equal request.name
+      otherRootNodeCreatePayloadADM.labels.value should not equal request.labels
+      otherRootNodeCreatePayloadADM.comments.value should not equal request.comments
     }
   }
 
@@ -208,8 +199,9 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     name: Option[String] = None,
     position: Option[Int] = None,
     labels: Seq[StringLiteralV2] = Seq(StringLiteralV2(value = "New label", language = Some("en"))),
-    comments: Seq[StringLiteralV2] = Seq(StringLiteralV2(value = "New comment", language = Some("en")))
-  ): CreateNodeApiRequestADM = CreateNodeApiRequestADM(id, parentNodeIri, projectIri, name, position, labels, comments)
+    comments: Seq[StringLiteralV2] = Seq(StringLiteralV2(value = "", language = None))
+  ): CreateNodeApiRequestADM =
+    CreateNodeApiRequestADM(id, parentNodeIri, projectIri, name, position, labels, comments)
 
   "When the ChildNodeCreatePayloadADM case class is created it" should {
     "create a valid ChildNodeCreatePayloadADM" in {
@@ -249,12 +241,12 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 //      otherChildNodeCreatePayloadADM.comments.map(_.value) should equal(otherRequest.comments)
 
       otherChildNodeCreatePayloadADM.id should not equal request.id
-      //      otherChildNodeCreatePayloadADM.parentNodeIri should equal(otherRequest.parentNodeIri)
-      otherChildNodeCreatePayloadADM.projectIri should not equal (request.projectIri)
-      otherChildNodeCreatePayloadADM.name.get.value should not equal (request.name)
-      //      otherChildNodeCreatePayloadADM.position.get.value should equal(otherRequest.position)
-      otherChildNodeCreatePayloadADM.labels.value should not equal (request.labels)
-      otherChildNodeCreatePayloadADM.comments.map(_.value) should not equal (request.comments)
+//      otherChildNodeCreatePayloadADM.parentNodeIri should equal(otherRequest.parentNodeIri)
+      otherChildNodeCreatePayloadADM.projectIri should not equal request.projectIri
+      otherChildNodeCreatePayloadADM.name.get.value should not equal request.name
+//      otherChildNodeCreatePayloadADM.position.map(_.value) should equal(otherRequest.position)
+      otherChildNodeCreatePayloadADM.labels.value should not equal request.labels
+      otherChildNodeCreatePayloadADM.comments.map(_.value) should not equal request.comments
     }
   }
 }

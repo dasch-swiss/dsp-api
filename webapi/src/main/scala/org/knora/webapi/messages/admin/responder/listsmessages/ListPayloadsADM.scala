@@ -10,10 +10,8 @@ sealed trait NodeCreatePayloadADM
 object NodeCreatePayloadADM {
   final case class RootNodeCreatePayloadADM(
     id: Option[IRI] = None,
-    parentNodeIri: Option[IRI] = None,
     projectIri: IRI,
     name: Option[ListName] = None,
-    position: Option[Position] = None,
     labels: Labels,
     comments: Comments
   ) extends NodeCreatePayloadADM
@@ -59,5 +57,6 @@ final case class NodeLabelsChangePayloadADM(
  * Node Comments update payload
  */
 final case class NodeCommentsChangePayloadADM(
+//  TODO: remove Option here
   comments: Option[Comments] = None
 )

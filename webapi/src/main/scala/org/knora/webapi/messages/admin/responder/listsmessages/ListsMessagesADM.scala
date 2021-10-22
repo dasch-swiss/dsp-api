@@ -75,7 +75,7 @@ case class CreateListApiRequestADM(
 
   def toJsValue: JsValue = createListApiRequestADMFormat.write(this)
 }
-
+// TODO: naming is wrong, below are used for both creating LIST and NODES, root node should be changed to LIST child node to NODE
 /**
  * Represents an API request payload that asks the Knora API server to create a new node.
  * If the IRI of the parent node is given, the new node is attached to the parent node as a sublist node.
@@ -101,7 +101,7 @@ case class CreateNodeApiRequestADM(
   labels: Seq[StringLiteralV2],
   comments: Seq[StringLiteralV2]
 ) extends ListADMJsonProtocol {
-//  TODO: are below checks necessary anymore?
+//  TODO: are below checks necessary anymore? CORRECT! but move all checks to value objects
 
   private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
   stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list node IRI"))

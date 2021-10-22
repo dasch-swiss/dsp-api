@@ -189,10 +189,8 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
 
         val createRootNodePayloadADM: RootNodeCreatePayloadADM = RootNodeCreatePayloadADM(
           id,
-          parentNodeIri,
           projectIri,
           name = maybeName,
-          position = maybePosition,
           labels,
           comments
         )
