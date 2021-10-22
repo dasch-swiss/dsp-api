@@ -977,7 +977,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
       // check the custom IRI; if not given, create an unused IRI
-      customListIri: Option[SmartIri] = id.map(iri => iri.toSmartIri)
+      customListIri: Option[SmartIri] = id.map(_.value).map(_.toSmartIri)
       maybeShortcode: String = project.shortcode
       newListNodeIri: IRI <- checkOrCreateEntityIri(customListIri, stringFormatter.makeRandomListIri(maybeShortcode))
 

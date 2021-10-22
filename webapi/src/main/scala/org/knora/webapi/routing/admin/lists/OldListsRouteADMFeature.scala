@@ -37,7 +37,14 @@ import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayload
   ListCreatePayloadADM
 }
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName, Position, ProjectIRI}
+import org.knora.webapi.messages.admin.responder.valueObjects.{
+  Comments,
+  CustomID,
+  Labels,
+  ListName,
+  Position,
+  ProjectIRI
+}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 import scala.concurrent.Future
@@ -138,6 +145,11 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
     post {
       /* create a list */
       entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
+        val maybeId: Option[CustomID] = apiRequest.id match {
+          case Some(value) => Some(CustomID.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
         val maybeName: Option[ListName] = apiRequest.name match {
           case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
           case None        => None
@@ -151,10 +163,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
 
         val createRootNodePayloadADM: ListCreatePayloadADM = ListCreatePayloadADM(
-          id = stringFormatter.validateAndEscapeOptionalIri(
-            apiRequest.id,
-            throw BadRequestException(s"Invalid custom node IRI")
-          ),
+          id = maybeId,
           projectIri,
           name = maybeName,
           labels = Labels.create(apiRequest.labels).fold(e => throw e, v => v),
@@ -360,6 +369,11 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
       post {
         /* add node to existing list node. the existing list node can be either the root or a child */
         entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
+          val maybeId: Option[CustomID] = apiRequest.id match {
+            case Some(value) => Some(CustomID.create(value).fold(e => throw e, v => v))
+            case None        => None
+          }
+
           val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
 
           val maybeName: Option[ListName] = apiRequest.name match {
@@ -373,10 +387,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           }
 
           val createChildNodeRequest: ChildNodeCreatePayloadADM = ChildNodeCreatePayloadADM(
-            id = stringFormatter.validateAndEscapeOptionalIri(
-              apiRequest.id,
-              throw BadRequestException(s"Invalid custom node IRI")
-            ),
+            id = maybeId,
             parentNodeIri = stringFormatter.validateAndEscapeOptionalIri(
               apiRequest.parentNodeIri,
               throw BadRequestException(s"Invalid parent node IRI")

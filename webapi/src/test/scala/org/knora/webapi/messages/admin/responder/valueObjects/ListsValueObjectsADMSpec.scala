@@ -48,21 +48,18 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   private def createRootNodeCreatePayloadADM(
     createNodeApiRequestADM: CreateNodeApiRequestADM
   ): ListCreatePayloadADM = {
+    val maybeId: Option[CustomID] = createNodeApiRequestADM.id match {
+      case Some(value) => Some(CustomID.create(value).fold(e => throw e, v => v))
+      case None        => None
+    }
+
     val maybeName: Option[ListName] = createNodeApiRequestADM.name match {
       case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
       case None        => None
     }
 
-    val maybePosition: Option[Position] = createNodeApiRequestADM.position match {
-      case Some(value) => Some(Position.create(value).fold(e => throw e, v => v))
-      case None        => None
-    }
-
     ListCreatePayloadADM(
-      id = stringFormatter.validateAndEscapeOptionalIri(
-        createNodeApiRequestADM.id,
-        throw BadRequestException(s"Invalid custom node IRI")
-      ),
+      id = maybeId,
       projectIri = ProjectIRI.create(createNodeApiRequestADM.projectIri).fold(e => throw e, v => v),
       name = maybeName,
       labels = Labels.create(createNodeApiRequestADM.labels).fold(e => throw e, v => v),
@@ -140,6 +137,11 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   private def createChildNodeCreatePayloadADM(
     createNodeApiRequestADM: CreateNodeApiRequestADM
   ): ChildNodeCreatePayloadADM = {
+    val maybeId: Option[CustomID] = createNodeApiRequestADM.id match {
+      case Some(value) => Some(CustomID.create(value).fold(e => throw e, v => v))
+      case None        => None
+    }
+
     val maybeName: Option[ListName] = createNodeApiRequestADM.name match {
       case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
       case None        => None
@@ -150,16 +152,8 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       case None        => None
     }
 
-//    val maybeComments: Option[Comments] = createNodeApiRequestADM.comments match {
-//      case Some(value) => Some(Comments.create(value).fold(e => throw e, v => v))
-//      case None        => None
-//    }
-
     ChildNodeCreatePayloadADM(
-      id = stringFormatter.validateAndEscapeOptionalIri(
-        createNodeApiRequestADM.id,
-        throw BadRequestException(s"Invalid custom node IRI")
-      ),
+      id = maybeId,
       parentNodeIri = stringFormatter.validateAndEscapeOptionalIri(
         createNodeApiRequestADM.parentNodeIri,
         throw BadRequestException(s"Invalid parent node IRI")
