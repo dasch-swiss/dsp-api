@@ -1138,9 +1138,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     ): Future[NodeInfoGetResponseADM] =
       for {
 
+        _ <- Future(println("77777", nodeIri, changeNodeRequest.listIri))
+
         // check if nodeIRI in path and payload match
         _ <- Future(
-          if (!nodeIri.equals(changeNodeRequest.listIri))
+          if (!nodeIri.equals(changeNodeRequest.listIri.value))
             throw BadRequestException("IRI in path and payload don't match.")
         )
 

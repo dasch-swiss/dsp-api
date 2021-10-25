@@ -5,6 +5,7 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.{
   INVALID_POSITION,
+  LABEL_MISSING_ERROR,
   LIST_NODE_IRI_INVALID_ERROR,
   LIST_NODE_IRI_MISSING_ERROR,
   PROJECT_IRI_INVALID_ERROR,
@@ -46,7 +47,7 @@ object CustomID {
 
   def create(value: String): Either[Throwable, CustomID] =
     if (value.isEmpty) {
-//      TODO: if id i only optional empty condition shouldn't exist
+//      TODO: if id is only optional empty condition shouldn't exist
       Left(BadRequestException("Invalid custom node IRI"))
     } else {
       val validatedValue = stringFormatter.validateAndEscapeIri(
@@ -84,7 +85,7 @@ object RootNodeIRI {
   val stringFormatter = StringFormatter.getGeneralInstance
 
   def create(value: String): Either[Throwable, RootNodeIRI] =
-    //      TODO: if id i only optional empty condition shouldn't exist
+    //      TODO: if id is only optional empty condition shouldn't exist
     if (value.isEmpty) {
       Left(BadRequestException(s"Missing root node IRI"))
     } else {
@@ -129,7 +130,7 @@ sealed abstract case class Labels private (value: Seq[StringLiteralV2])
 object Labels {
   def create(value: Seq[StringLiteralV2]): Either[Throwable, Labels] =
     if (value.isEmpty) {
-      Left(BadRequestException("Missing labels"))
+      Left(BadRequestException(LABEL_MISSING_ERROR))
     } else {
       Right(new Labels(value) {})
     }
