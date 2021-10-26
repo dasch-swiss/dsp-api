@@ -66,55 +66,55 @@ case class CreateNodeApiRequestADM(
 ) extends ListADMJsonProtocol {
 //  TODO: are below checks necessary anymore? CORRECT! but move all checks to value objects
 
-  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list IRI"))
-
-  if (parentNodeIri.nonEmpty && !stringFormatter.isKnoraListIriStr(parentNodeIri.get)) {
-    throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR)
-  }
-
-  if (projectIri.isEmpty) {
-    throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
-  }
-
-  if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-    throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
-  }
-
-  if (labels.isEmpty) {
-    throw BadRequestException(LABEL_MISSING_ERROR)
-  }
-
-  if (position.exists(_ < -1)) {
-    throw BadRequestException(INVALID_POSITION)
-  }
+//  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
+//  stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list IRI"))
+//
+//  if (parentNodeIri.nonEmpty && !stringFormatter.isKnoraListIriStr(parentNodeIri.get)) {
+//    throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR)
+//  }
+//
+//  if (projectIri.isEmpty) {
+//    throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
+//  }
+//
+//  if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
+//    throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
+//  }
+//
+//  if (labels.isEmpty) {
+//    throw BadRequestException(LABEL_MISSING_ERROR)
+//  }
+//
+//  if (position.exists(_ < -1)) {
+//    throw BadRequestException(INVALID_POSITION)
+//  }
 
   def toJsValue: JsValue = createListNodeApiRequestADMFormat.write(this)
 
   /**
    * Escapes special characters within strings
    */
-  def escape: CreateNodeApiRequestADM = {
-    val escapedLabels: Seq[StringLiteralV2] = labels.map { label =>
-      val escapedLabel =
-        stringFormatter.toSparqlEncodedString(label.value, throw BadRequestException(s"Invalid label: ${label.value}"))
-      StringLiteralV2(value = escapedLabel, language = label.language)
-    }
-    val escapedComments = comments.map { comment =>
-      val escapedComment =
-        stringFormatter.toSparqlEncodedString(
-          comment.value,
-          throw BadRequestException(s"Invalid comment: ${comment.value}")
-        )
-      StringLiteralV2(value = escapedComment, language = comment.language)
-    }
-    val escapedName: Option[String] = name match {
-      case None => None
-      case Some(value: String) =>
-        Some(stringFormatter.toSparqlEncodedString(value, throw BadRequestException(s"Invalid string: $value")))
-    }
-    copy(labels = escapedLabels, comments = escapedComments, name = escapedName)
-  }
+//  def escape: CreateNodeApiRequestADM = {
+//    val escapedLabels: Seq[StringLiteralV2] = labels.map { label =>
+//      val escapedLabel =
+//        stringFormatter.toSparqlEncodedString(label.value, throw BadRequestException(s"Invalid label: ${label.value}"))
+//      StringLiteralV2(value = escapedLabel, language = label.language)
+//    }
+//    val escapedComments = comments.map { comment =>
+//      val escapedComment =
+//        stringFormatter.toSparqlEncodedString(
+//          comment.value,
+//          throw BadRequestException(s"Invalid comment: ${comment.value}")
+//        )
+//      StringLiteralV2(value = escapedComment, language = comment.language)
+//    }
+//    val escapedName: Option[String] = name match {
+//      case None => None
+//      case Some(value: String) =>
+//        Some(stringFormatter.toSparqlEncodedString(value, throw BadRequestException(s"Invalid string: $value")))
+//    }
+//    copy(labels = escapedLabels, comments = escapedComments, name = escapedName)
+//  }
 }
 
 /**

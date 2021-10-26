@@ -4,20 +4,22 @@ import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.{
+  COMMENT_MISSING_ERROR,
   INVALID_POSITION,
   LABEL_MISSING_ERROR,
+  LIST_NAME_MISSING_ERROR,
   LIST_NODE_IRI_INVALID_ERROR,
   LIST_NODE_IRI_MISSING_ERROR,
   PROJECT_IRI_INVALID_ERROR,
   PROJECT_IRI_MISSING_ERROR
 }
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+
+import scala.util.{Failure, Success, Try}
 //TODO: sprawdzic na koncu wszystkie czeki w messangerze czy poktrywaja sie tu i tak samo tresci bledow
 //TODO: possible to somehow merge all IRI related value objects? what about diff exception messages
 // either use below checks in route to throw custom exceptions for one IRI value object
 // or bring these matches here
-//case Some(value) => Some(Comments.create(value).fold(e => throw e, v => v))
-//case None        => None
 
 /**
  * List ListIRI value object.
@@ -30,31 +32,15 @@ object ListIRI {
     if (value.isEmpty) {
       Left(BadRequestException(LIST_NODE_IRI_MISSING_ERROR))
     } else {
-      val validatedValue = stringFormatter.validateAndEscapeIri(
-        value,
-        throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR)
+      val validatedValue = Try(
+        //      move regex (string formatter functionality here)
+        stringFormatter.validateAndEscapeIri(value, throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
       )
-      Right(new ListIRI(validatedValue) {})
-    }
-}
 
-/**
- * List CustomID value object.
- */
-sealed abstract case class CustomID private (value: String)
-object CustomID {
-  val stringFormatter = StringFormatter.getGeneralInstance
-
-  def create(value: String): Either[Throwable, CustomID] =
-    if (value.isEmpty) {
-//      TODO: if id is only optional empty condition shouldn't exist
-      Left(BadRequestException("Invalid custom node IRI"))
-    } else {
-      val validatedValue = stringFormatter.validateAndEscapeIri(
-        value,
-        throw BadRequestException(s"Invalid custom node IRI")
-      )
-      Right(new CustomID(validatedValue) {})
+      validatedValue match {
+        case Success(_) => Right(new ListIRI(value) {})
+        case Failure(_) => Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
+      }
     }
 }
 
@@ -69,11 +55,14 @@ object ProjectIRI {
     if (value.isEmpty) {
       Left(BadRequestException(PROJECT_IRI_MISSING_ERROR))
     } else {
-      val validatedValue = stringFormatter.validateAndEscapeProjectIri(
-        value,
-        throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
+      val validatedValue = Try(
+        stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(PROJECT_IRI_INVALID_ERROR))
       )
-      Right(new ProjectIRI(validatedValue) {})
+
+      validatedValue match {
+        case Success(_) => Right(new ProjectIRI(value) {})
+        case Failure(_) => Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
+      }
     }
 }
 
@@ -89,11 +78,17 @@ object RootNodeIRI {
     if (value.isEmpty) {
       Left(BadRequestException(s"Missing root node IRI"))
     } else {
-      val validatedValue = stringFormatter.validateAndEscapeIri(
-        value,
-        throw BadRequestException(s"Invalid root node IRI")
+      val validatedValue = Try(
+        stringFormatter.validateAndEscapeIri(
+          value,
+          throw BadRequestException(s"Invalid root node IRI")
+        )
       )
-      Right(new RootNodeIRI(validatedValue) {})
+
+      validatedValue match {
+        case Success(_) => Right(new RootNodeIRI(value) {})
+        case Failure(_) => Left(BadRequestException(s"Invalid root node IRI"))
+      }
     }
 }
 
@@ -104,7 +99,7 @@ sealed abstract case class ListName private (value: String)
 object ListName {
   def create(value: String): Either[Throwable, ListName] =
     if (value.isEmpty) {
-      Left(BadRequestException("Missing list name"))
+      Left(BadRequestException(LIST_NAME_MISSING_ERROR))
     } else {
       Right(new ListName(value) {})
     }
@@ -143,7 +138,7 @@ sealed abstract case class Comments private (value: Seq[StringLiteralV2])
 object Comments {
   def create(value: Seq[StringLiteralV2]): Either[Throwable, Comments] =
     if (value.isEmpty) {
-      Left(BadRequestException("Missing comments"))
+      Left(BadRequestException(COMMENT_MISSING_ERROR))
     } else {
       Right(new Comments(value) {})
     }

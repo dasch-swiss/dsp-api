@@ -3,7 +3,6 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.valueObjects.{
   Comments,
-  CustomID,
   Labels,
   ListIRI,
   ListName,
@@ -18,14 +17,14 @@ import org.knora.webapi.messages.admin.responder.valueObjects.{
 sealed trait NodeCreatePayloadADM
 object NodeCreatePayloadADM {
   final case class ListCreatePayloadADM(
-    id: Option[CustomID] = None,
+    id: Option[ListIRI] = None,
     projectIri: ProjectIRI,
     name: Option[ListName] = None,
     labels: Labels,
     comments: Comments
   ) extends NodeCreatePayloadADM
   final case class ChildNodeCreatePayloadADM(
-    id: Option[CustomID] = None,
+    id: Option[ListIRI] = None,
     parentNodeIri: Option[ListIRI] = None,
     projectIri: ProjectIRI,
     name: Option[ListName] = None,

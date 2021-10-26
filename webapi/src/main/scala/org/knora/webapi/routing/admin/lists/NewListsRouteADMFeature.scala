@@ -36,7 +36,6 @@ import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayload
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects.{
   Comments,
-  CustomID,
   Labels,
   ListIRI,
   ListName,
@@ -170,8 +169,8 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
     post {
       /* create a list item (root or child node) */
       entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
-        val maybeId: Option[CustomID] = apiRequest.id match {
-          case Some(value) => Some(CustomID.create(value).fold(e => throw e, v => v))
+        val maybeId: Option[ListIRI] = apiRequest.id match {
+          case Some(value) => Some(ListIRI.create(value).fold(e => throw e, v => v))
           case None        => None
         }
 

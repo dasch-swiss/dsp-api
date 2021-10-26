@@ -20,221 +20,145 @@
 package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
-  ChildNodeCreatePayloadADM,
-  ListCreatePayloadADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.{
+  COMMENT_MISSING_ERROR,
+  INVALID_POSITION,
+  LABEL_MISSING_ERROR,
+  LIST_NAME_MISSING_ERROR,
+  LIST_NODE_IRI_INVALID_ERROR,
+  LIST_NODE_IRI_MISSING_ERROR,
+  PROJECT_IRI_INVALID_ERROR,
+  PROJECT_IRI_MISSING_ERROR
 }
-import org.knora.webapi.messages.admin.responder.listsmessages.{CreateNodeApiRequestADM, NodeCreatePayloadADM}
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.{IRI, UnitSpec}
-import org.scalatest.enablers.Messaging.messagingNatureOfThrowable
 
 /**
  * This spec is used to test the creation of value objects of the [[ListsValueObjectsADM]].
  */
 class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
-//  TODO: these test should be simplified - UNIT TESTS about value objects only
+  "ListIRI value object" when {
+    val validListIri = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
 
-  private implicit val stringFormatter: StringFormatter = StringFormatter.getInstanceForConstantOntologies
-
-  /**
-   * Convenience method returning the NodeCreatePayloadADM from the [[CreateNodeApiRequestADM]] object
-   *
-   * @param createNodeApiRequestADM the [[CreateNodeApiRequestADM]] object
-   * @return                        a [[NodeCreatePayloadADM]]
-   */
-  private def createRootNodeCreatePayloadADM(
-    createNodeApiRequestADM: CreateNodeApiRequestADM
-  ): ListCreatePayloadADM = {
-    val maybeId: Option[CustomID] = createNodeApiRequestADM.id match {
-      case Some(value) => Some(CustomID.create(value).fold(e => throw e, v => v))
-      case None        => None
+    "created using empty value" should {
+      "throw BadRequestException" in {
+        ListIRI.create("") should equal(Left(BadRequestException(LIST_NODE_IRI_MISSING_ERROR)))
+      }
     }
-
-    val maybeName: Option[ListName] = createNodeApiRequestADM.name match {
-      case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
-      case None        => None
+    "created using invalid value" should {
+      "throw BadRequestException" in {
+        ListIRI.create("123") should equal(Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR)))
+      }
     }
-
-    ListCreatePayloadADM(
-      id = maybeId,
-      projectIri = ProjectIRI.create(createNodeApiRequestADM.projectIri).fold(e => throw e, v => v),
-      name = maybeName,
-      labels = Labels.create(createNodeApiRequestADM.labels).fold(e => throw e, v => v),
-      comments = Comments.create(createNodeApiRequestADM.comments).fold(e => throw e, v => v)
-    )
-  }
-
-  /**
-   * Convenience method returning the [[ListCreatePayloadADM]] object
-   *
-   * @param id            the optional custom IRI of the list node.
-   * @param parentNodeIri the optional IRI of the parent node.
-   * @param projectIri    the IRI of the project.
-   * @param name          the optional name of the list node.
-   * @param position      the optional position of the node.
-   * @param labels        labels of the list node.
-   * @param comments      comments of the list node.
-   * @return            a [[ListCreatePayloadADM]]
-   */
-  private def createRootNodeApiRequestADM(
-    id: Option[IRI] = None,
-    parentNodeIri: Option[IRI] = None,
-    projectIri: IRI = "http://rdfh.ch/projects/0001",
-    name: Option[String] = None,
-    position: Option[Int] = None,
-    labels: Seq[StringLiteralV2] = Seq(StringLiteralV2(value = "New label", language = Some("en"))),
-    comments: Seq[StringLiteralV2] = Seq(StringLiteralV2(value = "New comment", language = Some("en")))
-  ): CreateNodeApiRequestADM = CreateNodeApiRequestADM(id, parentNodeIri, projectIri, name, position, labels, comments)
-
-  "When the ListCreatePayloadADM case class is created it" should {
-    "create a valid ListCreatePayloadADM" in {
-
-      val request = createRootNodeApiRequestADM()
-
-      val listCreatePayloadADM = createRootNodeCreatePayloadADM(request)
-
-      listCreatePayloadADM.id should equal(request.id)
-      listCreatePayloadADM.projectIri.value should equal(request.projectIri)
-      listCreatePayloadADM.name.map(_.value) should equal(request.name)
-      listCreatePayloadADM.labels.value should equal(request.labels)
-      listCreatePayloadADM.comments.value should equal(request.comments)
-
-      val otherRequest = createRootNodeApiRequestADM(
-        id = Some("http://rdfh.ch/lists/otherlistcustomid"),
-        parentNodeIri = None,
-        projectIri = "http://rdfh.ch/projects/0002",
-        name = Some("Uther Name"),
-        position = None,
-        labels = Seq(StringLiteralV2(value = "Other label", language = Some("en"))),
-        comments = Seq(StringLiteralV2(value = "Other comment", language = Some("en")))
-      )
-
-      val otherRootNodeCreatePayloadADM = createRootNodeCreatePayloadADM(otherRequest)
-
-      otherRootNodeCreatePayloadADM.id.map(_.value) should equal(otherRequest.id)
-      otherRootNodeCreatePayloadADM.projectIri.value should equal(otherRequest.projectIri)
-      otherRootNodeCreatePayloadADM.name.map(_.value) should equal(otherRequest.name)
-      otherRootNodeCreatePayloadADM.labels.value should equal(otherRequest.labels)
-      otherRootNodeCreatePayloadADM.comments.value should equal(otherRequest.comments)
-
-      otherRootNodeCreatePayloadADM.id.map(_.value) should not equal request.id
-      otherRootNodeCreatePayloadADM.projectIri.value should not equal request.projectIri
-      otherRootNodeCreatePayloadADM.name.get.value should not equal request.name
-      otherRootNodeCreatePayloadADM.labels.value should not equal request.labels
-      otherRootNodeCreatePayloadADM.comments.value should not equal request.comments
+    "created using valid value" should {
+      "return value object that value equals to the value used to its creation" in {
+//        TODO: this probably doesn't make sense
+        ListIRI.create(validListIri).map(_.value should equal(validListIri))
+      }
     }
   }
 
-  /**
-   * Convenience method returning the NodeCreatePayloadADM from the [[CreateNodeApiRequestADM]] object
-   *
-   * @param createNodeApiRequestADM the [[CreateNodeApiRequestADM]] object
-   * @return                        a [[NodeCreatePayloadADM]]
-   */
-  private def createChildNodeCreatePayloadADM(
-    createNodeApiRequestADM: CreateNodeApiRequestADM
-  ): ChildNodeCreatePayloadADM = {
-    val maybeId: Option[CustomID] = createNodeApiRequestADM.id match {
-      case Some(value) => Some(CustomID.create(value).fold(e => throw e, v => v))
-      case None        => None
-    }
+  "ProjectIRI value object" when {
+//    TODO: check string formatter project iri validation because passing just "http://rdfh.ch/projects/@@@@@@" works
+    val validProjectIri = "http://rdfh.ch/projects/0001"
 
-    val maybeParentNodeIri: Option[ListIRI] = createNodeApiRequestADM.parentNodeIri match {
-      case Some(value) => Some(ListIRI.create(value).fold(e => throw e, v => v))
-      case None        => None
+    "created using empty value" should {
+      "throw BadRequestException" in {
+        ProjectIRI.create("") should equal(Left(BadRequestException(PROJECT_IRI_MISSING_ERROR)))
+      }
     }
-
-    val maybeName: Option[ListName] = createNodeApiRequestADM.name match {
-      case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
-      case None        => None
+    "created using invalid value" should {
+      "throw BadRequestException" in {
+        ProjectIRI.create("123") should equal(Left(BadRequestException(PROJECT_IRI_INVALID_ERROR)))
+      }
     }
-
-    val maybePosition: Option[Position] = createNodeApiRequestADM.position match {
-      case Some(value) => Some(Position.create(value).fold(e => throw e, v => v))
-      case None        => None
+    "created using valid value" should {
+      "not throw BadRequestExceptions" in {
+//        ProjectIRI.create(validProjectIri).map(_.value should equal(validProjectIri))
+        ProjectIRI.create(validProjectIri) should not equal Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
+      }
     }
-
-    ChildNodeCreatePayloadADM(
-      id = maybeId,
-      parentNodeIri = maybeParentNodeIri,
-      projectIri = ProjectIRI.create(createNodeApiRequestADM.projectIri).fold(e => throw e, v => v),
-      name = maybeName,
-      position = maybePosition,
-      labels = Labels.create(createNodeApiRequestADM.labels).fold(e => throw e, v => v),
-      comments = Some(Comments.create(createNodeApiRequestADM.labels).fold(e => throw e, v => v))
-    )
   }
 
-  /**
-   * Convenience method returning the [[ChildNodeCreatePayloadADM]] object
-   *
-   * @param id            the optional custom IRI of the list node.
-   * @param parentNodeIri the optional IRI of the parent node.
-   * @param projectIri    the IRI of the project.
-   * @param name          the optional name of the list node.
-   * @param position      the optional position of the node.
-   * @param labels        labels of the list node.
-   * @param comments      comments of the list node.
-   * @return            a [[ChildNodeCreatePayloadADM]]
-   */
-  private def createChildNodeApiRequestADM(
-    id: Option[IRI] = None,
-    parentNodeIri: Option[IRI] = None,
-    projectIri: IRI = "http://rdfh.ch/projects/0001",
-    name: Option[String] = None,
-    position: Option[Int] = None,
-    labels: Seq[StringLiteralV2] = Seq(StringLiteralV2(value = "New label", language = Some("en"))),
-    comments: Seq[StringLiteralV2] = Seq(StringLiteralV2(value = "", language = None))
-  ): CreateNodeApiRequestADM =
-    CreateNodeApiRequestADM(id, parentNodeIri, projectIri, name, position, labels, comments)
+  "RootNodeIRI value object" when {
+//    TODO: check string formatter list iri validation because passing just "http://rdfh.ch" works
+    val validRootNodeIRI = "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A"
 
-  "When the ChildNodeCreatePayloadADM case class is created it" should {
-    "create a valid ChildNodeCreatePayloadADM" in {
+    "created using empty value" should {
+      "throw BadRequestException" in {
+        RootNodeIRI.create("") should equal(Left(BadRequestException("Missing root node IRI")))
+      }
+    }
+    "created using invalid value" should {
+      "throw BadRequestException" in {
+        RootNodeIRI.create("123") should equal(Left(BadRequestException("Invalid root node IRI")))
+      }
+    }
+    "created using valid value" should {
+      "not throw BadRequestExceptions" in {
+        RootNodeIRI.create(validRootNodeIRI) should not equal Left(BadRequestException("Invalid root node IRI"))
+      }
+    }
+  }
 
-      val request = createChildNodeApiRequestADM()
+  "ListName value object" when {
+    val validListName = "It's valid list name example"
 
-      val childNodeCreatePayloadADM = createChildNodeCreatePayloadADM(request)
+    "created using empty value" should {
+      "throw BadRequestException" in {
+        ListName.create("") should equal(Left(BadRequestException(LIST_NAME_MISSING_ERROR)))
+      }
+    }
+    "created using valid value" should {
+      "not throw BadRequestExceptions" in {
+        ListName.create(validListName) should not equal Left(BadRequestException(LIST_NAME_MISSING_ERROR))
+      }
+    }
+  }
 
-      childNodeCreatePayloadADM.id should equal(request.id)
-      childNodeCreatePayloadADM.parentNodeIri should equal(request.parentNodeIri)
-      childNodeCreatePayloadADM.projectIri.value should equal(request.projectIri)
-      childNodeCreatePayloadADM.name.map(_.value) should equal(request.name)
-      childNodeCreatePayloadADM.position.map(_.value) should equal(request.position)
-      childNodeCreatePayloadADM.labels.value should equal(request.labels)
-//      TODO: bring below back after separating ChildNodeCreateApiRequestADM from CreateNodeApiRequestADM
-//      childNodeCreatePayloadADM.comments.map(_.value) should equal(request.comments)
+  "Position value object" when {
+    val validPosition = 0
 
-      val otherRequest = createChildNodeApiRequestADM(
-        id = Some("http://rdfh.ch/lists/otherlistcustomid"),
-        parentNodeIri = None,
-        projectIri = "http://rdfh.ch/projects/0002",
-        name = Some("Uther Name"),
-        position = None,
-        labels = Seq(StringLiteralV2(value = "Other label", language = Some("en"))),
-        comments = Seq(StringLiteralV2(value = "Other comment", language = Some("en")))
-      )
+    "created using invalid value" should {
+      "throw BadRequestException" in {
+        Position.create(-2) should equal(Left(BadRequestException(INVALID_POSITION)))
+      }
+    }
+    "created using valid value" should {
+      "not throw BadRequestExceptions" in {
+        Position.create(validPosition) should not equal Left(BadRequestException(INVALID_POSITION))
+      }
+    }
+  }
 
-      val otherChildNodeCreatePayloadADM = createChildNodeCreatePayloadADM(otherRequest)
+  "Labels value object" when {
+    val validLabels = Seq(StringLiteralV2(value = "New Label", language = Some("en")))
 
-      otherChildNodeCreatePayloadADM.id.map(_.value) should equal(otherRequest.id)
-      otherChildNodeCreatePayloadADM.parentNodeIri should equal(otherRequest.parentNodeIri)
-      otherChildNodeCreatePayloadADM.projectIri.value should equal(otherRequest.projectIri)
-      otherChildNodeCreatePayloadADM.name.map(_.value) should equal(otherRequest.name)
-      otherChildNodeCreatePayloadADM.position.map(_.value) should equal(otherRequest.position)
-      otherChildNodeCreatePayloadADM.labels.value should equal(otherRequest.labels)
-//      TODO: bring below back after separating ChildNodeCreateApiRequestADM from CreateNodeApiRequestADM
-//      otherChildNodeCreatePayloadADM.comments.map(_.value) should equal(otherRequest.comments)
+    "created using empty value" should {
+      "throw BadRequestException" in {
+        Labels.create(Seq.empty) should equal(Left(BadRequestException(LABEL_MISSING_ERROR)))
+      }
+    }
+    "created using valid value" should {
+      "not throw BadRequestExceptions" in {
+        Labels.create(validLabels) should not equal Left(BadRequestException(LABEL_MISSING_ERROR))
+      }
+    }
+  }
 
-      otherChildNodeCreatePayloadADM.id.map(_.value) should not equal request.id
-//      otherChildNodeCreatePayloadADM.parentNodeIri should equal(otherRequest.parentNodeIri)
-      otherChildNodeCreatePayloadADM.projectIri.value should not equal request.projectIri
-      otherChildNodeCreatePayloadADM.name.get.value should not equal request.name
-//      otherChildNodeCreatePayloadADM.position.map(_.value) should equal(otherRequest.position)
-      otherChildNodeCreatePayloadADM.labels.value should not equal request.labels
-      otherChildNodeCreatePayloadADM.comments.map(_.value) should not equal request.comments
+  "Comments value object" when {
+    val validComments = Seq(StringLiteralV2(value = "New Comment", language = Some("en")))
+
+    "created using empty value" should {
+      "throw BadRequestException" in {
+        Comments.create(Seq.empty) should equal(Left(BadRequestException(COMMENT_MISSING_ERROR)))
+      }
+    }
+    "created using valid value" should {
+      "not throw BadRequestExceptions" in {
+        Comments.create(validComments) should not equal Left(BadRequestException(COMMENT_MISSING_ERROR))
+      }
     }
   }
 }
