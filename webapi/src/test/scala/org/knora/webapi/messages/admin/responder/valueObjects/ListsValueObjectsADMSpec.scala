@@ -53,8 +53,9 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     }
     "created using valid value" should {
       "return value object that value equals to the value used to its creation" in {
-//        TODO: this probably doesn't make sense
-        ListIRI.create(validListIri).map(_.value should equal(validListIri))
+////        TODO: this probably doesn't make sense
+//        ListIRI.create(validListIri).map(_.value should equal(validListIri))
+        ListIRI.create(validListIri) should not equal Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
       }
     }
   }
@@ -82,7 +83,6 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   }
 
   "RootNodeIRI value object" when {
-//    TODO: check string formatter list iri validation because passing just "http://rdfh.ch" works
     val validRootNodeIRI = "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A"
 
     "created using empty value" should {

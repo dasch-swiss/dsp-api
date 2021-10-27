@@ -1,6 +1,5 @@
 package org.knora.webapi.messages.admin.responder.valueObjects
 
-import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.{
@@ -32,14 +31,17 @@ object ListIRI {
     if (value.isEmpty) {
       Left(BadRequestException(LIST_NODE_IRI_MISSING_ERROR))
     } else {
-      val validatedValue = Try(
-        //      move regex (string formatter functionality here)
-        stringFormatter.validateAndEscapeIri(value, throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
-      )
+      if (value.nonEmpty && !stringFormatter.isKnoraListIriStr(value)) {
+        Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
+      } else {
+        val validatedValue = Try(
+          stringFormatter.validateAndEscapeIri(value, throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
+        )
 
-      validatedValue match {
-        case Success(_) => Right(new ListIRI(value) {})
-        case Failure(_) => Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
+        validatedValue match {
+          case Success(_) => Right(new ListIRI(value) {})
+          case Failure(_) => Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
+        }
       }
     }
 }
@@ -55,13 +57,17 @@ object ProjectIRI {
     if (value.isEmpty) {
       Left(BadRequestException(PROJECT_IRI_MISSING_ERROR))
     } else {
-      val validatedValue = Try(
-        stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(PROJECT_IRI_INVALID_ERROR))
-      )
+      if (value.nonEmpty && !stringFormatter.isKnoraProjectIriStr((value))) {
+        Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
+      } else {
+        val validatedValue = Try(
+          stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(PROJECT_IRI_INVALID_ERROR))
+        )
 
-      validatedValue match {
-        case Success(_) => Right(new ProjectIRI(value) {})
-        case Failure(_) => Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
+        validatedValue match {
+          case Success(_) => Right(new ProjectIRI(value) {})
+          case Failure(_) => Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
+        }
       }
     }
 }
@@ -74,20 +80,23 @@ object RootNodeIRI {
   val stringFormatter = StringFormatter.getGeneralInstance
 
   def create(value: String): Either[Throwable, RootNodeIRI] =
-    //      TODO: if id is only optional empty condition shouldn't exist
     if (value.isEmpty) {
       Left(BadRequestException(s"Missing root node IRI"))
     } else {
-      val validatedValue = Try(
-        stringFormatter.validateAndEscapeIri(
-          value,
-          throw BadRequestException(s"Invalid root node IRI")
+      if (value.nonEmpty && !stringFormatter.isKnoraListIriStr(value)) {
+        Left(BadRequestException(s"Invalid root node IRI"))
+      } else {
+        val validatedValue = Try(
+          stringFormatter.validateAndEscapeIri(
+            value,
+            throw BadRequestException(s"Invalid root node IRI")
+          )
         )
-      )
 
-      validatedValue match {
-        case Success(_) => Right(new RootNodeIRI(value) {})
-        case Failure(_) => Left(BadRequestException(s"Invalid root node IRI"))
+        validatedValue match {
+          case Success(_) => Right(new RootNodeIRI(value) {})
+          case Failure(_) => Left(BadRequestException(s"Invalid root node IRI"))
+        }
       }
     }
 }
@@ -111,7 +120,7 @@ object ListName {
 sealed abstract case class Position private (value: Int)
 object Position {
   def create(value: Int): Either[Throwable, Position] =
-    if (value < -1) { // TODO: what should be the criteria?
+    if (value < -1) {
       Left(BadRequestException(INVALID_POSITION))
     } else {
       Right(new Position(value) {})
