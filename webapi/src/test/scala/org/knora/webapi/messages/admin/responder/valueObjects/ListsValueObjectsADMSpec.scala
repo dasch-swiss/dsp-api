@@ -82,26 +82,6 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     }
   }
 
-  "RootNodeIRI value object" when {
-    val validRootNodeIRI = "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A"
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        RootNodeIRI.create("") should equal(Left(BadRequestException("Missing root node IRI")))
-      }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        RootNodeIRI.create("123") should equal(Left(BadRequestException("Invalid root node IRI")))
-      }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        RootNodeIRI.create(validRootNodeIRI) should not equal Left(BadRequestException("Invalid root node IRI"))
-      }
-    }
-  }
-
   "ListName value object" when {
     val validListName = "It's valid list name example"
 

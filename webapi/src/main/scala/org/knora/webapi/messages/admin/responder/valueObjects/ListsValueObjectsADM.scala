@@ -73,35 +73,6 @@ object ProjectIRI {
 }
 
 /**
- * List RootNodeIRI value object.
- */
-sealed abstract case class RootNodeIRI private (value: String)
-object RootNodeIRI {
-  val stringFormatter = StringFormatter.getGeneralInstance
-
-  def create(value: String): Either[Throwable, RootNodeIRI] =
-    if (value.isEmpty) {
-      Left(BadRequestException(s"Missing root node IRI"))
-    } else {
-      if (value.nonEmpty && !stringFormatter.isKnoraListIriStr(value)) {
-        Left(BadRequestException(s"Invalid root node IRI"))
-      } else {
-        val validatedValue = Try(
-          stringFormatter.validateAndEscapeIri(
-            value,
-            throw BadRequestException(s"Invalid root node IRI")
-          )
-        )
-
-        validatedValue match {
-          case Success(_) => Right(new RootNodeIRI(value) {})
-          case Failure(_) => Left(BadRequestException(s"Invalid root node IRI"))
-        }
-      }
-    }
-}
-
-/**
  * List ListName value object.
  */
 sealed abstract case class ListName private (value: String)

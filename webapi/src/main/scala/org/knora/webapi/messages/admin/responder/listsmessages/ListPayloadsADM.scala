@@ -7,8 +7,7 @@ import org.knora.webapi.messages.admin.responder.valueObjects.{
   ListIRI,
   ListName,
   Position,
-  ProjectIRI,
-  RootNodeIRI
+  ProjectIRI
 }
 
 /**
@@ -40,7 +39,7 @@ object NodeCreatePayloadADM {
 final case class NodeInfoChangePayloadADM(
   listIri: ListIRI,
   projectIri: ProjectIRI,
-  hasRootNode: Option[RootNodeIRI] = None,
+  hasRootNode: Option[ListIRI] = None,
   position: Option[Position] = None,
   name: Option[ListName] = None,
   labels: Option[Labels] = None,

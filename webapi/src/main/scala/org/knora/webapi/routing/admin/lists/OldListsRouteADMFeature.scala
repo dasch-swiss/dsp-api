@@ -43,8 +43,7 @@ import org.knora.webapi.messages.admin.responder.valueObjects.{
   ListIRI,
   ListName,
   Position,
-  ProjectIRI,
-  RootNodeIRI
+  ProjectIRI
 }
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
@@ -275,8 +274,8 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         val listIri = ListIRI.create(apiRequest.listIri).fold(e => throw e, v => v)
         val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
 
-        val maybeHasRootNode: Option[RootNodeIRI] = apiRequest.hasRootNode match {
-          case Some(value) => Some(RootNodeIRI.create(value).fold(e => throw e, v => v))
+        val maybeHasRootNode: Option[ListIRI] = apiRequest.hasRootNode match {
+          case Some(value) => Some(ListIRI.create(value).fold(e => throw e, v => v))
           case None        => None
         }
 
