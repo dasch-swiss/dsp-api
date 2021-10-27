@@ -22,12 +22,9 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 import java.util.UUID
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.CoreSpec
-import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
-import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
-  ChildNodeCreatePayloadADM,
-  ListCreatePayloadADM
-}
+import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.ChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListIRI, ProjectIRI, Position}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
@@ -146,72 +143,6 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       converted.children should be(children)
     }
 
-    "throw 'BadRequestException' for `CreateNodeApiRequestADM` when project IRI is empty" in {
-
-      val payload =
-        s"""
-           |{
-           |    "projectIri": "",
-           |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-           |    "comments": []
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
-
-      thrown.getMessage should equal(PROJECT_IRI_MISSING_ERROR)
-
-    }
-
-    "throw 'BadRequestException' for `CreateNodeApiRequestADM` when project IRI is invalid" in {
-
-      val payload =
-        s"""
-           |{
-           |    "projectIri": "not an IRI",
-           |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-           |    "comments": []
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
-
-      thrown.getMessage should equal(PROJECT_IRI_INVALID_ERROR)
-    }
-
-    "throw 'BadRequestException' for `CreateNodeApiRequestADM` when labels is empty" in {
-
-      val payload =
-        s"""
-           |{
-           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-           |    "labels": [],
-           |    "comments": []
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
-
-      thrown.getMessage should equal(LABEL_MISSING_ERROR)
-    }
-
-    "throw a 'BadRequestException' for `CreateNodeApiRequestADM` when an invalid list IRI is given" in {
-
-      val payload =
-        s"""
-           |{
-           |    "id": "invalid-list-IRI",
-           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-           |    "labels": [{ "value": "New List", "language": "en"}],
-           |    "comments": []
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
-
-      thrown.getMessage should equal("Invalid list IRI")
-    }
-
     "throw 'BadRequestException' for `CreateNodeApiRequestADM` when value of a label is missing" in {
 
       val payload =
@@ -245,105 +176,6 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       thrown.getMessage should equal("String value is missing.")
     }
 
-    "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when list IRI is empty" in {
-
-      val payload =
-        s"""
-           |{
-           |    "listIri": "",
-           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-           |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-           |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
-
-      thrown.getMessage should equal("IRI of list item is missing.")
-    }
-
-    "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when list IRI is invalid" in {
-      val invalidIri = "notvalidIRI"
-      val payload =
-        s"""
-           |{
-           |    "listIri": "$invalidIri",
-           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-           |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-           |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
-
-      thrown.getMessage should equal(s"Invalid IRI is given: $invalidIri.")
-    }
-
-    "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when project IRI is empty" in {
-
-      val payload =
-        s"""
-           |{
-           |    "listIri": "$exampleListIri",
-           |    "projectIri": "",
-           |    "labels": [{ "value": "Neue geönderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}]
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
-
-      thrown.getMessage should equal(PROJECT_IRI_MISSING_ERROR)
-    }
-
-    "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when project IRI is invalid" in {
-
-      val payload =
-        s"""
-           |{
-           |    "listIri": "$exampleListIri",
-           |    "projectIri": "notvalidIRI",
-           |    "name": "a new name"
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
-
-      thrown.getMessage should equal(PROJECT_IRI_INVALID_ERROR)
-    }
-
-    "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when labels are empty" in {
-
-      val payload =
-        s"""
-           |{
-           |    "listIri": "$exampleListIri",
-           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-           |    "labels": [],
-           |    "comments": []
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
-
-      thrown.getMessage should equal(UPDATE_REQUEST_EMPTY_LABEL_ERROR)
-    }
-
-    "throw 'BadRequestException' for `ChangeNodeInfoApiRequestADM` when position is invalid" in {
-
-      val payload =
-        s"""
-           |{
-           |    "listIri": "$exampleListIri",
-           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-           |    "position": -2
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodeInfoApiRequestADM]
-
-      thrown.getMessage should equal(INVALID_POSITION)
-    }
-
     "throw 'BadRequestException' if invalid position given in payload of `createChildNodeRequest`" in {
       val caught = intercept[BadRequestException](
         ListChildNodeCreateRequestADM(
@@ -366,114 +198,6 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
         )
       )
       assert(caught.getMessage === INVALID_POSITION)
-    }
-
-    "throw 'BadRequestException' for `createChildNodeRequest` when no parent node iri is given" in {
-
-      val payload =
-        s"""
-           |{
-           |    "parentNodeIri": "",
-           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-           |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
-           |    "comments": []
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
-
-      thrown.getMessage should equal(LIST_NODE_IRI_INVALID_ERROR)
-
-    }
-
-    "throw 'BadRequestException' for `createChildNodeRequest` when parent node iri is invalid" in {
-
-      val payload =
-        s"""
-           |{
-           |    "parentNodeIri": "notvalidIRI",
-           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-           |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
-           |    "comments": []
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
-
-      thrown.getMessage should equal(LIST_NODE_IRI_INVALID_ERROR)
-
-    }
-
-    "throw 'BadRequestException' for `createChildNodeRequest` when project iri is empty" in {
-
-      val payload =
-        s"""
-           |{
-           |    "parentNodeIri": "$exampleListIri",
-           |    "projectIri": "",
-           |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
-           |    "comments": []
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
-
-      thrown.getMessage should equal(PROJECT_IRI_MISSING_ERROR)
-
-    }
-
-    "throw 'BadRequestException' for `createChildNodeRequest` when project iri is invalid" in {
-
-      val payload =
-        s"""
-           |{
-           |    "parentNodeIri": "$exampleListIri",
-           |    "projectIri": "notvalidIRI",
-           |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
-           |    "comments": []
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
-
-      thrown.getMessage should equal(PROJECT_IRI_INVALID_ERROR)
-
-    }
-
-    "throw 'BadRequestException' for `createChildNodeRequest` when labels are empty" in {
-
-      val payload =
-        s"""
-           |{
-           |    "parentNodeIri": "$exampleListIri",
-           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-           |    "labels": [],
-           |    "comments": []
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
-
-      thrown.getMessage should equal(LABEL_MISSING_ERROR)
-
-    }
-
-    "throw 'BadRequestException' for `createChildNodeRequest` when custom iri of the child node is invalid" in {
-
-      val payload =
-        s"""
-           |{   "id": "invalid-list-node-IRI",
-           |    "parentNodeIri": "$exampleListIri",
-           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-           |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
-           |    "comments": []
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
-
-      thrown.getMessage should equal("Invalid list IRI")
-
     }
 
     "throw 'BadRequestException' for `ChangeNodePositionApiRequestADM` when no parent node iri is given" in {

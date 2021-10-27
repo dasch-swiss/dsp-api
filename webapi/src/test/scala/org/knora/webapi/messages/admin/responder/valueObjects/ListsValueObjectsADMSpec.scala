@@ -34,7 +34,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtil
   PROJECT_IRI_MISSING_ERROR
 }
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-import org.knora.webapi.{IRI, UnitSpec}
+import org.knora.webapi.UnitSpec
 
 /**
  * This spec is used to test the creation of value objects of the [[ListsValueObjectsADM]].
@@ -51,7 +51,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-        ListIRI.create("123") should equal(Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR)))
+        ListIRI.create("not a list IRI") should equal(Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR)))
       }
     }
     "created using valid value" should {
@@ -74,7 +74,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-        ProjectIRI.create("123") should equal(Left(BadRequestException(PROJECT_IRI_INVALID_ERROR)))
+        ProjectIRI.create("not a project IRI") should equal(Left(BadRequestException(PROJECT_IRI_INVALID_ERROR)))
       }
     }
     "created using valid value" should {
