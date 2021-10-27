@@ -155,11 +155,6 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           case None        => None
         }
 
-        val maybePosition: Option[Position] = apiRequest.position match {
-          case Some(value) => Some(Position.create(value).fold(e => throw e, v => v))
-          case None        => None
-        }
-
         val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
 
         val createRootNodePayloadADM: ListCreatePayloadADM = ListCreatePayloadADM(
@@ -391,6 +386,13 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
             case None        => None
           }
 
+          // allows to omit comments / send empty comments creating child node
+          val maybeComments = if (apiRequest.comments.isEmpty) {
+            None
+          } else {
+            Some(Comments.create(apiRequest.comments).fold(e => throw e, v => v))
+          }
+
           val createChildNodeRequest: ChildNodeCreatePayloadADM = ChildNodeCreatePayloadADM(
             id = maybeId,
             parentNodeIri = maybeParentNodeIri,
@@ -398,7 +400,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
             name = maybeName,
             position = maybePosition,
             labels = Labels.create(apiRequest.labels).fold(e => throw e, v => v),
-            comments = Some(Comments.create(apiRequest.comments).fold(e => throw e, v => v))
+            comments = maybeComments
           )
 
           val requestMessage: Future[ListChildNodeCreateRequestADM] = for {

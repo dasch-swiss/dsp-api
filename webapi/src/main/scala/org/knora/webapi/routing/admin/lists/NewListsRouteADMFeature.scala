@@ -189,26 +189,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
         }
 
         val labels = Labels.create(apiRequest.labels).fold(e => throw e, v => v)
-        val comments = Comments.create(apiRequest.comments).fold(e => throw e, v => v)
         val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
-
-        val createRootNodePayloadADM: ListCreatePayloadADM = ListCreatePayloadADM(
-          id = maybeId,
-          projectIri,
-          name = maybeName,
-          labels,
-          comments
-        )
-
-        val createChildNodePayloadADM: ChildNodeCreatePayloadADM = ChildNodeCreatePayloadADM(
-          id = maybeId,
-          parentNodeIri = maybeParentNodeIri,
-          projectIri,
-          name = maybeName,
-          position = maybePosition,
-          labels,
-          comments = Some(comments)
-        )
 
         val requestMessage = for {
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
@@ -224,6 +205,17 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
           createRequest =
             if (apiRequest.parentNodeIri.isEmpty) {
               // No, create a new list with given information of its root node.
+
+              val comments = Comments.create(apiRequest.comments).fold(e => throw e, v => v)
+
+              val createRootNodePayloadADM: ListCreatePayloadADM = ListCreatePayloadADM(
+                id = maybeId,
+                projectIri,
+                name = maybeName,
+                labels,
+                comments
+              )
+
               ListCreateRequestADM(
                 createRootNode = createRootNodePayloadADM,
                 featureFactoryConfig = featureFactoryConfig,
@@ -232,6 +224,24 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
               )
             } else {
               // Yes, create a new child and attach it to the parent node.
+
+              // allows to omit comments / send empty comments creating child node
+              val maybeComments = if (apiRequest.comments.isEmpty) {
+                None
+              } else {
+                Some(Comments.create(apiRequest.comments).fold(e => throw e, v => v))
+              }
+
+              val createChildNodePayloadADM: ChildNodeCreatePayloadADM = ChildNodeCreatePayloadADM(
+                id = maybeId,
+                parentNodeIri = maybeParentNodeIri,
+                projectIri,
+                name = maybeName,
+                position = maybePosition,
+                labels,
+                comments = maybeComments
+              )
+
               ListChildNodeCreateRequestADM(
                 createChildNodeRequest = createChildNodePayloadADM,
                 featureFactoryConfig = featureFactoryConfig,

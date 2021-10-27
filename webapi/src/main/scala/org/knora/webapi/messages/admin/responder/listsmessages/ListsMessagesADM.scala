@@ -64,59 +64,7 @@ case class CreateNodeApiRequestADM(
   labels: Seq[StringLiteralV2],
   comments: Seq[StringLiteralV2]
 ) extends ListADMJsonProtocol {
-//  TODO: are below checks necessary anymore? NO! but move all checks to value objects
-//   then remove related Messages tests
-
-  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-//  stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list IRI"))
-//
-//  if (parentNodeIri.nonEmpty && !stringFormatter.isKnoraListIriStr(parentNodeIri.get)) {
-//    throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR)
-//  }
-//
-//  if (projectIri.isEmpty) {
-//    throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
-//  }
-//
-//  if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-//    throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
-//  }
-//
-//  if (labels.isEmpty) {
-//    throw BadRequestException(LABEL_MISSING_ERROR)
-//  }
-//
-//  if (position.exists(_ < -1)) {
-//    throw BadRequestException(INVALID_POSITION)
-//  }
-
   def toJsValue: JsValue = createListNodeApiRequestADMFormat.write(this)
-
-  /**
-   * Escapes special characters within strings
-   */
-//    TODO: what about this code? Is it used at all?
-//  def escape: CreateNodeApiRequestADM = {
-//    val escapedLabels: Seq[StringLiteralV2] = labels.map { label =>
-//      val escapedLabel =
-//        stringFormatter.toSparqlEncodedString(label.value, throw BadRequestException(s"Invalid label: ${label.value}"))
-//      StringLiteralV2(value = escapedLabel, language = label.language)
-//    }
-//    val escapedComments = comments.map { comment =>
-//      val escapedComment =
-//        stringFormatter.toSparqlEncodedString(
-//          comment.value,
-//          throw BadRequestException(s"Invalid comment: ${comment.value}")
-//        )
-//      StringLiteralV2(value = escapedComment, language = comment.language)
-//    }
-//    val escapedName: Option[String] = name match {
-//      case None => None
-//      case Some(value: String) =>
-//        Some(stringFormatter.toSparqlEncodedString(value, throw BadRequestException(s"Invalid string: $value")))
-//    }
-//    copy(labels = escapedLabels, comments = escapedComments, name = escapedName)
-//  }
 }
 
 /**
@@ -139,40 +87,6 @@ case class ChangeNodeInfoApiRequestADM(
   labels: Option[Seq[StringLiteralV2]] = None,
   comments: Option[Seq[StringLiteralV2]] = None
 ) extends ListADMJsonProtocol {
-
-  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-
-//  if (listIri.isEmpty) {
-//    throw BadRequestException(s"IRI of list item is missing.")
-//  }
-//
-//  if (!stringFormatter.isKnoraListIriStr(listIri)) {
-//    throw BadRequestException(s"Invalid IRI is given: $listIri.")
-//  }
-//
-//  // Check that project Iri is given
-//  if (projectIri.isEmpty) {
-//    throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
-//  }
-//
-//  // Verify the project IRI
-//  if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-//    throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
-//  }
-////TODO: how to perform this kind of check in valu objects if isn't possible to know there if it is hasRootNode
-////  or something else (one list value object shared for all lists related properties)?
-//  if (hasRootNode.isDefined && !stringFormatter.isKnoraListIriStr(hasRootNode.get)) {
-//    throw BadRequestException(s"Invalid root node IRI is given.")
-//  }
-//  // If payload contains labels, they should not be empty
-//  if (labels.exists(_.isEmpty)) {
-//    throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_ERROR)
-//  }
-//
-//  if (position.exists(_ < -1)) {
-//    throw BadRequestException(INVALID_POSITION)
-//  }
-
   def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
 
