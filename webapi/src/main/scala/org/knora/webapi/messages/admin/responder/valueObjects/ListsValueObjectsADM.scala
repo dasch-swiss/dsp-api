@@ -3,9 +3,12 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.{
+  COMMENT_INVALID_ERROR,
   COMMENT_MISSING_ERROR,
   INVALID_POSITION,
+  LABEL_INVALID_ERROR,
   LABEL_MISSING_ERROR,
+  LIST_NAME_INVALID_ERROR,
   LIST_NAME_MISSING_ERROR,
   LIST_NODE_IRI_INVALID_ERROR,
   LIST_NODE_IRI_MISSING_ERROR,
@@ -39,8 +42,8 @@ object ListIRI {
         )
 
         validatedValue match {
-          case Success(_) => Right(new ListIRI(value) {})
-          case Failure(_) => Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
+          case Success(iri) => Right(new ListIRI(iri) {})
+          case Failure(_)   => Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
         }
       }
     }
@@ -57,7 +60,8 @@ object ProjectIRI {
     if (value.isEmpty) {
       Left(BadRequestException(PROJECT_IRI_MISSING_ERROR))
     } else {
-      if (value.nonEmpty && !stringFormatter.isKnoraProjectIriStr((value))) {
+      //      TODO: nonEmpty vs isDefined ??
+      if (value.nonEmpty && !stringFormatter.isKnoraProjectIriStr(value)) {
         Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
       } else {
         val validatedValue = Try(
@@ -65,8 +69,8 @@ object ProjectIRI {
         )
 
         validatedValue match {
-          case Success(_) => Right(new ProjectIRI(value) {})
-          case Failure(_) => Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
+          case Success(iri) => Right(new ProjectIRI(iri) {})
+          case Failure(_)   => Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
         }
       }
     }
@@ -77,11 +81,20 @@ object ProjectIRI {
  */
 sealed abstract case class ListName private (value: String)
 object ListName {
+  val stringFormatter = StringFormatter.getGeneralInstance
+
   def create(value: String): Either[Throwable, ListName] =
     if (value.isEmpty) {
       Left(BadRequestException(LIST_NAME_MISSING_ERROR))
     } else {
-      Right(new ListName(value) {})
+      val validatedValue = Try(
+        stringFormatter.toSparqlEncodedString(value, throw BadRequestException(LIST_NAME_INVALID_ERROR))
+      )
+
+      validatedValue match {
+        case Success(name) => Right(new ListName(name) {})
+        case Failure(_)    => Left(BadRequestException(LIST_NAME_INVALID_ERROR))
+      }
     }
 }
 
@@ -103,11 +116,22 @@ object Position {
  */
 sealed abstract case class Labels private (value: Seq[StringLiteralV2])
 object Labels {
+  val stringFormatter = StringFormatter.getGeneralInstance
+
   def create(value: Seq[StringLiteralV2]): Either[Throwable, Labels] =
     if (value.isEmpty) {
       Left(BadRequestException(LABEL_MISSING_ERROR))
     } else {
-      Right(new Labels(value) {})
+      val validatedLabels = Try(value.map { label =>
+        val validatedLabel =
+          stringFormatter.toSparqlEncodedString(label.value, throw BadRequestException(LABEL_INVALID_ERROR))
+        StringLiteralV2(value = validatedLabel, language = label.language)
+      })
+
+      validatedLabels match {
+        case Success(valid) => Right(new Labels(valid) {})
+        case Failure(_)     => Left(BadRequestException(LABEL_INVALID_ERROR))
+      }
     }
 }
 
@@ -116,10 +140,21 @@ object Labels {
  */
 sealed abstract case class Comments private (value: Seq[StringLiteralV2])
 object Comments {
+  val stringFormatter = StringFormatter.getGeneralInstance
+
   def create(value: Seq[StringLiteralV2]): Either[Throwable, Comments] =
     if (value.isEmpty) {
       Left(BadRequestException(COMMENT_MISSING_ERROR))
     } else {
-      Right(new Comments(value) {})
+      val validatedComments = Try(value.map { comment =>
+        val validatedComment =
+          stringFormatter.toSparqlEncodedString(comment.value, throw BadRequestException(COMMENT_INVALID_ERROR))
+        StringLiteralV2(value = validatedComment, language = comment.language)
+      })
+
+      validatedComments match {
+        case Success(valid) => Right(new Comments(valid) {})
+        case Failure(_)     => Left(BadRequestException(COMMENT_INVALID_ERROR))
+      }
     }
 }

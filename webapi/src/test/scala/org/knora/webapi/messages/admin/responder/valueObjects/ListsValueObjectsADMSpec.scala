@@ -21,9 +21,12 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.{
+  COMMENT_INVALID_ERROR,
   COMMENT_MISSING_ERROR,
   INVALID_POSITION,
+  LABEL_INVALID_ERROR,
   LABEL_MISSING_ERROR,
+  LIST_NAME_INVALID_ERROR,
   LIST_NAME_MISSING_ERROR,
   LIST_NODE_IRI_INVALID_ERROR,
   LIST_NODE_IRI_MISSING_ERROR,
@@ -90,9 +93,15 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
         ListName.create("") should equal(Left(BadRequestException(LIST_NAME_MISSING_ERROR)))
       }
     }
+    "created using invalid value" should {
+      "throw BadRequestException" in {
+//        TODO: should this: "\"It's invalid list name example\"" pass?
+        ListName.create("\r") should equal(Left(BadRequestException(LIST_NAME_INVALID_ERROR)))
+      }
+    }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
-        ListName.create(validListName) should not equal Left(BadRequestException(LIST_NAME_MISSING_ERROR))
+        ListName.create(validListName) should not equal Left(BadRequestException(LIST_NAME_INVALID_ERROR))
       }
     }
   }
@@ -114,30 +123,44 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
   "Labels value object" when {
     val validLabels = Seq(StringLiteralV2(value = "New Label", language = Some("en")))
+    val invalidLabels = Seq(StringLiteralV2(value = "\r", language = Some("en")))
 
     "created using empty value" should {
       "throw BadRequestException" in {
         Labels.create(Seq.empty) should equal(Left(BadRequestException(LABEL_MISSING_ERROR)))
       }
     }
+    "created using invalid value" should {
+      "throw BadRequestException" in {
+        //        TODO: should this: "\"It's invalid list name example\"" pass?
+        Labels.create(invalidLabels) should equal(Left(BadRequestException(LABEL_INVALID_ERROR)))
+      }
+    }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
-        Labels.create(validLabels) should not equal Left(BadRequestException(LABEL_MISSING_ERROR))
+        Labels.create(validLabels) should not equal Left(BadRequestException(LABEL_INVALID_ERROR))
       }
     }
   }
 
   "Comments value object" when {
     val validComments = Seq(StringLiteralV2(value = "New Comment", language = Some("en")))
+    val invalidComments = Seq(StringLiteralV2(value = "\r", language = Some("en")))
 
     "created using empty value" should {
       "throw BadRequestException" in {
         Comments.create(Seq.empty) should equal(Left(BadRequestException(COMMENT_MISSING_ERROR)))
       }
     }
+    "created using invalid value" should {
+      "throw BadRequestException" in {
+        //        TODO: should this: "\"It's invalid list name example\"" pass?
+        Comments.create(invalidComments) should equal(Left(BadRequestException(COMMENT_INVALID_ERROR)))
+      }
+    }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
-        Comments.create(validComments) should not equal Left(BadRequestException(COMMENT_MISSING_ERROR))
+        Comments.create(validComments) should not equal Left(BadRequestException(COMMENT_INVALID_ERROR))
       }
     }
   }

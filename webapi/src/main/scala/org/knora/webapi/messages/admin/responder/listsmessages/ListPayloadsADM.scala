@@ -1,6 +1,5 @@
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import org.knora.webapi.IRI
 import org.knora.webapi.messages.admin.responder.valueObjects.{
   Comments,
   Labels,

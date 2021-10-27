@@ -96,27 +96,27 @@ case class CreateNodeApiRequestADM(
    * Escapes special characters within strings
    */
 //    TODO: what about this code? Is it used at all?
-  def escape: CreateNodeApiRequestADM = {
-    val escapedLabels: Seq[StringLiteralV2] = labels.map { label =>
-      val escapedLabel =
-        stringFormatter.toSparqlEncodedString(label.value, throw BadRequestException(s"Invalid label: ${label.value}"))
-      StringLiteralV2(value = escapedLabel, language = label.language)
-    }
-    val escapedComments = comments.map { comment =>
-      val escapedComment =
-        stringFormatter.toSparqlEncodedString(
-          comment.value,
-          throw BadRequestException(s"Invalid comment: ${comment.value}")
-        )
-      StringLiteralV2(value = escapedComment, language = comment.language)
-    }
-    val escapedName: Option[String] = name match {
-      case None => None
-      case Some(value: String) =>
-        Some(stringFormatter.toSparqlEncodedString(value, throw BadRequestException(s"Invalid string: $value")))
-    }
-    copy(labels = escapedLabels, comments = escapedComments, name = escapedName)
-  }
+//  def escape: CreateNodeApiRequestADM = {
+//    val escapedLabels: Seq[StringLiteralV2] = labels.map { label =>
+//      val escapedLabel =
+//        stringFormatter.toSparqlEncodedString(label.value, throw BadRequestException(s"Invalid label: ${label.value}"))
+//      StringLiteralV2(value = escapedLabel, language = label.language)
+//    }
+//    val escapedComments = comments.map { comment =>
+//      val escapedComment =
+//        stringFormatter.toSparqlEncodedString(
+//          comment.value,
+//          throw BadRequestException(s"Invalid comment: ${comment.value}")
+//        )
+//      StringLiteralV2(value = escapedComment, language = comment.language)
+//    }
+//    val escapedName: Option[String] = name match {
+//      case None => None
+//      case Some(value: String) =>
+//        Some(stringFormatter.toSparqlEncodedString(value, throw BadRequestException(s"Invalid string: $value")))
+//    }
+//    copy(labels = escapedLabels, comments = escapedComments, name = escapedName)
+//  }
 }
 
 /**
