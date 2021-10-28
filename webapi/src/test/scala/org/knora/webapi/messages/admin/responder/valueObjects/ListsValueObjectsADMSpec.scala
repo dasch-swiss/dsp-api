@@ -56,8 +56,6 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     }
     "created using valid value" should {
       "return value object that value equals to the value used to its creation" in {
-////        TODO: this probably doesn't make sense
-//        ListIRI.create(validListIri).map(_.value should equal(validListIri))
         ListIRI.create(validListIri) should not equal Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
       }
     }
@@ -79,7 +77,6 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
-//        ProjectIRI.create(validProjectIri).map(_.value should equal(validProjectIri))
         ProjectIRI.create(validProjectIri) should not equal Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
       }
     }
@@ -95,7 +92,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-//        TODO: should this: "\"It's invalid list name example\"" pass?
+//        TODO: should this: "\"It's invalid list name example\"" pass? Same for comments and labels
         ListName.create("\r") should equal(Left(BadRequestException(LIST_NAME_INVALID_ERROR)))
       }
     }
@@ -132,7 +129,6 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-        //        TODO: should this: "\"It's invalid list name example\"" pass?
         Labels.create(invalidLabels) should equal(Left(BadRequestException(LABEL_INVALID_ERROR)))
       }
     }
@@ -154,7 +150,6 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-        //        TODO: should this: "\"It's invalid list name example\"" pass?
         Comments.create(invalidComments) should equal(Left(BadRequestException(COMMENT_INVALID_ERROR)))
       }
     }

@@ -165,7 +165,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
           comments = Comments.create(apiRequest.comments).fold(e => throw e, v => v)
         )
 
-        println("XXXXX", createRootNodePayloadADM)
+//        println("AAA-createList", createRootNodePayloadADM)
 
         val requestMessage: Future[ListCreateRequestADM] = for {
           requestingUser <- getUserADM(

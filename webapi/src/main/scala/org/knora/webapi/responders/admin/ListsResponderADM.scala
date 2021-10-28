@@ -27,10 +27,7 @@ import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
-import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
-  ChildNodeCreatePayloadADM,
-  ListCreatePayloadADM
-}
+import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.ChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -855,7 +852,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     featureFactoryConfig: FeatureFactoryConfig
   ): Future[IRI] = {
 
-    println("ZZZZZ-createNode", createNodeRequest)
+//    println("ZZZZZ-createNode", createNodeRequest)
 
     val (id, parentNodeIri, projectIri, name, position) = createNodeRequest match {
       case parent: NodeCreatePayloadADM.ListCreatePayloadADM =>
@@ -953,7 +950,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         name
       )
       _ = if (!projectUniqueNodeName) {
-//        TODO: all Option.get occurrences should be replaced by map
         val escapedName = name.get.value
         val unescapedName = stringFormatter.fromSparqlEncodedString(escapedName)
         throw BadRequestException(
@@ -1051,7 +1047,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     apiRequestID: UUID
   ): Future[ListGetResponseADM] = {
 
-    println("XXXXX-listCreateRequestADM")
+//    println("XXXXX-listCreateRequestADM")
 
     /**
      * The actual task run with an IRI lock.
@@ -1138,7 +1134,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     ): Future[NodeInfoGetResponseADM] =
       for {
 
-        _ <- Future(println("77777", nodeIri, changeNodeRequest.listIri))
+//        _ <- Future(println("77777", nodeIri, changeNodeRequest.listIri))
 
         // check if nodeIRI in path and payload match
         _ <- Future(

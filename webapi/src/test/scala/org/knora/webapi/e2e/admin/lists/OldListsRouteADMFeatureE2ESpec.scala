@@ -107,8 +107,6 @@ class OldListsRouteADMFeatureE2ESpec
           Get(baseApiUrl + s"/admin/lists") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
         val response: HttpResponse = singleAwaitingRequest(request)
 
-//        println(s"response: ${response.toString}")
-
         response.status should be(StatusCodes.OK)
 
         val lists: Seq[ListNodeInfoADM] =

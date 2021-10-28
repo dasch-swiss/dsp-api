@@ -18,10 +18,6 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtil
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 import scala.util.{Failure, Success, Try}
-//TODO: sprawdzic na koncu wszystkie czeki w messangerze czy poktrywaja sie tu i tak samo tresci bledow
-//TODO: possible to somehow merge all IRI related value objects? what about diff exception messages
-// either use below checks in route to throw custom exceptions for one IRI value object
-// or bring these matches here
 
 /**
  * List ListIRI value object.
@@ -60,7 +56,6 @@ object ProjectIRI {
     if (value.isEmpty) {
       Left(BadRequestException(PROJECT_IRI_MISSING_ERROR))
     } else {
-      //      TODO: nonEmpty vs isDefined ??
       if (value.nonEmpty && !stringFormatter.isKnoraProjectIriStr(value)) {
         Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
       } else {

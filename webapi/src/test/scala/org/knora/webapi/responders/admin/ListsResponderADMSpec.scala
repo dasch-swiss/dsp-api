@@ -366,8 +366,6 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
           apiRequestID = UUID.randomUUID
         )
 
-        // log.debug(s"response: ${response.toString}")
-
         val received: ChildNodeInfoGetResponseADM = expectMsgType[ChildNodeInfoGetResponseADM](timeout)
         val nodeInfo = received.nodeinfo
 
