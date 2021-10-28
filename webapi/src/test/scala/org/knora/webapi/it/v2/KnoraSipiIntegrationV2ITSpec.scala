@@ -1053,7 +1053,7 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-    "create a resource with a Zip file" in {
+    "create a resource with a Zip file" in { // TODO: this test should break
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,

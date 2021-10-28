@@ -947,7 +947,7 @@ object OntologyConstants {
     val DocumentFileValueHasDimX: IRI = KnoraApiV2PrefixExpansion + "documentFileValueHasDimX"
     val DocumentFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "documentFileValueHasDimY"
 
-//    TODO
+//    TODO: does it need this for bundleRepresentation? I don't think so
 
     val MovingImageFileValueHasDimX: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasDimX"
     val MovingImageFileValueHasDimY: IRI = KnoraApiV2PrefixExpansion + "movingImageFileValueHasDimY"

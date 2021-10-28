@@ -1874,7 +1874,7 @@
 
                         rdfs:subClassOf :Representation ,
                         [ rdf:type owl:Restriction ;
-                          owl:onProperty :hasDocumentFileValue ;
+                          owl:onProperty :hasBundleFileValue ;
                           owl:cardinality "1"^^xsd:nonNegativeInteger
                                  ] .
 
