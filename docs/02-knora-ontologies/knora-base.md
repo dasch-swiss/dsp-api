@@ -210,6 +210,8 @@ A resource that has a file value must belong to one of the subclasses of
 :   A representation containing a document (such as a PDF file) that is
     not a text file.
 
+<!-- TODO: add BundleRepresentation -->
+
 These classes can be used directly in data, but it is often better to make
 subclasses of them, to include metadata about the files being stored.
 

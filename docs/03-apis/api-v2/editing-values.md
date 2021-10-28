@@ -336,7 +336,9 @@ temporary file that was stored by Sipi is deleted.
 If you're submitting a PDF document, use the resource class
 `knora-api:DocumentRepresentation`, which has the property
 `knora-api:hasDocumentFileValue`, pointing to a
-`knora-api:DocumentFileValue`.
+`knora-api:DocumentFileValue`.$
+
+<!-- TODO: Add bundle representation -->
 
 For a text file, use `knora-api:TextRepresentation`, which has the property
 `knora-api:hasTextFileValue`, pointing to a

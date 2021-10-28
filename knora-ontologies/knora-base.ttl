@@ -383,22 +383,45 @@
 
 :hasDocumentFileValue rdf:type owl:ObjectProperty ;
 
-              rdfs:label "hat Dokument"@de ,
-                         "has document"@en ,
-                         "a document"@fr ,
-                         "ha documento"@it ;
+                      rdfs:label "hat Dokument"@de ,
+                      "has document"@en ,
+                      "a document"@fr ,
+                      "ha documento"@it ;
 
-              rdfs:comment "Connects a Representation to a document"@en ;
+                      rdfs:comment "Connects a Representation to a document"@en ;
 
-              :objectClassConstraint :DocumentFileValue ;
+                      :objectClassConstraint :DocumentFileValue ;
 
-              :subjectClassConstraint :DocumentRepresentation ;
+                      :subjectClassConstraint :DocumentRepresentation ;
 
-              :isEditable true ;
+                      :isEditable true ;
 
-              salsah-gui:guiElement salsah-gui:Fileupload ;
+                      salsah-gui:guiElement salsah-gui:Fileupload ;
 
-              rdfs:subPropertyOf :hasFileValue .
+                      rdfs:subPropertyOf :hasFileValue .
+
+
+
+###  http://www.knora.org/ontology/knora-base#hasBundleFileValue
+
+:hasBundleFileValue rdf:type owl:ObjectProperty ;
+
+                      rdfs:label "hat Zip"@de ,
+                      "has zip"@en ,
+                      "a zip"@fr ,
+                      "ha zip"@it ;
+
+                      rdfs:comment "Connects a Representation to a zip archive"@en ;
+
+                      :objectClassConstraint :BundleFileValue ;
+
+                      :subjectClassConstraint :BundleRepresentation ;
+
+                      :isEditable true ;
+
+                      salsah-gui:guiElement salsah-gui:Fileupload ;
+
+                      rdfs:subPropertyOf :hasFileValue .
 
 
 
@@ -1053,8 +1076,8 @@
            # No :subjectClassConstraint, because this can be used with :Resource or :Value.
 
            :objectClassConstraint knora-admin:User .
-           
-           
+
+
 #################################################################
 #
 #    Datatype properties
@@ -1809,15 +1832,51 @@
 :DocumentRepresentation rdf:type owl:Class ;
 
                         rdfs:label "Repräsentation (Dokument)"@de ,
-                                   "Representation (Document)"@en ,
-                                   "Répresentation (Document)"@fr ,
-                                   "Rappresentazione (Documento)"@it ;
+                        "Representation (Document)"@en ,
+                        "Répresentation (Document)"@fr ,
+                        "Rappresentazione (Documento)"@it ;
 
                         rdfs:subClassOf :Representation ,
-                                [ rdf:type owl:Restriction ;
-                                  owl:onProperty :hasDocumentFileValue ;
-                                  owl:cardinality "1"^^xsd:nonNegativeInteger
-                                ] .
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :hasDocumentFileValue ;
+                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                                 ] .
+
+
+
+###  http://www.knora.org/ontology/knora-base#BundleFileValue
+
+:BundleFileValue rdf:type owl:Class ;
+
+                   rdfs:subClassOf :FileValue ,
+                   [ rdf:type owl:Restriction ;
+                     owl:onProperty :pageCount ;
+                     owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                            ] ,
+                   [ rdf:type owl:Restriction ;
+                     owl:onProperty :dimX ;
+                     owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                            ] ,
+                   [ rdf:type owl:Restriction ;
+                     owl:onProperty :dimY ;
+                     owl:maxCardinality "1"^^xsd:nonNegativeInteger
+                            ] .
+
+
+###  http://www.knora.org/ontology/knora-base#BundleRepresentation
+
+:BundleRepresentation rdf:type owl:Class ;
+
+                        rdfs:label "Repräsentation (Zip)"@de ,
+                        "Representation (Zip)"@en ,
+                        "Répresentation (Zip)"@fr ,
+                        "Rappresentazione (Zip)"@it ;
+
+                        rdfs:subClassOf :Representation ,
+                        [ rdf:type owl:Restriction ;
+                          owl:onProperty :hasDocumentFileValue ;
+                          owl:cardinality "1"^^xsd:nonNegativeInteger
+                                 ] .
 
 
 
