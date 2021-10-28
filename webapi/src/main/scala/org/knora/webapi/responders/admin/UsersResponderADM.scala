@@ -1570,10 +1570,11 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       }
 
       _ = if (userUpdatePayload.projects.isDefined) {
-        if (updatedUserADM.projects.map(_.id) != userUpdatePayload.projects.get)
+        if (updatedUserADM.projects.map(_.id) != userUpdatePayload.projects.get) {
           throw UpdateNotPerformedException(
-            "User's 'project' memberships where not updated. Please report this as a possible bug."
+            "User's 'project' memberships were not updated. Please report this as a possible bug."
           )
+        }
       }
 
       _ = if (userUpdatePayload.systemAdmin.isDefined) {
@@ -1586,7 +1587,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       _ = if (userUpdatePayload.groups.isDefined) {
         if (updatedUserADM.groups.map(_.id) != userUpdatePayload.groups.get)
           throw UpdateNotPerformedException(
-            "User's 'group' memberships where not updated. Please report this as a possible bug."
+            "User's 'group' memberships were not updated. Please report this as a possible bug."
           )
       }
 
