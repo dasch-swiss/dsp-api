@@ -1570,7 +1570,8 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       }
 
       _ = if (userUpdatePayload.projects.isDefined) {
-        if (updatedUserADM.projects.map(_.id) != userUpdatePayload.projects.get) {
+
+        if (updatedUserADM.projects.map(_.id).sorted != userUpdatePayload.projects.get.sorted) {
           throw UpdateNotPerformedException(
             "User's 'project' memberships were not updated. Please report this as a possible bug."
           )
@@ -1585,7 +1586,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
       }
 
       _ = if (userUpdatePayload.groups.isDefined) {
-        if (updatedUserADM.groups.map(_.id) != userUpdatePayload.groups.get)
+        if (updatedUserADM.groups.map(_.id).sorted != userUpdatePayload.groups.get.sorted)
           throw UpdateNotPerformedException(
             "User's 'group' memberships were not updated. Please report this as a possible bug."
           )
