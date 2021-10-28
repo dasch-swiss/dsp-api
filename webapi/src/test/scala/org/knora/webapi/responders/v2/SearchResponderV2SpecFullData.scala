@@ -2039,4 +2039,42 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
     ),
     querySchema = Some(ApiV2Simple)
   )
+
+  val fulltextSearchForListNodeLabel: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
+    resources = Vector(
+      ReadResourceV2(
+        label = "instance of a book with a list value",
+        resourceIri = "http://rdfh.ch/0001/book-instance-02",
+        permissions =
+          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+        userPermission = ChangeRightsPermission,
+        attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+        resourceClassIri = "http://www.knora.org/ontology/0001/books#Book".toSmartIri,
+        projectADM = SharedTestDataADM.anythingProject,
+        creationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
+        values = Map(
+          "http://www.knora.org/ontology/0001/books#hasTextType".toSmartIri -> Vector(
+            ReadOtherValueV2(
+              valueContent = HierarchicalListValueContentV2(
+                ontologySchema = InternalSchema,
+                valueHasListNode = "http://rdfh.ch/lists/0001/ynm02-03"
+              ),
+              valueIri = "http://rdfh.ch/0001/book-instance-02/values/has-list-value-01",
+              valueHasUUID = stringFormatter.decodeUuid("d34d34d3-4d34-d34d-3496-2b2dfef6a5b9"),
+              permissions =
+                "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+              userPermission = ModifyPermission,
+              previousValueIri = None,
+              valueCreationDate = Instant.parse("2018-05-29T16:42:04.381Z"),
+              attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
+              deletionInfo = None
+            )
+          )
+        ),
+        lastModificationDate = None,
+        versionDate = None,
+        deletionInfo = None
+      )
+    )
+  )
 }

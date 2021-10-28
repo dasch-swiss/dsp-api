@@ -109,16 +109,39 @@ WHERE {
         ?property rdfs:subPropertyOf* knora-base:hasValue .
 
         FILTER NOT EXISTS {
-            ?matchingSubject knora-base:isDeleted true .
+            ?matchingSubject knora-base:isDeleted true
         }
 
         # this variable will only be bound if the search matched a value object
         BIND(?matchingSubject AS ?valueObject)
     }
 
-    # If the previous OPTIONAL clause was executed, ?matchingSubject is a value object, and ?containingResource will be set.
+    OPTIONAL {
+        ?matchingSubject a ?valueObjectType .
+
+        ?valueObjectType rdfs:subClassOf *knora-base:ListNode .
+
+        ?listValue knora-base:valueHasListNode ?matchingSubject .
+
+        ?subjectWithListValue ?predicate ?listValue .
+
+        FILTER NOT EXISTS {
+            ?matchingSubject knora-base:isDeleted true
+        }
+
+        # this variable will only be bound if the search matched a list node
+        BIND(?listValue AS ?valueObject)
+    }
+
+    # If the first OPTIONAL clause was executed, ?matchingSubject is a value object, and ?containingResource will be set as ?valueObject.
+    # If the second OPTIONAL clause was executed, ?matchingSubject is a list node, and ?listValue will be set as ?valueObject.
     # Otherwise, ?matchingSubject is a resource (its rdfs:label matched the search pattern).
-    BIND(COALESCE(?containingResource, ?matchingSubject) AS ?resource)
+    BIND(
+        COALESCE(
+            ?containingResource,
+            ?subjectWithListValue,
+            ?matchingSubject)
+        AS ?resource)
 
     ?resource a ?resourceClass .
 
