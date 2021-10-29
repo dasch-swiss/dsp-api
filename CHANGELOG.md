@@ -1,5 +1,12 @@
 # Changelog
 
+### [15.0.4](https://www.github.com/dasch-swiss/dsp-api/compare/v15.0.3...v15.0.4) (2021-10-29)
+
+
+### Maintenance
+
+* change license to Apache 2.0 (DEV-82) ([#1924](https://www.github.com/dasch-swiss/dsp-api/issues/1924)) ([2d39a1f](https://www.github.com/dasch-swiss/dsp-api/commit/2d39a1fb4c1103fa791966a54ec6fc772d355718))
+
 ### [15.0.3](https://www.github.com/dasch-swiss/dsp-api/compare/v15.0.2...v15.0.3) (2021-10-21)
 
 
