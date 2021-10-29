@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-object ListsMessagesUtilADM {
+object ListsErrorMessagesADM {
   val LIST_IRI_MISSING_ERROR = "List IRI cannot be empty."
   val LIST_IRI_INVALID_ERROR = "List IRI cannot be empty."
   val LIST_NODE_IRI_MISSING_ERROR = "List node IRI cannot be empty."

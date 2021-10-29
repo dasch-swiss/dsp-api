@@ -9,7 +9,7 @@ import java.util.UUID
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.ChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListIRI, ProjectIRI, Position}
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}

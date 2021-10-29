@@ -10,7 +10,7 @@ import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
+import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 import org.knora.webapi.messages.util.rdf
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.{KnoraJsonLDResponseV2, KnoraRequestV2}
@@ -89,8 +89,13 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
 
       val label: Map[IRI, JsonLDString] =
         makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, node.labels, userLang, fallbackLang)
-      val comment: Map[IRI, JsonLDString] =
-        makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, node.comments.get, userLang, fallbackLang)
+      val comment: Map[IRI, JsonLDString] = {
+        val maybeComment = node.comments match {
+          case Some(value) => value
+          case None        => StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
+        }
+        makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, maybeComment, userLang, fallbackLang)
+      }
 
       val position: Map[IRI, JsonLDInt] = Map(
         OntologyConstants.KnoraBase.ListNodePosition.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDInt(

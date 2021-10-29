@@ -2,7 +2,7 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.{
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.{
   COMMENT_INVALID_ERROR,
   COMMENT_MISSING_ERROR,
   INVALID_POSITION,

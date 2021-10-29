@@ -11,7 +11,7 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.ChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
@@ -764,7 +764,21 @@ case class ListChildNodeADM(
   position: Int,
   hasRootNode: IRI,
   children: Seq[ListChildNodeADM]
-) extends ListNodeADM(id, name, labels, comments.get, children) {
+) extends ListNodeADM(
+      id,
+      name,
+      labels,
+      comments = comments match {
+        case Some(value) => value
+        case None        => StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
+      },
+      children
+    ) {
+
+  private val maybeComments = comments match {
+    case Some(value) => Some(value)
+    case None        => None
+  }
 
   /**
    * Sorts the whole hierarchy.
@@ -776,7 +790,7 @@ case class ListChildNodeADM(
       id = id,
       name = name,
       labels = labels.sortByStringValue,
-      comments = comments.map(_.sortByStringValue),
+      comments = maybeComments,
       position = position,
       hasRootNode = hasRootNode,
       children = children.sortBy(_.position).map(_.sorted)
@@ -789,14 +803,17 @@ case class ListChildNodeADM(
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
-    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments.get)
-
-    val unescapedName: Option[String] = name match {
+    val unescapedComments = comments match {
+      case Some(value) => Some(stringFormatter.unescapeStringLiteralSeq(value))
       case None        => None
-      case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
     }
 
-    copy(name = unescapedName, labels = unescapedLabels, comments = Some(unescapedComments))
+    val unescapedName: Option[String] = name match {
+      case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
+      case None        => None
+    }
+
+    copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
   }
 
   /**
@@ -817,7 +834,10 @@ case class ListChildNodeADM(
    * @return the comment in the preferred language.
    */
   def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] =
-    comments.get.getPreferredLanguage(userLang, fallbackLang)
+    comments match {
+      case Some(value) => value.getPreferredLanguage(userLang, fallbackLang)
+      case None        => None
+    }
 }
 
 /**
@@ -1015,11 +1035,16 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           )
 
         case child: ListChildNodeADM =>
+          val maybeComments: StringLiteralSequenceV2 = child.comments match {
+            case Some(value) => value
+            case None        => StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
+          }
+
           JsObject(
             "id" -> child.id.toJson,
             "name" -> child.name.toJson,
             "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
-            "comments" -> JsArray(child.comments.get.stringLiterals.map(_.toJson)),
+            "comments" -> JsArray(maybeComments.stringLiterals.map(_.toJson)),
             "position" -> child.position.toJson,
             "hasRootNode" -> child.hasRootNode.toJson,
             "children" -> JsArray(child.children.map(write).toVector)

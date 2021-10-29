@@ -14,7 +14,7 @@ import javax.ws.rs.Path
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.feature.{Feature, FeatureFactoryConfig}
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM.LIST_CREATE_PERMISSION_ERROR
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.LIST_CREATE_PERMISSION_ERROR
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
   ChildNodeCreatePayloadADM,
   ListCreatePayloadADM
