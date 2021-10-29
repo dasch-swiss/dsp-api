@@ -93,8 +93,6 @@ class OldListsRouteADMFeatureE2ESpec
           Get(baseApiUrl + s"/admin/lists") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
         val response: HttpResponse = singleAwaitingRequest(request)
 
-        // println(s"response: ${response.toString}")
-
         response.status should be(StatusCodes.OK)
 
         val lists: Seq[ListNodeInfoADM] =
@@ -285,7 +283,7 @@ class OldListsRouteADMFeatureE2ESpec
              |    "id": "${SharedTestDataADM.customListIRI}",
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}""".stripMargin
 
         clientTestDataCollector.addFile(
@@ -335,7 +333,7 @@ class OldListsRouteADMFeatureE2ESpec
              |    "id": "${SharedTestDataADM.customListIRI}",
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "labels": [{ "value": "New List", "language": "en"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
                 """.stripMargin
 
@@ -361,7 +359,7 @@ class OldListsRouteADMFeatureE2ESpec
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "name": "node with a custom IRI",
              |    "labels": [{ "value": "New List Node", "language": "en"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}""".stripMargin
 
         clientTestDataCollector.addFile(
@@ -420,7 +418,7 @@ class OldListsRouteADMFeatureE2ESpec
           s"""{
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}""".stripMargin
 
         clientTestDataCollector.addFile(
@@ -451,7 +449,7 @@ class OldListsRouteADMFeatureE2ESpec
         labels.head should be(StringLiteralV2(value = "Neue Liste", language = Some("de")))
 
         val comments = receivedList.listinfo.comments.stringLiterals
-        comments.isEmpty should be(true)
+        comments.isEmpty should be(false)
 
         val children = receivedList.children
         children.size should be(0)
@@ -476,7 +474,7 @@ class OldListsRouteADMFeatureE2ESpec
              |{
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
                 """.stripMargin
 
@@ -497,7 +495,7 @@ class OldListsRouteADMFeatureE2ESpec
              |{
              |    "projectIri": "",
              |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
                 """.stripMargin
 
@@ -512,7 +510,7 @@ class OldListsRouteADMFeatureE2ESpec
              |{
              |    "projectIri": "notvalidIRI",
              |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
                 """.stripMargin
 
@@ -527,7 +525,7 @@ class OldListsRouteADMFeatureE2ESpec
              |{
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "labels": [],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
                 """.stripMargin
 
@@ -770,7 +768,7 @@ class OldListsRouteADMFeatureE2ESpec
              |    "listIri": "${newListIri.get}",
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "labels": [],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
                 """.stripMargin
 

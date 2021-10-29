@@ -6,18 +6,29 @@
 package org.knora.webapi.responders.admin
 
 import java.util.UUID
-
 import akka.actor.Status.Failure
 import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, UpdateNotPerformedException}
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
+  ChildNodeCreatePayloadADM,
+  ListCreatePayloadADM
+}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util.MutableTestIri
+import org.knora.webapi.messages.admin.responder.valueObjects.{
+  Comments,
+  Labels,
+  ListIRI,
+  ListName,
+  Position,
+  ProjectIRI
+}
 
 import scala.concurrent.duration._
 
@@ -162,12 +173,16 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
     "used to modify lists" should {
       "create a list" in {
         responderManager ! ListCreateRequestADM(
-          createRootNode = CreateNodeApiRequestADM(
-            projectIri = IMAGES_PROJECT_IRI,
-            name = Some("neuelistename"),
-            labels = Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))),
-            comments = Seq.empty[StringLiteralV2]
-          ).escape,
+          createRootNode = ListCreatePayloadADM(
+            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
+            name = Some(ListName.create("neuelistename").fold(e => throw e, v => v)),
+            labels = Labels
+              .create(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))))
+              .fold(e => throw e, v => v),
+            comments = Comments
+              .create(Seq(StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
+              .fold(e => throw e, v => v)
+          ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -184,8 +199,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         labels.size should be(1)
         labels.head should be(StringLiteralV2(value = "Neue Liste", language = Some("de")))
 
-        val comments = received.list.listinfo.comments.stringLiterals
-        comments.isEmpty should be(true)
+        val comments: Seq[StringLiteralV2] = listInfo.comments.stringLiterals
+        comments.isEmpty should be(false)
 
         val children = received.list.children
         children.size should be(0)
@@ -199,12 +214,16 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val commentWithSpecialCharacter = "Neue \\\"Kommentar\\\""
         val nameWithSpecialCharacter = "a new \\\"name\\\""
         responderManager ! ListCreateRequestADM(
-          createRootNode = CreateNodeApiRequestADM(
-            projectIri = IMAGES_PROJECT_IRI,
-            name = Some(nameWithSpecialCharacter),
-            labels = Seq(StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))),
-            comments = Seq(StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de")))
-          ).escape,
+          createRootNode = ListCreatePayloadADM(
+            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
+            name = Some(ListName.create(nameWithSpecialCharacter).fold(e => throw e, v => v)),
+            labels = Labels
+              .create(Seq(StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
+              .fold(e => throw e, v => v),
+            comments = Comments
+              .create(Seq(StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
+              .fold(e => throw e, v => v)
+          ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
@@ -235,21 +254,29 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "update basic list information" in {
         val changeNodeInfoRequest = NodeInfoChangeRequestADM(
           listIri = newListIri.get,
-          changeNodeRequest = ChangeNodeInfoApiRequestADM(
-            listIri = newListIri.get,
-            projectIri = IMAGES_PROJECT_IRI,
-            name = Some("updated name"),
+          changeNodeRequest = NodeInfoChangePayloadADM(
+            listIri = ListIRI.create(newListIri.get).fold(e => throw e, v => v),
+            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
+            name = Some(ListName.create("updated name").fold(e => throw e, v => v)),
             labels = Some(
-              Seq(
-                StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
-                StringLiteralV2(value = "Changed List", language = Some("en"))
-              )
+              Labels
+                .create(
+                  Seq(
+                    StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
+                    StringLiteralV2(value = "Changed List", language = Some("en"))
+                  )
+                )
+                .fold(e => throw e, v => v)
             ),
             comments = Some(
-              Seq(
-                StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
-                StringLiteralV2(value = "New Comment", language = Some("en"))
-              )
+              Comments
+                .create(
+                  Seq(
+                    StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
+                    StringLiteralV2(value = "New Comment", language = Some("en"))
+                  )
+                )
+                .fold(e => throw e, v => v)
             )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -283,12 +310,14 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "not update basic list information if name is duplicate" in {
+        val name = Some(ListName.create("sommer").fold(e => throw e, v => v))
+        val projectIRI = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v)
         responderManager ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
-          changeNodeRequest = ChangeNodeInfoApiRequestADM(
-            listIri = newListIri.get,
-            projectIri = IMAGES_PROJECT_IRI,
-            name = Some("sommer")
+          changeNodeRequest = NodeInfoChangePayloadADM(
+            listIri = ListIRI.create(newListIri.get).fold(e => throw e, v => v),
+            projectIri = projectIRI,
+            name = name
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -297,7 +326,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         expectMsg(
           Failure(
             DuplicateValueException(
-              "The name sommer is already used by a list inside the project http://rdfh.ch/projects/00FF."
+              s"The name ${name.value} is already used by a list inside the project ${projectIRI.value}."
             )
           )
         )
@@ -305,12 +334,18 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "add child to list - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = CreateNodeApiRequestADM(
-            parentNodeIri = Some(newListIri.get),
-            projectIri = IMAGES_PROJECT_IRI,
-            name = Some("first"),
-            labels = Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))),
-            comments = Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en")))
+          createChildNodeRequest = ChildNodeCreatePayloadADM(
+            parentNodeIri = Some(ListIRI.create(newListIri.get).fold(e => throw e, v => v)),
+            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
+            name = Some(ListName.create("first").fold(e => throw e, v => v)),
+            labels = Labels
+              .create(Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
+              .fold(e => throw e, v => v),
+            comments = Some(
+              Comments
+                .create(Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
+                .fold(e => throw e, v => v)
+            )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -351,13 +386,19 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "add second child to list in first position - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = CreateNodeApiRequestADM(
-            parentNodeIri = Some(newListIri.get),
-            projectIri = IMAGES_PROJECT_IRI,
-            name = Some("second"),
-            position = Some(0),
-            labels = Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))),
-            comments = Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en")))
+          createChildNodeRequest = ChildNodeCreatePayloadADM(
+            parentNodeIri = Some(ListIRI.create(newListIri.get).fold(e => throw e, v => v)),
+            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
+            name = Some(ListName.create("second").fold(e => throw e, v => v)),
+            position = Some(Position.create(0).fold(e => throw e, v => v)),
+            labels = Labels
+              .create(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
+              .fold(e => throw e, v => v),
+            comments = Some(
+              Comments
+                .create(Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
+                .fold(e => throw e, v => v)
+            )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -398,12 +439,18 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "add child to second child node" in {
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = CreateNodeApiRequestADM(
-            parentNodeIri = Some(secondChildIri.get),
-            projectIri = IMAGES_PROJECT_IRI,
-            name = Some("third"),
-            labels = Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))),
-            comments = Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en")))
+          createChildNodeRequest = ChildNodeCreatePayloadADM(
+            parentNodeIri = Some(ListIRI.create(secondChildIri.get).fold(e => throw e, v => v)),
+            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
+            name = Some(ListName.create("third").fold(e => throw e, v => v)),
+            labels = Labels
+              .create(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+              .fold(e => throw e, v => v),
+            comments = Some(
+              Comments
+                .create(Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
+                .fold(e => throw e, v => v)
+            )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -443,22 +490,32 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "not create a node if given new position is out of range" in {
-        val givenPosition = 20
+        val givenPosition = Some(Position.create(20).fold(e => throw e, v => v))
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = CreateNodeApiRequestADM(
-            parentNodeIri = Some(newListIri.get),
-            projectIri = IMAGES_PROJECT_IRI,
-            name = Some("fourth"),
-            position = Some(givenPosition),
-            labels = Seq(StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))),
-            comments = Seq(StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en")))
+          createChildNodeRequest = ChildNodeCreatePayloadADM(
+            parentNodeIri = Some(ListIRI.create(newListIri.get).fold(e => throw e, v => v)),
+            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
+            name = Some(ListName.create("fourth").fold(e => throw e, v => v)),
+            position = givenPosition,
+            labels = Labels
+              .create(Seq(StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))))
+              .fold(e => throw e, v => v),
+            comments = Some(
+              Comments
+                .create(Seq(StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))))
+                .fold(e => throw e, v => v)
+            )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
           apiRequestID = UUID.randomUUID
         )
         expectMsg(
-          Failure(BadRequestException(s"Invalid position given ${givenPosition}, maximum allowed position is = 2."))
+          Failure(
+            BadRequestException(
+              s"Invalid position given ${givenPosition.map(_.value)}, maximum allowed position is = 2."
+            )
+          )
         )
       }
     }

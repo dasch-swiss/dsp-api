@@ -6,13 +6,13 @@
 package org.knora.webapi.messages.admin.responder.listsmessages
 
 import java.util.UUID
-
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
-import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsMessagesUtilADM._
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
+import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.ChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{
@@ -26,44 +26,7 @@ import spray.json._
 // API requests
 
 /**
- * Represents an API request payload that asks the Knora API server to create a new list. At least one
- * label needs to be supplied.
- *
- * @param id         the optional custom list IRI.
- * @param projectIri the IRI of the project the list belongs to.
- * @param name       the optional name of the list.
- * @param labels     the list's labels.
- * @param comments   the list's comments.
- */
-case class CreateListApiRequestADM(
-  id: Option[IRI] = None,
-  projectIri: IRI,
-  name: Option[String] = None,
-  labels: Seq[StringLiteralV2],
-  comments: Seq[StringLiteralV2]
-) extends ListADMJsonProtocol {
-
-  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-
-  stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list IRI"))
-
-  if (projectIri.isEmpty) {
-    throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
-  }
-
-  if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-    throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
-  }
-
-  if (labels.isEmpty) {
-    throw BadRequestException(LABEL_MISSING_ERROR)
-  }
-
-  def toJsValue: JsValue = createListApiRequestADMFormat.write(this)
-}
-
-/**
- * Represents an API request payload that asks the Knora API server to create a new node.
+ * Represents an API request payload that asks the Knora API server to create a new list or child node.
  * If the IRI of the parent node is given, the new node is attached to the parent node as a sublist node.
  * If a specific position is given, insert the child node there. Otherwise, the newly created list node will be appended
  * to the end of the list of children.
@@ -87,56 +50,7 @@ case class CreateNodeApiRequestADM(
   labels: Seq[StringLiteralV2],
   comments: Seq[StringLiteralV2]
 ) extends ListADMJsonProtocol {
-
-  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-  stringFormatter.validateOptionalListIri(id, throw BadRequestException(s"Invalid list node IRI"))
-
-  if (parentNodeIri.nonEmpty && !stringFormatter.isKnoraListIriStr(parentNodeIri.get)) {
-    throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR)
-  }
-
-  if (projectIri.isEmpty) {
-    throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
-  }
-
-  if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-    throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
-  }
-
-  if (labels.isEmpty) {
-    throw BadRequestException(LABEL_MISSING_ERROR)
-  }
-
-  if (position.exists(_ < -1)) {
-    throw BadRequestException(INVALID_POSITION)
-  }
-
   def toJsValue: JsValue = createListNodeApiRequestADMFormat.write(this)
-
-  /**
-   * Escapes special characters within strings
-   */
-  def escape: CreateNodeApiRequestADM = {
-    val escapedLabels: Seq[StringLiteralV2] = labels.map { label =>
-      val escapedLabel =
-        stringFormatter.toSparqlEncodedString(label.value, throw BadRequestException(s"Invalid label: ${label.value}"))
-      StringLiteralV2(value = escapedLabel, language = label.language)
-    }
-    val escapedComments = comments.map { comment =>
-      val escapedComment =
-        stringFormatter.toSparqlEncodedString(
-          comment.value,
-          throw BadRequestException(s"Invalid comment: ${comment.value}")
-        )
-      StringLiteralV2(value = escapedComment, language = comment.language)
-    }
-    val escapedName: Option[String] = name match {
-      case None => None
-      case Some(value: String) =>
-        Some(stringFormatter.toSparqlEncodedString(value, throw BadRequestException(s"Invalid string: $value")))
-    }
-    copy(labels = escapedLabels, comments = escapedComments, name = escapedName)
-  }
 }
 
 /**
@@ -159,39 +73,6 @@ case class ChangeNodeInfoApiRequestADM(
   labels: Option[Seq[StringLiteralV2]] = None,
   comments: Option[Seq[StringLiteralV2]] = None
 ) extends ListADMJsonProtocol {
-
-  private val stringFormatter = StringFormatter.getInstanceForConstantOntologies
-
-  if (listIri.isEmpty) {
-    throw BadRequestException(s"IRI of list item is missing.")
-  }
-
-  if (!stringFormatter.isKnoraListIriStr(listIri)) {
-    throw BadRequestException(s"Invalid IRI is given: $listIri.")
-  }
-
-  // Check that project Iri is given
-  if (projectIri.isEmpty) {
-    throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
-  }
-
-  // Verify the project IRI
-  if (!stringFormatter.isKnoraProjectIriStr(projectIri)) {
-    throw BadRequestException(PROJECT_IRI_INVALID_ERROR)
-  }
-
-  if (hasRootNode.isDefined && !stringFormatter.isKnoraListIriStr(hasRootNode.get)) {
-    throw BadRequestException(s"Invalid root node IRI is given.")
-  }
-  // If payload contains labels, they should not be empty
-  if (labels.exists(_.isEmpty)) {
-    throw BadRequestException(UPDATE_REQUEST_EMPTY_LABEL_ERROR)
-  }
-
-  if (position.exists(_ < -1)) {
-    throw BadRequestException(INVALID_POSITION)
-  }
-
   def toJsValue: JsValue = changeListInfoApiRequestADMFormat.write(this)
 }
 
@@ -302,25 +183,17 @@ case class NodePathGetRequestADM(iri: IRI, featureFactoryConfig: FeatureFactoryC
 /**
  * Requests the creation of a new list.
  *
- * @param createRootNode       the [[CreateNodeApiRequestADM]] information used for creating the root node of the list.
+ * @param createRootNode       the [[NodeCreatePayloadADM]] information used for creating the root node of the list.
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user creating the new list.
  * @param apiRequestID         the ID of the API request.
  */
 case class ListCreateRequestADM(
-  createRootNode: CreateNodeApiRequestADM,
+  createRootNode: NodeCreatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
-) extends ListsResponderRequestADM {
-  // check if the requesting user is allowed to perform operation
-  if (
-    !requestingUser.permissions.isProjectAdmin(createRootNode.projectIri) && !requestingUser.permissions.isSystemAdmin
-  ) {
-    // not project or a system admin
-    throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
-  }
-}
+) extends ListsResponderRequestADM
 
 /**
  * Request updating basic information of an existing node.
@@ -333,22 +206,11 @@ case class ListCreateRequestADM(
  */
 case class NodeInfoChangeRequestADM(
   listIri: IRI,
-  changeNodeRequest: ChangeNodeInfoApiRequestADM,
+  changeNodeRequest: NodeInfoChangePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
-) extends ListsResponderRequestADM {
-  // check if the requesting user is allowed to perform operation
-  if (
-    !requestingUser.permissions.isProjectAdmin(
-      changeNodeRequest.projectIri
-    ) && !requestingUser.permissions.isSystemAdmin
-  ) {
-    // not project or a system admin
-    throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
-  }
-
-}
+) extends ListsResponderRequestADM
 
 /**
  * Request the creation of a new list node, root or child.
@@ -359,22 +221,11 @@ case class NodeInfoChangeRequestADM(
  * @param apiRequestID           the ID of the API request.
  */
 case class ListChildNodeCreateRequestADM(
-  createChildNodeRequest: CreateNodeApiRequestADM,
+  createChildNodeRequest: ChildNodeCreatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
-) extends ListsResponderRequestADM {
-  // check if the requesting user is allowed to perform operation
-  if (
-    !requestingUser.permissions.isProjectAdmin(
-      createChildNodeRequest.projectIri
-    ) && !requestingUser.permissions.isSystemAdmin
-  ) {
-    // not project or a system admin
-    throw ForbiddenException(LIST_NODE_CREATE_PERMISSION_ERROR)
-  }
-
-}
+) extends ListsResponderRequestADM
 
 /**
  * Request updating the name of an existing node.
@@ -387,7 +238,7 @@ case class ListChildNodeCreateRequestADM(
  */
 case class NodeNameChangeRequestADM(
   nodeIri: IRI,
-  changeNodeNameRequest: ChangeNodeNameApiRequestADM,
+  changeNodeNameRequest: NodeNameChangePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -404,7 +255,7 @@ case class NodeNameChangeRequestADM(
  */
 case class NodeLabelsChangeRequestADM(
   nodeIri: IRI,
-  changeNodeLabelsRequest: ChangeNodeLabelsApiRequestADM,
+  changeNodeLabelsRequest: NodeLabelsChangePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -421,7 +272,7 @@ case class NodeLabelsChangeRequestADM(
  */
 case class NodeCommentsChangeRequestADM(
   nodeIri: IRI,
-  changeNodeCommentsRequest: ChangeNodeCommentsApiRequestADM,
+  changeNodeCommentsRequest: NodeCommentsChangePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -725,7 +576,7 @@ case class ListChildNodeInfoADM(
       id = id,
       name = name,
       labels = labels.sortByStringValue,
-      comments = comments.sortByStringValue,
+      comments = comments,
       position = position,
       hasRootNode = hasRootNode
     )
@@ -909,11 +760,17 @@ case class ListChildNodeADM(
   id: IRI,
   name: Option[String],
   labels: StringLiteralSequenceV2,
-  comments: StringLiteralSequenceV2,
+  comments: Option[StringLiteralSequenceV2],
   position: Int,
   hasRootNode: IRI,
   children: Seq[ListChildNodeADM]
-) extends ListNodeADM(id, name, labels, comments, children) {
+) extends ListNodeADM(
+      id,
+      name,
+      labels,
+      comments = comments.getOrElse(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
+      children
+    ) {
 
   /**
    * Sorts the whole hierarchy.
@@ -925,7 +782,7 @@ case class ListChildNodeADM(
       id = id,
       name = name,
       labels = labels.sortByStringValue,
-      comments = comments.sortByStringValue,
+      comments = comments,
       position = position,
       hasRootNode = hasRootNode,
       children = children.sortBy(_.position).map(_.sorted)
@@ -938,11 +795,14 @@ case class ListChildNodeADM(
     val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     val unescapedLabels = stringFormatter.unescapeStringLiteralSeq(labels)
-    val unescapedComments = stringFormatter.unescapeStringLiteralSeq(comments)
+    val unescapedComments = comments match {
+      case Some(value) => Some(stringFormatter.unescapeStringLiteralSeq(value))
+      case None        => None
+    }
 
     val unescapedName: Option[String] = name match {
-      case None        => None
       case Some(value) => Some(stringFormatter.fromSparqlEncodedString(value))
+      case None        => None
     }
 
     copy(name = unescapedName, labels = unescapedLabels, comments = unescapedComments)
@@ -966,7 +826,10 @@ case class ListChildNodeADM(
    * @return the comment in the preferred language.
    */
   def getCommentInPreferredLanguage(userLang: String, fallbackLang: String): Option[String] =
-    comments.getPreferredLanguage(userLang, fallbackLang)
+    comments match {
+      case Some(value) => value.getPreferredLanguage(userLang, fallbackLang)
+      case None        => None
+    }
 }
 
 /**
@@ -1168,7 +1031,12 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
             "id" -> child.id.toJson,
             "name" -> child.name.toJson,
             "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
-            "comments" -> JsArray(child.comments.stringLiterals.map(_.toJson)),
+            "comments" -> JsArray(
+              child.comments
+                .getOrElse(StringLiteralSequenceV2(Vector.empty[StringLiteralV2]))
+                .stringLiterals
+                .map(_.toJson)
+            ),
             "position" -> child.position.toJson,
             "hasRootNode" -> child.hasRootNode.toJson,
             "children" -> JsArray(child.children.map(write).toVector)
@@ -1233,7 +1101,7 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           id = id,
           name = name,
           labels = StringLiteralSequenceV2(labels.toVector),
-          comments = StringLiteralSequenceV2(comments.toVector),
+          comments = Some(StringLiteralSequenceV2(comments.toVector)),
           position = maybePosition.getOrElse(throw DeserializationException("The position is not defined.")),
           hasRootNode = maybeHasRootNode.getOrElse(throw DeserializationException("The root node is not defined.")),
           children = children
@@ -1373,8 +1241,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
   }
 
-  implicit val createListApiRequestADMFormat: RootJsonFormat[CreateListApiRequestADM] =
-    jsonFormat(CreateListApiRequestADM, "id", "projectIri", "name", "labels", "comments")
   implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateNodeApiRequestADM] =
     jsonFormat(CreateNodeApiRequestADM, "id", "parentNodeIri", "projectIri", "name", "position", "labels", "comments")
   implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeNodeInfoApiRequestADM] = jsonFormat(
