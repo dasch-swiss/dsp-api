@@ -768,17 +768,9 @@ case class ListChildNodeADM(
       id,
       name,
       labels,
-      comments = comments match {
-        case Some(value) => value
-        case None        => StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
-      },
+      comments = comments.getOrElse(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
       children
     ) {
-
-  private val maybeComments = comments match {
-    case Some(value) => Some(value)
-    case None        => None
-  }
 
   /**
    * Sorts the whole hierarchy.
@@ -790,7 +782,7 @@ case class ListChildNodeADM(
       id = id,
       name = name,
       labels = labels.sortByStringValue,
-      comments = maybeComments,
+      comments = comments,
       position = position,
       hasRootNode = hasRootNode,
       children = children.sortBy(_.position).map(_.sorted)
@@ -1035,16 +1027,16 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
           )
 
         case child: ListChildNodeADM =>
-          val maybeComments: StringLiteralSequenceV2 = child.comments match {
-            case Some(value) => value
-            case None        => StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
-          }
-
           JsObject(
             "id" -> child.id.toJson,
             "name" -> child.name.toJson,
             "labels" -> JsArray(child.labels.stringLiterals.map(_.toJson)),
-            "comments" -> JsArray(maybeComments.stringLiterals.map(_.toJson)),
+            "comments" -> JsArray(
+              child.comments
+                .getOrElse(StringLiteralSequenceV2(Vector.empty[StringLiteralV2]))
+                .stringLiterals
+                .map(_.toJson)
+            ),
             "position" -> child.position.toJson,
             "hasRootNode" -> child.hasRootNode.toJson,
             "children" -> JsArray(child.children.map(write).toVector)

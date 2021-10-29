@@ -86,15 +86,15 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
      * @return a [[JsonLDObject]] representing the node.
      */
     def makeNode(node: ListChildNodeADM): JsonLDObject = {
-
       val label: Map[IRI, JsonLDString] =
         makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, node.labels, userLang, fallbackLang)
       val comment: Map[IRI, JsonLDString] = {
-        val maybeComment = node.comments match {
-          case Some(value) => value
-          case None        => StringLiteralSequenceV2(Vector.empty[StringLiteralV2])
-        }
-        makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, maybeComment, userLang, fallbackLang)
+        makeMapIriToJSONLDString(
+          OntologyConstants.Rdfs.Comment,
+          node.comments.getOrElse(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
+          userLang,
+          fallbackLang
+        )
       }
 
       val position: Map[IRI, JsonLDInt] = Map(
