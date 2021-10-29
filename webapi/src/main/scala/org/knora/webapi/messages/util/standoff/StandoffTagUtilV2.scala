@@ -1308,7 +1308,8 @@ object StandoffTagUtilV2 {
             conventionalAttributes
           ) :+ StandoffTagAttribute(
             key = dataTypeAttrName,
-            value = StandoffTagUtilV2.internalLinkMarker + internalRefTarget,
+//            or .toString
+            value = s"${StandoffTagUtilV2.internalLinkMarker}" + internalRefTarget,
             xmlNamespace = None
           )
 
