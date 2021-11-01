@@ -1405,7 +1405,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
                       .toVector
                       .sortBy(row => (row._2, row._3))
                       .map(_._1)
-//                    (valueStrings, guiOrders, valueOrders).zipped.toVector.sortBy(row => (row._2, row._3)).map(_._1)
 
                     // ?values is given: it is one string to be split by separator
                     val propValues = values.foldLeft(Vector(firstProp)) { case (acc, prop: String) =>
@@ -3378,7 +3377,6 @@ class ResourcesResponderV1(responderData: ResponderData) extends Responder(respo
 
     val valueObjects: Seq[PropertyGetValueV1] =
       propertyV1.value_ids.lazyZip(propertyV1.values).lazyZip(propertyV1.comments).map {
-//      (propertyV1.value_ids, propertyV1.values, propertyV1.comments).zipped.map {
         case (id: IRI, value: ApiValueV1, comment: Option[String]) =>
           PropertyGetValueV1(
             id = id,

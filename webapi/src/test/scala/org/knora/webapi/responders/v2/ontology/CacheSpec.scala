@@ -7,32 +7,24 @@ package org.knora.webapi.responders.v2.ontology
 
 import akka.actor.Props
 import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
-import org.knora.webapi.messages.store.triplestoremessages.{
-  IriLiteralV2,
-  RdfDataObject,
-  SmartIriLiteralV2,
-  StringLiteralV2
-}
+import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, SmartIriLiteralV2, StringLiteralV2}
 import org.knora.webapi.messages.util.KnoraSystemInstances
-import org.knora.webapi.messages.v2.responder.SuccessResponseV2
 import org.knora.webapi.messages.v2.responder.ontologymessages.{
   PredicateInfoV2,
   PropertyInfoContentV2,
   ReadOntologyV2,
   ReadPropertyInfoV2
 }
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraDispatchers
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
 import org.knora.webapi.util.cache.CacheUtil
 import org.knora.webapi.{IntegrationSpec, InternalSchema, TestContainerFuseki}
 
 import java.time.Instant
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 import scala.language.postfixOps
-import scala.util.{Failure, Success}
 
 /**
  * This spec is used to test [[org.knora.webapi.responders.v2.ontology.Cache]].
@@ -84,7 +76,6 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
         res.size should equal(13)
       }
     }
-
   }
 
   "Updating the ontology cache," when {
@@ -100,7 +91,7 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
         val previousBooksMaybe = previousCacheData.ontologies.get(iri)
         previousBooksMaybe match {
-          case Some(previousBooks) => {
+          case Some(previousBooks) =>
             // copy books-onto but remove :hasTitle property
             val newBooks = previousBooks.copy(
               ontologyMetadata = previousBooks.ontologyMetadata.copy(
@@ -124,17 +115,19 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
             // ensure that the cache updated correctly
             val newCachedBooksMaybe = newCachedCacheData.ontologies.get(iri)
             newCachedBooksMaybe match {
-              case Some(newCachedBooks) => {
+              case Some(newCachedBooks) =>
                 // check length
                 assert(newCachedBooks.properties.size != previousBooks.properties.size)
                 assert(newCachedBooks.properties.size == newBooks.properties.size)
 
                 // check actual property
-                previousBooks.properties should contain key (hasTitlePropertyIri)
+                previousBooks.properties should contain key hasTitlePropertyIri
                 newCachedBooks.properties should not contain key(hasTitlePropertyIri)
-              }
+
+              case None => fail(message = "Cache not available")
             }
-          }
+
+          case None => fail(message = "Cache not available")
         }
       }
     }
@@ -151,7 +144,7 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
         val previousBooksMaybe = previousCacheData.ontologies.get(iri)
         previousBooksMaybe match {
-          case Some(previousBooks) => {
+          case Some(previousBooks) =>
             // copy books-onto but add :hasDescription property
             val descriptionProp = ReadPropertyInfoV2(
               entityInfoContent = PropertyInfoContentV2(
@@ -217,19 +210,20 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
             // ensure that the cache updated correctly
             val newCachedBooksMaybe = newCachedCacheData.ontologies.get(iri)
             newCachedBooksMaybe match {
-              case Some(newCachedBooks) => {
+              case Some(newCachedBooks) =>
                 // check length
                 assert(newCachedBooks.properties.size != previousBooks.properties.size)
                 assert(newCachedBooks.properties.size == newBooks.properties.size)
 
                 // check actual property
                 previousBooks.properties should not contain key(hasDescriptionPropertyIri)
-                newCachedBooks.properties should contain key (hasDescriptionPropertyIri)
-              }
-            }
-          }
-        }
+                newCachedBooks.properties should contain key hasDescriptionPropertyIri
 
+              case None => fail(message = "Cache not available")
+            }
+
+          case None => fail(message = "Cache not available")
+        }
       }
 
       "add a link property and a link value property to the cache." in {
@@ -243,7 +237,7 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
         val previousCacheData = Await.result(Cache.getCacheData, 2 seconds)
         previousCacheData.ontologies.get(ontologyIri) match {
-          case Some(previousBooks) => {
+          case Some(previousBooks) =>
             // copy books-ontology but add link from book to page
             val linkPropertyInfoContent = PropertyInfoContentV2(
               propertyIri = hasPagePropertyIri,
@@ -308,7 +302,7 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
             // ensure that the cache updated correctly
             newCachedCacheData.ontologies.get(ontologyIri) match {
-              case Some(newCachedBooks) => {
+              case Some(newCachedBooks) =>
                 // check length
                 assert(newCachedBooks.properties.size != previousBooks.properties.size)
                 assert(newCachedBooks.properties.size == newBooks.properties.size)
@@ -323,20 +317,21 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
                 val newHasPageValuePropertyMaybe = newCachedBooks.properties.get(hasPageValuePropertyIri)
                 newHasPageValuePropertyMaybe should not equal (None)
                 newHasPageValuePropertyMaybe match {
-                  case Some(newHasPageValueProperty) => {
+                  case Some(newHasPageValueProperty) =>
                     assert(newHasPageValueProperty.isEditable)
                     assert(newHasPageValueProperty.isLinkValueProp)
-                  }
+
+                  case None => fail(message = "Cache not available")
                 }
 
                 newCachedBooks should equal(newBooks)
-              }
-            }
-          }
-        }
 
+              case None => fail(message = "Cache not available")
+            }
+
+          case None => fail(message = "Cache not available")
+        }
       }
     }
-
   }
 }

@@ -360,11 +360,6 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
        *
        * http://stackoverflow.com/questions/1157564/zipwith-mapping-over-multiple-seq-in-scala
        */
-//      searchCriteria: Seq[SearchCriterion] = (
-//        searchGetRequest.propertyIri,
-//        searchGetRequest.compareProps,
-//        searchGetRequest.searchValue
-//      ).zipped.map { (prop, compop, searchval) =>
       searchCriteria: Seq[SearchCriterion] =
         searchGetRequest.propertyIri.lazyZip(searchGetRequest.compareProps).lazyZip(searchGetRequest.searchValue).map {
           (prop, compop, searchval) =>
