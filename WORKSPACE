@@ -74,7 +74,7 @@ container_pull(
     digest = SIPI_IMAGE_DIGEST,
     registry = "docker.io",
     repository = SIPI_REPOSITORY,
-    tag = SIPI_VERSION,
+    # tag = SIPI_VERSION,
 )
 
 # get fuseki
@@ -85,7 +85,7 @@ container_pull(
     digest = FUSEKI_IMAGE_DIGEST,
     registry = "docker.io",
     repository = FUSEKI_REPOSITORY,
-    tag = FUSEKI_VERSION,
+    # tag = FUSEKI_VERSION,
 )
 
 #####################################
