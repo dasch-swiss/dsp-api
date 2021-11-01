@@ -1,20 +1,6 @@
 /*
- * Copyright © 2015-2021 Data and Service Center for the Humanities (DaSCH)
- *
- * This file is part of Knora.
- *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.e2e.admin.lists
@@ -309,7 +295,7 @@ class NewListsRouteADMFeatureE2ESpec
              |    "id": "${SharedTestDataADM.customListIRI}",
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "labels": [{ "value": "New list with a custom IRI", "language": "en"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}""".stripMargin
 
         clientTestDataCollector.addFile(
@@ -362,7 +348,7 @@ class NewListsRouteADMFeatureE2ESpec
              |    "id": "${SharedTestDataADM.customListIRI}",
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "labels": [{ "value": "New List", "language": "en"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
                 """.stripMargin
 
@@ -388,7 +374,7 @@ class NewListsRouteADMFeatureE2ESpec
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "name": "node with a custom IRI",
              |    "labels": [{ "value": "New List Node", "language": "en"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}""".stripMargin
 
         clientTestDataCollector.addFile(
@@ -448,7 +434,7 @@ class NewListsRouteADMFeatureE2ESpec
           s"""{
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}""".stripMargin
 
         clientTestDataCollector.addFile(
@@ -479,7 +465,7 @@ class NewListsRouteADMFeatureE2ESpec
         labels.head should be(StringLiteralV2(value = "Neue Liste", language = Some("de")))
 
         val comments = receivedList.listinfo.comments.stringLiterals
-        comments.isEmpty should be(true)
+        comments.isEmpty should be(false)
 
         val children = receivedList.children
         children.size should be(0)
@@ -504,7 +490,7 @@ class NewListsRouteADMFeatureE2ESpec
              |{
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
                 """.stripMargin
 
@@ -525,7 +511,7 @@ class NewListsRouteADMFeatureE2ESpec
              |{
              |    "projectIri": "",
              |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
                 """.stripMargin
 
@@ -541,7 +527,7 @@ class NewListsRouteADMFeatureE2ESpec
              |{
              |    "projectIri": "notvalidIRI",
              |    "labels": [{ "value": "Neue Liste", "language": "de"}],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
                 """.stripMargin
 
@@ -557,7 +543,7 @@ class NewListsRouteADMFeatureE2ESpec
              |{
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "labels": [],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
                 """.stripMargin
 
@@ -814,7 +800,7 @@ class NewListsRouteADMFeatureE2ESpec
              |    "listIri": "${newListIri.get}",
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
              |    "labels": [],
-             |    "comments": []
+             |    "comments": [{ "value": "XXXXX", "language": "en"}]
              |}
                 """.stripMargin
 

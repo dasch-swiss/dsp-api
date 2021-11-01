@@ -1,20 +1,6 @@
 /*
- * Copyright © 2015-2021 Data and Service Center for the Humanities (DaSCH)
- *
- *  This file is part of Knora.
- *
- *  Knora is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU Affero General Public License as published
- *  by the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  Knora is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Affero General Public License for more details.
- *
- *  You should have received a copy of the GNU Affero General Public
- *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.messages.v2.responder.listsmessages
@@ -24,7 +10,7 @@ import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralSequenceV2
+import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 import org.knora.webapi.messages.util.rdf
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.{KnoraJsonLDResponseV2, KnoraRequestV2}
@@ -100,11 +86,16 @@ case class ListGetResponseV2(list: ListADM, userLang: String, fallbackLang: Stri
      * @return a [[JsonLDObject]] representing the node.
      */
     def makeNode(node: ListChildNodeADM): JsonLDObject = {
-
       val label: Map[IRI, JsonLDString] =
         makeMapIriToJSONLDString(OntologyConstants.Rdfs.Label, node.labels, userLang, fallbackLang)
-      val comment: Map[IRI, JsonLDString] =
-        makeMapIriToJSONLDString(OntologyConstants.Rdfs.Comment, node.comments, userLang, fallbackLang)
+      val comment: Map[IRI, JsonLDString] = {
+        makeMapIriToJSONLDString(
+          OntologyConstants.Rdfs.Comment,
+          node.comments.getOrElse(StringLiteralSequenceV2(Vector.empty[StringLiteralV2])),
+          userLang,
+          fallbackLang
+        )
+      }
 
       val position: Map[IRI, JsonLDInt] = Map(
         OntologyConstants.KnoraBase.ListNodePosition.toSmartIri.toOntologySchema(ApiV2Complex).toString -> JsonLDInt(
