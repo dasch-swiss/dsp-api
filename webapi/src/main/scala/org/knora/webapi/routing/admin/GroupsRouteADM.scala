@@ -1,20 +1,6 @@
 /*
- * Copyright © 2015-2021 Data and Service Center for the Humanities (DaSCH)
- *
- * This file is part of Knora.
- *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.routing.admin
@@ -94,7 +80,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
       entity(as[CreateGroupApiRequestADM]) { apiRequest => requestContext =>
         val groupCreatePayloadADM: GroupCreatePayloadADM = GroupCreatePayloadADM.create(
           id = stringFormatter
-            .validateAndEscapeOptionalIri(apiRequest.id, throw BadRequestException(s"Invalid group IRI")),
+            .validateAndEscapeOptionalIri(apiRequest.id, throw BadRequestException(s"Invalid custom group IRI")),
           name = Name.create(apiRequest.name).fold(e => throw e, v => v),
           descriptions = Description.make(apiRequest.descriptions).fold(e => throw e.head, v => v),
           project = stringFormatter
@@ -136,7 +122,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
         /* returns a single group identified through iri */
         requestContext =>
           val checkedGroupIri =
-            stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
+            stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid custom group IRI $value"))
 
           val requestMessage = for {
             requestingUser <- getUserADM(

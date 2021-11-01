@@ -1,32 +1,23 @@
 /*
- * Copyright © 2015-2021 Data and Service Center for the Humanities (DaSCH)
- *
- *  This file is part of Knora.
- *
- *  Knora is free software: you can redistribute it and/or modify
- *  it under the terms of the GNU Affero General Public License as published
- *  by the Free Software Foundation, either version 3 of the License, or
- *  (at your option) any later version.
- *
- *  Knora is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU Affero General Public License for more details.
- *
- *  You should have received a copy of the GNU Affero General Public
- *  License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-object ListsMessagesUtilADM {
+object ListsErrorMessagesADM {
   val LIST_IRI_MISSING_ERROR = "List IRI cannot be empty."
   val LIST_IRI_INVALID_ERROR = "List IRI cannot be empty."
   val LIST_NODE_IRI_MISSING_ERROR = "List node IRI cannot be empty."
   val LIST_NODE_IRI_INVALID_ERROR = "List node IRI is invalid."
   val PROJECT_IRI_MISSING_ERROR = "Project IRI cannot be empty."
   val PROJECT_IRI_INVALID_ERROR = "Project IRI is invalid."
+  val LIST_NAME_MISSING_ERROR = "List name cannot be empty."
+  val LIST_NAME_INVALID_ERROR = "List name is invalid."
   val LABEL_MISSING_ERROR = "At least one label needs to be supplied."
+  val LABEL_INVALID_ERROR = "Invalid label."
+  val COMMENT_MISSING_ERROR = "At least one comment needs to be supplied."
+  val COMMENT_INVALID_ERROR = "Invalid comment."
   val LIST_CREATE_PERMISSION_ERROR = "A list can only be created by the project or system administrator."
   val LIST_NODE_CREATE_PERMISSION_ERROR = "A list node can only be created by the project or system administrator."
   val LIST_CHANGE_PERMISSION_ERROR = "A list can only be changed by the project or system administrator."

@@ -1,20 +1,6 @@
 /*
- * Copyright © 2015-2021 Data and Service Center for the Humanities (DaSCH)
- *
- * This file is part of Knora.
- *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.e2e.admin.lists
@@ -221,8 +207,8 @@ class UpdateListItemsRouteADME2ESpec
           )
         )
       }
-      "delete node comments" in {
-        val deleteCommentsLabels =
+      "not delete root node comments" in {
+        val deleteComments =
           s"""{
              |    "comments": []
              |}""".stripMargin
@@ -230,10 +216,10 @@ class UpdateListItemsRouteADME2ESpec
 
         val request = Put(
           baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
-          HttpEntity(ContentTypes.`application/json`, deleteCommentsLabels)
+          HttpEntity(ContentTypes.`application/json`, deleteComments)
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: ${response.toString}")
+        log.debug(s"response: ${response.toString}")
         response.status should be(StatusCodes.OK)
         val receivedListInfo: ListRootNodeInfoADM =
           AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
@@ -241,7 +227,8 @@ class UpdateListItemsRouteADME2ESpec
         receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
 
         val comments: Seq[StringLiteralV2] = receivedListInfo.comments.stringLiterals
-        comments.size should be(0)
+        comments.size should be(1)
+        comments should contain(StringLiteralV2(value = "nya kommentarer", language = Some("se")))
       }
     }
 
@@ -378,6 +365,39 @@ class UpdateListItemsRouteADME2ESpec
             text = responseToString(response)
           )
         )
+      }
+
+      "not delete child node comments by sending empty array" in {
+        val deleteNodeComments =
+          s"""{
+             |    "comments": []
+             |}""".stripMargin
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-childNode-comments-request",
+              fileExtension = "json"
+            ),
+            text = deleteNodeComments
+          )
+        )
+
+        val encodedListUrl = java.net.URLEncoder.encode(treeChildNode.id, "utf-8")
+
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl + "/comments",
+          HttpEntity(ContentTypes.`application/json`, deleteNodeComments)
+        ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+
+        response.status should be(StatusCodes.OK)
+
+        val receivedNodeInfo: ListChildNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
+        val comments: Seq[StringLiteralV2] = receivedNodeInfo.comments.stringLiterals
+        comments.size should be(1)
       }
 
       "not update the position of a node if given IRI is invalid" in {

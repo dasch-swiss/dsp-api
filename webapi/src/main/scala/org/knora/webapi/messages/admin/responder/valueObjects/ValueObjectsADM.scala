@@ -215,21 +215,6 @@ object Logo { self =>
     }
 }
 
-/** Groups value objects */
-
-/**
- * Group Name value object.
- */
-sealed abstract case class Name private (value: String)
-object Name {
-  def create(value: String): Either[Throwable, Name] =
-    if (value.isEmpty) {
-      Left(BadRequestException("Missing Name"))
-    } else {
-      Right(new Name(value) {})
-    }
-}
-
 /** Shared value objects */
 
 /**
@@ -260,5 +245,18 @@ object Description {
       Validation.fail(BadRequestException("Missing description"))
     } else {
       Validation.succeed(new Description(value) {})
+    }
+}
+
+/**
+ * Name value object.
+ */
+sealed abstract case class Name private (value: String)
+object Name {
+  def create(value: String): Either[Throwable, Name] =
+    if (value.isEmpty) {
+      Left(BadRequestException("Missing Name"))
+    } else {
+      Right(new Name(value) {})
     }
 }

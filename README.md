@@ -12,7 +12,7 @@ at the [University of Basel](https://www.unibas.ch), and is supported by the
 the [Swiss National Science Foundation](https://snf.ch) .
 
 Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html),
-released under the [GNU Affero General Public License](http://www.gnu.org/licenses/agpl-3.0.en.html).
+released under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
 
 ## Features
 
