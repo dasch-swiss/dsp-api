@@ -5,9 +5,6 @@
 
 package org.knora.webapi.messages.util.standoff
 
-import java.time.Instant
-import java.util.UUID
-
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.pattern.ask
@@ -30,6 +27,8 @@ import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.settings.KnoraSettingsImpl
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 
 object StandoffTagUtilV2 {
@@ -1308,8 +1307,7 @@ object StandoffTagUtilV2 {
             conventionalAttributes
           ) :+ StandoffTagAttribute(
             key = dataTypeAttrName,
-//            or .toString
-            value = s"${StandoffTagUtilV2.internalLinkMarker}" + internalRefTarget,
+            value = StandoffTagUtilV2.internalLinkMarker.toString + internalRefTarget,
             xmlNamespace = None
           )
 
