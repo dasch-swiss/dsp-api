@@ -6,15 +6,28 @@
 package org.knora.webapi.routing.admin.lists
 
 import java.util.UUID
-
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
+
 import javax.ws.rs.Path
 import org.knora.webapi.IRI
-import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.feature.{Feature, FeatureFactoryConfig}
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.LIST_CREATE_PERMISSION_ERROR
+import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
+  ChildNodeCreatePayloadADM,
+  ListCreatePayloadADM
+}
 import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.messages.admin.responder.valueObjects.{
+  Comments,
+  Labels,
+  ListIRI,
+  ListName,
+  Position,
+  ProjectIRI
+}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 import scala.concurrent.Future
@@ -120,7 +133,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
         name = "body",
         value = "\"list\" item to create",
         required = true,
-        dataTypeClass = classOf[CreateListApiRequestADM],
+        dataTypeClass = classOf[CreateNodeApiRequestADM],
         paramType = "body"
       ),
       new ApiImplicitParam(
@@ -141,22 +154,82 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
     post {
       /* create a list item (root or child node) */
       entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
+        val maybeId: Option[ListIRI] = apiRequest.id match {
+          case Some(value) => Some(ListIRI.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val maybeParentNodeIri: Option[ListIRI] = apiRequest.parentNodeIri match {
+          case Some(value) => Some(ListIRI.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val maybeName: Option[ListName] = apiRequest.name match {
+          case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val maybePosition: Option[Position] = apiRequest.position match {
+          case Some(value) => Some(Position.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val labels = Labels.create(apiRequest.labels).fold(e => throw e, v => v)
+        val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
+
         val requestMessage = for {
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+
+          _ = if (
+            !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
+          ) {
+            // not project or a system admin
+            throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+          }
+
           // Is parent node IRI given in the payload?
           createRequest =
             if (apiRequest.parentNodeIri.isEmpty) {
               // No, create a new list with given information of its root node.
+
+              val comments = Comments.create(apiRequest.comments).fold(e => throw e, v => v)
+
+              val createRootNodePayloadADM: ListCreatePayloadADM = ListCreatePayloadADM(
+                id = maybeId,
+                projectIri,
+                name = maybeName,
+                labels,
+                comments
+              )
+
               ListCreateRequestADM(
-                createRootNode = apiRequest.escape,
+                createRootNode = createRootNodePayloadADM,
                 featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser,
                 apiRequestID = UUID.randomUUID()
               )
             } else {
               // Yes, create a new child and attach it to the parent node.
+
+              // allows to omit comments / send empty comments creating child node
+              val maybeComments = if (apiRequest.comments.isEmpty) {
+                None
+              } else {
+                Some(Comments.create(apiRequest.comments).fold(e => throw e, v => v))
+              }
+
+              val createChildNodePayloadADM: ChildNodeCreatePayloadADM = ChildNodeCreatePayloadADM(
+                id = maybeId,
+                parentNodeIri = maybeParentNodeIri,
+                projectIri,
+                name = maybeName,
+                position = maybePosition,
+                labels,
+                comments = maybeComments
+              )
+
               ListChildNodeCreateRequestADM(
-                createChildNodeRequest = apiRequest.escape,
+                createChildNodeRequest = createChildNodePayloadADM,
                 featureFactoryConfig = featureFactoryConfig,
                 requestingUser = requestingUser,
                 apiRequestID = UUID.randomUUID()
@@ -263,14 +336,57 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
     put {
       /* update existing list node (either root or child) */
       entity(as[ChangeNodeInfoApiRequestADM]) { apiRequest => requestContext =>
-        val listIri =
-          stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+        val listIri = ListIRI.create(apiRequest.listIri).fold(e => throw e, v => v)
+        val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
+
+        val maybeHasRootNode: Option[ListIRI] = apiRequest.hasRootNode match {
+          case Some(value) => Some(ListIRI.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val maybeName: Option[ListName] = apiRequest.name match {
+          case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val maybePosition: Option[Position] = apiRequest.position match {
+          case Some(value) => Some(Position.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val maybeLabels: Option[Labels] = apiRequest.labels match {
+          case Some(value) => Some(Labels.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val maybeComments: Option[Comments] = apiRequest.comments match {
+          case Some(value) => Some(Comments.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val changeNodeInfoPayloadADM: NodeInfoChangePayloadADM = NodeInfoChangePayloadADM(
+          listIri,
+          projectIri,
+          hasRootNode = maybeHasRootNode,
+          position = maybePosition,
+          name = maybeName,
+          labels = maybeLabels,
+          comments = maybeComments
+        )
 
         val requestMessage: Future[NodeInfoChangeRequestADM] = for {
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+          // check if the requesting user is allowed to perform operation
+          _ = if (
+            !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
+          ) {
+            // not project or a system admin
+            throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+          }
         } yield NodeInfoChangeRequestADM(
-          listIri = listIri,
-          changeNodeRequest = apiRequest,
+          //TODO: why "listIri" property is doubled - here and inside "changeNodeRequest"
+          listIri = listIri.value,
+          changeNodeRequest = changeNodeInfoPayloadADM,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()

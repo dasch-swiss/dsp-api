@@ -80,7 +80,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
       entity(as[CreateGroupApiRequestADM]) { apiRequest => requestContext =>
         val groupCreatePayloadADM: GroupCreatePayloadADM = GroupCreatePayloadADM.create(
           id = stringFormatter
-            .validateAndEscapeOptionalIri(apiRequest.id, throw BadRequestException(s"Invalid group IRI")),
+            .validateAndEscapeOptionalIri(apiRequest.id, throw BadRequestException(s"Invalid custom group IRI")),
           name = Name.create(apiRequest.name).fold(e => throw e, v => v),
           descriptions = Description.make(apiRequest.descriptions).fold(e => throw e.head, v => v),
           project = stringFormatter
@@ -122,7 +122,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
         /* returns a single group identified through iri */
         requestContext =>
           val checkedGroupIri =
-            stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
+            stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid custom group IRI $value"))
 
           val requestMessage = for {
             requestingUser <- getUserADM(
