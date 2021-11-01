@@ -6,15 +6,14 @@
 package org.knora.webapi.messages.util.search.gravsearch.prequery
 
 import org.knora.webapi.ApiV2Schema
-import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.feature.{Feature, FeatureFactory, FeatureFactoryConfig}
-import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.messages.util.search._
 import org.knora.webapi.messages.util.search.gravsearch.types.{
   GravsearchTypeInspectionResult,
   GravsearchTypeInspectionUtil,
   TypeableEntity
 }
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import scalax.collection.Graph
 import scalax.collection.GraphEdge.DiHyperEdge
 
@@ -256,9 +255,10 @@ class ReorderPatternsByDependencyOptimisationFeature(
   private def createAndSortGraph(statementPatterns: Seq[StatementPattern]): Seq[QueryPattern] = {
     @scala.annotation.tailrec
     def makeGraphWithoutCycles(graphComponents: Seq[(String, String)]): Graph[String, DiHyperEdge] = {
-      val graph = graphComponents.foldLeft(Graph.empty[String, DiHyperEdge]) { (graph, edgeDef) =>
-        val edge = DiHyperEdge(edgeDef._1, edgeDef._2)
-        graph + edge // add nodes and edges to graph
+      val graph: Graph[String, DiHyperEdge] = graphComponents.foldLeft(Graph.empty[String, DiHyperEdge]) {
+        (graph, edgeDef) =>
+          val edge: DiHyperEdge[String] = DiHyperEdge(edgeDef._1, edgeDef._2)
+          graph ++ edge.toVector // add nodes and edges to graph
       }
 
       if (graph.isCyclic) {
