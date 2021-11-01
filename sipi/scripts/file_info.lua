@@ -199,6 +199,7 @@ function get_file_info(filename, mimetype)
         return make_text_file_info(extension)
     elseif table.contains(document_mime_types, mimetype) then
         return make_document_file_info(extension)
+--         TODO: should ZIP be in a separate group here?
     else
         -- no supported mediatype could be determined
         return nil
