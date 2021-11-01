@@ -360,205 +360,211 @@ class SearchResponderV1(responderData: ResponderData) extends Responder(responde
        *
        * http://stackoverflow.com/questions/1157564/zipwith-mapping-over-multiple-seq-in-scala
        */
-      searchCriteria: Seq[SearchCriterion] = (
-        searchGetRequest.propertyIri,
-        searchGetRequest.compareProps,
-        searchGetRequest.searchValue
-      ).zipped.map { (prop, compop, searchval) =>
-        val propertyEntityInfo = propertyInfo.propertyInfoMap(prop)
+//      searchCriteria: Seq[SearchCriterion] = (
+//        searchGetRequest.propertyIri,
+//        searchGetRequest.compareProps,
+//        searchGetRequest.searchValue
+//      ).zipped.map { (prop, compop, searchval) =>
+      searchCriteria: Seq[SearchCriterion] =
+        searchGetRequest.propertyIri.lazyZip(searchGetRequest.compareProps).lazyZip(searchGetRequest.searchValue).map {
+          (prop, compop, searchval) =>
+            val propertyEntityInfo = propertyInfo.propertyInfoMap(prop)
 
-        // If the property is a linking property, we pretend its knora-base:objectClassConstraint is knora-base:Resource, so validTypeCompopCombos will work.
-        val propertyObjectClassConstraint: IRI = if (propertyEntityInfo.isLinkProp) {
-          OntologyConstants.KnoraBase.Resource
-        } else {
-          propertyEntityInfo
-            .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
-            .getOrElse(
-              throw InconsistentRepositoryDataException(s"Property $prop has no knora-base:objectClassConstraint")
-            )
-        }
-
-        // Ensure that the property's objectClassConstraint is valid, and that the specified operator can be
-        // used with it.
-        validTypeCompopCombos.get(propertyObjectClassConstraint) match {
-          case Some(validOps) =>
-            if (!validOps.contains(compop)) {
-              // The class specified in the property's objectClassConstraint can't be used with the specified operator.
-              throw BadRequestException(s"Operator $compop cannot be used with property $prop")
+            // If the property is a linking property, we pretend its knora-base:objectClassConstraint is knora-base:Resource, so validTypeCompopCombos will work.
+            val propertyObjectClassConstraint: IRI = if (propertyEntityInfo.isLinkProp) {
+              OntologyConstants.KnoraBase.Resource
+            } else {
+              propertyEntityInfo
+                .getPredicateObject(OntologyConstants.KnoraBase.ObjectClassConstraint)
+                .getOrElse(
+                  throw InconsistentRepositoryDataException(s"Property $prop has no knora-base:objectClassConstraint")
+                )
             }
 
-          case None =>
-            // The class specified in the property's objectClassConstraint is invalid.
-            throw BadRequestException(
-              s"Property $prop has an invalid knora-base:objectClassConstraint: $propertyObjectClassConstraint"
-            )
-        }
-
-        val searchParamWithoutValue = SearchCriterion(
-          propertyIri = prop,
-          comparisonOperator = compop,
-          valueType = propertyObjectClassConstraint
-        )
-
-        // check and convert the searchval if necessary (e.g. check if a given string is numeric or convert a date string to a date)
-
-        if (compop == SearchComparisonOperatorV1.EXISTS) {
-          // EXISTS doesn't need the searchval at all.
-          searchParamWithoutValue
-        } else {
-          propertyObjectClassConstraint match {
-            case OntologyConstants.KnoraBase.DateValue =>
-              //
-              // It is a date, parse and convert it to JD
-              //
-
-              val datestring =
-                stringFormatter.validateDate(searchval, throw BadRequestException(s"Invalid date format: $searchval"))
-
-              // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
-              val parsedDate = datestring.split(StringFormatter.CalendarSeparator)
-              val calendar = KnoraCalendarV1.lookup(parsedDate(0))
-
-              // val daysInMonth = Calendar.DAY_OF_MONTH // will be used to determine the number of days in the given month
-              // val monthsInYear = Calendar.MONTH // will be used to determine the number of months in the given year (generic for other calendars)
-
-              val (dateStart, dateEnd) = if (parsedDate.length > 2) {
-                // it is a period: 0 : cal | 1 : start | 2 : end
-
-                val periodStart = DateUtilV1.dateString2DateRange(parsedDate(1), calendar).start
-                val periodEnd = DateUtilV1.dateString2DateRange(parsedDate(2), calendar).end
-
-                val start = DateUtilV1.convertDateToJulianDayNumber(periodStart)
-                val end = DateUtilV1.convertDateToJulianDayNumber(periodEnd)
-
-                // check if end is bigger than start (the user could have submitted a period where start is bigger than end)
-                if (start > end)
-                  throw BadRequestException(s"Invalid input for period: start is bigger than end: $searchval")
-
-                (start, end)
-              } else {
-                // no period: 0 : cal | 1 : start
-
-                val dateRange = DateUtilV1.dateString2DateRange(parsedDate(1), calendar)
-
-                val start = DateUtilV1.convertDateToJulianDayNumber(dateRange.start)
-                val end = DateUtilV1.convertDateToJulianDayNumber(dateRange.end)
-
-                (start, end)
-              }
-
-              searchParamWithoutValue.copy(
-                dateStart = Some(dateStart),
-                dateEnd = Some(dateEnd)
-              )
-
-            case OntologyConstants.KnoraBase.TextValue =>
-              // http://www.morelab.deusto.es/code_injection/
-              // http://stackoverflow.com/questions/29601839/prevent-sparql-injection-generic-solution-triplestore-independent
-              val searchString = stringFormatter
-                .toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
-
-              val (matchBooleanPositiveTerms, matchBooleanNegativeTerms) =
-                if (compop == SearchComparisonOperatorV1.MATCH_BOOLEAN) {
-                  val terms = searchString.asInstanceOf[String].split("\\s+").toSet
-                  val negativeTerms = terms.filter(_.startsWith("-"))
-                  val positiveTerms = terms -- negativeTerms
-                  val negativeTermsWithoutPrefixes = negativeTerms.map(_.stripPrefix("-"))
-                  val positiveTermsWithoutPrefixes = positiveTerms.map(_.stripPrefix("+"))
-                  (positiveTermsWithoutPrefixes, negativeTermsWithoutPrefixes)
-                } else {
-                  (Set.empty[String], Set.empty[String])
+            // Ensure that the property's objectClassConstraint is valid, and that the specified operator can be
+            // used with it.
+            validTypeCompopCombos.get(propertyObjectClassConstraint) match {
+              case Some(validOps) =>
+                if (!validOps.contains(compop)) {
+                  // The class specified in the property's objectClassConstraint can't be used with the specified operator.
+                  throw BadRequestException(s"Operator $compop cannot be used with property $prop")
                 }
 
-              searchParamWithoutValue.copy(
-                searchValue = Some(searchString),
-                matchBooleanPositiveTerms = matchBooleanPositiveTerms,
-                matchBooleanNegativeTerms = matchBooleanNegativeTerms
-              )
-
-            case OntologyConstants.KnoraBase.IntValue =>
-              // check if string is an integer
-              val searchString = stringFormatter
-                .validateInt(searchval, throw BadRequestException(s"Given searchval is not an integer: $searchval"))
-                .toString
-              searchParamWithoutValue.copy(searchValue = Some(searchString))
-
-            case OntologyConstants.KnoraBase.DecimalValue =>
-              // check if string is a decimal number
-              val searchString = stringFormatter
-                .validateBigDecimal(
-                  searchval,
-                  throw BadRequestException(s"Given searchval is not a decimal number: $searchval")
+              case None =>
+                // The class specified in the property's objectClassConstraint is invalid.
+                throw BadRequestException(
+                  s"Property $prop has an invalid knora-base:objectClassConstraint: $propertyObjectClassConstraint"
                 )
-                .toString
-              searchParamWithoutValue.copy(searchValue = Some(searchString))
+            }
 
-            case OntologyConstants.KnoraBase.TimeValue =>
-              // check if string is an integer
-              val searchString = stringFormatter
-                .xsdDateTimeStampToInstant(
-                  searchval,
-                  throw BadRequestException(s"Given searchval is not a timestamp: $searchval")
-                )
-                .toString
-              searchParamWithoutValue.copy(searchValue = Some(searchString))
+            val searchParamWithoutValue = SearchCriterion(
+              propertyIri = prop,
+              comparisonOperator = compop,
+              valueType = propertyObjectClassConstraint
+            )
 
-            case OntologyConstants.KnoraBase.Resource =>
-              // check if string is a valid IRI
-              val searchString = stringFormatter.validateAndEscapeIri(
-                searchval,
-                throw BadRequestException(s"Given searchval is not a valid IRI: $searchval")
-              )
-              searchParamWithoutValue.copy(searchValue = Some(searchString))
+            // check and convert the searchval if necessary (e.g. check if a given string is numeric or convert a date string to a date)
 
-            case OntologyConstants.KnoraBase.ColorValue =>
-              // check if string is a hexadecimal RGB-color value
-              val searchString =
-                stringFormatter.validateColor(searchval, throw BadRequestException(s"Invalid color format: $searchval"))
-              searchParamWithoutValue.copy(searchValue = Some(searchString))
+            if (compop == SearchComparisonOperatorV1.EXISTS) {
+              // EXISTS doesn't need the searchval at all.
+              searchParamWithoutValue
+            } else {
+              propertyObjectClassConstraint match {
+                case OntologyConstants.KnoraBase.DateValue =>
+                  //
+                  // It is a date, parse and convert it to JD
+                  //
 
-            case OntologyConstants.KnoraBase.GeomValue =>
-              // this only will be used with compop EXISTS
-              searchParamWithoutValue.copy(searchValue = Some(""))
+                  val datestring =
+                    stringFormatter
+                      .validateDate(searchval, throw BadRequestException(s"Invalid date format: $searchval"))
 
-            case OntologyConstants.KnoraBase.GeonameValue =>
-              // sanitize Geoname search string
-              val searchString = stringFormatter
-                .toSparqlEncodedString(
-                  searchval,
-                  throw BadRequestException(s"Invalid Geoname search string: '$searchval'")
-                )
+                  // parse date: Calendar:YYYY-MM-DD[:YYYY-MM-DD]
+                  val parsedDate = datestring.split(StringFormatter.CalendarSeparator)
+                  val calendar = KnoraCalendarV1.lookup(parsedDate(0))
 
-              searchParamWithoutValue.copy(searchValue = Some(searchString))
+                  // val daysInMonth = Calendar.DAY_OF_MONTH // will be used to determine the number of days in the given month
+                  // val monthsInYear = Calendar.MONTH // will be used to determine the number of months in the given year (generic for other calendars)
 
-            case OntologyConstants.KnoraBase.UriValue =>
-              // validate URI
-              val searchString =
-                stringFormatter.validateAndEscapeIri(searchval, throw BadRequestException(s"Invalid URI: $searchval"))
-              searchParamWithoutValue.copy(searchValue = Some(searchString))
+                  val (dateStart, dateEnd) = if (parsedDate.length > 2) {
+                    // it is a period: 0 : cal | 1 : start | 2 : end
 
-            case OntologyConstants.KnoraBase.ListValue =>
-              // check if string represents a node in a list
-              val searchString = stringFormatter.validateAndEscapeIri(
-                searchval,
-                throw BadRequestException(s"Given searchval is not a formally valid IRI $searchval")
-              )
-              searchParamWithoutValue.copy(searchValue = Some(searchString))
+                    val periodStart = DateUtilV1.dateString2DateRange(parsedDate(1), calendar).start
+                    val periodEnd = DateUtilV1.dateString2DateRange(parsedDate(2), calendar).end
 
-            case OntologyConstants.KnoraBase.BooleanValue =>
-              // check if searchVal is a Boolan value
-              val searchString = stringFormatter
-                .validateBoolean(
-                  searchval,
-                  throw BadRequestException(s"Given searchval is not a valid Boolean value: $searchval")
-                )
-                .toString
-              searchParamWithoutValue.copy(searchValue = Some(searchString))
+                    val start = DateUtilV1.convertDateToJulianDayNumber(periodStart)
+                    val end = DateUtilV1.convertDateToJulianDayNumber(periodEnd)
 
-            case other => throw BadRequestException(s"The value type for the given property $prop is unknown.")
-          }
+                    // check if end is bigger than start (the user could have submitted a period where start is bigger than end)
+                    if (start > end)
+                      throw BadRequestException(s"Invalid input for period: start is bigger than end: $searchval")
+
+                    (start, end)
+                  } else {
+                    // no period: 0 : cal | 1 : start
+
+                    val dateRange = DateUtilV1.dateString2DateRange(parsedDate(1), calendar)
+
+                    val start = DateUtilV1.convertDateToJulianDayNumber(dateRange.start)
+                    val end = DateUtilV1.convertDateToJulianDayNumber(dateRange.end)
+
+                    (start, end)
+                  }
+
+                  searchParamWithoutValue.copy(
+                    dateStart = Some(dateStart),
+                    dateEnd = Some(dateEnd)
+                  )
+
+                case OntologyConstants.KnoraBase.TextValue =>
+                  // http://www.morelab.deusto.es/code_injection/
+                  // http://stackoverflow.com/questions/29601839/prevent-sparql-injection-generic-solution-triplestore-independent
+                  val searchString = stringFormatter
+                    .toSparqlEncodedString(searchval, throw BadRequestException(s"Invalid search string: '$searchval'"))
+
+                  val (matchBooleanPositiveTerms, matchBooleanNegativeTerms) =
+                    if (compop == SearchComparisonOperatorV1.MATCH_BOOLEAN) {
+                      val terms = searchString.asInstanceOf[String].split("\\s+").toSet
+                      val negativeTerms = terms.filter(_.startsWith("-"))
+                      val positiveTerms = terms -- negativeTerms
+                      val negativeTermsWithoutPrefixes = negativeTerms.map(_.stripPrefix("-"))
+                      val positiveTermsWithoutPrefixes = positiveTerms.map(_.stripPrefix("+"))
+                      (positiveTermsWithoutPrefixes, negativeTermsWithoutPrefixes)
+                    } else {
+                      (Set.empty[String], Set.empty[String])
+                    }
+
+                  searchParamWithoutValue.copy(
+                    searchValue = Some(searchString),
+                    matchBooleanPositiveTerms = matchBooleanPositiveTerms,
+                    matchBooleanNegativeTerms = matchBooleanNegativeTerms
+                  )
+
+                case OntologyConstants.KnoraBase.IntValue =>
+                  // check if string is an integer
+                  val searchString = stringFormatter
+                    .validateInt(searchval, throw BadRequestException(s"Given searchval is not an integer: $searchval"))
+                    .toString
+                  searchParamWithoutValue.copy(searchValue = Some(searchString))
+
+                case OntologyConstants.KnoraBase.DecimalValue =>
+                  // check if string is a decimal number
+                  val searchString = stringFormatter
+                    .validateBigDecimal(
+                      searchval,
+                      throw BadRequestException(s"Given searchval is not a decimal number: $searchval")
+                    )
+                    .toString
+                  searchParamWithoutValue.copy(searchValue = Some(searchString))
+
+                case OntologyConstants.KnoraBase.TimeValue =>
+                  // check if string is an integer
+                  val searchString = stringFormatter
+                    .xsdDateTimeStampToInstant(
+                      searchval,
+                      throw BadRequestException(s"Given searchval is not a timestamp: $searchval")
+                    )
+                    .toString
+                  searchParamWithoutValue.copy(searchValue = Some(searchString))
+
+                case OntologyConstants.KnoraBase.Resource =>
+                  // check if string is a valid IRI
+                  val searchString = stringFormatter.validateAndEscapeIri(
+                    searchval,
+                    throw BadRequestException(s"Given searchval is not a valid IRI: $searchval")
+                  )
+                  searchParamWithoutValue.copy(searchValue = Some(searchString))
+
+                case OntologyConstants.KnoraBase.ColorValue =>
+                  // check if string is a hexadecimal RGB-color value
+                  val searchString =
+                    stringFormatter
+                      .validateColor(searchval, throw BadRequestException(s"Invalid color format: $searchval"))
+                  searchParamWithoutValue.copy(searchValue = Some(searchString))
+
+                case OntologyConstants.KnoraBase.GeomValue =>
+                  // this only will be used with compop EXISTS
+                  searchParamWithoutValue.copy(searchValue = Some(""))
+
+                case OntologyConstants.KnoraBase.GeonameValue =>
+                  // sanitize Geoname search string
+                  val searchString = stringFormatter
+                    .toSparqlEncodedString(
+                      searchval,
+                      throw BadRequestException(s"Invalid Geoname search string: '$searchval'")
+                    )
+
+                  searchParamWithoutValue.copy(searchValue = Some(searchString))
+
+                case OntologyConstants.KnoraBase.UriValue =>
+                  // validate URI
+                  val searchString =
+                    stringFormatter
+                      .validateAndEscapeIri(searchval, throw BadRequestException(s"Invalid URI: $searchval"))
+                  searchParamWithoutValue.copy(searchValue = Some(searchString))
+
+                case OntologyConstants.KnoraBase.ListValue =>
+                  // check if string represents a node in a list
+                  val searchString = stringFormatter.validateAndEscapeIri(
+                    searchval,
+                    throw BadRequestException(s"Given searchval is not a formally valid IRI $searchval")
+                  )
+                  searchParamWithoutValue.copy(searchValue = Some(searchString))
+
+                case OntologyConstants.KnoraBase.BooleanValue =>
+                  // check if searchVal is a Boolan value
+                  val searchString = stringFormatter
+                    .validateBoolean(
+                      searchval,
+                      throw BadRequestException(s"Given searchval is not a valid Boolean value: $searchval")
+                    )
+                    .toString
+                  searchParamWithoutValue.copy(searchValue = Some(searchString))
+
+                case other => throw BadRequestException(s"The value type for the given property $prop is unknown.")
+              }
+            }
         }
-      }
 
       // Get the search results.
       searchSparql = org.knora.webapi.messages.twirl.queries.sparql.v1.txt
