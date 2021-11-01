@@ -80,6 +80,8 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
 
   "Updating the ontology cache," when {
 
+    val CACHE_NOT_AVAILABLE_ERROR = "Cache not available"
+
     "removing a property from an ontology," should {
 
       "remove the property from the cache." in {
@@ -124,10 +126,10 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
                 previousBooks.properties should contain key hasTitlePropertyIri
                 newCachedBooks.properties should not contain key(hasTitlePropertyIri)
 
-              case None => fail(message = "Cache not available")
+              case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
             }
 
-          case None => fail(message = "Cache not available")
+          case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
         }
       }
     }
@@ -219,10 +221,10 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
                 previousBooks.properties should not contain key(hasDescriptionPropertyIri)
                 newCachedBooks.properties should contain key hasDescriptionPropertyIri
 
-              case None => fail(message = "Cache not available")
+              case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
             }
 
-          case None => fail(message = "Cache not available")
+          case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
         }
       }
 
@@ -321,15 +323,15 @@ class CacheSpec extends IntegrationSpec(TestContainerFuseki.PortConfig) {
                     assert(newHasPageValueProperty.isEditable)
                     assert(newHasPageValueProperty.isLinkValueProp)
 
-                  case None => fail(message = "Cache not available")
+                  case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
                 }
 
                 newCachedBooks should equal(newBooks)
 
-              case None => fail(message = "Cache not available")
+              case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
             }
 
-          case None => fail(message = "Cache not available")
+          case None => fail(message = CACHE_NOT_AVAILABLE_ERROR)
         }
       }
     }
