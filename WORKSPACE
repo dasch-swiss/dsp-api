@@ -1,7 +1,7 @@
 workspace(name = "io_dasch_dsp_api")
 
 # load http_archive method
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 #####################################
 # Skylib                            #
@@ -60,14 +60,14 @@ container_pull(
 # get openjdk
 container_pull(
     name = "openjdk11",
-    digest = "sha256:0e51b455654bd162c485a6a6b5b120cc82db453d9265cc90f0c4fb5d14e2f62e",
+    digest = "sha256:eac1c6cff5fded2dd35fc94bb23e7862a08277bd71f9b352a99df5bc740459c3",  # 06.10.2021
     registry = "docker.io",
     repository = "adoptopenjdk",
-    tag = "11-jre-hotspot-bionic",
+    # tag = "11-jre-hotspot-focal",
 )
 
 # get sipi
-load("//third_party:versions.bzl", "SIPI_IMAGE_DIGEST", "SIPI_REPOSITORY", "SIPI_VERSION")
+load("//third_party:versions.bzl", "FUSEKI_IMAGE_DIGEST", "FUSEKI_REPOSITORY", "SIPI_IMAGE_DIGEST", "SIPI_REPOSITORY")
 
 container_pull(
     name = "sipi",
@@ -76,9 +76,6 @@ container_pull(
     repository = SIPI_REPOSITORY,
     # tag = SIPI_VERSION,
 )
-
-# get fuseki
-load("//third_party:versions.bzl", "FUSEKI_IMAGE_DIGEST", "FUSEKI_REPOSITORY", "FUSEKI_VERSION")
 
 container_pull(
     name = "jenafuseki",
@@ -229,8 +226,6 @@ http_archive(
         "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.22.2/bazel-gazelle-v0.22.2.tar.gz",
     ],
 )
-
-load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
 
 # bazel buildtools providing buildifier
 http_archive(
