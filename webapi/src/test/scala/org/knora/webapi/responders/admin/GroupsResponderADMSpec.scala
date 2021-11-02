@@ -9,7 +9,6 @@
  */
 package org.knora.webapi.responders.admin
 
-import java.util.UUID
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
@@ -22,6 +21,7 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
 
+import java.util.UUID
 import scala.concurrent.duration._
 
 object GroupsResponderADMSpec {
@@ -88,7 +88,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
       "CREATE the group and return the group's info if the supplied group name is unique" in {
         responderManager ! GroupCreateRequestADM(
-          createRequest = GroupCreatePayloadADM.create(
+          createRequest = GroupCreatePayloadADM(
             id = None,
             name = Name.create("NewGroup").fold(e => throw e, v => v),
             descriptions = Description
@@ -124,7 +124,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
       "return a 'DuplicateValueException' if the supplied group name is not unique" in {
         responderManager ! GroupCreateRequestADM(
-          createRequest = GroupCreatePayloadADM.create(
+          createRequest = GroupCreatePayloadADM(
             id = Some(imagesReviewerGroup.id),
             name = Name.create("NewGroup").fold(e => throw e, v => v),
             descriptions = Description
@@ -146,7 +146,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
       "return 'BadRequestException' if project IRI are missing" in {
         responderManager ! GroupCreateRequestADM(
-          createRequest = GroupCreatePayloadADM.create(
+          createRequest = GroupCreatePayloadADM(
             id = Some(""),
             name = Name.create("OtherNewGroup").fold(e => throw e, v => v),
             descriptions = Description

@@ -5,17 +5,17 @@
 
 package org.knora.webapi.routing.admin
 
-import java.util.UUID
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
-
-import javax.ws.rs.Path
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects.{Description, Name, Selfjoin, Status}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+
+import java.util.UUID
+import javax.ws.rs.Path
 
 object GroupsRouteADM {
   val GroupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
@@ -78,7 +78,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
     post {
       /* create a new group */
       entity(as[CreateGroupApiRequestADM]) { apiRequest => requestContext =>
-        val groupCreatePayloadADM: GroupCreatePayloadADM = GroupCreatePayloadADM.create(
+        val groupCreatePayloadADM: GroupCreatePayloadADM = GroupCreatePayloadADM(
           id = stringFormatter
             .validateAndEscapeOptionalIri(apiRequest.id, throw BadRequestException(s"Invalid custom group IRI")),
           name = Name.create(apiRequest.name).fold(e => throw e, v => v),
