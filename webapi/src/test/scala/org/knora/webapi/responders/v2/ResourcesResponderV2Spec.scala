@@ -410,6 +410,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
     RdfDataObject(path = "test_data/all_data/incunabula-data.ttl", name = "http://www.knora.org/data/0803/incunabula"),
     RdfDataObject(path = "test_data/demo_data/images-demo-data.ttl", name = "http://www.knora.org/data/00FF/images"),
     RdfDataObject(path = "test_data/all_data/anything-data.ttl", name = "http://www.knora.org/data/0001/anything")
+//    RdfDataObject(path = "test_data/ontologies/books-onto.ttl", name = "http://www.knora.org/ontology/0001/books")
   )
 
   private val sampleStandoff: Vector[StandoffTagV2] = Vector(
@@ -1208,6 +1209,85 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         defaultValuePermissions = defaultStillImageFileValuePermissions,
         requestingUser = anythingUserProfile
       )
+    }
+
+    "create a resource with document representation" ignore {
+      // TODO: implement
+
+      // Create the resource.
+//
+//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+//
+//      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
+//        "http://0.0.0.0:3333/ontology/0001/books/v2#hasPDFDocumentValue".toSmartIri -> Seq(
+////        OntologyConstants.KnoraApiV2Complex.HasRepresentationValue.toSmartIri -> Seq(
+//          CreateValueInNewResourceV2(
+//            valueContent = DocumentFileValueContentV2(
+//              ontologySchema = ApiV2Complex,
+//              fileValue = FileValueV2(
+//                internalFilename = "IQUO3t1AABm-FSLC0vNvVpr-2.pdf",
+//                internalMimeType = "application/pdf",
+//                originalFilename = Some("test.pdf"),
+//                originalMimeType = Some("application/pdf")
+//              ),
+//              pageCount = Some(1),
+//              dimX = Some(100),
+//              dimY = Some(100),
+//              comment = Some("This is a document")
+//            )
+//          )
+//        )
+//      )
+//
+//      val inputResource = CreateResourceV2(
+//        resourceIri = Some(resourceIri.toSmartIri),
+//        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/books/v2#Book".toSmartIri,
+////        resourceClassIri = "http://www.knora.org/ontology/0001/books#Book".toSmartIri,
+//        label = "test document",
+//        values = inputValues,
+//        projectADM = SharedTestDataADM.anythingProject
+//      )
+//
+//      responderManager ! CreateResourceRequestV2(
+//        createResource = inputResource,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = anythingUserProfile,
+//        apiRequestID = UUID.randomUUID
+//      )
+//
+//      // Check that the response contains the correct metadata.
+//
+//      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+//        val outputResource: ReadResourceV2 = response.toResource(resourceIri).toOntologySchema(ApiV2Complex)
+//
+//        checkCreateResource(
+//          inputResourceIri = resourceIri,
+//          inputResource = inputResource,
+//          outputResource = outputResource,
+//          defaultResourcePermissions = defaultAnythingResourcePermissions,
+//          defaultValuePermissions = defaultAnythingValuePermissions,
+//          requestingUser = anythingUserProfile
+//        )
+//      }
+//
+//      // Get the resource from the triplestore and check it again.
+//
+//      val outputResource = getResource(resourceIri, anythingUserProfile)
+//
+//      checkCreateResource(
+//        inputResourceIri = resourceIri,
+//        inputResource = inputResource,
+//        outputResource = outputResource,
+//        defaultResourcePermissions = defaultAnythingResourcePermissions,
+//        defaultValuePermissions = defaultAnythingValuePermissions,
+//        requestingUser = anythingUserProfile
+//      )
+    }
+
+    "create a resource with bundle representation" ignore {
+
+      // TODO: implement
+
     }
 
     "not create a resource with missing required values" in {

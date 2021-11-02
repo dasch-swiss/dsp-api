@@ -831,6 +831,8 @@ object OntologyConstants {
     val DocumentFileValue: IRI = KnoraApiV2PrefixExpansion + "DocumentFileValue"
     val BundleFileValue: IRI = KnoraApiV2PrefixExpansion + "BundleFileValue"
 
+    val HasRepresentationValue: IRI = KnoraApiV2PrefixExpansion + "hasRepresentationValue"
+
     val FileValueClasses: Set[IRI] = Set(
       FileValue,
       StillImageFileValue,
