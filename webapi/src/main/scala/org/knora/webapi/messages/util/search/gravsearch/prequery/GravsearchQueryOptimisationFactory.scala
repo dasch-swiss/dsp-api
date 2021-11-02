@@ -258,7 +258,7 @@ class ReorderPatternsByDependencyOptimisationFeature(
       val graph: Graph[String, DiHyperEdge] = graphComponents.foldLeft(Graph.empty[String, DiHyperEdge]) {
         (graph, edgeDef) =>
           val edge: DiHyperEdge[String] = DiHyperEdge(edgeDef._1, edgeDef._2)
-          graph ++ edge.toVector // add nodes and edges to graph
+          graph ++ Vector(edge) // add nodes and edges to graph
       }
 
       if (graph.isCyclic) {
