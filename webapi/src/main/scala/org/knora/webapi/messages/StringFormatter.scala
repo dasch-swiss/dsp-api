@@ -2326,7 +2326,7 @@ class StringFormatter private (
     errorFun: => Nothing
   ): IRI = {
     val ontologyIri = xmlImportNamespaceToInternalOntologyIriV1(namespace, errorFun)
-    ontologyIri + "#" + elementLabel
+    ontologyIri.toString + "#" + elementLabel
   }
 
   /**

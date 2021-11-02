@@ -170,7 +170,7 @@ class CkanResponderV1(responderData: ResponderData) extends Responder(responderD
         val propsMap = flattenProps(props)
         CkanProjectDatasetV1(
           ckan_title = propsMap.getOrElse("Description", ""),
-          ckan_tags = propsMap.getOrElse("Title", "").split("/").map(_.trim),
+          ckan_tags = propsMap.getOrElse("Title", "").split("/").toIndexedSeq.map(_.trim),
           files = Vector(
             CkanProjectDatasetFileV1(
               ckan_title = propsMap.getOrElse("preview_loc_origname", ""),
