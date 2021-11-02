@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.e2e.v2
+package org.knora.webapi.models
 
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 

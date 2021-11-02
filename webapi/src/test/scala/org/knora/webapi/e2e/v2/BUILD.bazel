@@ -74,7 +74,6 @@ scala_test(
     size = "medium",  # 300s
     srcs = [
         "OntologyV2R2RSpec.scala",
-        "OntologyModels.scala"
     ],
     data = [
         "//knora-ontologies",

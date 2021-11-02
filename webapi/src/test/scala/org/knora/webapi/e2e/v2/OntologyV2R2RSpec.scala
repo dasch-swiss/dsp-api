@@ -13,6 +13,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, TestResponseParsingModeV2}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.models._
 import org.knora.webapi.routing.v2.{OntologiesRouteV2, ResourcesRouteV2}
 import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util._
@@ -154,8 +155,11 @@ class OntologyV2R2RSpec extends R2RSpec {
      * @param mediaType the media type of the response.
      * @return the contents of the file.
      */
-    def readFile(mediaType: MediaType.NonBinary): String =
+    def readFile(mediaType: MediaType.NonBinary): String = {
+      println(mediaType)
+      println(makeFile(mediaType))
       FileUtil.readTextFile(makeFile(mediaType))
+    }
   }
 
   // URL-encoded IRIs for use as URL segments in HTTP GET tests.
@@ -407,8 +411,9 @@ class OntologyV2R2RSpec extends R2RSpec {
             } else {
               // No. Compare the received response with the expected response.
               mediaType match {
-                case RdfMediaTypes.`application/ld+json` =>
+                case RdfMediaTypes.`application/ld+json` => {
                   assert(JsonParser(responseStr) == JsonParser(httpGetTest.readFile(mediaType)))
+                }
 
                 case RdfMediaTypes.`text/turtle` =>
                   assert(parseTurtle(responseStr) == parseTurtle(httpGetTest.readFile(mediaType)))
