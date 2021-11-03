@@ -1,7 +1,7 @@
 workspace(name = "io_dasch_dsp_api")
 
 # load http_archive method
-load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive", "http_file")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 #####################################
 # Skylib                            #
@@ -20,9 +20,9 @@ http_archive(
 # Docker                            #
 #####################################
 
-rules_docker_version = "0.19.0"
+rules_docker_version = "0.20.0"  # 12.10.2021
 
-rules_docker_version_sha256 = "1f4e59843b61981a96835dc4ac377ad4da9f8c334ebe5e0bb3f58f80c09735f4"
+rules_docker_version_sha256 = "92779d3445e7bdc79b961030b996cb0c91820ade7ffa7edca69273f404b085d5"
 
 http_archive(
     name = "io_bazel_rules_docker",
@@ -60,32 +60,29 @@ container_pull(
 # get openjdk
 container_pull(
     name = "openjdk11",
-    digest = "sha256:0e51b455654bd162c485a6a6b5b120cc82db453d9265cc90f0c4fb5d14e2f62e",
+    digest = "sha256:8f0a99f12dfc7ff2524f1550ffd6ab432597cd20417413b46cb96c7b9ec2b7f0",  # 16.10.2021
     registry = "docker.io",
-    repository = "adoptopenjdk",
-    tag = "11-jre-hotspot-bionic",
+    repository = "eclipse-temurin",
+    # tag = "11-jre-focal", # Ubuntu 20.04
 )
 
 # get sipi
-load("//third_party:versions.bzl", "SIPI_IMAGE_DIGEST", "SIPI_REPOSITORY", "SIPI_VERSION")
+load("//third_party:versions.bzl", "FUSEKI_IMAGE_DIGEST", "FUSEKI_REPOSITORY", "SIPI_IMAGE_DIGEST", "SIPI_REPOSITORY")
 
 container_pull(
     name = "sipi",
     digest = SIPI_IMAGE_DIGEST,
     registry = "docker.io",
     repository = SIPI_REPOSITORY,
-    tag = SIPI_VERSION,
+    # tag = SIPI_VERSION,
 )
-
-# get fuseki
-load("//third_party:versions.bzl", "FUSEKI_IMAGE_DIGEST", "FUSEKI_REPOSITORY", "FUSEKI_VERSION")
 
 container_pull(
     name = "jenafuseki",
     digest = FUSEKI_IMAGE_DIGEST,
     registry = "docker.io",
     repository = FUSEKI_REPOSITORY,
-    tag = FUSEKI_VERSION,
+    # tag = FUSEKI_VERSION,
 )
 
 #####################################
@@ -229,8 +226,6 @@ http_archive(
         "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.22.2/bazel-gazelle-v0.22.2.tar.gz",
     ],
 )
-
-load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies")
 
 # bazel buildtools providing buildifier
 http_archive(

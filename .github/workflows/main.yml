@@ -40,17 +40,9 @@ jobs:
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
       - name: Disk Free
-        run: |
-          df -h
-          docker system df
-          docker system prune --all --force --volumes
-          df -h
+        run: df -h
       - name: Run build everything
         run: make build
-      - name: Disk Free After
-        run: |
-          df -h
-          docker system df
 
 # ------------------------------------------
 # ------------------------------------------
@@ -71,10 +63,7 @@ jobs:
         run: sudo apt-get install ca-certificates-java expect redis-tools unzip
       - name: Generate api-client-test-data
         run: make client-test-data
-      - name: Disk Free After
-        run: |
-          df -h
-          docker system df
+
 # ------------------------------------------
 # ------------------------------------------
 
@@ -117,18 +106,8 @@ jobs:
         run: |
           make env-file
           make print-env-file
-      - name: Disk Free
-        run: |
-          df -h
-          docker system df
-          docker system prune --all --force --volumes
-          df -h
       - name: Run API unit tests
         run: make test-unit
-      - name: Disk Free After
-        run: |
-          df -h
-          docker system df
 
   api-e2e-tests:
     name: API E2E Tests
@@ -172,18 +151,8 @@ jobs:
         run: |
           make env-file
           make print-env-file
-      - name: Disk Free
-        run: |
-          df -h
-          docker system df
-          docker system prune --all --force --volumes
-          df -h
       - name: run API E2E tests
         run: make test-e2e
-      - name: Disk Free After
-        run: |
-          df -h
-          docker system df
 
   api-integration-tests:
     name: API Integration Tests
@@ -224,20 +193,10 @@ jobs:
         run: |
           make env-file
           make print-env-file
-      - name: Disk Free
-        run: |
-          df -h
-          docker system df
-          docker system prune --all --force --volumes
-          df -h
       - name: run API integration tests
         run: |
           make test-docker
           make test-it
-      - name: Disk Free After
-        run: |
-          df -h
-          docker system df
 
   upgrade-integration-tests:
     name: Upgrade Integration Tests
@@ -276,18 +235,8 @@ jobs:
             ${{ runner.OS }}-
       - name: install requirements
         run: sudo apt-get install expect
-      - name: Disk Free
-        run: |
-          df -h
-          docker system df
-          docker system prune --all --force --volumes
-          df -h
       - name: test repository upgrade
         run: make test-repository-upgrade
-      - name: Disk Free After
-        run: |
-          df -h
-          docker system df
 
   docs-build-test:
     name: Docs Build Test
@@ -312,18 +261,8 @@ jobs:
           npm install --global typedoc
           npm install --global @bazel/bazelisk
           sudo apt-get install graphviz
-      - name: Disk Free
-        run: |
-          df -h
-          docker system df
-          docker system prune --all --force --volumes
-          df -h
       - name: run docs build
         run: make docs-build
-      - name: Disk Free After
-        run: |
-          df -h
-          docker system df
 
   release-please:
     name: Prepare next release
@@ -336,7 +275,14 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
           release-type: simple
           package-name: dsp-api
-          changelog-types: '[{"type": "feat", "section": "Enhancements", "hidden": false }, {"type": "fix", "section": "Bug Fixes", "hidden": false }, {"type": "chore", "section": "Maintenance", "hidden": false }, {"type": "refactor", "section": "Maintenance", "hidden": false }, {"type": "docs", "section": "Documentation", "hidden": false }]'
+          changelog-types: '[
+            {"type": "feat", "section": "Enhancements", "hidden": false },
+            {"type": "fix", "section": "Bug Fixes", "hidden": false },
+            {"type": "build", "section": "Maintenance", "hidden": false },
+            {"type": "chore", "section": "Maintenance", "hidden": false },
+            {"type": "refactor", "section": "Maintenance", "hidden": false },
+            {"type": "docs", "section": "Documentation", "hidden": false }
+          ]'
 
   # publish only on release
   publish:
@@ -394,20 +340,10 @@ jobs:
             ${{ runner.OS }}-build-${{ env.cache-name }}-
             ${{ runner.OS }}-build-
             ${{ runner.OS }}-
-      - name: Disk Free
-        run: |
-          df -h
-          docker system df
-          docker system prune --all --force --volumes
-          df -h
       - name: Build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make docker-publish
-      - name: Disk Free After
-        run: |
-          df -h
-          docker system df
 
   # google chat notification about release
   notification:
@@ -455,7 +391,3 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           CUSTOM_DOMAIN: docs-api.dasch.swiss
           REQUIREMENTS: docs/requirements.txt
-      - name: Disk Free After
-        run: |
-          df -h
-          docker system df

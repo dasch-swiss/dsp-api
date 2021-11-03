@@ -1095,7 +1095,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
       if (changeNodeRequest.labels.nonEmpty) {
         if (updatedNode.getLabels.stringLiterals.diff(changeNodeRequest.labels.get.value).nonEmpty)
-          throw UpdateNotPerformedException("Lists's 'labels' where not updated. Please report this as a possible bug.")
+          throw UpdateNotPerformedException("Lists's 'labels' were not updated. Please report this as a possible bug.")
       }
 
       if (changeNodeRequest.comments.nonEmpty) {
