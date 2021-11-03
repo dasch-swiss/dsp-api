@@ -3272,6 +3272,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             val guiElementTypeFromMessage = predicateInfo.objects.head.asInstanceOf[SmartIriLiteralV2]
             val guiElementTypeInternal = guiElementTypeFromMessage.toOntologySchema(InternalSchema)
             guiElementTypeFromMessage should equal(guiElementTypeInternal)
+          case None => ()
         }
 
         // Check that the salsah-gui:guiElement from the message is as expected

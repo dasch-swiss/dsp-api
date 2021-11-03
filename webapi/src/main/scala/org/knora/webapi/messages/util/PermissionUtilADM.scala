@@ -441,7 +441,8 @@ object PermissionUtilADM extends LazyLogging {
       throw InconsistentRepositoryDataException(s"invalid permission literal: $permissionLiteral")
     }
   ): Map[EntityPermission, Set[IRI]] = {
-    val permissions: Seq[String] = permissionLiteral.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
+    val permissions: Seq[String] =
+      permissionLiteral.split(OntologyConstants.KnoraBase.PermissionListDelimiter).toIndexedSeq
 
     permissions.map { permission =>
       val splitPermission: Array[String] = permission.split(' ')
@@ -481,7 +482,7 @@ object PermissionUtilADM extends LazyLogging {
         {
           val cleanedPermissionListStr = permissionListStr.replaceAll("[<>]", "")
           val permissions: Seq[String] =
-            cleanedPermissionListStr.split(OntologyConstants.KnoraBase.PermissionListDelimiter)
+            cleanedPermissionListStr.split(OntologyConstants.KnoraBase.PermissionListDelimiter).toIndexedSeq
           logger.debug(s"PermissionUtil.parsePermissionsWithType - split permissions: $permissions")
           permissions.flatMap { permission =>
             val splitPermission = permission.split(' ')
