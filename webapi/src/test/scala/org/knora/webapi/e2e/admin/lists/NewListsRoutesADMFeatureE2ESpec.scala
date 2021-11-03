@@ -611,6 +611,62 @@ class NewListsRouteADMFeatureE2ESpec
         )
       }
 
+      "update basic list information with special characters" in {
+
+        val updateListInfo: String =
+          s"""{
+             |    "listIri": "${newListIri.get}",
+             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "labels": [{ "value": "Neue geänderte Liste mit A'postroph", "language": "de"}, { "value": "Changed list with a'postrophe", "language": "en"}],
+             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+             |}""".stripMargin
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-list-info-request-special-characters",
+              fileExtension = "json"
+            ),
+            text = updateListInfo
+          )
+        )
+        val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
+
+        val request = Put(
+          baseApiUrl + s"/admin/lists/" + encodedListUrl,
+          HttpEntity(ContentTypes.`application/json`, updateListInfo)
+        )
+          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
+          anythingAdminUserCreds.basicHttpCredentials
+        )
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+        response.status should be(StatusCodes.OK)
+
+        val receivedListInfo: ListRootNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+
+        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
+
+        val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
+        labels.size should be(2)
+
+        val comments = receivedListInfo.comments.stringLiterals
+        comments.size should be(2)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "update-list-info-response-special-characters",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
       "update basic list information with a new name" in {
         val updateListName =
           s"""{
@@ -1028,13 +1084,14 @@ class NewListsRouteADMFeatureE2ESpec
           )
         )
       }
+
       "update node information of node that has custom IRI with a new name" in {
         val newName = "modified third child"
         val updateNodeName =
           s"""{
              |    "listIri": "$customChildNodeIRI",
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-             |    "name": "${newName}"
+             |    "name": "$newName"
              |}""".stripMargin
 
         clientTestDataCollector.addFile(
