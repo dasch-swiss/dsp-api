@@ -11,7 +11,7 @@ import io.swagger.annotations._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.{Description, Name, Selfjoin, Status}
+import org.knora.webapi.messages.admin.responder.valueObjects.{GroupDescription, GroupName, GroupSelfJoin, GroupStatus}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 import java.util.UUID
@@ -81,12 +81,12 @@ class GroupsRouteADM(routeData: KnoraRouteData)
         val groupCreatePayloadADM: GroupCreatePayloadADM = GroupCreatePayloadADM(
           id = stringFormatter
             .validateAndEscapeOptionalIri(apiRequest.id, throw BadRequestException(s"Invalid custom group IRI")),
-          name = Name.create(apiRequest.name).fold(e => throw e, v => v),
-          descriptions = Description.make(apiRequest.descriptions).fold(e => throw e.head, v => v),
+          name = GroupName.create(apiRequest.name).fold(e => throw e, v => v),
+          descriptions = GroupDescription.make(apiRequest.descriptions).fold(e => throw e.head, v => v),
           project = stringFormatter
             .validateAndEscapeProjectIri(apiRequest.project, throw BadRequestException(s"Invalid project IRI")),
-          status = Status.make(apiRequest.status).fold(e => throw e.head, v => v),
-          selfjoin = Selfjoin.make(apiRequest.selfjoin).fold(e => throw e.head, v => v)
+          status = GroupStatus.make(apiRequest.status).fold(e => throw e.head, v => v),
+          selfjoin = GroupSelfJoin.make(apiRequest.selfjoin).fold(e => throw e.head, v => v)
         )
 
         val requestMessage = for {

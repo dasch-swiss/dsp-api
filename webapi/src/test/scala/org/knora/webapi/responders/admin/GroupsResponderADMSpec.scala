@@ -16,7 +16,7 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
-import org.knora.webapi.messages.admin.responder.valueObjects.{Description, Name, Selfjoin, Status}
+import org.knora.webapi.messages.admin.responder.valueObjects.{GroupDescription, GroupName, GroupSelfJoin, GroupStatus}
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
@@ -90,8 +90,8 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         responderManager ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
             id = None,
-            name = Name.create("NewGroup").fold(e => throw e, v => v),
-            descriptions = Description
+            name = GroupName.create("NewGroup").fold(e => throw e, v => v),
+            descriptions = GroupDescription
               .make(
                 Seq(
                   StringLiteralV2(value = """NewGroupDescription with "quotes" and <html tag>""", language = Some("en"))
@@ -99,8 +99,8 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
               )
               .fold(e => throw e.head, v => v),
             project = SharedTestDataADM.IMAGES_PROJECT_IRI,
-            status = Status.make(true).fold(e => throw e.head, v => v),
-            selfjoin = Selfjoin.make(false).fold(e => throw e.head, v => v)
+            status = GroupStatus.make(true).fold(e => throw e.head, v => v),
+            selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -126,13 +126,13 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         responderManager ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
             id = Some(imagesReviewerGroup.id),
-            name = Name.create("NewGroup").fold(e => throw e, v => v),
-            descriptions = Description
+            name = GroupName.create("NewGroup").fold(e => throw e, v => v),
+            descriptions = GroupDescription
               .make(Seq(StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             project = SharedTestDataADM.IMAGES_PROJECT_IRI,
-            status = Status.make(true).fold(e => throw e.head, v => v),
-            selfjoin = Selfjoin.make(false).fold(e => throw e.head, v => v)
+            status = GroupStatus.make(true).fold(e => throw e.head, v => v),
+            selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -148,13 +148,13 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         responderManager ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
             id = Some(""),
-            name = Name.create("OtherNewGroup").fold(e => throw e, v => v),
-            descriptions = Description
+            name = GroupName.create("OtherNewGroup").fold(e => throw e, v => v),
+            descriptions = GroupDescription
               .make(Seq(StringLiteralV2(value = "OtherNewGroupDescription", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             project = "",
-            status = Status.make(true).fold(e => throw e.head, v => v),
-            selfjoin = Selfjoin.make(false).fold(e => throw e.head, v => v)
+            status = GroupStatus.make(true).fold(e => throw e.head, v => v),
+            selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
