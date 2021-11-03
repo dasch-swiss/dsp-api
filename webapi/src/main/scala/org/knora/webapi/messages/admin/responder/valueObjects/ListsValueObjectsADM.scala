@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.exceptions.BadRequestException
@@ -24,7 +29,7 @@ import scala.util.{Failure, Success, Try}
  */
 sealed abstract case class ListIRI private (value: String)
 object ListIRI {
-  val stringFormatter = StringFormatter.getGeneralInstance
+  val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
   def create(value: String): Either[Throwable, ListIRI] =
     if (value.isEmpty) {
@@ -40,32 +45,6 @@ object ListIRI {
         validatedValue match {
           case Success(iri) => Right(new ListIRI(iri) {})
           case Failure(_)   => Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
-        }
-      }
-    }
-}
-
-/**
- * List ProjectIRI value object.
- */
-sealed abstract case class ProjectIRI private (value: String)
-object ProjectIRI {
-  val stringFormatter = StringFormatter.getGeneralInstance
-
-  def create(value: String): Either[Throwable, ProjectIRI] =
-    if (value.isEmpty) {
-      Left(BadRequestException(PROJECT_IRI_MISSING_ERROR))
-    } else {
-      if (value.nonEmpty && !stringFormatter.isKnoraProjectIriStr(value)) {
-        Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
-      } else {
-        val validatedValue = Try(
-          stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(PROJECT_IRI_INVALID_ERROR))
-        )
-
-        validatedValue match {
-          case Success(iri) => Right(new ProjectIRI(iri) {})
-          case Failure(_)   => Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
         }
       }
     }

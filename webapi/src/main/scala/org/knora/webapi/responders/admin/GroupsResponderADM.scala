@@ -5,8 +5,6 @@
 
 package org.knora.webapi.responders.admin
 
-import java.util.UUID
-
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -24,6 +22,7 @@ import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
 
+import java.util.UUID
 import scala.concurrent.Future
 
 /**
@@ -417,25 +416,31 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       apiRequestID: UUID
     ): Future[GroupOperationResponseADM] =
       for {
-        /* check if username or password are not empty */
-        _ <- Future(if (createRequest.name.value.isEmpty) throw BadRequestException("Group name cannot be empty"))
-        _ = if (createRequest.project.isEmpty) throw BadRequestException("Project IRI cannot be empty")
-
+//        /* check if username or password are not empty */
+//        _ <- Future(if (createRequest.name.value.isEmpty) throw BadRequestException("Group name cannot be empty"))
+//        _ = if (createRequest.project.value.isEmpty) throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
+//TODO: where to check it?
         /* check if the requesting user is allowed to create group */
-        _ = if (
-          !requestingUser.permissions.isProjectAdmin(createRequest.project) && !requestingUser.permissions.isSystemAdmin
-        ) {
-          // not a project admin and not a system admin
-          throw ForbiddenException("A new group can only be created by a project or system admin.")
-        }
+        _ <- Future(
+          if (
+            !requestingUser.permissions
+              .isProjectAdmin(createRequest.project.value) && !requestingUser.permissions.isSystemAdmin
+          ) {
+            // not a project admin and not a system admin
+            throw ForbiddenException("A new group can only be created by a project or system admin.")
+          }
+        )
 
-        nameExists <- groupByNameAndProjectExists(name = createRequest.name.value, projectIri = createRequest.project)
+        nameExists <- groupByNameAndProjectExists(
+          name = createRequest.name.value,
+          projectIri = createRequest.project.value
+        )
         _ = if (nameExists) {
           throw DuplicateValueException(s"Group with the name '${createRequest.name.value}' already exists")
         }
 
         maybeProjectADM: Option[ProjectADM] <- (responderManager ? ProjectGetADM(
-          identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.project)),
+          identifier = ProjectIdentifierADM(maybeIri = Some(createRequest.project.value)),
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = KnoraSystemInstances.Users.SystemUser
         )).mapTo[Option[ProjectADM]]
@@ -464,7 +469,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             groupClassIri = OntologyConstants.KnoraAdmin.UserGroup,
             name = createRequest.name.value,
             descriptions = createRequest.descriptions.value,
-            projectIri = createRequest.project,
+            projectIri = createRequest.project.value,
             status = createRequest.status.value,
             hasSelfJoinEnabled = createRequest.selfjoin.value
           )

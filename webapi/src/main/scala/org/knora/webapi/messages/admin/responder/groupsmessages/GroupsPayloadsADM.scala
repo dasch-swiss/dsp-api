@@ -10,7 +10,7 @@ final case class GroupCreatePayloadADM(
   id: Option[GroupIRI] = None,
   name: GroupName,
   descriptions: GroupDescription,
-  project: IRI,
+  project: ProjectIRI,
   status: GroupStatus,
   selfjoin: GroupSelfJoin
 )

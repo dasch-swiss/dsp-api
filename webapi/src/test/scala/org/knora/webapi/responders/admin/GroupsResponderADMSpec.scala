@@ -16,13 +16,7 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
-import org.knora.webapi.messages.admin.responder.valueObjects.{
-  GroupDescription,
-  GroupIRI,
-  GroupName,
-  GroupSelfJoin,
-  GroupStatus
-}
+import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
@@ -104,7 +98,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
                 )
               )
               .fold(e => throw e.head, v => v),
-            project = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            project = ProjectIRI.create(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             status = GroupStatus.make(true).fold(e => throw e.head, v => v),
             selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),
@@ -138,7 +132,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
             descriptions = GroupDescription
               .make(Seq(StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
               .fold(e => throw e.head, v => v),
-            project = SharedTestDataADM.IMAGES_PROJECT_IRI,
+            project = ProjectIRI.create(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
             status = GroupStatus.make(true).fold(e => throw e.head, v => v),
             selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
           ),
@@ -151,25 +145,25 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
           msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
         }
       }
-
-      "return 'BadRequestException' if project IRI are missing" in {
-        responderManager ! GroupCreateRequestADM(
-          createRequest = GroupCreatePayloadADM(
-            id = None,
-            name = GroupName.create("OtherNewGroup").fold(e => throw e, v => v),
-            descriptions = GroupDescription
-              .make(Seq(StringLiteralV2(value = "OtherNewGroupDescription", language = Some("en"))))
-              .fold(e => throw e.head, v => v),
-            project = "",
-            status = GroupStatus.make(true).fold(e => throw e.head, v => v),
-            selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
-          ),
-          featureFactoryConfig = defaultFeatureFactoryConfig,
-          requestingUser = SharedTestDataADM.imagesUser01,
-          apiRequestID = UUID.randomUUID
-        )
-        expectMsg(Failure(BadRequestException("Project IRI cannot be empty")))
-      }
+// TODO: below test will be covered by value object unit test
+//      "return 'BadRequestException' if project IRI are missing" in {
+//        responderManager ! GroupCreateRequestADM(
+//          createRequest = GroupCreatePayloadADM(
+//            id = None,
+//            name = GroupName.create("OtherNewGroup").fold(e => throw e, v => v),
+//            descriptions = GroupDescription
+//              .make(Seq(StringLiteralV2(value = "OtherNewGroupDescription", language = Some("en"))))
+//              .fold(e => throw e.head, v => v),
+//            project = "",
+//            status = GroupStatus.make(true).fold(e => throw e.head, v => v),
+//            selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
+//          ),
+//          featureFactoryConfig = defaultFeatureFactoryConfig,
+//          requestingUser = SharedTestDataADM.imagesUser01,
+//          apiRequestID = UUID.randomUUID
+//        )
+//        expectMsg(Failure(BadRequestException("Project IRI cannot be empty")))
+//      }
 
       "UPDATE a group" in {
         responderManager ! GroupChangeRequestADM(

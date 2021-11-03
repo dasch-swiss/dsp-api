@@ -1,43 +1,17 @@
 /*
- * Copyright © 2015-2021 Data and Service Center for the Humanities (DaSCH)
- *
- * This file is part of Knora.
- *
- * Knora is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Affero General Public License as published
- * by the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Knora is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Affero General Public License for more details.
- *
- * You should have received a copy of the GNU Affero General Public
- * License along with Knora.  If not, see <http://www.gnu.org/licenses/>.
+ * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
  */
 
 package org.knora.webapi.messages.admin.responder.valueObjects
 
-import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.{
-  COMMENT_INVALID_ERROR,
-  COMMENT_MISSING_ERROR,
-  INVALID_POSITION,
-  LABEL_INVALID_ERROR,
-  LABEL_MISSING_ERROR,
-  LIST_NAME_INVALID_ERROR,
-  LIST_NAME_MISSING_ERROR,
-  LIST_NODE_IRI_INVALID_ERROR,
-  LIST_NODE_IRI_MISSING_ERROR,
-  PROJECT_IRI_INVALID_ERROR,
-  PROJECT_IRI_MISSING_ERROR
-}
-import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.UnitSpec
+import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
+import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 /**
- * This spec is used to test the creation of value objects of the [[ListsValueObjectsADM]].
+ * This spec is used to test the [[ListsValueObjectsADM]] value objects creation.
  */
 class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
@@ -63,6 +37,7 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
   "ProjectIRI value object" when {
 //    TODO: check string formatter project iri validation because passing just "http://rdfh.ch/projects/@@@@@@" works
+//    TODO: move project IRI related test
     val validProjectIri = "http://rdfh.ch/projects/0001"
 
     "created using empty value" should {
