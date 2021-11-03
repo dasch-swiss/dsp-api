@@ -60,10 +60,10 @@ container_pull(
 # get openjdk
 container_pull(
     name = "openjdk11",
-    digest = "sha256:eac1c6cff5fded2dd35fc94bb23e7862a08277bd71f9b352a99df5bc740459c3",  # 06.10.2021
+    digest = "sha256:8f0a99f12dfc7ff2524f1550ffd6ab432597cd20417413b46cb96c7b9ec2b7f0",  # 16.10.2021
     registry = "docker.io",
-    repository = "adoptopenjdk",
-    # tag = "11-jre-hotspot-focal",
+    repository = "eclipse-temurin",
+    # tag = "11-jre",
 )
 
 # get sipi
