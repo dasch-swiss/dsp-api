@@ -63,7 +63,7 @@ container_pull(
     digest = "sha256:8f0a99f12dfc7ff2524f1550ffd6ab432597cd20417413b46cb96c7b9ec2b7f0",  # 16.10.2021
     registry = "docker.io",
     repository = "eclipse-temurin",
-    # tag = "11-jre",
+    # tag = "11-jre-focal", # Ubuntu 20.04
 )
 
 # get sipi
