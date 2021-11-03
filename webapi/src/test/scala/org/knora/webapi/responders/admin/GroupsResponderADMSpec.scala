@@ -16,7 +16,13 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, NotFoundException}
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
-import org.knora.webapi.messages.admin.responder.valueObjects.{GroupDescription, GroupName, GroupSelfJoin, GroupStatus}
+import org.knora.webapi.messages.admin.responder.valueObjects.{
+  GroupDescription,
+  GroupIRI,
+  GroupName,
+  GroupSelfJoin,
+  GroupStatus
+}
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
@@ -125,7 +131,9 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       "return a 'DuplicateValueException' if the supplied group name is not unique" in {
         responderManager ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
-            id = Some(imagesReviewerGroup.id),
+            id = Some(
+              GroupIRI.create(imagesReviewerGroup.id).fold(e => throw e, v => v)
+            ),
             name = GroupName.create("NewGroup").fold(e => throw e, v => v),
             descriptions = GroupDescription
               .make(Seq(StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
@@ -147,7 +155,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       "return 'BadRequestException' if project IRI are missing" in {
         responderManager ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
-            id = Some(""),
+            id = None,
             name = GroupName.create("OtherNewGroup").fold(e => throw e, v => v),
             descriptions = GroupDescription
               .make(Seq(StringLiteralV2(value = "OtherNewGroupDescription", language = Some("en"))))

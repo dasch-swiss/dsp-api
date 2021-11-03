@@ -11,7 +11,7 @@ import io.swagger.annotations._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.{GroupDescription, GroupName, GroupSelfJoin, GroupStatus}
+import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
 import java.util.UUID
@@ -78,9 +78,13 @@ class GroupsRouteADM(routeData: KnoraRouteData)
     post {
       /* create a new group */
       entity(as[CreateGroupApiRequestADM]) { apiRequest => requestContext =>
+        val maybeId: Option[GroupIRI] = apiRequest.id match {
+          case Some(value) => Some(GroupIRI.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
         val groupCreatePayloadADM: GroupCreatePayloadADM = GroupCreatePayloadADM(
-          id = stringFormatter
-            .validateAndEscapeOptionalIri(apiRequest.id, throw BadRequestException(s"Invalid custom group IRI")),
+          id = maybeId,
           name = GroupName.create(apiRequest.name).fold(e => throw e, v => v),
           descriptions = GroupDescription.make(apiRequest.descriptions).fold(e => throw e.head, v => v),
           project = stringFormatter
