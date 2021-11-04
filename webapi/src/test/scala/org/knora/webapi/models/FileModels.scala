@@ -50,3 +50,39 @@ object UploadFileRequest {
     new UploadFileRequest(value) {}
   }
 }
+
+sealed abstract case class ChangeFileRequest private (value: String)
+object ChangeFileRequest {
+  def make(
+    resourceIRI: String,
+    valueIRI: String,
+    ontologyName: String,
+    internalFilename: String,
+    fileValueType: FileValueType
+  ): ChangeFileRequest = {
+    val ontologyIRI = ontologyName match {
+      case "anything" => "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+    }
+    val propName = fileValueType match {
+      case FileValueType.DocumentFileValue => "knora-api:hasDocumentFileValue"
+    }
+    val value =
+      s"""{
+         |  "@id" : "$resourceIRI",
+         |  "@type" : "$ontologyName:ThingDocument",
+         |  "$propName" : {
+         |    "@id" : "$valueIRI",
+         |    "@type" : "${fileValueType.value}",
+         |    "knora-api:fileValueHasFilename" : "$internalFilename"
+         |  },
+         |  "@context" : {
+         |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+         |    "$ontologyName" : "$ontologyIRI"
+         |  }
+         |}""".stripMargin
+    new ChangeFileRequest(value) {}
+  }
+}

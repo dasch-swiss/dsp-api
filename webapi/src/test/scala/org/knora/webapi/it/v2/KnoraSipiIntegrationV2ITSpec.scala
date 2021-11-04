@@ -684,23 +684,15 @@ class KnoraSipiIntegrationV2ITSpec
 
       // Ask Knora to update the value.
 
-      val jsonLdEntity =
-        s"""{
-           |  "@id" : "${pdfResourceIri.get}",
-           |  "@type" : "anything:ThingDocument",
-           |  "knora-api:hasDocumentFileValue" : {
-           |    "@id" : "${pdfValueIri.get}",
-           |    "@type" : "knora-api:DocumentFileValue",
-           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
-           |  },
-           |  "@context" : {
-           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
+      val jsonLdEntity = ChangeFileRequest
+        .make(
+          resourceIRI = pdfResourceIri.get,
+          valueIRI = pdfValueIri.get,
+          ontologyName = "anything",
+          internalFilename = uploadedFile.internalFilename,
+          fileValueType = FileValueType.DocumentFileValue
+        )
+        .value
 
       val request =
         Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
