@@ -77,6 +77,8 @@ test-data/admin/lists/update-childNode-position-to-end-request.json
 test-data/admin/lists/update-childNode-position-to-end-response.json
 test-data/admin/lists/update-list-info-comment-label-multiple-languages-request.json
 test-data/admin/lists/update-list-info-comment-label-multiple-languages-response.json
+test-data/admin/lists/update-list-info-request.json
+test-data/admin/lists/update-list-info-response.json
 test-data/admin/lists/update-list-info-request-special-characters.json
 test-data/admin/lists/update-list-info-response-special-characters.json
 test-data/admin/lists/update-list-name-request.json
