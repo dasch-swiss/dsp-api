@@ -553,7 +553,7 @@ class NewListsRouteADMFeatureE2ESpec
           s"""{
              |    "listIri": "${newListIri.get}",
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-             |    "name": "Neue name",
+             |    "name": "Neue Name",
              |    "labels": [{ "value": "Neue geänderte Liste mit A'postroph", "language": "de"}, { "value": "Changed list with a'postrophe", "language": "en"}],
              |    "comments": [{ "value": "Neuer Kommentar mit A'postroph", "language": "de"}, { "value": "New comment with a'postrophe", "language": "en"}]
              |}""".stripMargin
