@@ -155,6 +155,7 @@ sealed abstract case class Shortname private (value: String)
 object Shortname {
   val stringFormatter = StringFormatter.getGeneralInstance
 
+  // TODO: check out smart types in zio.prelude
   def make(value: String): Validation[Throwable, Shortname] =
     if (value.isEmpty) {
       Validation.fail(BadRequestException("Missing shortname"))
