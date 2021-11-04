@@ -118,6 +118,58 @@
             "@id": "knora-api:AudioRepresentation"
         },
         {
+            "@id": "knora-api:BundleRepresentation",
+            "@type": "owl:Class",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Representation"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasDocumentFile"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:label": "Representation (Zip)"
+        },
+        {
             "rdfs:label": "Color literal",
             "rdfs:comment": "Represents a color.",
             "@type": "rdfs:Datatype",
