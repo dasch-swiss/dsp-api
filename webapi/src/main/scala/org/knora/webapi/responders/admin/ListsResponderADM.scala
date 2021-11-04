@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.admin
 
-import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -17,14 +16,15 @@ import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayload
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.admin.responder.valueObjects.{ListIRI, ListName, ProjectIRI}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.messages.admin.responder.valueObjects.{ListIRI, ListName, ProjectIRI}
 
+import java.util.UUID
 import scala.annotation.tailrec
 import scala.concurrent.Future
 
@@ -1091,24 +1091,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     apiRequestID: UUID
   ): Future[NodeInfoGetResponseADM] = {
 
-    def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit = {
-
-      if (changeNodeRequest.labels.nonEmpty) {
-        if (updatedNode.getLabels.stringLiterals.diff(changeNodeRequest.labels.get.value).nonEmpty)
-          throw UpdateNotPerformedException("Lists's 'labels' were not updated. Please report this as a possible bug.")
-      }
-
-      if (changeNodeRequest.comments.nonEmpty) {
-        if (updatedNode.getComments.stringLiterals.diff(changeNodeRequest.comments.get.value).nonEmpty)
-          throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
-      }
-
-      if (changeNodeRequest.name.nonEmpty) {
-        if (updatedNode.getName.nonEmpty && updatedNode.getName.get != changeNodeRequest.name.get.value)
-          throw UpdateNotPerformedException("List's 'name' was not updated. Please report this as a possible bug.")
-      }
-    }
-
     /**
      * The actual task run with an IRI lock.
      */
@@ -1140,14 +1122,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         )
 
         response = maybeNodeADM match {
-          case Some(rootNode: ListRootNodeInfoADM) =>
-            verifyUpdatedNode(rootNode)
-            RootNodeInfoGetResponseADM(listinfo = rootNode)
-
-          case Some(childNode: ListChildNodeInfoADM) =>
-            verifyUpdatedNode(childNode)
-            ChildNodeInfoGetResponseADM(nodeinfo = childNode)
-
+          case Some(rootNode: ListRootNodeInfoADM)   => RootNodeInfoGetResponseADM(listinfo = rootNode)
+          case Some(childNode: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(nodeinfo = childNode)
           case _ =>
             throw UpdateNotPerformedException(s"Node $nodeIri was not updated. Please report this as a possible bug.")
         }
