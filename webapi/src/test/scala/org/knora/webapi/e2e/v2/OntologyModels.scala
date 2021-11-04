@@ -5,12 +5,32 @@
 
 package org.knora.webapi.e2e.v2
 
-import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
+import org.knora.webapi.IRI
 
 import java.time.Instant
 import scala.annotation.tailrec
 
 final case class LangString(language: String, value: String)
+
+sealed abstract case class CreateOntologyRequest private (value: String)
+object CreateOntologyRequest {
+  def make(name: String, project: IRI, label: String, comment: String): CreateOntologyRequest = {
+    val value =
+      s"""{
+         |    "knora-api:ontologyName": "$name",
+         |    "knora-api:attachedToProject": {
+         |      "@id": "$project"
+         |    },
+         |    "rdfs:label": "$label",
+         |    "rdfs:comment": "$comment",
+         |    "@context": {
+         |        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+         |        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+         |    }
+         |}""".stripMargin
+    new CreateOntologyRequest(value) {}
+  }
+}
 
 sealed abstract case class CreateClassRequest private (value: String)
 object CreateClassRequest {
@@ -21,8 +41,8 @@ object CreateClassRequest {
     label: LangString,
     comment: LangString
   ): CreateClassRequest = {
-    val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"
-    val ontologyId = LocalHost_Ontology + s"/0001/$ontologyName/v2"
+    val LocalHostOntology = "http://0.0.0.0:3333/ontology"
+    val ontologyId = LocalHostOntology + s"/0001/$ontologyName/v2"
 
     val value = s"""{
                    |  "@id" : "$ontologyId",
