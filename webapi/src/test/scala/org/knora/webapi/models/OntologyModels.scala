@@ -21,8 +21,7 @@ object CreateClassRequest {
     label: LangString,
     comment: LangString
   ): CreateClassRequest = {
-    val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"
-    val ontologyId = LocalHost_Ontology + s"/0001/$ontologyName/v2"
+    val ontologyId = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
 
     val value = s"""{
                    |  "@id" : "$ontologyId",
@@ -85,8 +84,7 @@ object CreatePropertyRequest {
     label: LangString,
     comment: LangString
   ): CreatePropertyRequest = {
-    val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"
-    val ontologyId = LocalHost_Ontology + s"/0001/$ontologyName/v2"
+    val ontologyId = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
     val value = s"""{
                    |  "@id" : "$ontologyId",
                    |  "@type" : "owl:Ontology",
@@ -179,8 +177,7 @@ object AddCardinalitiesRequest {
     className: String,
     restrictions: List[Restriction]
   ): AddCardinalitiesRequest = {
-    val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"
-    val ontologyId = LocalHost_Ontology + s"/0001/$ontologyName/v2"
+    val ontologyId = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
     val restrictionsString: String = stringifyRestrictions(restrictions)
     val value = s"""
                    |{

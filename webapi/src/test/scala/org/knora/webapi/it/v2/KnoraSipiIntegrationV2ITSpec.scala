@@ -115,6 +115,8 @@ class KnoraSipiIntegrationV2ITSpec
   private val testVideo2OriginalFilename = "test.wav"
   private val pathToTestVideo2 = s"test_data/test_route/files/$testVideo2OriginalFilename"
 
+  private val thingDocumentIRI = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument"
+
   /**
    * Represents the information that Knora returns about an image file value that was created.
    *
@@ -637,9 +639,7 @@ class KnoraSipiIntegrationV2ITSpec
       // Get the resource from Knora.
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(pdfResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
-      assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument"
-      )
+      assert(resource.requireTypeAsKnoraTypeIri.toString == thingDocumentIRI)
 
       // Get the new file value from the resource.
 
@@ -1064,9 +1064,7 @@ class KnoraSipiIntegrationV2ITSpec
       // Get the resource from Knora.
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
-      assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument"
-      )
+      assert(resource.requireTypeAsKnoraTypeIri.toString == thingDocumentIRI)
 
       // Get the new file value from the resource.
 
@@ -1141,7 +1139,7 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
       assert(
-        resource.requireTypeAsKnoraTypeIri.toString == "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingDocument"
+        resource.requireTypeAsKnoraTypeIri.toString == thingDocumentIRI
       )
 
       // Get the new file value from the resource.
