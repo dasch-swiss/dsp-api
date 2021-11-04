@@ -2839,7 +2839,7 @@ case class ReadClassInfoV2(
       propertyIri
     }.sortBy { case (_, cardinalityInfo: KnoraCardinalityInfo) =>
       cardinalityInfo.guiOrder
-    }.map { case (propertyIri: SmartIri, cardinalityInfo: KnoraCardinalityInfo) =>
+    }.toIndexedSeq.map { case (propertyIri: SmartIri, cardinalityInfo: KnoraCardinalityInfo) =>
       val prop2card: (IRI, JsonLDInt) = cardinalityInfo.cardinality match {
         case Cardinality.MayHaveMany  => OntologyConstants.Owl.MinCardinality -> JsonLDInt(0)
         case Cardinality.MayHaveOne   => OntologyConstants.Owl.MaxCardinality -> JsonLDInt(1)
@@ -2904,7 +2904,7 @@ case class ReadClassInfoV2(
     } ++ owlCardinalities
 
     val jsonSubClassOfStatement: Option[(IRI, JsonLDArray)] = if (jsonSubClassOf.nonEmpty) {
-      Some(OntologyConstants.Rdfs.SubClassOf -> JsonLDArray(jsonSubClassOf))
+      Some(OntologyConstants.Rdfs.SubClassOf -> JsonLDArray(jsonSubClassOf.toIndexedSeq))
     } else {
       None
     }
@@ -3063,7 +3063,7 @@ case class ReadPropertyInfoV2(
         case objs if objs.nonEmpty =>
           Some(
             OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiAttribute -> JsonLDArray(
-              objs.toArray.sorted.map(JsonLDString)
+              objs.toArray.sorted.map(JsonLDString).toIndexedSeq
             )
           )
 
