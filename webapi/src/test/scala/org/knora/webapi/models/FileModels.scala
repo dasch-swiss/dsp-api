@@ -12,22 +12,31 @@ object FileValueType {
   case object DocumentFileValue extends FileValueType {
     val value = "knora-api:DocumentFileValue"
   }
+  case object StillImageFileValue extends FileValueType {
+    val value = "knora-api:StillImageFileValue"
+  }
+  case object TextFileValue extends FileValueType {
+    val value = "knora-api:TextFileValue"
+  }
 }
 
 sealed abstract case class UploadFileRequest private (value: String)
 object UploadFileRequest {
   def make(
-    shortcode: String,
-    ontologyName: String,
     className: String,
     internalFilename: String,
-    fileValueType: FileValueType
+    fileValueType: FileValueType,
+    shortcode: String = "0001",
+    ontologyName: String = "anything"
   ): UploadFileRequest = {
-    val ontologyIRI = ontologyName match {
-      case "anything" => "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+    val context = ontologyName match {
+      case "anything" => ""","anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#" """
+      case _          => ""
     }
     val propName = fileValueType match {
-      case FileValueType.DocumentFileValue => "knora-api:hasDocumentFileValue"
+      case FileValueType.DocumentFileValue   => "knora-api:hasDocumentFileValue"
+      case FileValueType.StillImageFileValue => "knora-api:hasStillImageFileValue"
+      case FileValueType.TextFileValue       => "knora-api:hasTextFileValue"
     }
     val value = s"""{
                    |  "@type" : "$ontologyName:$className",
@@ -43,8 +52,8 @@ object UploadFileRequest {
                    |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
                    |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
                    |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-                   |    "$ontologyName" : "$ontologyIRI"
+                   |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+                   |    $context
                    |  }
                    |}""".stripMargin
     new UploadFileRequest(value) {}
@@ -54,22 +63,24 @@ object UploadFileRequest {
 sealed abstract case class ChangeFileRequest private (value: String)
 object ChangeFileRequest {
   def make(
+    className: String,
+    fileValueType: FileValueType,
     resourceIRI: String,
-    valueIRI: String,
-    ontologyName: String,
     internalFilename: String,
-    fileValueType: FileValueType
+    valueIRI: String,
+    ontologyName: String = "anything"
   ): ChangeFileRequest = {
     val ontologyIRI = ontologyName match {
       case "anything" => "http://0.0.0.0:3333/ontology/0001/anything/v2#"
     }
     val propName = fileValueType match {
-      case FileValueType.DocumentFileValue => "knora-api:hasDocumentFileValue"
+      case FileValueType.DocumentFileValue   => "knora-api:hasDocumentFileValue"
+      case FileValueType.StillImageFileValue => "knora-api:hasStillImageFileValue"
     }
     val value =
       s"""{
          |  "@id" : "$resourceIRI",
-         |  "@type" : "$ontologyName:ThingDocument",
+         |  "@type" : "$ontologyName:$className",
          |  "$propName" : {
          |    "@id" : "$valueIRI",
          |    "@type" : "${fileValueType.value}",
