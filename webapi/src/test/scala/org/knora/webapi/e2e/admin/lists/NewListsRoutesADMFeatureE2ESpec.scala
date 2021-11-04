@@ -87,9 +87,7 @@ class NewListsRouteADMFeatureE2ESpec
        |}""".stripMargin
 
   "The Lists Route (/admin/lists)" when {
-
     "used to query information about lists" should {
-
       "return all lists" in {
         val request = Get(baseApiUrl + s"/admin/lists")
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
@@ -340,7 +338,6 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "return a DuplicateValueException during list creation when the supplied list IRI is not unique" in {
-
         // duplicate list IRI
         val params =
           s"""
@@ -366,7 +363,6 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "add a child with a custom IRI" in {
-
         val createChildNodeWithCustomIriRequest =
           s"""
              |{   "id": "$customChildNodeIRI",
@@ -423,7 +419,6 @@ class NewListsRouteADMFeatureE2ESpec
     }
 
     "used to modify list information" should {
-
       val newListIri = new MutableTestIri
       val firstChildIri = new MutableTestIri
       val secondChildIri = new MutableTestIri
@@ -504,7 +499,6 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "return a BadRequestException during list creation when payload is not correct" in {
-
         // no project IRI
         val params01 =
           s"""
@@ -552,67 +546,9 @@ class NewListsRouteADMFeatureE2ESpec
         val response03: HttpResponse = singleAwaitingRequest(request03)
         // println(s"response: ${response03.toString}")
         response03.status should be(StatusCodes.BadRequest)
-
-      }
-
-      "update basic list information" in {
-
-        val updateListInfo: String =
-          s"""{
-             |    "listIri": "${newListIri.get}",
-             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-             |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-             |}""".stripMargin
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-list-info-request",
-              fileExtension = "json"
-            ),
-            text = updateListInfo
-          )
-        )
-        val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
-
-        val request = Put(
-          baseApiUrl + s"/admin/lists/" + encodedListUrl,
-          HttpEntity(ContentTypes.`application/json`, updateListInfo)
-        )
-          .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
-          anythingAdminUserCreds.basicHttpCredentials
-        )
-        val response: HttpResponse = singleAwaitingRequest(request)
-        // log.debug(s"response: ${response.toString}")
-        response.status should be(StatusCodes.OK)
-
-        val receivedListInfo: ListRootNodeInfoADM =
-          AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
-
-        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
-
-        val labels: Seq[StringLiteralV2] = receivedListInfo.labels.stringLiterals
-        labels.size should be(2)
-
-        val comments = receivedListInfo.comments.stringLiterals
-        comments.size should be(2)
-
-        clientTestDataCollector.addFile(
-          TestDataFileContent(
-            filePath = TestDataFilePath(
-              directoryPath = clientTestDataPath,
-              filename = "update-list-info-response",
-              fileExtension = "json"
-            ),
-            text = responseToString(response)
-          )
-        )
       }
 
       "update basic list information with special characters" in {
-
         val updateListInfo: String =
           s"""{
              |    "listIri": "${newListIri.get}",
@@ -719,7 +655,6 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "update basic list information with repeated comment and label in different languages" in {
-
         val updateListInfoWithRepeatedCommentAndLabelValuesRequest: String =
           s"""{
              |    "listIri": "http://rdfh.ch/lists/0001/treeList",
@@ -807,7 +742,6 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "return a BadRequestException during list change when payload is not correct" in {
-
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
         // empty list IRI
@@ -943,7 +877,6 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "add second child to list - to the root node" in {
-
         val name = "second"
         val label = "New Second Child List Node Value"
         val comment = "New Second Child List Node Comment"
@@ -1015,7 +948,6 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "add child to second child node" in {
-
         val name = "third"
         val label = "New Third Child List Node Value"
         val comment = "New Third Child List Node Comment"
