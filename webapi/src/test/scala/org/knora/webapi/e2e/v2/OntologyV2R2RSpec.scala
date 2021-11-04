@@ -155,11 +155,8 @@ class OntologyV2R2RSpec extends R2RSpec {
      * @param mediaType the media type of the response.
      * @return the contents of the file.
      */
-    def readFile(mediaType: MediaType.NonBinary): String = {
-      println(mediaType)
-      println(makeFile(mediaType))
+    def readFile(mediaType: MediaType.NonBinary): String =
       FileUtil.readTextFile(makeFile(mediaType))
-    }
   }
 
   // URL-encoded IRIs for use as URL segments in HTTP GET tests.
@@ -2756,7 +2753,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         )
       )
     )
-    println(cardinalityOnLinkPropertyWhichCantBeDeletedPayload)
 
     val params =
       s"""
@@ -2781,7 +2777,6 @@ class OntologyV2R2RSpec extends R2RSpec {
          |	}]
          |}
          |""".stripMargin
-    println(params)
 
     Post(
       "/v2/ontologies/candeletecardinalities",
@@ -2790,7 +2785,6 @@ class OntologyV2R2RSpec extends R2RSpec {
       BasicHttpCredentials(anythingUsername, password)
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
-      println(responseStr)
       assert(status == StatusCodes.OK, response.toString)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
       assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
