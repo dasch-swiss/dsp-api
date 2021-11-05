@@ -67,7 +67,7 @@ for file_index, file_params in pairs(server.uploads) do
     local mime_info
     success, mime_info = server.file_mimetype(file_index)
     if not success then
-        send_error(500, "server.file_mimetype() failed: " .. tostring(mime_info))
+        send_error(415, "server.file_mimetype() failed: " .. tostring(mime_info))
         return
     end
     local mime_type = mime_info["mimetype"]
@@ -82,7 +82,7 @@ for file_index, file_params in pairs(server.uploads) do
     local original_filename = file_params["origname"]
     local file_info = get_file_info(original_filename, mime_type)
     if file_info == nil then
-        send_error(400, "Unsupported MIME type: " .. tostring(mime_type))
+        send_error(415, "Unsupported MIME type: " .. tostring(mime_type))
         return
     end
 
@@ -176,14 +176,47 @@ for file_index, file_params in pairs(server.uploads) do
             return
         end
         server.log("upload.lua: wrote image file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
-    else
-        -- It's not an image file. Just move it to its temporary storage location.
+    -- Is this a video file?
+    elseif media_type == VIDEO then
+        server.log("upload.lua: video file type " .. media_type, server.loglevel.LOG_DEBUG)
         success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
         if not success then
             send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
             return
         end
-        server.log("upload.lua: wrote non-image file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
+        server.log("upload.lua: wrote video file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
+    --     server.log("I'm a video")
+    --     local uploaded_video
+    --     -- success, uploaded_video = SipiImage.new(file_index, {original = original_filename, hash = "sha256"})
+    --     -- if not success then
+    --     --     send_error(500, "SipiImage.new() failed: " .. tostring(uploaded_image))
+    --     --     return
+    --     -- end
+
+    --     expected (to close 'for' at line 63) near <eof>, scriptname: /sipi/scripts/upload.lua
+
+
+    --     -- move it to its temporary storage location
+    --     success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
+    --     if not success then
+    --         send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+    --         return
+    --     end
+
+
+    --     -- run shell script to convert video and extract preview frames
+    --     -- use os.execute
+        os.execute("ffprobe -i " .. tmp_storage_file_path)
+        
+
+    else
+        -- It's not an image or video file. Just move it to its temporary storage location.
+        success, error_msg = server.copyTmpfile(file_index, tmp_storage_file_path)
+        if not success then
+            send_error(500, "server.copyTmpfile() failed for " .. tostring(tmp_storage_file_path) .. ": " .. tostring(error_msg))
+            return
+        end
+        server.log("upload.lua: wrote non-image, non-video file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
     end
 
     --
