@@ -87,9 +87,7 @@ class NewListsRouteADMFeatureE2ESpec
        |}""".stripMargin
 
   "The Lists Route (/admin/lists)" when {
-
     "used to query information about lists" should {
-
       "return all lists" in {
         val request = Get(baseApiUrl + s"/admin/lists")
           .addHeader(RawHeader(FeatureToggle.REQUEST_HEADER, "new-list-admin-routes:1=on")) ~> addCredentials(
@@ -340,7 +338,6 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "return a DuplicateValueException during list creation when the supplied list IRI is not unique" in {
-
         // duplicate list IRI
         val params =
           s"""
@@ -366,7 +363,6 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "add a child with a custom IRI" in {
-
         val createChildNodeWithCustomIriRequest =
           s"""
              |{   "id": "$customChildNodeIRI",
@@ -423,7 +419,6 @@ class NewListsRouteADMFeatureE2ESpec
     }
 
     "used to modify list information" should {
-
       val newListIri = new MutableTestIri
       val firstChildIri = new MutableTestIri
       val secondChildIri = new MutableTestIri
@@ -504,7 +499,6 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "return a BadRequestException during list creation when payload is not correct" in {
-
         // no project IRI
         val params01 =
           s"""
@@ -556,19 +550,13 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "update basic list information using special characters" in {
-
         val updateListInfo: String =
-//          s"""{
-//             |    "listIri": "${newListIri.get}",
-//             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-//             |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
-//             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
-//             |}""".stripMargin
           s"""{
              |    "listIri": "${newListIri.get}",
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+             |    "name": "neue Name mit A'postroph",
              |    "labels": [{ "value": "Neue geänderte Liste mit A'postroph", "language": "de"}, { "value": "Changed list with a'postrophe", "language": "en"}],
-             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+             |    "comments": [{ "value": "Neuer Kommentar mit A'postroph", "language": "de"}, { "value": "New comment with a'postrophe", "language": "en"}]
              |}""".stripMargin
 
         clientTestDataCollector.addFile(
@@ -668,7 +656,6 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "update basic list information with repeated comment and label in different languages" in {
-
         val updateListInfoWithRepeatedCommentAndLabelValuesRequest: String =
           s"""{
              |    "listIri": "http://rdfh.ch/lists/0001/treeList",
@@ -756,7 +743,6 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "return a BadRequestException during list change when payload is not correct" in {
-
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
         // empty list IRI
@@ -892,7 +878,6 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "add second child to list - to the root node" in {
-
         val name = "second"
         val label = "New Second Child List Node Value"
         val comment = "New Second Child List Node Comment"
@@ -964,7 +949,6 @@ class NewListsRouteADMFeatureE2ESpec
       }
 
       "add child to second child node" in {
-
         val name = "third"
         val label = "New Third Child List Node Value"
         val comment = "New Third Child List Node Comment"
@@ -1034,6 +1018,7 @@ class NewListsRouteADMFeatureE2ESpec
           )
         )
       }
+
       "update node information of node that has custom IRI with a new name" in {
         val newName = "modified third child"
         val updateNodeName =
