@@ -555,13 +555,19 @@ class NewListsRouteADMFeatureE2ESpec
 
       }
 
-      "update basic list information" in {
+      "update basic list information using special characters" in {
 
         val updateListInfo: String =
+//          s"""{
+//             |    "listIri": "${newListIri.get}",
+//             |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
+//             |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+//             |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
+//             |}""".stripMargin
           s"""{
              |    "listIri": "${newListIri.get}",
              |    "projectIri": "${SharedTestDataADM.ANYTHING_PROJECT_IRI}",
-             |    "labels": [{ "value": "Neue geänderte Liste", "language": "de"}, { "value": "Changed list", "language": "en"}],
+             |    "labels": [{ "value": "Neue geänderte Liste mit A'postroph", "language": "de"}, { "value": "Changed list with a'postrophe", "language": "en"}],
              |    "comments": [{ "value": "Neuer Kommentar", "language": "de"}, { "value": "New comment", "language": "en"}]
              |}""".stripMargin
 
