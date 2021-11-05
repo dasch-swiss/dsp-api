@@ -1091,24 +1091,6 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     apiRequestID: UUID
   ): Future[NodeInfoGetResponseADM] = {
 
-    def verifyUpdatedNode(updatedNode: ListNodeInfoADM): Unit = {
-
-      if (changeNodeRequest.labels.nonEmpty) {
-        if (updatedNode.getLabels.stringLiterals.diff(changeNodeRequest.labels.get.value).nonEmpty)
-          throw UpdateNotPerformedException("Lists's 'labels' were not updated. Please report this as a possible bug.")
-      }
-
-      if (changeNodeRequest.comments.nonEmpty) {
-        if (updatedNode.getComments.stringLiterals.diff(changeNodeRequest.comments.get.value).nonEmpty)
-          throw UpdateNotPerformedException("List's 'comments' was not updated. Please report this as a possible bug.")
-      }
-
-      if (changeNodeRequest.name.nonEmpty) {
-        if (updatedNode.getName.nonEmpty && updatedNode.getName.get != changeNodeRequest.name.get.value)
-          throw UpdateNotPerformedException("List's 'name' was not updated. Please report this as a possible bug.")
-      }
-    }
-
     /**
      * The actual task run with an IRI lock.
      */
@@ -1140,13 +1122,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         )
 
         response = maybeNodeADM match {
-          case Some(rootNode: ListRootNodeInfoADM) =>
-            verifyUpdatedNode(rootNode)
-            RootNodeInfoGetResponseADM(listinfo = rootNode)
+          case Some(rootNode: ListRootNodeInfoADM) => RootNodeInfoGetResponseADM(listinfo = rootNode)
 
-          case Some(childNode: ListChildNodeInfoADM) =>
-            verifyUpdatedNode(childNode)
-            ChildNodeInfoGetResponseADM(nodeinfo = childNode)
+          case Some(childNode: ListChildNodeInfoADM) => ChildNodeInfoGetResponseADM(nodeinfo = childNode)
 
           case _ =>
             throw UpdateNotPerformedException(s"Node $nodeIri was not updated. Please report this as a possible bug.")
