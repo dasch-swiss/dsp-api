@@ -20,6 +20,8 @@ import zio.prelude.Validation
 
 import scala.util.{Failure, Success, Try}
 
+//  TODO-mpro: try resolve Option on value objects side
+
 sealed abstract case class GroupIRI private (value: String)
 object GroupIRI {
   private val sf = StringFormatter.getGeneralInstance

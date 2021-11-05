@@ -14,6 +14,7 @@ import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.admin.responder.valueObjects.GroupStatus
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
@@ -416,10 +417,6 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       apiRequestID: UUID
     ): Future[GroupOperationResponseADM] =
       for {
-//        /* check if username or password are not empty */
-//        _ <- Future(if (createRequest.name.value.isEmpty) throw BadRequestException("Group name cannot be empty"))
-//        _ = if (createRequest.project.value.isEmpty) throw BadRequestException(PROJECT_IRI_MISSING_ERROR)
-//TODO: where to check it?
         /* check if the requesting user is allowed to create group */
         _ <- Future(
           if (
@@ -513,7 +510,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
    */
   private def changeGroupBasicInformationRequestADM(
     groupIri: IRI,
-    changeGroupRequest: ChangeGroupApiRequestADM,
+    changeGroupRequest: GroupUpdatePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
@@ -524,7 +521,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
      */
     def changeGroupTask(
       groupIri: IRI,
-      changeGroupRequest: ChangeGroupApiRequestADM,
+      changeGroupRequest: GroupUpdatePayloadADM,
       requestingUser: UserADM
     ): Future[GroupOperationResponseADM] =
       for {
@@ -633,9 +630,14 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
           throw ForbiddenException("Group's status can only be changed by a project or system admin.")
         }
 
+        maybeStatus: Option[GroupStatus] = changeGroupRequest.status match {
+          case Some(value) => Some(GroupStatus.make(value).fold(e => throw e.head, v => v))
+          case None        => None
+        }
+
         /* create the update request */
         groupUpdatePayload = GroupUpdatePayloadADM(
-          status = changeGroupRequest.status
+          status = maybeStatus
         )
 
         // update group status
@@ -709,7 +711,7 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       groupByNameAlreadyExists <-
         if (groupUpdatePayload.name.nonEmpty) {
           val newName = groupUpdatePayload.name.get
-          groupByNameAndProjectExists(newName, groupADM.project.id)
+          groupByNameAndProjectExists(newName.value, groupADM.project.id)
         } else {
           FastFuture.successful(false)
         }
@@ -726,11 +728,11 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
             adminNamedGraphIri = "http://www.knora.org/data/admin",
             triplestore = settings.triplestoreType,
             groupIri,
-            maybeName = groupUpdatePayload.name,
-            maybeDescriptions = groupUpdatePayload.descriptions,
+            maybeName = groupUpdatePayload.name.map(_.value),
+            maybeDescriptions = groupUpdatePayload.descriptions.map(_.value),
             maybeProject = None, // maybe later we want to allow moving of a group to another project
-            maybeStatus = groupUpdatePayload.status,
-            maybeSelfjoin = groupUpdatePayload.selfjoin
+            maybeStatus = groupUpdatePayload.status.map(_.value),
+            maybeSelfjoin = groupUpdatePayload.selfjoin.map(_.value)
           )
           .toString
       )
@@ -750,36 +752,6 @@ class GroupsResponderADM(responderData: ResponderData) extends Responder(respond
       )
 
       //_ = log.debug("updateProjectV1 - projectUpdatePayload: {} /  updatedProject: {}", projectUpdatePayload, updatedProject)
-
-      _ = if (groupUpdatePayload.name.isDefined) {
-        if (updatedGroup.name != groupUpdatePayload.name.get)
-          throw UpdateNotPerformedException("Group's 'name' was not updated. Please report this as a possible bug.")
-      }
-
-      _ = if (groupUpdatePayload.descriptions.isDefined) {
-        if (updatedGroup.descriptions != groupUpdatePayload.descriptions.get)
-          throw UpdateNotPerformedException(
-            "Group's 'descriptions' was not updated. Please report this as a possible bug."
-          )
-      }
-
-      /*
-            _ = if (groupUpdatePayload.project.isDefined) {
-                if (updatedGroup.project != groupUpdatePayload.project.get) throw UpdateNotPerformedException("Group's 'project' was not updated. Please report this as a possible bug.")
-            }
-       */
-
-      _ = if (groupUpdatePayload.status.isDefined) {
-        if (updatedGroup.status != groupUpdatePayload.status.get)
-          throw UpdateNotPerformedException("Group's 'status' was not updated. Please report this as a possible bug.")
-      }
-
-      _ = if (groupUpdatePayload.selfjoin.isDefined) {
-        if (updatedGroup.selfjoin != groupUpdatePayload.selfjoin.get)
-          throw UpdateNotPerformedException(
-            "Group's 'selfjoin' status was not updated. Please report this as a possible bug."
-          )
-      }
 
     } yield GroupOperationResponseADM(group = updatedGroup)
 

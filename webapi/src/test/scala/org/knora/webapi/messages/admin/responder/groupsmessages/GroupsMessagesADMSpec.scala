@@ -24,9 +24,7 @@ object GroupsMessagesADMSpec {
 class GroupsMessagesADMSpec extends CoreSpec(GroupsMessagesADMSpec.config) {
 
   "The CreateGroupsApiRequestADM case class" should {
-
     "return 'BadRequest' if the supplied 'id' is not a valid IRI" in {
-
       val caught = intercept[BadRequestException](
         CreateGroupApiRequestADM(
           id = Some("invalid-group-IRI"),

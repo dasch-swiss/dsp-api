@@ -156,6 +156,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
     put {
       /* update a group identified by iri */
       entity(as[ChangeGroupApiRequestADM]) { apiRequest => requestContext =>
+//        TODO-mpro: what is this for and why STATUS can't be updeted at the same time with other fields?
         val checkedGroupIri =
           stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
@@ -169,6 +170,33 @@ class GroupsRouteADM(routeData: KnoraRouteData)
           )
         }
 
+        val maybeName: Option[GroupName] = apiRequest.name match {
+          case Some(value) => Some(GroupName.create(value).fold(e => throw e, v => v))
+          case None        => None
+        }
+
+        val maybeDescriptions: Option[GroupDescription] = apiRequest.descriptions match {
+          case Some(value) => Some(GroupDescription.make(value).fold(e => throw e.head, v => v))
+          case None        => None
+        }
+
+        val maybeStatus: Option[GroupStatus] = apiRequest.status match {
+          case Some(value) => Some(GroupStatus.make(value).fold(e => throw e.head, v => v))
+          case None        => None
+        }
+
+        val maybeSelfJoin: Option[GroupSelfJoin] = apiRequest.selfjoin match {
+          case Some(value) => Some(GroupSelfJoin.make(value).fold(e => throw e.head, v => v))
+          case None        => None
+        }
+
+        val guroupUpdatePayloadADM: GroupUpdatePayloadADM = GroupUpdatePayloadADM(
+          name = maybeName,
+          descriptions = maybeDescriptions,
+          status = maybeStatus,
+          selfjoin = maybeSelfJoin
+        )
+
         val requestMessage = for {
           requestingUser <- getUserADM(
             requestContext = requestContext,
@@ -176,7 +204,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
           )
         } yield GroupChangeRequestADM(
           groupIri = checkedGroupIri,
-          changeGroupRequest = apiRequest,
+          changeGroupRequest = guroupUpdatePayloadADM,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()

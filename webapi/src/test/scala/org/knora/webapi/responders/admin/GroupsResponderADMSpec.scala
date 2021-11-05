@@ -36,16 +36,12 @@ object GroupsResponderADMSpec {
  * This spec is used to test the messages received by the [[org.knora.webapi.responders.admin.UsersResponderADM]] actor.
  */
 class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) with ImplicitSender {
-
   private val timeout = 5.seconds
-
   private val imagesProject = SharedTestDataADM.imagesProject
   private val imagesReviewerGroup = SharedTestDataADM.imagesReviewerGroup
-
   private val rootUser = SharedTestDataADM.rootUser
 
   "The GroupsResponder " when {
-
     "asked about all groups" should {
       "return a list" in {
         responderManager ! GroupsGetRequestADM(
@@ -69,6 +65,7 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
 
         expectMsg(GroupGetResponseADM(imagesReviewerGroup))
       }
+
       "return 'NotFoundException' when the group is unknown " in {
         responderManager ! GroupGetRequestADM(
           groupIri = "http://rdfh.ch/groups/notexisting",
@@ -83,7 +80,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
     }
 
     "used to modify group information" should {
-
       val newGroupIri = new MutableTestIri
 
       "CREATE the group and return the group's info if the supplied group name is unique" in {
@@ -145,33 +141,18 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
           msg.cause.isInstanceOf[DuplicateValueException] should ===(true)
         }
       }
-// TODO: below test will be covered by value object unit test
-//      "return 'BadRequestException' if project IRI are missing" in {
-//        responderManager ! GroupCreateRequestADM(
-//          createRequest = GroupCreatePayloadADM(
-//            id = None,
-//            name = GroupName.create("OtherNewGroup").fold(e => throw e, v => v),
-//            descriptions = GroupDescription
-//              .make(Seq(StringLiteralV2(value = "OtherNewGroupDescription", language = Some("en"))))
-//              .fold(e => throw e.head, v => v),
-//            project = "",
-//            status = GroupStatus.make(true).fold(e => throw e.head, v => v),
-//            selfjoin = GroupSelfJoin.make(false).fold(e => throw e.head, v => v)
-//          ),
-//          featureFactoryConfig = defaultFeatureFactoryConfig,
-//          requestingUser = SharedTestDataADM.imagesUser01,
-//          apiRequestID = UUID.randomUUID
-//        )
-//        expectMsg(Failure(BadRequestException("Project IRI cannot be empty")))
-//      }
 
       "UPDATE a group" in {
         responderManager ! GroupChangeRequestADM(
           groupIri = newGroupIri.get,
-          changeGroupRequest = ChangeGroupApiRequestADM(
-            Some("UpdatedGroupName"),
+          changeGroupRequest = GroupUpdatePayloadADM(
+            Some(GroupName.create("UpdatedGroupName").fold(e => throw e, v => v)),
             Some(
-              Seq(StringLiteralV2(value = """UpdatedDescription with "quotes" and <html tag>""", Some("en")))
+              GroupDescription
+                .make(
+                  Seq(StringLiteralV2(value = """UpdatedDescription with "quotes" and <html tag>""", Some("en")))
+                )
+                .fold(e => throw e.head, v => v)
             )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -194,9 +175,13 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       "return 'NotFound' if a not-existing group IRI is submitted during update" in {
         responderManager ! GroupChangeRequestADM(
           groupIri = "http://rdfh.ch/groups/notexisting",
-          ChangeGroupApiRequestADM(
-            Some("UpdatedGroupName"),
-            Some(Seq(StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
+          GroupUpdatePayloadADM(
+            Some(GroupName.create("UpdatedGroupName").fold(e => throw e, v => v)),
+            Some(
+              GroupDescription
+                .make(Seq(StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
+                .fold(e => throw e.head, v => v)
+            )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -211,9 +196,13 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
       "return 'BadRequest' if the new group name already exists inside the project" in {
         responderManager ! GroupChangeRequestADM(
           groupIri = newGroupIri.get,
-          changeGroupRequest = ChangeGroupApiRequestADM(
-            Some("Image reviewer"),
-            Some(Seq(StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
+          changeGroupRequest = GroupUpdatePayloadADM(
+            Some(GroupName.create("Image reviewer").fold(e => throw e, v => v)),
+            Some(
+              GroupDescription
+                .make(Seq(StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
+                .fold(e => throw e.head, v => v)
+            )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -231,7 +220,6 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
     }
 
     "used to query members" should {
-
       "return all members of a group identified by IRI" in {
         responderManager ! GroupMembersGetRequestADM(
           groupIri = SharedTestDataADM.imagesReviewerGroup.id,

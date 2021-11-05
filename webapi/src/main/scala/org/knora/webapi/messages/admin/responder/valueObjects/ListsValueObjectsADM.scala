@@ -24,6 +24,8 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 
 import scala.util.{Failure, Success, Try}
 
+//  TODO-mpro: try resolve Option on value objects side
+
 /**
  * List ListIRI value object.
  */

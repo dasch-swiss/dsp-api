@@ -7,15 +7,7 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.UnitSpec
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsErrorMessagesADM.{
-  GROUP_DESCRIPTION_INVALID_ERROR,
-  GROUP_DESCRIPTION_MISSING_ERROR,
-  GROUP_IRI_INVALID_ERROR,
-  GROUP_IRI_MISSING_ERROR,
-  GROUP_NAME_INVALID_ERROR,
-  GROUP_NAME_MISSING_ERROR
-}
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsErrorMessagesADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 
@@ -37,7 +29,7 @@ class GroupsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       }
     }
     "created using valid value" should {
-      "not throw BadRequestException " in {
+      "not throw BadRequestException" in {
         GroupIRI.create(validGroupIri).merge should not equal BadRequestException(GROUP_IRI_INVALID_ERROR)
       }
       "return value passed to value object" in {

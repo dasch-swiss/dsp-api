@@ -5,7 +5,6 @@
 
 package org.knora.webapi.messages.admin.responder.groupsmessages
 
-import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
@@ -16,6 +15,8 @@ import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
+
+import java.util.UUID
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -190,7 +191,7 @@ case class GroupCreateRequestADM(
  */
 case class GroupChangeRequestADM(
   groupIri: IRI,
-  changeGroupRequest: ChangeGroupApiRequestADM,
+  changeGroupRequest: GroupUpdatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -306,21 +307,6 @@ case class GroupADM(
  * @param selfjoin      the group's self-join status.
  */
 case class GroupShortADM(id: IRI, name: String, descriptions: Seq[StringLiteralV2], status: Boolean, selfjoin: Boolean)
-
-/**
- * Payload used for updating of an existing group.
- *
- * @param name          the name of the group.
- * @param descriptions  the descriptions of the group.
- * @param status        the group's status.
- * @param selfjoin      the group's self-join status.
- */
-case class GroupUpdatePayloadADM(
-  name: Option[String] = None,
-  descriptions: Option[Seq[StringLiteralV2]] = None,
-  status: Option[Boolean] = None,
-  selfjoin: Option[Boolean] = None
-)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting
