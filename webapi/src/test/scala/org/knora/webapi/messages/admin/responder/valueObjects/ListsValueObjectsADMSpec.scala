@@ -14,7 +14,6 @@ import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
  * This spec is used to test the [[ListsValueObjectsADM]] value objects creation.
  */
 class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
-
   "ListIRI value object" when {
     val validListIri = "http://rdfh.ch/lists/0803/qBCJAdzZSCqC_2snW5Q7Nw"
 
@@ -31,6 +30,9 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using valid value" should {
       "return value object that value equals to the value used to its creation" in {
         ListIRI.create(validListIri) should not equal Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
+      }
+      "return value passed to value object" in {
+        ListIRI.create(validListIri).toOption.get.value should equal(validListIri)
       }
     }
   }
@@ -54,11 +56,14 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       "not throw BadRequestExceptions" in {
         ProjectIRI.create(validProjectIri) should not equal Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
       }
+      "return value passed to value object" in {
+        ProjectIRI.create(validProjectIri).toOption.get.value should equal(validProjectIri)
+      }
     }
   }
 
   "ListName value object" when {
-    val validListName = "It's valid list name example"
+    val validListName = "Valid list name"
 
     "created using empty value" should {
       "throw BadRequestException" in {
@@ -67,13 +72,15 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-//        TODO: should this: "\"It's invalid list name example\"" pass? Same for comments and labels
         ListName.create("\r") should equal(Left(BadRequestException(LIST_NAME_INVALID_ERROR)))
       }
     }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
         ListName.create(validListName) should not equal Left(BadRequestException(LIST_NAME_INVALID_ERROR))
+      }
+      "return value passed to value object" in {
+        ListName.create(validListName).toOption.get.value should equal(validListName)
       }
     }
   }
@@ -89,6 +96,9 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
         Position.create(validPosition) should not equal Left(BadRequestException(INVALID_POSITION))
+      }
+      "return value passed to value object" in {
+        Position.create(validPosition).toOption.get.value should equal(validPosition)
       }
     }
   }
@@ -111,12 +121,15 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       "not throw BadRequestExceptions" in {
         Labels.create(validLabels) should not equal Left(BadRequestException(LABEL_INVALID_ERROR))
       }
+      "return value passed to value object" in {
+        Labels.create(validLabels).toOption.get.value should equal(validLabels)
+      }
     }
   }
 
   "Comments value object" when {
-    val validComments = Seq(StringLiteralV2(value = "New Comment", language = Some("en")))
-    val invalidComments = Seq(StringLiteralV2(value = "\r", language = Some("en")))
+    val validComments = Seq(StringLiteralV2(value = "Valid comment", language = Some("en")))
+    val invalidComments = Seq(StringLiteralV2(value = "Invalid comment \r", language = Some("en")))
 
     "created using empty value" should {
       "throw BadRequestException" in {
@@ -131,6 +144,9 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
         Comments.create(validComments) should not equal Left(BadRequestException(COMMENT_INVALID_ERROR))
+      }
+      "return value passed to value object" in {
+        Comments.create(validComments).toOption.get.value should equal(validComments)
       }
     }
   }
