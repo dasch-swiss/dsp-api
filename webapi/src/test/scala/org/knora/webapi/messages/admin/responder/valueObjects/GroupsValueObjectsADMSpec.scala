@@ -20,20 +20,20 @@ class GroupsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "created using empty value" should {
       "throw BadRequestException" in {
-        GroupIRI.create("").merge should equal(BadRequestException(GROUP_IRI_MISSING_ERROR))
+        GroupIRI.make("") should equal(Validation.fail(BadRequestException(GROUP_IRI_MISSING_ERROR)))
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-        GroupIRI.create("not a group IRI").merge should equal(BadRequestException(GROUP_IRI_INVALID_ERROR))
+        GroupIRI.make("not a group IRI") should equal(Validation.fail(BadRequestException(GROUP_IRI_INVALID_ERROR)))
       }
     }
     "created using valid value" should {
       "not throw BadRequestException" in {
-        GroupIRI.create(validGroupIri).merge should not equal BadRequestException(GROUP_IRI_INVALID_ERROR)
+        GroupIRI.make(validGroupIri) should not equal Validation.fail(BadRequestException(GROUP_IRI_INVALID_ERROR))
       }
       "return value passed to value object" in {
-        GroupIRI.create(validGroupIri).toOption.get.value should equal(validGroupIri)
+        GroupIRI.make(validGroupIri).toOption.get.value should equal(validGroupIri)
       }
     }
   }
@@ -43,49 +43,51 @@ class GroupsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "created using empty value" should {
       "throw BadRequestException" in {
-        GroupName.create("").merge should equal(BadRequestException(GROUP_NAME_MISSING_ERROR))
+        GroupName.make("") should equal(Validation.fail(BadRequestException(GROUP_NAME_MISSING_ERROR)))
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-        GroupName.create("Invalid group name\r").merge should equal(BadRequestException(GROUP_NAME_INVALID_ERROR))
+        GroupName.make("Invalid group name\r") should equal(
+          Validation.fail(BadRequestException(GROUP_NAME_INVALID_ERROR))
+        )
       }
     }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
-        GroupName.create(validGroupName).merge should not equal BadRequestException(GROUP_NAME_INVALID_ERROR)
+        GroupName.make(validGroupName) should not equal Validation.fail(BadRequestException(GROUP_NAME_INVALID_ERROR))
       }
       "return value passed to value object" in {
-        GroupName.create(validGroupName).toOption.get.value should equal(validGroupName)
+        GroupName.make(validGroupName).toOption.get.value should equal(validGroupName)
       }
     }
   }
 
-  "GroupDescription value object" when {
+  "GroupDescriptions value object" when {
     val validDescription = Seq(StringLiteralV2(value = "Valid description", language = Some("en")))
     val invalidDescription = Seq(StringLiteralV2(value = "Invalid description \r", language = Some("en")))
 
     "created using empty value" should {
       "throw BadRequestException" in {
-        GroupDescription.make(Seq.empty) should equal(
+        GroupDescriptions.make(Seq.empty) should equal(
           Validation.fail(BadRequestException(GROUP_DESCRIPTION_MISSING_ERROR))
         )
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-        GroupDescription.make(invalidDescription) should equal(
+        GroupDescriptions.make(invalidDescription) should equal(
           Validation.fail(BadRequestException(GROUP_DESCRIPTION_INVALID_ERROR))
         )
       }
     }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
-        GroupDescription.make(validDescription).toOption.get.value should not equal
+        GroupDescriptions.make(validDescription).toOption.get.value should not equal
           BadRequestException(GROUP_DESCRIPTION_INVALID_ERROR)
       }
       "return value passed to value object" in {
-        GroupDescription.make(validDescription).toOption.get.value should equal(validDescription)
+        GroupDescriptions.make(validDescription).toOption.get.value should equal(validDescription)
       }
     }
   }

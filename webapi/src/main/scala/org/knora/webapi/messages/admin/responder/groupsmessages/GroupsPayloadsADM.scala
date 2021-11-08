@@ -8,7 +8,7 @@ import org.knora.webapi.messages.admin.responder.valueObjects._
 final case class GroupCreatePayloadADM(
   id: Option[GroupIRI] = None,
   name: GroupName,
-  descriptions: GroupDescription,
+  descriptions: GroupDescriptions,
   project: ProjectIRI,
   status: GroupStatus,
   selfjoin: GroupSelfJoin
@@ -24,7 +24,7 @@ final case class GroupCreatePayloadADM(
  */
 final case class GroupUpdatePayloadADM(
   name: Option[GroupName] = None,
-  descriptions: Option[GroupDescription] = None,
+  descriptions: Option[GroupDescriptions] = None,
 //  TODO-mpro remove status from here and create sperate payload?
   status: Option[GroupStatus] = None,
   selfjoin: Option[GroupSelfJoin] = None

@@ -86,8 +86,8 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         responderManager ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
             id = None,
-            name = GroupName.create("NewGroup").fold(e => throw e, v => v),
-            descriptions = GroupDescription
+            name = GroupName.make("NewGroup").fold(e => throw e.head, v => v),
+            descriptions = GroupDescriptions
               .make(
                 Seq(
                   StringLiteralV2(value = """NewGroupDescription with "quotes" and <html tag>""", language = Some("en"))
@@ -122,10 +122,10 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         responderManager ! GroupCreateRequestADM(
           createRequest = GroupCreatePayloadADM(
             id = Some(
-              GroupIRI.create(imagesReviewerGroup.id).fold(e => throw e, v => v)
+              GroupIRI.make(imagesReviewerGroup.id).fold(e => throw e.head, v => v)
             ),
-            name = GroupName.create("NewGroup").fold(e => throw e, v => v),
-            descriptions = GroupDescription
+            name = GroupName.make("NewGroup").fold(e => throw e.head, v => v),
+            descriptions = GroupDescriptions
               .make(Seq(StringLiteralV2(value = "NewGroupDescription", language = Some("en"))))
               .fold(e => throw e.head, v => v),
             project = ProjectIRI.create(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
@@ -146,9 +146,9 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         responderManager ! GroupChangeRequestADM(
           groupIri = newGroupIri.get,
           changeGroupRequest = GroupUpdatePayloadADM(
-            Some(GroupName.create("UpdatedGroupName").fold(e => throw e, v => v)),
+            Some(GroupName.make("UpdatedGroupName").fold(e => throw e.head, v => v)),
             Some(
-              GroupDescription
+              GroupDescriptions
                 .make(
                   Seq(StringLiteralV2(value = """UpdatedDescription with "quotes" and <html tag>""", Some("en")))
                 )
@@ -176,9 +176,9 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         responderManager ! GroupChangeRequestADM(
           groupIri = "http://rdfh.ch/groups/notexisting",
           GroupUpdatePayloadADM(
-            Some(GroupName.create("UpdatedGroupName").fold(e => throw e, v => v)),
+            Some(GroupName.make("UpdatedGroupName").fold(e => throw e.head, v => v)),
             Some(
-              GroupDescription
+              GroupDescriptions
                 .make(Seq(StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )
@@ -197,9 +197,9 @@ class GroupsResponderADMSpec extends CoreSpec(GroupsResponderADMSpec.config) wit
         responderManager ! GroupChangeRequestADM(
           groupIri = newGroupIri.get,
           changeGroupRequest = GroupUpdatePayloadADM(
-            Some(GroupName.create("Image reviewer").fold(e => throw e, v => v)),
+            Some(GroupName.make("Image reviewer").fold(e => throw e.head, v => v)),
             Some(
-              GroupDescription
+              GroupDescriptions
                 .make(Seq(StringLiteralV2(value = "UpdatedDescription", language = Some("en"))))
                 .fold(e => throw e.head, v => v)
             )

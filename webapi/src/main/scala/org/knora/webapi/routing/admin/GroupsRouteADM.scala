@@ -78,15 +78,10 @@ class GroupsRouteADM(routeData: KnoraRouteData)
     post {
       /* create a new group */
       entity(as[CreateGroupApiRequestADM]) { apiRequest => requestContext =>
-        val maybeId: Option[GroupIRI] = apiRequest.id match {
-          case Some(value) => Some(GroupIRI.create(value).fold(e => throw e, v => v))
-          case None        => None
-        }
-
         val groupCreatePayloadADM: GroupCreatePayloadADM = GroupCreatePayloadADM(
-          id = maybeId,
-          name = GroupName.create(apiRequest.name).fold(e => throw e, v => v),
-          descriptions = GroupDescription.make(apiRequest.descriptions).fold(e => throw e.head, v => v),
+          id = GroupIRI.make(apiRequest.id).fold(e => throw e.head, v => v),
+          name = GroupName.make(apiRequest.name).fold(e => throw e.head, v => v),
+          descriptions = GroupDescriptions.make(apiRequest.descriptions).fold(e => throw e.head, v => v),
           project = ProjectIRI.create(apiRequest.project).fold(e => throw e, v => v),
           status = GroupStatus.make(apiRequest.status).fold(e => throw e.head, v => v),
           selfjoin = GroupSelfJoin.make(apiRequest.selfjoin).fold(e => throw e.head, v => v)
@@ -170,31 +165,11 @@ class GroupsRouteADM(routeData: KnoraRouteData)
           )
         }
 
-        val maybeName: Option[GroupName] = apiRequest.name match {
-          case Some(value) => Some(GroupName.create(value).fold(e => throw e, v => v))
-          case None        => None
-        }
-
-        val maybeDescriptions: Option[GroupDescription] = apiRequest.descriptions match {
-          case Some(value) => Some(GroupDescription.make(value).fold(e => throw e.head, v => v))
-          case None        => None
-        }
-
-        val maybeStatus: Option[GroupStatus] = apiRequest.status match {
-          case Some(value) => Some(GroupStatus.make(value).fold(e => throw e.head, v => v))
-          case None        => None
-        }
-
-        val maybeSelfJoin: Option[GroupSelfJoin] = apiRequest.selfjoin match {
-          case Some(value) => Some(GroupSelfJoin.make(value).fold(e => throw e.head, v => v))
-          case None        => None
-        }
-
         val guroupUpdatePayloadADM: GroupUpdatePayloadADM = GroupUpdatePayloadADM(
-          name = maybeName,
-          descriptions = maybeDescriptions,
-          status = maybeStatus,
-          selfjoin = maybeSelfJoin
+          name = GroupName.make(apiRequest.name).fold(e => throw e.head, v => v),
+          descriptions = GroupDescriptions.make(apiRequest.descriptions).fold(e => throw e.head, v => v),
+          status = GroupStatus.make(apiRequest.status).fold(e => throw e.head, v => v),
+          selfjoin = GroupSelfJoin.make(apiRequest.selfjoin).fold(e => throw e.head, v => v)
         )
 
         val requestMessage = for {

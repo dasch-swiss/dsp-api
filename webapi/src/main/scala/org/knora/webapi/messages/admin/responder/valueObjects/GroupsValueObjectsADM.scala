@@ -7,41 +7,33 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsErrorMessagesADM.{
-  GROUP_DESCRIPTION_INVALID_ERROR,
-  GROUP_DESCRIPTION_MISSING_ERROR,
-  GROUP_IRI_INVALID_ERROR,
-  GROUP_IRI_MISSING_ERROR,
-  GROUP_NAME_INVALID_ERROR,
-  GROUP_NAME_MISSING_ERROR
-}
+import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsErrorMessagesADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 
-import scala.util.{Failure, Success, Try}
-
-//  TODO-mpro: try resolve Option on value objects side
-
 sealed abstract case class GroupIRI private (value: String)
-object GroupIRI {
+object GroupIRI { self =>
   private val sf = StringFormatter.getGeneralInstance
 
-  def create(value: String): Either[Throwable, GroupIRI] =
+  def make(value: String): Validation[Throwable, GroupIRI] =
     if (value.isEmpty) {
-      Left(BadRequestException(GROUP_IRI_MISSING_ERROR))
+      Validation.fail(BadRequestException(GROUP_IRI_MISSING_ERROR))
     } else {
       if (value.nonEmpty && !sf.isKnoraGroupIriStr(value)) {
-        Left(BadRequestException(GROUP_IRI_INVALID_ERROR))
+        Validation.fail(BadRequestException(GROUP_IRI_INVALID_ERROR))
       } else {
-        val validatedValue = Try(
+        val validatedValue = Validation(
           sf.validateAndEscapeIri(value, throw BadRequestException(GROUP_IRI_INVALID_ERROR))
         )
 
-        validatedValue match {
-          case Success(iri) => Right(new GroupIRI(iri) {})
-          case Failure(_)   => Left(BadRequestException(GROUP_IRI_INVALID_ERROR))
-        }
+        validatedValue.map(new GroupIRI(_) {})
       }
+    }
+
+  def make(value: Option[String]): Validation[Throwable, Option[GroupIRI]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -49,44 +41,50 @@ object GroupIRI {
  * GroupName value object.
  */
 sealed abstract case class GroupName private (value: String)
-object GroupName {
+object GroupName { self =>
   private val sf = StringFormatter.getGeneralInstance
 
-  def create(value: String): Either[Throwable, GroupName] =
+  def make(value: String): Validation[Throwable, GroupName] =
     if (value.isEmpty) {
-      Left(BadRequestException(GROUP_NAME_MISSING_ERROR))
+      Validation.fail(BadRequestException(GROUP_NAME_MISSING_ERROR))
     } else {
-      val validatedValue = Try(
+      val validatedValue = Validation(
         sf.toSparqlEncodedString(value, throw BadRequestException(GROUP_NAME_INVALID_ERROR))
       )
 
-      validatedValue match {
-        case Success(value) => Right(new GroupName(value) {})
-        case Failure(_)     => Left(BadRequestException(GROUP_NAME_INVALID_ERROR))
-      }
+      validatedValue.map(new GroupName(_) {})
+    }
+
+  def make(value: Option[String]): Validation[Throwable, Option[GroupName]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
 /**
- * GroupDescription value object.
+ * GroupDescriptions value object.
  */
-sealed abstract case class GroupDescription private (value: Seq[StringLiteralV2])
-object GroupDescription {
+sealed abstract case class GroupDescriptions private (value: Seq[StringLiteralV2])
+object GroupDescriptions { self =>
   private val sf = StringFormatter.getGeneralInstance
 
-  def make(value: Seq[StringLiteralV2]): Validation[Throwable, GroupDescription] =
+  def make(value: Seq[StringLiteralV2]): Validation[Throwable, GroupDescriptions] =
     if (value.isEmpty) {
       Validation.fail(BadRequestException(GROUP_DESCRIPTION_MISSING_ERROR))
     } else {
-      val validatedDescriptions = Try(value.map { description =>
+      val validatedDescriptions = Validation(value.map { description =>
         val validatedDescription =
           sf.toSparqlEncodedString(description.value, throw BadRequestException(GROUP_DESCRIPTION_INVALID_ERROR))
         StringLiteralV2(value = validatedDescription, language = description.language)
       })
-      validatedDescriptions match {
-        case Success(value) => Validation.succeed(new GroupDescription(value) {})
-        case Failure(_)     => Validation.fail(BadRequestException(GROUP_DESCRIPTION_INVALID_ERROR))
-      }
+      validatedDescriptions.map(new GroupDescriptions(_) {})
+    }
+
+  def make(value: Option[Seq[StringLiteralV2]]): Validation[Throwable, Option[GroupDescriptions]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -94,16 +92,26 @@ object GroupDescription {
  * GroupStatus value object.
  */
 sealed abstract case class GroupStatus private (value: Boolean)
-object GroupStatus {
+object GroupStatus { self =>
   def make(value: Boolean): Validation[Throwable, GroupStatus] =
     Validation.succeed(new GroupStatus(value) {})
+  def make(value: Option[Boolean]): Validation[Throwable, Option[GroupStatus]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
+    }
 }
 
 /**
  * GroupSelfJoin value object.
  */
 sealed abstract case class GroupSelfJoin private (value: Boolean)
-object GroupSelfJoin {
+object GroupSelfJoin { self =>
   def make(value: Boolean): Validation[Throwable, GroupSelfJoin] =
     Validation.succeed(new GroupSelfJoin(value) {})
+  def make(value: Option[Boolean]): Validation[Throwable, Option[GroupSelfJoin]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
+    }
 }
