@@ -70,12 +70,14 @@ object ChangeFileRequest {
     valueIRI: String,
     ontologyName: String = "anything"
   ): ChangeFileRequest = {
-    val ontologyIRI = ontologyName match {
-      case "anything" => "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+    val context = ontologyName match {
+      case "anything" => ""","anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#" """
+      case _          => ""
     }
     val propName = fileValueType match {
       case FileValueType.DocumentFileValue   => "knora-api:hasDocumentFileValue"
       case FileValueType.StillImageFileValue => "knora-api:hasStillImageFileValue"
+      case FileValueType.TextFileValue       => "knora-api:hasTextFileValue"
     }
     val value =
       s"""{
@@ -90,8 +92,8 @@ object ChangeFileRequest {
          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-         |    "$ontologyName" : "$ontologyIRI"
+         |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+         |    $context
          |  }
          |}""".stripMargin
     new ChangeFileRequest(value) {}
