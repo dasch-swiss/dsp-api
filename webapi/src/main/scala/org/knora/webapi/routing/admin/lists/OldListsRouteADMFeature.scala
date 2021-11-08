@@ -123,7 +123,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
     post {
       /* create a list */
       entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
-        val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
+        val projectIri = ProjectIRI.make(apiRequest.projectIri).fold(e => throw e.head, v => v)
 
         val createRootNodePayloadADM: ListCreatePayloadADM = ListCreatePayloadADM(
           id = ListIRI.make(apiRequest.id).fold(e => throw e.head, v => v),
@@ -235,7 +235,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
       /* update existing list node (either root or child) */
       entity(as[ChangeNodeInfoApiRequestADM]) { apiRequest => requestContext =>
         val listIri = ListIRI.make(apiRequest.listIri).fold(e => throw e.head, v => v)
-        val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
+        val projectIri = ProjectIRI.make(apiRequest.projectIri).fold(e => throw e.head, v => v)
 
         val changeNodeInfoPayloadADM: NodeInfoChangePayloadADM = NodeInfoChangePayloadADM(
           listIri,
@@ -307,7 +307,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
       post {
         /* add node to existing list node. the existing list node can be either the root or a child */
         entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
-          val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
+          val projectIri = ProjectIRI.make(apiRequest.projectIri).fold(e => throw e.head, v => v)
 
           // allows to omit comments / send empty comments creating child node
           val maybeComments = if (apiRequest.comments.isEmpty) {

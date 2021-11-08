@@ -82,7 +82,7 @@ class GroupsRouteADM(routeData: KnoraRouteData)
           id = GroupIRI.make(apiRequest.id).fold(e => throw e.head, v => v),
           name = GroupName.make(apiRequest.name).fold(e => throw e.head, v => v),
           descriptions = GroupDescriptions.make(apiRequest.descriptions).fold(e => throw e.head, v => v),
-          project = ProjectIRI.create(apiRequest.project).fold(e => throw e, v => v),
+          project = ProjectIRI.make(apiRequest.project).fold(e => throw e.head, v => v),
           status = GroupStatus.make(apiRequest.status).fold(e => throw e.head, v => v),
           selfjoin = GroupSelfJoin.make(apiRequest.selfjoin).fold(e => throw e.head, v => v)
         )

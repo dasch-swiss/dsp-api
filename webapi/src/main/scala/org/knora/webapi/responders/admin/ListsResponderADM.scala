@@ -1242,7 +1242,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         changeNodeNameSparqlString <- getUpdateNodeInfoSparqlStatement(
           changeNodeInfoRequest = NodeInfoChangePayloadADM(
             listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.create(projectIri).fold(e => throw e, v => v),
+            projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
             name = Some(changeNodeNameRequest.name)
           ),
           featureFactoryConfig = featureFactoryConfig
@@ -1328,7 +1328,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         changeNodeLabelsSparqlString <- getUpdateNodeInfoSparqlStatement(
           changeNodeInfoRequest = NodeInfoChangePayloadADM(
             listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.create(projectIri).fold(e => throw e, v => v),
+            projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
             labels = Some(changeNodeLabelsRequest.labels)
           ),
           featureFactoryConfig = featureFactoryConfig
@@ -1413,7 +1413,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(
           changeNodeInfoRequest = NodeInfoChangePayloadADM(
             listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
-            projectIri = ProjectIRI.create(projectIri).fold(e => throw e, v => v),
+            projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
             comments = changeNodeCommentsRequest.comments
           ),
           featureFactoryConfig = featureFactoryConfig

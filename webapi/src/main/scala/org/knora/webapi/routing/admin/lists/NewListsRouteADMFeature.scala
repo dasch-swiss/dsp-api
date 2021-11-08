@@ -147,7 +147,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
       /* create a list item (root or child node) */
       entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
         val maybeId = ListIRI.make(apiRequest.id).fold(e => throw e.head, v => v)
-        val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
+        val projectIri = ProjectIRI.make(apiRequest.projectIri).fold(e => throw e.head, v => v)
         val maybeName = ListName.make(apiRequest.name).fold(e => throw e.head, v => v)
         val labels = Labels.make(apiRequest.labels).fold(e => throw e.head, v => v)
         val comments = Comments.make(apiRequest.comments).fold(e => throw e.head, v => v)
@@ -309,7 +309,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
       /* update existing list node (either root or child) */
       entity(as[ChangeNodeInfoApiRequestADM]) { apiRequest => requestContext =>
         val listIri = ListIRI.make(apiRequest.listIri).fold(e => throw e.head, v => v)
-        val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
+        val projectIri = ProjectIRI.make(apiRequest.projectIri).fold(e => throw e.head, v => v)
 
         val changeNodeInfoPayloadADM: NodeInfoChangePayloadADM = NodeInfoChangePayloadADM(
           listIri,

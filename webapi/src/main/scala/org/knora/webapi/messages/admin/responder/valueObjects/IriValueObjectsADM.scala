@@ -11,31 +11,27 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessage
   PROJECT_IRI_INVALID_ERROR,
   PROJECT_IRI_MISSING_ERROR
 }
-
-import scala.util.{Failure, Success, Try}
+import zio.prelude.Validation
 
 /**
  * ProjectIRI value object.
  */
 sealed abstract case class ProjectIRI private (value: String)
 object ProjectIRI {
-  val stringFormatter = StringFormatter.getGeneralInstance
+  val sf = StringFormatter.getGeneralInstance
 
-  def create(value: String): Either[Throwable, ProjectIRI] =
+  def make(value: String): Validation[Throwable, ProjectIRI] =
     if (value.isEmpty) {
-      Left(BadRequestException(PROJECT_IRI_MISSING_ERROR))
+      Validation.fail(BadRequestException(PROJECT_IRI_MISSING_ERROR))
     } else {
-      if (value.nonEmpty && !stringFormatter.isKnoraProjectIriStr(value)) {
-        Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
+      if (value.nonEmpty && !sf.isKnoraProjectIriStr(value)) {
+        Validation.fail(BadRequestException(PROJECT_IRI_INVALID_ERROR))
       } else {
-        val validatedValue = Try(
-          stringFormatter.validateAndEscapeProjectIri(value, throw BadRequestException(PROJECT_IRI_INVALID_ERROR))
+        val validatedValue = Validation(
+          sf.validateAndEscapeProjectIri(value, throw BadRequestException(PROJECT_IRI_INVALID_ERROR))
         )
 
-        validatedValue match {
-          case Success(iri) => Right(new ProjectIRI(iri) {})
-          case Failure(_)   => Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
-        }
+        validatedValue.map(new ProjectIRI(_) {})
       }
     }
 }

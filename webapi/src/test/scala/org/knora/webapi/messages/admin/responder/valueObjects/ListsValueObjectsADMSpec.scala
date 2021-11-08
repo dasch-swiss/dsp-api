@@ -38,31 +38,6 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     }
   }
 
-  "ProjectIRI value object" when {
-//    TODO: check string formatter project iri validation because passing just "http://rdfh.ch/projects/@@@@@@" works
-//    TODO: move project IRI related test
-    val validProjectIri = "http://rdfh.ch/projects/0001"
-
-    "created using empty value" should {
-      "throw BadRequestException" in {
-        ProjectIRI.create("") should equal(Left(BadRequestException(PROJECT_IRI_MISSING_ERROR)))
-      }
-    }
-    "created using invalid value" should {
-      "throw BadRequestException" in {
-        ProjectIRI.create("not a project IRI") should equal(Left(BadRequestException(PROJECT_IRI_INVALID_ERROR)))
-      }
-    }
-    "created using valid value" should {
-      "not throw BadRequestExceptions" in {
-        ProjectIRI.create(validProjectIri) should not equal Left(BadRequestException(PROJECT_IRI_INVALID_ERROR))
-      }
-      "return value passed to value object" in {
-        ProjectIRI.create(validProjectIri).toOption.get.value should equal(validProjectIri)
-      }
-    }
-  }
-
   "ListName value object" when {
     val validListName = "Valid list name"
 
