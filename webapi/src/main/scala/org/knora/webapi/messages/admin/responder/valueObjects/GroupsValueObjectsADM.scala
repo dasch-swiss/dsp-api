@@ -11,6 +11,9 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.GroupsErrorMessa
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 
+/**
+ * GroupIRI value object.
+ */
 sealed abstract case class GroupIRI private (value: String)
 object GroupIRI { self =>
   private val sf = StringFormatter.getGeneralInstance

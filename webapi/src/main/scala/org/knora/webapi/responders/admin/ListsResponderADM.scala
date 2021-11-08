@@ -5,7 +5,6 @@
 
 package org.knora.webapi.responders.admin
 
-import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -17,14 +16,15 @@ import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayload
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.admin.responder.valueObjects.{ListIRI, ListName, ProjectIRI}
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.{KnoraSystemInstances, ResponderData}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
-import org.knora.webapi.messages.admin.responder.valueObjects.{ListIRI, ListName, ProjectIRI}
 
+import java.util.UUID
 import scala.annotation.tailrec
 import scala.concurrent.Future
 
@@ -1241,7 +1241,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         changeNodeNameSparqlString <- getUpdateNodeInfoSparqlStatement(
           changeNodeInfoRequest = NodeInfoChangePayloadADM(
-            listIri = ListIRI.create(nodeIri).fold(e => throw e, v => v),
+            listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
             projectIri = ProjectIRI.create(projectIri).fold(e => throw e, v => v),
             name = Some(changeNodeNameRequest.name)
           ),
@@ -1327,7 +1327,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
         changeNodeLabelsSparqlString <- getUpdateNodeInfoSparqlStatement(
           changeNodeInfoRequest = NodeInfoChangePayloadADM(
-            listIri = ListIRI.create(nodeIri).fold(e => throw e, v => v),
+            listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
             projectIri = ProjectIRI.create(projectIri).fold(e => throw e, v => v),
             labels = Some(changeNodeLabelsRequest.labels)
           ),
@@ -1412,7 +1412,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
         changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(
           changeNodeInfoRequest = NodeInfoChangePayloadADM(
-            listIri = ListIRI.create(nodeIri).fold(e => throw e, v => v),
+            listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
             projectIri = ProjectIRI.create(projectIri).fold(e => throw e, v => v),
             comments = changeNodeCommentsRequest.comments
           ),

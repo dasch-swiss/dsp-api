@@ -5,16 +5,17 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import java.util.UUID
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
 import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.ChildNodeCreatePayloadADM
-import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListIRI, ProjectIRI, Position}
+import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import spray.json._
+
+import java.util.UUID
 
 object ListsMessagesADMSpec {
   val config = ConfigFactory.parseString("""
@@ -166,16 +167,16 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       val caught = intercept[BadRequestException](
         ListChildNodeCreateRequestADM(
           createChildNodeRequest = ChildNodeCreatePayloadADM(
-            parentNodeIri = Some(ListIRI.create(exampleListIri).fold(e => throw e, v => v)),
+            parentNodeIri = Some(ListIRI.make(exampleListIri).fold(e => throw e.head, v => v)),
             projectIri = ProjectIRI.create(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
-            position = Some(Position.create(-3).fold(e => throw e, v => v)),
+            position = Some(Position.make(-3).fold(e => throw e.head, v => v)),
             labels = Labels
-              .create(Seq(StringLiteralV2(value = "New child node", language = Some("en"))))
-              .fold(e => throw e, v => v),
+              .make(Seq(StringLiteralV2(value = "New child node", language = Some("en"))))
+              .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .create(Seq(StringLiteralV2(value = "New child comment", language = Some("en"))))
-                .fold(e => throw e, v => v)
+                .make(Seq(StringLiteralV2(value = "New child comment", language = Some("en"))))
+                .fold(e => throw e.head, v => v)
             )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,

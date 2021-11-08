@@ -5,12 +5,9 @@
 
 package org.knora.webapi.routing.admin.lists
 
-import java.util.UUID
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
-
-import javax.ws.rs.Path
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.{BadRequestException, ForbiddenException}
 import org.knora.webapi.feature.{Feature, FeatureFactoryConfig}
@@ -23,16 +20,11 @@ import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayload
   ListCreatePayloadADM
 }
 import org.knora.webapi.messages.admin.responder.listsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Comments,
-  Labels,
-  ListIRI,
-  ListName,
-  Position,
-  ProjectIRI
-}
+import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
+import java.util.UUID
+import javax.ws.rs.Path
 import scala.concurrent.Future
 
 object OldListsRouteADMFeature {
@@ -131,24 +123,14 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
     post {
       /* create a list */
       entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
-        val maybeId: Option[ListIRI] = apiRequest.id match {
-          case Some(value) => Some(ListIRI.create(value).fold(e => throw e, v => v))
-          case None        => None
-        }
-
-        val maybeName: Option[ListName] = apiRequest.name match {
-          case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
-          case None        => None
-        }
-
         val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
 
         val createRootNodePayloadADM: ListCreatePayloadADM = ListCreatePayloadADM(
-          id = maybeId,
+          id = ListIRI.make(apiRequest.id).fold(e => throw e.head, v => v),
           projectIri,
-          name = maybeName,
-          labels = Labels.create(apiRequest.labels).fold(e => throw e, v => v),
-          comments = Comments.create(apiRequest.comments).fold(e => throw e, v => v)
+          name = ListName.make(apiRequest.name).fold(e => throw e.head, v => v),
+          labels = Labels.make(apiRequest.labels).fold(e => throw e.head, v => v),
+          comments = Comments.make(apiRequest.comments).fold(e => throw e.head, v => v)
         )
 
 //        println("AAA-createList", createRootNodePayloadADM)
@@ -252,42 +234,17 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
     put {
       /* update existing list node (either root or child) */
       entity(as[ChangeNodeInfoApiRequestADM]) { apiRequest => requestContext =>
-        val listIri = ListIRI.create(apiRequest.listIri).fold(e => throw e, v => v)
+        val listIri = ListIRI.make(apiRequest.listIri).fold(e => throw e.head, v => v)
         val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
-
-        val maybeHasRootNode: Option[ListIRI] = apiRequest.hasRootNode match {
-          case Some(value) => Some(ListIRI.create(value).fold(e => throw e, v => v))
-          case None        => None
-        }
-
-        val maybeName: Option[ListName] = apiRequest.name match {
-          case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
-          case None        => None
-        }
-
-        val maybePosition: Option[Position] = apiRequest.position match {
-          case Some(value) => Some(Position.create(value).fold(e => throw e, v => v))
-          case None        => None
-        }
-
-        val maybeLabels: Option[Labels] = apiRequest.labels match {
-          case Some(value) => Some(Labels.create(value).fold(e => throw e, v => v))
-          case None        => None
-        }
-
-        val maybeComments: Option[Comments] = apiRequest.comments match {
-          case Some(value) => Some(Comments.create(value).fold(e => throw e, v => v))
-          case None        => None
-        }
 
         val changeNodeInfoPayloadADM: NodeInfoChangePayloadADM = NodeInfoChangePayloadADM(
           listIri,
           projectIri,
-          hasRootNode = maybeHasRootNode,
-          position = maybePosition,
-          name = maybeName,
-          labels = maybeLabels,
-          comments = maybeComments
+          hasRootNode = ListIRI.make(apiRequest.hasRootNode).fold(e => throw e.head, v => v),
+          position = Position.make(apiRequest.position).fold(e => throw e.head, v => v),
+          name = ListName.make(apiRequest.name).fold(e => throw e.head, v => v),
+          labels = Labels.make(apiRequest.labels).fold(e => throw e.head, v => v),
+          comments = Comments.make(apiRequest.comments).fold(e => throw e.head, v => v)
         )
 
         val requestMessage: Future[NodeInfoChangeRequestADM] = for {
@@ -350,42 +307,22 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
       post {
         /* add node to existing list node. the existing list node can be either the root or a child */
         entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
-          val maybeId: Option[ListIRI] = apiRequest.id match {
-            case Some(value) => Some(ListIRI.create(value).fold(e => throw e, v => v))
-            case None        => None
-          }
-
-          val maybeParentNodeIri: Option[ListIRI] = apiRequest.parentNodeIri match {
-            case Some(value) => Some(ListIRI.create(value).fold(e => throw e, v => v))
-            case None        => None
-          }
-
           val projectIri = ProjectIRI.create(apiRequest.projectIri).fold(e => throw e, v => v)
-
-          val maybeName: Option[ListName] = apiRequest.name match {
-            case Some(value) => Some(ListName.create(value).fold(e => throw e, v => v))
-            case None        => None
-          }
-
-          val maybePosition: Option[Position] = apiRequest.position match {
-            case Some(value) => Some(Position.create(value).fold(e => throw e, v => v))
-            case None        => None
-          }
 
           // allows to omit comments / send empty comments creating child node
           val maybeComments = if (apiRequest.comments.isEmpty) {
             None
           } else {
-            Some(Comments.create(apiRequest.comments).fold(e => throw e, v => v))
+            Some(Comments.make(apiRequest.comments).fold(e => throw e.head, v => v))
           }
 
           val createChildNodeRequest: ChildNodeCreatePayloadADM = ChildNodeCreatePayloadADM(
-            id = maybeId,
-            parentNodeIri = maybeParentNodeIri,
+            id = ListIRI.make(apiRequest.id).fold(e => throw e.head, v => v),
+            parentNodeIri = ListIRI.make(apiRequest.parentNodeIri).fold(e => throw e.head, v => v),
             projectIri,
-            name = maybeName,
-            position = maybePosition,
-            labels = Labels.create(apiRequest.labels).fold(e => throw e, v => v),
+            name = ListName.make(apiRequest.name).fold(e => throw e.head, v => v),
+            position = Position.make(apiRequest.position).fold(e => throw e.head, v => v),
+            labels = Labels.make(apiRequest.labels).fold(e => throw e.head, v => v),
             comments = maybeComments
           )
 

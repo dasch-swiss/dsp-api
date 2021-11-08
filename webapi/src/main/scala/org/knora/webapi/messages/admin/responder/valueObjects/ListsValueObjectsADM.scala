@@ -7,22 +7,9 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.{
-  COMMENT_INVALID_ERROR,
-  COMMENT_MISSING_ERROR,
-  INVALID_POSITION,
-  LABEL_INVALID_ERROR,
-  LABEL_MISSING_ERROR,
-  LIST_NAME_INVALID_ERROR,
-  LIST_NAME_MISSING_ERROR,
-  LIST_NODE_IRI_INVALID_ERROR,
-  LIST_NODE_IRI_MISSING_ERROR,
-  PROJECT_IRI_INVALID_ERROR,
-  PROJECT_IRI_MISSING_ERROR
-}
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
-
-import scala.util.{Failure, Success, Try}
+import zio.prelude.Validation
 
 //  TODO-mpro: try resolve Option on value objects side
 
@@ -30,25 +17,28 @@ import scala.util.{Failure, Success, Try}
  * List ListIRI value object.
  */
 sealed abstract case class ListIRI private (value: String)
-object ListIRI {
-  val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+object ListIRI { self =>
+  val sf: StringFormatter = StringFormatter.getGeneralInstance
 
-  def create(value: String): Either[Throwable, ListIRI] =
+  def make(value: String): Validation[Throwable, ListIRI] =
     if (value.isEmpty) {
-      Left(BadRequestException(LIST_NODE_IRI_MISSING_ERROR))
+      Validation.fail(BadRequestException(LIST_NODE_IRI_MISSING_ERROR))
     } else {
-      if (value.nonEmpty && !stringFormatter.isKnoraListIriStr(value)) {
-        Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
+      if (value.nonEmpty && !sf.isKnoraListIriStr(value)) {
+        Validation.fail(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
       } else {
-        val validatedValue = Try(
-          stringFormatter.validateAndEscapeIri(value, throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
+        val validatedValue = Validation(
+          sf.validateAndEscapeIri(value, throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
         )
 
-        validatedValue match {
-          case Success(iri) => Right(new ListIRI(iri) {})
-          case Failure(_)   => Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
-        }
+        validatedValue.map(new ListIRI(_) {})
       }
+    }
+
+  def make(value: Option[String]): Validation[Throwable, Option[ListIRI]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -56,21 +46,24 @@ object ListIRI {
  * List ListName value object.
  */
 sealed abstract case class ListName private (value: String)
-object ListName {
-  val stringFormatter = StringFormatter.getGeneralInstance
+object ListName { self =>
+  val sf = StringFormatter.getGeneralInstance
 
-  def create(value: String): Either[Throwable, ListName] =
+  def make(value: String): Validation[Throwable, ListName] =
     if (value.isEmpty) {
-      Left(BadRequestException(LIST_NAME_MISSING_ERROR))
+      Validation.fail(BadRequestException(LIST_NAME_MISSING_ERROR))
     } else {
-      val validatedValue = Try(
-        stringFormatter.toSparqlEncodedString(value, throw BadRequestException(LIST_NAME_INVALID_ERROR))
+      val validatedValue = Validation(
+        sf.toSparqlEncodedString(value, throw BadRequestException(LIST_NAME_INVALID_ERROR))
       )
 
-      validatedValue match {
-        case Success(name) => Right(new ListName(name) {})
-        case Failure(_)    => Left(BadRequestException(LIST_NAME_INVALID_ERROR))
-      }
+      validatedValue.map(new ListName(_) {})
+    }
+
+  def make(value: Option[String]): Validation[Throwable, Option[ListName]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -78,12 +71,18 @@ object ListName {
  * List Position value object.
  */
 sealed abstract case class Position private (value: Int)
-object Position {
-  def create(value: Int): Either[Throwable, Position] =
+object Position { self =>
+  def make(value: Int): Validation[Throwable, Position] =
     if (value < -1) {
-      Left(BadRequestException(INVALID_POSITION))
+      Validation.fail(BadRequestException(INVALID_POSITION))
     } else {
-      Right(new Position(value) {})
+      Validation.succeed(new Position(value) {})
+    }
+
+  def make(value: Option[Int]): Validation[Throwable, Option[Position]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -91,23 +90,26 @@ object Position {
  * List Labels value object.
  */
 sealed abstract case class Labels private (value: Seq[StringLiteralV2])
-object Labels {
-  val stringFormatter = StringFormatter.getGeneralInstance
+object Labels { self =>
+  val sf = StringFormatter.getGeneralInstance
 
-  def create(value: Seq[StringLiteralV2]): Either[Throwable, Labels] =
+  def make(value: Seq[StringLiteralV2]): Validation[Throwable, Labels] =
     if (value.isEmpty) {
-      Left(BadRequestException(LABEL_MISSING_ERROR))
+      Validation.fail(BadRequestException(LABEL_MISSING_ERROR))
     } else {
-      val validatedLabels = Try(value.map { label =>
+      val validatedLabels = Validation(value.map { label =>
         val validatedLabel =
-          stringFormatter.toSparqlEncodedString(label.value, throw BadRequestException(LABEL_INVALID_ERROR))
+          sf.toSparqlEncodedString(label.value, throw BadRequestException(LABEL_INVALID_ERROR))
         StringLiteralV2(value = validatedLabel, language = label.language)
       })
 
-      validatedLabels match {
-        case Success(valid) => Right(new Labels(valid) {})
-        case Failure(_)     => Left(BadRequestException(LABEL_INVALID_ERROR))
-      }
+      validatedLabels.map(new Labels(_) {})
+    }
+
+  def make(value: Option[Seq[StringLiteralV2]]): Validation[Throwable, Option[Labels]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -115,22 +117,25 @@ object Labels {
  * List Comments value object.
  */
 sealed abstract case class Comments private (value: Seq[StringLiteralV2])
-object Comments {
-  val stringFormatter = StringFormatter.getGeneralInstance
+object Comments { self =>
+  val sf = StringFormatter.getGeneralInstance
 
-  def create(value: Seq[StringLiteralV2]): Either[Throwable, Comments] =
+  def make(value: Seq[StringLiteralV2]): Validation[Throwable, Comments] =
     if (value.isEmpty) {
-      Left(BadRequestException(COMMENT_MISSING_ERROR))
+      Validation.fail(BadRequestException(COMMENT_MISSING_ERROR))
     } else {
-      val validatedComments = Try(value.map { comment =>
+      val validatedComments = Validation(value.map { comment =>
         val validatedComment =
-          stringFormatter.toSparqlEncodedString(comment.value, throw BadRequestException(COMMENT_INVALID_ERROR))
+          sf.toSparqlEncodedString(comment.value, throw BadRequestException(COMMENT_INVALID_ERROR))
         StringLiteralV2(value = validatedComment, language = comment.language)
       })
 
-      validatedComments match {
-        case Success(valid) => Right(new Comments(valid) {})
-        case Failure(_)     => Left(BadRequestException(COMMENT_INVALID_ERROR))
-      }
+      validatedComments.map(new Comments(_) {})
+    }
+
+  def make(value: Option[Seq[StringLiteralV2]]): Validation[Throwable, Option[Comments]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }

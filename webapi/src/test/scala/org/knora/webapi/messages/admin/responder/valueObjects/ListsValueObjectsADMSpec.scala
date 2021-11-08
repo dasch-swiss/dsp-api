@@ -9,6 +9,7 @@ import org.knora.webapi.UnitSpec
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
+import zio.prelude.Validation
 
 /**
  * This spec is used to test the [[ListsValueObjectsADM]] value objects creation.
@@ -19,20 +20,20 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "created using empty value" should {
       "throw BadRequestException" in {
-        ListIRI.create("") should equal(Left(BadRequestException(LIST_NODE_IRI_MISSING_ERROR)))
+        ListIRI.make("") should equal(Validation.fail(BadRequestException(LIST_NODE_IRI_MISSING_ERROR)))
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-        ListIRI.create("not a list IRI") should equal(Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR)))
+        ListIRI.make("not a list IRI") should equal(Validation.fail(BadRequestException(LIST_NODE_IRI_INVALID_ERROR)))
       }
     }
     "created using valid value" should {
       "return value object that value equals to the value used to its creation" in {
-        ListIRI.create(validListIri) should not equal Left(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
+        ListIRI.make(validListIri) should not equal Validation.fail(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
       }
       "return value passed to value object" in {
-        ListIRI.create(validListIri).toOption.get.value should equal(validListIri)
+        ListIRI.make(validListIri).toOption.get.value should equal(validListIri)
       }
     }
   }
@@ -67,20 +68,20 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "created using empty value" should {
       "throw BadRequestException" in {
-        ListName.create("") should equal(Left(BadRequestException(LIST_NAME_MISSING_ERROR)))
+        ListName.make("") should equal(Validation.fail(BadRequestException(LIST_NAME_MISSING_ERROR)))
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-        ListName.create("\r") should equal(Left(BadRequestException(LIST_NAME_INVALID_ERROR)))
+        ListName.make("\r") should equal(Validation.fail(BadRequestException(LIST_NAME_INVALID_ERROR)))
       }
     }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
-        ListName.create(validListName) should not equal Left(BadRequestException(LIST_NAME_INVALID_ERROR))
+        ListName.make(validListName) should not equal Validation.fail(BadRequestException(LIST_NAME_INVALID_ERROR))
       }
       "return value passed to value object" in {
-        ListName.create(validListName).toOption.get.value should equal(validListName)
+        ListName.make(validListName).toOption.get.value should equal(validListName)
       }
     }
   }
@@ -90,15 +91,15 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "created using invalid value" should {
       "throw BadRequestException" in {
-        Position.create(-2) should equal(Left(BadRequestException(INVALID_POSITION)))
+        Position.make(-2) should equal(Validation.fail(BadRequestException(INVALID_POSITION)))
       }
     }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
-        Position.create(validPosition) should not equal Left(BadRequestException(INVALID_POSITION))
+        Position.make(validPosition) should not equal Validation.fail(BadRequestException(INVALID_POSITION))
       }
       "return value passed to value object" in {
-        Position.create(validPosition).toOption.get.value should equal(validPosition)
+        Position.make(validPosition).toOption.get.value should equal(validPosition)
       }
     }
   }
@@ -109,20 +110,20 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "created using empty value" should {
       "throw BadRequestException" in {
-        Labels.create(Seq.empty) should equal(Left(BadRequestException(LABEL_MISSING_ERROR)))
+        Labels.make(Seq.empty) should equal(Validation.fail(BadRequestException(LABEL_MISSING_ERROR)))
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-        Labels.create(invalidLabels) should equal(Left(BadRequestException(LABEL_INVALID_ERROR)))
+        Labels.make(invalidLabels) should equal(Validation.fail(BadRequestException(LABEL_INVALID_ERROR)))
       }
     }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
-        Labels.create(validLabels) should not equal Left(BadRequestException(LABEL_INVALID_ERROR))
+        Labels.make(validLabels) should not equal Validation.fail(BadRequestException(LABEL_INVALID_ERROR))
       }
       "return value passed to value object" in {
-        Labels.create(validLabels).toOption.get.value should equal(validLabels)
+        Labels.make(validLabels).toOption.get.value should equal(validLabels)
       }
     }
   }
@@ -133,20 +134,20 @@ class ListsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
     "created using empty value" should {
       "throw BadRequestException" in {
-        Comments.create(Seq.empty) should equal(Left(BadRequestException(COMMENT_MISSING_ERROR)))
+        Comments.make(Seq.empty) should equal(Validation.fail(BadRequestException(COMMENT_MISSING_ERROR)))
       }
     }
     "created using invalid value" should {
       "throw BadRequestException" in {
-        Comments.create(invalidComments) should equal(Left(BadRequestException(COMMENT_INVALID_ERROR)))
+        Comments.make(invalidComments) should equal(Validation.fail(BadRequestException(COMMENT_INVALID_ERROR)))
       }
     }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
-        Comments.create(validComments) should not equal Left(BadRequestException(COMMENT_INVALID_ERROR))
+        Comments.make(validComments) should not equal Validation.fail(BadRequestException(COMMENT_INVALID_ERROR))
       }
       "return value passed to value object" in {
-        Comments.create(validComments).toOption.get.value should equal(validComments)
+        Comments.make(validComments).toOption.get.value should equal(validComments)
       }
     }
   }

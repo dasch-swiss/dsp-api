@@ -5,18 +5,17 @@
 
 package org.knora.webapi.routing.admin.lists
 
-import java.util.UUID
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
-
-import javax.ws.rs.Path
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.{Feature, FeatureFactoryConfig}
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects.{Comments, Labels, ListName}
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 
+import java.util.UUID
+import javax.ws.rs.Path
 import scala.concurrent.Future
 
 object UpdateListItemsRouteADM {
@@ -77,7 +76,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
           val namePayload: NodeNameChangePayloadADM =
-            NodeNameChangePayloadADM(ListName.create(apiRequest.name).fold(e => throw e, v => v))
+            NodeNameChangePayloadADM(ListName.make(apiRequest.name).fold(e => throw e.head, v => v))
 
           val requestMessage: Future[NodeNameChangeRequestADM] = for {
             requestingUser <- getUserADM(requestContext, featureFactoryConfig)
@@ -136,7 +135,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
           val labelsPayload: NodeLabelsChangePayloadADM =
-            NodeLabelsChangePayloadADM(Labels.create(apiRequest.labels).fold(e => throw e, v => v))
+            NodeLabelsChangePayloadADM(Labels.make(apiRequest.labels).fold(e => throw e.head, v => v))
 
           val requestMessage: Future[NodeLabelsChangeRequestADM] = for {
             requestingUser <- getUserADM(requestContext, featureFactoryConfig)
@@ -197,7 +196,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           val commentsPayload: NodeCommentsChangePayloadADM = if (apiRequest.comments.isEmpty) {
             NodeCommentsChangePayloadADM(None)
           } else {
-            NodeCommentsChangePayloadADM(Some(Comments.create(apiRequest.comments).fold(e => throw e, v => v)))
+            NodeCommentsChangePayloadADM(Some(Comments.make(apiRequest.comments).fold(e => throw e.head, v => v)))
           }
 
           val requestMessage: Future[NodeCommentsChangeRequestADM] = for {
