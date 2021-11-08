@@ -378,9 +378,6 @@ class KnoraSipiIntegrationV2ITSpec
 
   "The Knora/Sipi integration" should {
     var loginToken: String = ""
-    "pass" in {
-      assert(true)
-    }
 
     "not accept a token in Sipi that hasn't been signed by Knora" in {
       val invalidToken =
@@ -588,7 +585,7 @@ class KnoraSipiIntegrationV2ITSpec
       assert(sipiResponse.status == StatusCodes.NotFound)
     }
 
-    "create a resource with a PDF file" in {
+    "create a resource with a PDF file" ignore {
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
@@ -653,7 +650,7 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-    "change a PDF file value" in {
+    "change a PDF file value" ignore {
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
@@ -704,7 +701,7 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-    "create a resource with a CSV file" in {
+    "create a resource with a CSV file" ignore {
 //      // Upload the file to Sipi.
 //      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
 //        loginToken = loginToken,
@@ -787,7 +784,7 @@ class KnoraSipiIntegrationV2ITSpec
 //      checkResponseOK(sipiGetFileRequest)
     }
 
-    "change a CSV file value" in {
+    "change a CSV file value" ignore {
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
