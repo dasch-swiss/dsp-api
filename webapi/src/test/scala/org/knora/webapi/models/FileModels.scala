@@ -274,14 +274,9 @@ object ChangeFileRequest {
     valueIRI: String,
     ontologyName: String
   ): ChangeFileRequest = {
-    val anythingContext =
-      """
-        |,
-        |    "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-        |""".stripMargin
 
     val context = ontologyName match {
-      case "anything"  => anythingContext
+      case "anything"  => ",\n\"anything\": \"http://0.0.0.0:3333/ontology/0001/anything/v2#\""
       case "knora-api" => ""
       case _           => ""
     }
