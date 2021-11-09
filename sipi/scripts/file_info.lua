@@ -28,6 +28,7 @@ local AUDIO_MP4 = "audio/mp4"
 local AUDIO_WAV = "audio/wav"
 local AUDIO_X_WAV = "audio/x-wav"
 local AUDIO_VND_WAVE = "audio/vnd.wave"
+local APPLICATION_CSV = "application/csv"
 local APPLICATION_PDF = "application/pdf"
 local APPLICATION_DOC = "application/msword"
 local APPLICATION_DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -60,7 +61,8 @@ local audio_mime_types = {
 local text_mime_types = {
     TEXT_PLAIN,
     APPLICATION_XML,
-    TEXT_XML
+    TEXT_XML,
+    APPLICATION_CSV
 }
 
 local document_mime_types = {
