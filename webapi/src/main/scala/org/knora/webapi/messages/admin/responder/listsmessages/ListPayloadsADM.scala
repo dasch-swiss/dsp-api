@@ -1,13 +1,6 @@
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Comments,
-  Labels,
-  ListIRI,
-  ListName,
-  Position,
-  ProjectIRI
-}
+import org.knora.webapi.messages.admin.responder.valueObjects._
 
 /**
  * List (parent node, former root node) and Node (former child node) creation payloads

@@ -136,10 +136,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 //        println("AAA-createList", createRootNodePayloadADM)
 
         val requestMessage: Future[ListCreateRequestADM] = for {
-          requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
 
           // check if the requesting user is allowed to perform operation
           _ = if (

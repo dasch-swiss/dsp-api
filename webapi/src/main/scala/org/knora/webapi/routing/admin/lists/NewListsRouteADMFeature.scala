@@ -182,7 +182,6 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
               )
             } else {
               // Yes, create a new child and attach it to the parent node.
-
               // allows to omit comments / send empty comments creating child node
               val maybeComments = if (apiRequest.comments.isEmpty) {
                 None
@@ -192,7 +191,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
 
               val createChildNodePayloadADM: ChildNodeCreatePayloadADM = ChildNodeCreatePayloadADM(
                 id = maybeId,
-                parentNodeIri = maybeId,
+                parentNodeIri = ListIRI.make(apiRequest.parentNodeIri).fold(e => throw e.head, v => v),
                 projectIri,
                 name = maybeName,
                 position = Position.make(apiRequest.position).fold(e => throw e.head, v => v),
@@ -331,7 +330,7 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
             throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
           }
         } yield NodeInfoChangeRequestADM(
-          //TODO: why "listIri" property is doubled - here and inside "changeNodeRequest"
+          //TODO-mpro: why "listIri" property is doubled - here and inside "changeNodeRequest"
           listIri = listIri.value,
           changeNodeRequest = changeNodeInfoPayloadADM,
           featureFactoryConfig = featureFactoryConfig,
