@@ -11,6 +11,7 @@ IMAGE = "image"
 DOCUMENT = "document"
 AUDIO = "audio"
 VIDEO = "video"
+BUNDLE = "bundle"
 
 -------------------------------------------------------------------------------
 -- Mimetype constants
@@ -67,16 +68,19 @@ local text_mime_types = {
 
 local document_mime_types = {
     APPLICATION_PDF,
-    APPLICATION_TAR,
-    APPLICATION_ZIP,
     APPLICATION_ISO,
-    APPLICATION_GZIP,
     APPLICATION_DOC,
     APPLICATION_DOCX,
     APPLICATION_XLS,
     APPLICATION_XLSX,
     APPLICATION_PPT,
     APPLICATION_PPTX
+}
+
+local bundle_mime_types = {
+    APPLICATION_TAR,
+    APPLICATION_ZIP,
+    APPLICATION_GZIP
 }
 
 local video_mime_types = {
@@ -97,18 +101,22 @@ local text_extensions = {
     "csv"
 }
 
+-- TODO should be tidied up!
 local document_extensions = {
     "pdf",
-    "zip",
-    "tar",
     "iso",
-    "gz",
     "doc",
     "docx",
     "xls",
     "xlsx",
     "ppt",
     "pptx"
+}
+
+local bundle_extensions = {
+    "zip",
+    "tar",
+    "gz"
 }
 
 local video_extensions = {
@@ -162,6 +170,17 @@ function make_document_file_info(extension)
     end
 end
 
+function make_bundle_file_info(extension)
+    if not table.contains(bundle_extensions, extension) then
+        return nil
+    else
+        return {
+            media_type = BUNDLE,
+            extension = extension
+        }
+    end
+end
+
 -------------------------------------------------------------------------------
 -- Determines the media type and file extension of a file.
 -- Parameters:
@@ -174,7 +193,7 @@ end
 function get_file_info(filename, mimetype)
 
     local extension = filename:match("^.+%.([^.]+)$")
-    
+
     if extension == nil then
         return nil
     elseif table.contains(image_mime_types, mimetype) then
@@ -187,7 +206,8 @@ function get_file_info(filename, mimetype)
         return make_text_file_info(extension)
     elseif table.contains(document_mime_types, mimetype) then
         return make_document_file_info(extension)
---         TODO: should ZIP be in a separate group here?
+    elseif table.contains(bundle_mime_types, mimetype) then
+        return make_bundle_file_info(extension)
     else
         -- no supported mediatype could be determined
         return nil
