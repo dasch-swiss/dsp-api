@@ -509,10 +509,10 @@ class KnoraSipiIntegrationV2ITSpec
       uploadedFile.originalFilename should ===(trp88OriginalFilename)
 
       // JSON describing the new image to Knora.
-      val jsonLdEntity = ChangeFileRequest
+      val jsonLdEntity = ChangeImageFileRequest
         .make(
           className = "ThingPicture",
-          fileValueType = FileValueType.StillImageFileValue,
+          ontologyName = "anything",
           resourceIRI = stillImageResourceIri.get,
           internalFilename = uploadedFile.internalFilename,
           valueIRI = stillImageFileValueIri.get
@@ -561,10 +561,10 @@ class KnoraSipiIntegrationV2ITSpec
       val temporaryDirectDownloadUrl = temporaryUrl + "/file"
 
       // JSON describing the new image to Knora.
-      val jsonLdEntity = ChangeFileRequest
+      val jsonLdEntity = ChangeImageFileRequest
         .make(
           className = "ThingDocument", // refuse, as it should be "ThingImage"
-          fileValueType = FileValueType.StillImageFileValue,
+          ontologyName = "anything",
           resourceIRI = stillImageResourceIri.get,
           internalFilename = internalFilename,
           valueIRI = stillImageFileValueIri.get
@@ -660,14 +660,13 @@ class KnoraSipiIntegrationV2ITSpec
       uploadedFile.originalFilename should ===(testPdfOriginalFilename)
 
       // Ask Knora to update the value.
-
-      val jsonLdEntity = ChangeFileRequest
+      val jsonLdEntity = ChangeDocumentFileRequest
         .make(
-          className = "ThingDocument",
           resourceIRI = pdfResourceIri.get,
           valueIRI = pdfValueIri.get,
           internalFilename = uploadedFile.internalFilename,
-          fileValueType = FileValueType.DocumentFileValue
+          className = "ThingDocument",
+          ontologyName = "anything"
         )
         .value
 
@@ -699,6 +698,7 @@ class KnoraSipiIntegrationV2ITSpec
       val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
       checkResponseOK(sipiGetFileRequest)
     }
+
 // TODO: reactivate and implement
     "not create a resource with a PDF file that is actually a zip file" ignore {
       // Upload the file to Sipi.
@@ -796,14 +796,11 @@ class KnoraSipiIntegrationV2ITSpec
 
       // Ask Knora to update the value.
 
-      val jsonLdEntity = ChangeFileRequest
+      val jsonLdEntity = ChangeTextFileRequest
         .make(
-          className = "TextRepresentation",
-          fileValueType = FileValueType.TextFileValue,
           resourceIRI = csvResourceIri.get,
           internalFilename = uploadedFile.internalFilename,
-          valueIRI = csvValueIri.get,
-          ontologyName = "knora-api"
+          valueIRI = csvValueIri.get
         )
         .value
 
@@ -846,9 +843,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       // Ask Knora to create the resource.
 
-      val jsonLdEntity = UploadImageFile
-        .make("StillImageRepresentation", uploadedFile.internalFilename, ontologyName = "knora-api")
-        .value
+      val jsonLdEntity = UploadImageFile.make(uploadedFile.internalFilename).value
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -927,22 +922,13 @@ class KnoraSipiIntegrationV2ITSpec
 
       // Ask Knora to update the value.
 
-      val jsonLdEntity =
-        s"""{
-           |  "@id" : "${xmlResourceIri.get}",
-           |  "@type" : "knora-api:TextRepresentation",
-           |  "knora-api:hasTextFileValue" : {
-           |    "@id" : "${xmlValueIri.get}",
-           |    "@type" : "knora-api:TextFileValue",
-           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
-           |  },
-           |  "@context" : {
-           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-           |  }
-           |}""".stripMargin
+      val jsonLdEntity = ChangeTextFileRequest
+        .make(
+          resourceIRI = xmlResourceIri.get,
+          internalFilename = uploadedFile.internalFilename,
+          valueIRI = xmlValueIri.get
+        )
+        .value
 
       val request =
         Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
@@ -1245,22 +1231,13 @@ class KnoraSipiIntegrationV2ITSpec
 
       // Ask Knora to update the value.
 
-      val jsonLdEntity =
-        s"""{
-           |  "@id" : "${wavResourceIri.get}",
-           |  "@type" : "knora-api:AudioRepresentation",
-           |  "knora-api:hasAudioFileValue" : {
-           |    "@type" : "knora-api:AudioFileValue",
-           |    "@id" : "${wavValueIri.get}",
-           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
-           |  },
-           |  "@context" : {
-           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-           |  }
-           |}""".stripMargin
+      val jsonLdEntity = ChangeAudioFileRequest
+        .make(
+          resourceIRI = wavResourceIri.get,
+          internalFilename = uploadedFile.internalFilename,
+          valueIRI = wavValueIri.get
+        )
+        .value
 
       val request =
         Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
@@ -1356,22 +1333,13 @@ class KnoraSipiIntegrationV2ITSpec
 
       // Ask Knora to update the value.
 
-      val jsonLdEntity =
-        s"""{
-           |  "@id" : "${videoResourceIri.get}",
-           |  "@type" : "knora-api:MovingImageRepresentation",
-           |  "knora-api:hasMovingImageFileValue" : {
-           |    "@type" : "knora-api:MovingImageFileValue",
-           |    "@id" : "${videoValueIri.get}",
-           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
-           |  },
-           |  "@context" : {
-           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-           |  }
-           |}""".stripMargin
+      val jsonLdEntity = ChangeVideoFileRequest
+        .make(
+          resourceIRI = videoResourceIri.get,
+          internalFilename = uploadedFile.internalFilename,
+          valueIRI = videoValueIri.get
+        )
+        .value
 
       val request =
         Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(

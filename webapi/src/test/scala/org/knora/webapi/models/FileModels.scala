@@ -169,24 +169,128 @@ object UploadFileRequest {
   }
 }
 
-sealed abstract case class ChangeFileRequest private (value: String)
-object ChangeFileRequest {
+sealed abstract case class ChangeDocumentFileRequest private (value: String)
+object ChangeDocumentFileRequest {
   def make(
-    className: String,
-    fileValueType: FileValueType,
     resourceIRI: String,
     internalFilename: String,
     valueIRI: String,
-    ontologyName: String = "anything"
+    className: String = "DocumentRepresentation",
+    ontologyName: String = "knora-api"
+  ): ChangeFileRequest =
+    ChangeFileRequest.make(
+      fileValueType = FileValueType.DocumentFileValue,
+      resourceIRI = resourceIRI,
+      internalFilename = internalFilename,
+      valueIRI = valueIRI,
+      className = className,
+      ontologyName = ontologyName
+    )
+}
+
+sealed abstract case class ChangeImageFileRequest private (value: String)
+object ChangeImageFileRequest {
+  def make(
+    resourceIRI: String,
+    internalFilename: String,
+    valueIRI: String,
+    className: String = "StillImageRepresentation",
+    ontologyName: String = "knora-api"
+  ): ChangeFileRequest =
+    ChangeFileRequest.make(
+      fileValueType = FileValueType.StillImageFileValue,
+      resourceIRI = resourceIRI,
+      internalFilename = internalFilename,
+      valueIRI = valueIRI,
+      className = className,
+      ontologyName = ontologyName
+    )
+}
+
+sealed abstract case class ChangeVideoFileRequest private (value: String)
+object ChangeVideoFileRequest {
+  def make(
+    resourceIRI: String,
+    internalFilename: String,
+    valueIRI: String,
+    className: String = "MovingImageRepresentation",
+    ontologyName: String = "knora-api"
+  ): ChangeFileRequest =
+    ChangeFileRequest.make(
+      fileValueType = FileValueType.MovingImageFileValue,
+      resourceIRI = resourceIRI,
+      internalFilename = internalFilename,
+      valueIRI = valueIRI,
+      className = className,
+      ontologyName = ontologyName
+    )
+}
+
+sealed abstract case class ChangeTextFileRequest private (value: String)
+object ChangeTextFileRequest {
+  def make(
+    resourceIRI: String,
+    internalFilename: String,
+    valueIRI: String,
+    className: String = "TextRepresentation",
+    ontologyName: String = "knora-api"
+  ): ChangeFileRequest =
+    ChangeFileRequest.make(
+      fileValueType = FileValueType.TextFileValue,
+      resourceIRI = resourceIRI,
+      internalFilename = internalFilename,
+      valueIRI = valueIRI,
+      className = className,
+      ontologyName = ontologyName
+    )
+}
+
+sealed abstract case class ChangeAudioFileRequest private (value: String)
+object ChangeAudioFileRequest {
+  def make(
+    resourceIRI: String,
+    internalFilename: String,
+    valueIRI: String,
+    className: String = "AudioRepresentation",
+    ontologyName: String = "knora-api"
+  ): ChangeFileRequest =
+    ChangeFileRequest.make(
+      fileValueType = FileValueType.AudioFileValue,
+      resourceIRI = resourceIRI,
+      internalFilename = internalFilename,
+      valueIRI = valueIRI,
+      className = className,
+      ontologyName = ontologyName
+    )
+}
+
+sealed abstract case class ChangeFileRequest private (value: String)
+object ChangeFileRequest {
+  def make(
+    fileValueType: FileValueType,
+    className: String,
+    resourceIRI: String,
+    internalFilename: String,
+    valueIRI: String,
+    ontologyName: String
   ): ChangeFileRequest = {
+    val anythingContext =
+      """
+        |,
+        |    "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+        |""".stripMargin
+
     val context = ontologyName match {
-      case "anything" => ""","anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#" """
-      case _          => ""
+      case "anything"  => anythingContext
+      case "knora-api" => ""
+      case _           => ""
     }
     val propName = fileValueType match {
-      case FileValueType.DocumentFileValue   => "knora-api:hasDocumentFileValue"
-      case FileValueType.StillImageFileValue => "knora-api:hasStillImageFileValue"
-      case FileValueType.TextFileValue       => "knora-api:hasTextFileValue"
+      case FileValueType.DocumentFileValue    => "knora-api:hasDocumentFileValue"
+      case FileValueType.StillImageFileValue  => "knora-api:hasStillImageFileValue"
+      case FileValueType.MovingImageFileValue => "knora-api:hasMovingImageFileValue"
+      case FileValueType.TextFileValue        => "knora-api:hasTextFileValue"
+      case FileValueType.AudioFileValue       => "knora-api:hasAudioFileValue"
     }
     val value =
       s"""{
@@ -201,8 +305,7 @@ object ChangeFileRequest {
          |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
          |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
          |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-         |    "xsd" : "http://www.w3.org/2001/XMLSchema#"
-         |    $context
+         |    "xsd" : "http://www.w3.org/2001/XMLSchema#"$context
          |  }
          |}""".stripMargin
     new ChangeFileRequest(value) {}
