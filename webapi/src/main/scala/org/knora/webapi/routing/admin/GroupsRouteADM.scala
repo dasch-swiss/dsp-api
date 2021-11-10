@@ -13,6 +13,7 @@ import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import zio.prelude.Validation
 
 import java.util.UUID
 import javax.ws.rs.Path
@@ -78,22 +79,21 @@ class GroupsRouteADM(routeData: KnoraRouteData)
     post {
       /* create a new group */
       entity(as[CreateGroupApiRequestADM]) { apiRequest => requestContext =>
-        val groupCreatePayloadADM: GroupCreatePayloadADM = GroupCreatePayloadADM(
-          id = GroupIRI.make(apiRequest.id).fold(e => throw e.head, v => v),
-          name = GroupName.make(apiRequest.name).fold(e => throw e.head, v => v),
-          descriptions = GroupDescriptions.make(apiRequest.descriptions).fold(e => throw e.head, v => v),
-          project = ProjectIRI.make(apiRequest.project).fold(e => throw e.head, v => v),
-          status = GroupStatus.make(apiRequest.status).fold(e => throw e.head, v => v),
-          selfjoin = GroupSelfJoin.make(apiRequest.selfjoin).fold(e => throw e.head, v => v)
-        )
+        val id = GroupIRI.make(apiRequest.id)
+        val name = GroupName.make(apiRequest.name)
+        val descriptions = GroupDescriptions.make(apiRequest.descriptions)
+        val project = ProjectIRI.make(apiRequest.project)
+        val status = GroupStatus.make(apiRequest.status)
+        val selfjoin = GroupSelfJoin.make(apiRequest.selfjoin)
+
+        val validatedGroupCreatePayload: Validation[Throwable, GroupCreatePayloadADM] =
+          Validation.validateWith(id, name, descriptions, project, status, selfjoin)(GroupCreatePayloadADM)
 
         val requestMessage = for {
-          requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+          payload <- toFuture(validatedGroupCreatePayload)
+          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
         } yield GroupCreateRequestADM(
-          createRequest = groupCreatePayloadADM,
+          createRequest = payload,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
@@ -151,7 +151,6 @@ class GroupsRouteADM(routeData: KnoraRouteData)
     put {
       /* update a group identified by iri */
       entity(as[ChangeGroupApiRequestADM]) { apiRequest => requestContext =>
-//        TODO-mpro: what is this for and why STATUS can't be updeted at the same time with other fields?
         val checkedGroupIri =
           stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
@@ -165,21 +164,20 @@ class GroupsRouteADM(routeData: KnoraRouteData)
           )
         }
 
-        val guroupUpdatePayloadADM: GroupUpdatePayloadADM = GroupUpdatePayloadADM(
-          name = GroupName.make(apiRequest.name).fold(e => throw e.head, v => v),
-          descriptions = GroupDescriptions.make(apiRequest.descriptions).fold(e => throw e.head, v => v),
-          status = GroupStatus.make(apiRequest.status).fold(e => throw e.head, v => v),
-          selfjoin = GroupSelfJoin.make(apiRequest.selfjoin).fold(e => throw e.head, v => v)
-        )
+        val name = GroupName.make(apiRequest.name)
+        val descriptions = GroupDescriptions.make(apiRequest.descriptions)
+        val status = GroupStatus.make(apiRequest.status)
+        val selfjoin = GroupSelfJoin.make(apiRequest.selfjoin)
+
+        val validatedGroupUpdatePayload: Validation[Throwable, GroupUpdatePayloadADM] =
+          Validation.validateWith(name, descriptions, status, selfjoin)(GroupUpdatePayloadADM)
 
         val requestMessage = for {
-          requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+          payload <- toFuture(validatedGroupUpdatePayload)
+          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
         } yield GroupChangeRequestADM(
           groupIri = checkedGroupIri,
-          changeGroupRequest = guroupUpdatePayloadADM,
+          changeGroupRequest = payload,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()

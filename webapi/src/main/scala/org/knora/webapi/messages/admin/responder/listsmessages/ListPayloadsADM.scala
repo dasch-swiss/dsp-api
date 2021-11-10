@@ -16,6 +16,7 @@ object NodeCreatePayloadADM {
   ) extends NodeCreatePayloadADM
   final case class ChildNodeCreatePayloadADM(
     id: Option[ListIRI] = None,
+//    TODO: lack of consistency between parentNodeIri and hasRootNode, should be renamed to hasParent
     parentNodeIri: Option[ListIRI] = None,
     projectIri: ProjectIRI,
     name: Option[ListName] = None,
@@ -29,6 +30,7 @@ object NodeCreatePayloadADM {
  * Node Info update payload
  */
 final case class NodeInfoChangePayloadADM(
+//  TODO-mpro: listIri can be probably removed
   listIri: ListIRI,
   projectIri: ProjectIRI,
   hasRootNode: Option[ListIRI] = None,

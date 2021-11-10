@@ -11,8 +11,6 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessage
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 
-//  TODO-mpro: try resolve Option on value objects side
-
 /**
  * List ListIRI value object.
  */

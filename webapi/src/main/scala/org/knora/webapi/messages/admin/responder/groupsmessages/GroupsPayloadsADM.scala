@@ -25,8 +25,7 @@ final case class GroupCreatePayloadADM(
 final case class GroupUpdatePayloadADM(
   name: Option[GroupName] = None,
   descriptions: Option[GroupDescriptions] = None,
-//  TODO-mpro remove status from here and create separate payload?
-//    according to docs, status can't be updated like that
+//  TODO-mpro: create separate payload for status update
   status: Option[GroupStatus] = None,
   selfjoin: Option[GroupSelfJoin] = None
 )

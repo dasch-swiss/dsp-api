@@ -67,6 +67,7 @@ case class ChangeGroupApiRequestADM(
   selfjoin: Option[Boolean] = None
 ) extends GroupsADMJsonProtocol {
 
+//  TODO-mpro: once status is separate route then it can be removed
   private val parametersCount = List(
     name,
     descriptions,

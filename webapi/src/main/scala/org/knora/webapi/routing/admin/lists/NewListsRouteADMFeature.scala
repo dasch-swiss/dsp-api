@@ -19,6 +19,7 @@ import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayload
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import zio.prelude.Validation
 
 import java.util.UUID
 import javax.ws.rs.Path
@@ -143,79 +144,85 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
     )
   )
   private def createListItem(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
+//    TODO-mro: these should be two separated methods one for list another for node
     post {
       /* create a list item (root or child node) */
       entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
-        val maybeId = ListIRI.make(apiRequest.id).fold(e => throw e.head, v => v)
-        val projectIri = ProjectIRI.make(apiRequest.projectIri).fold(e => throw e.head, v => v)
-        val maybeName = ListName.make(apiRequest.name).fold(e => throw e.head, v => v)
-        val labels = Labels.make(apiRequest.labels).fold(e => throw e.head, v => v)
-        val comments = Comments.make(apiRequest.comments).fold(e => throw e.head, v => v)
+        val maybeId: Validation[Throwable, Option[ListIRI]] = ListIRI.make(apiRequest.id)
+        val projectIri: Validation[Throwable, ProjectIRI] = ProjectIRI.make(apiRequest.projectIri)
+        val maybeName: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
+        val labels: Validation[Throwable, Labels] = Labels.make(apiRequest.labels)
 
-        val requestMessage = for {
-          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+        if (apiRequest.parentNodeIri.isEmpty) {
+          val comments: Validation[Throwable, Comments] = Comments.make(apiRequest.comments)
+          val validatedListCreatePayload: Validation[Throwable, ListCreatePayloadADM] =
+            Validation.validateWith(maybeId, projectIri, maybeName, labels, comments)(ListCreatePayloadADM)
 
-          _ = if (
-            !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
-          ) {
-            // not project or a system admin
-            throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
-          }
+          val requestMessage: Future[ListsResponderRequestADM] = for {
+            payload <- toFuture(validatedListCreatePayload)
+            requestingUser <- getUserADM(requestContext, featureFactoryConfig)
 
-          // Is parent node IRI given in the payload?
-          createRequest =
-            if (apiRequest.parentNodeIri.isEmpty) {
-              // No, create a new list with given information of its root node.
-              val createRootNodePayloadADM: ListCreatePayloadADM = ListCreatePayloadADM(
-                id = maybeId,
-                projectIri,
-                name = maybeName,
-                labels,
-                comments
-              )
-
-              ListCreateRequestADM(
-                createRootNode = createRootNodePayloadADM,
-                featureFactoryConfig = featureFactoryConfig,
-                requestingUser = requestingUser,
-                apiRequestID = UUID.randomUUID()
-              )
-            } else {
-              // Yes, create a new child and attach it to the parent node.
-              // allows to omit comments / send empty comments creating child node
-              val maybeComments = if (apiRequest.comments.isEmpty) {
-                None
-              } else {
-                Some(comments)
-              }
-
-              val createChildNodePayloadADM: ChildNodeCreatePayloadADM = ChildNodeCreatePayloadADM(
-                id = maybeId,
-                parentNodeIri = ListIRI.make(apiRequest.parentNodeIri).fold(e => throw e.head, v => v),
-                projectIri,
-                name = maybeName,
-                position = Position.make(apiRequest.position).fold(e => throw e.head, v => v),
-                labels,
-                comments = maybeComments
-              )
-
-              ListChildNodeCreateRequestADM(
-                createChildNodeRequest = createChildNodePayloadADM,
-                featureFactoryConfig = featureFactoryConfig,
-                requestingUser = requestingUser,
-                apiRequestID = UUID.randomUUID()
-              )
+            _ = if (
+              !requestingUser.permissions.isProjectAdmin(
+                projectIri.toOption.get.value
+              ) && !requestingUser.permissions.isSystemAdmin
+            ) {
+              // not project or a system admin
+              throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
             }
-        } yield createRequest
+          } yield ListCreateRequestADM(
+            createRootNode = payload,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
 
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
-          requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
-          settings = settings,
-          responderManager = responderManager,
-          log = log
-        )
+          RouteUtilADM.runJsonRoute(
+            requestMessageF = requestMessage,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log
+          )
+        } else {
+          val parentNodeIri: Validation[Throwable, Option[ListIRI]] = ListIRI.make(apiRequest.parentNodeIri)
+          val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
+          val comments: Validation[Throwable, Option[Comments]] = Comments.make(Option(apiRequest.comments))
+
+          val validatedChildNodeCreatePayload: Validation[Throwable, ChildNodeCreatePayloadADM] =
+            Validation.validateWith(maybeId, parentNodeIri, projectIri, maybeName, position, labels, comments)(
+              ChildNodeCreatePayloadADM
+            )
+
+          val requestMessage: Future[ListsResponderRequestADM] = for {
+            payload <- toFuture(validatedChildNodeCreatePayload)
+            requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+
+            _ = if (
+              !requestingUser.permissions.isProjectAdmin(
+                projectIri.toOption.get.value
+              ) && !requestingUser.permissions.isSystemAdmin
+            ) {
+              // not project or a system admin
+              throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
+            }
+          } yield ListChildNodeCreateRequestADM(
+            createChildNodeRequest = payload,
+            featureFactoryConfig = featureFactoryConfig,
+            requestingUser = requestingUser,
+            apiRequestID = UUID.randomUUID()
+          )
+
+          RouteUtilADM.runJsonRoute(
+            requestMessageF = requestMessage,
+            requestContext = requestContext,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            responderManager = responderManager,
+            log = log
+          )
+        }
       }
     }
   }
@@ -307,32 +314,40 @@ class NewListsRouteADMFeature(routeData: KnoraRouteData)
     put {
       /* update existing list node (either root or child) */
       entity(as[ChangeNodeInfoApiRequestADM]) { apiRequest => requestContext =>
-        val listIri = ListIRI.make(apiRequest.listIri).fold(e => throw e.head, v => v)
-        val projectIri = ProjectIRI.make(apiRequest.projectIri).fold(e => throw e.head, v => v)
+        // checks if requested Iri matches the route Iri
+        val listIri: Validation[Throwable, ListIRI] = if (iri == apiRequest.listIri) {
+          ListIRI.make(apiRequest.listIri)
+        } else {
+          Validation.fail(throw BadRequestException("ListIri mismatch"))
+        }
 
-        val changeNodeInfoPayloadADM: NodeInfoChangePayloadADM = NodeInfoChangePayloadADM(
-          listIri,
-          projectIri,
-          hasRootNode = ListIRI.make(apiRequest.hasRootNode).fold(e => throw e.head, v => v),
-          position = Position.make(apiRequest.position).fold(e => throw e.head, v => v),
-          name = ListName.make(apiRequest.name).fold(e => throw e.head, v => v),
-          labels = Labels.make(apiRequest.labels).fold(e => throw e.head, v => v),
-          comments = Comments.make(apiRequest.comments).fold(e => throw e.head, v => v)
-        )
+        val projectIri: Validation[Throwable, ProjectIRI] = ProjectIRI.make(apiRequest.projectIri)
+        val hasRootNode: Validation[Throwable, Option[ListIRI]] = ListIRI.make(apiRequest.hasRootNode)
+        val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
+        val name: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
+        val labels: Validation[Throwable, Option[Labels]] = Labels.make(apiRequest.labels)
+        val comments: Validation[Throwable, Option[Comments]] = Comments.make(apiRequest.comments)
+
+        val validatedChangeNodeInfoPayload: Validation[Throwable, NodeInfoChangePayloadADM] =
+          Validation.validateWith(listIri, projectIri, hasRootNode, position, name, labels, comments)(
+            NodeInfoChangePayloadADM
+          )
 
         val requestMessage: Future[NodeInfoChangeRequestADM] = for {
+          changeNodeInfoPayload <- toFuture(validatedChangeNodeInfoPayload)
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)
           // check if the requesting user is allowed to perform operation
           _ = if (
-            !requestingUser.permissions.isProjectAdmin(projectIri.value) && !requestingUser.permissions.isSystemAdmin
+            !requestingUser.permissions.isProjectAdmin(
+              projectIri.toOption.get.value
+            ) && !requestingUser.permissions.isSystemAdmin
           ) {
             // not project or a system admin
             throw ForbiddenException(LIST_CREATE_PERMISSION_ERROR)
           }
         } yield NodeInfoChangeRequestADM(
-          //TODO-mpro: why "listIri" property is doubled - here and inside "changeNodeRequest"
-          listIri = listIri.value,
-          changeNodeRequest = changeNodeInfoPayloadADM,
+          listIri = listIri.toOption.get.value,
+          changeNodeRequest = changeNodeInfoPayload,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
