@@ -28,11 +28,9 @@ object ListsMessagesADMSpec {
  * This spec is used to test 'ListAdminMessages'.
  */
 class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with ListADMJsonProtocol {
-
   val exampleListIri = "http://rdfh.ch/lists/00FF/abcd"
 
   "Conversion from case class to JSON and back" should {
-
     "work for a 'ListRootNodeInfoADM'" in {
 
       val listInfo = ListRootNodeInfoADM(
@@ -60,7 +58,6 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     }
 
     "work for a 'ListChildNodeInfoADM'" in {
-
       val listNodeInfo = ListChildNodeInfoADM(
         id = "http://rdfh.ch/lists/00FF/526f26ed04",
         name = Some("sommer"),
@@ -80,7 +77,6 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     }
 
     "work for a 'ListChildNodeADM'" in {
-
       val listNode: ListNodeADM = ListChildNodeADM(
         id = "http://rdfh.ch/lists/00FF/526f26ed04",
         name = Some("sommer"),
@@ -101,7 +97,6 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     }
 
     "work for a 'ListADM'" in {
-
       val listInfo = SharedListsTestDataADM.treeListInfo
 
       val children = SharedListsTestDataADM.treeListChildNodes
@@ -117,7 +112,6 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     }
 
     "work for a 'NodeADM'" in {
-
       val nodeInfo = SharedListsTestDataADM.summerNodeInfo
 
       val children = Seq.empty[ListChildNodeADM]
@@ -128,39 +122,6 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
 
       converted.nodeinfo should be(nodeInfo)
       converted.children should be(children)
-    }
-
-    "throw 'BadRequestException' for `CreateNodeApiRequestADM` when value of a label is missing" in {
-
-      val payload =
-        s"""
-           |{
-           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-           |    "labels": [{ "value": "Neuer List Node", "language": "de"}, { "value": "", "language": "en"}],
-           |    "comments": []
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
-
-      thrown.getMessage should equal("String value is missing.")
-    }
-
-    "throw 'BadRequestException' for `CreateNodeApiRequestADM` when value of a comment is missing" in {
-
-      val payload =
-        s"""
-           |{
-           |    "parentNodeIri": "$exampleListIri",
-           |    "projectIri": "${SharedTestDataADM.IMAGES_PROJECT_IRI}",
-           |    "labels": [{ "value": "Neuer List Node", "language": "de"}],
-           |    "comments": [{ "value": "", "language": "de"}]
-           |}
-                """.stripMargin
-
-      val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[CreateNodeApiRequestADM]
-
-      thrown.getMessage should equal("String value is missing.")
     }
 
     "throw 'BadRequestException' if invalid position given in payload of `createChildNodeRequest`" in {
@@ -188,7 +149,6 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     }
 
     "throw 'BadRequestException' for `ChangeNodePositionApiRequestADM` when no parent node iri is given" in {
-
       val payload =
         s"""
            |{
@@ -200,7 +160,6 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
 
       thrown.getMessage should equal("IRI of parent node is missing.")
-
     }
 
     "throw 'BadRequestException' for `ChangeNodePositionApiRequestADM` when parent node IRI is invalid" in {
@@ -216,11 +175,9 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
 
       thrown.getMessage should equal(s"Invalid IRI is given: $invalid_parentIri.")
-
     }
 
     "throw 'BadRequestException' for `ChangeNodePositionApiRequestADM` when position is invalid" in {
-
       val payload =
         s"""
            |{
@@ -232,7 +189,6 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       val thrown = the[BadRequestException] thrownBy payload.parseJson.convertTo[ChangeNodePositionApiRequestADM]
 
       thrown.getMessage should equal(INVALID_POSITION)
-
     }
   }
 }
