@@ -8,8 +8,8 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 import com.typesafe.config.ConfigFactory
 import org.knora.webapi.CoreSpec
 import org.knora.webapi.exceptions.BadRequestException
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
-import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.ChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.store.triplestoremessages.{StringLiteralSequenceV2, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
@@ -127,7 +127,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
     "throw 'BadRequestException' if invalid position given in payload of `createChildNodeRequest`" in {
       val caught = intercept[BadRequestException](
         ListChildNodeCreateRequestADM(
-          createChildNodeRequest = ChildNodeCreatePayloadADM(
+          createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = Some(ListIRI.make(exampleListIri).fold(e => throw e.head, v => v)),
             projectIri = ProjectIRI.make(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             position = Some(Position.make(-3).fold(e => throw e.head, v => v)),

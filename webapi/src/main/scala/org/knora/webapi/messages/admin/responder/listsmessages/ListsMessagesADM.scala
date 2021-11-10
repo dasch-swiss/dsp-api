@@ -5,14 +5,13 @@
 
 package org.knora.webapi.messages.admin.responder.listsmessages
 
-import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
-import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.ChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.{
@@ -21,6 +20,8 @@ import org.knora.webapi.messages.store.triplestoremessages.{
   TriplestoreJsonProtocol
 }
 import spray.json._
+
+import java.util.UUID
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -41,7 +42,7 @@ import spray.json._
  * @param labels        labels of the list node.
  * @param comments      comments of the list node.
  */
-case class CreateListRootNodeApiRequestADM(
+case class ListRootNodeCreateApiRequestADM(
   id: Option[IRI] = None,
 //  remove below
   parentNodeIri: Option[IRI] = None,
@@ -70,7 +71,7 @@ case class CreateListRootNodeApiRequestADM(
  * @param labels        labels of the list node.
  * @param comments      comments of the list node.
  */
-case class CreateListChildApiRequestADM(
+case class ListChildNodeCreateApiRequestADM(
   id: Option[IRI] = None,
 //  make below required
   parentNodeIri: Option[IRI] = None,
@@ -94,7 +95,7 @@ case class CreateListChildApiRequestADM(
  * @param labels      the labels.
  * @param comments    the comments.
  */
-case class ChangeNodeInfoApiRequestADM(
+case class ListNodeChangeApiRequestADM(
   listIri: IRI,
   projectIri: IRI,
   hasRootNode: Option[IRI] = None,
@@ -218,8 +219,8 @@ case class NodePathGetRequestADM(iri: IRI, featureFactoryConfig: FeatureFactoryC
  * @param requestingUser       the user creating the new list.
  * @param apiRequestID         the ID of the API request.
  */
-case class ListCreateRequestADM(
-  createRootNode: NodeCreatePayloadADM,
+case class ListRootNodeCreateRequestADM(
+  createRootNode: ListNodeCreatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -236,7 +237,7 @@ case class ListCreateRequestADM(
  */
 case class NodeInfoChangeRequestADM(
   listIri: IRI,
-  changeNodeRequest: NodeInfoChangePayloadADM,
+  changeNodeRequest: ListNodeChangePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -251,7 +252,7 @@ case class NodeInfoChangeRequestADM(
  * @param apiRequestID           the ID of the API request.
  */
 case class ListChildNodeCreateRequestADM(
-  createChildNodeRequest: ChildNodeCreatePayloadADM,
+  createChildNodeRequest: ListChildNodeCreatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -1271,9 +1272,9 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
   }
 
-  implicit val createListRootNodeApiRequestADMFormat: RootJsonFormat[CreateListRootNodeApiRequestADM] =
+  implicit val createListRootNodeApiRequestADMFormat: RootJsonFormat[ListRootNodeCreateApiRequestADM] =
     jsonFormat(
-      CreateListRootNodeApiRequestADM,
+      ListRootNodeCreateApiRequestADM,
       "id",
       "parentNodeIri",
       "projectIri",
@@ -1282,9 +1283,9 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
       "labels",
       "comments"
     )
-  implicit val createListChildNodeApiRequestADMFormat: RootJsonFormat[CreateListChildApiRequestADM] =
+  implicit val createListChildNodeApiRequestADMFormat: RootJsonFormat[ListChildNodeCreateApiRequestADM] =
     jsonFormat(
-      CreateListChildApiRequestADM,
+      ListChildNodeCreateApiRequestADM,
       "id",
       "parentNodeIri",
       "projectIri",
@@ -1293,8 +1294,8 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
       "labels",
       "comments"
     )
-  implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeNodeInfoApiRequestADM] = jsonFormat(
-    ChangeNodeInfoApiRequestADM,
+  implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ListNodeChangeApiRequestADM] = jsonFormat(
+    ListNodeChangeApiRequestADM,
     "listIri",
     "projectIri",
     "hasRootNode",

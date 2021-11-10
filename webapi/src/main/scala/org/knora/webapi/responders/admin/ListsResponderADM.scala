@@ -11,8 +11,8 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
-import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.ChildNodeCreatePayloadADM
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages._
@@ -48,7 +48,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       listNodeInfoGetRequestADM(listIri, featureFactoryConfig, requestingUser)
     case NodePathGetRequestADM(iri, featureFactoryConfig, requestingUser) =>
       nodePathGetAdminRequest(iri, requestingUser)
-    case ListCreateRequestADM(createRootNode, featureFactoryConfig, requestingUser, apiRequestID) =>
+    case ListRootNodeCreateRequestADM(createRootNode, featureFactoryConfig, requestingUser, apiRequestID) =>
       listCreateRequestADM(createRootNode, featureFactoryConfig, apiRequestID)
     case ListChildNodeCreateRequestADM(createChildNodeRequest, featureFactoryConfig, requestingUser, apiRequestID) =>
       listChildNodeCreateRequestADM(createChildNodeRequest, featureFactoryConfig, apiRequestID)
@@ -834,16 +834,16 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    * @return a [newListNodeIri]
    */
   private def createNode(
-    createNodeRequest: NodeCreatePayloadADM,
+    createNodeRequest: ListNodeCreatePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig
   ): Future[IRI] = {
 
 //    println("ZZZZZ-createNode", createNodeRequest)
 
     val (id, parentNodeIri, projectIri, name, position) = createNodeRequest match {
-      case parent: NodeCreatePayloadADM.ListCreatePayloadADM =>
+      case parent: ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM =>
         (parent.id, None, parent.projectIri, parent.name, None)
-      case node: NodeCreatePayloadADM.ChildNodeCreatePayloadADM =>
+      case node: ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM =>
         (node.id, node.parentNodeIri, node.projectIri, node.name, node.position)
     }
 
@@ -965,7 +965,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
       // Create the new list node depending on type
       createNewListSparqlString: String = createNodeRequest match {
-        case NodeCreatePayloadADM.ListCreatePayloadADM(
+        case ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM(
               _,
               projectIri,
               name,
@@ -988,7 +988,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
             )
             .toString
         }
-        case NodeCreatePayloadADM.ChildNodeCreatePayloadADM(
+        case ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM(
               _,
               parentNodeIri,
               projectIri,
@@ -1028,7 +1028,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    * @return a [[RootNodeInfoGetResponseADM]]
    */
   private def listCreateRequestADM(
-    createRootRequest: NodeCreatePayloadADM,
+    createRootRequest: ListNodeCreatePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     apiRequestID: UUID
   ): Future[ListGetResponseADM] = {
@@ -1039,7 +1039,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * The actual task run with an IRI lock.
      */
     def listCreateTask(
-      createRootRequest: NodeCreatePayloadADM,
+      createRootRequest: ListNodeCreatePayloadADM,
       featureFactoryConfig: FeatureFactoryConfig,
       apiRequestID: UUID
     ): Future[ListGetResponseADM] =
@@ -1086,7 +1086,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def nodeInfoChangeRequest(
     nodeIri: IRI,
-    changeNodeRequest: NodeInfoChangePayloadADM,
+    changeNodeRequest: ListNodeChangePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     apiRequestID: UUID
   ): Future[NodeInfoGetResponseADM] = {
@@ -1096,7 +1096,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      */
     def nodeInfoChangeTask(
       nodeIri: IRI,
-      changeNodeRequest: NodeInfoChangePayloadADM,
+      changeNodeRequest: ListNodeChangePayloadADM,
       featureFactoryConfig: FeatureFactoryConfig,
       apiRequestID: UUID
     ): Future[NodeInfoGetResponseADM] =
@@ -1151,7 +1151,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    * @return a [[ChildNodeInfoGetResponseADM]]
    */
   private def listChildNodeCreateRequestADM(
-    createChildNodeRequest: ChildNodeCreatePayloadADM,
+    createChildNodeRequest: ListChildNodeCreatePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     apiRequestID: UUID
   ): Future[ChildNodeInfoGetResponseADM] = {
@@ -1160,7 +1160,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * The actual task run with an IRI lock.
      */
     def listChildNodeCreateTask(
-      createChildNodeRequest: ChildNodeCreatePayloadADM,
+      createChildNodeRequest: ListChildNodeCreatePayloadADM,
       featureFactoryConfig: FeatureFactoryConfig,
       apiRequestID: UUID
     ): Future[ChildNodeInfoGetResponseADM] =
@@ -1240,7 +1240,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         changeNodeNameSparqlString <- getUpdateNodeInfoSparqlStatement(
-          changeNodeInfoRequest = NodeInfoChangePayloadADM(
+          changeNodeInfoRequest = ListNodeChangePayloadADM(
             listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
             projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
             name = Some(changeNodeNameRequest.name)
@@ -1326,7 +1326,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           throw ForbiddenException(LIST_CHANGE_PERMISSION_ERROR)
         }
         changeNodeLabelsSparqlString <- getUpdateNodeInfoSparqlStatement(
-          changeNodeInfoRequest = NodeInfoChangePayloadADM(
+          changeNodeInfoRequest = ListNodeChangePayloadADM(
             listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
             projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
             labels = Some(changeNodeLabelsRequest.labels)
@@ -1411,7 +1411,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         changeNodeCommentsSparqlString <- getUpdateNodeInfoSparqlStatement(
-          changeNodeInfoRequest = NodeInfoChangePayloadADM(
+          changeNodeInfoRequest = ListNodeChangePayloadADM(
             listIri = ListIRI.make(nodeIri).fold(e => throw e.head, v => v),
             projectIri = ProjectIRI.make(projectIri).fold(e => throw e.head, v => v),
             comments = changeNodeCommentsRequest.comments
@@ -2125,7 +2125,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    * @return a [[String]].
    */
   private def getUpdateNodeInfoSparqlStatement(
-    changeNodeInfoRequest: NodeInfoChangePayloadADM,
+    changeNodeInfoRequest: ListNodeChangePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig
   ): Future[String] =
     for {

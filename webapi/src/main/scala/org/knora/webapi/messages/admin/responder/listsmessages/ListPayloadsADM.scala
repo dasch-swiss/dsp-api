@@ -3,20 +3,18 @@ package org.knora.webapi.messages.admin.responder.listsmessages
 import org.knora.webapi.messages.admin.responder.valueObjects._
 
 /**
- * List (parent node, former root node) and Node (former child node) creation payloads
+ * List root node and child node creation payloads
  */
-sealed trait NodeCreatePayloadADM
-object NodeCreatePayloadADM {
-//  ListRootNode
-  final case class ListCreatePayloadADM(
+sealed trait ListNodeCreatePayloadADM
+object ListNodeCreatePayloadADM {
+  final case class ListRootNodeCreatePayloadADM(
     id: Option[ListIRI] = None,
     projectIri: ProjectIRI,
     name: Option[ListName] = None,
     labels: Labels,
     comments: Comments
-  ) extends NodeCreatePayloadADM
-//  ListChildNode
-  final case class ChildNodeCreatePayloadADM(
+  ) extends ListNodeCreatePayloadADM
+  final case class ListChildNodeCreatePayloadADM(
     id: Option[ListIRI] = None,
 //    TODO-mpro: lack of consistency between parentNodeIri and hasRootNode, should be renamed to hasParent
 //      make arentNodeIri required
@@ -26,13 +24,13 @@ object NodeCreatePayloadADM {
     position: Option[Position] = None,
     labels: Labels,
     comments: Option[Comments] = None
-  ) extends NodeCreatePayloadADM
+  ) extends ListNodeCreatePayloadADM
 }
 
 /**
- * Node Info update payload
+ * List node update payload
  */
-final case class NodeInfoChangePayloadADM(
+final case class ListNodeChangePayloadADM(
 //  TODO-mpro: listIri can be probably removed
   listIri: ListIRI,
   projectIri: ProjectIRI,

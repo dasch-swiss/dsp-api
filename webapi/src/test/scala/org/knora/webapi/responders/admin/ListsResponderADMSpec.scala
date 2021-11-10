@@ -11,9 +11,9 @@ import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, UpdateNotPerformedException}
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
-  ChildNodeCreatePayloadADM,
-  ListCreatePayloadADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.{
+  ListChildNodeCreatePayloadADM,
+  ListRootNodeCreatePayloadADM
 }
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects._
@@ -58,9 +58,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
   private val treeListChildNodes: Seq[ListNodeADM] = SharedListsTestDataADM.treeListChildNodes
 
   "The Lists Responder" when {
-
     "used to query information about lists" should {
-
       "return all lists" in {
         responderManager ! ListsGetRequestADM(
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -165,8 +163,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
     "used to modify lists" should {
       "create a list" in {
-        responderManager ! ListCreateRequestADM(
-          createRootNode = ListCreatePayloadADM(
+        responderManager ! ListRootNodeCreateRequestADM(
+          createRootNode = ListRootNodeCreatePayloadADM(
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("neuelistename").fold(e => throw e.head, v => v)),
             labels = Labels
@@ -206,8 +204,8 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val labelWithSpecialCharacter = "Neue \\\"Liste\\\""
         val commentWithSpecialCharacter = "Neue \\\"Kommentar\\\""
         val nameWithSpecialCharacter = "a new \\\"name\\\""
-        responderManager ! ListCreateRequestADM(
-          createRootNode = ListCreatePayloadADM(
+        responderManager ! ListRootNodeCreateRequestADM(
+          createRootNode = ListRootNodeCreatePayloadADM(
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make(nameWithSpecialCharacter).fold(e => throw e.head, v => v)),
             labels = Labels
@@ -247,7 +245,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "update basic list information" in {
         val changeNodeInfoRequest = NodeInfoChangeRequestADM(
           listIri = newListIri.get,
-          changeNodeRequest = NodeInfoChangePayloadADM(
+          changeNodeRequest = ListNodeChangePayloadADM(
             listIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("updated name").fold(e => throw e.head, v => v)),
@@ -307,7 +305,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val projectIRI = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v)
         responderManager ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
-          changeNodeRequest = NodeInfoChangePayloadADM(
+          changeNodeRequest = ListNodeChangePayloadADM(
             listIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
             projectIri = projectIRI,
             name = name
@@ -327,7 +325,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "add child to list - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = ChildNodeCreatePayloadADM(
+          createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = Some(ListIRI.make(newListIri.get).fold(e => throw e.head, v => v)),
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("first").fold(e => throw e.head, v => v)),
@@ -379,7 +377,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "add second child to list in first position - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = ChildNodeCreatePayloadADM(
+          createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = Some(ListIRI.make(newListIri.get).fold(e => throw e.head, v => v)),
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("second").fold(e => throw e.head, v => v)),
@@ -432,7 +430,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "add child to second child node" in {
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = ChildNodeCreatePayloadADM(
+          createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = Some(ListIRI.make(secondChildIri.get).fold(e => throw e.head, v => v)),
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("third").fold(e => throw e.head, v => v)),
@@ -485,7 +483,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "not create a node if given new position is out of range" in {
         val givenPosition = Some(Position.make(20).fold(e => throw e.head, v => v))
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = ChildNodeCreatePayloadADM(
+          createChildNodeRequest = ListChildNodeCreatePayloadADM(
             parentNodeIri = Some(ListIRI.make(newListIri.get).fold(e => throw e.head, v => v)),
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("fourth").fold(e => throw e.head, v => v)),
