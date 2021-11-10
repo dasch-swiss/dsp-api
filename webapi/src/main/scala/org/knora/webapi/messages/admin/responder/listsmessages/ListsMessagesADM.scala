@@ -26,7 +26,7 @@ import spray.json._
 // API requests
 
 /**
- * Represents an API request payload that asks the Knora API server to create a new list or child node.
+ * Represents an API request payload that asks the Knora API server to create a new list or root node.
  * If the IRI of the parent node is given, the new node is attached to the parent node as a sublist node.
  * If a specific position is given, insert the child node there. Otherwise, the newly created list node will be appended
  * to the end of the list of children.
@@ -41,8 +41,9 @@ import spray.json._
  * @param labels        labels of the list node.
  * @param comments      comments of the list node.
  */
-case class CreateNodeApiRequestADM(
+case class CreateListRootNodeApiRequestADM(
   id: Option[IRI] = None,
+//  remove below
   parentNodeIri: Option[IRI] = None,
   projectIri: IRI,
   name: Option[String] = None,
@@ -50,7 +51,36 @@ case class CreateNodeApiRequestADM(
   labels: Seq[StringLiteralV2],
   comments: Seq[StringLiteralV2]
 ) extends ListADMJsonProtocol {
-  def toJsValue: JsValue = createListNodeApiRequestADMFormat.write(this)
+  def toJsValue: JsValue = createListRootNodeApiRequestADMFormat.write(this)
+}
+
+/**
+ * Represents an API request payload that asks the Knora API server to create a new list child node.
+ * If the IRI of the parent node is given, the new node is attached to the parent node as a sublist node.
+ * If a specific position is given, insert the child node there. Otherwise, the newly created list node will be appended
+ * to the end of the list of children.
+ * If no parent node IRI is given in the payload, a new list is created with this node as its root node.
+ * At least one label needs to be supplied.
+ *
+ * @param id            the optional custom IRI of the list node.
+ * @param parentNodeIri the optional IRI of the parent node.
+ * @param projectIri    the IRI of the project.
+ * @param name          the optional name of the list node.
+ * @param position      the optional position of the node.
+ * @param labels        labels of the list node.
+ * @param comments      comments of the list node.
+ */
+case class CreateListChildApiRequestADM(
+  id: Option[IRI] = None,
+//  make below required
+  parentNodeIri: Option[IRI] = None,
+  projectIri: IRI,
+  name: Option[String] = None,
+  position: Option[Int] = None,
+  labels: Seq[StringLiteralV2],
+  comments: Option[Seq[StringLiteralV2]]
+) extends ListADMJsonProtocol {
+  def toJsValue: JsValue = createListChildNodeApiRequestADMFormat.write(this)
 }
 
 /**
@@ -1241,8 +1271,28 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     }
   }
 
-  implicit val createListNodeApiRequestADMFormat: RootJsonFormat[CreateNodeApiRequestADM] =
-    jsonFormat(CreateNodeApiRequestADM, "id", "parentNodeIri", "projectIri", "name", "position", "labels", "comments")
+  implicit val createListRootNodeApiRequestADMFormat: RootJsonFormat[CreateListRootNodeApiRequestADM] =
+    jsonFormat(
+      CreateListRootNodeApiRequestADM,
+      "id",
+      "parentNodeIri",
+      "projectIri",
+      "name",
+      "position",
+      "labels",
+      "comments"
+    )
+  implicit val createListChildNodeApiRequestADMFormat: RootJsonFormat[CreateListChildApiRequestADM] =
+    jsonFormat(
+      CreateListChildApiRequestADM,
+      "id",
+      "parentNodeIri",
+      "projectIri",
+      "name",
+      "position",
+      "labels",
+      "comments"
+    )
   implicit val changeListInfoApiRequestADMFormat: RootJsonFormat[ChangeNodeInfoApiRequestADM] = jsonFormat(
     ChangeNodeInfoApiRequestADM,
     "listIri",

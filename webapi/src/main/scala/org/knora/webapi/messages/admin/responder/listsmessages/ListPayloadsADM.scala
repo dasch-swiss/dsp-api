@@ -7,6 +7,7 @@ import org.knora.webapi.messages.admin.responder.valueObjects._
  */
 sealed trait NodeCreatePayloadADM
 object NodeCreatePayloadADM {
+//  ListRootNode
   final case class ListCreatePayloadADM(
     id: Option[ListIRI] = None,
     projectIri: ProjectIRI,
@@ -14,9 +15,11 @@ object NodeCreatePayloadADM {
     labels: Labels,
     comments: Comments
   ) extends NodeCreatePayloadADM
+//  ListChildNode
   final case class ChildNodeCreatePayloadADM(
     id: Option[ListIRI] = None,
-//    TODO: lack of consistency between parentNodeIri and hasRootNode, should be renamed to hasParent
+//    TODO-mpro: lack of consistency between parentNodeIri and hasRootNode, should be renamed to hasParent
+//      make arentNodeIri required
     parentNodeIri: Option[ListIRI] = None,
     projectIri: ProjectIRI,
     name: Option[ListName] = None,

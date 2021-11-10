@@ -110,7 +110,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         name = "body",
         value = "\"list\" to create",
         required = true,
-        dataTypeClass = classOf[CreateNodeApiRequestADM],
+        dataTypeClass = classOf[CreateListRootNodeApiRequestADM],
         paramType = "body"
       )
     )
@@ -120,20 +120,18 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
       new ApiResponse(code = 500, message = "Internal server error")
     )
   )
+//  createListRoot
   private def createList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
     post {
       /* create a list */
-      entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
+      entity(as[CreateListRootNodeApiRequestADM]) { apiRequest => requestContext =>
         val maybeId: Validation[Throwable, Option[ListIRI]] = ListIRI.make(apiRequest.id)
         val projectIri: Validation[Throwable, ProjectIRI] = ProjectIRI.make(apiRequest.projectIri)
         val maybeName: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
         val labels: Validation[Throwable, Labels] = Labels.make(apiRequest.labels)
-
         val comments: Validation[Throwable, Comments] = Comments.make(apiRequest.comments)
         val validatedListCreatePayload: Validation[Throwable, ListCreatePayloadADM] =
           Validation.validateWith(maybeId, projectIri, maybeName, labels, comments)(ListCreatePayloadADM)
-
-//        println("AAA-createList", createRootNodePayloadADM)
 
         val requestMessage: Future[ListCreateRequestADM] = for {
           payload <- toFuture(validatedListCreatePayload)
@@ -240,6 +238,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         } else {
           Validation.fail(throw BadRequestException("ListIri mismatch"))
         }
+
         val projectIri: Validation[Throwable, ProjectIRI] = ProjectIRI.make(apiRequest.projectIri)
         val hasRootNode: Validation[Throwable, Option[ListIRI]] = ListIRI.make(apiRequest.hasRootNode)
         val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
@@ -300,7 +299,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
         name = "body",
         value = "\"node\" to create",
         required = true,
-        dataTypeClass = classOf[CreateNodeApiRequestADM],
+        dataTypeClass = classOf[CreateListChildApiRequestADM],
         paramType = "body"
       )
     )
@@ -314,24 +313,23 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
     iri =>
       post {
         /* add node to existing list node. the existing list node can be either the root or a child */
-        entity(as[CreateNodeApiRequestADM]) { apiRequest => requestContext =>
+        entity(as[CreateListChildApiRequestADM]) { apiRequest => requestContext =>
+//          // checks if requested Iri matches the route Iri
+//          val parentNodeIri: Validation[Throwable, Option[ListIRI]] = if (iri == apiRequest.parentNodeIri) {
+//            ListIRI.make(apiRequest.parentNodeIri)
+//          } else {
+//            Validation.fail(throw BadRequestException("ListIri mismatch"))
+//          }
+
           val id: Validation[Throwable, Option[ListIRI]] = ListIRI.make(apiRequest.id)
           val parentNodeIri: Validation[Throwable, Option[ListIRI]] = ListIRI.make(apiRequest.parentNodeIri)
           val projectIri: Validation[Throwable, ProjectIRI] = ProjectIRI.make(apiRequest.projectIri)
           val name: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
           val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)
           val labels: Validation[Throwable, Labels] = Labels.make(apiRequest.labels)
-          val maybeComments: Validation[Throwable, Option[Comments]] = Comments.make(Option(apiRequest.comments))
-
-//          // allows to omit comments / send empty comments creating child node
-//          val maybeComments: Option[Validation[Throwable, Option[Comments]]] = if (apiRequest.comments.isEmpty) {
-//            None
-//          } else {
-//            Comments.make(Option(apiRequest.comments))
-//          }
-
+          val comments: Validation[Throwable, Option[Comments]] = Comments.make(apiRequest.comments)
           val validatedCreateChildNodePeyload: Validation[Throwable, ChildNodeCreatePayloadADM] =
-            Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, maybeComments)(
+            Validation.validateWith(id, parentNodeIri, projectIri, name, position, labels, comments)(
               ChildNodeCreatePayloadADM
             )
 
