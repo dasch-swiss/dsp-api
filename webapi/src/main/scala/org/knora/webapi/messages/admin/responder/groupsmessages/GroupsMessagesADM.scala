@@ -9,7 +9,6 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
@@ -39,13 +38,7 @@ case class CreateGroupApiRequestADM(
   status: Boolean,
   selfjoin: Boolean
 ) extends GroupsADMJsonProtocol {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
   def toJsValue: JsValue = createGroupApiRequestADMFormat.write(this)
-
-  //check the custom Iri
-  stringFormatter.validateOptionalGroupIri(id, throw BadRequestException(s"Invalid group IRI"))
 }
 
 /**
@@ -66,7 +59,6 @@ case class ChangeGroupApiRequestADM(
   status: Option[Boolean] = None,
   selfjoin: Option[Boolean] = None
 ) extends GroupsADMJsonProtocol {
-
 //  TODO-mpro: once status is separate route then it can be removed
   private val parametersCount = List(
     name,
@@ -99,8 +91,6 @@ case class ChangeGroupApiRequestADM(
  * An abstract trait representing a request message that can be sent to 'GroupsResponderADM'.
  */
 sealed trait GroupsResponderRequestADM extends KnoraRequestADM
-
-// Requests
 
 /**
  * Get all information about all groups.
