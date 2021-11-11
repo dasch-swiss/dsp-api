@@ -23,6 +23,28 @@ object OntologyDomain extends App {
     type WithTag[T] = OntologyProperty { type Tag = T }
   }
 
+  trait Cardinality {
+    type ClassTag
+    type PropertyTag
+
+    def ontologyClass: OntologyClass.WithTag[ClassTag]
+    def ontologyProperty: OntologyProperty.WithTag[PropertyTag]
+    def cardinalityType: CardinalityType
+  }
+  object Cardinality {
+    type WithTags[T1, T2] = Cardinality { type ClassTag = T1; type PropertyTag = T2 }
+
+    def apply(oc: OntologyClass, op: OntologyProperty, ct: CardinalityType): WithTags[oc.Tag, op.Tag] =
+      new Cardinality {
+        type ClassTag = oc.Tag
+        type PropertyTag = op.Tag
+
+        val ontologyClass = oc
+        val ontologyProperty = op
+        val cardinalityType = ct
+      }
+  }
+
   case class Cardinality[T1, T2](
     ontologyClass: OntologyClass.WithTag[T1],
     property: OntologyProperty.WithTag[T2],
@@ -36,6 +58,9 @@ object OntologyDomain extends App {
   }
 
   sealed trait Ontology[+Classes, +Properties] { self =>
+    def bimap[C2, P2](f: Classes => C2, g: Properties => P2): Ontology[C2, P2] = ???
+
+
     def empty(ontoInfo: OntologyInfo): Ontology[Any, Any] = Ontology.Empty(ontoInfo)
 
     def withClass(ontoClass: OntologyClass): Ontology[Classes with ontoClass.Tag, Properties] =
@@ -44,10 +69,10 @@ object OntologyDomain extends App {
     def withProperty(propertyInfo: OntologyProperty): Ontology[Classes, Properties with propertyInfo.Tag] =
       Ontology.WithProperty[Classes, Properties, propertyInfo.Tag](self, propertyInfo)
 
-    def withCardinality[T1, T2](
-      cardinality: Cardinality[T1, T2]
-    )(implicit ev1: Classes <:< T1, ev2: Properties <:< T2): Ontology[Classes, Properties] =
-      Ontology.WithCardinality[Classes, Properties, T1, T2](self, cardinality)
+    def withCardinality(
+      cardinality: Cardinality
+    )(implicit ev1: Classes <:< cardinality.ClassTag, ev2: Properties <:< cardinality.PropertyTag): Ontology[Classes, Properties] =
+      Ontology.WithCardinality[Classes, Properties](self, cardinality)
 
   }
   object Ontology {
@@ -63,9 +88,9 @@ object OntologyDomain extends App {
       property: OntologyProperty.WithTag[T2]
     ) extends Ontology[Classes, Properties with T2]
 
-    final case class WithCardinality[Classes, Properties, T1, T2](
+    final case class WithCardinality[Classes, Properties](
       ontology: Ontology[Classes, Properties],
-      cardinality: Cardinality[T1, T2]
+      cardinality: Cardinality.WithTags[_ >: Classes, _ >: Properties]
     ) extends Ontology[Classes, Properties]
   }
 
@@ -84,15 +109,17 @@ object OntologyDomain extends App {
   val propertyTwo = OntologyProperty("PropertyTwo", "Property Two", "Property Two", "http://example.org/test")
 
   val cardOne = Cardinality(classOne, propertyOne, CardinalityType.MinCardinalityOne)
+  val cardTwo = Cardinality(classTwo, propertyTwo, CardinalityType.MinCardinalityOne)
 
   val exampleOnto =
     Ontology
       .Empty(ontoInfo)
       .withClass(classOne)
-      .withClass(classTwo)
+      //.withClass(classTwo)
       .withProperty(propertyOne)
-      .withProperty(propertyTwo)
+      //.withProperty(propertyTwo)
       .withCardinality(cardOne)
+      .withCardinality(cardTwo)
 
 //
 //  val x: classOne.Tag = ???
