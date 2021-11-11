@@ -323,7 +323,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
 //          }
 
           val id: Validation[Throwable, Option[ListIRI]] = ListIRI.make(apiRequest.id)
-          val parentNodeIri: Validation[Throwable, Option[ListIRI]] = ListIRI.make(apiRequest.parentNodeIri)
+          val parentNodeIri: Validation[Throwable, ListIRI] = ListIRI.make(apiRequest.parentNodeIri)
           val projectIri: Validation[Throwable, ProjectIRI] = ProjectIRI.make(apiRequest.projectIri)
           val name: Validation[Throwable, Option[ListName]] = ListName.make(apiRequest.name)
           val position: Validation[Throwable, Option[Position]] = Position.make(apiRequest.position)

@@ -142,6 +142,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           stringFormatter
             .validateAndEscapeOptionalProjectIri(apiRequest.id, throw BadRequestException(s"Invalid project IRI"))
         )
+//        TODO-mpro: why id, longname and logo are not options below?
         val shortname = Shortname.make(apiRequest.shortname)
         val shortcode = Shortcode.make(apiRequest.shortcode)
         val longname = Longname.make(apiRequest.longname)

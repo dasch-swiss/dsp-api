@@ -11,7 +11,10 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.{
+  ListChildNodeCreatePayloadADM,
+  ListRootNodeCreatePayloadADM
+}
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
 import org.knora.webapi.messages.admin.responder.listsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
@@ -840,11 +843,17 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 //    println("ZZZZZ-createNode", createNodeRequest)
 
-    val (id, parentNodeIri, projectIri, name, position) = createNodeRequest match {
-      case parent: ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM =>
-        (parent.id, None, parent.projectIri, parent.name, None)
-      case node: ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM =>
-        (node.id, node.parentNodeIri, node.projectIri, node.name, node.position)
+//    TODO-mrpo: that quickfix, consider refactor/split creation method for root and child
+    val parentNode: Option[ListIRI] = createNodeRequest match {
+      case ListRootNodeCreatePayloadADM(_, _, _, _, _)                    => None
+      case ListChildNodeCreatePayloadADM(_, parentNodeIri, _, _, _, _, _) => Some(parentNodeIri)
+    }
+
+    val (id, projectIri, name, position) = createNodeRequest match {
+      case root: ListNodeCreatePayloadADM.ListRootNodeCreatePayloadADM =>
+        (root.id, root.projectIri, root.name, None)
+      case child: ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM =>
+        (child.id, child.projectIri, child.name, child.position)
     }
 
     def getPositionOfNewChild(children: Seq[ListChildNodeADM]): Int = {
@@ -948,9 +957,9 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
       // if parent node is known, find the root node of the list and the position of the new child node
       (newPosition: Option[Int], rootNodeIri: Option[IRI]) <-
-        if (parentNodeIri.nonEmpty) {
+        if (parentNode.nonEmpty) {
           getRootNodeAndPositionOfNewChild(
-            parentNodeIri = parentNodeIri.get.value,
+            parentNodeIri = parentNode.map(_.value).toString,
             dataNamedGraph = dataNamedGraph,
             featureFactoryConfig = featureFactoryConfig
           )
@@ -1004,7 +1013,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
               listClassIri = OntologyConstants.KnoraBase.ListNode,
               projectIri = projectIri.value,
               nodeIri = newListNodeIri,
-              parentNodeIri = parentNodeIri.map(_.value),
+              parentNodeIri = Some(parentNodeIri.value),
               rootNodeIri = rootNodeIri,
               position = newPosition,
               maybeName = name.map(_.value),
@@ -1028,7 +1037,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
    * @return a [[RootNodeInfoGetResponseADM]]
    */
   private def listCreateRequestADM(
-    createRootRequest: ListNodeCreatePayloadADM,
+    createRootRequest: ListRootNodeCreatePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     apiRequestID: UUID
   ): Future[ListGetResponseADM] = {
@@ -1039,7 +1048,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
      * The actual task run with an IRI lock.
      */
     def listCreateTask(
-      createRootRequest: ListNodeCreatePayloadADM,
+      createRootRequest: ListRootNodeCreatePayloadADM,
       featureFactoryConfig: FeatureFactoryConfig,
       apiRequestID: UUID
     ): Future[ListGetResponseADM] =

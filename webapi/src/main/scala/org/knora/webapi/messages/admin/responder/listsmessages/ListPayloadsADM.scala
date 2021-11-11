@@ -17,8 +17,8 @@ object ListNodeCreatePayloadADM {
   final case class ListChildNodeCreatePayloadADM(
     id: Option[ListIRI] = None,
 //    TODO-mpro: lack of consistency between parentNodeIri and hasRootNode, should be renamed to hasParent
-//      make arentNodeIri required
-    parentNodeIri: Option[ListIRI] = None,
+//    TODO-mpro: making parentNodeIri required didn't bring much, consider adding separate sparql model for child creation
+    parentNodeIri: ListIRI,
     projectIri: ProjectIRI,
     name: Option[ListName] = None,
     position: Option[Position] = None,

@@ -326,7 +326,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "add child to list - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = Some(ListIRI.make(newListIri.get).fold(e => throw e.head, v => v)),
+            parentNodeIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("first").fold(e => throw e.head, v => v)),
             labels = Labels
@@ -378,7 +378,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "add second child to list in first position - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = Some(ListIRI.make(newListIri.get).fold(e => throw e.head, v => v)),
+            parentNodeIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("second").fold(e => throw e.head, v => v)),
             position = Some(Position.make(0).fold(e => throw e.head, v => v)),
@@ -431,7 +431,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "add child to second child node" in {
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = Some(ListIRI.make(secondChildIri.get).fold(e => throw e.head, v => v)),
+            parentNodeIri = ListIRI.make(secondChildIri.get).fold(e => throw e.head, v => v),
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("third").fold(e => throw e.head, v => v)),
             labels = Labels
@@ -484,7 +484,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val givenPosition = Some(Position.make(20).fold(e => throw e.head, v => v))
         responderManager ! ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = Some(ListIRI.make(newListIri.get).fold(e => throw e.head, v => v)),
+            parentNodeIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
             projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             name = Some(ListName.make("fourth").fold(e => throw e.head, v => v)),
             position = givenPosition,

@@ -128,7 +128,7 @@ class ListsMessagesADMSpec extends CoreSpec(ListsMessagesADMSpec.config) with Li
       val caught = intercept[BadRequestException](
         ListChildNodeCreateRequestADM(
           createChildNodeRequest = ListChildNodeCreatePayloadADM(
-            parentNodeIri = Some(ListIRI.make(exampleListIri).fold(e => throw e.head, v => v)),
+            parentNodeIri = ListIRI.make(exampleListIri).fold(e => throw e.head, v => v),
             projectIri = ProjectIRI.make(SharedTestDataADM.IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
             position = Some(Position.make(-3).fold(e => throw e.head, v => v)),
             labels = Labels

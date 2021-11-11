@@ -10,7 +10,10 @@ import org.knora.webapi._
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.ListChildNodeCreatePayloadADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.{
+  ListChildNodeCreatePayloadADM,
+  ListRootNodeCreatePayloadADM
+}
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
 import org.knora.webapi.messages.admin.responder.usersmessages._
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
@@ -27,28 +30,19 @@ import java.util.UUID
 // API requests
 
 /**
- * Represents an API request payload that asks the Knora API server to create a new list or root node.
- * If the IRI of the parent node is given, the new node is attached to the parent node as a sublist node.
- * If a specific position is given, insert the child node there. Otherwise, the newly created list node will be appended
- * to the end of the list of children.
- * If no parent node IRI is given in the payload, a new list is created with this node as its root node.
- * At least one label needs to be supplied.
+ * Represents an API request payload that asks the Knora API server to create a new list root node.
+ * At least one label and comment need to be supplied.
  *
  * @param id            the optional custom IRI of the list node.
- * @param parentNodeIri the optional IRI of the parent node.
  * @param projectIri    the IRI of the project.
  * @param name          the optional name of the list node.
- * @param position      the optional position of the node.
  * @param labels        labels of the list node.
  * @param comments      comments of the list node.
  */
 case class ListRootNodeCreateApiRequestADM(
   id: Option[IRI] = None,
-//  remove below
-  parentNodeIri: Option[IRI] = None,
   projectIri: IRI,
   name: Option[String] = None,
-  position: Option[Int] = None,
   labels: Seq[StringLiteralV2],
   comments: Seq[StringLiteralV2]
 ) extends ListADMJsonProtocol {
@@ -57,10 +51,9 @@ case class ListRootNodeCreateApiRequestADM(
 
 /**
  * Represents an API request payload that asks the Knora API server to create a new list child node.
- * If the IRI of the parent node is given, the new node is attached to the parent node as a sublist node.
+ * attached to given parent node as a sublist node.
  * If a specific position is given, insert the child node there. Otherwise, the newly created list node will be appended
  * to the end of the list of children.
- * If no parent node IRI is given in the payload, a new list is created with this node as its root node.
  * At least one label needs to be supplied.
  *
  * @param id            the optional custom IRI of the list node.
@@ -73,8 +66,7 @@ case class ListRootNodeCreateApiRequestADM(
  */
 case class ListChildNodeCreateApiRequestADM(
   id: Option[IRI] = None,
-//  make below required
-  parentNodeIri: Option[IRI] = None,
+  parentNodeIri: IRI,
   projectIri: IRI,
   name: Option[String] = None,
   position: Option[Int] = None,
@@ -214,13 +206,13 @@ case class NodePathGetRequestADM(iri: IRI, featureFactoryConfig: FeatureFactoryC
 /**
  * Requests the creation of a new list.
  *
- * @param createRootNode       the [[NodeCreatePayloadADM]] information used for creating the root node of the list.
+ * @param createRootNode       the [[ListRootNodeCreatePayloadADM]] information used for creating the root node of the list.
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user creating the new list.
  * @param apiRequestID         the ID of the API request.
  */
 case class ListRootNodeCreateRequestADM(
-  createRootNode: ListNodeCreatePayloadADM,
+  createRootNode: ListRootNodeCreatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -1276,10 +1268,10 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     jsonFormat(
       ListRootNodeCreateApiRequestADM,
       "id",
-      "parentNodeIri",
+//      "parentNodeIri",
       "projectIri",
       "name",
-      "position",
+//      "position",
       "labels",
       "comments"
     )
