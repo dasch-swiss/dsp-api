@@ -322,13 +322,15 @@ temporary file that was stored by Sipi is deleted.
 If you're submitting a PDF document, use the resource class
 `knora-api:DocumentRepresentation`, which has the property
 `knora-api:hasDocumentFileValue`, pointing to a
-`knora-api:DocumentFileValue`.$
-
-<!-- TODO: Add bundle representation -->
+`knora-api:DocumentFileValue`.
 
 For a text file, use `knora-api:TextRepresentation`, which has the property
 `knora-api:hasTextFileValue`, pointing to a
 `knora-api:TextFileValue`.
+
+For an archive like zip, use `knora-api:BundleRepresentation`, which has the property
+`knora-api:hasBundleFileValue`, pointing to a
+`knora-api:BundleFileValue`.
 
 ## Updating a Value
 
