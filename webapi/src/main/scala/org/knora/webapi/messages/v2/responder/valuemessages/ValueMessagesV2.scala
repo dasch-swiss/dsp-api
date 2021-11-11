@@ -3396,7 +3396,6 @@ case class DocumentFileValueContentV2(
  * @param fileValue the basic metadata about the file value.
  * @param comment   a comment on this `DocumentFileValueContentV2`, if any.
  */
-// TODO: some of these parameters are not relevant
 case class BundleFileValueContentV2(
   ontologySchema: OntologySchema,
   fileValue: FileValueV2,
@@ -3422,7 +3421,6 @@ case class BundleFileValueContentV2(
 
     targetSchema match {
       case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
-      // TODO: get rid of irrelevant fields
       case ApiV2Complex =>
         JsonLDObject(
           toJsonLDObjectMapInComplexSchema(

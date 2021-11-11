@@ -20,21 +20,45 @@ sealed trait FileValueType {
   val value: String
 }
 object FileValueType {
+
+  /**
+   * Represents "knora-api:DocumentFileValue"
+   */
   case object DocumentFileValue extends FileValueType {
     val value = "knora-api:DocumentFileValue"
   }
+
+  /**
+   * Represents "knora-api:StillImageFileValue"
+   */
   case object StillImageFileValue extends FileValueType {
     val value = "knora-api:StillImageFileValue"
   }
+
+  /**
+   * Represents "knora-api:MovingImageFileValue"
+   */
   case object MovingImageFileValue extends FileValueType {
     val value = "knora-api:MovingImageFileValue"
   }
+
+  /**
+   * Represents "knora-api:TextFileValue"
+   */
   case object TextFileValue extends FileValueType {
     val value = "knora-api:TextFileValue"
   }
+
+  /**
+   * Represents "knora-api:AudioFileValue"
+   */
   case object AudioFileValue extends FileValueType {
     val value = "knora-api:AudioFileValue"
   }
+
+  /**
+   * Represents "knora-api:BundleFileValue"
+   */
   case object BundleFileValue extends FileValueType {
     val value = "knora-api:BundleFileValue"
   }
@@ -47,14 +71,17 @@ object UploadDocumentFile {
     className: String = "DocumentRepresentation",
     shortcode: String = "0001",
     ontologyName: String = "knora-api"
-  ): UploadFileRequest =
-    UploadFileRequest.make(
-      className = className,
-      internalFilename = internalFilename,
-      fileValueType = FileValueType.DocumentFileValue,
-      shortcode = shortcode,
-      ontologyName = ontologyName
-    )
+  ): UploadDocumentFile = new UploadDocumentFile(
+    UploadFileRequest
+      .make(
+        className = className,
+        internalFilename = internalFilename,
+        fileValueType = FileValueType.DocumentFileValue,
+        shortcode = shortcode,
+        ontologyName = ontologyName
+      )
+      .value
+  ) {}
 }
 
 sealed abstract case class UploadTextFile private (value: String)
@@ -64,14 +91,17 @@ object UploadTextFile {
     className: String = "TextRepresentation",
     shortcode: String = "0001",
     ontologyName: String = "knora-api"
-  ): UploadFileRequest =
-    UploadFileRequest.make(
-      className = className,
-      internalFilename = internalFilename,
-      fileValueType = FileValueType.TextFileValue,
-      shortcode = shortcode,
-      ontologyName = ontologyName
-    )
+  ): UploadTextFile = new UploadTextFile(
+    UploadFileRequest
+      .make(
+        className = className,
+        internalFilename = internalFilename,
+        fileValueType = FileValueType.TextFileValue,
+        shortcode = shortcode,
+        ontologyName = ontologyName
+      )
+      .value
+  ) {}
 }
 
 sealed abstract case class UploadImageFile private (value: String)
@@ -81,14 +111,17 @@ object UploadImageFile {
     className: String = "StillImageRepresentation",
     shortcode: String = "0001",
     ontologyName: String = "knora-api"
-  ): UploadFileRequest =
-    UploadFileRequest.make(
-      className = className,
-      internalFilename = internalFilename,
-      fileValueType = FileValueType.StillImageFileValue,
-      shortcode = shortcode,
-      ontologyName = ontologyName
-    )
+  ): UploadImageFile = new UploadImageFile(
+    UploadFileRequest
+      .make(
+        className = className,
+        internalFilename = internalFilename,
+        fileValueType = FileValueType.StillImageFileValue,
+        shortcode = shortcode,
+        ontologyName = ontologyName
+      )
+      .value
+  ) {}
 }
 
 sealed abstract case class UploadAudioFile private (value: String)
@@ -98,14 +131,17 @@ object UploadAudioFile {
     className: String = "AudioRepresentation",
     shortcode: String = "0001",
     ontologyName: String = "knora-api"
-  ): UploadFileRequest =
-    UploadFileRequest.make(
-      className = className,
-      internalFilename = internalFilename,
-      fileValueType = FileValueType.AudioFileValue,
-      shortcode = shortcode,
-      ontologyName = ontologyName
-    )
+  ): UploadAudioFile = new UploadAudioFile(
+    UploadFileRequest
+      .make(
+        className = className,
+        internalFilename = internalFilename,
+        fileValueType = FileValueType.AudioFileValue,
+        shortcode = shortcode,
+        ontologyName = ontologyName
+      )
+      .value
+  ) {}
 }
 
 sealed abstract case class UploadVideoFile private (value: String)
@@ -115,14 +151,17 @@ object UploadVideoFile {
     className: String = "MovingImageRepresentation",
     shortcode: String = "0001",
     ontologyName: String = "knora-api"
-  ): UploadFileRequest =
-    UploadFileRequest.make(
-      className = className,
-      internalFilename = internalFilename,
-      fileValueType = FileValueType.MovingImageFileValue,
-      shortcode = shortcode,
-      ontologyName = ontologyName
-    )
+  ): UploadVideoFile = new UploadVideoFile(
+    UploadFileRequest
+      .make(
+        className = className,
+        internalFilename = internalFilename,
+        fileValueType = FileValueType.MovingImageFileValue,
+        shortcode = shortcode,
+        ontologyName = ontologyName
+      )
+      .value
+  ) {}
 }
 
 sealed abstract case class UploadBundleFile private (value: String)
@@ -132,14 +171,17 @@ object UploadBundleFile {
     className: String = "BundleRepresentation",
     shortcode: String = "0001",
     ontologyName: String = "knora-api"
-  ): UploadFileRequest =
-    UploadFileRequest.make(
-      className = className,
-      internalFilename = internalFilename,
-      fileValueType = FileValueType.BundleFileValue,
-      shortcode = shortcode,
-      ontologyName = ontologyName
-    )
+  ): UploadBundleFile = new UploadBundleFile(
+    UploadFileRequest
+      .make(
+        className = className,
+        internalFilename = internalFilename,
+        fileValueType = FileValueType.BundleFileValue,
+        shortcode = shortcode,
+        ontologyName = ontologyName
+      )
+      .value
+  ) {}
 }
 
 sealed abstract case class UploadFileRequest private (value: String)
@@ -193,15 +235,18 @@ object ChangeDocumentFileRequest {
     valueIRI: String,
     className: String = "DocumentRepresentation",
     ontologyName: String = "knora-api"
-  ): ChangeFileRequest =
-    ChangeFileRequest.make(
-      fileValueType = FileValueType.DocumentFileValue,
-      resourceIRI = resourceIRI,
-      internalFilename = internalFilename,
-      valueIRI = valueIRI,
-      className = className,
-      ontologyName = ontologyName
-    )
+  ): ChangeDocumentFileRequest = new ChangeDocumentFileRequest(
+    ChangeFileRequest
+      .make(
+        fileValueType = FileValueType.DocumentFileValue,
+        resourceIRI = resourceIRI,
+        internalFilename = internalFilename,
+        valueIRI = valueIRI,
+        className = className,
+        ontologyName = ontologyName
+      )
+      .value
+  ) {}
 }
 
 sealed abstract case class ChangeImageFileRequest private (value: String)
@@ -212,15 +257,18 @@ object ChangeImageFileRequest {
     valueIRI: String,
     className: String = "StillImageRepresentation",
     ontologyName: String = "knora-api"
-  ): ChangeFileRequest =
-    ChangeFileRequest.make(
-      fileValueType = FileValueType.StillImageFileValue,
-      resourceIRI = resourceIRI,
-      internalFilename = internalFilename,
-      valueIRI = valueIRI,
-      className = className,
-      ontologyName = ontologyName
-    )
+  ): ChangeImageFileRequest = new ChangeImageFileRequest(
+    ChangeFileRequest
+      .make(
+        fileValueType = FileValueType.StillImageFileValue,
+        resourceIRI = resourceIRI,
+        internalFilename = internalFilename,
+        valueIRI = valueIRI,
+        className = className,
+        ontologyName = ontologyName
+      )
+      .value
+  ) {}
 }
 
 sealed abstract case class ChangeVideoFileRequest private (value: String)
@@ -231,15 +279,18 @@ object ChangeVideoFileRequest {
     valueIRI: String,
     className: String = "MovingImageRepresentation",
     ontologyName: String = "knora-api"
-  ): ChangeFileRequest =
-    ChangeFileRequest.make(
-      fileValueType = FileValueType.MovingImageFileValue,
-      resourceIRI = resourceIRI,
-      internalFilename = internalFilename,
-      valueIRI = valueIRI,
-      className = className,
-      ontologyName = ontologyName
-    )
+  ): ChangeVideoFileRequest = new ChangeVideoFileRequest(
+    ChangeFileRequest
+      .make(
+        fileValueType = FileValueType.MovingImageFileValue,
+        resourceIRI = resourceIRI,
+        internalFilename = internalFilename,
+        valueIRI = valueIRI,
+        className = className,
+        ontologyName = ontologyName
+      )
+      .value
+  ) {}
 }
 
 sealed abstract case class ChangeTextFileRequest private (value: String)
@@ -250,15 +301,18 @@ object ChangeTextFileRequest {
     valueIRI: String,
     className: String = "TextRepresentation",
     ontologyName: String = "knora-api"
-  ): ChangeFileRequest =
-    ChangeFileRequest.make(
-      fileValueType = FileValueType.TextFileValue,
-      resourceIRI = resourceIRI,
-      internalFilename = internalFilename,
-      valueIRI = valueIRI,
-      className = className,
-      ontologyName = ontologyName
-    )
+  ): ChangeTextFileRequest = new ChangeTextFileRequest(
+    ChangeFileRequest
+      .make(
+        fileValueType = FileValueType.TextFileValue,
+        resourceIRI = resourceIRI,
+        internalFilename = internalFilename,
+        valueIRI = valueIRI,
+        className = className,
+        ontologyName = ontologyName
+      )
+      .value
+  ) {}
 }
 
 sealed abstract case class ChangeAudioFileRequest private (value: String)
@@ -269,15 +323,18 @@ object ChangeAudioFileRequest {
     valueIRI: String,
     className: String = "AudioRepresentation",
     ontologyName: String = "knora-api"
-  ): ChangeFileRequest =
-    ChangeFileRequest.make(
-      fileValueType = FileValueType.AudioFileValue,
-      resourceIRI = resourceIRI,
-      internalFilename = internalFilename,
-      valueIRI = valueIRI,
-      className = className,
-      ontologyName = ontologyName
-    )
+  ): ChangeAudioFileRequest = new ChangeAudioFileRequest(
+    ChangeFileRequest
+      .make(
+        fileValueType = FileValueType.AudioFileValue,
+        resourceIRI = resourceIRI,
+        internalFilename = internalFilename,
+        valueIRI = valueIRI,
+        className = className,
+        ontologyName = ontologyName
+      )
+      .value
+  ) {}
 }
 
 sealed abstract case class ChangeBundleFileRequest private (value: String)
@@ -288,15 +345,18 @@ object ChangeBundleFileRequest {
     valueIRI: String,
     className: String = "BundleRepresentation",
     ontologyName: String = "knora-api"
-  ): ChangeFileRequest =
-    ChangeFileRequest.make(
-      fileValueType = FileValueType.BundleFileValue,
-      resourceIRI = resourceIRI,
-      internalFilename = internalFilename,
-      valueIRI = valueIRI,
-      className = className,
-      ontologyName = ontologyName
-    )
+  ): ChangeBundleFileRequest = new ChangeBundleFileRequest(
+    ChangeFileRequest
+      .make(
+        fileValueType = FileValueType.BundleFileValue,
+        resourceIRI = resourceIRI,
+        internalFilename = internalFilename,
+        valueIRI = valueIRI,
+        className = className,
+        ontologyName = ontologyName
+      )
+      .value
+  ) {}
 }
 
 sealed abstract case class ChangeFileRequest private (value: String)
