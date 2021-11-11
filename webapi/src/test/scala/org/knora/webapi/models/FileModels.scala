@@ -14,6 +14,7 @@ package org.knora.webapi.models
  *  - knora-api:StillImageFileValue
  *  - knora-api:TextFileValue
  *  - knora-api:TextFileValue
+ *  - knora-api:BundleRepresentation
  */
 sealed trait FileValueType {
   val value: String
@@ -33,6 +34,9 @@ object FileValueType {
   }
   case object AudioFileValue extends FileValueType {
     val value = "knora-api:AudioFileValue"
+  }
+  case object BundleFileValue extends FileValueType {
+    val value = "knora-api:BundleFileValue"
   }
 }
 
@@ -121,6 +125,23 @@ object UploadVideoFile {
     )
 }
 
+sealed abstract case class UploadBundleFile private (value: String)
+object UploadBundleFile {
+  def make(
+    internalFilename: String,
+    className: String = "BundleRepresentation",
+    shortcode: String = "0001",
+    ontologyName: String = "knora-api"
+  ): UploadFileRequest =
+    UploadFileRequest.make(
+      className = className,
+      internalFilename = internalFilename,
+      fileValueType = FileValueType.BundleFileValue,
+      shortcode = shortcode,
+      ontologyName = ontologyName
+    )
+}
+
 sealed abstract case class UploadFileRequest private (value: String)
 object UploadFileRequest {
   def make(
@@ -130,14 +151,8 @@ object UploadFileRequest {
     shortcode: String,
     ontologyName: String
   ): UploadFileRequest = {
-    val anythingContext =
-      """
-        |,
-        |    "anything": "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-        |""".stripMargin
-
     val context = ontologyName match {
-      case "anything"  => anythingContext
+      case "anything"  => ",\n    \"anything\": \"http://0.0.0.0:3333/ontology/0001/anything/v2#\""
       case "knora-api" => ""
       case _           => ""
     }
@@ -147,6 +162,7 @@ object UploadFileRequest {
       case FileValueType.MovingImageFileValue => "knora-api:hasMovingImageFileValue"
       case FileValueType.TextFileValue        => "knora-api:hasTextFileValue"
       case FileValueType.AudioFileValue       => "knora-api:hasAudioFileValue"
+      case FileValueType.BundleFileValue      => "knora-api:hasBundleFileValue"
     }
     val value = s"""{
                    |  "@type" : "$ontologyName:$className",
@@ -276,7 +292,7 @@ object ChangeFileRequest {
   ): ChangeFileRequest = {
 
     val context = ontologyName match {
-      case "anything"  => ",\n\"anything\": \"http://0.0.0.0:3333/ontology/0001/anything/v2#\""
+      case "anything"  => ",\n    \"anything\": \"http://0.0.0.0:3333/ontology/0001/anything/v2#\""
       case "knora-api" => ""
       case _           => ""
     }
