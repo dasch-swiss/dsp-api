@@ -1035,7 +1035,7 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-    "change a Zip file value" ignore {
+    "change a Zip file value" in {
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
@@ -1047,23 +1047,13 @@ class KnoraSipiIntegrationV2ITSpec
 
       // Ask Knora to update the value.
 
-      val jsonLdEntity =
-        s"""{
-           |  "@id" : "${zipResourceIri.get}",
-           |  "@type" : "anything:ThingDocument",
-           |  "knora-api:hasDocumentFileValue" : {
-           |    "@id" : "${zipValueIri.get}",
-           |    "@type" : "knora-api:DocumentFileValue",
-           |    "knora-api:fileValueHasFilename" : "${uploadedFile.internalFilename}"
-           |  },
-           |  "@context" : {
-           |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-           |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-           |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-           |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
-           |    "anything" : "http://0.0.0.0:3333/ontology/0001/anything/v2#"
-           |  }
-           |}""".stripMargin
+      val jsonLdEntity = ChangeBundleFileRequest
+        .make(
+          resourceIRI = zipResourceIri.get,
+          valueIRI = zipValueIri.get,
+          internalFilename = uploadedFile.internalFilename
+        )
+        .value
 
       val request =
         Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
@@ -1079,7 +1069,7 @@ class KnoraSipiIntegrationV2ITSpec
       // Get the new file value from the resource.
       val savedValue: JsonLDObject = getValueFromResource(
         resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri,
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasBundleFileValue.toSmartIri,
         expectedValueIri = zipValueIri.get
       )
 
@@ -1092,7 +1082,7 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-    "create a resource with a WAV file" ignore {
+    "create a resource with a WAV file" in {
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
@@ -1148,7 +1138,7 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-    "change a WAV file value" ignore {
+    "change a WAV file value" in {
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,

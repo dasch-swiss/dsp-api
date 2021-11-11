@@ -280,6 +280,25 @@ object ChangeAudioFileRequest {
     )
 }
 
+sealed abstract case class ChangeBundleFileRequest private (value: String)
+object ChangeBundleFileRequest {
+  def make(
+    resourceIRI: String,
+    internalFilename: String,
+    valueIRI: String,
+    className: String = "BundleRepresentation",
+    ontologyName: String = "knora-api"
+  ): ChangeFileRequest =
+    ChangeFileRequest.make(
+      fileValueType = FileValueType.BundleFileValue,
+      resourceIRI = resourceIRI,
+      internalFilename = internalFilename,
+      valueIRI = valueIRI,
+      className = className,
+      ontologyName = ontologyName
+    )
+}
+
 sealed abstract case class ChangeFileRequest private (value: String)
 object ChangeFileRequest {
   def make(
@@ -302,6 +321,7 @@ object ChangeFileRequest {
       case FileValueType.MovingImageFileValue => "knora-api:hasMovingImageFileValue"
       case FileValueType.TextFileValue        => "knora-api:hasTextFileValue"
       case FileValueType.AudioFileValue       => "knora-api:hasAudioFileValue"
+      case FileValueType.BundleFileValue      => "knora-api:hasBundleFileValue"
     }
     val value =
       s"""{
