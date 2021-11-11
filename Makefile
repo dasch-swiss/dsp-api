@@ -292,6 +292,11 @@ init-db-test-unit-minimal: stack-down-delete-volumes stack-db-only ## initialize
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit-minimal
 
+## Dump test data
+db_test_dump.trig:
+	@echo $@
+	@curl -X GET -H "Accept: application/trig" -u "admin:${DB_TEST_PASSWORD}" "https://db.test.dasch.swiss/dsp-repo" > "db_test_dump.trig"
+
 ## Dump staging data
 db_staging_dump.trig:
 	@echo $@
@@ -301,6 +306,12 @@ db_staging_dump.trig:
 db_prod_dump.trig:
 	@echo $@
 	@curl -X GET -H "Accept: application/trig" -u "admin:${DB_PROD_PASSWORD}" "https://db.dasch.swiss/dsp-repo" > "db_prod_dump.trig"
+
+.PHONY: init-db-test-from-test
+init-db-test-from-test: db_test_dump.trig init-db-test-empty ## init local database with data from test
+	@echo $@
+	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
+	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_test_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
 .PHONY: init-db-test-from-staging
 init-db-test-from-staging: db_staging_dump.trig init-db-test-empty ## init local database with data from staging
