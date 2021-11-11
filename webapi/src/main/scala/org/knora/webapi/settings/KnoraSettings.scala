@@ -129,6 +129,15 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
     }
     .toSet
 
+  val bundleMimeTypes: Set[String] = config
+    .getList("app.sipi.bundle-mime-types")
+    .iterator
+    .asScala
+    .map { mType: ConfigValue =>
+      mType.unwrapped.toString
+    }
+    .toSet
+
   val internalSipiProtocol: String = config.getString("app.sipi.internal-protocol")
   val internalSipiHost: String = config.getString("app.sipi.internal-host")
   val internalSipiPort: Int = config.getInt("app.sipi.internal-port")

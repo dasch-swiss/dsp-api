@@ -1382,6 +1382,8 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
             log = log
           )
 
+        // TODO: add bundle file value
+
         case other => throw NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other")
       }
 

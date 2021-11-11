@@ -699,7 +699,6 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-// TODO: reactivate and implement
     "not create a document resource if the file is actually a zip file" in {
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
@@ -709,6 +708,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
+      uploadedFile.fileType should equal("bundle")
 
       // Ask Knora to create the resource.
 
