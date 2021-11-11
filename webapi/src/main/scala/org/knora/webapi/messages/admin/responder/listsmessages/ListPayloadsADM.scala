@@ -31,7 +31,7 @@ object ListNodeCreatePayloadADM {
  * List node update payload
  */
 final case class ListNodeChangePayloadADM(
-//  TODO-mpro: listIri can be probably removed
+//  TODO-mpro: listIri can be probably removed here or maybe from the route??
   listIri: ListIRI,
   projectIri: ProjectIRI,
   hasRootNode: Option[ListIRI] = None,

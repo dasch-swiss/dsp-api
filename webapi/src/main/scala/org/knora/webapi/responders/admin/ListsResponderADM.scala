@@ -843,7 +843,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
 
 //    println("ZZZZZ-createNode", createNodeRequest)
 
-//    TODO-mrpo: that quickfix, consider refactor/split creation method for root and child
+//    TODO-mpro: it's quickfix, refactor
     val parentNode: Option[ListIRI] = createNodeRequest match {
       case ListRootNodeCreatePayloadADM(_, _, _, _, _)                    => None
       case ListChildNodeCreatePayloadADM(_, parentNodeIri, _, _, _, _, _) => Some(parentNodeIri)
@@ -959,7 +959,7 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       (newPosition: Option[Int], rootNodeIri: Option[IRI]) <-
         if (parentNode.nonEmpty) {
           getRootNodeAndPositionOfNewChild(
-            parentNodeIri = parentNode.map(_.value).toString,
+            parentNodeIri = parentNode.get.value,
             dataNamedGraph = dataNamedGraph,
             featureFactoryConfig = featureFactoryConfig
           )
