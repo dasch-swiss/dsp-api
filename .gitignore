@@ -56,7 +56,9 @@ dump.rdb
 /site/
 dependencies.txt
 /client-test-data.zip
+/db_prod_dump.trig
 /db_staging_dump.trig
+/db_test_dump.trig
 /.vscode
 /cleandeps.sh
 /.metals
