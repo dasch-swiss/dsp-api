@@ -160,7 +160,7 @@ object Shortname {
     if (value.isEmpty) {
       Validation.fail(BadRequestException("Missing shortname"))
     } else {
-      val validatedValue = Validation(
+      val validatedValue: Validation[Throwable, String] = Validation(
         stringFormatter.validateAndEscapeProjectShortname(value, throw AssertionException("not valid"))
       )
       validatedValue.map(new Shortname(_) {})
