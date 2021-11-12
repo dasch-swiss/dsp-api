@@ -16,8 +16,9 @@ object ListNodeCreatePayloadADM {
   ) extends ListNodeCreatePayloadADM
   final case class ListChildNodeCreatePayloadADM(
     id: Option[ListIRI] = None,
-//    TODO-mpro: lack of consistency between parentNodeIri and hasRootNode, should be renamed to hasParent
-//    TODO-mpro: making parentNodeIri required didn't bring much, consider adding separate sparql model for child creation
+//    TODO-mpro: lack of consistency between parentNodeIri and hasRootNode in change payload, should be renamed to parentNodeIri
+//      making parentNodeIri required didn't bring much, consider adding separate sparql model for child creation
+//      also id should be renamed to customIri or something similar
     parentNodeIri: ListIRI,
     projectIri: ProjectIRI,
     name: Option[ListName] = None,
