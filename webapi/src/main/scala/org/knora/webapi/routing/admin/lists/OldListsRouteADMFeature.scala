@@ -62,7 +62,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
     )
   )
   /**
-   * Returns all lists optionally filtered by project
+   * Returns all lists optionally filtered by project.
    */
   private def getLists(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
     get {
@@ -104,7 +104,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
     )
   )
   /**
-   * Returns a list node, root or child, with children (if exist)
+   * Returns a list node, root or child, with children (if exist).
    */
   private def getListNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
     get { requestContext =>
@@ -134,7 +134,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   }
 
   /**
-   * Returns basic information about a node, root or child, w/o children
+   * Returns basic information about a node, root or child, w/o children.
    */
   private def getListNodeInfo(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(ListsBasePath / Segment / "info") { iri =>
@@ -184,7 +184,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
     )
   )
   /**
-   * Creates a new list (root node)
+   * Creates a new list (root node).
    */
   private def createListRootNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath) {
     post {
@@ -253,7 +253,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
     )
   )
   /**
-   * Creates a new list child node
+   * Creates a new list child node.
    */
   private def createListChildNode(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) {
     iri =>
@@ -333,7 +333,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
     )
   )
   /**
-   * Updates existing list node, either root or child
+   * Updates existing list node, either root or child.
    */
   private def updateList(featureFactoryConfig: FeatureFactoryConfig): Route = path(ListsBasePath / Segment) { iri =>
     put {

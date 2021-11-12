@@ -207,6 +207,7 @@ class UpdateListItemsRouteADME2ESpec
           )
         )
       }
+
       "not delete root node comments" in {
         val deleteComments =
           s"""{
@@ -219,16 +220,8 @@ class UpdateListItemsRouteADME2ESpec
           HttpEntity(ContentTypes.`application/json`, deleteComments)
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
-        log.debug(s"response: ${response.toString}")
-        response.status should be(StatusCodes.OK)
-        val receivedListInfo: ListRootNodeInfoADM =
-          AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
-
-        receivedListInfo.projectIri should be(SharedTestDataADM.ANYTHING_PROJECT_IRI)
-
-        val comments: Seq[StringLiteralV2] = receivedListInfo.comments.stringLiterals
-        comments.size should be(1)
-        comments should contain(StringLiteralV2(value = "nya kommentarer", language = Some("se")))
+//        log.debug(s"response: ${response.toString}")
+        response.status should be(StatusCodes.BadRequest)
       }
     }
 
@@ -392,12 +385,7 @@ class UpdateListItemsRouteADME2ESpec
         ) ~> addCredentials(anythingAdminUserCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
 
-        response.status should be(StatusCodes.OK)
-
-        val receivedNodeInfo: ListChildNodeInfoADM =
-          AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
-        val comments: Seq[StringLiteralV2] = receivedNodeInfo.comments.stringLiterals
-        comments.size should be(1)
+        response.status should be(StatusCodes.BadRequest)
       }
 
       "not update the position of a node if given IRI is invalid" in {

@@ -65,7 +65,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
     )
   )
   /**
-   * Update name of an existing list node, either root or child
+   * Update name of an existing list node, either root or child.
    */
   private def updateNodeName(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(ListsBasePath / Segment / "name") { iri =>
@@ -123,7 +123,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
     )
   )
   /**
-   * Update labels of an existing list node, either root or child
+   * Update labels of an existing list node, either root or child.
    */
   private def updateNodeLabels(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(ListsBasePath / Segment / "labels") { iri =>
@@ -181,7 +181,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
     )
   )
   /**
-   * Updates comments of an existing list node, either root or child
+   * Updates comments of an existing list node, either root or child.
    */
   private def updateNodeComments(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(ListsBasePath / Segment / "comments") { iri =>
@@ -190,11 +190,8 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
           val nodeIri =
             stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param node IRI: $iri"))
 
-          val commentsPayload: NodeCommentsChangePayloadADM = if (apiRequest.comments.isEmpty) {
-            NodeCommentsChangePayloadADM(None)
-          } else {
-            NodeCommentsChangePayloadADM(Some(Comments.make(apiRequest.comments).fold(e => throw e.head, v => v)))
-          }
+          val commentsPayload: NodeCommentsChangePayloadADM =
+            NodeCommentsChangePayloadADM(Comments.make(apiRequest.comments).fold(e => throw e.head, v => v))
 
           val requestMessage: Future[NodeCommentsChangeRequestADM] = for {
             requestingUser <- getUserADM(requestContext, featureFactoryConfig)
@@ -242,7 +239,7 @@ class UpdateListItemsRouteADM(routeData: KnoraRouteData)
     )
   )
   /**
-   * Updates position of an existing list child node
+   * Updates position of an existing list child node.
    */
   private def updateNodePosition(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(ListsBasePath / Segment / "position") { iri =>
