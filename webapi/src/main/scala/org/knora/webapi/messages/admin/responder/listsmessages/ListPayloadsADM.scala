@@ -6,6 +6,9 @@ import org.knora.webapi.messages.admin.responder.valueObjects._
  * List root node and child node creation payloads
  */
 sealed trait ListNodeCreatePayloadADM
+//    TODO-mpro:
+//     1. lack of consistency between parentNodeIri and hasRootNode in change payload - should be renamed to parentNodeIri
+//     2. Rethink other field names if they are descriptive enough, e.g. id should be renamed to customIri or something similar
 object ListNodeCreatePayloadADM {
   final case class ListRootNodeCreatePayloadADM(
     id: Option[ListIRI] = None,
@@ -16,9 +19,6 @@ object ListNodeCreatePayloadADM {
   ) extends ListNodeCreatePayloadADM
   final case class ListChildNodeCreatePayloadADM(
     id: Option[ListIRI] = None,
-//    TODO-mpro: lack of consistency between parentNodeIri and hasRootNode in change payload, should be renamed to parentNodeIri
-//      making parentNodeIri required didn't bring much, consider adding separate sparql model for child creation
-//      also id should be renamed to customIri or something similar
     parentNodeIri: ListIRI,
     projectIri: ProjectIRI,
     name: Option[ListName] = None,

@@ -10,23 +10,21 @@
 **List Item Operations:**
 
 - `GET: /admin/lists[?projectIri=<projectIri>]` : return all lists optionally filtered by project
-- `GET: /admin/lists/<listItemIri>` : return complete list with all children if IRI of the list (i.e. root node) is given. 
-If IRI of the child node is given, return the node with its immediate children. 
-- `GET: /admin/lists/infos/<listIri>` : return list information (without children)
-- `GET: /admin/lists/nodes/<nodeIri>` : return list node information (without children)
+- `GET: /admin/lists/<listItemIri>` : return complete list with all children if IRI of the list (i.e. root node) is given
+If IRI of the child node is given, return the node with its immediate children
+- `GET: /admin/lists/<listIri>/info` : return list basic information (without children)
 
 - `POST: /admin/lists` : create new list
 - `POST: /admin/lists/<parentNodeIri>` : create new child node under the supplied parent node IRI
 
-- `PUT: /admin/lists/<listItemIri>` : update node information (root or child.)
-- `PUT: /admin/lists/<listItemIri>/name` : update the name of the node (root or child).
-- `PUT: /admin/lists/<listItemIri>/labels` : update labels of the node (root or child).
-- `PUT: /admin/lists/<listItemIri>/comments` : update comments of the node (root or child).
+- `PUT: /admin/lists/<listItemIri>` : update node information (root or child)
+- `PUT: /admin/lists/<listItemIri>/name` : update the name of the node (root or child)
+- `PUT: /admin/lists/<listItemIri>/labels` : update labels of the node (root or child)
+- `PUT: /admin/lists/<listItemIri>/comments` : update comments of the node (root or child)
 - `PUT: /admin/lists/<nodeIri>/position` : update position of a child node within its current parent or by changing its 
-parent node.
+parent node
 
-- `DELETE: /admin/lists/<listItemIri>` : delete a list (i.e. root node) or a child node and 
-all its children, if not used
+- `DELETE: /admin/lists/<listItemIri>` : delete a list (i.e. root node) or a child node and all its children, if not used
 
 ## List Item Operations
 
@@ -39,20 +37,27 @@ all its children, if not used
 ### Get list
 
  - Required permission: none
- - Return complete `list` including basic information of the list, `listinfo`, and all its children.
+ - Return complete `list` (or `node`) including basic information of the list (or child node), `listinfo` (or `nodeinfo`),
+and all its children
  - GET: `/admin/lists/<listIri>`
 
+### Get list's information
+
+- Required permission: none
+- Return list (or node) basic information, `listinfo` (or `nodeinfo`), without its children
+- GET: `/admin/lists/<listIri>/info`
 
 ### Create new list
 
   - Required permission: SystemAdmin / ProjectAdmin
+  - Required fields: `projectIri`, `labels`, `comments`
   - POST: `/admin/lists`
   - BODY:
   
 ```json
     {
         "projectIri": "someprojectiri",
-        "labels": [{ "value": "Neue Liste", "language": "de"}],
+        "labels": [{ "value": "New list", "language": "en"}],
         "comments": []
     } 
 ```
@@ -64,8 +69,8 @@ Additionally, each list can have an optional custom IRI (of [Knora IRI](../api-v
     "id": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
     "projectIri": "http://rdfh.ch/projects/0001",
     "name": "a new list",
-    "labels": [{ "value": "Neue Liste mit IRI", "language": "de"}],
-    "comments": []
+    "labels": [{ "value": "New list with IRI", "language": "en"}],
+    "comments": [{ "value": "New comment", "language": "en"}]
   }
 ```
 
@@ -75,13 +80,13 @@ The response will contain the basic information of the list, `listinfo` and an e
     "list": {
         "children": [],
         "listinfo": {
-            "comments": [],
+            "comments": [{ "value": "New comment", "language": "en"}],
             "id": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
             "isRootNode": true,
             "labels": [
                 {
-                    "value": "Neue Liste mit IRI",
-                    "language": "de"
+                    "value": "New list with IRI",
+                    "language": "en"
                 }
             ],
             "name": "a new list",
@@ -90,18 +95,79 @@ The response will contain the basic information of the list, `listinfo` and an e
     }
 }
 ```
-### Get list's information
 
- - Required permission: none
- - Return list information, `listinfo` (without children).
- - GET: `/admin/lists/infos/<listIri>`
+### Create new child node
+
+- Required permission: SystemAdmin / ProjectAdmin
+- Required fields: `parentNodeIri`, `projectIri`, `labels`,
+- Appends a new child node under the supplied nodeIri. If the supplied nodeIri
+  is the listIri, then a new child node is appended to the top level. If a position is given
+  for the new child node, the node will be created and inserted in the specified position, otherwise
+  the node is appended to the end of parent's children.
+- POST: `/admin/lists/<parentNodeIri>`
+- BODY:
+
+```json
+     {   
+         "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
+         "projectIri": "http://rdfh.ch/projects/0001",
+         "name": "a child",
+         "labels": [{ "value": "New List Node", "language": "en"}]
+    }
+```
+
+Additionally, each child node can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
+
+```json
+{    "id": "http://rdfh.ch/lists/0001/8u37MxBVMbX3XQ8-d31x6w",
+     "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
+     "projectIri": "http://rdfh.ch/projects/0001",
+     "name": "a child",
+     "labels": [{ "value": "New List Node", "language": "en"}]
+}
+```
+
+The response will contain the basic information of the node, `nodeinfo`, as below:
+```json
+{
+    "nodeinfo": {
+        "comments": [],
+        "hasRootNode": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
+        "id": "http://rdfh.ch/lists/0001/8u37MxBVMbX3XQ8-d31x6w",
+        "labels": [
+            {
+                "value": "New List Node",
+                "language": "en"
+            }
+        ],
+        "name": "a new child",
+        "position": 1
+    }
+}
+```
+The new node can be created and inserted in a specific position which must be given in the payload as shown below. If necessary,
+according to the given position, the sibling nodes will be shifted. Note that `position` cannot have a value higher than the
+number of existing children.
+
+```json
+{   "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
+    "projectIri": "http://rdfh.ch/projects/0001",
+    "name": "Inserted new child",
+    "position": 0,
+    "labels": [{ "value": "New List Node", "language": "en"}]
+}
+```
+
+In case the new node should be appended to the list of current children, either `position: -1` must be given in the
+payload or the `position` parameter must be left out of the payload.
  
-### Update list's information
-The basic information of a list such as its labels, comments, name, or all of them can be updated. The parameters that 
+### Update list's or node's information
+The basic information of a list (or node) such as its labels, comments, name, or all of them can be updated. The parameters that 
 must be updated together with the new value must be given in the JSON body of the request together with the IRI of the 
 list and the IRI of the project it belongs to. 
 
  - Required permission: SystemAdmin / ProjectAdmin
+ - Required fields: `listIri`, `projectIri`
  - Update list information
  - PUT: `/admin/lists/<listIri>`
  - BODY:
@@ -115,7 +181,7 @@ list and the IRI of the project it belongs to.
   }
 ```
 
-The response will contain the basic information of the list, `listinfo`, without its children, as below:
+The response will contain the basic information of the list, `listinfo` (or `nodeinfo`), without its children, as below:
 ```json
 {
     "listinfo": {
@@ -192,144 +258,6 @@ There is no need to specify the project IRI because it is automatically extracte
 }
 ```
 There is no need to specify the project IRI because it is automatically extracted using the given `<listItemIRI>`.
-
-### Get node
-
- - Required permission: none
- - Return complete `node` including basic information of the list, `nodeinfo`, and all its immediate children.
- - GET: `/admin/lists/<nodeIri>`
-
-### Get List Node Information
-
- - Required permission: none
- - Return node information, `nodeinfo`, (without children).
- - GET: `/admin/lists/nodes/<nodeIri>`
-
-
-### Create new child node
-
-  - Required permission: SystemAdmin / ProjectAdmin
-  - Appends a new child node under the supplied nodeIri. If the supplied nodeIri
-    is the listIri, then a new child node is appended to the top level. If a position is given
-     for the new child node, the node will be created and inserted in the specified position, otherwise 
-     the node is appended to the end of parent's children.
-  - POST: `/admin/lists/<parentNodeIri>`
-  - BODY:
-  
-```json
-     {   
-         "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
-         "projectIri": "http://rdfh.ch/projects/0001",
-         "name": "a child",
-         "labels": [{ "value": "New List Node", "language": "en"}],
-         "comments": []
-    }
-```
-
-Additionally, each child node can have an optional custom IRI (of [Knora IRI](../api-v2/knora-iris.md#iris-for-data) form) specified by the `id` in the request body as below:
-
-```json
-{    "id": "http://rdfh.ch/lists/0001/8u37MxBVMbX3XQ8-d31x6w",
-     "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
-     "projectIri": "http://rdfh.ch/projects/0001",
-     "name": "a child",
-     "labels": [{ "value": "New List Node", "language": "en"}],
-     "comments": []
-}
-```
-
-The response will contain the basic information of the node, `nodeinfo`, as below:
-```json
-{
-    "nodeinfo": {
-        "comments": [],
-        "hasRootNode": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
-        "id": "http://rdfh.ch/lists/0001/8u37MxBVMbX3XQ8-d31x6w",
-        "labels": [
-            {
-                "value": "New List Node",
-                "language": "en"
-            }
-        ],
-        "name": "a new child",
-        "position": 1
-    }
-}
-```
-The new node can be created and inserted in a specific position which must be given in the payload as shown below. If necessary, 
-according to the given position, the sibling nodes will be shifted. Note that `position` cannot have a value higher than the
-number of existing children.
-
-```json
-{   "parentNodeIri": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
-    "projectIri": "http://rdfh.ch/projects/0001",
-    "name": "Inserted new child",
-    "position": 0,
-    "labels": [{ "value": "New List Node", "language": "en"}],
-    "comments": []
-}
-```
-
-In case the new node should be appended to the list of current children, either `position: -1` must be given in the 
-payload or the `position` parameter must be left out of the payload. 
-
-### Update node's information
-The basic information of a node such as its labels, comments, name, or all of them can be updated. The parameters that 
-must be updated together with the new value must be given in the JSON body of the request together with the IRI of the 
-node and the IRI of the project it belongs to. 
-
- - Required permission: SystemAdmin / ProjectAdmin
- - Update node information
- - PUT: `/admin/lists/<nodeIri>`
- - BODY:
- 
-```json
-  {   "listIri": "http://rdfh.ch/lists/0001/8u37MxBVMbX3XQ8-d31x6w",
-       "projectIri": "http://rdfh.ch/projects/0001",
-       "name": "new node name",
-       "labels": [{ "value": "new node label", "language": "en"}],
-       "comments": [{ "value": "new node comment", "language": "en"}]
-   }
-```
-
-The response will contain the basic information of the node as `nodeInfo` without its children, as below:
-
-```json
-{
-    "nodeinfo": {
-        "comments": [
-            {
-                "value": "new node comment",
-                "language": "en"
-            }
-        ],
-        "hasRootNode": "http://rdfh.ch/lists/0001/yWQEGXl53Z4C4DYJ-S2c5A",
-        "id": "http://rdfh.ch/lists/0001/8u37MxBVMbX3XQ8-d31x6w",
-        "labels": [
-            {
-                "value": "new node label",
-                "language": "en"
-            }
-        ],
-        "name": "new node name",
-        "position": 0
-    }
-}
-```
-
-If only name of the node must be updated, it can be given as below in the body of the request:
-
-```json
-   {
-      "listIri": "nodeIri",
-      "projectIri": "projectIri",
-      "name": "another name"
-  }
-```
-
-Alternatively, basic information of the child node can be updated individually as explained above (See 
-[update node name](#update-list-or-nodes-name), [update node labels](#update-list-or-nodes-labels), and 
-[update node comments](#update-list-or-nodes-comments)).
 
 ### Repositioning a child node
 
