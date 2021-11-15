@@ -13,6 +13,9 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 
+import java.time.Instant
+import java.util.UUID
+
 object FileJsonModels {
 
   /**
@@ -429,7 +432,12 @@ object FileMessageModels {
       dimY: Option[Int] = Some(100),
       label: String = "test document",
       comment: Option[String] = Some("This is a document"),
-      project: ProjectADM = SharedTestDataADM.anythingProject
+      project: ProjectADM = SharedTestDataADM.anythingProject,
+      permissions: Option[String] = None,
+      valueIRI: Option[SmartIri] = None,
+      valueUUID: Option[UUID] = None,
+      valueCreationDate: Option[Instant] = None,
+      valuePermissions: Option[String] = None
     ): CreateDocumentMessage = {
       val valuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri
       val valueContent = DocumentFileValueContentV2(
@@ -450,9 +458,20 @@ object FileMessageModels {
           resourceIri = resourceIri,
           resourceClassIri = OntologyConstants.KnoraApiV2Complex.DocumentRepresentation.toSmartIri,
           label = label,
-          valuePropertyIri = Some(valuePropertyIri),
-          valueContent = Some(valueContent),
-          project = project
+          valuePropertyIris = List(valuePropertyIri),
+          values = List(
+            List(
+              CreateValueInNewResourceV2(
+                valueContent = valueContent,
+                customValueIri = valueIRI,
+                customValueUUID = valueUUID,
+                customValueCreationDate = valueCreationDate,
+                permissions = valuePermissions
+              )
+            )
+          ),
+          project = project,
+          permissions = permissions
         )
         .value
       new CreateDocumentMessage(value) {}
@@ -465,21 +484,21 @@ object FileMessageModels {
       resourceIri: IRI,
       resourceClassIri: SmartIri,
       label: String,
-      valuePropertyIri: Option[SmartIri] = None,
-      valueContent: Option[ValueContentV2] = None,
-      project: ProjectADM = SharedTestDataADM.anythingProject
+      valuePropertyIris: List[SmartIri] = List.empty,
+      values: List[List[CreateValueInNewResourceV2]] = List.empty,
+      project: ProjectADM = SharedTestDataADM.anythingProject,
+      permissions: Option[String] = None
     ): CreateResourceMessage = {
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = (valuePropertyIri, valueContent) match {
-        case (Some(iri), Some(content)) => Map(iri -> Seq(CreateValueInNewResourceV2(content)))
-        case _                          => Map.empty
-      }
+
+      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = valuePropertyIris.zip(values).toMap
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
         resourceClassIri = resourceClassIri,
         label = label,
         values = inputValues,
-        projectADM = project
+        projectADM = project,
+        permissions = permissions
       )
       new CreateResourceMessage(inputResource) {}
     }
