@@ -36,20 +36,15 @@ object OntologyDomain extends App {
 
     def apply(oc: OntologyClass, op: OntologyProperty, ct: CardinalityType): WithTags[oc.Tag, op.Tag] =
       new Cardinality {
-        type ClassTag = oc.Tag
+        type ClassTag    = oc.Tag
         type PropertyTag = op.Tag
 
-        val ontologyClass = oc
+        val ontologyClass    = oc
         val ontologyProperty = op
-        val cardinalityType = ct
+        val cardinalityType  = ct
       }
   }
 
-  case class Cardinality[T1, T2](
-    ontologyClass: OntologyClass.WithTag[T1],
-    property: OntologyProperty.WithTag[T2],
-    cardinalityType: CardinalityType
-  )
   sealed trait CardinalityType
   object CardinalityType {
     case object MaxCardinalityOne  extends CardinalityType
@@ -59,7 +54,6 @@ object OntologyDomain extends App {
 
   sealed trait Ontology[+Classes, +Properties] { self =>
     def bimap[C2, P2](f: Classes => C2, g: Properties => P2): Ontology[C2, P2] = ???
-
 
     def empty(ontoInfo: OntologyInfo): Ontology[Any, Any] = Ontology.Empty(ontoInfo)
 
@@ -71,7 +65,10 @@ object OntologyDomain extends App {
 
     def withCardinality(
       cardinality: Cardinality
-    )(implicit ev1: Classes <:< cardinality.ClassTag, ev2: Properties <:< cardinality.PropertyTag): Ontology[Classes, Properties] =
+    )(implicit
+      ev1: Classes <:< cardinality.ClassTag,
+      ev2: Properties <:< cardinality.PropertyTag
+    ): Ontology[Classes, Properties] =
       Ontology.WithCardinality[Classes, Properties](self, cardinality)
 
   }
@@ -126,5 +123,5 @@ object OntologyDomain extends App {
 //
 //  // path dependent types
   implicitly[classOne.Tag =:= classOne.Tag]
-  implicitly[classOne.Tag =:= classTwo.Tag]
+//  implicitly[classOne.Tag =:= classTwo.Tag]
 }
