@@ -7,7 +7,6 @@ package org.knora.webapi.it.v2
 
 import java.net.URLEncoder
 import java.nio.file.{Files, Paths}
-
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers.BasicHttpCredentials
 import akka.http.scaladsl.unmarshalling.Unmarshal
@@ -19,9 +18,9 @@ import org.knora.webapi.messages.store.triplestoremessages.TriplestoreJsonProtoc
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.routing.authenticationmessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.models.FileJsonModels._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.models._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._

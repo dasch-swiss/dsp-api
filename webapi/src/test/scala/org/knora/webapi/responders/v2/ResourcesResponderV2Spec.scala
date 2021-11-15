@@ -8,7 +8,6 @@ package org.knora.webapi.responders.v2
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-
 import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
@@ -29,6 +28,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.models.FileMessageModels._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.settings.{KnoraDispatchers, _}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -1215,33 +1215,12 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = DocumentFileValueContentV2(
-              ontologySchema = ApiV2Complex,
-              fileValue = FileValueV2(
-                internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.pdf",
-                internalMimeType = "application/pdf",
-                originalFilename = Some("test.pdf"),
-                originalMimeType = Some("application/pdf")
-              ),
-              pageCount = Some(1),
-              dimX = Some(100),
-              dimY = Some(100),
-              comment = Some("This is a document")
-            )
-          )
+      val inputResource = CreateDocumentMessage
+        .make(
+          resourceIri = resourceIri,
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.pdf"
         )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = OntologyConstants.KnoraApiV2Complex.DocumentRepresentation.toSmartIri,
-        label = "test document",
-        values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
-      )
+        .value
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
