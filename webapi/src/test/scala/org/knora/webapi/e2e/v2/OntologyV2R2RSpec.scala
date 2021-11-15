@@ -2737,7 +2737,7 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
   }
 
-  "create two classes with the same property, use one in data, and allow only removal of the cardinality for the property not used in data" in {
+  "create two classes with the same property, use one in data, and allow removal of the cardinality for the property not used in data" in {
     // Create TestClassOne with no cardinalities.
     val createClassRequestJsonOne = CreateClassRequest
       .make(
