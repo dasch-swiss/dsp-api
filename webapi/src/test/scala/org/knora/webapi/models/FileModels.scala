@@ -8,7 +8,12 @@ package org.knora.webapi.models
 import org.knora.webapi.{ApiV2Complex, IRI}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceV2, CreateValueInNewResourceV2}
-import org.knora.webapi.messages.v2.responder.valuemessages.{DocumentFileValueContentV2, FileValueV2, ValueContentV2}
+import org.knora.webapi.messages.v2.responder.valuemessages.{
+  DocumentFileValueContentV2,
+  FileValueV2,
+  StillImageFileValueContentV2,
+  ValueContentV2
+}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
@@ -426,6 +431,7 @@ object FileMessageModels {
     def make(
       resourceIri: IRI,
       internalFilename: String,
+      resourceClassIri: SmartIri = OntologyConstants.KnoraApiV2Complex.DocumentRepresentation.toSmartIri,
       originalFilename: Option[String] = Some("test.pdf"),
       pageCount: Option[Int] = Some(1),
       dimX: Option[Int] = Some(100),
@@ -456,7 +462,7 @@ object FileMessageModels {
       val value = CreateResourceMessage
         .make(
           resourceIri = resourceIri,
-          resourceClassIri = OntologyConstants.KnoraApiV2Complex.DocumentRepresentation.toSmartIri,
+          resourceClassIri = resourceClassIri,
           label = label,
           valuePropertyIris = List(valuePropertyIri),
           values = List(
@@ -475,6 +481,63 @@ object FileMessageModels {
         )
         .value
       new CreateDocumentMessage(value) {}
+    }
+  }
+
+  sealed abstract case class CreateImageMessage private (value: CreateResourceV2)
+  object CreateImageMessage {
+    def make(
+      resourceIri: IRI,
+      internalFilename: String,
+      dimX: Int,
+      dimY: Int,
+      resourceClassIri: SmartIri = OntologyConstants.KnoraApiV2Complex.StillImageRepresentation.toSmartIri,
+      originalFilename: Option[String] = Some("test.tiff"),
+      label: String = "test thing picture",
+      originalMimeType: Option[String] = Some("image/tiff"),
+      comment: Option[String] = None,
+      project: ProjectADM = SharedTestDataADM.anythingProject,
+      permissions: Option[String] = None,
+      valueIRI: Option[SmartIri] = None,
+      valueUUID: Option[UUID] = None,
+      valueCreationDate: Option[Instant] = None,
+      valuePermissions: Option[String] = None
+    ): CreateImageMessage = {
+      val valuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
+      val valueContent = StillImageFileValueContentV2(
+        ontologySchema = ApiV2Complex,
+        fileValue = FileValueV2(
+          internalFilename = internalFilename,
+          internalMimeType = "image/jp2",
+          originalFilename = originalFilename,
+          originalMimeType = originalMimeType
+        ),
+        dimX = dimX,
+        dimY = dimY,
+        comment = comment
+      )
+      val value = CreateResourceMessage
+        .make(
+          resourceIri = resourceIri,
+          resourceClassIri = resourceClassIri,
+          label = label,
+          valuePropertyIris = List(valuePropertyIri),
+          values = List(
+            List(
+              CreateValueInNewResourceV2(
+                valueContent = valueContent,
+                customValueIri = valueIRI,
+                customValueUUID = valueUUID,
+                customValueCreationDate = valueCreationDate,
+                permissions = valuePermissions
+              )
+            )
+          ),
+          project = project,
+          permissions = permissions
+        )
+        .value
+      new CreateImageMessage(value) {}
     }
   }
 

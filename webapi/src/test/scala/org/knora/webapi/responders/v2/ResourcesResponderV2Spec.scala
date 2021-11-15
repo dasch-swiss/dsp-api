@@ -1179,31 +1179,15 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = StillImageFileValueContentV2(
-              ontologySchema = ApiV2Complex,
-              fileValue = FileValueV2(
-                internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
-                internalMimeType = "image/jp2",
-                originalFilename = Some("test.tiff"),
-                originalMimeType = Some("image/tiff")
-              ),
-              dimX = 512,
-              dimY = 256
-            )
-          )
+      val inputResource = CreateImageMessage
+        .make(
+          resourceIri = resourceIri,
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
+          dimX = 512,
+          dimY = 256,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri
         )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-        label = "test thing picture",
-        values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
-      )
+        .value
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
