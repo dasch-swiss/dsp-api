@@ -186,6 +186,8 @@ for file_index, file_params in pairs(server.uploads) do
             return
         end
         server.log("upload.lua: wrote video file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
+
+        
     --     server.log("I'm a video")
     --     local uploaded_video
     --     -- success, uploaded_video = SipiImage.new(file_index, {original = original_filename, hash = "sha256"})
