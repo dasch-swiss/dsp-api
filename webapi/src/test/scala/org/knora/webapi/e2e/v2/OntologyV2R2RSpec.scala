@@ -2523,7 +2523,7 @@ class OntologyV2R2RSpec extends R2RSpec {
           ontologyName = "freetest",
           lastModificationDate = freetestLastModDate,
           propertyName = "hasBlueTestTextProp",
-          subjectClassName = "BlueFreeTestClass",
+          subjectClassName = Some("BlueFreeTestClass"),
           propertyType = PropertyValueType.TextValue,
           label = LangString("en", "blue test text property"),
           comment = LangString("en", "A blue test text property")
@@ -2551,7 +2551,7 @@ class OntologyV2R2RSpec extends R2RSpec {
         ontologyName = "freetest",
         lastModificationDate = freetestLastModDate,
         propertyName = "hasBlueTestIntProp",
-        subjectClassName = "BlueFreeTestClass",
+        subjectClassName = Some("BlueFreeTestClass"),
         propertyType = PropertyValueType.IntValue,
         label = LangString("en", "blue test integer property"),
         comment = LangString("en", "A blue test integer property")
@@ -2737,6 +2737,210 @@ class OntologyV2R2RSpec extends R2RSpec {
     }
   }
 
+  "create two classes with the same property, use one in data, and allow only removal of the cardinality for the property not used in data" in {
+    // Create TestClassOne with no cardinalities.
+    val createClassRequestJsonOne = CreateClassRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "TestClassOne",
+        label = LangString("en", "Test class number one"),
+        comment = LangString("en", "A test class used for testing cardinalities")
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/classes",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJsonOne)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      assert(status == StatusCodes.OK, response.toString)
+      val responseJsonDoc = responseToJsonLDDocument(response)
+
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+
+    // Create TestClassTwo with no cardinalities
+    val createClassRequestJsonTwo = CreateClassRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "TestClassTwo",
+        label = LangString("en", "Test class number two"),
+        comment = LangString("en", "A test class used for testing cardinalities")
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/classes",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createClassRequestJsonTwo)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      assert(status == StatusCodes.OK, response.toString)
+      val responseJsonDoc = responseToJsonLDDocument(response)
+
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+
+    // Create a text property hasTestTextProp.
+    val createPropRequestJson = CreatePropertyRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        propertyName = "hasIntProp",
+        subjectClassName = None,
+        propertyType = PropertyValueType.IntValue,
+        label = LangString("en", "Test int property"),
+        comment = LangString("en", "A test int property")
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/properties",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createPropRequestJson)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      val responseStr = responseAs[String]
+      assert(status == StatusCodes.OK, responseStr)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+
+    }
+
+    // Add cardinality hasIntProp to TestClassOne.
+    val addCardinalitiesRequestJsonOne = AddCardinalitiesRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "TestClassOne",
+        restrictions = List(
+          Restriction(
+            CardinalityRestriction.MaxCardinalityOne,
+            onProperty = Property(ontology = "freetest", property = "hasIntProp")
+          )
+        )
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/cardinalities",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJsonOne)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      val responseStr = responseAs[String]
+      assert(status == StatusCodes.OK, responseStr)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+
+    // Add cardinality hasIntProp to TestClassTwo.
+    val addCardinalitiesRequestJsonTwo = AddCardinalitiesRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "TestClassTwo",
+        restrictions = List(
+          Restriction(
+            CardinalityRestriction.MaxCardinalityOne,
+            onProperty = Property(ontology = "freetest", property = "hasIntProp")
+          )
+        )
+      )
+      .value
+
+    Post(
+      "/v2/ontologies/cardinalities",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, addCardinalitiesRequestJsonTwo)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+      val responseStr = responseAs[String]
+      assert(status == StatusCodes.OK, responseStr)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+
+      val responseAsInput: InputOntologyV2 =
+        InputOntologyV2.fromJsonLD(responseJsonDoc, parsingMode = TestResponseParsingModeV2).unescape
+      freetestLastModDate = responseAsInput.ontologyMetadata.lastModificationDate.get
+    }
+
+    // Create a resource of #TestClassOne using #hasIntProp
+    val createResourceWithValues: String =
+      s"""{
+         |  "@type" : "freetest:TestClassOne",
+         |  "freetest:hasIntProp" : {
+         |    "@type" : "knora-api:IntValue",
+         |    "knora-api:hasPermissions" : "CR knora-admin:Creator|V http://rdfh.ch/groups/0001/thing-searcher",
+         |    "knora-api:intValueAsInt" : 5,
+         |    "knora-api:valueHasComment" : "this is the number five"
+         |  },
+         |  "knora-api:attachedToProject" : {
+         |    "@id" : "http://rdfh.ch/projects/0001"
+         |  },
+         |  "rdfs:label" : "test class instance",
+         |  "@context" : {
+         |    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+         |    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
+         |    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
+         |    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+         |    "freetest" : "${SharedOntologyTestDataADM.FREETEST_ONTOLOGY_IRI_LocalHost}#"
+         |  }
+         |}""".stripMargin
+
+    Post(
+      "/v2/resources",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, createResourceWithValues)
+    ) ~> addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> resourcesPath ~> check {
+      val responseStr = responseAs[String]
+      assert(status == StatusCodes.OK, responseStr)
+      val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+      val resourceIri: IRI =
+        responseJsonDoc.body.requireStringWithValidation(JsonLDKeywords.ID, stringFormatter.validateAndEscapeIri)
+      assert(resourceIri.toSmartIri.isKnoraDataIri)
+    }
+
+    // payload to ask if cardinality can be removed from TestClassTwo
+    val cardinalityCanBeDeletedPayload = AddCardinalitiesRequest
+      .make(
+        ontologyName = "freetest",
+        lastModificationDate = freetestLastModDate,
+        className = "TestClassTwo",
+        restrictions = List(
+          Restriction(
+            CardinalityRestriction.MaxCardinalityOne,
+            onProperty = Property(ontology = "freetest", property = "hasIntProp")
+          )
+        )
+      )
+      .value
+
+    //CollectClientTestData("candeletecardinalities-false-request", cardinalityCanBeDeletedPayload.value)
+
+    // Expect cardinality can be deleted from TestClassTwo - CanDo response should return true
+    Post(
+      "/v2/ontologies/candeletecardinalities",
+      HttpEntity(RdfMediaTypes.`application/ld+json`, cardinalityCanBeDeletedPayload)
+    ) ~>
+      addCredentials(BasicHttpCredentials(anythingUsername, password)) ~> ontologiesPath ~> check {
+        val responseStr = responseAs[String]
+        assert(status == StatusCodes.OK, response.toString)
+        val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
+        assert(
+          responseJsonDoc.body
+            .value(OntologyConstants.KnoraApiV2Complex.CanDo)
+            .asInstanceOf[JsonLDBoolean]
+            .value
+        )
+
+        //CollectClientTestData("candeletecardinalities-false-response", responseStr)
+      }
+  }
+
   "verify that link-property can not be deleted" in {
 
     // payload representing a link-property to test that cardinality can't be deleted
@@ -2751,7 +2955,6 @@ class OntologyV2R2RSpec extends R2RSpec {
         )
       )
     )
-    println(cardinalityOnLinkPropertyWhichCantBeDeletedPayload)
 
     val params =
       s"""
@@ -2776,7 +2979,6 @@ class OntologyV2R2RSpec extends R2RSpec {
          |	}]
          |}
          |""".stripMargin
-    println(params)
 
     Post(
       "/v2/ontologies/candeletecardinalities",
@@ -2785,7 +2987,6 @@ class OntologyV2R2RSpec extends R2RSpec {
       BasicHttpCredentials(anythingUsername, password)
     ) ~> ontologiesPath ~> check {
       val responseStr = responseAs[String]
-      println(responseStr)
       assert(status == StatusCodes.OK, response.toString)
       val responseJsonDoc = JsonLDUtil.parseJsonLD(responseStr)
       assert(!responseJsonDoc.body.value(OntologyConstants.KnoraApiV2Complex.CanDo).asInstanceOf[JsonLDBoolean].value)
