@@ -34,6 +34,7 @@ test-data/admin/lists/get-lists-response.json
 test-data/admin/lists/get-node-response.json
 test-data/admin/lists/insert-childNode-in-position-request.json
 test-data/admin/lists/insert-childNode-in-position-response.json
+test-data/admin/lists/not-update-childNode-comments-request.json
 test-data/admin/lists/update-childNode-comments-request.json
 test-data/admin/lists/update-childNode-comments-response.json
 test-data/admin/lists/update-childNode-labels-request.json

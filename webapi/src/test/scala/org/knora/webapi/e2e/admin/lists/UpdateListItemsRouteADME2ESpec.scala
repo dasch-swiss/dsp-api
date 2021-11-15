@@ -370,7 +370,7 @@ class UpdateListItemsRouteADME2ESpec
           TestDataFileContent(
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
-              filename = "update-childNode-comments-request",
+              filename = "not-update-childNode-comments-request",
               fileExtension = "json"
             ),
             text = deleteNodeComments
