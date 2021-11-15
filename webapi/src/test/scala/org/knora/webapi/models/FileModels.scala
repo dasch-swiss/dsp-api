@@ -9,6 +9,7 @@ import org.knora.webapi.{ApiV2Complex, IRI}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceV2, CreateValueInNewResourceV2}
 import org.knora.webapi.messages.v2.responder.valuemessages.{
+  BundleFileValueContentV2,
   DocumentFileValueContentV2,
   FileValueV2,
   StillImageFileValueContentV2,
@@ -538,6 +539,59 @@ object FileMessageModels {
         )
         .value
       new CreateImageMessage(value) {}
+    }
+  }
+
+  sealed abstract case class CreateBundleMessage private (value: CreateResourceV2)
+  object CreateBundleMessage {
+    def make(
+      resourceIri: IRI,
+      internalFilename: String,
+      internalMimeType: String,
+      resourceClassIri: SmartIri = OntologyConstants.KnoraApiV2Complex.BundleRepresentation.toSmartIri,
+      originalFilename: Option[String] = Some("test.zip"),
+      label: String = "test bundle",
+      comment: Option[String] = Some("This is a zip archive"),
+      project: ProjectADM = SharedTestDataADM.anythingProject,
+      permissions: Option[String] = None,
+      valueIRI: Option[SmartIri] = None,
+      valueUUID: Option[UUID] = None,
+      valueCreationDate: Option[Instant] = None,
+      valuePermissions: Option[String] = None
+    ): CreateBundleMessage = {
+      val valuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasBundleFileValue.toSmartIri
+      val valueContent = BundleFileValueContentV2(
+        ontologySchema = ApiV2Complex,
+        fileValue = FileValueV2(
+          internalFilename = internalFilename,
+          internalMimeType = internalMimeType,
+          originalFilename = originalFilename,
+          originalMimeType = Some(internalMimeType)
+        ),
+        comment = comment
+      )
+      val value = CreateResourceMessage
+        .make(
+          resourceIri = resourceIri,
+          resourceClassIri = resourceClassIri,
+          label = label,
+          valuePropertyIris = List(valuePropertyIri),
+          values = List(
+            List(
+              CreateValueInNewResourceV2(
+                valueContent = valueContent,
+                customValueIri = valueIRI,
+                customValueUUID = valueUUID,
+                customValueCreationDate = valueCreationDate,
+                permissions = valuePermissions
+              )
+            )
+          ),
+          project = project,
+          permissions = permissions
+        )
+        .value
+      new CreateBundleMessage(value) {}
     }
   }
 

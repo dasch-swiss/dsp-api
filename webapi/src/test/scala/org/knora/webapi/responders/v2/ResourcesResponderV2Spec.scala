@@ -1247,10 +1247,39 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
     }
 
-    "create a resource with bundle representation" ignore {
+    "create a resource with bundle representation" in {
+      // Create the resource.
 
-      // TODO: implement
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
+      val inputResource = CreateDocumentMessage
+        .make(
+          resourceIri = resourceIri,
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVps.zip"
+        )
+        .value
+
+      responderManager ! CreateResourceRequestV2(
+        createResource = inputResource,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgType[ReadResourcesSequenceV2](timeout)
+
+      // Get the resource from the triplestore and check it.
+
+      val outputResource = getResource(resourceIri, anythingUserProfile)
+
+      checkCreateResource(
+        inputResourceIri = resourceIri,
+        inputResource = inputResource,
+        outputResource = outputResource,
+        defaultResourcePermissions = defaultAnythingResourcePermissions,
+        defaultValuePermissions = defaultStillImageFileValuePermissions,
+        requestingUser = anythingUserProfile
+      )
     }
 
     "not create a resource with missing required values" in {
