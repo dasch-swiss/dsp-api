@@ -11,6 +11,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceV2
 import org.knora.webapi.messages.v2.responder.valuemessages.{DocumentFileValueContentV2, FileValueV2, ValueContentV2}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 
 object FileJsonModels {
 
@@ -426,7 +427,9 @@ object FileMessageModels {
       pageCount: Option[Int] = Some(1),
       dimX: Option[Int] = Some(100),
       dimY: Option[Int] = Some(100),
-      comment: Option[String] = Some("This is a document")
+      label: String = "test document",
+      comment: Option[String] = Some("This is a document"),
+      project: ProjectADM = SharedTestDataADM.anythingProject
     ): CreateDocumentMessage = {
       val valuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri
       val valueContent = DocumentFileValueContentV2(
@@ -445,8 +448,11 @@ object FileMessageModels {
       val value = CreateResourceMessage
         .make(
           resourceIri = resourceIri,
-          valuePropertyIri = valuePropertyIri,
-          valueContent = valueContent
+          resourceClassIri = OntologyConstants.KnoraApiV2Complex.DocumentRepresentation.toSmartIri,
+          label = label,
+          valuePropertyIri = Some(valuePropertyIri),
+          valueContent = Some(valueContent),
+          project = project
         )
         .value
       new CreateDocumentMessage(value) {}
@@ -457,23 +463,23 @@ object FileMessageModels {
   object CreateResourceMessage {
     def make(
       resourceIri: IRI,
-      valuePropertyIri: SmartIri,
-      valueContent: ValueContentV2
+      resourceClassIri: SmartIri,
+      label: String,
+      valuePropertyIri: Option[SmartIri] = None,
+      valueContent: Option[ValueContentV2] = None,
+      project: ProjectADM = SharedTestDataADM.anythingProject
     ): CreateResourceMessage = {
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        valuePropertyIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = valueContent
-          )
-        )
-      )
+      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = (valuePropertyIri, valueContent) match {
+        case (Some(iri), Some(content)) => Map(iri -> Seq(CreateValueInNewResourceV2(content)))
+        case _                          => Map.empty
+      }
 
       val inputResource = CreateResourceV2(
         resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = OntologyConstants.KnoraApiV2Complex.DocumentRepresentation.toSmartIri,
-        label = "test document",
+        resourceClassIri = resourceClassIri,
+        label = label,
         values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
+        projectADM = project
       )
       new CreateResourceMessage(inputResource) {}
     }

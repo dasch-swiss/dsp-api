@@ -915,13 +915,13 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
-        label = "test thing",
-        values = Map.empty,
-        projectADM = SharedTestDataADM.anythingProject
-      )
+      val inputResource = CreateResourceMessage
+        .make(
+          resourceIri = resourceIri,
+          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+          label = "test thing"
+        )
+        .value
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
