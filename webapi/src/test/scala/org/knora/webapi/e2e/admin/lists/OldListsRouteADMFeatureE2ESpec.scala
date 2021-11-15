@@ -169,7 +169,7 @@ class OldListsRouteADMFeatureE2ESpec
 
       "return basic list information (w/o children)" in {
         val request = Get(
-          baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList/info"
+          baseApiUrl + s"/admin/lists/infos/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList"
         ) ~> addCredentials(rootCreds.basicHttpCredentials)
         val response: HttpResponse = singleAwaitingRequest(request)
         // log.debug(s"response: ${response.toString}")
@@ -195,6 +195,35 @@ class OldListsRouteADMFeatureE2ESpec
         )
       }
 
+      "return basic list information (w/o children) for new merged GET route" in {
+        // the same test as above, testing the new route
+        val request = Get(
+          baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList/info"
+        ) ~> addCredentials(rootCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+
+        response.status should be(StatusCodes.OK)
+
+        val receivedListInfo: ListRootNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+
+        val expectedListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
+
+        receivedListInfo.sorted should be(expectedListInfo.sorted)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-list-info-response-new-merged-get-route",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
       "return a complete list" in {
         val request = Get(
           baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList"
@@ -213,6 +242,34 @@ class OldListsRouteADMFeatureE2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-list-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "return node info w/o children" in {
+        val request = Get(
+          baseApiUrl + s"/admin/lists/nodes/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList01"
+        ) ~> addCredentials(rootCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+
+        response.status should be(StatusCodes.OK)
+
+        val receivedListInfo: ListChildNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("nodeinfo").convertTo[ListChildNodeInfoADM]
+
+        val expectedListInfo: ListChildNodeInfoADM = SharedListsTestDataADM.treeListNode01Info
+
+        receivedListInfo.sorted should be(expectedListInfo.sorted)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-list-node-info-response",
               fileExtension = "json"
             ),
             text = responseToString(response)

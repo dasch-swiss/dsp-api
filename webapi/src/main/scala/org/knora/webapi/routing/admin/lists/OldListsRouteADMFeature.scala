@@ -50,7 +50,9 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     getLists(featureFactoryConfig) ~
       getListNode(featureFactoryConfig) ~
-      getListNodeInfo(featureFactoryConfig) ~
+      getListOrNodeInfo(featureFactoryConfig, "infos") ~
+      getListOrNodeInfo(featureFactoryConfig, "nodes") ~
+      getListInfo(featureFactoryConfig) ~
       createListRootNode(featureFactoryConfig) ~
       createListChildNode(featureFactoryConfig) ~
       updateList(featureFactoryConfig)
@@ -134,9 +136,37 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
   }
 
   /**
+   * Returns basic information about list node, root or child, w/o children (if exist).
+   */
+  private def getListOrNodeInfo(featureFactoryConfig: FeatureFactoryConfig, routeSwitch: String): Route =
+    path(ListsBasePath / routeSwitch / Segment) { iri =>
+      get { requestContext =>
+        val listIri =
+          stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+        val requestMessage: Future[ListNodeInfoGetRequestADM] = for {
+          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
+        } yield ListNodeInfoGetRequestADM(
+          iri = listIri,
+          featureFactoryConfig = featureFactoryConfig,
+          requestingUser = requestingUser
+        )
+
+        RouteUtilADM.runJsonRoute(
+          requestMessageF = requestMessage,
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig,
+          settings = settings,
+          responderManager = responderManager,
+          log = log
+        )
+      }
+    }
+
+  /**
    * Returns basic information about a node, root or child, w/o children.
    */
-  private def getListNodeInfo(featureFactoryConfig: FeatureFactoryConfig): Route =
+  private def getListInfo(featureFactoryConfig: FeatureFactoryConfig): Route =
+//  Brought from new lists route implementation, has the same functionality as getListOrNodeInfo
     path(ListsBasePath / Segment / "info") { iri =>
       get { requestContext =>
         val listIri =
