@@ -10,6 +10,7 @@ require "send_response"
 require "jwt"
 require "clean_temp_dir"
 require "util"
+Json = require "json"
 
 --------------------------------------------------------------------------
 -- Calculate the SHA256 checksum of a file using the operating system tool
@@ -206,8 +207,35 @@ for file_index, file_params in pairs(server.uploads) do
 
     --     -- run shell script to convert video and extract preview frames
     --     -- use os.execute
-        os.execute("ffprobe -i " .. tmp_storage_file_path)
-        
+        -- os.execute("ffprobe -i " .. tmp_storage_file_path)
+
+        -- get video file info with ffprobe and save as json file
+        local tmp_storage_ffprobe = uuid62 .. ".json"
+        local hashed_tmp_storage_ffprobe
+        success, hashed_tmp_storage_ffprobe = helper.filename_hash(tmp_storage_ffprobe)
+        if not success then
+            send_error(500, "helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_ffprobe))
+            return
+        else
+        end
+
+        local tmp_storage_ffprobe_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_ffprobe
+        -- local ffprobe_json = io.open(tmp_storage_ffprobe_path, "w")
+        -- ffprobe_json:close()
+        -- server.log("upload.lua: create ffprobe json file to " .. tmp_storage_ffprobe_path, server.loglevel.LOG_DEBUG)
+
+        os.execute("ffprobe -v quiet -print_format json -show_format -show_streams " .. tmp_storage_file_path .. " > " .. tmp_storage_ffprobe_path)
+
+        -- local contents = ""
+        local ffprobe = {}
+        -- local ffprobe_content = ffprobe_json:read("r")
+
+        local ffprobe_json = io.open(tmp_storage_ffprobe_path, "r")
+        local contents = ffprobe_json:read("*a")
+        ffprobe = Json.decode(contents);
+        io.close( ffprobe_json )
+
+        server.log("upload.lua: get video info: duration " .. ffprobe.streams[0].duration, server.loglevel.LOG_DEBUG)
 
     else
         -- It's not an image or video file. Just move it to its temporary storage location.
