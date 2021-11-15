@@ -153,9 +153,17 @@ abstract class KnoraRoute(routeData: KnoraRouteData) extends KnoraRouteFactory(r
   def toFuture[A](either: Either[Throwable, A]): Future[A] = either.fold(Future.failed, Future.successful)
 
   /**
-   * Helper method converting an [[zio.prelude.Validation]] to a [[Future]].
-   * FIXME: only the first error is returned, which defeats the purpose, but don't know better at the moment.
+   * Helper method converting an [[zio.prelude.Validation]] to a [[scala.concurrent.Future]].
    */
   def toFuture[A](validation: Validation[Throwable, A]): Future[A] =
-    validation.fold(errors => Future.failed(errors.head), Future.successful)
+    validation.fold(
+      errors => {
+        val newThrowable: Throwable = errors.tail.foldLeft(errors.head) { (acc, err) =>
+          acc.addSuppressed(err)
+          acc
+        }
+        Future.failed(newThrowable)
+      },
+      Future.successful
+    )
 }
