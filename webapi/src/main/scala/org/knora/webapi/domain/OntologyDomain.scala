@@ -23,13 +23,28 @@ object OntologyDomain extends App {
     type WithTag[T] = OntologyProperty { type Tag = T }
   }
 
-  trait Cardinality {
+  trait Cardinality { self =>
     type ClassTag
     type PropertyTag
 
     def ontologyClass: OntologyClass.WithTag[ClassTag]
     def ontologyProperty: OntologyProperty.WithTag[PropertyTag]
     def cardinalityType: CardinalityType
+
+    def refine[Classes, Properties](implicit
+      ev1: Classes <:< ClassTag,
+      ev2: Properties <:< PropertyTag
+    ): Cardinality.WithTags[_ >: Classes, _ >: Properties] =
+      new Cardinality {
+        type ClassTag >: Classes
+        type PropertyTag >: Properties
+
+        def ontologyClass: OntologyClass.WithTag[ClassTag] =
+          self.ontologyClass.asInstanceOf[OntologyClass.WithTag[ClassTag]]
+        def ontologyProperty: OntologyProperty.WithTag[PropertyTag] =
+          self.ontologyProperty.asInstanceOf[OntologyProperty.WithTag[PropertyTag]]
+        def cardinalityType: CardinalityType = self.cardinalityType
+      }
   }
   object Cardinality {
     type WithTags[T1, T2] = Cardinality { type ClassTag = T1; type PropertyTag = T2 }
@@ -53,7 +68,6 @@ object OntologyDomain extends App {
   }
 
   sealed trait Ontology[+Classes, +Properties] { self =>
-    def bimap[C2, P2](f: Classes => C2, g: Properties => P2): Ontology[C2, P2] = ???
 
     def empty(ontoInfo: OntologyInfo): Ontology[Any, Any] = Ontology.Empty(ontoInfo)
 
@@ -69,7 +83,7 @@ object OntologyDomain extends App {
       ev1: Classes <:< cardinality.ClassTag,
       ev2: Properties <:< cardinality.PropertyTag
     ): Ontology[Classes, Properties] =
-      Ontology.WithCardinality[Classes, Properties](self, cardinality)
+      Ontology.WithCardinality[Classes, Properties](self, cardinality.refine[Classes, Properties])
 
   }
   object Ontology {
@@ -105,8 +119,10 @@ object OntologyDomain extends App {
   val classTwo    = OntologyClass("ClassTwo", "Class Two", "Class Two")
   val propertyTwo = OntologyProperty("PropertyTwo", "Property Two", "Property Two", "http://example.org/test")
 
-  val cardOne = Cardinality(classOne, propertyOne, CardinalityType.MinCardinalityOne)
-  val cardTwo = Cardinality(classTwo, propertyTwo, CardinalityType.MinCardinalityOne)
+  val cardOne   = Cardinality(classOne, propertyOne, CardinalityType.MinCardinalityOne)
+  val cardTwo   = Cardinality(classTwo, propertyTwo, CardinalityType.MinCardinalityOne)
+  val cardThree = Cardinality(classOne, propertyTwo, CardinalityType.MinCardinalityOne)
+  val cardFour  = Cardinality(classTwo, propertyOne, CardinalityType.MinCardinalityOne)
 
   val exampleOnto =
     Ontology
@@ -116,7 +132,7 @@ object OntologyDomain extends App {
       .withProperty(propertyOne)
       //.withProperty(propertyTwo)
       .withCardinality(cardOne)
-      .withCardinality(cardTwo)
+      .withCardinality(cardOne)
 
 //
 //  val x: classOne.Tag = ???
