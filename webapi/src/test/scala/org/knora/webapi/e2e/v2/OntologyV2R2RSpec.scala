@@ -2919,7 +2919,10 @@ class OntologyV2R2RSpec extends R2RSpec {
       )
       .value
 
-    //CollectClientTestData("candeletecardinalities-false-request", cardinalityCanBeDeletedPayload.value)
+    CollectClientTestData(
+      "candeletecardinalities-true-if-not-used-in-this-class-request",
+      cardinalityCanBeDeletedPayload
+    )
 
     // Expect cardinality can be deleted from TestClassTwo - CanDo response should return true
     Post(
@@ -2937,7 +2940,7 @@ class OntologyV2R2RSpec extends R2RSpec {
             .value
         )
 
-        //CollectClientTestData("candeletecardinalities-false-response", responseStr)
+        CollectClientTestData("candeletecardinalities-true-if-not-used-in-this-class-response", responseStr)
       }
   }
 
