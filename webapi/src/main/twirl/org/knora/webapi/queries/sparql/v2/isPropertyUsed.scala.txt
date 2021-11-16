@@ -35,19 +35,17 @@ ASK
 WHERE {
     BIND(IRI("@internalPropertyIri") AS ?property)
     BIND(IRI("@internalClassIri") AS ?classIri)
-    BIND(IRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type") AS ?class)
 
     {
-    #select all items with property ?property and class of classIri.
-    ?s ?property ?o .
-    ?s ?class ?classIri .
+        # select all items of type classIri with property ?property.
+        ?s ?property ?o .
+        ?s rdf:type ?classIri .
     }
 
-    UNION
-        {
-        ?s ?property ?o .
-        #select all items with property ?property and subclass or superclass of classIri.
-        ?s rdf:type ?type.
-        ?type rdfs:subClassOf*|rdfs:superClassOf* ?classIri.
-        }
+    UNION {
+            # select all items belonging to a subclass of classIri and with property ?property.
+            ?s ?property ?o .
+            ?s rdf:type ?class .
+            ?class rdfs:subClassOf* ?classIri .
+          }
 }
