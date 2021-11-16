@@ -408,9 +408,8 @@ class OntologyV2R2RSpec extends R2RSpec {
             } else {
               // No. Compare the received response with the expected response.
               mediaType match {
-                case RdfMediaTypes.`application/ld+json` => {
+                case RdfMediaTypes.`application/ld+json` =>
                   assert(JsonParser(responseStr) == JsonParser(httpGetTest.readFile(mediaType)))
-                }
 
                 case RdfMediaTypes.`text/turtle` =>
                   assert(parseTurtle(responseStr) == parseTurtle(httpGetTest.readFile(mediaType)))

@@ -62,7 +62,3 @@
     knora-base:resourceIcon "page.png" ;
     rdfs:label              "Seite"@de, "Page"@en ;
     rdfs:comment            """A resource describing a page in a book."""@en .
-
-
-
-
