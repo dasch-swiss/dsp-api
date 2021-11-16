@@ -166,7 +166,7 @@ class OldListsRouteADMFeature(routeData: KnoraRouteData)
    * Returns basic information about a node, root or child, w/o children.
    */
   private def getListInfo(featureFactoryConfig: FeatureFactoryConfig): Route =
-//  Brought from new lists route implementation, has the same functionality as getListOrNodeInfo
+//  Brought from new lists route implementation, has the e functionality as getListOrNodeInfo
     path(ListsBasePath / Segment / "info") { iri =>
       get { requestContext =>
         val listIri =

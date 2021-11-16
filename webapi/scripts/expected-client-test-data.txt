@@ -28,8 +28,9 @@ test-data/admin/lists/delete-list-node-response.json
 test-data/admin/lists/delete-list-response.json
 test-data/admin/lists/get-anything-project-lists-response.json
 test-data/admin/lists/get-image-project-lists-response.json
-test-data/admin/lists/get-list-info-response.json
 test-data/admin/lists/get-list-info-response-new-merged-get-route.json
+test-data/admin/lists/get-list-info-response.json
+test-data/admin/lists/get-list-node-info-response.json
 test-data/admin/lists/get-list-response.json
 test-data/admin/lists/get-lists-response.json
 test-data/admin/lists/get-node-response.json
