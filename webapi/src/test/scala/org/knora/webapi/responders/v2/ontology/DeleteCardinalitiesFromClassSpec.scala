@@ -93,7 +93,6 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
     }
 
     "detect that property is in use, when used in a resource of a subclass" in {
-      // TODO Shouldn't this be false? Cardinality can be deleted from superclass if used in subclass (doesn't affect sublcass, only deletion of property should be forbidden)
       val FreetestOntologyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
       val internalPropertyIri = FreetestOntologyIri.makeEntityIri("hasDecimal").toOntologySchema(InternalSchema)
       val internalClassIri = FreetestOntologyIri.makeEntityIri("FreeTest").toOntologySchema(InternalSchema)
