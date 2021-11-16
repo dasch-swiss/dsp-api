@@ -195,6 +195,8 @@ test-data/v2/ontologies/anything-ontology.json
 test-data/v2/ontologies/can-do-response.json
 test-data/v2/ontologies/candeletecardinalities-false-request.json
 test-data/v2/ontologies/candeletecardinalities-false-response.json
+test-data/v2/ontologies/candeletecardinalities-true-if-not-used-in-this-class-request.json
+test-data/v2/ontologies/candeletecardinalities-true-if-not-used-in-this-class-response.json
 test-data/v2/ontologies/candeletecardinalities-true-request.json
 test-data/v2/ontologies/candeletecardinalities-true-response.json
 test-data/v2/ontologies/change-class-comment-request.json
