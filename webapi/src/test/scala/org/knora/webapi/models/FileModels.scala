@@ -22,7 +22,21 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import java.time.Instant
 import java.util.UUID
 
+object FileModelConstants {
+  val documentRepresentation = "DocumentRepresentation"
+  val textRepresentation = "TextRepresentation"
+  val stillImageRepresentation = "StillImageRepresentation"
+  val movingImageRepresentation = "MovingImageRepresentation"
+  val audioRepresentation = "AudioRepresentation"
+  val bundleRepresentation = "BundleRepresentation"
+
+  val knoraApiPrefix = "knora-api"
+
+  val anythingShortcode = "0001"
+}
+
 object FileJsonModels {
+  import FileModelConstants._
 
   /**
    * Trait for FileValue type.
@@ -87,9 +101,9 @@ object FileJsonModels {
   object UploadDocumentFile {
     def make(
       internalFilename: String,
-      className: String = "DocumentRepresentation",
-      shortcode: String = "0001",
-      ontologyName: String = "knora-api"
+      className: String = documentRepresentation,
+      shortcode: String = anythingShortcode,
+      ontologyName: String = knoraApiPrefix
     ): UploadDocumentFile = new UploadDocumentFile(
       UploadFileRequest
         .make(
@@ -107,9 +121,9 @@ object FileJsonModels {
   object UploadTextFile {
     def make(
       internalFilename: String,
-      className: String = "TextRepresentation",
-      shortcode: String = "0001",
-      ontologyName: String = "knora-api"
+      className: String = textRepresentation,
+      shortcode: String = anythingShortcode,
+      ontologyName: String = knoraApiPrefix
     ): UploadTextFile = new UploadTextFile(
       UploadFileRequest
         .make(
@@ -127,9 +141,9 @@ object FileJsonModels {
   object UploadImageFile {
     def make(
       internalFilename: String,
-      className: String = "StillImageRepresentation",
-      shortcode: String = "0001",
-      ontologyName: String = "knora-api"
+      className: String = stillImageRepresentation,
+      shortcode: String = anythingShortcode,
+      ontologyName: String = knoraApiPrefix
     ): UploadImageFile = new UploadImageFile(
       UploadFileRequest
         .make(
@@ -147,9 +161,9 @@ object FileJsonModels {
   object UploadAudioFile {
     def make(
       internalFilename: String,
-      className: String = "AudioRepresentation",
-      shortcode: String = "0001",
-      ontologyName: String = "knora-api"
+      className: String = audioRepresentation,
+      shortcode: String = anythingShortcode,
+      ontologyName: String = knoraApiPrefix
     ): UploadAudioFile = new UploadAudioFile(
       UploadFileRequest
         .make(
@@ -167,9 +181,9 @@ object FileJsonModels {
   object UploadVideoFile {
     def make(
       internalFilename: String,
-      className: String = "MovingImageRepresentation",
-      shortcode: String = "0001",
-      ontologyName: String = "knora-api"
+      className: String = movingImageRepresentation,
+      shortcode: String = anythingShortcode,
+      ontologyName: String = knoraApiPrefix
     ): UploadVideoFile = new UploadVideoFile(
       UploadFileRequest
         .make(
@@ -187,9 +201,9 @@ object FileJsonModels {
   object UploadBundleFile {
     def make(
       internalFilename: String,
-      className: String = "BundleRepresentation",
-      shortcode: String = "0001",
-      ontologyName: String = "knora-api"
+      className: String = bundleRepresentation,
+      shortcode: String = anythingShortcode,
+      ontologyName: String = knoraApiPrefix
     ): UploadBundleFile = new UploadBundleFile(
       UploadFileRequest
         .make(
@@ -252,8 +266,8 @@ object FileJsonModels {
       resourceIRI: String,
       internalFilename: String,
       valueIRI: String,
-      className: String = "DocumentRepresentation",
-      ontologyName: String = "knora-api"
+      className: String = documentRepresentation,
+      ontologyName: String = knoraApiPrefix
     ): ChangeDocumentFileRequest = new ChangeDocumentFileRequest(
       ChangeFileRequest
         .make(
@@ -274,8 +288,8 @@ object FileJsonModels {
       resourceIRI: String,
       internalFilename: String,
       valueIRI: String,
-      className: String = "StillImageRepresentation",
-      ontologyName: String = "knora-api"
+      className: String = stillImageRepresentation,
+      ontologyName: String = knoraApiPrefix
     ): ChangeImageFileRequest = new ChangeImageFileRequest(
       ChangeFileRequest
         .make(
@@ -296,8 +310,8 @@ object FileJsonModels {
       resourceIRI: String,
       internalFilename: String,
       valueIRI: String,
-      className: String = "MovingImageRepresentation",
-      ontologyName: String = "knora-api"
+      className: String = movingImageRepresentation,
+      ontologyName: String = knoraApiPrefix
     ): ChangeVideoFileRequest = new ChangeVideoFileRequest(
       ChangeFileRequest
         .make(
@@ -318,8 +332,8 @@ object FileJsonModels {
       resourceIRI: String,
       internalFilename: String,
       valueIRI: String,
-      className: String = "TextRepresentation",
-      ontologyName: String = "knora-api"
+      className: String = textRepresentation,
+      ontologyName: String = knoraApiPrefix
     ): ChangeTextFileRequest = new ChangeTextFileRequest(
       ChangeFileRequest
         .make(
@@ -340,8 +354,8 @@ object FileJsonModels {
       resourceIRI: String,
       internalFilename: String,
       valueIRI: String,
-      className: String = "AudioRepresentation",
-      ontologyName: String = "knora-api"
+      className: String = audioRepresentation,
+      ontologyName: String = knoraApiPrefix
     ): ChangeAudioFileRequest = new ChangeAudioFileRequest(
       ChangeFileRequest
         .make(
@@ -362,8 +376,8 @@ object FileJsonModels {
       resourceIRI: String,
       internalFilename: String,
       valueIRI: String,
-      className: String = "BundleRepresentation",
-      ontologyName: String = "knora-api"
+      className: String = bundleRepresentation,
+      ontologyName: String = knoraApiPrefix
     ): ChangeBundleFileRequest = new ChangeBundleFileRequest(
       ChangeFileRequest
         .make(
