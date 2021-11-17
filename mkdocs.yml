@@ -58,7 +58,6 @@ nav:
           - Projects Endpoint: 03-apis/api-admin/projects.md
           - Groups Endpoint: 03-apis/api-admin/groups.md
           - Lists Endpoint: 03-apis/api-admin/lists.md
-          - New Lists Endpoint: 03-apis/api-admin/lists_new-list-admin-routes_v1.md
           - Permissions Endpoint: 03-apis/api-admin/permissions.md
           - Stores Endpoint: 03-apis/api-admin/stores.md
       - Util API:
