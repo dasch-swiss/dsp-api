@@ -5,14 +5,6 @@
 
 package org.knora.webapi.messages
 
-import java.nio.ByteBuffer
-import java.text.ParseException
-import java.time._
-import java.time.format.DateTimeFormatter
-import java.time.temporal.{ChronoField, TemporalAccessor}
-import java.util.concurrent.ConcurrentHashMap
-import java.util.{Base64, UUID}
-
 import akka.actor.ActorRef
 import akka.event.LoggingAdapter
 import akka.http.scaladsl.util.FastFuture
@@ -39,6 +31,13 @@ import org.knora.webapi.settings.KnoraSettingsImpl
 import org.knora.webapi.util.{Base64UrlCheckDigit, JavaUtil}
 import spray.json._
 
+import java.nio.ByteBuffer
+import java.text.ParseException
+import java.time._
+import java.time.format.DateTimeFormatter
+import java.time.temporal.{ChronoField, TemporalAccessor}
+import java.util.concurrent.ConcurrentHashMap
+import java.util.{Base64, UUID}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.control.Exception._
 import scala.util.matching.Regex

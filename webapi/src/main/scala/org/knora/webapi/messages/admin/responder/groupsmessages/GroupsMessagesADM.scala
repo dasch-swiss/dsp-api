@@ -5,17 +5,17 @@
 
 package org.knora.webapi.messages.admin.responder.groupsmessages
 
-import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import org.knora.webapi.IRI
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
-import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectsADMJsonProtocol}
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.admin.responder.{KnoraRequestADM, KnoraResponseADM}
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import spray.json.{DefaultJsonProtocol, JsValue, JsonFormat, RootJsonFormat}
+
+import java.util.UUID
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // API requests
@@ -38,13 +38,7 @@ case class CreateGroupApiRequestADM(
   status: Boolean,
   selfjoin: Boolean
 ) extends GroupsADMJsonProtocol {
-
-  implicit protected val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-
   def toJsValue: JsValue = createGroupApiRequestADMFormat.write(this)
-
-  //check the custom Iri
-  stringFormatter.validateOptionalGroupIri(id, throw BadRequestException(s"Invalid group IRI"))
 }
 
 /**
@@ -65,7 +59,7 @@ case class ChangeGroupApiRequestADM(
   status: Option[Boolean] = None,
   selfjoin: Option[Boolean] = None
 ) extends GroupsADMJsonProtocol {
-
+//  TODO-mpro: once status is separate route then it can be removed
   private val parametersCount = List(
     name,
     descriptions,
@@ -97,8 +91,6 @@ case class ChangeGroupApiRequestADM(
  * An abstract trait representing a request message that can be sent to 'GroupsResponderADM'.
  */
 sealed trait GroupsResponderRequestADM extends KnoraRequestADM
-
-// Requests
 
 /**
  * Get all information about all groups.
@@ -190,7 +182,7 @@ case class GroupCreateRequestADM(
  */
 case class GroupChangeRequestADM(
   groupIri: IRI,
-  changeGroupRequest: ChangeGroupApiRequestADM,
+  changeGroupRequest: GroupUpdatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -306,21 +298,6 @@ case class GroupADM(
  * @param selfjoin      the group's self-join status.
  */
 case class GroupShortADM(id: IRI, name: String, descriptions: Seq[StringLiteralV2], status: Boolean, selfjoin: Boolean)
-
-/**
- * Payload used for updating of an existing group.
- *
- * @param name          the name of the group.
- * @param descriptions  the descriptions of the group.
- * @param status        the group's status.
- * @param selfjoin      the group's self-join status.
- */
-case class GroupUpdatePayloadADM(
-  name: Option[String] = None,
-  descriptions: Option[Seq[StringLiteralV2]] = None,
-  status: Option[Boolean] = None,
-  selfjoin: Option[Boolean] = None
-)
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // JSON formatting

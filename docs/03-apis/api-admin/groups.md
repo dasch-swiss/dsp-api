@@ -87,7 +87,7 @@ hasProjectRestrictedGroupAdminPermission (for this group)
 - PUT: `/admin/groups/<groupIri>/status`
 - BODY:
 
-```
+```json
 {
   "status": false
 }

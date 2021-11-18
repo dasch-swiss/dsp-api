@@ -49,7 +49,6 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
 
   "The Groups Route ('admin/groups')" when {
     "used to query for group information" should {
-
       "return all groups" in {
         val request =
           Get(baseApiUrl + s"/admin/groups") ~> addCredentials(BasicHttpCredentials(imagesUser01Email, testPass))
@@ -159,11 +158,9 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
     }
 
     "used to modify group information" should {
-
       val newGroupIri = new MutableTestIri
 
       "CREATE a new group" in {
-
         val createGroupRequest: String =
           s"""{
              |    "name": "NewGroup",
@@ -217,7 +214,6 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
       }
 
       "UPDATE a group" in {
-
         val updateGroupRequest: String =
           s"""{
              |    "name": "UpdatedGroupName",
@@ -264,7 +260,6 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
       }
 
       "DELETE a group" in {
-
         val groupIriEnc = java.net.URLEncoder.encode(newGroupIri.get, "utf-8")
         val request = Delete(baseApiUrl + "/admin/groups/" + groupIriEnc) ~> addCredentials(
           BasicHttpCredentials(imagesUser01Email, testPass)
@@ -295,7 +290,6 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
       }
 
       "CHANGE status of a group" in {
-
         val changeGroupStatusRequest: String =
           s"""{
              |    "status": true
@@ -343,7 +337,6 @@ class GroupsADME2ESpec extends E2ESpec(GroupsADME2ESpec.config) with GroupsADMJs
     }
 
     "used to query members" should {
-
       "return all members of a group" in {
         val request = Get(baseApiUrl + s"/admin/groups/$groupIriEnc/members") ~> addCredentials(
           BasicHttpCredentials(imagesUser01Email, testPass)
