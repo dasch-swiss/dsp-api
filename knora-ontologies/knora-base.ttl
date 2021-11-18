@@ -390,9 +390,9 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#hasBundleFileValue
+###  http://www.knora.org/ontology/knora-base#hasArchiveFileValue
 
-:hasBundleFileValue rdf:type owl:ObjectProperty ;
+:hasArchiveFileValue rdf:type owl:ObjectProperty ;
 
                       rdfs:label "hat Zip"@de ,
                       "has zip"@en ,
@@ -401,9 +401,9 @@
 
                       rdfs:comment "Connects a Representation to a zip archive"@en ;
 
-                      :objectClassConstraint :BundleFileValue ;
+                      :objectClassConstraint :ArchiveFileValue ;
 
-                      :subjectClassConstraint :BundleRepresentation ;
+                      :subjectClassConstraint :ArchiveRepresentation ;
 
                       :isEditable true ;
 
@@ -1832,28 +1832,16 @@
 
 
 
-###  http://www.knora.org/ontology/knora-base#BundleFileValue
+###  http://www.knora.org/ontology/knora-base#ArchiveFileValue
 
-:BundleFileValue rdf:type owl:Class ;
+:ArchiveFileValue rdf:type owl:Class ;
 
-                   rdfs:subClassOf :FileValue ,
-                   [ rdf:type owl:Restriction ;
-                     owl:onProperty :pageCount ;
-                     owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                            ] ,
-                   [ rdf:type owl:Restriction ;
-                     owl:onProperty :dimX ;
-                     owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                            ] ,
-                   [ rdf:type owl:Restriction ;
-                     owl:onProperty :dimY ;
-                     owl:maxCardinality "1"^^xsd:nonNegativeInteger
-                            ] .
+                   rdfs:subClassOf :FileValue .
 
 
-###  http://www.knora.org/ontology/knora-base#BundleRepresentation
+###  http://www.knora.org/ontology/knora-base#ArchiveRepresentation
 
-:BundleRepresentation rdf:type owl:Class ;
+:ArchiveRepresentation rdf:type owl:Class ;
 
                         rdfs:label "Repräsentation (Zip)"@de ,
                         "Representation (Zip)"@en ,
@@ -1862,7 +1850,7 @@
 
                         rdfs:subClassOf :Representation ,
                         [ rdf:type owl:Restriction ;
-                          owl:onProperty :hasBundleFileValue ;
+                          owl:onProperty :hasArchiveFileValue ;
                           owl:cardinality "1"^^xsd:nonNegativeInteger
                                  ] .
 
