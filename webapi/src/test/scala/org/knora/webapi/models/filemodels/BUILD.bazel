@@ -4,7 +4,7 @@ load("@io_bazel_rules_scala//scala:scala.bzl", "scala_test")
 filegroup(
     name = "srcs",
     srcs = [
-        "OntologyModels.scala",
-        "//webapi/src/test/scala/org/knora/webapi/models/filemodels:srcs",
+        "FileModels.scala",
+        "FileModelUtil.scala"
     ],
 )
