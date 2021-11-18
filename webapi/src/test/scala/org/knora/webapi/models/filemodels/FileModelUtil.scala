@@ -5,7 +5,20 @@
 
 package org.knora.webapi.models.filemodels
 
+import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.IriConversions._
+
 object FileModelUtil {
+  private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+  def getFileRepresentationClassIri(fileType: FileType): SmartIri = fileType match {
+    case FileType.DocumentFile    => OntologyConstants.KnoraApiV2Complex.DocumentRepresentation.toSmartIri
+    case FileType.StillImageFile  => OntologyConstants.KnoraApiV2Complex.StillImageRepresentation.toSmartIri
+    case FileType.MovingImageFile => OntologyConstants.KnoraApiV2Complex.MovingImageRepresentation.toSmartIri
+    case FileType.TextFile        => OntologyConstants.KnoraApiV2Complex.TextRepresentation.toSmartIri
+    case FileType.AudioFile       => OntologyConstants.KnoraApiV2Complex.AudioRepresentation.toSmartIri
+    case FileType.ArchiveFile     => OntologyConstants.KnoraApiV2Complex.AudioRepresentation.toSmartIri
+  }
 
   def getFileValuePropertyName(fileType: FileType): String = fileType match {
     case FileType.DocumentFile    => "knora-api:hasDocumentFileValue"

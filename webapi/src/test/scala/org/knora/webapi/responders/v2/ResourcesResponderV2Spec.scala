@@ -1156,114 +1156,118 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
     }
 
-//    "create a resource with a still image file value" in {
-//      // Create the resource.
-//
-//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
-//
-//      val inputResource = CreateImageMessage
-//        .make(
-//          resourceIri = resourceIri,
-//          internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
-//          dimX = 512,
-//          dimY = 256,
-//          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri
-//        )
-//        .value
-//
-//      responderManager ! CreateResourceRequestV2(
-//        createResource = inputResource,
-//        featureFactoryConfig = defaultFeatureFactoryConfig,
-//        requestingUser = anythingUserProfile,
-//        apiRequestID = UUID.randomUUID
-//      )
-//
-//      expectMsgType[ReadResourcesSequenceV2](timeout)
-//
-//      // Get the resource from the triplestore and check it.
-//
-//      val outputResource = getResource(resourceIri, anythingUserProfile)
-//
-//      checkCreateResource(
-//        inputResourceIri = resourceIri,
-//        inputResource = inputResource,
-//        outputResource = outputResource,
-//        defaultResourcePermissions = defaultAnythingResourcePermissions,
-//        defaultValuePermissions = defaultStillImageFileValuePermissions,
-//        requestingUser = anythingUserProfile
-//      )
-//    }
-//
-//    "create a resource with document representation" in {
-//      // Create the resource.
-//
-//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
-//
-//      val inputResource = CreateDocumentMessage
-//        .make(
-//          resourceIri = resourceIri,
-//          internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.pdf"
-//        )
-//        .value
-//
-//      responderManager ! CreateResourceRequestV2(
-//        createResource = inputResource,
-//        featureFactoryConfig = defaultFeatureFactoryConfig,
-//        requestingUser = anythingUserProfile,
-//        apiRequestID = UUID.randomUUID
-//      )
-//
-//      expectMsgType[ReadResourcesSequenceV2](timeout)
-//
-//      // Get the resource from the triplestore and check it.
-//
-//      val outputResource = getResource(resourceIri, anythingUserProfile)
-//
-//      checkCreateResource(
-//        inputResourceIri = resourceIri,
-//        inputResource = inputResource,
-//        outputResource = outputResource,
-//        defaultResourcePermissions = defaultAnythingResourcePermissions,
-//        defaultValuePermissions = defaultStillImageFileValuePermissions,
-//        requestingUser = anythingUserProfile
-//      )
-//    }
-//
-//    "create a resource with archive representation" in {
-//      // Create the resource.
-//
-//      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
-//
-//      val inputResource = CreateArchiveMessage
-//        .make(
-//          resourceIri = resourceIri,
-//          internalFilename = "IQUO3t1AABm-FSLC0vNvVps.zip",
-//          internalMimeType = "application/zip"
-//        )
-//        .value
-//
-//      responderManager ! CreateResourceRequestV2(
-//        createResource = inputResource,
-//        featureFactoryConfig = defaultFeatureFactoryConfig,
-//        requestingUser = anythingUserProfile,
-//        apiRequestID = UUID.randomUUID
-//      )
-//
-//      expectMsgType[ReadResourcesSequenceV2](timeout)
-//
-//      // Get the resource from the triplestore and check it.
-//
-//      val outputResource = getResource(resourceIri, anythingUserProfile)
-//
-//      checkCreateResource(
-//        inputResourceIri = resourceIri,
-//        inputResource = inputResource,
-//        outputResource = outputResource,
-//        defaultResourcePermissions = defaultAnythingResourcePermissions,
-//        defaultValuePermissions = defaultStillImageFileValuePermissions,
-//        requestingUser = anythingUserProfile
-//      )
-//    }
+    "create a resource with a still image file value" in {
+      // Create the resource.
+
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+      val inputResource = UploadFileRequest
+        .make(
+          fileType = FileType.StillImageFile,
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
+          className = Some("ThingPicture"),
+          ontologyName = "anything",
+          resourceIri = Some(resourceIri),
+          dimX = Some(512),
+          dimY = Some(256)
+        )
+        .toMessage
+
+      responderManager ! CreateResourceRequestV2(
+        createResource = inputResource,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgType[ReadResourcesSequenceV2](timeout)
+
+      // Get the resource from the triplestore and check it.
+
+      val outputResource = getResource(resourceIri, anythingUserProfile)
+
+      checkCreateResource(
+        inputResourceIri = resourceIri,
+        inputResource = inputResource,
+        outputResource = outputResource,
+        defaultResourcePermissions = defaultAnythingResourcePermissions,
+        defaultValuePermissions = defaultStillImageFileValuePermissions,
+        requestingUser = anythingUserProfile
+      )
+    }
+
+    "create a resource with document representation" in {
+      // Create the resource.
+
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+      val inputResource = UploadFileRequest
+        .make(
+          fileType = FileType.DocumentFile,
+          resourceIri = Some(resourceIri),
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.pdf"
+        )
+        .toMessage
+
+      responderManager ! CreateResourceRequestV2(
+        createResource = inputResource,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgType[ReadResourcesSequenceV2](timeout)
+
+      // Get the resource from the triplestore and check it.
+
+      val outputResource = getResource(resourceIri, anythingUserProfile)
+
+      checkCreateResource(
+        inputResourceIri = resourceIri,
+        inputResource = inputResource,
+        outputResource = outputResource,
+        defaultResourcePermissions = defaultAnythingResourcePermissions,
+        defaultValuePermissions = defaultStillImageFileValuePermissions,
+        requestingUser = anythingUserProfile
+      )
+    }
+
+    "create a resource with archive representation" in {
+      // Create the resource.
+
+      val resourceIri: String = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+      val inputResource = UploadFileRequest
+        .make(
+          fileType = FileType.ArchiveFile,
+          resourceIri = Some(resourceIri),
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVps.zip",
+          internalMimeType = Some("application/zip")
+        )
+        .toMessage
+
+      responderManager ! CreateResourceRequestV2(
+        createResource = inputResource,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgType[ReadResourcesSequenceV2](timeout)
+
+      // Get the resource from the triplestore and check it.
+
+      val outputResource = getResource(resourceIri, anythingUserProfile)
+
+      checkCreateResource(
+        inputResourceIri = resourceIri,
+        inputResource = inputResource,
+        outputResource = outputResource,
+        defaultResourcePermissions = defaultAnythingResourcePermissions,
+        defaultValuePermissions = defaultStillImageFileValuePermissions,
+        requestingUser = anythingUserProfile
+      )
+    }
 
     "not create a resource with missing required values" in {
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.incunabulaProject.shortcode)
