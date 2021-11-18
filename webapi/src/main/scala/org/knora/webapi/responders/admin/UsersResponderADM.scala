@@ -294,7 +294,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     userInformationType: UserInformationTypeADM,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
-    skipCache: Boolean = false
+    skipCache: Boolean = true
   ): Future[Option[UserADM]] = tracedFuture("admin-user-get-single-user") {
 
     log.debug(
