@@ -222,7 +222,7 @@ DSP-API v2 currently supports using Sipi to store the following types of files:
 * Audio: MPEG, MP4, or Waveform audio file format (.wav, .x-wav, .vnd.wave)
 * Text files: TXT, XML, or CSV
 * Video files: MP4
-* Bundle files: ZIP, TAR, GZIP
+* Archive files: ZIP, TAR, GZIP
 
 Support for other types of files will be added in the future.
 
@@ -329,9 +329,9 @@ For a text file, use `knora-api:TextRepresentation`, which has the property
 `knora-api:hasTextFileValue`, pointing to a
 `knora-api:TextFileValue`.
 
-For an archive like zip, use `knora-api:BundleRepresentation`, which has the property
-`knora-api:hasBundleFileValue`, pointing to a
-`knora-api:BundleFileValue`.
+For an archive like zip, use `knora-api:ArchiveRepresentation`, which has the property
+`knora-api:hasArchiveFileValue`, pointing to a
+`knora-api:ArchiveFileValue`.
 
 ## Updating a Value
 

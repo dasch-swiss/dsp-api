@@ -27,24 +27,19 @@ metadata. In the diagram below, a book (`ex:book2`) has a title
 
 ### Projects
 
-In Knora, each item of data belongs to some particular project. Each project using Knora must define a `kb:knoraProject`
-, which has these properties (cardinalities are indicated in parentheses after each property name):
+In Knora, each item of data belongs to some particular project. Each project using Knora must define a
+`kb:knoraProject`, which has these properties (cardinalities are indicated in parentheses after each property name):
 
-- `projectShortname` (1):  
-  A short name that can be used to identify the project in configuration files and the like.
+- `projectShortname` (1): A short name that can be used to identify the project in configuration files and the like.
 
-- `projectLongname` (1):  
-  The full name of the project.
+- `projectLongname` (1): The full name of the project.
 
-- `projectShortcode` (1):  
-  A hexadecimal code that uniquely identifies the project. These codes are assigned to projects by
-  the [DaSCH](http://dasch.swiss/).
+- `projectShortcode` (1): A hexadecimal code that uniquely identifies the project. These codes are assigned to projects
+  by the [DaSCH](http://dasch.swiss/).
 
-- `projectDescription` (1-n):  
-  A description of the project.
+- `projectDescription` (1-n): A description of the project.
 
-- `belongsToInstitution` (0-1):  
-  The `kb:Institution` that the project belongs to.
+- `belongsToInstitution` (0-1): The `kb:Institution` that the project belongs to.
 
 Ontologies and resources are associated with a project by means of the
 `kb:attachedToProject` property, as described in [Ontologies](#ontologies)
@@ -94,29 +89,22 @@ resource.
 
 #### Properties of Resource
 
-- `creationDate` (1):  
-  The time when the resource was created.
+- `creationDate` (1): The time when the resource was created.
 
-- `attachedToUser` (1):  
-  The user who owns the resource.
+- `attachedToUser` (1): The user who owns the resource.
 
-- `attachedToProject` (1):  
-  The project that the resource is part of.
+- `attachedToProject` (1): The project that the resource is part of.
 
-- `lastModificationDate` (0-1):  
-  A timestamp indicating when the resource (or one of its values) was last modified.
+- `lastModificationDate` (0-1): A timestamp indicating when the resource (or one of its values) was last modified.
 
-- `seqnum` (0-1):  
-  The sequence number of the resource, if it is part of an ordered group of resources, such as the pages in a book.
+- `seqnum` (0-1): The sequence number of the resource, if it is part of an ordered group of resources, such as the pages
+  in a book.
 
-- `isDeleted` (1):  
-  Indicates whether the resource has been deleted.
+- `isDeleted` (1): Indicates whether the resource has been deleted.
 
-- `deleteDate` (0-1):  
-  If the resource has been deleted, indicates when it was deleted.
+- `deleteDate` (0-1): If the resource has been deleted, indicates when it was deleted.
 
-- `deleteComment` (0-1):  
-  If the resource has been deleted, indicates why it was deleted.
+- `deleteComment` (0-1): If the resource has been deleted, indicates why it was deleted.
 
 Resources can have properties that point to other resources; see
 [Links Between Resources](#links-between-resources). A resource grants permissions to groups of users;
@@ -134,26 +122,19 @@ create file values using Knora and Sipi.
 A resource that has a file value must belong to one of the subclasses of
 `kb:Representation`. Its subclasses include:
 
-- `StillImageRepresentation`:  
-  A representation containing a still image file.
+- `StillImageRepresentation`: A representation containing a still image file.
 
-- `MovingImageRepresentation`:  
-  A representation containing a video file.
+- `MovingImageRepresentation`: A representation containing a video file.
 
-- `AudioRepresentation`:  
-  A representation containing an audio file.
+- `AudioRepresentation`: A representation containing an audio file.
 
-- `DDDrepresentation`:  
-  A representation containing a 3D image file.
+- `DDDrepresentation`: A representation containing a 3D image file.
 
-- `TextRepresentation`:  
-  A representation containing a formatted text file, such as an XML file.
+- `TextRepresentation`: A representation containing a formatted text file, such as an XML file.
 
-- `DocumentRepresentation`:  
-  A representation containing a document (such as a PDF file) that is not a text file.
+- `DocumentRepresentation`: A representation containing a document (such as a PDF file) that is not a text file.
 
-- `BundleRepresentation`:  
-  A representation containing a bundle (such as a zip archive).
+- `ArchiveRepresentation`: A representation containing an archive file (such as a zip archive).
 
 These classes can be used directly in data, but it is often better to make subclasses of them, to include metadata about
 the files being stored.
@@ -161,8 +142,7 @@ the files being stored.
 The base class of all these classes is `Representation`, which is not intended to be used directly. It has this
 property, which its subclasses override:
 
-- `hasFileValue` (1):  
-  Points to a file value.
+- `hasFileValue` (1): Points to a file value.
 
 There are two ways for a project to design classes for representations. The simpler way is to create a resource class
 that represents a thing in the world (such as `ex:Painting`) and also belongs to a subclass of `Representation`. This is
@@ -180,15 +160,12 @@ Each of these other resources can extend a different subclass of `Representation
 In general, each project using Knora must define its own subclasses of `kb:Resource`. However, the Knora base ontology
 provides some standard subclasses of `kb:Resource`, which are intended to be used by any project:
 
-- `Region`:  
-  Represents a region of a `Representation` (see [Representations](#representations)).
+- `Region`: Represents a region of a `Representation` (see [Representations](#representations)).
 
-- `Annotation`:  
-  Represents an annotation of a resource.  
+- `Annotation`: Represents an annotation of a resource.  
   The `hasComment` property points to the text of the annotation, represented as a `kb:TextValue`.
 
-- `LinkObj`:  
-  Represents a link that connects two or more resources.  
+- `LinkObj`: Represents a link that connects two or more resources.  
   A `LinkObj` has a `hasLinkTo` property pointing to each resource that it connects, as well as a `hasLinkToValue`
   property pointing to a reification of each of these direct links (
   see [Links Between Resources](#links-between-resources)).  
@@ -228,36 +205,29 @@ data from a deleted value.
 
 #### Properties of Value
 
-- `valueCreationDate` (1):  
-  The date and time when the value was created.
+- `valueCreationDate` (1): The date and time when the value was created.
 
-- `attachedToUser` (1):  
-  The user who owns the value.
+- `attachedToUser` (1): The user who owns the value.
 
-- `valueHasString` (1):  
-  A human-readable string representation of the value's contents, which is available to Knora's full-text search index.
+- `valueHasString` (1): A human-readable string representation of the value's contents, which is available to Knora's
+  full-text search index.
 
-- `valueHasOrder` (0-1):  
-  A resource may have several properties of the same type with different values (which will be of the same class), and
-  it may be necessary to indicate an order in which these values occur. For example, a book may have several authors
-  which should appear in a defined order. Hence, `valueHasOrder`, when present, points to an integer literal indicating
-  the order of a given value relative to the other values of the same property. These integers will not necessarily
-  start at any particular number, and will not necessarily be consecutive.
+- `valueHasOrder` (0-1): A resource may have several properties of the same type with different values (which will be of
+  the same class), and it may be necessary to indicate an order in which these values occur. For example, a book may
+  have several authors which should appear in a defined order. Hence, `valueHasOrder`, when present, points to an
+  integer literal indicating the order of a given value relative to the other values of the same property. These
+  integers will not necessarily start at any particular number, and will not necessarily be consecutive.
 
-- `previousValue` (0-1):  
-  The previous version of the value.
+- `previousValue` (0-1): The previous version of the value.
 
-- `valueHasUUID` (0-1):  
-  The UUID that refers to all versions of the value. Only the latest version of the value has this property.
+- `valueHasUUID` (0-1): The UUID that refers to all versions of the value. Only the latest version of the value has this
+  property.
 
-- `isDeleted` (1):  
-  Indicates whether the value has been deleted.
+- `isDeleted` (1): Indicates whether the value has been deleted.
 
-- `deleteDate` (0-1):  
-  If the value has been deleted, indicates when it was deleted.
+- `deleteDate` (0-1): If the value has been deleted, indicates when it was deleted.
 
-- `deleteComment` (0-1):  
-  If the value has been deleted, indicates why it was deleted.
+- `deleteComment` (0-1): If the value has been deleted, indicates why it was deleted.
 
 Each Knora value can grant permissions (see [Authorisation](#authorisation)).
 
@@ -272,17 +242,15 @@ below), so they are recognised as separate in a full-text search index.
 
 Markup is stored using this property:
 
-- `valueHasStandoff` (0-n):  
-  Points to a standoff markup tag. See [Text with Standoff Markup](#text-with-standoff-markup).
+- `valueHasStandoff` (0-n): Points to a standoff markup tag. See
+  [Text with Standoff Markup](#text-with-standoff-markup).
 
-- `valueHasMapping` (0-1):  
-  Points to the mapping used to create the standoff markup and to convert it back to the original XML. See
-  [Mapping to Create Standoff From XML](#mapping-to-create-standoff-from-xml).
+- `valueHasMapping` (0-1): Points to the mapping used to create the standoff markup and to convert it back to the
+  original XML. See [Mapping to Create Standoff From XML](#mapping-to-create-standoff-from-xml).
 
 A text value can have a specified language:
 
-- `valueHasLanguage` (0-1):  
-  is an ISO 639-1 code as string specifying the language of the text.
+- `valueHasLanguage` (0-1): An ISO 639-1 code as string specifying the language of the text.
 
 ##### DateValue
 
@@ -293,87 +261,75 @@ added to the date, when no era is provided the default era `AD` will be consider
 are stored as two Julian Day Numbers. This calendar-independent representation makes it possible to compare and search
 for dates regardless of the calendar in which they were entered. Properties:
 
-- `valueHasCalendar` (1):  
-  The name of the calendar in which the date should be displayed. Currently `GREGORIAN`, `JULIAN`, and `ISLAMIC` civil
-  calendars are supported.
+- `valueHasCalendar` (1): The name of the calendar in which the date should be displayed. Currently `GREGORIAN`,
+  `JULIAN`, and `ISLAMIC` civil calendars are supported.
 
-- `valueHasStartJDN` (1):  
-  The Julian Day Number of the start of the period (an `xsd:integer`).
+- `valueHasStartJDN` (1): The Julian Day Number of the start of the period (an `xsd:integer`).
 
-- `valueHasStartPrecision` (1):  
-  The precision of the start of the period.
+- `valueHasStartPrecision` (1): The precision of the start of the period.
 
-- `valueHasEndJDN` (1):  
-  The Julian Day Number of the end of the period (an `xsd:integer`).
+- `valueHasEndJDN` (1): The Julian Day Number of the end of the period (an `xsd:integer`).
 
-- `valueHasEndPrecision` (1):  
-  The precision of the end of the period.
+- `valueHasEndPrecision` (1): The precision of the end of the period.
 
 ##### TimeValue
 
 A Knora time value represents a precise moment in time in the Gregorian calendar. Since nanosecond precision can be
 included, it is suitable for use as a timestamp. Properties:
 
-- `valueHasTimeStamp` (1):  
-  An `xsd:dateTimeStamp`, stored as an `xsd:dateTime` (because SPARQL does not support `xsd:dateTimeStamp`).
+- `valueHasTimeStamp` (1): An `xsd:dateTimeStamp`, stored as an `xsd:dateTime` (because SPARQL does not support
+  `xsd:dateTimeStamp`).
 
 ##### IntValue
 
 Represents an integer. Property:
 
-- `valueHasInteger` (1):  
-  An `xsd:integer`.
+- `valueHasInteger` (1): An `xsd:integer`.
 
 ##### ColorValue
 
-- `valueHasColor` (1):  
-  A string representing a color. The string encodes a color as hexadecimal RGB values, e.g. \"\#FF0000\".
+- `valueHasColor` (1): A string representing a color. The string encodes a color as hexadecimal RGB values, e.g.
+  `\#FF0000`.
 
 ##### DecimalValue
 
 Represents an arbitrary-precision decimal number. Property:
 
-- `valueHasDecimal` (1):  
-  An `xsd:decimal`.
+- `valueHasDecimal` (1): An `xsd:decimal`.
 
 ##### UriValue
 
 Represents a non-Knora URI. Property:
 
-- `valueHasUri` (1):  
-  An `xsd:anyURI`.
+- `valueHasUri` (1): An `xsd:anyURI`.
 
 ##### BooleanValue
 
 Represents a boolean value. Property:
 
-- `valueHasBoolean` (1):  
-  An `xsd:boolean`.
+- `valueHasBoolean` (1): An `xsd:boolean`.
 
 ##### GeomValue
 
 Represents a geometrical object as a JSON string, using normalized coordinates. Property:
 
-- `valueHasGeometry` (1):  
-  A JSON string.
+- `valueHasGeometry` (1): A JSON string.
 
 ##### GeonameValue
 
 Represents a geolocation, using the identifiers found at [GeoNames](http://geonames.org). Property:
 
-- `valueHasGeonameCode` (1):  
-  the identifier of a geographical feature from [GeoNames](http://geonames.org), represented as an `xsd:string`.
+- `valueHasGeonameCode` (1): The identifier of a geographical feature from [GeoNames](http://geonames.org), represented
+  as an `xsd:string`.
 
 ##### IntervalValue
 
 Represents a time interval, with precise start and end times on a timeline, e.g. relative to the beginning of an audio
 or video file. Properties:
 
-- `valueHasIntervalStart` (1):  
-  An `xsd:decimal` representing the start of the interval in seconds.
+- `valueHasIntervalStart` (1): An `xsd:decimal` representing the start of the interval in seconds.
 
-- `valueHasIntervalEnd` (1):  
-  An `xsd:decimal` representing the end of the interval in seconds.
+- `valueHasIntervalEnd` (1): An `xsd:decimal` representing the end of the interval in seconds.
 
 ##### ListValue
 
@@ -384,25 +340,20 @@ a tree.
 
 A `ListValue` has this property:
 
-- `valueHasListNode` (1):  
-  Points to a `ListNode`.
+- `valueHasListNode` (1): Points to a `ListNode`.
 
 Each `ListNode` can have the following properties:
 
-- `isRootNode` (0-1):  
-  Set to `true` if this is the root node.
+- `isRootNode` (0-1): Set to `true` if this is the root node.
 
-- `hasSubListNode` (0-n):  
-  Points to the node's child nodes, if any.
+- `hasSubListNode` (0-n): Points to the node's child nodes, if any.
 
-- `hasRootNode` (0-1):  
-  Points to the root node of the list (absent if `isRootNode` is `true`).
+- `hasRootNode` (0-1): Points to the root node of the list (absent if `isRootNode` is `true`).
 
-- `listNodePosition` (0-1):  
-  An integer indicating the node's position in the list of its siblings (absent if `isRootNode` is `true`).
+- `listNodePosition` (0-1): An integer indicating the node's position in the list of its siblings (absent
+  if `isRootNode` is `true`).
 
-- `listNodeName` (0-1):  
-  The node's human-readable name (absent if `isRootNode` is `true`).
+- `listNodeName` (0-1): The node's human-readable name (absent if `isRootNode` is `true`).
 
 ##### FileValue
 
@@ -410,44 +361,32 @@ Knora stores certain kinds of data outside the triplestore, in files (see [Repre
 digital object that is stored outside the triplestore has associated metadata, which is stored in the triplestore in
 a `kb:FileValue`. The base class `FileValue`, which is not intended to be used directly, has these properties:
 
-- `internalFilename` (1):  
-  The name of the file as stored by Knora.
+- `internalFilename` (1): The name of the file as stored by Knora.
 
-- `internalMimeType` (1):  
-  The MIME type of the file as stored by Knora.
+- `internalMimeType` (1): The MIME type of the file as stored by Knora.
 
-- `originalFilename` (0-1):  
-  The original name of the file when it was uploaded to the DSP-API server.
+- `originalFilename` (0-1): The original name of the file when it was uploaded to the DSP-API server.
 
-- `originalMimeType` (0-1):  
-  The original MIME type of the file when it was uploaded to the Knora API server.
+- `originalMimeType` (0-1): The original MIME type of the file when it was uploaded to the Knora API server.
 
-- `isPreview` (0-1):  
-  A boolean indicating whether the file is a preview, i.e. a small image representing the contents of the file. A
-  preview is always a `StillImageFileValue`, regardless of the type of the enclosing `Representation`.
+- `isPreview` (0-1): A boolean indicating whether the file is a preview, i.e. a small image representing the contents of
+  the file. A preview is always a `StillImageFileValue`, regardless of the type of the enclosing `Representation`.
 
 The subclasses of `FileValue`, which are intended to be used directly in data, include:
 
-- `StillImageFileValue`:  
-  Contains metadata about a still image file.
+- `StillImageFileValue`: Contains metadata about a still image file.
 
-- `MovingImageFileValue`:  
-  Contains metadata about a video file.
+- `MovingImageFileValue`: Contains metadata about a video file.
 
-- `AudioFileValue`:  
-  Contains metadata about an audio file.
+- `AudioFileValue`: Contains metadata about an audio file.
 
-- `DDDFileValue`:  
-  Contains metadata about a 3D image file.
+- `DDDFileValue`: Contains metadata about a 3D image file.
 
-- `TextFileValue`:  
-  Contains metadata about a text file.
+- `TextFileValue`: Contains metadata about a text file.
 
-- `DocumentFileValue`:  
-  Contains metadata about a document (such as PDF) that is not a text file.
+- `DocumentFileValue`: Contains metadata about a document (such as PDF) that is not a text file.
 
-- `BundleFileValue`:  
-  Contains metadata about a bundle (such as zio archive).
+- `ArchiveFileValue`: Contains metadata about an archive (such as zio archive).
 
 Each of these classes contains properties that are specific to the type of file it describes. For example, still image
 files have dimensions, video files have frame rates, and so on.
