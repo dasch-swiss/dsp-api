@@ -60,7 +60,7 @@ class OntologyV2R2RSpec extends R2RSpec {
   // If true, the existing expected response files are overwritten with the HTTP GET responses from the server.
   // If false, the responses from the server are compared to the contents fo the expected response files.
   // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  private val writeTestDataFiles = false
+  private val writeTestDataFiles = true
 
   override lazy val rdfDataObjects = List(
     RdfDataObject(
@@ -381,6 +381,16 @@ class OntologyV2R2RSpec extends R2RSpec {
           Get(httpGetTest.urlPath).addHeader(Accept(mediaType)) ~> ontologiesPath ~> check {
             val responseStr: String = responseAs[String]
             assert(response.status == StatusCodes.OK, responseStr)
+
+            if (httpGetTest.fileBasename == "knoraApiOntologySimple") {
+              println("----")
+              println(httpGetTest.fileBasename)
+              println(httpGetTest.urlPath)
+              println(mediaType)
+              println("")
+              println(responseStr)
+              println("----")
+            }
 
             // Are we writing expected response files?
             if (writeTestDataFiles) {

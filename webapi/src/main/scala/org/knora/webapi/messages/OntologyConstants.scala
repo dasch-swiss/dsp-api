@@ -1116,7 +1116,7 @@ object OntologyConstants {
       KnoraBase.HasDDDFileValue -> KnoraApiV2Simple.HasDDDFile,
       KnoraBase.HasTextFileValue -> KnoraApiV2Simple.HasTextFile,
       KnoraBase.HasDocumentFileValue -> KnoraApiV2Simple.HasDocumentFile,
-      KnoraBase.HasArchiveFileValue -> KnoraApiV2Simple.HasDocumentFile
+      KnoraBase.HasArchiveFileValue -> KnoraApiV2Simple.HasArchiveFile
     ),
     (InternalSchema, ApiV2Complex) -> Map(
       KnoraBase.SubjectClassConstraint -> KnoraApiV2Complex.SubjectType,
