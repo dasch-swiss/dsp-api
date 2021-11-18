@@ -1097,9 +1097,9 @@ object ConstructResponseUtilV2 {
           )
         )
 
-      case OntologyConstants.KnoraBase.BundleFileValue =>
+      case OntologyConstants.KnoraBase.ArchiveFileValue =>
         FastFuture.successful(
-          BundleFileValueContentV2(
+          ArchiveFileValueContentV2(
             ontologySchema = InternalSchema,
             fileValue = fileValue,
             comment = valueCommentOption

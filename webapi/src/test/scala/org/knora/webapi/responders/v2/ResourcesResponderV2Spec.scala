@@ -1247,15 +1247,16 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
     }
 
-    "create a resource with bundle representation" in {
+    "create a resource with archive representation" in {
       // Create the resource.
 
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
-      val inputResource = CreateDocumentMessage
+      val inputResource = CreateArchiveMessage
         .make(
           resourceIri = resourceIri,
-          internalFilename = "IQUO3t1AABm-FSLC0vNvVps.zip"
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVps.zip",
+          internalMimeType = "application/zip"
         )
         .value
 

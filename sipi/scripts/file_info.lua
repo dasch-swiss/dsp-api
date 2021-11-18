@@ -11,7 +11,7 @@ IMAGE = "image"
 DOCUMENT = "document"
 AUDIO = "audio"
 VIDEO = "video"
-BUNDLE = "bundle"
+ARCHIVE = "archive"
 
 -------------------------------------------------------------------------------
 -- Mimetype constants
@@ -77,7 +77,7 @@ local document_mime_types = {
     APPLICATION_PPTX
 }
 
-local bundle_mime_types = {
+local archive_mime_types = {
     APPLICATION_TAR,
     APPLICATION_ZIP,
     APPLICATION_GZIP
@@ -101,7 +101,6 @@ local text_extensions = {
     "csv"
 }
 
--- TODO should be tidied up!
 local document_extensions = {
     "pdf",
     "iso",
@@ -113,7 +112,7 @@ local document_extensions = {
     "pptx"
 }
 
-local bundle_extensions = {
+local archive_extensions = {
     "zip",
     "tar",
     "gz"
@@ -170,12 +169,12 @@ function make_document_file_info(extension)
     end
 end
 
-function make_bundle_file_info(extension)
-    if not table.contains(bundle_extensions, extension) then
+function make_archive_file_info(extension)
+    if not table.contains(archive_extensions, extension) then
         return nil
     else
         return {
-            media_type = BUNDLE,
+            media_type = ARCHIVE,
             extension = extension
         }
     end
@@ -206,8 +205,8 @@ function get_file_info(filename, mimetype)
         return make_text_file_info(extension)
     elseif table.contains(document_mime_types, mimetype) then
         return make_document_file_info(extension)
-    elseif table.contains(bundle_mime_types, mimetype) then
-        return make_bundle_file_info(extension)
+    elseif table.contains(archive_mime_types, mimetype) then
+        return make_archive_file_info(extension)
     else
         -- no supported mediatype could be determined
         return nil

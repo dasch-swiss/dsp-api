@@ -435,7 +435,7 @@ class KnoraSipiIntegrationV2ITSpec
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(marblesOriginalFilename)
 
-      // Ask Knora to create the resource.
+      // Create the resource in the API.
 
       val jsonLdEntity = UploadImageFile
         .make(
@@ -594,7 +594,7 @@ class KnoraSipiIntegrationV2ITSpec
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(minimalPdfOriginalFilename)
 
-      // Ask Knora to create the resource.
+      // Create the resource in the API.
 
       val jsonLdEntity =
         UploadDocumentFile
@@ -707,9 +707,9 @@ class KnoraSipiIntegrationV2ITSpec
 
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
-      uploadedFile.fileType should equal("bundle")
+      uploadedFile.fileType should equal("archive")
 
-      // Ask Knora to create the resource.
+      // Create the resource in the API.
 
       val jsonLdEntity = UploadDocumentFile
         .make(
@@ -738,7 +738,7 @@ class KnoraSipiIntegrationV2ITSpec
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(csv1OriginalFilename)
 
-      // Ask Knora to create the resource.
+      // Create the resource in the API.
 
       val jsonLdEntity = UploadTextFile.make(internalFilename = uploadedFile.internalFilename).value
 
@@ -841,7 +841,7 @@ class KnoraSipiIntegrationV2ITSpec
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(csv1OriginalFilename)
 
-      // Ask Knora to create the resource.
+      // Create the resource in the API.
 
       val jsonLdEntity = UploadImageFile.make(uploadedFile.internalFilename).value
 
@@ -864,7 +864,7 @@ class KnoraSipiIntegrationV2ITSpec
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(xml1OriginalFilename)
 
-      // Ask Knora to create the resource.
+      // Create the resource in the API.
 
       val jsonLdEntity = UploadTextFile.make(internalFilename = uploadedFile.internalFilename).value
 
@@ -966,7 +966,7 @@ class KnoraSipiIntegrationV2ITSpec
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
 
-      // Ask Knora to create the resource.
+      // Create the resource in the API.
 
       val jsonLdEntity = UploadTextFile.make(internalFilename = uploadedFile.internalFilename).value
 
@@ -978,7 +978,7 @@ class KnoraSipiIntegrationV2ITSpec
       assert(response.status == StatusCodes.BadRequest)
     }
 
-    "create a resource of type BundleRepresentation with a Zip file" in {
+    "create a resource of type ArchiveRepresentation with a Zip file" in {
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
@@ -988,9 +988,9 @@ class KnoraSipiIntegrationV2ITSpec
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(minimalZipOriginalFilename)
 
-      // Ask Knora to create the resource.
+      // Create the resource in the API.
 
-      val jsonLdEntity = UploadBundleFile.make(internalFilename = uploadedFile.internalFilename).value
+      val jsonLdEntity = UploadArchiveFile.make(internalFilename = uploadedFile.internalFilename).value
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
@@ -1003,13 +1003,15 @@ class KnoraSipiIntegrationV2ITSpec
       val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
       val resource: JsonLDDocument = getResponseJsonLD(knoraGetRequest)
 
-      resource.requireTypeAsKnoraTypeIri.toString should equal(OntologyConstants.KnoraApiV2Complex.BundleRepresentation)
+      resource.requireTypeAsKnoraTypeIri.toString should equal(
+        OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation
+      )
 
       // Get the new file value from the resource.
 
       val savedValues: JsonLDArray = getValuesFromResource(
         resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasBundleFileValue.toSmartIri
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri
       )
 
       val savedValue: JsonLDValue = if (savedValues.value.size == 1) {
@@ -1046,7 +1048,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       // Ask Knora to update the value.
 
-      val jsonLdEntity = ChangeBundleFileRequest
+      val jsonLdEntity = ChangeArchiveFileRequest
         .make(
           resourceIRI = zipResourceIri.get,
           valueIRI = zipValueIri.get,
@@ -1068,7 +1070,7 @@ class KnoraSipiIntegrationV2ITSpec
       // Get the new file value from the resource.
       val savedValue: JsonLDObject = getValueFromResource(
         resource = resource,
-        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasBundleFileValue.toSmartIri,
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri,
         expectedValueIri = zipValueIri.get
       )
 
@@ -1091,7 +1093,7 @@ class KnoraSipiIntegrationV2ITSpec
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(minimalWavOriginalFilename)
 
-      // Ask Knora to create the resource.
+      // Create the resource in the API.
       val jsonLdEntity = UploadAudioFile.make(internalFilename = uploadedFile.internalFilename).value
 
       val request = Post(
@@ -1194,7 +1196,7 @@ class KnoraSipiIntegrationV2ITSpec
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(testVideoOriginalFilename)
 
-      // Ask Knora to create the resource.
+      // Create the resource in the API.
       val jsonLdEntity = UploadVideoFile.make(internalFilename = uploadedFile.internalFilename).value
 
       val request = Post(

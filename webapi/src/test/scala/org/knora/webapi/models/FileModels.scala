@@ -9,7 +9,7 @@ import org.knora.webapi.{ApiV2Complex, IRI}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceV2, CreateValueInNewResourceV2}
 import org.knora.webapi.messages.v2.responder.valuemessages.{
-  BundleFileValueContentV2,
+  ArchiveFileValueContentV2,
   DocumentFileValueContentV2,
   FileValueV2,
   StillImageFileValueContentV2,
@@ -26,29 +26,13 @@ import java.util.UUID
  * Constants for use in FileModels.
  */
 object FileModelConstants {
-
-  /** "DocumentRepresentation" */
   val documentRepresentation = "DocumentRepresentation"
-
-  /** "TextRepresentation" */
   val textRepresentation = "TextRepresentation"
-
-  /** "StillImageRepresentation" */
   val stillImageRepresentation = "StillImageRepresentation"
-
-  /** "MovingImageRepresentation" */
   val movingImageRepresentation = "MovingImageRepresentation"
-
-  /** "AudioRepresentation" */
   val audioRepresentation = "AudioRepresentation"
-
-  /** "BundleRepresentation" */
-  val bundleRepresentation = "BundleRepresentation"
-
-  /** "knora-api" */
+  val archiveRepresentation = "ArchiveRepresentation"
   val knoraApiPrefix = "knora-api"
-
-  /** "0001" */
   val anythingShortcode = "0001"
 }
 
@@ -67,7 +51,7 @@ object FileJsonModels {
    *  - knora-api:StillImageFileValue
    *  - knora-api:TextFileValue
    *  - knora-api:TextFileValue
-   *  - knora-api:BundleRepresentation
+   *  - knora-api:ArchiveRepresentation
    */
   sealed trait FileValueType {
 
@@ -116,10 +100,10 @@ object FileJsonModels {
     }
 
     /**
-     * Represents "knora-api:BundleFileValue"
+     * Represents "knora-api:ArchiveFileValue"
      */
-    case object BundleFileValue extends FileValueType {
-      val value = "knora-api:BundleFileValue"
+    case object ArchiveFileValue extends FileValueType {
+      val value = "knora-api:ArchiveFileValue"
     }
   }
 
@@ -334,40 +318,40 @@ object FileJsonModels {
   }
 
   /**
-   * Case class containing the JSON-LD serialization of a request to create a "knora-api:BundleRepresentation".
+   * Case class containing the JSON-LD serialization of a request to create a "knora-api:ArchiveRepresentation".
    *
    * @param value the JSON-LD serialized request.
    */
-  sealed abstract case class UploadBundleFile private (value: String)
+  sealed abstract case class UploadArchiveFile private (value: String)
 
   /**
-   * Companion object to the [[UploadBundleFile]] case class.
+   * Companion object to the [[UploadArchiveFile]] case class.
    */
-  object UploadBundleFile {
+  object UploadArchiveFile {
 
     /**
-     * Smart constructor for instantiating a [[UploadBundleFile]].
+     * Smart constructor for instantiating a [[UploadArchiveFile]].
      *
      * @param internalFilename the internal file name assigned by SIPI.
-     * @param className the class name of the resource. Defaults to "BundleRepresentation".
-     *                  Can be a project ontology class that inherits from "BundleRepresentation".
+     * @param className the class name of the resource. Defaults to "ArchiveRepresentation".
+     *                  Can be a project ontology class that inherits from "ArchiveRepresentation".
      * @param shortcode the shortcode of the project to which the resource should be added.
      *                  Defaults to "0001" (anything project).
      * @param ontologyName the name of the ontology to be prefixed to the class name. Defaults to "knora-api".
      *                     Should only be used, if `className` has a non-default value.
-     * @return returns a [[UploadBundleFile]] holding a JSON-LD serialized request to create the resource as specified by the parameters.
+     * @return returns a [[UploadArchiveFile]] holding a JSON-LD serialized request to create the resource as specified by the parameters.
      */
     def make(
       internalFilename: String,
-      className: String = bundleRepresentation,
+      className: String = archiveRepresentation,
       shortcode: String = anythingShortcode,
       ontologyName: String = knoraApiPrefix
-    ): UploadBundleFile = new UploadBundleFile(
+    ): UploadArchiveFile = new UploadArchiveFile(
       UploadFileRequest
         .make(
           className = className,
           internalFilename = internalFilename,
-          fileValueType = FileValueType.BundleFileValue,
+          fileValueType = FileValueType.ArchiveFileValue,
           shortcode = shortcode,
           ontologyName = ontologyName
         )
@@ -398,7 +382,7 @@ object FileJsonModels {
      *  - [[UploadImageFile]]
      *  - [[UploadAudioFile]]
      *  - [[UploadVideoFile]]
-     *  - [[UploadBundleFile]]
+     *  - [[UploadArchiveFile]]
      *
      * @param className        the class name of the resource.
      * @param internalFilename the internal file name assigned by SIPI.
@@ -425,7 +409,7 @@ object FileJsonModels {
         case FileValueType.MovingImageFileValue => "knora-api:hasMovingImageFileValue"
         case FileValueType.TextFileValue        => "knora-api:hasTextFileValue"
         case FileValueType.AudioFileValue       => "knora-api:hasAudioFileValue"
-        case FileValueType.BundleFileValue      => "knora-api:hasBundleFileValue"
+        case FileValueType.ArchiveFileValue     => "knora-api:hasArchiveFileValue"
       }
       val value = s"""{
                      |  "@type" : "$ontologyName:$className",
@@ -669,39 +653,39 @@ object FileJsonModels {
   }
 
   /**
-   * Case class containing the JSON-LD serialization of a request to change a "knora-api:BundleRepresentation".
+   * Case class containing the JSON-LD serialization of a request to change a "knora-api:ArchiveRepresentation".
    *
    * @param value the JSON-LD serialized request.
    */
-  sealed abstract case class ChangeBundleFileRequest private (value: String)
+  sealed abstract case class ChangeArchiveFileRequest private (value: String)
 
   /**
-   * Companion object to the [[ChangeBundleFileRequest]] case class.
+   * Companion object to the [[ChangeArchiveFileRequest]] case class.
    */
-  object ChangeBundleFileRequest {
+  object ChangeArchiveFileRequest {
 
     /**
-     * Smart constructor for instantiating a [[ChangeBundleFileRequest]].
+     * Smart constructor for instantiating a [[ChangeArchiveFileRequest]].
      *
      * @param resourceIRI      the IRI of the resource where a property is to change.
      * @param internalFilename the new internal file name assigned by SIPI.
      * @param valueIRI         the IRI of the value property to change.
-     * @param className        the class name of the resource. Defaults to "BundleRepresentation".
-     *                         Can be a project ontology class that inherits from "BundleRepresentation".
+     * @param className        the class name of the resource. Defaults to "ArchiveRepresentation".
+     *                         Can be a project ontology class that inherits from "ArchiveRepresentation".
      * @param ontologyName     the name of the ontology to be prefixed to the class name. Defaults to "knora-api".
      *                         Should only be used, if `className` has a non-default value.
-     * @return returns a [[ChangeBundleFileRequest]] holding a JSON-LD serialized request to change the resource as specified by the parameters.
+     * @return returns a [[ChangeArchiveFileRequest]] holding a JSON-LD serialized request to change the resource as specified by the parameters.
      */
     def make(
       resourceIRI: String,
       internalFilename: String,
       valueIRI: String,
-      className: String = bundleRepresentation,
+      className: String = archiveRepresentation,
       ontologyName: String = knoraApiPrefix
-    ): ChangeBundleFileRequest = new ChangeBundleFileRequest(
+    ): ChangeArchiveFileRequest = new ChangeArchiveFileRequest(
       ChangeFileRequest
         .make(
-          fileValueType = FileValueType.BundleFileValue,
+          fileValueType = FileValueType.ArchiveFileValue,
           resourceIRI = resourceIRI,
           internalFilename = internalFilename,
           valueIRI = valueIRI,
@@ -735,7 +719,7 @@ object FileJsonModels {
      *  - [[ChangeImageFileRequest]]
      *  - [[ChangeAudioFileRequest]]
      *  - [[ChangeVideoFileRequest]]
-     *  - [[ChangeBundleFileRequest]]
+     *  - [[ChangeArchiveFileRequest]]
      *
      * @param fileValueType    the [[FileValueType]] of the resource.
      * @param className        the class name of the resource.
@@ -765,7 +749,7 @@ object FileJsonModels {
         case FileValueType.MovingImageFileValue => "knora-api:hasMovingImageFileValue"
         case FileValueType.TextFileValue        => "knora-api:hasTextFileValue"
         case FileValueType.AudioFileValue       => "knora-api:hasAudioFileValue"
-        case FileValueType.BundleFileValue      => "knora-api:hasBundleFileValue"
+        case FileValueType.ArchiveFileValue     => "knora-api:hasArchiveFileValue"
       }
       val value =
         s"""{
@@ -988,15 +972,15 @@ object FileMessageModels {
    *
    * @param value the [[CreateResourceV2]] message.
    */
-  sealed abstract case class CreateBundleMessage private (value: CreateResourceV2)
+  sealed abstract case class CreateArchiveMessage private (value: CreateResourceV2)
 
   /**
-   * Companion object to the [[CreateBundleMessage]] case class.
+   * Companion object to the [[CreateArchiveMessage]] case class.
    */
-  object CreateBundleMessage {
+  object CreateArchiveMessage {
 
     /**
-     * Smart constructor for instantiating a [[CreateBundleMessage]]
+     * Smart constructor for instantiating a [[CreateArchiveMessage]]
      *
      * @param resourceIri       the IRI of the resource to create.
      * @param internalFilename  the internal file name assigned by SIPI.
@@ -1004,7 +988,7 @@ object FileMessageModels {
      * @param resourceClassIri  the IRI of the resource class. Defaults to `knora-api:StillImageRepresentation`
      * @param originalFilename  the original file name previous to the SIPI upload.
      *                          Optional. Defaults to `Some("test.zip")`.
-     * @param label             the `rdfs:label` of the resource. Defaults to `"test bundle"`
+     * @param label             the `rdfs:label` of the resource. Defaults to `"test archive"`
      * @param comment           comment on the resource. Optional. Defaults to `Some("This is a zip archive")`
      * @param project           the project to which the resource belongs.
      *                          Defaults to [[SharedTestDataADM.anythingProject]]
@@ -1017,15 +1001,15 @@ object FileMessageModels {
      *                          Defaults to `None`. If `None`, the current instant will be used.
      * @param valuePermissions  custom permissions for the value. Optional. Defaults to `None`.
      *                          If `None`, the default permissions will be used.
-     * @return a [[CreateBundleMessage]] containing a [[CreateResourceV2]] as specified by the parameters.
+     * @return a [[CreateArchiveMessage]] containing a [[CreateResourceV2]] as specified by the parameters.
      */
     def make(
       resourceIri: IRI,
       internalFilename: String,
       internalMimeType: String,
-      resourceClassIri: SmartIri = OntologyConstants.KnoraApiV2Complex.BundleRepresentation.toSmartIri,
+      resourceClassIri: SmartIri = OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation.toSmartIri,
       originalFilename: Option[String] = Some("test.zip"),
-      label: String = "test bundle",
+      label: String = "test archive",
       comment: Option[String] = Some("This is a zip archive"),
       project: ProjectADM = SharedTestDataADM.anythingProject,
       permissions: Option[String] = None,
@@ -1033,9 +1017,9 @@ object FileMessageModels {
       valueUUID: Option[UUID] = None,
       valueCreationDate: Option[Instant] = None,
       valuePermissions: Option[String] = None
-    ): CreateBundleMessage = {
-      val valuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasBundleFileValue.toSmartIri
-      val valueContent = BundleFileValueContentV2(
+    ): CreateArchiveMessage = {
+      val valuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri
+      val valueContent = ArchiveFileValueContentV2(
         ontologySchema = ApiV2Complex,
         fileValue = FileValueV2(
           internalFilename = internalFilename,
@@ -1066,7 +1050,7 @@ object FileMessageModels {
           permissions = permissions
         )
         .value
-      new CreateBundleMessage(value) {}
+      new CreateArchiveMessage(value) {}
     }
   }
 
@@ -1090,7 +1074,7 @@ object FileMessageModels {
      *
      *  - [[CreateDocumentMessage]]
      *  - [[CreateImageMessage]]
-     *  - [[CreateBundleMessage]]
+     *  - [[CreateArchiveMessage]]
      *
      * @param resourceIri       the IRI of the resource to create.
      * @param resourceClassIri  the IRI of the resource class.

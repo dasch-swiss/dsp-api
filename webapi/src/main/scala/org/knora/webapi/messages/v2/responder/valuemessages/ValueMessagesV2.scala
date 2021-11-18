@@ -1382,8 +1382,8 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
             log = log
           )
 
-        case OntologyConstants.KnoraApiV2Complex.BundleFileValue =>
-          BundleFileValueContentV2.fromJsonLDObject(
+        case OntologyConstants.KnoraApiV2Complex.ArchiveFileValue =>
+          ArchiveFileValueContentV2.fromJsonLDObject(
             jsonLDObject = jsonLDObject,
             requestingUser = requestingUser,
             responderManager = responderManager,
@@ -3391,24 +3391,24 @@ case class DocumentFileValueContentV2(
 }
 
 /**
- * Represents bundle file metadata.
+ * Represents archive file metadata.
  *
  * @param fileValue the basic metadata about the file value.
- * @param comment   a comment on this `DocumentFileValueContentV2`, if any.
+ * @param comment   a comment on this `ArchiveFileValueContentV2`, if any.
  */
-case class BundleFileValueContentV2(
+case class ArchiveFileValueContentV2(
   ontologySchema: OntologySchema,
   fileValue: FileValueV2,
   comment: Option[String] = None
 ) extends FileValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    OntologyConstants.KnoraBase.BundleFileValue.toSmartIri.toOntologySchema(ontologySchema)
+    OntologyConstants.KnoraBase.ArchiveFileValue.toSmartIri.toOntologySchema(ontologySchema)
   }
 
   override def valueHasString: String = fileValue.internalFilename
 
-  override def toOntologySchema(targetSchema: OntologySchema): BundleFileValueContentV2 =
+  override def toOntologySchema(targetSchema: OntologySchema): ArchiveFileValueContentV2 =
     copy(ontologySchema = targetSchema)
 
   override def toJsonLDValue(
@@ -3435,16 +3435,16 @@ case class BundleFileValueContentV2(
 
   override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
     that match {
-      case thatBundleFile: BundleFileValueContentV2 =>
-        fileValue == thatBundleFile.fileValue
+      case thatArchiveFile: ArchiveFileValueContentV2 =>
+        fileValue == thatArchiveFile.fileValue
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
     }
 
   override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
     currentVersion match {
-      case thatBundleFile: BundleFileValueContentV2 =>
-        wouldDuplicateOtherValue(thatBundleFile) && comment == thatBundleFile.comment
+      case thatArchiveFile: ArchiveFileValueContentV2 =>
+        wouldDuplicateOtherValue(thatArchiveFile) && comment == thatArchiveFile.comment
 
       case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
     }
@@ -3492,9 +3492,9 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
 }
 
 /**
- * Constructs [[BundleFileValueContentV2]] objects based on JSON-LD input.
+ * Constructs [[ArchiveFileValueContentV2]] objects based on JSON-LD input.
  */
-object BundleFileValueContentV2 extends ValueContentReaderV2[BundleFileValueContentV2] {
+object ArchiveFileValueContentV2 extends ValueContentReaderV2[ArchiveFileValueContentV2] {
   override def fromJsonLDObject(
     jsonLDObject: JsonLDObject,
     requestingUser: UserADM,
@@ -3503,7 +3503,7 @@ object BundleFileValueContentV2 extends ValueContentReaderV2[BundleFileValueCont
     featureFactoryConfig: FeatureFactoryConfig,
     settings: KnoraSettingsImpl,
     log: LoggingAdapter
-  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[BundleFileValueContentV2] = {
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ArchiveFileValueContentV2] = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     for {
@@ -3516,12 +3516,12 @@ object BundleFileValueContentV2 extends ValueContentReaderV2[BundleFileValueCont
         log = log
       )
 
-      _ = if (!settings.bundleMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
+      _ = if (!settings.archiveMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
         throw BadRequestException(
-          s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for bundle files"
+          s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for archive files"
         )
       }
-    } yield BundleFileValueContentV2(
+    } yield ArchiveFileValueContentV2(
       ontologySchema = ApiV2Complex,
       fileValue = fileValueWithSipiMetadata.fileValue,
       comment = getComment(jsonLDObject)

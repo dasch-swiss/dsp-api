@@ -129,8 +129,8 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
     }
     .toSet
 
-  val bundleMimeTypes: Set[String] = config
-    .getList("app.sipi.bundle-mime-types")
+  val archiveMimeTypes: Set[String] = config
+    .getList("app.sipi.archive-mime-types")
     .iterator
     .asScala
     .map { mType: ConfigValue =>
