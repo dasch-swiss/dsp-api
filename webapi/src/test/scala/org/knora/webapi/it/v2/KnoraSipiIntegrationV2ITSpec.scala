@@ -513,14 +513,14 @@ class KnoraSipiIntegrationV2ITSpec
         .make(
           fileType = FileType.StillImageFile,
           internalFilename = uploadedFile.internalFilename,
-          resourceIRI = stillImageResourceIri.get,
-          valueIRI = stillImageFileValueIri.get,
+          resourceIri = stillImageResourceIri.get,
+          valueIri = stillImageFileValueIri.get,
           className = Some("ThingPicture"),
           ontologyName = "anything"
         )
         .toJsonLd
 
-      // Send the JSON in a PUT request to Knora.
+      // Send the JSON in a PUT request to the API.
       val knoraPostRequest =
         Put(baseApiUrl + "/v2/values", HttpEntity(ContentTypes.`application/json`, jsonLdEntity)) ~> addCredentials(
           BasicHttpCredentials(anythingUserEmail, password)
@@ -566,8 +566,8 @@ class KnoraSipiIntegrationV2ITSpec
         .make(
           fileType = FileType.StillImageFile,
           internalFilename = internalFilename,
-          resourceIRI = stillImageResourceIri.get,
-          valueIRI = stillImageFileValueIri.get,
+          resourceIri = stillImageResourceIri.get,
+          valueIri = stillImageFileValueIri.get,
           className = Some("ThingDocument"), // refuse, as it should be "ThingImage"
           ontologyName = "anything"
         )
@@ -651,56 +651,57 @@ class KnoraSipiIntegrationV2ITSpec
       val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
       checkResponseOK(sipiGetFileRequest)
     }
-//
-//    "change a PDF file value" in {
-//      // Upload the file to Sipi.
-//      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
-//        loginToken = loginToken,
-//        filesToUpload = Seq(FileToUpload(path = pathToTestPdf, mimeType = MediaTypes.`application/pdf`))
-//      )
-//
-//      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
-//      uploadedFile.originalFilename should ===(testPdfOriginalFilename)
-//
-//      // Ask Knora to update the value.
-//      val jsonLdEntity = ChangeDocumentFileRequest
-//        .make(
-//          resourceIRI = pdfResourceIri.get,
-//          valueIRI = pdfValueIri.get,
-//          internalFilename = uploadedFile.internalFilename,
-//          className = "ThingDocument",
-//          ontologyName = "anything"
-//        )
-//        .value
-//
-//      val request =
-//        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-//          BasicHttpCredentials(anythingUserEmail, password)
-//        )
-//      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-//      pdfValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
-//
-//      // Get the resource from Knora.
-//      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(pdfResourceIri.get, "UTF-8")}")
-//      val resource = getResponseJsonLD(knoraGetRequest)
-//
-//      // Get the new file value from the resource.
-//      val savedValue: JsonLDObject = getValueFromResource(
-//        resource = resource,
-//        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri,
-//        expectedValueIri = pdfValueIri.get
-//      )
-//
-//      val savedDocument: SavedDocument = savedValueToSavedDocument(savedValue)
-//      assert(savedDocument.internalFilename == uploadedFile.internalFilename)
-//      assert(savedDocument.pageCount.contains(1))
-//      assert(savedDocument.width.contains(testPdfWidth))
-//      assert(savedDocument.height.contains(testPdfHeight))
-//
-//      // Request the permanently stored file from Sipi.
-//      val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-//      checkResponseOK(sipiGetFileRequest)
-//    }
+
+    "change a PDF file value" in {
+      // Upload the file to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToTestPdf, mimeType = MediaTypes.`application/pdf`))
+      )
+
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.originalFilename should ===(testPdfOriginalFilename)
+
+      // Update the value.
+      val jsonLdEntity = ChangeFileRequest
+        .make(
+          fileType = FileType.DocumentFile,
+          internalFilename = uploadedFile.internalFilename,
+          resourceIri = pdfResourceIri.get,
+          valueIri = pdfValueIri.get,
+          className = Some("ThingDocument"),
+          ontologyName = "anything"
+        )
+        .toJsonLd
+
+      val request =
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      pdfValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
+
+      // Get the resource from Knora.
+      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(pdfResourceIri.get, "UTF-8")}")
+      val resource = getResponseJsonLD(knoraGetRequest)
+
+      // Get the new file value from the resource.
+      val savedValue: JsonLDObject = getValueFromResource(
+        resource = resource,
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri,
+        expectedValueIri = pdfValueIri.get
+      )
+
+      val savedDocument: SavedDocument = savedValueToSavedDocument(savedValue)
+      assert(savedDocument.internalFilename == uploadedFile.internalFilename)
+      assert(savedDocument.pageCount.contains(1))
+      assert(savedDocument.width.contains(testPdfWidth))
+      assert(savedDocument.height.contains(testPdfHeight))
+
+      // Request the permanently stored file from Sipi.
+      val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
+      checkResponseOK(sipiGetFileRequest)
+    }
 
     "not create a document resource if the file is actually a zip file" in {
       // Upload the file to Sipi.
@@ -793,52 +794,52 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-//    "change a CSV file value" in {
-//      // Upload the file to Sipi.
-//      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
-//        loginToken = loginToken,
-//        filesToUpload =
-//          Seq(FileToUpload(path = pathToCsv2, mimeType = MediaTypes.`text/csv`.toContentType(HttpCharsets.`UTF-8`)))
-//      )
-//
-//      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
-//      uploadedFile.originalFilename should ===(csv2OriginalFilename)
-//
-//      // Ask Knora to update the value.
-//
-//      val jsonLdEntity = ChangeTextFileRequest
-//        .make(
-//          resourceIRI = csvResourceIri.get,
-//          internalFilename = uploadedFile.internalFilename,
-//          valueIRI = csvValueIri.get
-//        )
-//        .value
-//
-//      val request =
-//        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-//          BasicHttpCredentials(anythingUserEmail, password)
-//        )
-//      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-//      csvValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
-//
-//      // Get the resource from Knora.
-//      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(csvResourceIri.get, "UTF-8")}")
-//      val resource = getResponseJsonLD(knoraGetRequest)
-//
-//      // Get the new file value from the resource.
-//      val savedValue: JsonLDObject = getValueFromResource(
-//        resource = resource,
-//        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri,
-//        expectedValueIri = csvValueIri.get
-//      )
-//
-//      val savedTextFile: SavedTextFile = savedValueToSavedTextFile(savedValue)
-//      assert(savedTextFile.internalFilename == uploadedFile.internalFilename)
-//
-//      // Request the permanently stored file from Sipi.
-//      val sipiGetFileRequest = Get(savedTextFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-//      checkResponseOK(sipiGetFileRequest)
-//    }
+    "change a CSV file value" in {
+      // Upload the file to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload =
+          Seq(FileToUpload(path = pathToCsv2, mimeType = MediaTypes.`text/csv`.toContentType(HttpCharsets.`UTF-8`)))
+      )
+
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.originalFilename should ===(csv2OriginalFilename)
+
+      // Update the value.
+      val jsonLdEntity = ChangeFileRequest
+        .make(
+          fileType = FileType.TextFile,
+          internalFilename = uploadedFile.internalFilename,
+          resourceIri = csvResourceIri.get,
+          valueIri = csvValueIri.get
+        )
+        .toJsonLd
+
+      val request =
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      csvValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
+
+      // Get the resource from Knora.
+      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(csvResourceIri.get, "UTF-8")}")
+      val resource = getResponseJsonLD(knoraGetRequest)
+
+      // Get the new file value from the resource.
+      val savedValue: JsonLDObject = getValueFromResource(
+        resource = resource,
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri,
+        expectedValueIri = csvValueIri.get
+      )
+
+      val savedTextFile: SavedTextFile = savedValueToSavedTextFile(savedValue)
+      assert(savedTextFile.internalFilename == uploadedFile.internalFilename)
+
+      // Request the permanently stored file from Sipi.
+      val sipiGetFileRequest = Get(savedTextFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
+      checkResponseOK(sipiGetFileRequest)
+    }
 
     "not create a resource with a still image file that's actually a text file" in {
       // Upload the file to Sipi.
@@ -923,52 +924,53 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-//    "change an XML file value" in {
-//      // Upload the file to Sipi.
-//      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
-//        loginToken = loginToken,
-//        filesToUpload =
-//          Seq(FileToUpload(path = pathToXml2, mimeType = MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`)))
-//      )
-//
-//      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
-//      uploadedFile.originalFilename should ===(xml2OriginalFilename)
-//
-//      // Ask Knora to update the value.
-//
-//      val jsonLdEntity = ChangeTextFileRequest
-//        .make(
-//          resourceIRI = xmlResourceIri.get,
-//          internalFilename = uploadedFile.internalFilename,
-//          valueIRI = xmlValueIri.get
-//        )
-//        .value
-//
-//      val request =
-//        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-//          BasicHttpCredentials(anythingUserEmail, password)
-//        )
-//      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-//      xmlValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
-//
-//      // Get the resource from Knora.
-//      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(xmlResourceIri.get, "UTF-8")}")
-//      val resource = getResponseJsonLD(knoraGetRequest)
-//
-//      // Get the new file value from the resource.
-//      val savedValue: JsonLDObject = getValueFromResource(
-//        resource = resource,
-//        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri,
-//        expectedValueIri = xmlValueIri.get
-//      )
-//
-//      val savedTextFile: SavedTextFile = savedValueToSavedTextFile(savedValue)
-//      assert(savedTextFile.internalFilename == uploadedFile.internalFilename)
-//
-//      // Request the permanently stored file from Sipi.
-//      val sipiGetFileRequest = Get(savedTextFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-//      checkResponseOK(sipiGetFileRequest)
-//    }
+    "change an XML file value" in {
+      // Upload the file to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload =
+          Seq(FileToUpload(path = pathToXml2, mimeType = MediaTypes.`text/xml`.toContentType(HttpCharsets.`UTF-8`)))
+      )
+
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.originalFilename should ===(xml2OriginalFilename)
+
+      // Update the value.
+
+      val jsonLdEntity = ChangeFileRequest
+        .make(
+          fileType = FileType.TextFile,
+          internalFilename = uploadedFile.internalFilename,
+          resourceIri = xmlResourceIri.get,
+          valueIri = xmlValueIri.get
+        )
+        .toJsonLd
+
+      val request =
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      xmlValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
+
+      // Get the resource from Knora.
+      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(xmlResourceIri.get, "UTF-8")}")
+      val resource = getResponseJsonLD(knoraGetRequest)
+
+      // Get the new file value from the resource.
+      val savedValue: JsonLDObject = getValueFromResource(
+        resource = resource,
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri,
+        expectedValueIri = xmlValueIri.get
+      )
+
+      val savedTextFile: SavedTextFile = savedValueToSavedTextFile(savedValue)
+      assert(savedTextFile.internalFilename == uploadedFile.internalFilename)
+
+      // Request the permanently stored file from Sipi.
+      val sipiGetFileRequest = Get(savedTextFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
+      checkResponseOK(sipiGetFileRequest)
+    }
 
     "not create a resource of type TextRepresentation with a Zip file" in {
       // Upload the file to Sipi.
@@ -1054,52 +1056,53 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-//    "change a Zip file value" in {
-//      // Upload the file to Sipi.
-//      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
-//        loginToken = loginToken,
-//        filesToUpload = Seq(FileToUpload(path = pathToTestZip, mimeType = MediaTypes.`application/zip`))
-//      )
-//
-//      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
-//      uploadedFile.originalFilename should ===(testZipOriginalFilename)
-//
-//      // Ask Knora to update the value.
-//
-//      val jsonLdEntity = ChangeArchiveFileRequest
-//        .make(
-//          resourceIRI = zipResourceIri.get,
-//          valueIRI = zipValueIri.get,
-//          internalFilename = uploadedFile.internalFilename
-//        )
-//        .value
-//
-//      val request =
-//        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-//          BasicHttpCredentials(anythingUserEmail, password)
-//        )
-//      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-//      zipValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
-//
-//      // Get the resource from Knora.
-//      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
-//      val resource = getResponseJsonLD(knoraGetRequest)
-//
-//      // Get the new file value from the resource.
-//      val savedValue: JsonLDObject = getValueFromResource(
-//        resource = resource,
-//        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri,
-//        expectedValueIri = zipValueIri.get
-//      )
-//
-//      val savedDocument: SavedDocument = savedValueToSavedDocument(savedValue)
-//      assert(savedDocument.internalFilename == uploadedFile.internalFilename)
-//      assert(savedDocument.pageCount.isEmpty)
-//
-//      // Request the permanently stored file from Sipi.
-//      val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-//      checkResponseOK(sipiGetFileRequest)
-//    }
+    "change a Zip file value" in {
+      // Upload the file to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToTestZip, mimeType = MediaTypes.`application/zip`))
+      )
+
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.originalFilename should ===(testZipOriginalFilename)
+
+      // Update the value.
+
+      val jsonLdEntity = ChangeFileRequest
+        .make(
+          fileType = FileType.ArchiveFile,
+          resourceIri = zipResourceIri.get,
+          valueIri = zipValueIri.get,
+          internalFilename = uploadedFile.internalFilename
+        )
+        .toJsonLd
+
+      val request =
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      zipValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
+
+      // Get the resource from Knora.
+      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(zipResourceIri.get, "UTF-8")}")
+      val resource = getResponseJsonLD(knoraGetRequest)
+
+      // Get the new file value from the resource.
+      val savedValue: JsonLDObject = getValueFromResource(
+        resource = resource,
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri,
+        expectedValueIri = zipValueIri.get
+      )
+
+      val savedDocument: SavedDocument = savedValueToSavedDocument(savedValue)
+      assert(savedDocument.internalFilename == uploadedFile.internalFilename)
+      assert(savedDocument.pageCount.isEmpty)
+
+      // Request the permanently stored file from Sipi.
+      val sipiGetFileRequest = Get(savedDocument.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
+      checkResponseOK(sipiGetFileRequest)
+    }
 
     "create a resource with a WAV file" in {
       // Upload the file to Sipi.
@@ -1159,51 +1162,52 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-//    "change a WAV file value" in {
-//      // Upload the file to Sipi.
-//      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
-//        loginToken = loginToken,
-//        filesToUpload = Seq(FileToUpload(path = pathToTestWav, mimeType = MediaTypes.`audio/wav`))
-//      )
-//
-//      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
-//      uploadedFile.originalFilename should ===(testWavOriginalFilename)
-//
-//      // Ask Knora to update the value.
-//
-//      val jsonLdEntity = ChangeAudioFileRequest
-//        .make(
-//          resourceIRI = wavResourceIri.get,
-//          internalFilename = uploadedFile.internalFilename,
-//          valueIRI = wavValueIri.get
-//        )
-//        .value
-//
-//      val request =
-//        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-//          BasicHttpCredentials(anythingUserEmail, password)
-//        )
-//      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-//      wavValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
-//
-//      // Get the resource from Knora.
-//      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(wavResourceIri.get, "UTF-8")}")
-//      val resource = getResponseJsonLD(knoraGetRequest)
-//
-//      // Get the new file value from the resource.
-//      val savedValue: JsonLDObject = getValueFromResource(
-//        resource = resource,
-//        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasAudioFileValue.toSmartIri,
-//        expectedValueIri = wavValueIri.get
-//      )
-//
-//      val savedAudioFile: SavedAudioFile = savedValueToSavedAudioFile(savedValue)
-//      assert(savedAudioFile.internalFilename == uploadedFile.internalFilename)
-//
-//      // Request the permanently stored file from Sipi.
-//      val sipiGetFileRequest = Get(savedAudioFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-//      checkResponseOK(sipiGetFileRequest)
-//    }
+    "change a WAV file value" in {
+      // Upload the file to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToTestWav, mimeType = MediaTypes.`audio/wav`))
+      )
+
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.originalFilename should ===(testWavOriginalFilename)
+
+      // Update the value.
+
+      val jsonLdEntity = ChangeFileRequest
+        .make(
+          fileType = FileType.AudioFile,
+          resourceIri = wavResourceIri.get,
+          internalFilename = uploadedFile.internalFilename,
+          valueIri = wavValueIri.get
+        )
+        .toJsonLd
+
+      val request =
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      wavValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
+
+      // Get the resource from Knora.
+      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(wavResourceIri.get, "UTF-8")}")
+      val resource = getResponseJsonLD(knoraGetRequest)
+
+      // Get the new file value from the resource.
+      val savedValue: JsonLDObject = getValueFromResource(
+        resource = resource,
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasAudioFileValue.toSmartIri,
+        expectedValueIri = wavValueIri.get
+      )
+
+      val savedAudioFile: SavedAudioFile = savedValueToSavedAudioFile(savedValue)
+      assert(savedAudioFile.internalFilename == uploadedFile.internalFilename)
+
+      // Request the permanently stored file from Sipi.
+      val sipiGetFileRequest = Get(savedAudioFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
+      checkResponseOK(sipiGetFileRequest)
+    }
 
     //TODO: activate the following two tests after support of video files is added to sipi
     "create a resource with a video file" ignore {
@@ -1263,50 +1267,51 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-//    "change a video file value" ignore {
-//      // Upload the file to Sipi.
-//      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
-//        loginToken = loginToken,
-//        filesToUpload = Seq(FileToUpload(path = pathToTestVideo2, mimeType = MediaTypes.`video/mp4`))
-//      )
-//
-//      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
-//      uploadedFile.originalFilename should ===(testVideo2OriginalFilename)
-//
-//      // Ask Knora to update the value.
-//
-//      val jsonLdEntity = ChangeVideoFileRequest
-//        .make(
-//          resourceIRI = videoResourceIri.get,
-//          internalFilename = uploadedFile.internalFilename,
-//          valueIRI = videoValueIri.get
-//        )
-//        .value
-//
-//      val request =
-//        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
-//          BasicHttpCredentials(anythingUserEmail, password)
-//        )
-//      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
-//      videoValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
-//
-//      // Get the resource from Knora.
-//      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(videoResourceIri.get, "UTF-8")}")
-//      val resource = getResponseJsonLD(knoraGetRequest)
-//
-//      // Get the new file value from the resource.
-//      val savedValue: JsonLDObject = getValueFromResource(
-//        resource = resource,
-//        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasMovingImageFileValue.toSmartIri,
-//        expectedValueIri = videoValueIri.get
-//      )
-//
-//      val savedVideoFile: SavedVideoFile = savedValueToSavedVideoFile(savedValue)
-//      assert(savedVideoFile.internalFilename == uploadedFile.internalFilename)
-//
-//      // Request the permanently stored file from Sipi.
-//      val sipiGetFileRequest = Get(savedVideoFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
-//      checkResponseOK(sipiGetFileRequest)
-//    }
+    "change a video file value" ignore {
+      // Upload the file to Sipi.
+      val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
+        loginToken = loginToken,
+        filesToUpload = Seq(FileToUpload(path = pathToTestVideo2, mimeType = MediaTypes.`video/mp4`))
+      )
+
+      val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
+      uploadedFile.originalFilename should ===(testVideo2OriginalFilename)
+
+      // Update the value.
+
+      val jsonLdEntity = ChangeFileRequest
+        .make(
+          fileType = FileType.MovingImageFile,
+          resourceIri = videoResourceIri.get,
+          internalFilename = uploadedFile.internalFilename,
+          valueIri = videoValueIri.get
+        )
+        .toJsonLd
+
+      val request =
+        Put(s"$baseApiUrl/v2/values", HttpEntity(RdfMediaTypes.`application/ld+json`, jsonLdEntity)) ~> addCredentials(
+          BasicHttpCredentials(anythingUserEmail, password)
+        )
+      val responseJsonDoc: JsonLDDocument = getResponseJsonLD(request)
+      videoValueIri.set(responseJsonDoc.body.requireIDAsKnoraDataIri.toString)
+
+      // Get the resource from Knora.
+      val knoraGetRequest = Get(s"$baseApiUrl/v2/resources/${URLEncoder.encode(videoResourceIri.get, "UTF-8")}")
+      val resource = getResponseJsonLD(knoraGetRequest)
+
+      // Get the new file value from the resource.
+      val savedValue: JsonLDObject = getValueFromResource(
+        resource = resource,
+        propertyIriInResult = OntologyConstants.KnoraApiV2Complex.HasMovingImageFileValue.toSmartIri,
+        expectedValueIri = videoValueIri.get
+      )
+
+      val savedVideoFile: SavedVideoFile = savedValueToSavedVideoFile(savedValue)
+      assert(savedVideoFile.internalFilename == uploadedFile.internalFilename)
+
+      // Request the permanently stored file from Sipi.
+      val sipiGetFileRequest = Get(savedVideoFile.url.replace("http://0.0.0.0:1024", baseInternalSipiUrl))
+      checkResponseOK(sipiGetFileRequest)
+    }
   }
 }
