@@ -1,5 +1,17 @@
 # Changelog
 
+### [15.1.3](https://www.github.com/dasch-swiss/dsp-api/compare/v15.1.2...v15.1.3) (2021-11-19)
+
+
+### Bug Fixes
+
+* **projectsADM:** clear cache after changing project (DEV-239) ([#1943](https://www.github.com/dasch-swiss/dsp-api/issues/1943)) ([17c5c09](https://www.github.com/dasch-swiss/dsp-api/commit/17c5c093381a351beccac3a18df5136f02a970c7))
+
+
+### Maintenance
+
+* **lists+groups:** improve value objects + remove new lists implementation (DEV-160) ([#1932](https://www.github.com/dasch-swiss/dsp-api/issues/1932)) ([24e34dd](https://www.github.com/dasch-swiss/dsp-api/commit/24e34ddc20a4f3978b57b539db711afae34d0e7c))
+
 ### [15.1.2](https://www.github.com/dasch-swiss/dsp-api/compare/v15.1.1...v15.1.2) (2021-11-12)
 
 
