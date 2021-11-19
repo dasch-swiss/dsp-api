@@ -1,6 +1,6 @@
 # Changelog
 
-## [16.0.0](https://www.github.com/dasch-swiss/dsp-api/compare/v15.1.2...v16.0.0) (2021-11-19)
+## [15.1.3](https://www.github.com/dasch-swiss/dsp-api/compare/v15.1.2...v16.0.0) (2021-11-19)
 
 ### ⚠ BREAKING CHANGES
 
