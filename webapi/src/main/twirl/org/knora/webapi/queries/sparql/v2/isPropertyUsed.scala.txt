@@ -17,6 +17,7 @@
  *@
 @(triplestore: String,
   internalPropertyIri: IRI,
+  internalClassIri: IRI,
   ignoreKnoraConstraints: Boolean = false,
   ignoreRdfSubjectAndObject: Boolean = false)
 
@@ -33,6 +34,18 @@ ASK
 }
 WHERE {
     BIND(IRI("@internalPropertyIri") AS ?property)
+    BIND(IRI("@internalClassIri") AS ?classIri)
 
-    ?s ?property ?o .
+    {
+        # select all items of type classIri with property ?property.
+        ?s ?property ?o .
+        ?s rdf:type ?classIri .
+    }
+
+    UNION {
+            # select all items belonging to a subclass of classIri and with property ?property.
+            ?s ?property ?o .
+            ?s rdf:type ?class .
+            ?class rdfs:subClassOf* ?classIri .
+          }
 }
