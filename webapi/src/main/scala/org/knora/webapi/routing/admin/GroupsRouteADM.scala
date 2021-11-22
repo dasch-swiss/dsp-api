@@ -5,17 +5,18 @@
 
 package org.knora.webapi.routing.admin
 
-import java.util.UUID
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
-
-import javax.ws.rs.Path
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.groupsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.{Description, Name, Selfjoin, Status}
+import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import zio.prelude.Validation
+
+import java.util.UUID
+import javax.ws.rs.Path
 
 object GroupsRouteADM {
   val GroupsBasePath: PathMatcher[Unit] = PathMatcher("admin" / "groups")
@@ -36,26 +37,85 @@ class GroupsRouteADM(routeData: KnoraRouteData)
 
   override def makeRoute(featureFactoryConfig: FeatureFactoryConfig): Route =
     getGroups(featureFactoryConfig) ~
+      getGroup(featureFactoryConfig) ~
+      getGroupMembers(featureFactoryConfig) ~
       createGroup(featureFactoryConfig) ~
-      getGroupByIri(featureFactoryConfig) ~
       updateGroup(featureFactoryConfig) ~
       changeGroupStatus(featureFactoryConfig) ~
-      deleteGroup(featureFactoryConfig) ~
-      getGroupMembers(featureFactoryConfig)
+      deleteGroup(featureFactoryConfig)
 
   /**
-   * Returns all groups
+   * Returns all groups.
    */
   private def getGroups(featureFactoryConfig: FeatureFactoryConfig): Route = path(GroupsBasePath) {
-    get {
-      /* return all groups */
-      requestContext =>
+    get { requestContext =>
+      val requestMessage = for {
+        requestingUser <- getUserADM(
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig
+        )
+      } yield GroupsGetRequestADM(
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser
+      )
+
+      RouteUtilADM.runJsonRoute(
+        requestMessageF = requestMessage,
+        requestContext = requestContext,
+        featureFactoryConfig = featureFactoryConfig,
+        settings = settings,
+        responderManager = responderManager,
+        log = log
+      )
+    }
+  }
+
+  /**
+   * Returns a single group identified by IRI.
+   */
+  private def getGroup(featureFactoryConfig: FeatureFactoryConfig): Route = path(GroupsBasePath / Segment) { value =>
+    get { requestContext =>
+      val checkedGroupIri =
+        stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid custom group IRI $value"))
+
+      val requestMessage = for {
+        requestingUser <- getUserADM(
+          requestContext = requestContext,
+          featureFactoryConfig = featureFactoryConfig
+        )
+      } yield GroupGetRequestADM(
+        groupIri = checkedGroupIri,
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser
+      )
+
+      RouteUtilADM.runJsonRoute(
+        requestMessageF = requestMessage,
+        requestContext = requestContext,
+        featureFactoryConfig = featureFactoryConfig,
+        settings = settings,
+        responderManager = responderManager,
+        log = log
+      )
+    }
+  }
+
+  /**
+   * Returns all members of single group.
+   */
+  private def getGroupMembers(featureFactoryConfig: FeatureFactoryConfig): Route =
+    path(GroupsBasePath / Segment / "members") { value =>
+      get { requestContext =>
+        val checkedGroupIri =
+          stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
+
         val requestMessage = for {
           requestingUser <- getUserADM(
             requestContext = requestContext,
             featureFactoryConfig = featureFactoryConfig
           )
-        } yield GroupsGetRequestADM(
+        } yield GroupMembersGetRequestADM(
+          groupIri = checkedGroupIri,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser
         )
@@ -68,34 +128,30 @@ class GroupsRouteADM(routeData: KnoraRouteData)
           responderManager = responderManager,
           log = log
         )
+      }
     }
-  }
 
   /**
-   * Creates a group
+   * Creates a group.
    */
   private def createGroup(featureFactoryConfig: FeatureFactoryConfig): Route = path(GroupsBasePath) {
     post {
-      /* create a new group */
       entity(as[CreateGroupApiRequestADM]) { apiRequest => requestContext =>
-        val groupCreatePayloadADM: GroupCreatePayloadADM = GroupCreatePayloadADM.create(
-          id = stringFormatter
-            .validateAndEscapeOptionalIri(apiRequest.id, throw BadRequestException(s"Invalid custom group IRI")),
-          name = Name.create(apiRequest.name).fold(e => throw e, v => v),
-          descriptions = Description.make(apiRequest.descriptions).fold(e => throw e.head, v => v),
-          project = stringFormatter
-            .validateAndEscapeProjectIri(apiRequest.project, throw BadRequestException(s"Invalid project IRI")),
-          status = Status.make(apiRequest.status).fold(e => throw e.head, v => v),
-          selfjoin = Selfjoin.make(apiRequest.selfjoin).fold(e => throw e.head, v => v)
-        )
+        val id = GroupIRI.make(apiRequest.id)
+        val name = GroupName.make(apiRequest.name)
+        val descriptions = GroupDescriptions.make(apiRequest.descriptions)
+        val project = ProjectIRI.make(apiRequest.project)
+        val status = GroupStatus.make(apiRequest.status)
+        val selfjoin = GroupSelfJoin.make(apiRequest.selfjoin)
+
+        val validatedGroupCreatePayload: Validation[Throwable, GroupCreatePayloadADM] =
+          Validation.validateWith(id, name, descriptions, project, status, selfjoin)(GroupCreatePayloadADM)
 
         val requestMessage = for {
-          requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+          payload <- toFuture(validatedGroupCreatePayload)
+          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
         } yield GroupCreateRequestADM(
-          createRequest = groupCreatePayloadADM,
+          createRequest = payload,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
@@ -114,44 +170,10 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   }
 
   /**
-   * Returns a single group identified by IRI.
-   */
-  private def getGroupByIri(featureFactoryConfig: FeatureFactoryConfig): Route = path(GroupsBasePath / Segment) {
-    value =>
-      get {
-        /* returns a single group identified through iri */
-        requestContext =>
-          val checkedGroupIri =
-            stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid custom group IRI $value"))
-
-          val requestMessage = for {
-            requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          } yield GroupGetRequestADM(
-            groupIri = checkedGroupIri,
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = requestingUser
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            responderManager = responderManager,
-            log = log
-          )
-      }
-  }
-
-  /**
-   * Update basic group information.
+   * Updates basic group information.
    */
   private def updateGroup(featureFactoryConfig: FeatureFactoryConfig): Route = path(GroupsBasePath / Segment) { value =>
     put {
-      /* update a group identified by iri */
       entity(as[ChangeGroupApiRequestADM]) { apiRequest => requestContext =>
         val checkedGroupIri =
           stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
@@ -166,14 +188,20 @@ class GroupsRouteADM(routeData: KnoraRouteData)
           )
         }
 
+        val name = GroupName.make(apiRequest.name)
+        val descriptions = GroupDescriptions.make(apiRequest.descriptions)
+        val status = GroupStatus.make(apiRequest.status)
+        val selfjoin = GroupSelfJoin.make(apiRequest.selfjoin)
+
+        val validatedGroupUpdatePayload: Validation[Throwable, GroupUpdatePayloadADM] =
+          Validation.validateWith(name, descriptions, status, selfjoin)(GroupUpdatePayloadADM)
+
         val requestMessage = for {
-          requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+          payload <- toFuture(validatedGroupUpdatePayload)
+          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
         } yield GroupChangeRequestADM(
           groupIri = checkedGroupIri,
-          changeGroupRequest = apiRequest,
+          changeGroupRequest = payload,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
@@ -192,12 +220,11 @@ class GroupsRouteADM(routeData: KnoraRouteData)
   }
 
   /**
-   * Update the group's status.
+   * Updates the group's status.
    */
   private def changeGroupStatus(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(GroupsBasePath / Segment / "status") { value =>
       put {
-        /* change the status of a group identified by iri */
         entity(as[ChangeGroupApiRequestADM]) { apiRequest => requestContext =>
           val checkedGroupIri =
             stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
@@ -239,69 +266,34 @@ class GroupsRouteADM(routeData: KnoraRouteData)
     }
 
   /**
-   * Deletes a group (sets status to false)
+   * Deletes a group (sets status to false).
    */
   private def deleteGroup(featureFactoryConfig: FeatureFactoryConfig): Route = path(GroupsBasePath / Segment) { value =>
-    delete {
-      /* update group status to false */
-      requestContext =>
-        val checkedGroupIri =
-          stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
+    delete { requestContext =>
+      val checkedGroupIri =
+        stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
 
-        val requestMessage = for {
-          requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
-        } yield GroupChangeStatusRequestADM(
-          groupIri = checkedGroupIri,
-          changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),
-          featureFactoryConfig = featureFactoryConfig,
-          requestingUser = requestingUser,
-          apiRequestID = UUID.randomUUID()
-        )
-
-        RouteUtilADM.runJsonRoute(
-          requestMessageF = requestMessage,
+      val requestMessage = for {
+        requestingUser <- getUserADM(
           requestContext = requestContext,
-          featureFactoryConfig = featureFactoryConfig,
-          settings = settings,
-          responderManager = responderManager,
-          log = log
+          featureFactoryConfig = featureFactoryConfig
         )
+      } yield GroupChangeStatusRequestADM(
+        groupIri = checkedGroupIri,
+        changeGroupRequest = ChangeGroupApiRequestADM(status = Some(false)),
+        featureFactoryConfig = featureFactoryConfig,
+        requestingUser = requestingUser,
+        apiRequestID = UUID.randomUUID()
+      )
+
+      RouteUtilADM.runJsonRoute(
+        requestMessageF = requestMessage,
+        requestContext = requestContext,
+        featureFactoryConfig = featureFactoryConfig,
+        settings = settings,
+        responderManager = responderManager,
+        log = log
+      )
     }
   }
-
-  /**
-   * Gets members of single group.
-   */
-  private def getGroupMembers(featureFactoryConfig: FeatureFactoryConfig): Route =
-    path(GroupsBasePath / Segment / "members") { value =>
-      get {
-        /* returns all members of the group identified through iri */
-        requestContext =>
-          val checkedGroupIri =
-            stringFormatter.validateAndEscapeIri(value, throw BadRequestException(s"Invalid group IRI $value"))
-
-          val requestMessage = for {
-            requestingUser <- getUserADM(
-              requestContext = requestContext,
-              featureFactoryConfig = featureFactoryConfig
-            )
-          } yield GroupMembersGetRequestADM(
-            groupIri = checkedGroupIri,
-            featureFactoryConfig = featureFactoryConfig,
-            requestingUser = requestingUser
-          )
-
-          RouteUtilADM.runJsonRoute(
-            requestMessageF = requestMessage,
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig,
-            settings = settings,
-            responderManager = responderManager,
-            log = log
-          )
-      }
-    }
 }

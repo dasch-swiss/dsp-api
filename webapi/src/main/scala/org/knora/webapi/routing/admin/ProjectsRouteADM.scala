@@ -30,6 +30,7 @@ import org.knora.webapi.messages.admin.responder.valueObjects.{
   Shortname,
   Status
 }
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import zio.prelude.Validation
 
@@ -142,6 +143,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
           stringFormatter
             .validateAndEscapeOptionalProjectIri(apiRequest.id, throw BadRequestException(s"Invalid project IRI"))
         )
+//        TODO-mpro: why id, longname and logo are not options below?
         val shortname = Shortname.make(apiRequest.shortname)
         val shortcode = Shortcode.make(apiRequest.shortcode)
         val longname = Longname.make(apiRequest.longname)

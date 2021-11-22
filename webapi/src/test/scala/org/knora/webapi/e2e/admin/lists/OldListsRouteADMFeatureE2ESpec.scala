@@ -85,9 +85,7 @@ class OldListsRouteADMFeatureE2ESpec
        |}""".stripMargin
 
   "The Lists Route (/admin/lists)" when {
-
     "used to query information about lists" should {
-
       "return all lists" in {
         val request =
           Get(baseApiUrl + s"/admin/lists") ~> addCredentials(BasicHttpCredentials(rootCreds.email, rootCreds.password))
@@ -169,7 +167,7 @@ class OldListsRouteADMFeatureE2ESpec
         )
       }
 
-      "return basic list information" in {
+      "return basic list information (w/o children)" in {
         val request = Get(
           baseApiUrl + s"/admin/lists/infos/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList"
         ) ~> addCredentials(rootCreds.basicHttpCredentials)
@@ -190,6 +188,35 @@ class OldListsRouteADMFeatureE2ESpec
             filePath = TestDataFilePath(
               directoryPath = clientTestDataPath,
               filename = "get-list-info-response",
+              fileExtension = "json"
+            ),
+            text = responseToString(response)
+          )
+        )
+      }
+
+      "return basic list information (w/o children) for new merged GET route" in {
+        // the same test as above, testing the new route
+        val request = Get(
+          baseApiUrl + s"/admin/lists/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList/info"
+        ) ~> addCredentials(rootCreds.basicHttpCredentials)
+        val response: HttpResponse = singleAwaitingRequest(request)
+        // log.debug(s"response: ${response.toString}")
+
+        response.status should be(StatusCodes.OK)
+
+        val receivedListInfo: ListRootNodeInfoADM =
+          AkkaHttpUtils.httpResponseToJson(response).fields("listinfo").convertTo[ListRootNodeInfoADM]
+
+        val expectedListInfo: ListRootNodeInfoADM = SharedListsTestDataADM.treeListInfo
+
+        receivedListInfo.sorted should be(expectedListInfo.sorted)
+
+        clientTestDataCollector.addFile(
+          TestDataFileContent(
+            filePath = TestDataFilePath(
+              directoryPath = clientTestDataPath,
+              filename = "get-list-info-response-new-merged-get-route",
               fileExtension = "json"
             ),
             text = responseToString(response)
@@ -222,7 +249,7 @@ class OldListsRouteADMFeatureE2ESpec
         )
       }
 
-      "return node info without children" in {
+      "return node info w/o children" in {
         val request = Get(
           baseApiUrl + s"/admin/lists/nodes/http%3A%2F%2Frdfh.ch%2Flists%2F0001%2FtreeList01"
         ) ~> addCredentials(rootCreds.basicHttpCredentials)
@@ -276,7 +303,6 @@ class OldListsRouteADMFeatureE2ESpec
     }
 
     "given a custom Iri" should {
-
       "create a list with the provided custom Iri" in {
         val createListWithCustomIriRequest: String =
           s"""{
@@ -325,7 +351,6 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "return a DuplicateValueException during list creation when the supplied list IRI is not unique" in {
-
         // duplicate list IRI
         val params =
           s"""
@@ -351,7 +376,6 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "add a child with a custom IRI" in {
-
         val createChildNodeWithCustomIriRequest =
           s"""
              |{   "id": "$customChildNodeIRI",
@@ -407,7 +431,6 @@ class OldListsRouteADMFeatureE2ESpec
     }
 
     "used to modify list information" should {
-
       val newListIri = new MutableTestIri
       val firstChildIri = new MutableTestIri
       val secondChildIri = new MutableTestIri
@@ -488,7 +511,6 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "return a BadRequestException during list creation when payload is not correct" in {
-
         // no project IRI
         val params01 =
           s"""
@@ -537,7 +559,6 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "update basic list information" in {
-
         val updateListInfo: String =
           s"""{
              |    "listIri": "${newListIri.get}",
@@ -636,7 +657,6 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "update basic list information with repeated comment and label in different languages" in {
-
         val updateListInfoWithRepeatedCommentAndLabelValuesRequest: String =
           s"""{
              |    "listIri": "http://rdfh.ch/lists/0001/treeList",
@@ -720,7 +740,6 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "return a BadRequestException during list change when payload is not correct" in {
-
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
         // empty list IRI
@@ -783,7 +802,6 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "add child to list - to the root node" in {
-
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
         val name = "first"
@@ -856,7 +874,6 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "add second child to list - to the root node" in {
-
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
         val name = "second"
@@ -929,7 +946,6 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "insert new child in a specific position" in {
-
         val encodedListUrl = java.net.URLEncoder.encode(newListIri.get, "utf-8")
 
         val name = "child with position"
@@ -1006,7 +1022,6 @@ class OldListsRouteADMFeatureE2ESpec
       }
 
       "add child to second child node" in {
-
         val encodedListUrl = java.net.URLEncoder.encode(secondChildIri.get, "utf-8")
 
         val name = "third"
