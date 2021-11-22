@@ -5,31 +5,24 @@
 
 package org.knora.webapi.responders.admin
 
-import java.util.UUID
 import akka.actor.Status.Failure
 import akka.testkit._
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, UpdateNotPerformedException}
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.listsmessages.NodeCreatePayloadADM.{
-  ChildNodeCreatePayloadADM,
-  ListCreatePayloadADM
+import org.knora.webapi.messages.admin.responder.listsmessages.ListNodeCreatePayloadADM.{
+  ListChildNodeCreatePayloadADM,
+  ListRootNodeCreatePayloadADM
 }
 import org.knora.webapi.messages.admin.responder.listsmessages._
+import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.store.triplestoremessages.{RdfDataObject, StringLiteralV2}
 import org.knora.webapi.sharedtestdata.SharedTestDataV1._
 import org.knora.webapi.sharedtestdata.{SharedListsTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util.MutableTestIri
-import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Comments,
-  Labels,
-  ListIRI,
-  ListName,
-  Position,
-  ProjectIRI
-}
 
+import java.util.UUID
 import scala.concurrent.duration._
 
 /**
@@ -65,9 +58,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
   private val treeListChildNodes: Seq[ListNodeADM] = SharedListsTestDataADM.treeListChildNodes
 
   "The Lists Responder" when {
-
     "used to query information about lists" should {
-
       "return all lists" in {
         responderManager ! ListsGetRequestADM(
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -172,16 +163,16 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
     "used to modify lists" should {
       "create a list" in {
-        responderManager ! ListCreateRequestADM(
-          createRootNode = ListCreatePayloadADM(
-            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
-            name = Some(ListName.create("neuelistename").fold(e => throw e, v => v)),
+        responderManager ! ListRootNodeCreateRequestADM(
+          createRootNode = ListRootNodeCreatePayloadADM(
+            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            name = Some(ListName.make("neuelistename").fold(e => throw e.head, v => v)),
             labels = Labels
-              .create(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))))
-              .fold(e => throw e, v => v),
+              .make(Seq(StringLiteralV2(value = "Neue Liste", language = Some("de"))))
+              .fold(e => throw e.head, v => v),
             comments = Comments
-              .create(Seq(StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
-              .fold(e => throw e, v => v)
+              .make(Seq(StringLiteralV2(value = "Neuer Kommentar", language = Some("de"))))
+              .fold(e => throw e.head, v => v)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -213,16 +204,16 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         val labelWithSpecialCharacter = "Neue \\\"Liste\\\""
         val commentWithSpecialCharacter = "Neue \\\"Kommentar\\\""
         val nameWithSpecialCharacter = "a new \\\"name\\\""
-        responderManager ! ListCreateRequestADM(
-          createRootNode = ListCreatePayloadADM(
-            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
-            name = Some(ListName.create(nameWithSpecialCharacter).fold(e => throw e, v => v)),
+        responderManager ! ListRootNodeCreateRequestADM(
+          createRootNode = ListRootNodeCreatePayloadADM(
+            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            name = Some(ListName.make(nameWithSpecialCharacter).fold(e => throw e.head, v => v)),
             labels = Labels
-              .create(Seq(StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
-              .fold(e => throw e, v => v),
+              .make(Seq(StringLiteralV2(value = labelWithSpecialCharacter, language = Some("de"))))
+              .fold(e => throw e.head, v => v),
             comments = Comments
-              .create(Seq(StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
-              .fold(e => throw e, v => v)
+              .make(Seq(StringLiteralV2(value = commentWithSpecialCharacter, language = Some("de"))))
+              .fold(e => throw e.head, v => v)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = SharedTestDataADM.imagesUser01,
@@ -254,29 +245,29 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       "update basic list information" in {
         val changeNodeInfoRequest = NodeInfoChangeRequestADM(
           listIri = newListIri.get,
-          changeNodeRequest = NodeInfoChangePayloadADM(
-            listIri = ListIRI.create(newListIri.get).fold(e => throw e, v => v),
-            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
-            name = Some(ListName.create("updated name").fold(e => throw e, v => v)),
+          changeNodeRequest = ListNodeChangePayloadADM(
+            listIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            name = Some(ListName.make("updated name").fold(e => throw e.head, v => v)),
             labels = Some(
               Labels
-                .create(
+                .make(
                   Seq(
                     StringLiteralV2(value = "Neue geänderte Liste", language = Some("de")),
                     StringLiteralV2(value = "Changed List", language = Some("en"))
                   )
                 )
-                .fold(e => throw e, v => v)
+                .fold(e => throw e.head, v => v)
             ),
             comments = Some(
               Comments
-                .create(
+                .make(
                   Seq(
                     StringLiteralV2(value = "Neuer Kommentar", language = Some("de")),
                     StringLiteralV2(value = "New Comment", language = Some("en"))
                   )
                 )
-                .fold(e => throw e, v => v)
+                .fold(e => throw e.head, v => v)
             )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -310,12 +301,12 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "not update basic list information if name is duplicate" in {
-        val name = Some(ListName.create("sommer").fold(e => throw e, v => v))
-        val projectIRI = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v)
+        val name = Some(ListName.make("sommer").fold(e => throw e.head, v => v))
+        val projectIRI = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v)
         responderManager ! NodeInfoChangeRequestADM(
           listIri = newListIri.get,
-          changeNodeRequest = NodeInfoChangePayloadADM(
-            listIri = ListIRI.create(newListIri.get).fold(e => throw e, v => v),
+          changeNodeRequest = ListNodeChangePayloadADM(
+            listIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
             projectIri = projectIRI,
             name = name
           ),
@@ -334,17 +325,17 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "add child to list - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = ChildNodeCreatePayloadADM(
-            parentNodeIri = Some(ListIRI.create(newListIri.get).fold(e => throw e, v => v)),
-            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
-            name = Some(ListName.create("first").fold(e => throw e, v => v)),
+          createChildNodeRequest = ListChildNodeCreatePayloadADM(
+            parentNodeIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            name = Some(ListName.make("first").fold(e => throw e.head, v => v)),
             labels = Labels
-              .create(Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
-              .fold(e => throw e, v => v),
+              .make(Seq(StringLiteralV2(value = "New First Child List Node Value", language = Some("en"))))
+              .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .create(Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
-                .fold(e => throw e, v => v)
+                .make(Seq(StringLiteralV2(value = "New First Child List Node Comment", language = Some("en"))))
+                .fold(e => throw e.head, v => v)
             )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -386,18 +377,18 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "add second child to list in first position - to the root node" in {
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = ChildNodeCreatePayloadADM(
-            parentNodeIri = Some(ListIRI.create(newListIri.get).fold(e => throw e, v => v)),
-            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
-            name = Some(ListName.create("second").fold(e => throw e, v => v)),
-            position = Some(Position.create(0).fold(e => throw e, v => v)),
+          createChildNodeRequest = ListChildNodeCreatePayloadADM(
+            parentNodeIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            name = Some(ListName.make("second").fold(e => throw e.head, v => v)),
+            position = Some(Position.make(0).fold(e => throw e.head, v => v)),
             labels = Labels
-              .create(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
-              .fold(e => throw e, v => v),
+              .make(Seq(StringLiteralV2(value = "New Second Child List Node Value", language = Some("en"))))
+              .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .create(Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
-                .fold(e => throw e, v => v)
+                .make(Seq(StringLiteralV2(value = "New Second Child List Node Comment", language = Some("en"))))
+                .fold(e => throw e.head, v => v)
             )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -439,17 +430,17 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
 
       "add child to second child node" in {
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = ChildNodeCreatePayloadADM(
-            parentNodeIri = Some(ListIRI.create(secondChildIri.get).fold(e => throw e, v => v)),
-            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
-            name = Some(ListName.create("third").fold(e => throw e, v => v)),
+          createChildNodeRequest = ListChildNodeCreatePayloadADM(
+            parentNodeIri = ListIRI.make(secondChildIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            name = Some(ListName.make("third").fold(e => throw e.head, v => v)),
             labels = Labels
-              .create(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
-              .fold(e => throw e, v => v),
+              .make(Seq(StringLiteralV2(value = "New Third Child List Node Value", language = Some("en"))))
+              .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .create(Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
-                .fold(e => throw e, v => v)
+                .make(Seq(StringLiteralV2(value = "New Third Child List Node Comment", language = Some("en"))))
+                .fold(e => throw e.head, v => v)
             )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -490,20 +481,20 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
       }
 
       "not create a node if given new position is out of range" in {
-        val givenPosition = Some(Position.create(20).fold(e => throw e, v => v))
+        val givenPosition = Some(Position.make(20).fold(e => throw e.head, v => v))
         responderManager ! ListChildNodeCreateRequestADM(
-          createChildNodeRequest = ChildNodeCreatePayloadADM(
-            parentNodeIri = Some(ListIRI.create(newListIri.get).fold(e => throw e, v => v)),
-            projectIri = ProjectIRI.create(IMAGES_PROJECT_IRI).fold(e => throw e, v => v),
-            name = Some(ListName.create("fourth").fold(e => throw e, v => v)),
+          createChildNodeRequest = ListChildNodeCreatePayloadADM(
+            parentNodeIri = ListIRI.make(newListIri.get).fold(e => throw e.head, v => v),
+            projectIri = ProjectIRI.make(IMAGES_PROJECT_IRI).fold(e => throw e.head, v => v),
+            name = Some(ListName.make("fourth").fold(e => throw e.head, v => v)),
             position = givenPosition,
             labels = Labels
-              .create(Seq(StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))))
-              .fold(e => throw e, v => v),
+              .make(Seq(StringLiteralV2(value = "New Fourth Child List Node Value", language = Some("en"))))
+              .fold(e => throw e.head, v => v),
             comments = Some(
               Comments
-                .create(Seq(StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))))
-                .fold(e => throw e, v => v)
+                .make(Seq(StringLiteralV2(value = "New Fourth Child List Node Comment", language = Some("en"))))
+                .fold(e => throw e.head, v => v)
             )
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,

@@ -25,6 +25,7 @@ import org.knora.webapi.messages.admin.responder.usersmessages.{
 }
 import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.cacheservicemessages.{
+  CacheServiceFlushDB,
   CacheServiceGetProjectADM,
   CacheServicePutProjectADM,
   CacheServiceRemoveValues
@@ -879,7 +880,8 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
       }
       // we are changing the project, so lets get rid of the cached copy
-      _ = invalidateCachedProjectADM(maybeCurrentProject)
+      // invalidateCachedProjectADM isn't clearing cache as expected
+      _ = storeManager ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser)
 
       /* Update project */
       updateProjectSparqlString <- Future(
