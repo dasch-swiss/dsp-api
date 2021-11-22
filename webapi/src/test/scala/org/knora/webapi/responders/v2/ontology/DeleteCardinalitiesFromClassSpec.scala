@@ -7,7 +7,7 @@ package org.knora.webapi.responders.v2.ontology
 
 import akka.actor.Props
 import org.knora.webapi.messages.IriConversions._
-import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.{SmartIri, StringFormatter}
 import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.settings.KnoraDispatchers
 import org.knora.webapi.store.triplestore.http.HttpTriplestoreConnector
@@ -41,6 +41,8 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
     name = "httpTriplestoreConnector"
   )
 
+  val freetestOntologyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
+
   override def beforeAll(): Unit = {
     waitForReadyTriplestore(fusekiActor)
     loadTestData(fusekiActor, additionalTestData)
@@ -49,7 +51,6 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
   // use started actor in tests instead of the store manager
   "DeleteCardinalitiesFromClass" should {
     "detect that property is in use, when used in a resource" in {
-      val freetestOntologyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
       val internalPropertyIri = freetestOntologyIri.makeEntityIri("hasText").toOntologySchema(InternalSchema)
       val internalClassIri = freetestOntologyIri.makeEntityIri("FreeTest").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
@@ -59,7 +60,6 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
     }
 
     "detect that property is not in use, when not used in a resource" in {
-      val freetestOntologyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
       val internalPropertyIri = freetestOntologyIri.makeEntityIri("hasText").toOntologySchema(InternalSchema)
       val internalClassIri = freetestOntologyIri.makeEntityIri("FreeTestResourceClass").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
@@ -71,7 +71,6 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
     }
 
     "detect that property is not in use, when not used in a resource of that class (even when used in another class)" in {
-      val freetestOntologyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
       val internalPropertyIri = freetestOntologyIri.makeEntityIri("hasIntegerProperty").toOntologySchema(InternalSchema)
       val internalClassIri = freetestOntologyIri.makeEntityIri("FreeTest").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
@@ -93,7 +92,6 @@ class DeleteCardinalitiesFromClassSpec extends IntegrationSpec(TestContainerFuse
     }
 
     "detect that property is in use, when used in a resource of a subclass" in {
-      val freetestOntologyIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2".toSmartIri
       val internalPropertyIri = freetestOntologyIri.makeEntityIri("hasDecimal").toOntologySchema(InternalSchema)
       val internalClassIri = freetestOntologyIri.makeEntityIri("FreeTest").toOntologySchema(InternalSchema)
       println(s"internalPropertyIri: $internalPropertyIri")
