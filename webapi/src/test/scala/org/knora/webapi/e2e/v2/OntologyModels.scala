@@ -80,13 +80,23 @@ object CreatePropertyRequest {
     ontologyName: String,
     lastModificationDate: Instant,
     propertyName: String,
-    subjectClassName: String,
+    subjectClassName: Option[String],
     propertyType: PropertyValueType,
     label: LangString,
     comment: LangString
   ): CreatePropertyRequest = {
     val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"
     val ontologyId = LocalHost_Ontology + s"/0001/$ontologyName/v2"
+
+    val optionalSubjectClass = subjectClassName match {
+      case Some(subjectName) => s"""
+                                   |"knora-api:subjectType" : {
+                                   |      "@id" : "$ontologyName:$subjectName"
+                                   |    },
+                                   |""".stripMargin
+      case None              => ""
+    }
+
     val value = s"""{
                    |  "@id" : "$ontologyId",
                    |  "@type" : "owl:Ontology",
@@ -97,9 +107,7 @@ object CreatePropertyRequest {
                    |  "@graph" : [ {
                    |      "@id" : "$ontologyName:$propertyName",
                    |      "@type" : "owl:ObjectProperty",
-                   |      "knora-api:subjectType" : {
-                   |        "@id" : "$ontologyName:$subjectClassName"
-                   |      },
+                   |      $optionalSubjectClass
                    |      "knora-api:objectType" : {
                    |        "@id" : "${propertyType.value}"
                    |      },
