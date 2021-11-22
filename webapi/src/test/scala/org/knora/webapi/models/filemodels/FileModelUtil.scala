@@ -53,7 +53,9 @@ object FileModelUtil {
         FileModelConstants.defaultJsonLdContextMap + ("anything" -> "http://0.0.0.0:3333/ontology/0001/anything/v2#")
       case _ => FileModelConstants.defaultJsonLdContextMap
     }
-    val lines = ontologies.toList.map(x => s"""    "${x._1}": "${x._2}" """).reduce({ (a, b) => a + "\n" + b })
+    val lines = ontologies.toList
+      .map(x => s"""    "${x._1}": "${x._2}\"""")
+      .reduce({ (a, b) => a + ",\n" + b })
     s"""|"@context" : {
         |$lines
         |  }
