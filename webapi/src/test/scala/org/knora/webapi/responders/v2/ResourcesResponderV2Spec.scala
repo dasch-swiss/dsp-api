@@ -1264,7 +1264,7 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         inputResource = inputResource,
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
-        defaultValuePermissions = defaultStillImageFileValuePermissions,
+        defaultValuePermissions = defaultAnythingValuePermissions,
         requestingUser = anythingUserProfile
       )
     }
