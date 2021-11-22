@@ -17,7 +17,16 @@ object FileModelUtil {
     case FileType.MovingImageFile => OntologyConstants.KnoraApiV2Complex.MovingImageRepresentation.toSmartIri
     case FileType.TextFile        => OntologyConstants.KnoraApiV2Complex.TextRepresentation.toSmartIri
     case FileType.AudioFile       => OntologyConstants.KnoraApiV2Complex.AudioRepresentation.toSmartIri
-    case FileType.ArchiveFile     => OntologyConstants.KnoraApiV2Complex.AudioRepresentation.toSmartIri
+    case FileType.ArchiveFile     => OntologyConstants.KnoraApiV2Complex.ArchiveRepresentation.toSmartIri
+  }
+
+  def getFileRepresentationPropertyIri(fileType: FileType): SmartIri = fileType match {
+    case FileType.DocumentFile    => OntologyConstants.KnoraApiV2Complex.HasDocumentFileValue.toSmartIri
+    case FileType.StillImageFile  => OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri
+    case FileType.MovingImageFile => OntologyConstants.KnoraApiV2Complex.HasMovingImageFileValue.toSmartIri
+    case FileType.TextFile        => OntologyConstants.KnoraApiV2Complex.HasTextFileValue.toSmartIri
+    case FileType.AudioFile       => OntologyConstants.KnoraApiV2Complex.HasAudioFileValue.toSmartIri
+    case FileType.ArchiveFile     => OntologyConstants.KnoraApiV2Complex.HasArchiveFileValue.toSmartIri
   }
 
   def getFileValuePropertyName(fileType: FileType): String = fileType match {

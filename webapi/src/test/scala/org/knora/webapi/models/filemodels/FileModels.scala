@@ -75,6 +75,7 @@ sealed abstract case class UploadFileRequest private (
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     val resourceClassIri: SmartIri = FileModelUtil.getFileRepresentationClassIri(fileType)
+    val fileValuePropertyIri: SmartIri = FileModelUtil.getFileRepresentationPropertyIri(fileType)
     val valueContent = fileType match {
       case FileType.DocumentFile =>
         DocumentFileValueContentV2(
@@ -160,7 +161,7 @@ sealed abstract case class UploadFileRequest private (
         permissions = valuePermissions
       )
     )
-    val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(resourceClassIri -> values)
+    val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(fileValuePropertyIri -> values)
 
     CreateResourceV2(
       resourceIri = Some(resourceIri.toSmartIri),
