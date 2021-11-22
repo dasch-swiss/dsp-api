@@ -30,6 +30,7 @@ import org.knora.webapi.messages.admin.responder.valueObjects.{
   Shortname,
   Status
 }
+import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import zio.prelude.Validation
 
