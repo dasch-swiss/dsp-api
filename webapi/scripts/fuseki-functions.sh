@@ -79,7 +79,7 @@ create-repository() {
 }
 
 upload-graph() {
-  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USER_NAME}:${PASSWORD} -H "Content-Type:text/turtle; charset=utf-8" --data-binary @$1 -X PUT http://${HOST}/${REPOSITORY}\?graph\="$2")
+  STATUS=$(curl -s -o /dev/null -w '%{http_code}' -u ${USER_NAME}:${PASSWORD} -H "Content-Type:text/turtle; charset=utf-8" --data-binary @$1 -X PUT http://${HOST}/${REPOSITORY}/data\?graph\="$2")
 
   if [ "${STATUS}" -eq 201 ]; then
     echo "==> 201 Created: $1 -> $2"

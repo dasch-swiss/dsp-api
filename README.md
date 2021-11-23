@@ -175,17 +175,6 @@ A pull request should include tests and documentation for the changes that were
 made. See the [documentation README](https://github.com/dasch-swiss/knora-api/blob/main/docs/Readme.md)
 for information on writing Knora documentation.
 
-## Contact information
-
-### Technical
-
-Please use the [discuss.dasch.swiss](https://discuss.dasch.swiss) forum for
-technical questions.
-
-### Administrative
-
-Lukas Rosenthaler `<lukas.rosenthaler@unibas.ch>`
-
 ## Commit Message Schema
 
 When writing commit messages, we follow the [Conventional Commit messages](https://www.conventionalcommits.org/) rules.
