@@ -1,6 +1,7 @@
 package org.knora.webapi.models.filemodels
 
 import org.knora.webapi.CoreSpec
+import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 class FileModelsSpec extends CoreSpec {
   "FileModelsUtil" when {
@@ -45,11 +46,23 @@ class FileModelsSpec extends CoreSpec {
         documentRepresentation.fileType should equal(FileType.DocumentFile)
         documentRepresentation.internalFilename should equal("document-file.pdf")
         documentRepresentation.internalMimeType should equal(None)
-        documentRepresentation.fileType should equal(FileType.DocumentFile)
-        documentRepresentation.fileType should equal(FileType.DocumentFile)
-        documentRepresentation.fileType should equal(FileType.DocumentFile)
-        documentRepresentation.fileType should equal(FileType.DocumentFile)
-        documentRepresentation.fileType should equal(FileType.DocumentFile)
+        documentRepresentation.dimX should equal(Some(100))
+        documentRepresentation.dimY should equal(Some(100))
+        documentRepresentation.resourcePermissions should equal(None)
+        documentRepresentation.customValueUUID should equal(None)
+        documentRepresentation.project should equal(SharedTestDataADM.anythingProject)
+        documentRepresentation.customValueIri should equal(None)
+        documentRepresentation.className should equal(FileModelUtil.getDefaultClassName(FileType.DocumentFile))
+        documentRepresentation.comment should equal(None)
+        documentRepresentation.customValueCreationDate should equal(None)
+        documentRepresentation.label should equal("test label")
+        documentRepresentation.ontologyName should equal("knora-api")
+        documentRepresentation.originalFilename should equal(None)
+        documentRepresentation.originalMimeType should equal(None)
+        documentRepresentation.pageCount should equal(Some(1))
+        documentRepresentation.resourceIri should not equal (None)
+        documentRepresentation.shortcode should equal("0001")
+        documentRepresentation.valuePermissions should equal(None)
       }
     }
   }
