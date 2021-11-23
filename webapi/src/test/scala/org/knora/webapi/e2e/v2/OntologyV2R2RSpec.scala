@@ -382,16 +382,6 @@ class OntologyV2R2RSpec extends R2RSpec {
             val responseStr: String = responseAs[String]
             assert(response.status == StatusCodes.OK, responseStr)
 
-            if (httpGetTest.fileBasename == "knoraApiOntologySimple") {
-              println("----")
-              println(httpGetTest.fileBasename)
-              println(httpGetTest.urlPath)
-              println(mediaType)
-              println("")
-              println(responseStr)
-              println("----")
-            }
-
             // Are we writing expected response files?
             if (writeTestDataFiles) {
               // Yes. But only write RDF/XML files if they're semantically different from the ones that we already

@@ -67,8 +67,7 @@ sealed abstract case class UploadFileRequest private (
        |    "@id" : "http://rdfh.ch/projects/$shortcode"
        |  },
        |  "rdfs:label" : "test label",
-       |  $context
-       |}""".stripMargin
+       |  $context}""".stripMargin
   }
 
   def toMessage: CreateResourceV2 = {
@@ -82,7 +81,10 @@ sealed abstract case class UploadFileRequest private (
           ontologySchema = ApiV2Complex,
           fileValue = FileValueV2(
             internalFilename = internalFilename,
-            internalMimeType = "application/pdf",
+            internalMimeType = internalMimeType match {
+              case Some(v) => v
+              case None    => "application/pdf"
+            },
             originalFilename = originalFilename,
             originalMimeType = Some("application/pdf")
           ),

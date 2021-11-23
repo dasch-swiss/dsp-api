@@ -39,12 +39,12 @@ object FileModelUtil {
   }
 
   def getDefaultClassName(fileType: FileType): String = fileType match {
-    case FileType.DocumentFile    => "knora-api:DocumentRepresentation"
-    case FileType.StillImageFile  => "knora-api:StillImageRepresentation"
-    case FileType.MovingImageFile => "knora-api:MovingImageRepresentation"
-    case FileType.TextFile        => "knora-api:TextRepresentation"
-    case FileType.AudioFile       => "knora-api:AudioRepresentation"
-    case FileType.ArchiveFile     => "knora-api:ArchiveRepresentation"
+    case FileType.DocumentFile    => "DocumentRepresentation"
+    case FileType.StillImageFile  => "StillImageRepresentation"
+    case FileType.MovingImageFile => "MovingImageRepresentation"
+    case FileType.TextFile        => "TextRepresentation"
+    case FileType.AudioFile       => "AudioRepresentation"
+    case FileType.ArchiveFile     => "ArchiveRepresentation"
   }
 
   def getFileValueType(fileType: FileType): String = fileType match {
