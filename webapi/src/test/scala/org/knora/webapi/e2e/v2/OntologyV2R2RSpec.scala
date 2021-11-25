@@ -13,6 +13,7 @@ import org.knora.webapi.messages.store.triplestoremessages.RdfDataObject
 import org.knora.webapi.messages.util.rdf._
 import org.knora.webapi.messages.v2.responder.ontologymessages.{InputOntologyV2, TestResponseParsingModeV2}
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.models._
 import org.knora.webapi.routing.v2.{OntologiesRouteV2, ResourcesRouteV2}
 import org.knora.webapi.sharedtestdata.{SharedOntologyTestDataADM, SharedTestDataADM}
 import org.knora.webapi.util._

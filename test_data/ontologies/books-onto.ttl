@@ -41,7 +41,7 @@
 
 :Book
     rdf:type                owl:Class ;
-    rdfs:subClassOf         knora-base:Resource;
+    rdfs:subClassOf         knora-base:Resource ;
     knora-base:resourceIcon "book.png" ;
     rdfs:label              "Buch"@de, "Book"@en ;
     rdfs:comment            """A resource describing a book."""@en .
@@ -58,7 +58,7 @@
 
 :Page
     rdf:type                owl:Class ;
-    rdfs:subClassOf         knora-base:Resource;
+    rdfs:subClassOf         knora-base:Resource ;
     knora-base:resourceIcon "page.png" ;
     rdfs:label              "Seite"@de, "Page"@en ;
     rdfs:comment            """A resource describing a page in a book."""@en .

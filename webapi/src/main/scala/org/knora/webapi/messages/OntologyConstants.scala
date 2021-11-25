@@ -181,6 +181,7 @@ object OntologyConstants {
     val AudioRepresentation: IRI = KnoraBasePrefixExpansion + "AudioRepresentation"
     val DDDRepresentation: IRI = KnoraBasePrefixExpansion + "DDDRepresentation"
     val DocumentRepresentation: IRI = KnoraBasePrefixExpansion + "DocumentRepresentation"
+    val ArchiveRepresentation: IRI = KnoraBasePrefixExpansion + "ArchiveRepresentation"
     val MovingImageRepresentation: IRI = KnoraBasePrefixExpansion + "MovingImageRepresentation"
     val StillImageRepresentation: IRI = KnoraBasePrefixExpansion + "StillImageRepresentation"
     val TextRepresentation: IRI = KnoraBasePrefixExpansion + "TextRepresentation"
@@ -258,6 +259,7 @@ object OntologyConstants {
     val HasDDDFileValue: IRI = KnoraBasePrefixExpansion + "hasDDDFileValue"
     val HasTextFileValue: IRI = KnoraBasePrefixExpansion + "hasTextFileValue"
     val HasDocumentFileValue: IRI = KnoraBasePrefixExpansion + "hasDocumentFileValue"
+    val HasArchiveFileValue: IRI = KnoraBasePrefixExpansion + "hasArchiveFileValue"
     val HasComment: IRI = KnoraBasePrefixExpansion + "hasComment"
 
     val ResourceIcon: IRI = KnoraBasePrefixExpansion + "resourceIcon"
@@ -298,6 +300,7 @@ object OntologyConstants {
     val AudioFileValue: IRI = KnoraBasePrefixExpansion + "AudioFileValue"
     val DDDFileValue: IRI = KnoraBasePrefixExpansion + "DDDFileValue"
     val DocumentFileValue: IRI = KnoraBasePrefixExpansion + "DocumentFileValue"
+    val ArchiveFileValue: IRI = KnoraBasePrefixExpansion + "ArchiveFileValue"
     val StillImageFileValue: IRI = KnoraBasePrefixExpansion + "StillImageFileValue"
     val MovingImageFileValue: IRI = KnoraBasePrefixExpansion + "MovingImageFileValue"
     val TextFileValue: IRI = KnoraBasePrefixExpansion + "TextFileValue"
@@ -309,7 +312,8 @@ object OntologyConstants {
       AudioFileValue,
       DDDFileValue,
       TextFileValue,
-      DocumentFileValue
+      DocumentFileValue,
+      ArchiveFileValue
     )
 
     val ValueClasses: Set[IRI] = Set(
@@ -330,6 +334,7 @@ object OntologyConstants {
       AudioFileValue,
       DDDFileValue,
       DocumentFileValue,
+      ArchiveFileValue,
       StillImageFileValue,
       MovingImageFileValue,
       TextFileValue
@@ -431,6 +436,7 @@ object OntologyConstants {
       AudioRepresentation,
       DDDRepresentation,
       DocumentRepresentation,
+      ArchiveRepresentation,
       MovingImageRepresentation,
       StillImageRepresentation,
       TextRepresentation
@@ -776,6 +782,7 @@ object OntologyConstants {
     val DDDRepresentation: IRI = KnoraApiV2PrefixExpansion + "DDDRepresentation"
     val TextRepresentation: IRI = KnoraApiV2PrefixExpansion + "TextRepresentation"
     val DocumentRepresentation: IRI = KnoraApiV2PrefixExpansion + "DocumentRepresentation"
+    val ArchiveRepresentation: IRI = KnoraApiV2PrefixExpansion + "ArchiveRepresentation"
     val XMLToStandoffMapping: IRI = KnoraApiV2PrefixExpansion + "XMLToStandoffMapping"
     val ListNode: IRI = KnoraApiV2PrefixExpansion + "ListNode"
     val LinkObj: IRI = KnoraApiV2PrefixExpansion + "LinkObj"
@@ -822,6 +829,9 @@ object OntologyConstants {
     val DDDFileValue: IRI = KnoraApiV2PrefixExpansion + "DDDFileValue"
     val TextFileValue: IRI = KnoraApiV2PrefixExpansion + "TextFileValue"
     val DocumentFileValue: IRI = KnoraApiV2PrefixExpansion + "DocumentFileValue"
+    val ArchiveFileValue: IRI = KnoraApiV2PrefixExpansion + "ArchiveFileValue"
+
+    val HasRepresentationValue: IRI = KnoraApiV2PrefixExpansion + "hasRepresentationValue"
 
     val FileValueClasses: Set[IRI] = Set(
       FileValue,
@@ -830,7 +840,8 @@ object OntologyConstants {
       AudioFileValue,
       DDDFileValue,
       TextFileValue,
-      DocumentFileValue
+      DocumentFileValue,
+      ArchiveFileValue
     )
 
     val ValueClasses: Set[IRI] = Set(
@@ -870,6 +881,7 @@ object OntologyConstants {
     val HasDDDFileValue: IRI = KnoraApiV2PrefixExpansion + "hasDDDFileValue"
     val HasTextFileValue: IRI = KnoraApiV2PrefixExpansion + "hasTextFileValue"
     val HasDocumentFileValue: IRI = KnoraApiV2PrefixExpansion + "hasDocumentFileValue"
+    val HasArchiveFileValue: IRI = KnoraApiV2PrefixExpansion + "hasArchiveFileValue"
 
     val DateValueHasStartYear: IRI = KnoraApiV2PrefixExpansion + "dateValueHasStartYear"
     val DateValueHasEndYear: IRI = KnoraApiV2PrefixExpansion + "dateValueHasEndYear"
@@ -1006,7 +1018,7 @@ object OntologyConstants {
     val AudioRepresentation: IRI = KnoraApiV2PrefixExpansion + "AudioRepresentation"
     val DDDRepresentation: IRI = KnoraApiV2PrefixExpansion + "DDDRepresentation"
     val TextRepresentation: IRI = KnoraApiV2PrefixExpansion + "TextRepresentation"
-    val DocumentRepresentation: IRI = KnoraApiV2PrefixExpansion + "DocumentRepresentation"
+    val ArchiveRepresentation: IRI = KnoraApiV2PrefixExpansion + "ArchiveRepresentation"
     val LinkObj: IRI = KnoraApiV2PrefixExpansion + "LinkObj"
 
     val Date: IRI = KnoraApiV2PrefixExpansion + "Date"
@@ -1043,6 +1055,7 @@ object OntologyConstants {
     val HasDDDFile: IRI = KnoraApiV2PrefixExpansion + "hasDDDFile"
     val HasTextFile: IRI = KnoraApiV2PrefixExpansion + "hasTextFile"
     val HasDocumentFile: IRI = KnoraApiV2PrefixExpansion + "hasDocumentFile"
+    val HasArchiveFile: IRI = KnoraApiV2PrefixExpansion + "hasArchiveFile"
 
     val File: IRI = KnoraApiV2PrefixExpansion + "File"
 
@@ -1095,13 +1108,15 @@ object OntologyConstants {
       KnoraBase.DDDFileValue -> KnoraApiV2Simple.File,
       KnoraBase.TextFileValue -> KnoraApiV2Simple.File,
       KnoraBase.DocumentFileValue -> KnoraApiV2Simple.File,
+      KnoraBase.ArchiveFileValue -> KnoraApiV2Simple.File,
       KnoraBase.HasFileValue -> KnoraApiV2Simple.HasFile,
       KnoraBase.HasStillImageFileValue -> KnoraApiV2Simple.HasStillImageFile,
       KnoraBase.HasMovingImageFileValue -> KnoraApiV2Simple.HasMovingImageFile,
       KnoraBase.HasAudioFileValue -> KnoraApiV2Simple.HasAudioFile,
       KnoraBase.HasDDDFileValue -> KnoraApiV2Simple.HasDDDFile,
       KnoraBase.HasTextFileValue -> KnoraApiV2Simple.HasTextFile,
-      KnoraBase.HasDocumentFileValue -> KnoraApiV2Simple.HasDocumentFile
+      KnoraBase.HasDocumentFileValue -> KnoraApiV2Simple.HasDocumentFile,
+      KnoraBase.HasArchiveFileValue -> KnoraApiV2Simple.HasArchiveFile
     ),
     (InternalSchema, ApiV2Complex) -> Map(
       KnoraBase.SubjectClassConstraint -> KnoraApiV2Complex.SubjectType,
@@ -1143,6 +1158,7 @@ object OntologyConstants {
       KnoraApiV2Simple.HasDDDFile -> KnoraBase.HasDDDFileValue,
       KnoraApiV2Simple.HasTextFile -> KnoraBase.HasTextFileValue,
       KnoraApiV2Simple.HasDocumentFile -> KnoraBase.HasDocumentFileValue,
+      KnoraApiV2Simple.HasArchiveFile -> KnoraBase.HasArchiveFileValue,
       KnoraApiV2Simple.ListNode -> KnoraBase.ListValue
     ),
     (ApiV2Complex, InternalSchema) -> Map(

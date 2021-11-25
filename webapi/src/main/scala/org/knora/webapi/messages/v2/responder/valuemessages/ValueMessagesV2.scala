@@ -1382,6 +1382,17 @@ object ValueContentV2 extends ValueContentReaderV2[ValueContentV2] {
             log = log
           )
 
+        case OntologyConstants.KnoraApiV2Complex.ArchiveFileValue =>
+          ArchiveFileValueContentV2.fromJsonLDObject(
+            jsonLDObject = jsonLDObject,
+            requestingUser = requestingUser,
+            responderManager = responderManager,
+            storeManager = storeManager,
+            featureFactoryConfig = featureFactoryConfig,
+            settings = settings,
+            log = log
+          )
+
         case other => throw NotImplementedException(s"Parsing of JSON-LD value type not implemented: $other")
       }
 
@@ -3380,6 +3391,66 @@ case class DocumentFileValueContentV2(
 }
 
 /**
+ * Represents archive file metadata.
+ *
+ * @param fileValue the basic metadata about the file value.
+ * @param comment   a comment on this `ArchiveFileValueContentV2`, if any.
+ */
+case class ArchiveFileValueContentV2(
+  ontologySchema: OntologySchema,
+  fileValue: FileValueV2,
+  comment: Option[String] = None
+) extends FileValueContentV2 {
+  override def valueType: SmartIri = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    OntologyConstants.KnoraBase.ArchiveFileValue.toSmartIri.toOntologySchema(ontologySchema)
+  }
+
+  override def valueHasString: String = fileValue.internalFilename
+
+  override def toOntologySchema(targetSchema: OntologySchema): ArchiveFileValueContentV2 =
+    copy(ontologySchema = targetSchema)
+
+  override def toJsonLDValue(
+    targetSchema: ApiV2Schema,
+    projectADM: ProjectADM,
+    settings: KnoraSettingsImpl,
+    schemaOptions: Set[SchemaOption]
+  ): JsonLDValue = {
+    val fileUrl: String = s"${settings.externalSipiBaseUrl}/${projectADM.shortcode}/${fileValue.internalFilename}/file"
+
+    targetSchema match {
+      case ApiV2Simple => toJsonLDValueInSimpleSchema(fileUrl)
+      case ApiV2Complex =>
+        JsonLDObject(
+          toJsonLDObjectMapInComplexSchema(
+            fileUrl
+          )
+        )
+    }
+  }
+
+  override def unescape: ValueContentV2 =
+    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+
+  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean =
+    that match {
+      case thatArchiveFile: ArchiveFileValueContentV2 =>
+        fileValue == thatArchiveFile.fileValue
+
+      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${that.valueType}>")
+    }
+
+  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean =
+    currentVersion match {
+      case thatArchiveFile: ArchiveFileValueContentV2 =>
+        wouldDuplicateOtherValue(thatArchiveFile) && comment == thatArchiveFile.comment
+
+      case _ => throw AssertionException(s"Can't compare a <$valueType> to a <${currentVersion.valueType}>")
+    }
+}
+
+/**
  * Constructs [[DocumentFileValueContentV2]] objects based on JSON-LD input.
  */
 object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValueContentV2] {
@@ -3415,6 +3486,44 @@ object DocumentFileValueContentV2 extends ValueContentReaderV2[DocumentFileValue
       pageCount = fileValueWithSipiMetadata.sipiFileMetadata.pageCount,
       dimX = fileValueWithSipiMetadata.sipiFileMetadata.width,
       dimY = fileValueWithSipiMetadata.sipiFileMetadata.height,
+      comment = getComment(jsonLDObject)
+    )
+  }
+}
+
+/**
+ * Constructs [[ArchiveFileValueContentV2]] objects based on JSON-LD input.
+ */
+object ArchiveFileValueContentV2 extends ValueContentReaderV2[ArchiveFileValueContentV2] {
+  override def fromJsonLDObject(
+    jsonLDObject: JsonLDObject,
+    requestingUser: UserADM,
+    responderManager: ActorRef,
+    storeManager: ActorRef,
+    featureFactoryConfig: FeatureFactoryConfig,
+    settings: KnoraSettingsImpl,
+    log: LoggingAdapter
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ArchiveFileValueContentV2] = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+
+    for {
+      fileValueWithSipiMetadata <- FileValueWithSipiMetadata.fromJsonLDObject(
+        jsonLDObject = jsonLDObject,
+        requestingUser = requestingUser,
+        responderManager = responderManager,
+        storeManager = storeManager,
+        settings = settings,
+        log = log
+      )
+
+      _ = if (!settings.archiveMimeTypes.contains(fileValueWithSipiMetadata.fileValue.internalMimeType)) {
+        throw BadRequestException(
+          s"File ${fileValueWithSipiMetadata.fileValue.internalFilename} has MIME type ${fileValueWithSipiMetadata.fileValue.internalMimeType}, which is not supported for archive files"
+        )
+      }
+    } yield ArchiveFileValueContentV2(
+      ontologySchema = ApiV2Complex,
+      fileValue = fileValueWithSipiMetadata.fileValue,
       comment = getComment(jsonLDObject)
     )
   }

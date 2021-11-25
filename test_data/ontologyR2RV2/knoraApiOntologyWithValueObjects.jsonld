@@ -173,6 +173,290 @@
             "@id": "knora-api:Annotation"
         },
         {
+            "@id": "knora-api:ArchiveFileValue",
+            "@type": "owl:Class",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:FileValue"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToUser"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deletedBy"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:fileValueAsUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:fileValueHasFilename"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasPermissions"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isDeleted"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:userHasPermission"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueAsString"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueCreationDate"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueHasComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:valueHasUUID"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                }
+            ],
+            "knora-api:isValueClass": true
+        },
+        {
+            "knora-api:isResourceClass": true,
+            "rdfs:label": "Representation (Zip)",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Representation"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToProject"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:attachedToUser"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:creationDate"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteComment"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deleteDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:deletedBy"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasArchiveFileValue"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLinkValue"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasPermissions"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkToValue"
+                    },
+                    "owl:minCardinality": 0,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:isDeleted"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:lastModificationDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:userHasPermission"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionDate"
+                    },
+                    "owl:maxCardinality": 1,
+                    "knora-api:isInherited": true
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1,
+                    "knora-api:isInherited": true
+                }
+            ],
+            "@type": "owl:Class",
+            "@id": "knora-api:ArchiveRepresentation"
+        },
+        {
             "knora-api:isValueClass": true,
             "rdfs:subClassOf": [
                 {
@@ -6612,6 +6896,26 @@
                 "@id": "knora-api:GeonameValue"
             },
             "rdfs:comment": "Represents the literal Geoname code of a GeonameValue."
+        },
+        {
+            "rdfs:label": "has zip",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasFileValue"
+            },
+            "knora-api:isEditable": true,
+            "knora-api:isResourceProperty": true,
+            "@type": "owl:ObjectProperty",
+            "knora-api:objectType": {
+                "@id": "knora-api:ArchiveFileValue"
+            },
+            "salsah-gui:guiElement": {
+                "@id": "salsah-gui:Fileupload"
+            },
+            "@id": "knora-api:hasArchiveFileValue",
+            "knora-api:subjectType": {
+                "@id": "knora-api:ArchiveRepresentation"
+            },
+            "rdfs:comment": "Connects a Representation to a zip archive"
         },
         {
             "rdfs:label": "has audio file",

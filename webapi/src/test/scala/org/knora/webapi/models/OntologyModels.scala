@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package org.knora.webapi.e2e.v2
+package org.knora.webapi.models
 
 import org.knora.webapi.sharedtestdata.SharedOntologyTestDataADM
 
@@ -21,8 +21,7 @@ object CreateClassRequest {
     label: LangString,
     comment: LangString
   ): CreateClassRequest = {
-    val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"
-    val ontologyId = LocalHost_Ontology + s"/0001/$ontologyName/v2"
+    val ontologyId = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
 
     val value = s"""{
                    |  "@id" : "$ontologyId",
@@ -187,8 +186,7 @@ object AddCardinalitiesRequest {
     className: String,
     restrictions: List[Restriction]
   ): AddCardinalitiesRequest = {
-    val LocalHost_Ontology = "http://0.0.0.0:3333/ontology"
-    val ontologyId = LocalHost_Ontology + s"/0001/$ontologyName/v2"
+    val ontologyId = s"http://0.0.0.0:3333/ontology/0001/$ontologyName/v2"
     val restrictionsString: String = stringifyRestrictions(restrictions)
     val value = s"""
                    |{
