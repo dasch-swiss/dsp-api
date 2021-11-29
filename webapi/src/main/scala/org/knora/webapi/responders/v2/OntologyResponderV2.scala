@@ -1786,7 +1786,7 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
    * Checks if cardinalities can be removed from a class.
    *
    * @param canDeleteCardinalitiesFromClassRequest the request to remove cardinalities.
-   * @return a [[ReadOntologyV2]] in the internal schema, containing the new class definition.
+   * @return a [[CanDoResponseV2]] indicating whether a class's cardinalities can be deleted.
    */
   private def canDeleteCardinalitiesFromClass(
     canDeleteCardinalitiesFromClassRequest: CanDeleteCardinalitiesFromClassRequestV2

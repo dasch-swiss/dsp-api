@@ -110,10 +110,15 @@ object Cardinalities {
         isCardinalityDefinedOnClass(cacheData, p._1, p._2, internalClassIri, internalOntologyIri)
       )
 
-      // Check if property is used in resources
+      // Check if property is used in resources of this class
 
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
-      propertyIsUsed: Boolean <- isPropertyUsedInResources(settings, storeManager, submittedPropertyToDelete)
+      propertyIsUsed: Boolean <- isPropertyUsedInResources(
+        settings,
+        storeManager,
+        internalClassIri,
+        submittedPropertyToDelete
+      )
 
       // Make an update class definition in which the cardinality to delete is removed
 
@@ -249,10 +254,15 @@ object Cardinalities {
         isCardinalityDefinedOnClass(cacheData, p._1, p._2, internalClassIri, internalOntologyIri)
       )
 
-      // Check if property is used in resources
+      // Check if property is used in resources of this class
 
       submittedPropertyToDelete: SmartIri = cardinalitiesToDelete.head._1
-      propertyIsUsed: Boolean <- isPropertyUsedInResources(settings, storeManager, submittedPropertyToDelete)
+      propertyIsUsed: Boolean <- isPropertyUsedInResources(
+        settings,
+        storeManager,
+        internalClassIri,
+        submittedPropertyToDelete
+      )
       _ = if (propertyIsUsed) {
         throw BadRequestException("Property is used in data. The cardinality cannot be deleted.")
       }
@@ -429,6 +439,7 @@ object Cardinalities {
   def isPropertyUsedInResources(
     settings: KnoraSettingsImpl,
     storeManager: ActorRef,
+    internalClassIri: SmartIri,
     internalPropertyIri: SmartIri
   )(implicit ec: ExecutionContext, timeout: Timeout): Future[Boolean] =
     for {
@@ -437,6 +448,7 @@ object Cardinalities {
           .isPropertyUsed(
             triplestore = settings.triplestoreType,
             internalPropertyIri = internalPropertyIri.toString,
+            internalClassIri = internalClassIri.toString,
             ignoreKnoraConstraints = true,
             ignoreRdfSubjectAndObject = true
           )

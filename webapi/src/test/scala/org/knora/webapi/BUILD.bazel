@@ -25,5 +25,6 @@ filegroup(
         "//webapi/src/test/scala/org/knora/webapi/sharedtestdata:srcs",
         "//webapi/src/test/scala/org/knora/webapi/store:srcs",
         "//webapi/src/test/scala/org/knora/webapi/util:srcs",
+        "//webapi/src/test/scala/org/knora/webapi/models:srcs",
     ],
 )

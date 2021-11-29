@@ -65,6 +65,58 @@
             "@id": "knora-api:Annotation"
         },
         {
+            "@id": "knora-api:ArchiveRepresentation",
+            "@type": "owl:Class",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Representation"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasArchiveFile"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:label": "Representation (Zip)"
+        },
+        {
             "rdfs:label": "Representation (Audio)",
             "rdfs:subClassOf": [
                 {
@@ -758,6 +810,21 @@
                 "@id": "xsd:string"
             },
             "@id": "knora-api:error"
+        },
+        {
+            "rdfs:label": "has zip",
+            "rdfs:subPropertyOf": {
+                "@id": "knora-api:hasFile"
+            },
+            "rdfs:comment": "Connects a Representation to a zip archive",
+            "@type": "owl:DatatypeProperty",
+            "knora-api:subjectType": {
+                "@id": "knora-api:ArchiveRepresentation"
+            },
+            "knora-api:objectType": {
+                "@id": "knora-api:File"
+            },
+            "@id": "knora-api:hasArchiveFile"
         },
         {
             "rdfs:label": "has audio file",

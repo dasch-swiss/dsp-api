@@ -1079,6 +1079,7 @@ object ConstructResponseUtilV2 {
             comment = valueCommentOption
           )
         )
+
       case OntologyConstants.KnoraBase.MovingImageFileValue =>
         FastFuture.successful(
           MovingImageFileValueContentV2(
@@ -1092,6 +1093,15 @@ object ConstructResponseUtilV2 {
             duration = valueObject
               .maybeStringObject(OntologyConstants.KnoraBase.Duration.toSmartIri)
               .map(definedDuration => BigDecimal(definedDuration)),
+            comment = valueCommentOption
+          )
+        )
+
+      case OntologyConstants.KnoraBase.ArchiveFileValue =>
+        FastFuture.successful(
+          ArchiveFileValueContentV2(
+            ontologySchema = InternalSchema,
+            fileValue = fileValue,
             comment = valueCommentOption
           )
         )
