@@ -11,6 +11,7 @@ IMAGE = "image"
 DOCUMENT = "document"
 AUDIO = "audio"
 VIDEO = "video"
+ARCHIVE = "archive"
 
 -------------------------------------------------------------------------------
 -- Mimetype constants
@@ -67,16 +68,19 @@ local text_mime_types = {
 
 local document_mime_types = {
     APPLICATION_PDF,
-    APPLICATION_TAR,
-    APPLICATION_ZIP,
     APPLICATION_ISO,
-    APPLICATION_GZIP,
     APPLICATION_DOC,
     APPLICATION_DOCX,
     APPLICATION_XLS,
     APPLICATION_XLSX,
     APPLICATION_PPT,
     APPLICATION_PPTX
+}
+
+local archive_mime_types = {
+    APPLICATION_TAR,
+    APPLICATION_ZIP,
+    APPLICATION_GZIP
 }
 
 local video_mime_types = {
@@ -99,16 +103,19 @@ local text_extensions = {
 
 local document_extensions = {
     "pdf",
-    "zip",
-    "tar",
     "iso",
-    "gz",
     "doc",
     "docx",
     "xls",
     "xlsx",
     "ppt",
     "pptx"
+}
+
+local archive_extensions = {
+    "zip",
+    "tar",
+    "gz"
 }
 
 local video_extensions = {
@@ -166,6 +173,17 @@ function make_document_file_info(extension)
     end
 end
 
+function make_archive_file_info(extension)
+    if not table.contains(archive_extensions, extension) then
+        return nil
+    else
+        return {
+            media_type = ARCHIVE,
+            extension = extension
+        }
+    end
+end
+
 -------------------------------------------------------------------------------
 -- Determines the media type and file extension of a file.
 -- Parameters:
@@ -178,7 +196,7 @@ end
 function get_file_info(filename, mimetype)
 
     local extension = filename:match("^.+%.([^.]+)$")
-    
+
     if extension == nil then
         return nil
     elseif table.contains(image_mime_types, mimetype) then
@@ -191,6 +209,8 @@ function get_file_info(filename, mimetype)
         return make_text_file_info(extension)
     elseif table.contains(document_mime_types, mimetype) then
         return make_document_file_info(extension)
+    elseif table.contains(archive_mime_types, mimetype) then
+        return make_archive_file_info(extension)
     else
         -- no supported mediatype could be determined
         return nil

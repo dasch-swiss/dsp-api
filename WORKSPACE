@@ -60,7 +60,7 @@ container_pull(
 # get openjdk
 container_pull(
     name = "openjdk11",
-    digest = "sha256:8f0a99f12dfc7ff2524f1550ffd6ab432597cd20417413b46cb96c7b9ec2b7f0",  # 16.10.2021
+    digest = "sha256:07a404dc9d910d35d89f8c4ab31016162f820ebfd3ae88d2a10f9d4755b60364",  # 5.11.2021
     registry = "docker.io",
     repository = "eclipse-temurin",
     # tag = "11-jre-focal", # Ubuntu 20.04
@@ -74,7 +74,6 @@ container_pull(
     digest = SIPI_IMAGE_DIGEST,
     registry = "docker.io",
     repository = SIPI_REPOSITORY,
-    # tag = SIPI_VERSION,
 )
 
 container_pull(
@@ -82,7 +81,6 @@ container_pull(
     digest = FUSEKI_IMAGE_DIGEST,
     registry = "docker.io",
     repository = FUSEKI_REPOSITORY,
-    # tag = FUSEKI_VERSION,
 )
 
 #####################################

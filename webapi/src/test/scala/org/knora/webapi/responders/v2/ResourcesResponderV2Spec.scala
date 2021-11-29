@@ -8,7 +8,6 @@ package org.knora.webapi.responders.v2
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.UUID
-
 import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
@@ -29,6 +28,7 @@ import org.knora.webapi.messages.v2.responder.resourcemessages._
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.models.filemodels._
 import org.knora.webapi.responders.v2.ResourcesResponseCheckerV2.compareReadResourcesSequenceV2Response
 import org.knora.webapi.settings.{KnoraDispatchers, _}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -1161,31 +1161,17 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
 
-      val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(
-        OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri -> Seq(
-          CreateValueInNewResourceV2(
-            valueContent = StillImageFileValueContentV2(
-              ontologySchema = ApiV2Complex,
-              fileValue = FileValueV2(
-                internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
-                internalMimeType = "image/jp2",
-                originalFilename = Some("test.tiff"),
-                originalMimeType = Some("image/tiff")
-              ),
-              dimX = 512,
-              dimY = 256
-            )
-          )
+      val inputResource = UploadFileRequest
+        .make(
+          fileType = FileType.StillImageFile,
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.jp2",
+          className = Some("ThingPicture"),
+          ontologyName = "anything",
+          resourceIri = Some(resourceIri),
+          dimX = Some(512),
+          dimY = Some(256)
         )
-      )
-
-      val inputResource = CreateResourceV2(
-        resourceIri = Some(resourceIri.toSmartIri),
-        resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-        label = "test thing picture",
-        values = inputValues,
-        projectADM = SharedTestDataADM.anythingProject
-      )
+        .toMessage
 
       responderManager ! CreateResourceRequestV2(
         createResource = inputResource,
@@ -1206,6 +1192,79 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         outputResource = outputResource,
         defaultResourcePermissions = defaultAnythingResourcePermissions,
         defaultValuePermissions = defaultStillImageFileValuePermissions,
+        requestingUser = anythingUserProfile
+      )
+    }
+
+    "create a resource with document representation" in {
+      // Create the resource.
+
+      val resourceIri: IRI = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+      val inputResource = UploadFileRequest
+        .make(
+          fileType = FileType.DocumentFile,
+          resourceIri = Some(resourceIri),
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVpr.pdf"
+        )
+        .toMessage
+
+      responderManager ! CreateResourceRequestV2(
+        createResource = inputResource,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgType[ReadResourcesSequenceV2](timeout)
+
+      // Get the resource from the triplestore and check it.
+
+      val outputResource = getResource(resourceIri, anythingUserProfile)
+
+      checkCreateResource(
+        inputResourceIri = resourceIri,
+        inputResource = inputResource,
+        outputResource = outputResource,
+        defaultResourcePermissions = defaultAnythingResourcePermissions,
+        defaultValuePermissions = defaultStillImageFileValuePermissions,
+        requestingUser = anythingUserProfile
+      )
+    }
+
+    "create a resource with archive representation" in {
+      // Create the resource.
+
+      val resourceIri: String = stringFormatter.makeRandomResourceIri(SharedTestDataADM.anythingProject.shortcode)
+
+      val inputResource = UploadFileRequest
+        .make(
+          fileType = FileType.ArchiveFile,
+          resourceIri = Some(resourceIri),
+          internalFilename = "IQUO3t1AABm-FSLC0vNvVps.zip",
+          internalMimeType = Some("application/zip")
+        )
+        .toMessage
+
+      responderManager ! CreateResourceRequestV2(
+        createResource = inputResource,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingUserProfile,
+        apiRequestID = UUID.randomUUID
+      )
+
+      expectMsgType[ReadResourcesSequenceV2](timeout)
+
+      // Get the resource from the triplestore and check it.
+
+      val outputResource = getResource(resourceIri, anythingUserProfile)
+
+      checkCreateResource(
+        inputResourceIri = resourceIri,
+        inputResource = inputResource,
+        outputResource = outputResource,
+        defaultResourcePermissions = defaultAnythingResourcePermissions,
+        defaultValuePermissions = defaultAnythingValuePermissions,
         requestingUser = anythingUserProfile
       )
     }

@@ -58,6 +58,22 @@
                                 "max=-1" .
 
 
+:hasIntegerProperty rdf:type owl:ObjectProperty ;
+
+            rdfs:subPropertyOf knora-base:hasValue ;
+
+            rdfs:label "Ganzzahl"@de ,
+            "Nombre entier"@fr ,
+            "Intero"@it ,
+            "Integer"@en ;
+
+            knora-base:objectClassConstraint knora-base:IntValue ;
+
+            salsah-gui:guiElement salsah-gui:Spinbox ;
+
+            salsah-gui:guiAttribute "min=0" ,
+            "max=-1" .
+
 
 :hasDecimal rdf:type owl:ObjectProperty ;
 
@@ -121,6 +137,12 @@
                           owl:onProperty :hasInteger ;
                           owl:minCardinality "0"^^xsd:nonNegativeInteger ;
                           salsah-gui:guiOrder "4"^^xsd:nonNegativeInteger
+                      ] ,
+                      [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasIntegerProperty ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "5"^^xsd:nonNegativeInteger
                       ] ;
 
       knora-base:resourceIcon "thing.png" ;
@@ -141,3 +163,19 @@
                "SFT en"@en ;
 
     rdfs:comment """A comment for SFT."""@de .
+
+
+:FreeTestResourceClass rdf:type owl:Class ;
+               rdfs:subClassOf knora-base:Resource ,
+                      [
+                          rdf:type owl:Restriction ;
+                          owl:onProperty :hasIntegerProperty ;
+                          owl:minCardinality "0"^^xsd:nonNegativeInteger ;
+                          salsah-gui:guiOrder "1"^^xsd:nonNegativeInteger
+                      ] ;
+               rdfs:label "FTRC de"@de ,
+               "FTRC fr"@fr ,
+               "FTRC it"@it ,
+               "FTRC en"@en ;
+
+               rdfs:comment """A comment for FTRC."""@de .
