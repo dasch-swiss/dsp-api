@@ -1209,8 +1209,7 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-    //TODO: activate the following two tests after support of video files is added to sipi
-    "create a resource with a video file" ignore {
+    "create a resource with a video file" in {
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
@@ -1267,7 +1266,7 @@ class KnoraSipiIntegrationV2ITSpec
       checkResponseOK(sipiGetFileRequest)
     }
 
-    "change a video file value" ignore {
+    "change a video file value" in {
       // Upload the file to Sipi.
       val sipiUploadResponse: SipiUploadResponse = uploadToSipi(
         loginToken = loginToken,
