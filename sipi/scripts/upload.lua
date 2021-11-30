@@ -11,6 +11,7 @@ require "jwt"
 require "clean_temp_dir"
 require "util"
 Json = require "json"
+local sh = require "sh"
 
 --------------------------------------------------------------------------
 -- Calculate the SHA256 checksum of a file using the operating system tool
@@ -113,14 +114,7 @@ for file_index, file_params in pairs(server.uploads) do
         return
     end
 
-    -- filename for sidecar file
-    local tmp_storage_sidecar = uuid62 .. ".info"
-    local hashed_tmp_storage_sidecar
-    success, hashed_tmp_storage_sidecar = helper.filename_hash(tmp_storage_sidecar)
-    if not success then
-        send_error(500, "helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_sidecar))
-        return
-    end
+   
 
     -- filename for original file copy
     local tmp_storage_original = uuid62 .. "." .. file_info["extension"] .. ".orig"
@@ -132,7 +126,6 @@ for file_index, file_params in pairs(server.uploads) do
     end
 
     local tmp_storage_file_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_filename
-    local tmp_storage_sidecar_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_sidecar
     local tmp_storage_original_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_original
 
     -- Create a IIIF base URL for the converted file.
@@ -177,6 +170,9 @@ for file_index, file_params in pairs(server.uploads) do
             return
         end
         server.log("upload.lua: wrote image file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
+
+        Write_Sidecar_File(tmp_storage_original_path, tmp_storage_file_path, original_filename, tmp_storage_filename, hashed_tmp_storage_original)
+
     -- Is this a video file?
     elseif media_type == VIDEO then
         server.log("upload.lua: video file type " .. media_type, server.loglevel.LOG_DEBUG)
@@ -228,16 +224,66 @@ for file_index, file_params in pairs(server.uploads) do
 
         os.execute("ffprobe -v quiet -print_format json -show_format -show_streams " .. tmp_storage_file_path .. " > " .. tmp_storage_ffprobe_path)
 
+        local handle
+
+        -- get video duration
+        handle = io.popen("ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " .. tmp_storage_file_path)
+        local duration = handle:read("*a")
+        handle:close()
+        -- success, command = os.execute("ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " .. tmp_storage_file_path .. " > " .. duration)
+        -- server.log("ffprobe get duration: " .. duration, server.loglevel.LOG_DEBUG)
+        if not duration then
+            send_error(417, "ffprobe get duration failed: " .. duration)
+        else
+            server.log("ffprobe get duration: " .. duration, server.loglevel.LOG_DEBUG)
+        end
+        -- get video width (dimX)
+        handle = io.popen("ffprobe -v error -show_entries stream=width -select_streams v -of default=noprint_wrappers=1:nokey=1 " .. tmp_storage_file_path)
+        local width = handle:read("*a")
+        handle:close()
+        if not width then
+            send_error(417, "ffprobe get width failed: " .. width)
+        else
+            server.log("ffprobe get width: " .. width, server.loglevel.LOG_DEBUG)
+        end
+        -- get video height (dimY)
+        handle = io.popen("ffprobe -v error -show_entries stream=height -select_streams v -of default=noprint_wrappers=1:nokey=1 " .. tmp_storage_file_path)
+        local height = handle:read("*a")
+        handle:close()
+        if not height then
+            send_error(417, "ffprobe get height failed: " .. height)
+        else
+            server.log("ffprobe get height: " .. height, server.loglevel.LOG_DEBUG)
+        end
+        -- get video fps
+        handle = io.popen("ffprobe -v error -show_entries stream=r_frame_rate -select_streams v -of default=noprint_wrappers=1:nokey=1 " .. tmp_storage_file_path)
+        local fps = handle:read("*a")
+        handle:close()
+        if not fps then
+            send_error(417, "ffprobe get fps failed: " .. fps)
+        else
+            server.log("ffprobe get fps: " .. fps, server.loglevel.LOG_DEBUG)
+        end
+
+        local additional_sidecar_data = {
+            width = width,
+            height = height,
+            duration = duration,
+            fps = fps
+        }
+
+        Write_Sidecar_File(tmp_storage_original_path, tmp_storage_file_path, original_filename, tmp_storage_filename, hashed_tmp_storage_original, additional_sidecar_data)
+
         -- local contents = ""
-        local ffprobe = {}
+        -- local ffprobe = {}
         -- local ffprobe_content = ffprobe_json:read("r")
 
-        local ffprobe_json = io.open(tmp_storage_ffprobe_path, "r")
-        local contents = ffprobe_json:read("*a")
-        ffprobe = Json.decode(contents);
-        io.close( ffprobe_json )
+        -- local ffprobe_json = io.open(tmp_storage_ffprobe_path, "r")
+        -- local contents = ffprobe_json:read("*a")
+        -- ffprobe = Json.decode(contents);
+        -- io.close( ffprobe_json )
 
-        server.log("upload.lua: get video info: duration " .. ffprobe.streams[0].duration, server.loglevel.LOG_DEBUG)
+        -- server.log("upload.lua: get video info: " .. this_file_upload_data, server.loglevel.LOG_DEBUG)
 
     else
         -- It's not an image or video file. Just move it to its temporary storage location.
@@ -247,47 +293,64 @@ for file_index, file_params in pairs(server.uploads) do
             return
         end
         server.log("upload.lua: wrote non-image, non-video file to " .. tmp_storage_file_path, server.loglevel.LOG_DEBUG)
+
+        Write_Sidecar_File(tmp_storage_original_path, tmp_storage_file_path, original_filename, tmp_storage_filename, hashed_tmp_storage_original)
+        
+
     end
 
+    
+end
+
+function Write_Sidecar_File(tmp_original_path, tmp_derivate_path, original_file, internal_file, hashed_tmp_original_file, additional_data)
+
+    -- filename for sidecar file
+    local tmp_storage_sidecar = uuid62 .. ".info"
+    local hashed_tmp_storage_sidecar
+    success, hashed_tmp_storage_sidecar = helper.filename_hash(tmp_storage_sidecar)
+    if not success then
+        send_error(500, "helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_sidecar))
+        return
+    end
+
+    local tmp_storage_sidecar_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_sidecar
+        
     --
     -- Calculate checksum of original file
     --
-    local checksum_original = file_checksum(tmp_storage_original_path)
+    local checksum_original = file_checksum(tmp_original_path)
 
     --
     -- Calculate checksum of derivative file
     --
-    local checksum_derivative = file_checksum(tmp_storage_file_path)
+    local checksum_derivative = file_checksum(tmp_derivate_path)
 
     --
     -- prepare and write sidecar file
     --
     local sidecar_data = {
-        originalFilename = original_filename,
+        originalFilename = original_file,
         checksumOriginal = checksum_original,
-        originalInternalFilename = hashed_tmp_storage_original,
-        internalFilename = tmp_storage_filename,
+        originalInternalFilename = hashed_tmp_original_file,
+        internalFilename = internal_file,
         checksumDerivative = checksum_derivative
     }
-    local success, jsonstr = server.table_to_json(sidecar_data)
+
+    if additional_data then
+        for i=1, #additional_data do
+            sidecar_data[#sidecar_data+1] = additional_data[i]
+        end
+    end
+
+    local jsonstr
+    success, jsonstr = server.table_to_json(sidecar_data)
     if not success then
         send_error(500, "Couldn't create json string!")
         return
     end
-    sidecar = io.open(tmp_storage_sidecar_path, "w")
+    local sidecar = io.open(tmp_storage_sidecar_path, "w")
     sidecar:write(jsonstr)
     sidecar:close()
-
-    local this_file_upload_data = {
-        internalFilename = tmp_storage_filename,
-        originalFilename = original_filename,
-        temporaryUrl = tmp_storage_url,
-        fileType = media_type,
-        sidecarFile = tmp_storage_sidecar,
-        checksumOriginal = checksum_orig,
-        checksumDerivative = checksum_derivative
-    }
-    file_upload_data[file_index] = this_file_upload_data
 end
 
 -- Clean up old temporary files.
