@@ -5,6 +5,7 @@
 -- Moves a file from temporary to permanent storage.
 --
 
+require "file_info"
 require "send_response"
 require "jwt"
 
@@ -220,12 +221,58 @@ if not success then
     return
 end
 
-local destination_path = storage_dir .. hashed_filename
-success, error_msg = server.fs.moveFile(source_path, destination_path)
+local mime_info
+success, mime_info = server.file_mimetype(source_path)
 if not success then
-    send_error(500, "server.fs.moveFile() failed: " .. error_msg)
+    send_error(415, "server.file_mimetype() failed: " .. tostring(mime_info))
     return
 end
+local mime_type = mime_info["mimetype"]
+if mime_type == nil then
+    send_error(400, "Could not determine MIME type of uploaded file")
+    return
+end
+local file_info = get_file_info(source_path, mime_type)
+if file_info == nil then
+    send_error(415, "Unsupported MIME type: " .. tostring(mime_type))
+    return
+end
+local media_type = file_info["media_type"]
+
+local destination_path = storage_dir .. hashed_filename
+if media_type == VIDEO then
+
+    -- start with movie converter script resp. with at command which starts the converter script
+    os.execute("ffmpeg -i " .. source_path .. " -pix_fmt yuv420p -vcodec h264 -threads 2 -pass 1 " .. destination_path)
+    os.execute("ffmpeg -i " .. source_path .. " -y -pix_fmt yuv420p -vcodec h264 -threads 2 -pass 2 " .. destination_path)
+
+    -- move video info file (from ffprobe) to destination
+    server.log("store.lua: get video file path: " .. source_path, server.loglevel.LOG_DEBUG)
+    -- success, error_msg = server.fs.moveFile(source_path, destination_path)
+    -- if not success then
+    --     send_error(500, "server.fs.moveFile() failed: " .. error_msg)
+    --     return
+    -- end
+
+
+    local hashed_ffprobe =  get_file_basename(hashed_filename) .. ".json"
+    local source_ffprobe = config.imgroot .. "/tmp/" .. hashed_ffprobe
+    success, readable = server.fs.is_readable(source_ffprobe)
+    if not success then
+        send_error(500, "server.fs.is_readable() failed: " .. readable)
+        return
+    end
+
+
+else
+    success, error_msg = server.fs.moveFile(source_path, destination_path)
+    if not success then
+        send_error(500, "server.fs.moveFile() failed: " .. error_msg)
+        return
+    end
+end
+
+
 
 --
 -- Move sidecarfile if it exists
