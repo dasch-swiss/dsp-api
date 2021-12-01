@@ -93,18 +93,8 @@ print-env-file: ## prints the env file used by knora-stack
 
 .PHONY: env-file
 env-file: ## write the env file used by knora-stack.
-ifeq ($(KNORA_DB_HOME), unknown)
 	@echo KNORA_DB_HOME_DIR=db-home > .env
-else
-	$(info Using $(KNORA_DB_HOME) for the DB home directory.)
-	@echo KNORA_DB_HOME_DIR=$(KNORA_DB_HOME) > .env
-endif
-ifeq ($(KNORA_DB_IMPORT), unknown)
 	@echo KNORA_DB_IMPORT_DIR=db-import >> .env
-else
-	$(info Using $(KNORA_DB_IMPORT) for the DB import directory.)
-	@echo KNORA_DB_IMPORT_DIR=$(KNORA_DB_IMPORT) >> .env
-endif
 	@echo DOCKERHOST=$(DOCKERHOST) >> .env
 	@echo KNORA_DB_REPOSITORY_NAME=$(KNORA_DB_REPOSITORY_NAME) >> .env
 	@echo LOCAL_HOME=$(CURRENT_DIR) >> .env

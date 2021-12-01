@@ -121,21 +121,6 @@ Run :
 make test
 ```
 
-### Running with Custom Folders
-
-The `$ make stack-up` target can be additionally configured thorough the
-following environment variables:
-
-* `KNORA_DB_HOME`: sets the path to the folder where the triplestore will store
-the database files
-* `KNORA_DB_IMPORT`: sets the path to the import directory accessible from
-inside the docker image
-
-If the import and/or data directory are not set, then Docker volumes will be
-used instead. Be aware on macOS, that setting the `KNORA_DB_HOME` has a
-significant negative impact on performance, because of how synchronization with
-the VM, in which docker is running, is implemented.
-
 ## How to Contribute
 
 You can help by testing Knora with your data, making bug reports, improving the
