@@ -93,9 +93,7 @@ print-env-file: ## prints the env file used by knora-stack
 
 .PHONY: env-file
 env-file: ## write the env file used by knora-stack.
-	@echo KNORA_DB_HOME_DIR=db-home > .env
-	@echo KNORA_DB_IMPORT_DIR=db-import >> .env
-	@echo DOCKERHOST=$(DOCKERHOST) >> .env
+	@echo DOCKERHOST=$(DOCKERHOST) > .env
 	@echo KNORA_DB_REPOSITORY_NAME=$(KNORA_DB_REPOSITORY_NAME) >> .env
 	@echo LOCAL_HOME=$(CURRENT_DIR) >> .env
 
@@ -360,8 +358,6 @@ clean: docs-clean clean-local-tmp clean-docker ## clean build artifacts
 info: ## print out all variables
 	@echo "BUILD_TAG: \t\t $(BUILD_TAG)"
 	@echo "GIT_EMAIL: \t\t $(GIT_EMAIL)"
-	@echo "KNORA_DB_IMPORT: \t $(KNORA_DB_IMPORT)"
-	@echo "KNORA_DB_HOME: \t\t $(KNORA_DB_HOME)"
 
 .PHONY: help
 help: ## this help
