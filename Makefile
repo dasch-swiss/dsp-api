@@ -93,19 +93,7 @@ print-env-file: ## prints the env file used by knora-stack
 
 .PHONY: env-file
 env-file: ## write the env file used by knora-stack.
-ifeq ($(KNORA_DB_HOME), unknown)
-	@echo KNORA_DB_HOME_DIR=db-home > .env
-else
-	$(info Using $(KNORA_DB_HOME) for the DB home directory.)
-	@echo KNORA_DB_HOME_DIR=$(KNORA_DB_HOME) > .env
-endif
-ifeq ($(KNORA_DB_IMPORT), unknown)
-	@echo KNORA_DB_IMPORT_DIR=db-import >> .env
-else
-	$(info Using $(KNORA_DB_IMPORT) for the DB import directory.)
-	@echo KNORA_DB_IMPORT_DIR=$(KNORA_DB_IMPORT) >> .env
-endif
-	@echo DOCKERHOST=$(DOCKERHOST) >> .env
+	@echo DOCKERHOST=$(DOCKERHOST) > .env
 	@echo KNORA_DB_REPOSITORY_NAME=$(KNORA_DB_REPOSITORY_NAME) >> .env
 	@echo LOCAL_HOME=$(CURRENT_DIR) >> .env
 
@@ -204,7 +192,7 @@ stack-without-api-and-sipi: stack-up ## starts the knora-stack without knora-api
 	@docker-compose -f docker-compose.yml stop sipi
 
 .PHONY: stack-db-only
-stack-db-only: docker-build-knora-jena-fuseki-image env-file ## starts only fuseki.
+stack-db-only: env-file docker-build-knora-jena-fuseki-image  ## starts only fuseki.
 	docker-compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 
@@ -268,27 +256,27 @@ test: docker-build ## runs all test targets.
 #################################
 
 .PHONY: init-db-test
-init-db-test: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository
+init-db-test: env-file stack-down-delete-volumes stack-db-only ## initializes the knora-test repository
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test
 
 .PHONY: init-db-test-minimal
-init-db-test-minimal: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
+init-db-test-minimal: env-file stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-minimal
 
 .PHONY: init-db-test-empty
-init-db-test-empty: stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
+init-db-test-empty: env-file stack-down-delete-volumes stack-db-only ## initializes the knora-test repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-empty
 
 .PHONY: init-db-test-unit
-init-db-test-unit: stack-down-delete-volumes stack-db-only ## initializes the knora-test-unit repository
+init-db-test-unit: env-file stack-down-delete-volumes stack-db-only ## initializes the knora-test-unit repository
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit
 
 .PHONY: init-db-test-unit-minimal
-init-db-test-unit-minimal: stack-down-delete-volumes stack-db-only ## initializes the knora-test-unit repository with minimal data
+init-db-test-unit-minimal: env-file stack-down-delete-volumes stack-db-only ## initializes the knora-test-unit repository with minimal data
 	@echo $@
 	@$(MAKE) -C webapi/scripts fuseki-init-knora-test-unit-minimal
 
@@ -370,8 +358,6 @@ clean: docs-clean clean-local-tmp clean-docker ## clean build artifacts
 info: ## print out all variables
 	@echo "BUILD_TAG: \t\t $(BUILD_TAG)"
 	@echo "GIT_EMAIL: \t\t $(GIT_EMAIL)"
-	@echo "KNORA_DB_IMPORT: \t $(KNORA_DB_IMPORT)"
-	@echo "KNORA_DB_HOME: \t\t $(KNORA_DB_HOME)"
 
 .PHONY: help
 help: ## this help
