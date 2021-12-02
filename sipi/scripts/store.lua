@@ -281,6 +281,8 @@ if readable then
 
 end
 
+server.log("store.lua: moved " .. source_path .. " to " .. destination_path, server.loglevel.LOG_DEBUG)
+
 --
 -- Move preview frames (in case of video) if they exist
 --
