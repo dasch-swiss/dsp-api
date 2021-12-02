@@ -231,71 +231,8 @@ for file_index, file_params in pairs(server.uploads) do
         end
 
         local tmp_storage_ffprobe_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_ffprobe
-        -- local ffprobe_json = io.open(tmp_storage_ffprobe_path, "w")
-        -- ffprobe_json:close()
-        -- server.log("upload.lua: create ffprobe json file to " .. tmp_storage_ffprobe_path, server.loglevel.LOG_DEBUG)
 
-        -- os.execute("ffprobe -v quiet -print_format json -show_format -show_streams " .. tmp_storage_file_path .. " > " .. tmp_storage_ffprobe_path)
-
-
-        -- -- filename for sidecar file
-        -- local tmp_storage_sidecar = uuid62 .. ".info"
-        -- local hashed_tmp_storage_sidecar
-        -- success, hashed_tmp_storage_sidecar = helper.filename_hash(tmp_storage_sidecar)
-        -- if not success then
-        --     send_error(500, "helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_sidecar))
-        --     return
-        -- end
-
-        -- local tmp_storage_sidecar_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_sidecar
-            
-        -- --
-        -- -- Calculate checksum of original file
-        -- --
-        -- local checksum_original = file_checksum(tmp_storage_original_path)
-
-        -- --
-        -- -- Calculate checksum of derivative file
-        -- --
-        -- local checksum_derivative = file_checksum(tmp_storage_file_path)
-
-        -- --
-        -- -- prepare and write sidecar file
-        -- --
-        -- local sidecar_data = {
-        --     originalFilename = original_filename,
-        --     checksumOriginal = checksum_original,
-        --     originalInternalFilename = hashed_tmp_storage_original,
-        --     internalFilename = tmp_storage_filename,
-        --     checksumDerivative = checksum_derivative,
-        --     width = 640,
-        --     height = 360,
-        --     duration = 61.183333,
-        --     fps = 30
-        -- }
-
-        -- local jsonstr
-        -- success, jsonstr = server.table_to_json(sidecar_data)
-        -- if not success then
-        --     send_error(500, "Couldn't create json string!")
-        --     return
-        -- end
-        -- local sidecar = io.open(tmp_storage_sidecar_path, "w")
-        -- sidecar:write(jsonstr)
-        -- sidecar:close()
-
-        -- write_sidecar_file(uuid62, tmp_storage_original_path, tmp_storage_file_path, original_filename, tmp_storage_filename, hashed_tmp_storage_original, additional_sidecar_data)
-
-        -- local contents = ""
-        -- local ffprobe = {}
-        -- local ffprobe_content = ffprobe_json:read("r")
-
-        -- local ffprobe_json = io.open(tmp_storage_ffprobe_path, "r")
-        -- local contents = ffprobe_json:read("*a")
-        -- ffprobe = Json.decode(contents);
-        -- io.close( ffprobe_json )
-
-        -- server.log("upload.lua: get video info: " .. this_file_upload_data, server.loglevel.LOG_DEBUG)
+        os.execute("ffprobe -v quiet -print_format json -show_format -show_streams " .. tmp_storage_file_path .. " > " .. tmp_storage_ffprobe_path)
 
     else
         -- It's neither an image nor a video file. Just move it to its temporary storage location.
@@ -382,14 +319,8 @@ for file_index, file_params in pairs(server.uploads) do
             checksumDerivative = checksum_derivative,
             width = width,
             height = height,
-            duration = duration,
-            fps = fps
+            duration = duration
         }
-
-        -- for i=1, #additional_sidecar_data do
-        --     server.log("--> --> --> upload.lua: additional sidecar data item" .. additional_sidecar_data[i], server.loglevel.LOG_DEBUG)
-        --     sidecar_data[#sidecar_data+1] = additional_sidecar_data[i]
-        -- end
 
     else
         sidecar_data = {
@@ -402,14 +333,12 @@ for file_index, file_params in pairs(server.uploads) do
     end
 
 
-
-
     local success, jsonstr = server.table_to_json(sidecar_data)
     if not success then
         send_error(500, "Couldn't create json string!")
         return
     end
-    sidecar = io.open(tmp_storage_sidecar_path, "w")
+    local sidecar = io.open(tmp_storage_sidecar_path, "w")
     sidecar:write(jsonstr)
     sidecar:close()
 
