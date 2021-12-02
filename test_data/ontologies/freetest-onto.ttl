@@ -110,6 +110,26 @@
 
        salsah-gui:guiElement salsah-gui:Checkbox .
 
+:hasAuthor rdf:type owl:ObjectProperty ;
+           rdfs:subPropertyOf knora-base:hasValue ;
+           rdfs:label "Autor"@de ,
+                      "Auteur"@fr ,
+                      "Autore"@it ,
+                      "Author"@en ;
+           knora-base:subjectClassConstraint :FreeTest ;
+           knora-base:objectClassConstraint knora-base:TextValue ;
+           salahs-gui:guiElement salsah-gui:SimpleText .
+
+:hasScientificEditor rdf:type owl:ObjectProperty ;
+           rdfs:subPropertyOf :hasAuthor ;
+           rdfs:label "Wissenschaftlicher Redakteur"@de ,
+                      "Scientifique éditeur"@fr ,
+                      "Scientific editor"@it ,
+                      "Scientific editor"@en ;
+           knora-base:subjectClassConstraint :FreeTest ;
+           knora-base:objectClassConstraint knora-base:TextValue ;
+           salahs-gui:guiElement salsah-gui:SimpleText .
+
 
 :FreeTest rdf:type owl:Class ;
 
