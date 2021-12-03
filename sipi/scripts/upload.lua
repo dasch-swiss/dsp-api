@@ -319,7 +319,8 @@ for file_index, file_params in pairs(server.uploads) do
             checksumDerivative = checksum_derivative,
             width = width,
             height = height,
-            duration = duration
+            duration = duration,
+            fps = fps
         }
 
     else
