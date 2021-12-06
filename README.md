@@ -61,7 +61,7 @@ To install, follow these steps:
 
 ```shell
 brew tap AdoptOpenJDK/openjdk
-brew cask install AdoptOpenJDK/openjdk/adoptopenjdk11
+brew install AdoptOpenJDK/openjdk/adoptopenjdk11 --cask
 ```
 
 To pin the version of Java, please add this environment variable to you startup script (bashrc, etc.):
@@ -106,6 +106,15 @@ make stack-up
 ```
 
 Then try opening [http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a](http://localhost:3333/v2/resources/http%3A%2F%2Frdfh.ch%2F0803%2Fc5058f3a) in a web browser. You should see a response in JSON-LD describing a book.
+
+On first installation, errors similar to the following can come up:
+```
+error decoding 'Volumes[0]': invalid spec: :/fuseki:delegated: empty section between colons
+```
+To solve this you need to deactivate Docker Compose V2. This can be done in Docker Desktop either by unchecking the "Use Docker Compose V2"-flag under "Preferences/General" or by running
+ ```
+docker-compose disable-v2
+```
 
 To shut down the Knora-Stack:
 
