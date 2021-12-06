@@ -1962,16 +1962,23 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       // We should now be unable to request the resource.
 
-      responderManager ! ResourcesGetRequestV2(
-        resourceIris = Seq(aThingIri),
-        targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = SharedTestDataADM.anythingUser1
-      )
+//      responderManager ! ResourcesGetRequestV2(
+//        resourceIris = Seq(aThingIri),
+//        targetSchema = ApiV2Complex,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = SharedTestDataADM.anythingUser1
+//      )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
+      val res = getResource(aThingIri, SharedTestDataADM.anythingUser1)
+
+      println(res)
+      res.deletionInfo should not equal (None)
+
+//      TODO: do something with it?
+
+//      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+//        msg.cause.isInstanceOf[NotFoundException] should ===(true)
+//      }
     }
 
     "mark a resource as deleted, supplying a custom delete date" in {
@@ -1995,16 +2002,23 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       // We should now be unable to request the resource.
 
-      responderManager ! ResourcesGetRequestV2(
-        resourceIris = Seq(resourceIri),
-        targetSchema = ApiV2Complex,
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = SharedTestDataADM.anythingUser1
-      )
+//      responderManager ! ResourcesGetRequestV2(
+//        resourceIris = Seq(resourceIri),
+//        targetSchema = ApiV2Complex,
+//        featureFactoryConfig = defaultFeatureFactoryConfig,
+//        requestingUser = SharedTestDataADM.anythingUser1
+//      )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        msg.cause.isInstanceOf[NotFoundException] should ===(true)
-      }
+      val res = getResource(resourceIri, SharedTestDataADM.anythingUser1)
+
+      println(res)
+      res.deletionInfo should not equal (None)
+
+      //      TODO: do something with it?
+
+//      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
+//        msg.cause.isInstanceOf[NotFoundException] should ===(true)
+//      }
 
       val savedDeleteDate: Instant = getDeleteDate(resourceIri)
       assert(savedDeleteDate == deleteDate)

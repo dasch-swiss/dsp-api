@@ -1561,7 +1561,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       mainResourcesAndValueRdfData: ConstructResponseUtilV2.MainResourcesAndValueRdfData <- getResourcesFromTriplestore(
         resourceIris = resourceIris,
         preview = false,
-        withDeleted = withDeleted,
+        withDeleted = true,
         propertyIri = propertyIri,
         valueUuid = valueUuid,
         versionDate = versionDate,
@@ -1605,6 +1605,9 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       _ = valueUuid match {
         case Some(definedValueUuid) =>
           if (!apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))) {
+            println("---")
+            println(apiResponse)
+            println("---")
             throw NotFoundException(
               s"Value with UUID ${stringFormatter.base64EncodeUuid(definedValueUuid)} not found (maybe you do not have permission to see it, or it is marked as deleted)"
             )
