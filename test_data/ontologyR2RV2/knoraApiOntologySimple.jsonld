@@ -247,6 +247,58 @@
             "@id": "knora-api:Date"
         },
         {
+            "rdfs:label": "Deleted Resource",
+            "rdfs:subClassOf": [
+                {
+                    "@id": "knora-api:Resource"
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:arkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasIncomingLink"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:hasStandoffLinkTo"
+                    },
+                    "owl:minCardinality": 0
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "knora-api:versionArkUrl"
+                    },
+                    "owl:cardinality": 1
+                },
+                {
+                    "@type": "owl:Restriction",
+                    "owl:onProperty": {
+                        "@id": "rdfs:label"
+                    },
+                    "owl:cardinality": 1
+                }
+            ],
+            "rdfs:comment": "Generic representation of a deleted resource that can therefore not be displayed",
+            "@type": "owl:Class",
+            "@id": "knora-api:DeletedResource"
+        },
+        {
+            "@id": "knora-api:DeletedValue",
+            "@type": "owl:Class",
+            "rdfs:label": "Deleted Value",
+            "rdfs:comment": "Generic representation of a deleted value that can therefore not be displayed"
+        },
+        {
             "@id": "knora-api:DocumentRepresentation",
             "@type": "owl:Class",
             "rdfs:subClassOf": [

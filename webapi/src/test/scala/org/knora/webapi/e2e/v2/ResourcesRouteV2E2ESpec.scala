@@ -1827,6 +1827,7 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
       val previewResponseAsString = responseToString(previewResponse)
       assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
+      // TODO: would break if changing preview here
     }
 
     "mark a resource as deleted, supplying a custom delete date" in {
