@@ -354,6 +354,15 @@ clean: docs-clean clean-local-tmp clean-docker ## clean build artifacts
 	@rm -rf .env
 	@bazel clean
 
+.PHONY: clean-sipi-tmp
+clean-sipi-tmp: ## deletes all files in Sipi's tmp folder
+	@rm -rf sipi/images/tmp/*
+
+.PHONY: clean-sipi-projects
+clean-sipi-projects: ## deletes all files uploaded within a project
+	@rm -rf sipi/images/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
+	@rm -rf sipi/images/originals/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
+
 .PHONY: info
 info: ## print out all variables
 	@echo "BUILD_TAG: \t\t $(BUILD_TAG)"
