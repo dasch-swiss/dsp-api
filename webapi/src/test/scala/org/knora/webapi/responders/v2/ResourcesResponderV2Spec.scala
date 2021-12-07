@@ -1960,25 +1960,19 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgType[SuccessResponseV2](timeout)
 
-      // We should now be unable to request the resource.
-
-//      responderManager ! ResourcesGetRequestV2(
-//        resourceIris = Seq(aThingIri),
-//        targetSchema = ApiV2Complex,
-//        featureFactoryConfig = defaultFeatureFactoryConfig,
-//        requestingUser = SharedTestDataADM.anythingUser1
-//      )
-
-      val res = getResource(aThingIri, SharedTestDataADM.anythingUser1)
-
-      println(res)
-      res.deletionInfo should not equal (None)
-
-//      TODO: do something with it?
-
-//      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-//        msg.cause.isInstanceOf[NotFoundException] should ===(true)
-//      }
+      responderManager ! ResourcesGetRequestV2(
+        resourceIris = Seq(aThingIri),
+        targetSchema = ApiV2Complex,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.anythingUser1
+      )
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        response.resources.size should equal(1)
+        val resource = response.resources.head
+        resource.resourceClassIri should equal(OntologyConstants.KnoraBase.DeletedResource.toSmartIri)
+        resource.deletionInfo should not be (None)
+        println(resource)
+      }
     }
 
     "mark a resource as deleted, supplying a custom delete date" in {
@@ -2000,28 +1994,21 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgType[SuccessResponseV2](timeout)
 
-      // We should now be unable to request the resource.
-
-//      responderManager ! ResourcesGetRequestV2(
-//        resourceIris = Seq(resourceIri),
-//        targetSchema = ApiV2Complex,
-//        featureFactoryConfig = defaultFeatureFactoryConfig,
-//        requestingUser = SharedTestDataADM.anythingUser1
-//      )
-
-      val res = getResource(resourceIri, SharedTestDataADM.anythingUser1)
-
-      println(res)
-      res.deletionInfo should not equal (None)
-
-      //      TODO: do something with it?
-
-//      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-//        msg.cause.isInstanceOf[NotFoundException] should ===(true)
-//      }
-
-      val savedDeleteDate: Instant = getDeleteDate(resourceIri)
-      assert(savedDeleteDate == deleteDate)
+      responderManager ! ResourcesGetRequestV2(
+        resourceIris = Seq(resourceIri),
+        targetSchema = ApiV2Complex,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.anythingUser1
+      )
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        response.resources.size should equal(1)
+        val resource = response.resources.head
+        resource.resourceClassIri should equal(OntologyConstants.KnoraBase.DeletedResource.toSmartIri)
+        resource.deletionInfo match {
+          case Some(v) => v.deleteDate should equal(deleteDate)
+          case None    => throw AssertionException("Missing deletionInfo on DeletedResource")
+        }
+      }
     }
 
     "not accept custom resource permissions that would give the requesting user a higher permission on a resource than the default" in {

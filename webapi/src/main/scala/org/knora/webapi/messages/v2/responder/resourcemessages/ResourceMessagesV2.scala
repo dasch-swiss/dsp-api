@@ -64,7 +64,7 @@ case class ResourcesGetRequestV2(
   propertyIri: Option[SmartIri] = None,
   valueUuid: Option[UUID] = None,
   versionDate: Option[Instant] = None,
-  withDeleted: Boolean = false,
+  withDeleted: Boolean = true,
   targetSchema: ApiV2Schema,
   schemaOptions: Set[SchemaOption] = Set.empty,
   featureFactoryConfig: FeatureFactoryConfig,
