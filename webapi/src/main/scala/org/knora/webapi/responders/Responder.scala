@@ -132,9 +132,9 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     } yield isEntityUsedResponse.results.bindings.nonEmpty
 
   /**
-   * Checks whether an instance of a class exists
+   * Checks whether an instance of a class (or any ob its sub-classes) exists
    *
-   * @param classIri                 the IRI of the class.
+   * @param classIri  the IRI of the class.
    *
    * @return `true` if the class is used.
    */
@@ -181,8 +181,8 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
   /**
    * Throws an exception if a class is used in data.
    *
-   * @param classIri                  the IRI of the class.
-   * @param errorFun                  a function that throws an exception. It will be called if the class is used.
+   * @param classIri  the IRI of the class.
+   * @param errorFun  a function that throws an exception. It will be called if the class is used.
    */
   protected def throwIfClassIsUsedInData(
     classIri: SmartIri,
