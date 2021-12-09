@@ -1619,8 +1619,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           if (apiResponse.resources.nonEmpty) {
             val newList = l.map { resource =>
               resource.deletionInfo match {
+                // Resource deleted -> return DeletedResource instead
                 case Some(_) => resource.asDeletedResource()
-                case None    => resource
+                // Resource not deleted -> return resource, but check if values are deleted
+                case None => resource.withDeletedValues()
               }
             }
             apiResponse.copy(resources = newList)
@@ -1690,7 +1692,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
             val newList = l.map { resource =>
               resource.deletionInfo match {
                 case Some(_) => resource.asDeletedResource()
-                case None    => resource
+                case None    => resource.withDeletedValues()
               }
             }
             apiResponse.copy(resources = newList)

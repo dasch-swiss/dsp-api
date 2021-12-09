@@ -755,6 +755,20 @@ sealed trait ReadValueV2 extends IOValueV2 {
       case ApiV2Simple => valueContentAsJsonLD
     }
   }
+
+  def asDeletedValue(): ReadValueV2 =
+    ReadOtherValueV2(
+      valueIri = this.valueIri,
+      attachedToUser = this.attachedToUser,
+      permissions = this.permissions,
+      userPermission = this.userPermission,
+      valueCreationDate = this.valueCreationDate,
+      valueHasUUID = this.valueHasUUID,
+      valueContent = DeletedValueContentV2(InternalSchema),
+      previousValueIri = this.previousValueIri,
+      deletionInfo = this.deletionInfo
+    )
+
 }
 
 /**
@@ -3983,4 +3997,31 @@ object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
       comment = getComment(jsonLDObject)
     )
   }
+}
+
+case class DeletedValueContentV2(ontologySchema: OntologySchema, comment: Option[String] = None)
+    extends ValueContentV2 {
+  override def valueType: SmartIri = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    OntologyConstants.KnoraBase.IntValue.toSmartIri.toOntologySchema(ontologySchema)
+  }
+
+  override def toOntologySchema(targetSchema: OntologySchema): DeletedValueContentV2 =
+    copy(ontologySchema = targetSchema)
+
+  override def toJsonLDValue(
+    targetSchema: ApiV2Schema,
+    projectADM: ProjectADM,
+    settings: KnoraSettingsImpl,
+    schemaOptions: Set[SchemaOption]
+  ): JsonLDValue = JsonLDString("Deleted Value")
+
+  override def unescape: ValueContentV2 =
+    copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))
+
+  override def wouldDuplicateOtherValue(that: ValueContentV2): Boolean = false
+
+  override def wouldDuplicateCurrentVersion(currentVersion: ValueContentV2): Boolean = false
+
+  override def valueHasString: String = "Deleted Value"
 }

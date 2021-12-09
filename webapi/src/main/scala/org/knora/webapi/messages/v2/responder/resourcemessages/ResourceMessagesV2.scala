@@ -552,6 +552,23 @@ case class ReadResourceV2(
     )
   }
 
+  def withDeletedValues(): ReadResourceV2 = {
+    val valuesWithDeletedValues: Map[SmartIri, Seq[ReadValueV2]] = this.values.map { case (k, v) =>
+      val withDeletedValues = v.map { case value =>
+        value.deletionInfo match {
+          // value is deleted -> return DeletedValue instead
+          case Some(del) => value.asDeletedValue()
+          // not deleted -> value remains
+          case None => value
+        }
+      }
+      (k, withDeletedValues)
+    }
+    this.copy(
+      values = valuesWithDeletedValues
+    )
+  }
+
 }
 
 /**
