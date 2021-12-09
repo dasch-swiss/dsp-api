@@ -1605,9 +1605,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       _ = valueUuid match {
         case Some(definedValueUuid) =>
           if (!apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))) {
-            // TODO: rather than crashing to 404 when excluding deleted, check resources if they were deleted, and if so, return a DeletedResource
             throw NotFoundException(
-              s"Value with UUID ${stringFormatter.base64EncodeUuid(definedValueUuid)} not found (maybe you do not have permission to see it, or it is marked as deleted)"
+              s"Value with UUID ${stringFormatter.base64EncodeUuid(definedValueUuid)} not found (maybe you do not have permission to see it)"
             )
           }
 
@@ -1615,28 +1614,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       }
 
       // Check if resources are deleted, if so, replace them with DeletedResource
-      // TODO: later maybe only if user doesn't have permission to restore?
       responseWithoutDeletedResources = apiResponse.resources match {
         case l =>
           if (apiResponse.resources.nonEmpty) {
             val newList = l.map { resource =>
               resource.deletionInfo match {
-                case Some(del) =>
-                  ReadResourceV2(
-                    resourceIri = stringFormatter.makeRandomResourceIri(resource.projectADM.shortcode),
-                    label = "Deleted Resource",
-                    resourceClassIri = OntologyConstants.KnoraBase.DeletedResource.toSmartIri,
-                    attachedToUser = resource.attachedToUser,
-                    projectADM = resource.projectADM,
-                    permissions = resource.permissions,
-                    userPermission = resource.userPermission,
-                    values = Map.empty,
-                    creationDate = Instant.now(),
-                    lastModificationDate = None,
-                    versionDate = None,
-                    deletionInfo = Some(del)
-                  )
-                case None => resource
+                case Some(_) => resource.asDeletedResource()
+                case None    => resource
               }
             }
             apiResponse.copy(resources = newList)
@@ -1660,7 +1644,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    */
   private def getResourcePreviewV2(
     resourceIris: Seq[IRI],
-    withDeleted: Boolean = false, // TODO: should this be changed too? see what happens
+    withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
@@ -1698,7 +1682,24 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         targetResourceIris = resourceIris.toSet,
         resourcesSequence = apiResponse
       )
-    } yield apiResponse
+
+      // Check if resources are deleted, if so, replace them with DeletedResource
+      responseWithoutDeletedResources = apiResponse.resources match {
+        case l =>
+          if (apiResponse.resources.nonEmpty) {
+            val newList = l.map { resource =>
+              resource.deletionInfo match {
+                case Some(_) => resource.asDeletedResource()
+                case None    => resource
+              }
+            }
+            apiResponse.copy(resources = newList)
+          } else {
+            apiResponse
+          }
+      }
+
+    } yield responseWithoutDeletedResources
   }
 
   /**

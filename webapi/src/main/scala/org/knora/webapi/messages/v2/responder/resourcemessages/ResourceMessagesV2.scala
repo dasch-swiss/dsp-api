@@ -533,6 +533,25 @@ case class ReadResourceV2(
       ) ++ propertiesAndValuesAsJsonLD ++ metadataForComplexSchema + arkUrlAsJsonLD + versionArkUrlAsJsonLD
     )
   }
+
+  def asDeletedResource(): ReadResourceV2 = {
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    ReadResourceV2(
+      resourceIri = this.resourceIri,
+      label = "Deleted Resource",
+      resourceClassIri = OntologyConstants.KnoraBase.DeletedResource.toSmartIri,
+      attachedToUser = this.attachedToUser,
+      projectADM = this.projectADM,
+      permissions = this.permissions,
+      userPermission = this.userPermission,
+      values = Map.empty,
+      creationDate = Instant.now(),
+      lastModificationDate = None,
+      versionDate = None,
+      deletionInfo = this.deletionInfo
+    )
+  }
+
 }
 
 /**
