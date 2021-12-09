@@ -105,6 +105,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         valueUuid,
         versionDate,
         withDeleted,
+        showDeletedValues = versionDate match {
+          case Some(_) => true
+          case None    => false
+        },
         targetSchema,
         schemaOptions,
         featureFactoryConfig,
@@ -1543,6 +1547,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     valueUuid: Option[UUID] = None,
     versionDate: Option[Instant] = None,
     withDeleted: Boolean = true,
+    showDeletedValues: Boolean = false,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption],
     featureFactoryConfig: FeatureFactoryConfig,
@@ -1621,8 +1626,12 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
               resource.deletionInfo match {
                 // Resource deleted -> return DeletedResource instead
                 case Some(_) => resource.asDeletedResource()
-                // Resource not deleted -> return resource, but check if values are deleted
-                case None => resource.withDeletedValues()
+                // Resource not deleted -> return resource
+                case None =>
+                  // deleted values should be shown -> resource can be returned
+                  if (showDeletedValues) resource
+                  // deleted Values should not be shown -> replace them with generic DeletedValue
+                  else resource.withDeletedValues()
               }
             }
             apiResponse.copy(resources = newList)
@@ -2746,6 +2755,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         resourceIris = Seq(resourceIri),
         versionDate = Some(versionHist.versionDate),
         withDeleted = true,
+        showDeletedValues = true,
         targetSchema = ApiV2Complex,
         schemaOptions = Set.empty[SchemaOption],
         featureFactoryConfig = featureFactoryConfig,
