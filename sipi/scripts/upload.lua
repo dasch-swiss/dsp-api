@@ -302,7 +302,7 @@ for file_index, file_params in pairs(server.uploads) do
         -- get video fps
         handle = io.popen("ffprobe -v error -show_entries stream=r_frame_rate -select_streams v -of default=noprint_wrappers=1:nokey=1 " .. tmp_storage_file_path)
         local fps = handle:read("*a")
-        fps = fps:gsub("[\n\r]", "")
+        fps = 30 -- fps:gsub("[\n\r]", "")
         -- fps = tonumber(fps);
         handle:close()
         if not fps then
