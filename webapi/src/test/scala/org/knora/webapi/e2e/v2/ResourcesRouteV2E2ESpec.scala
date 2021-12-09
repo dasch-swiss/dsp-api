@@ -1826,8 +1826,19 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
       val previewResponseAsString = responseToString(previewResponse)
-      assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
-      // TODO: would break if changing preview here
+      previewResponse.status should equal(StatusCodes.OK)
+      // TODO-BL: check more stuff here?
+
+      clientTestDataCollector.addFile(
+        TestDataFileContent(
+          filePath = TestDataFilePath(
+            directoryPath = clientTestDataPath,
+            filename = "deleted-resource-preview-response",
+            fileExtension = "json"
+          ),
+          text = previewResponseAsString
+        )
+      )
     }
 
     "mark a resource as deleted, supplying a custom delete date" in {
@@ -1877,7 +1888,8 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
       val previewResponseAsString = responseToString(previewResponse)
-      assert(previewResponse.status == StatusCodes.NotFound, previewResponseAsString)
+      assert(previewResponse.status == StatusCodes.OK, previewResponseAsString)
+      // TODO-BL: check more stuff here?
     }
 
     "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" ignore { // uses too much memory for GitHub CI

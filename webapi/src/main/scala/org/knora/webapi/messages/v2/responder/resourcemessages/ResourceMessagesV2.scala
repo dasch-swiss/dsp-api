@@ -82,7 +82,7 @@ case class ResourcesGetRequestV2(
  */
 case class ResourcesPreviewGetRequestV2(
   resourceIris: Seq[IRI],
-  withDeletedResource: Boolean = false,
+  withDeletedResource: Boolean = true,
   targetSchema: ApiV2Schema,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM
