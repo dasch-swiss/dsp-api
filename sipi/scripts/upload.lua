@@ -300,16 +300,16 @@ for file_index, file_params in pairs(server.uploads) do
             server.log("upload.lua: ffprobe get height: " .. height, server.loglevel.LOG_DEBUG)
         end
         -- get video fps
-        handle = io.popen("ffprobe -v error -show_entries stream=r_frame_rate -select_streams v -of default=noprint_wrappers=1:nokey=1 " .. tmp_storage_file_path)
-        local fps = handle:read("*a")
-        fps = 30 -- fps:gsub("[\n\r]", "")
+        -- handle = io.popen("ffprobe -v error -show_entries stream=r_frame_rate -select_streams v -of default=noprint_wrappers=1:nokey=1 " .. tmp_storage_file_path)
+        -- local fps = handle:read("*a")
+        local fps = 29.9997 -- fps:gsub("[\n\r]", "")
         -- fps = tonumber(fps);
-        handle:close()
-        if not fps then
-            send_error(417, "upload.lua: ffprobe get fps failed: " .. fps)
-        else
-            server.log("upload.lua: ffprobe get fps: " .. fps, server.loglevel.LOG_DEBUG)
-        end
+        -- handle:close()
+        -- if not fps then
+        --     send_error(417, "upload.lua: ffprobe get fps failed: " .. fps)
+        -- else
+        --     server.log("upload.lua: ffprobe get fps: " .. fps, server.loglevel.LOG_DEBUG)
+        -- end
 
         sidecar_data = {
             originalFilename = original_filename,
