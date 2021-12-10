@@ -7,28 +7,45 @@
 package org.knora.webapi.domain
 
 import org.knora.webapi.IRI
+import zio.prelude.Validation
 
 object OntologyDomain extends App {
+  // implicitly["".type =:= "".type]
+
   final case class OntologyInfo(name: String, projectIri: IRI, label: String, comment: String)
-  final case class OntologyClass(name: String, label: String, comment: String) {
-    type Tag
+  final case class OntologyClass[A <: Singleton with String](name: A, label: String, comment: String) { self =>
+    type Tag = A
+
+    override def equals(that: Any): Boolean =
+      that match {
+        case that: OntologyClass[_] => self.name == that.name
+        case _                      => false
+      }
+    override def hashCode: Int = name.hashCode
   }
-  object OntologyClass {
-    type WithTag[T] = OntologyClass { type Tag = T }
-  }
-  final case class OntologyProperty(name: String, label: String, comment: String, range: String) {
-    type Tag
-  }
-  object OntologyProperty {
-    type WithTag[T] = OntologyProperty { type Tag = T }
+  final case class OntologyProperty[A <: Singleton with String](
+    name: A,
+    label: String,
+    comment: String,
+    range: String
+  ) { self =>
+    type Tag = A
+
+    override def equals(that: Any): Boolean =
+      that match {
+        case that: OntologyProperty[_] => self.name == that.name
+        case _                         => false
+      }
+
+    override def hashCode: Int = name.hashCode
   }
 
   trait Cardinality { self =>
-    type ClassTag
-    type PropertyTag
+    type ClassTag <: Singleton with String
+    type PropertyTag <: Singleton with String
 
-    def ontologyClass: OntologyClass.WithTag[ClassTag]
-    def ontologyProperty: OntologyProperty.WithTag[PropertyTag]
+    def ontologyClass: OntologyClass[ClassTag]
+    def ontologyProperty: OntologyProperty[PropertyTag]
     def cardinalityType: CardinalityType
 
     def refine[Classes, Properties](implicit
@@ -36,20 +53,21 @@ object OntologyDomain extends App {
       ev2: Properties <:< PropertyTag
     ): Cardinality.WithTags[_ >: Classes, _ >: Properties] =
       new Cardinality {
-        type ClassTag >: Classes
-        type PropertyTag >: Properties
-
-        def ontologyClass: OntologyClass.WithTag[ClassTag] =
-          self.ontologyClass.asInstanceOf[OntologyClass.WithTag[ClassTag]]
-        def ontologyProperty: OntologyProperty.WithTag[PropertyTag] =
-          self.ontologyProperty.asInstanceOf[OntologyProperty.WithTag[PropertyTag]]
+        def ontologyClass: OntologyClass[ClassTag] =
+          self.ontologyClass.asInstanceOf[OntologyClass[ClassTag]]
+        def ontologyProperty: OntologyProperty[PropertyTag] =
+          self.ontologyProperty.asInstanceOf[OntologyProperty[PropertyTag]]
         def cardinalityType: CardinalityType = self.cardinalityType
       }
   }
   object Cardinality {
     type WithTags[T1, T2] = Cardinality { type ClassTag = T1; type PropertyTag = T2 }
 
-    def apply(oc: OntologyClass, op: OntologyProperty, ct: CardinalityType): WithTags[oc.Tag, op.Tag] =
+    def apply[A <: Singleton with String, B <: Singleton with String](
+      oc: OntologyClass[A],
+      op: OntologyProperty[B],
+      ct: CardinalityType
+    ): WithTags[oc.Tag, op.Tag] =
       new Cardinality {
         type ClassTag    = oc.Tag
         type PropertyTag = op.Tag
@@ -67,15 +85,17 @@ object OntologyDomain extends App {
     case object MinCardinalityZero extends CardinalityType
   }
 
-  sealed trait Ontology[+Classes, +Properties] { self =>
+  sealed trait Ontology[Classes, Properties] { self =>
 
-    def empty(ontoInfo: OntologyInfo): Ontology[Any, Any] = Ontology.Empty(ontoInfo)
+    def withClass[Tag <: Singleton with String](ontoClass: OntologyClass[Tag])(implicit
+      ev: NotSubtypeOf[Classes, Tag]
+    ): Ontology[Classes with Tag, Properties] =
+      Ontology.WithClass[Classes, Properties, Tag](self, ontoClass)
 
-    def withClass(ontoClass: OntologyClass): Ontology[Classes with ontoClass.Tag, Properties] =
-      Ontology.WithClass[Classes, Properties, ontoClass.Tag](self, ontoClass)
-
-    def withProperty(propertyInfo: OntologyProperty): Ontology[Classes, Properties with propertyInfo.Tag] =
-      Ontology.WithProperty[Classes, Properties, propertyInfo.Tag](self, propertyInfo)
+    def withProperty[Tag <: Singleton with String](propertyInfo: OntologyProperty[Tag])(implicit
+      ev: NotSubtypeOf[Properties, Tag]
+    ): Ontology[Classes, Properties with Tag] =
+      Ontology.WithProperty[Classes, Properties, Tag](self, propertyInfo)
 
     def withCardinality(
       cardinality: Cardinality
@@ -85,18 +105,32 @@ object OntologyDomain extends App {
     ): Ontology[Classes, Properties] =
       Ontology.WithCardinality[Classes, Properties](self, cardinality.refine[Classes, Properties])
 
+    def withClassV[Tag <: Singleton with String](
+      ontoClass: OntologyClass[Tag]
+    ): Validation[String, Ontology[Classes with Tag, Properties]] = ???
+
+    def withPropertyV[Tag <: Singleton with String](
+      propertyInfo: OntologyProperty[Tag]
+    ): Validation[String, Ontology[Classes, Properties with Tag]] = ???
+
+    def withCardinalityV(
+      cardinality: Cardinality
+    ): Validation[String, Ontology[Classes, Properties]] = ???
+
   }
   object Ontology {
+    def empty(ontoInfo: OntologyInfo): Ontology[Any, Any] = Ontology.Empty(ontoInfo)
+
     final case class Empty(info: OntologyInfo) extends Ontology[Any, Any]
 
-    final case class WithClass[Classes, Properties, T1](
+    final case class WithClass[Classes, Properties, T1 <: Singleton with String](
       ontology: Ontology[Classes, Properties],
-      singleClass: OntologyClass.WithTag[T1]
+      singleClass: OntologyClass[T1]
     ) extends Ontology[Classes with T1, Properties]
 
-    final case class WithProperty[Classes, Properties, T2](
+    final case class WithProperty[Classes, Properties, T2 <: Singleton with String](
       ontology: Ontology[Classes, Properties],
-      property: OntologyProperty.WithTag[T2]
+      property: OntologyProperty[T2]
     ) extends Ontology[Classes, Properties with T2]
 
     final case class WithCardinality[Classes, Properties](
@@ -105,9 +139,18 @@ object OntologyDomain extends App {
     ) extends Ontology[Classes, Properties]
   }
 
+  trait NotSubtypeOf[A, B]
+  object NotSubtypeOf {
+    implicit def notSubtypeOf[A, B]: NotSubtypeOf[A, B] = new NotSubtypeOf[A, B] {}
+
+    implicit def isSubtypeOf1[A, B >: A]: NotSubtypeOf[A, B] = new NotSubtypeOf[A, B] {}
+    implicit def isSubtypeOf2[A, B >: A]: NotSubtypeOf[A, B] = new NotSubtypeOf[A, B] {}
+  }
+
   def describe[Classes, Properties](ontology: Ontology[Classes, Properties]): String = ontology match {
     case Ontology.Empty(info) =>
       s"Ontology: ${info.name} (${info.projectIri})"
+    case _ => "" // FIXME
   }
 
   //trying it out
@@ -126,13 +169,19 @@ object OntologyDomain extends App {
 
   val exampleOnto =
     Ontology
-      .Empty(ontoInfo)
+      .empty(ontoInfo)
       .withClass(classOne)
       //.withClass(classTwo)
       .withProperty(propertyOne)
+      //.withProperty(propertyOne)
       //.withProperty(propertyTwo)
       .withCardinality(cardOne)
       .withCardinality(cardOne)
+
+  // TODO: add missing runtime validation analog to the compile-time validation
+  // TODO: check that at compile time the same class or property is not added twice (uniqueness is defined by the name)
+  // TODO: check that runtime validation doesn't allow adding a cardinality with the same class and property combination twice
+  // TODO: add unit tests doing all these tests
 
 //
 //  val x: classOne.Tag = ???
