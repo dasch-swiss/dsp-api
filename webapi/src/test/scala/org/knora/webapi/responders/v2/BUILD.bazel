@@ -126,22 +126,3 @@ scala_test(
         "@maven//:com_typesafe_play_twirl_api_2_13",
     ] + BASE_TEST_DEPENDENCIES,
 )
-
-scala_test(
-    name = "MetadataResponderV2Spec",
-    size = "medium",
-    srcs = [
-        "MetadataResponderV2Spec.scala",
-    ],
-    data = [
-        "//knora-ontologies",
-        "//test_data",
-    ],
-    jvm_flags = ["-Dconfig.resource=fuseki.conf"],
-    # unused_dependency_checker_mode = "warn",
-    deps = ALL_WEBAPI_MAIN_DEPENDENCIES + [
-        "//webapi:main_library",
-        "//webapi:test_library",
-        "@maven//:org_apache_jena_apache_jena_libs",
-    ] + BASE_TEST_DEPENDENCIES,
-)
