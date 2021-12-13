@@ -776,6 +776,7 @@ object OntologyConstants {
     val Author: IRI = KnoraApiV2PrefixExpansion + "author"
 
     val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
+    val DeletedResource: IRI = KnoraApiV2PrefixExpansion + "DeletedResource"
     val Region: IRI = KnoraApiV2PrefixExpansion + "Region"
     val Representation: IRI = KnoraApiV2PrefixExpansion + "Representation"
     val StillImageRepresentation: IRI = KnoraApiV2PrefixExpansion + "StillImageRepresentation"

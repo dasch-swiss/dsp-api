@@ -1815,9 +1815,14 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
         s"$baseApiUrl/v2/resourcespreview/$aThingIriEncoded"
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
-      val previewResponseAsString = responseToString(previewResponse)
       previewResponse.status should equal(StatusCodes.OK)
-      // TODO-BL: check more stuff here?
+
+      val previewResponseAsString = responseToString(previewResponse)
+      val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
+      val responseIsDeleted = previewJsonLD.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsDeleted)
+      responseIsDeleted should equal(true)
+      val responseType = previewJsonLD.requireString("@type")
+      responseType should equal(OntologyConstants.KnoraApiV2Complex.DeletedResource)
 
       clientTestDataCollector.addFile(
         TestDataFileContent(
@@ -1878,8 +1883,17 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
       ) ~> addCredentials(BasicHttpCredentials(anythingUserEmail, password))
       val previewResponse: HttpResponse = singleAwaitingRequest(previewRequest)
       val previewResponseAsString = responseToString(previewResponse)
-      assert(previewResponse.status == StatusCodes.OK, previewResponseAsString)
-      // TODO-BL: check more stuff here?
+      previewResponse.status should equal(StatusCodes.OK)
+
+      val previewJsonLD = JsonLDUtil.parseJsonLD(previewResponseAsString)
+      val responseIsDeleted = previewJsonLD.requireBoolean(OntologyConstants.KnoraApiV2Complex.IsDeleted)
+      responseIsDeleted should equal(true)
+      val responseType = previewJsonLD.requireString("@type")
+      responseType should equal(OntologyConstants.KnoraApiV2Complex.DeletedResource)
+      val responseDeleteDate = previewJsonLD
+        .requireObject(OntologyConstants.KnoraApiV2Complex.DeleteDate)
+        .requireString("@value")
+      responseDeleteDate should equal(deleteDate.toString)
     }
 
     "create a resource with a large text containing a lot of markup (32849 words, 6738 standoff tags)" ignore { // uses too much memory for GitHub CI
