@@ -23,12 +23,10 @@
         },
         "knora-api:valueHasUUID": "IZGOjVqxTfSNO4ieKyp0SA",
         "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-        "@type": "knora-api:LinkValue",
-        "@id": "http://rdfh.ch/0001/thing-with-history/values/3b",
         "knora-api:isDeleted": true,
-        "knora-api:linkValueHasTargetIri": {
-            "@id": "http://rdfh.ch/0001/2qMtTWvVRXWMBcRNlduvCQ"
-        }
+        "@type": "knora-api:DeletedValue",
+        "http://www.knora.org/ontology/knora-base#DeletedValue": "DeletedValue",
+        "@id": "http://rdfh.ch/0001/thing-with-history/values/3b"
     },
     "knora-api:lastModificationDate": {
         "@value": "2019-02-13T09:05:10Z",
