@@ -4003,7 +4003,7 @@ case class DeletedValueContentV2(ontologySchema: OntologySchema, comment: Option
     extends ValueContentV2 {
   override def valueType: SmartIri = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
-    OntologyConstants.KnoraBase.IntValue.toSmartIri.toOntologySchema(ontologySchema)
+    OntologyConstants.KnoraBase.DeletedValue.toSmartIri.toOntologySchema(ontologySchema)
   }
 
   override def toOntologySchema(targetSchema: OntologySchema): DeletedValueContentV2 =
@@ -4014,7 +4014,7 @@ case class DeletedValueContentV2(ontologySchema: OntologySchema, comment: Option
     projectADM: ProjectADM,
     settings: KnoraSettingsImpl,
     schemaOptions: Set[SchemaOption]
-  ): JsonLDValue = JsonLDString("Deleted Value")
+  ): JsonLDValue = JsonLDObject(Map(OntologyConstants.KnoraBase.DeletedValue -> JsonLDString("DeletedValue")))
 
   override def unescape: ValueContentV2 =
     copy(comment = comment.map(commentStr => stringFormatter.fromSparqlEncodedString(commentStr)))

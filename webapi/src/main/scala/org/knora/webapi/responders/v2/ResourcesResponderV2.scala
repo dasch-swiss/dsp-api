@@ -105,10 +105,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         valueUuid,
         versionDate,
         withDeleted,
-        showDeletedValues = versionDate match {
-          case Some(_) => true
-          case None    => false
-        },
+        showDeletedValues = false,
         targetSchema,
         schemaOptions,
         featureFactoryConfig,
