@@ -756,6 +756,12 @@ sealed trait ReadValueV2 extends IOValueV2 {
     }
   }
 
+  /**
+   * Return a `knora-base:DeletedValue` representation of the present value.
+   *
+   * @return A ReadValueV2 object identical to the current one (includding the IRI),
+   *         but with valueContent of type [[DeletedValueContentV2]].
+   */
   def asDeletedValue(): ReadValueV2 =
     ReadOtherValueV2(
       valueIri = this.valueIri,
@@ -3999,6 +4005,12 @@ object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
   }
 }
 
+/**
+ * Generic representation of a deleted value.
+ *
+ * @param ontologySchema the ontology schema
+ * @param comment optional comment
+ */
 case class DeletedValueContentV2(ontologySchema: OntologySchema, comment: Option[String] = None)
     extends ValueContentV2 {
   override def valueType: SmartIri = {

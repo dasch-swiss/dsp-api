@@ -534,6 +534,17 @@ case class ReadResourceV2(
     )
   }
 
+  /**
+   * Transform this Resource into a generic representation for a deleted resource.
+   *
+   * The resulting Resource is of type `knora-base:DeletedResource`, has `"Deleted Resource"` as its label,
+   * and no values at all.
+   * Otherwise it is similar to the initial resource (including the IRI).
+   *
+   * Note that the `deletionInfo` holds the deletion date and optionally the deletion comment.
+   *
+   * @return A generic DeletedResource
+   */
   def asDeletedResource(): ReadResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
     ReadResourceV2(
@@ -552,6 +563,12 @@ case class ReadResourceV2(
     )
   }
 
+  /**
+   * Return a copy of the present resource, where all values that are marked as deleted,
+   * are replaced with a generic DeletedValue
+   *
+   * @return
+   */
   def withDeletedValues(): ReadResourceV2 = {
     val valuesWithDeletedValues: Map[SmartIri, Seq[ReadValueV2]] = this.values.map { case (k, v) =>
       val withDeletedValues = v.map { case value =>
