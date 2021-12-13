@@ -4330,7 +4330,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgType[SuccessResponseV2](timeout)
 
-      // TODO-BL: do something here?
       checkValueIsDeleted(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
