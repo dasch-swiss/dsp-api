@@ -25,7 +25,6 @@ import org.knora.webapi.messages.v2.responder.{CanDoResponseV2, SuccessResponseV
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
-import org.scalatest.concurrent.ScalaFutures
 
 import java.time.Instant
 import java.util.UUID
@@ -69,6 +68,34 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
   private var chairLastModDate: Instant = Instant.now
   private var anythingLastModDate: Instant = Instant.parse("2017-12-19T15:23:42.166Z")
   private var freetestLastModData: Instant = Instant.parse("2012-12-12T12:12:12.12Z")
+
+  val anythingOntology = "http://0.0.0.0:3333/ontology/0001/anything/v2#"
+  val anythingThing: IRI = anythingOntology + "Thing"
+  val anythingHasBoolean: IRI = anythingOntology + "hasBoolean"
+  val anythingHasColor: IRI = anythingOntology + "hasColor"
+  val anythingHasDate: IRI = anythingOntology + "hasDate"
+  val anythingHasDecimal: IRI = anythingOntology + "hasDecimal"
+  val anythingHasGeometry: IRI = anythingOntology + "hasGeometry"
+  val anythingHasGeoname: IRI = anythingOntology + "hasGeoname"
+  val anythingHasInteger: IRI = anythingOntology + "hasInteger"
+  val anythingHasInterval: IRI = anythingOntology + "hasInterval"
+  val anythingHasListItem: IRI = anythingOntology + "hasListItem"
+  val anythingHasName: IRI = anythingOntology + "hasName"
+  val anythingHasOtherListItem: IRI = anythingOntology + "hasOtherListItem"
+  val anythingHasOtherThing: IRI = anythingOntology + "hasOtherThing"
+  val anythingHasOtherThingValue: IRI = anythingOntology + "hasOtherThingValue"
+  val anythingHasRichtext: IRI = anythingOntology + "hasRichtext"
+  val anythingHasText: IRI = anythingOntology + "hasText"
+  val anythingHasThingDocument: IRI = anythingOntology + "hasThingDocument"
+  val anythingHasThingDocumentValue: IRI = anythingOntology + "hasThingDocumentValue"
+  val anythingHasThingPicture: IRI = anythingOntology + "hasThingPicture"
+  val anythingHasThingPictureValue: IRI = anythingOntology + "hasThingPictureValue"
+  val anythingHasTimeStamp: IRI = anythingOntology + "hasTimeStamp"
+  val anythingHasUri: IRI = anythingOntology + "hasUri"
+  val anythingIsPartOfOtherThing: IRI = anythingOntology + "isPartOfOtherThing"
+  val anythingIsPartOfOtherThingValue: IRI = anythingOntology + "isPartOfOtherThingValue"
+  val anythingHasStandoffLinkTo: IRI = "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo"
+  val anythingHasStandoffLinkToValue: IRI = "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
 
   private def loadInvalidTestData(rdfDataObjs: List[RdfDataObject]): Unit = {
     storeManager ! ResetRepositoryContent(rdfDataObjs)
@@ -2424,36 +2451,36 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       val expectedProperties: Set[SmartIri] = Set(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocument",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocumentValue",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue",
-        "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
-        "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+        anythingHasBoolean,
+        anythingHasColor,
+        anythingHasDate,
+        anythingHasDecimal,
+        anythingHasGeometry,
+        anythingHasGeoname,
+        anythingHasInteger,
+        anythingHasInterval,
+        anythingHasListItem,
+        anythingHasName,
+        anythingHasOtherListItem,
+        anythingHasOtherThing,
+        anythingHasOtherThingValue,
+        anythingHasRichtext,
+        anythingHasText,
+        anythingHasThingDocument,
+        anythingHasThingDocumentValue,
+        anythingHasThingPicture,
+        anythingHasThingPictureValue,
+        anythingHasTimeStamp,
+        anythingHasUri,
+        anythingIsPartOfOtherThing,
+        anythingIsPartOfOtherThingValue,
+        anythingHasStandoffLinkTo,
+        anythingHasStandoffLinkToValue
       ).map(_.toSmartIri)
 
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#WildThing".toSmartIri,
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+        (anythingOntology + "WildThing").toSmartIri,
+        anythingThing.toSmartIri,
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
       )
 
@@ -2464,7 +2491,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         readClassInfo.allBaseClasses should ===(expectedAllBaseClasses)
         readClassInfo.entityInfoContent should ===(classInfoContent)
         readClassInfo.inheritedCardinalities.keySet
-          .contains("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri) should ===(false)
+          .contains(anythingHasInteger.toSmartIri) should ===(false)
         readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
         val metadata = externalOntology.ontologyMetadata
@@ -2511,36 +2538,36 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       val expectedProperties: Set[SmartIri] = Set(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocument",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocumentValue",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue",
-        "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
-        "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+        anythingHasBoolean,
+        anythingHasColor,
+        anythingHasDate,
+        anythingHasDecimal,
+        anythingHasGeometry,
+        anythingHasGeoname,
+        anythingHasInteger,
+        anythingHasInterval,
+        anythingHasListItem,
+        anythingHasName,
+        anythingHasOtherListItem,
+        anythingHasOtherThing,
+        anythingHasOtherThingValue,
+        anythingHasRichtext,
+        anythingHasText,
+        anythingHasThingDocument,
+        anythingHasThingDocumentValue,
+        anythingHasThingPicture,
+        anythingHasThingPictureValue,
+        anythingHasTimeStamp,
+        anythingHasUri,
+        anythingIsPartOfOtherThing,
+        anythingIsPartOfOtherThingValue,
+        anythingHasStandoffLinkTo,
+        anythingHasStandoffLinkToValue
       ).map(_.toSmartIri)
 
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#SubThing".toSmartIri,
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+        (anythingOntology + "SubThing").toSmartIri,
+        anythingThing.toSmartIri,
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
       )
 
@@ -2550,7 +2577,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         readClassInfo.allBaseClasses should ===(expectedAllBaseClasses)
         readClassInfo.entityInfoContent should ===(classInfoContent)
         readClassInfo.inheritedCardinalities.keySet
-          .contains("http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri) should ===(true)
+          .contains(anythingHasInteger.toSmartIri) should ===(true)
         readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
         val metadata = externalOntology.ontologyMetadata
@@ -2632,36 +2659,36 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       val expectedProperties: Set[SmartIri] = Set(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasBoolean",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasColor",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDate",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasDecimal",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeometry",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasGeoname",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInterval",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasListItem",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasName",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherListItem",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThing",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasOtherThingValue",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasRichtext",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasText",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocument",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingDocumentValue",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPicture",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasThingPictureValue",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasTimeStamp",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#hasUri",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThing",
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#isPartOfOtherThingValue",
-        "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
-        "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+        anythingHasBoolean,
+        anythingHasColor,
+        anythingHasDate,
+        anythingHasDecimal,
+        anythingHasGeometry,
+        anythingHasGeoname,
+        anythingHasInteger,
+        anythingHasInterval,
+        anythingHasListItem,
+        anythingHasName,
+        anythingHasOtherListItem,
+        anythingHasOtherThing,
+        anythingHasOtherThingValue,
+        anythingHasRichtext,
+        anythingHasText,
+        anythingHasThingDocument,
+        anythingHasThingDocumentValue,
+        anythingHasThingPicture,
+        anythingHasThingPictureValue,
+        anythingHasTimeStamp,
+        anythingHasUri,
+        anythingIsPartOfOtherThing,
+        anythingIsPartOfOtherThingValue,
+        anythingHasStandoffLinkTo,
+        anythingHasStandoffLinkToValue
       ).map(_.toSmartIri)
 
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#OtherSubThing".toSmartIri,
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
+        (anythingOntology + "OtherSubThing").toSmartIri,
+        anythingThing.toSmartIri,
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
       )
 
@@ -2671,7 +2698,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         readClassInfo.allBaseClasses should ===(expectedAllBaseClasses)
         readClassInfo.entityInfoContent should ===(classInfoContent)
         readClassInfo.inheritedCardinalities.keySet
-          .contains("http://0.0.0.0:3333/ontology/0001/anything/v2#hasName".toSmartIri) should ===(false)
+          .contains(anythingHasName.toSmartIri) should ===(false)
         readClassInfo.allResourcePropertyCardinalities.keySet should ===(expectedProperties)
 
         val metadata = externalOntology.ontologyMetadata
@@ -2756,8 +2783,8 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       val expectedProperties = Set(
-        "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkTo",
-        "http://api.knora.org/ontology/knora-api/v2#hasStandoffLinkToValue"
+        anythingHasStandoffLinkTo,
+        anythingHasStandoffLinkToValue
       ).map(_.toSmartIri)
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
@@ -3908,7 +3935,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri,
+        (anythingOntology + "Nothing").toSmartIri,
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
       )
 
@@ -4370,7 +4397,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       val expectedAllBaseClasses: Seq[SmartIri] = Seq(
-        "http://0.0.0.0:3333/ontology/0001/anything/v2#Nothing".toSmartIri,
+        (anythingOntology + "Nothing").toSmartIri,
         "http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri
       )
 
@@ -5222,7 +5249,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
             )
           ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri,
+          classIri = (anythingOntology + "TestClass").toSmartIri,
           ontologySchema = ApiV2Complex,
           subClassOf = Set("http://api.knora.org/ontology/knora-api/v2#Resource".toSmartIri)
         ),
@@ -5243,7 +5270,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreatePropertyRequestV2(
         propertyInfoContent = PropertyInfoContentV2(
-          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#testTextProp".toSmartIri,
+          propertyIri = (anythingOntology + "testTextProp").toSmartIri,
           predicates = Map(
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
@@ -5256,8 +5283,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ),
             "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects =
-                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
+              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri))
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
@@ -5298,7 +5324,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreatePropertyRequestV2(
         propertyInfoContent = PropertyInfoContentV2(
-          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#testIntProp".toSmartIri,
+          propertyIri = (anythingOntology + "testIntProp").toSmartIri,
           predicates = Map(
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
@@ -5311,8 +5337,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ),
             "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects =
-                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
+              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri))
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
@@ -5353,7 +5378,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       responderManager ! CreatePropertyRequestV2(
         propertyInfoContent = PropertyInfoContentV2(
-          propertyIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#testLinkProp".toSmartIri,
+          propertyIri = (anythingOntology + "testLinkProp").toSmartIri,
           predicates = Map(
             "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#label".toSmartIri,
@@ -5366,8 +5391,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ),
             "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#subjectType".toSmartIri,
-              objects =
-                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
+              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri))
             ),
             "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/2000/01/rdf-schema#comment".toSmartIri,
@@ -5380,8 +5404,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
             ),
             "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://api.knora.org/ontology/knora-api/v2#objectType".toSmartIri,
-              objects =
-                Vector(SmartIriLiteralV2(value = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri))
+              objects = Vector(SmartIriLiteralV2(value = (anythingOntology + "TestClass").toSmartIri))
             ),
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri -> PredicateInfoV2(
               predicateIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type".toSmartIri,
@@ -5414,16 +5437,16 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
             )
           ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri,
+          classIri = (anythingOntology + "TestClass").toSmartIri,
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testTextProp".toSmartIri -> KnoraCardinalityInfo(
+            (anythingOntology + "testTextProp").toSmartIri -> KnoraCardinalityInfo(
               cardinality = Cardinality.MayHaveOne
             ),
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testIntProp".toSmartIri -> KnoraCardinalityInfo(
+            (anythingOntology + "testIntProp").toSmartIri -> KnoraCardinalityInfo(
               cardinality = Cardinality.MayHaveOne
             ),
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testLinkProp".toSmartIri -> KnoraCardinalityInfo(
+            (anythingOntology + "testLinkProp").toSmartIri -> KnoraCardinalityInfo(
               cardinality = Cardinality.MayHaveOne
             )
           )
@@ -5451,13 +5474,13 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
             )
           ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#TestClass".toSmartIri,
+          classIri = (anythingOntology + "TestClass").toSmartIri,
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testTextProp".toSmartIri -> KnoraCardinalityInfo(
+            (anythingOntology + "testTextProp").toSmartIri -> KnoraCardinalityInfo(
               cardinality = Cardinality.MayHaveOne
             ),
-            "http://0.0.0.0:3333/ontology/0001/anything/v2#testIntProp".toSmartIri -> KnoraCardinalityInfo(
+            (anythingOntology + "testIntProp").toSmartIri -> KnoraCardinalityInfo(
               cardinality = Cardinality.MayHaveOne
             )
           )
