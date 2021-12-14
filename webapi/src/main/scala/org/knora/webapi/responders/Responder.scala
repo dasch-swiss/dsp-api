@@ -132,6 +132,31 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
     } yield isEntityUsedResponse.results.bindings.nonEmpty
 
   /**
+   * Checks whether an instance of a class (or any ob its sub-classes) exists
+   *
+   * @param classIri  the IRI of the class.
+   *
+   * @return `true` if the class is used.
+   */
+  protected def isClassUsedInData(
+    classIri: SmartIri
+  ): Future[Boolean] =
+    for {
+      isClassUsedInDataSparql <- Future(
+        org.knora.webapi.messages.twirl.queries.sparql.v2.txt
+          .isClassUsedInData(
+            triplestore = settings.triplestoreType,
+            classIri = classIri
+          )
+          .toString()
+      )
+
+      isClassUsedInDataResponse: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(isClassUsedInDataSparql))
+        .mapTo[SparqlSelectResult]
+
+    } yield isClassUsedInDataResponse.results.bindings.nonEmpty
+
+  /**
    * Throws an exception if an entity is used in the triplestore.
    *
    * @param entityIri the IRI of the entity.
@@ -149,6 +174,24 @@ abstract class Responder(responderData: ResponderData) extends LazyLogging {
       entityIsUsed: Boolean <- isEntityUsed(entityIri, ignoreKnoraConstraints, ignoreRdfSubjectAndObject)
 
       _ = if (entityIsUsed) {
+        errorFun
+      }
+    } yield ()
+
+  /**
+   * Throws an exception if a class is used in data.
+   *
+   * @param classIri  the IRI of the class.
+   * @param errorFun  a function that throws an exception. It will be called if the class is used.
+   */
+  protected def throwIfClassIsUsedInData(
+    classIri: SmartIri,
+    errorFun: => Nothing
+  ): Future[Unit] =
+    for {
+      classIsUsed: Boolean <- isClassUsedInData(classIri)
+
+      _ = if (classIsUsed) {
         errorFun
       }
     } yield ()

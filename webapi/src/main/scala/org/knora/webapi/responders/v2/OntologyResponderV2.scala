@@ -1348,15 +1348,13 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
           }
 
         _ <- hasCardinality match {
-          // If there is, check that the class isn't used in data, and that it has no subclasses.
+          // If there is, check that the class isn't used in data.
           case Some((propIri: SmartIri, cardinality: KnoraCardinalityInfo)) =>
-            throwIfEntityIsUsed(
-              entityIri = internalClassIri,
+            throwIfClassIsUsedInData(
+              classIri = internalClassIri,
               errorFun = throw BadRequestException(
-                s"Cardinality ${cardinality.toString} for $propIri cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data or has a subclass"
-              ),
-              ignoreKnoraConstraints =
-                true // It's OK if a property refers to the class via knora-base:subjectClassConstraint or knora-base:objectClassConstraint.
+                s"Cardinality ${cardinality.toString} for $propIri cannot be added to class ${addCardinalitiesRequest.classInfoContent.classIri}, because it is used in data"
+              )
             )
           case None => Future.successful(())
         }

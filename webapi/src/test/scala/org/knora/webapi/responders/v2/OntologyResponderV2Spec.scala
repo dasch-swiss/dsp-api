@@ -3739,7 +3739,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "not add a cardinality=1 to the class anything:Nothing, because it has a subclass" in {
+    "add a cardinality=1 to the class anything:Nothing which has a subclass" in {
       val classIri = AnythingOntologyIri.makeEntityIri("Nothing")
 
       val classInfoContent = ClassInfoContentV2(
@@ -3764,9 +3764,34 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingAdminUser
       )
 
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        if (printErrorMessages) println(msg.cause.getMessage)
-        msg.cause.isInstanceOf[BadRequestException] should ===(true)
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        assert(externalOntology.classes.size == 1)
+
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+        anythingLastModDate = newAnythingLastModDate
+      }
+
+      responderManager ! DeleteCardinalitiesFromClassRequestV2(
+        classInfoContent = classInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+        anythingLastModDate = newAnythingLastModDate
       }
     }
 
