@@ -38,7 +38,7 @@ ontologies for that project will be returned.
 
 The response is in the complex API v2 schema. Sample response:
 
-```jsonld
+```json
 {
   "@graph" : [ {
     "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
@@ -104,7 +104,7 @@ The project IRIs must be URL-encoded.
 Example response for the `anything` test project
 (project IRI `http://rdfh.ch/projects/0001`):
 
-```jsonld
+```json
 {
   "@id" : "http://0.0.0.0:3333/ontology/0001/anything/v2",
   "@type" : "owl:Ontology",
@@ -180,7 +180,7 @@ but not update data in Knora. For example, here is the response for the
 `http://0.0.0.0:3333/ontology/00FF/images/simple/v2` (simplified for
 clarity):
 
-```jsonld
+```json
 {
   "@id" : "http://0.0.0.0:3333/ontology/00FF/images/simple/v2",
   "@type" : "owl:Ontology",
@@ -417,7 +417,7 @@ obtain these values in all available languages, add the URL parameter
 `?allLanguages=true`. For example, with this parameter, the definition
 of `images:description` becomes:
 
-```jsonld
+```json
 {
   "@id" : "images:description",
   "@type" : "owl:DatatypeProperty",
@@ -456,7 +456,7 @@ the client can request the `knora-api` ontology in the simple schema:
 Knora-specific, human-readable format. In the `knora-api` simple
 ontology, there is a definition of this type:
 
-```jsonld
+```json
 {
   "@id" : "http://api.knora.org/ontology/knora-api/simple/v2",
   "@type" : "owl:Ontology",
@@ -493,7 +493,7 @@ update data in Knora. For example, here is the response for the `images`
 sample ontology in the complex schema, `http://0.0.0.0:3333/ontology/00FF/images/v2`
 (simplified for clarity):
 
-```jsonld
+```json
 {
   "@id" : "http://0.0.0.0:3333/ontology/00FF/images/v2",
   "@type" : "owl:Ontology",
@@ -920,7 +920,7 @@ An ontology is always created within a particular project.
 HTTP POST to http://host/v2/ontologies
 ```
 
-```jsonld
+```json
 {
   "knora-api:ontologyName" : "ONTOLOGY_NAME",
   "knora-api:attachedToProject" : {
@@ -972,7 +972,7 @@ or both. The example below shows the request for changing the label of an ontolo
 HTTP PUT to http://host/v2/ontologies/metadata
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "rdfs:label" : "NEW_ONTOLOGY_LABEL",
@@ -991,7 +991,7 @@ HTTP PUT to http://host/v2/ontologies/metadata
 Similarly, a user can change an ontology's existing comment or add one by specifying 
 the new comment in the request body:
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "rdfs:comment" : "NEW_ONTOLOGY_COMMENT",
@@ -1045,7 +1045,7 @@ HTTP GET to http://host/v2/ontologies/candeleteontology/ONTOLOGY_IRI
 
 The response will look like this:
 
-```jsonld
+```json
 {
     "knora-api:canDo": false,
     "@context": {
@@ -1060,7 +1060,7 @@ The response will look like this:
 HTTP POST to http://host/v2/ontologies/classes
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1113,7 +1113,7 @@ subclass of their `knora-api:subjectType`.
 HTTP POST to http://host/v2/ontologies/classes
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1179,7 +1179,7 @@ This operation is permitted even if the class is used in data.
 HTTP PUT to http://host/v2/ontologies/classes
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1218,7 +1218,7 @@ This operation is permitted even if the class is used in data.
 HTTP PUT to http://host/v2/ontologies/classes
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1256,7 +1256,7 @@ will replace the existing ones.
 HTTP POST to http://host/v2/ontologies/properties
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1345,7 +1345,7 @@ This operation is permitted even if the property is used in data.
 HTTP PUT to http://host/v2/ontologies/properties
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1383,7 +1383,7 @@ This operation is permitted even if the property is used in data.
 HTTP PUT to http://host/v2/ontologies/properties
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1421,7 +1421,7 @@ This operation is permitted even if the property is used in data.
 HTTP PUT to http://host/v2/ontologies/properties/guielement
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1459,7 +1459,7 @@ has a subclass, it is not allowed to add cardinalities `owl:minCardinality` grea
 HTTP POST to http://host/v2/ontologies/cardinalities
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1518,7 +1518,7 @@ has a subclass.
 HTTP PUT to http://host/v2/ontologies/cardinalities
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1567,7 +1567,7 @@ HTTP GET to http://host/v2/ontologies/canreplacecardinalities/CLASS_IRI
 
 The response will look like this:
 
-```jsonld
+```json
 {
     "knora-api:canDo": false,
     "@context": {
@@ -1587,7 +1587,7 @@ isn't allowed to be used inside the data in any subclasses of this class.
 HTTP PATCH to http://host/v2/ontologies/cardinalities
 ```
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1636,7 +1636,7 @@ HTTP POST to http://host/v2/ontologies/candeletecardinalities
 
 The response will look like this:
 
-```jsonld
+```json
 {
     "knora-api:canDo": false,
     "@context": {
@@ -1658,7 +1658,7 @@ This can be done even if the class is used in data.
 The request body includes the cardinalities whose GUI order should be changed,
 using the predicate `salsah-gui:guiOrder`, whose object is an integer:
 
-```jsonld
+```json
 {
   "@id" : "ONTOLOGY_IRI",
   "@type" : "owl:Ontology",
@@ -1720,7 +1720,7 @@ HTTP GET to http://host/v2/ontologies/candeleteproperty/PROPERTY_IRI
 
 The response will look like this:
 
-```jsonld
+```json
 {
     "knora-api:canDo": false,
     "@context": {
@@ -1752,7 +1752,7 @@ HTTP GET to http://host/v2/ontologies/candeleteclass/CLASS_IRI
 
 The response will look like this:
 
-```jsonld
+```json
 {
     "knora-api:canDo": false,
     "@context": {

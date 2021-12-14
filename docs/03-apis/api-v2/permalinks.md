@@ -18,7 +18,7 @@ to the latest version of the resource or value (`knora-api:arkUrl`), and one tha
 specifically to the version being returned (`knora-api:versionArkUrl`).
 For example:
 
-```jsonld
+```json
 {
   "@id" : "http://rdfh.ch/0803/2a6221216701",
   "@type" : "incunabula:book",

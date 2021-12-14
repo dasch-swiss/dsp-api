@@ -68,7 +68,7 @@ API v2 route, submitting the string `standoff` as the value of either:
 
 If a text value in the resource contains markup, the text value will look something like this:
 
-```jsonld
+```json
 {
   "@id" : "http://rdfh.ch/0001/LK-wKXDNQJaRHOf0F0aJ2g/values/1Er1OpVwQR2u6peTwyNpJw",
   "@type" : "knora-api:TextValue",
@@ -102,7 +102,7 @@ HTTP GET to http://host/v2/standoff/RESOURCE_IRI/TEXT_VALUE_IRI/OFFSET
 Both `RESOURCE_IRI` and `TEXT_VALUE_IRI` must be URL-encoded. The offset is an integer whose
 initial value is 0. The response will look like this:
 
-```jsonld
+```json
 {
   "@graph" : [ {
     "@type" : "http://api.knora.org/ontology/standoff/v2#StandoffRootTag",
@@ -271,7 +271,7 @@ The response is a list of changes made to the resource, in reverse chronological
 Each entry has the properties `knora-api:author` (the IRI of the user who made the change) and
 `knora-api:versionDate` (the date when the change was made). For example:
 
-```jsonld
+```json
 {
   "@graph" : [ {
     "knora-api:author" : {
@@ -354,7 +354,7 @@ To accommodate large graphs, the graph response format is very concise, and is t
 simpler than the usual resources response format. Each resource represented only by its IRI,
 class, and label. Direct links are shown instead of link values. For example:
 
-```jsonld
+```json
 {
   "@graph" : [ {
     "@id" : "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ",
@@ -578,7 +578,7 @@ The resource IRI must be URL-encoded. The response is a list of events describin
 For example, the following response contains the list of events describing the version history of the resource 
 `http://rdfh.ch/0001/thing-with-history` ordered by date:
 
-```jsonld
+```json
 {
   "@graph" : [ 
         {
