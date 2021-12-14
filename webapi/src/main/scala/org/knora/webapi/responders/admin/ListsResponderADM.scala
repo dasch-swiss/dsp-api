@@ -85,6 +85,8 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       nodePositionChangeRequest(nodeIri, changeNodePositionRequest, featureFactoryConfig, requestingUser, apiRequestID)
     case ListItemDeleteRequestADM(nodeIri, featureFactoryConfig, requestingUser, apiRequestID) =>
       deleteListItemRequestADM(nodeIri, featureFactoryConfig, requestingUser, apiRequestID)
+    case CanDeleteListRequestADM(iri, featureFactoryConfig, requestingUser) =>
+      canDeleteListRequestADM(iri)
     case other => handleUnexpectedMessage(other, log, this.getClass.getName)
   }
 
@@ -1759,6 +1761,29 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
           nodePositionChangeTask(nodeIri, changeNodePositionRequest, featureFactoryConfig, requestingUser, apiRequestID)
       )
     } yield taskResult
+  }
+
+  private def canDeleteListRequestADM(
+    iri: IRI
+  ): Future[CanDeleteListResponseADM] = {
+    var canDelete = false
+    for {
+      sparqlQuery <- Future(
+        org.knora.webapi.messages.twirl.queries.sparql.admin.txt
+          .canDeleteList(
+            triplestore = settings.triplestoreType,
+            listIri = iri
+          )
+          .toString()
+      )
+
+      response: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparqlQuery))
+        .mapTo[SparqlSelectResult]
+
+      _ = if (response.results.bindings.isEmpty) {
+        canDelete = true
+      }
+    } yield CanDeleteListResponseADM(iri, canDelete)
   }
 
   /**

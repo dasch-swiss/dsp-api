@@ -1341,5 +1341,5 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
   implicit val listDeleteResponseADMFormat: RootJsonFormat[ListDeleteResponseADM] =
     jsonFormat(ListDeleteResponseADM, "iri", "deleted")
   implicit val canDeleteListResponseADMFormat: RootJsonFormat[CanDeleteListResponseADM] =
-    jsonFormat(CanDeleteListResponseADM, "iri", "deleted")
+    jsonFormat(CanDeleteListResponseADM, "listIri", "canDeleteList")
 }
