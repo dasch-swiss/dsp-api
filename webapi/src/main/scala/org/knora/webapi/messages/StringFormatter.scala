@@ -2405,15 +2405,6 @@ class StringFormatter private (
     OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode + "/" + project.shortname
 
   /**
-   * Given the [[ProjectADM]] calculates the project's metadata named graph.
-   *
-   * @param project the project's [[ProjectADM]].
-   * @return the IRI of the project's metadata named graph.
-   */
-  def projectMetadataNamedGraphV2(project: ProjectADM): IRI =
-    OntologyConstants.NamedGraphs.DataNamedGraphStart + "/" + project.shortcode + "/" + project.shortname + "/metadata"
-
-  /**
    * Check that the supplied IRI represents a valid project IRI.
    *
    * @param iri      the string to be checked.

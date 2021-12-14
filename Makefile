@@ -108,9 +108,6 @@ stack-up: docker-build env-file ## starts the knora-stack: fuseki, sipi, redis, 
 	docker-compose -f docker-compose.yml up -d
 	$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh
 
-.PHONY: stack-up-with-metadata
-stack-up-with-metadata: stack-up metadata ## starts stack and adds metadata
-
 .PHONY: stack-up-fast
 stack-up-fast: docker-build-knora-api-image env-file ## starts the knora-stack by skipping rebuilding most of the images (only api image is rebuilt).
 	docker-compose -f docker-compose.yml up -d
@@ -313,30 +310,6 @@ init-db-test-from-prod: db_prod_dump.trig init-db-test-empty ## init local datab
 	@curl -X POST -H "Content-Type: application/sparql-update" -d "DROP ALL" -u "admin:test" "http://localhost:3030/knora-test"
 	@curl -X POST -H "Content-Type: application/trig" --data-binary "@${CURRENT_DIR}/db_prod_dump.trig" -u "admin:test" "http://localhost:3030/knora-test"
 
-.PHONY: metadata
-metadata: metadata-standard metadata-minimal metadata-maximal ## add three example metadata sets
-
-.PHONY: metadata-standard
-metadata-standard: ## add pseudo-realistic metadata set to anything project
-	@echo $@
-	@mkdir -p .tmp
-	@curl https://raw.githubusercontent.com/dasch-swiss/dsp-ontologies/main/example/example-metadata.ttl -o .tmp/metadata.ttl -s
-	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0001" -s -o /dev/null
-
-.PHONY: metadata-minimal
-metadata-minimal: ## add minimal metadata set to images project
-	@echo $@
-	@mkdir -p .tmp
-	@curl https://raw.githubusercontent.com/dasch-swiss/dsp-ontologies/main/example/example-metadata-minimal.ttl -o .tmp/metadata.ttl -s
-	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F00FF" -s -o /dev/null
-
-.PHONY: metadata-maximal
-metadata-maximal: ## add maximal metadata set to dokubib project
-	@echo $@
-	@mkdir -p .tmp
-	@curl https://raw.githubusercontent.com/dasch-swiss/dsp-ontologies/main/example/example-metadata-maximal.ttl -o .tmp/metadata.ttl -s
-	@curl -X PUT -u root@example.com:test -H "Content-Type: text/turtle" -T ".tmp/metadata.ttl" "localhost:3333/v2/metadata/http%3A%2F%2Frdfh.ch%2Fprojects%2F0804" -s -o /dev/null
-
 #################################
 ## Other
 #################################
@@ -353,6 +326,15 @@ clean-local-tmp:
 clean: docs-clean clean-local-tmp clean-docker ## clean build artifacts
 	@rm -rf .env
 	@bazel clean
+
+.PHONY: clean-sipi-tmp
+clean-sipi-tmp: ## deletes all files in Sipi's tmp folder
+	@rm -rf sipi/images/tmp/*
+
+.PHONY: clean-sipi-projects
+clean-sipi-projects: ## deletes all files uploaded within a project
+	@rm -rf sipi/images/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
+	@rm -rf sipi/images/originals/[0-9A-F][0-9A-F][0-9A-F][0-9A-F]
 
 .PHONY: info
 info: ## print out all variables
