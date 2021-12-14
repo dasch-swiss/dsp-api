@@ -266,9 +266,29 @@ object Cardinalities {
       cardinalitiesToDelete: Map[SmartIri, Cardinality.KnoraCardinalityInfo] =
         deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema).directCardinalities
 
-      _ = cardinalitiesToDelete.foreach(p =>
-        isCardinalityDefinedOnClass(cacheData, p._1, p._2, internalClassIri, internalOntologyIri)
+      isDefinedOnClassFutureList: Future[List[Boolean]] = Future
+        .sequence(cardinalitiesToDelete.map { p =>
+          for {
+            isDefined: Boolean <- isCardinalityDefinedOnClass(
+              cacheData,
+              p._1,
+              p._2,
+              internalClassIri,
+              internalOntologyIri
+            )
+          } yield isDefined
+        }.toList)
+
+      atLeastOneCardinalityNotDefinedOnClassFuture: Future[Boolean] = isDefinedOnClassFutureList.map(list =>
+        list.contains(false)
       )
+
+      atLeastOneCardinalityNotDefinedOnClass <- atLeastOneCardinalityNotDefinedOnClassFuture
+      _ = if (atLeastOneCardinalityNotDefinedOnClass) {
+        throw BadRequestException(
+          "The cardinality is not defined directly on the class and cannot be deleted."
+        )
+      }
 
       // Check if property is used in resources of this class
 
