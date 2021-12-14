@@ -1195,11 +1195,9 @@
 
 :fps rdf:type owl:DatatypeProperty ;
 
-     rdfs:label "Frames per second"@en ;
-
      rdfs:subPropertyOf :valueHas ;
 
-     :subjectClassConstraint :MovingImageFileValue ;
+     :subjectClassConstraint :FileValue ;
 
      :objectDatatypeConstraint xsd:decimal .
 

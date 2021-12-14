@@ -221,18 +221,18 @@ for file_index, file_params in pairs(server.uploads) do
         -- os.execute("ffprobe -i " .. tmp_storage_file_path)
 
         -- get video file info with ffprobe and save as json file
-        local tmp_storage_ffprobe = uuid62 .. ".json"
-        local hashed_tmp_storage_ffprobe
-        success, hashed_tmp_storage_ffprobe = helper.filename_hash(tmp_storage_ffprobe)
-        if not success then
-            send_error(500, "helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_ffprobe))
-            return
-        else
-        end
+        -- local tmp_storage_ffprobe = uuid62 .. ".json"
+        -- local hashed_tmp_storage_ffprobe
+        -- success, hashed_tmp_storage_ffprobe = helper.filename_hash(tmp_storage_ffprobe)
+        -- if not success then
+        --     send_error(500, "helper.filename_hash() failed: " .. tostring(hashed_tmp_storage_ffprobe))
+        --     return
+        -- else
+        -- end
 
-        local tmp_storage_ffprobe_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_ffprobe
+        -- local tmp_storage_ffprobe_path = config.imgroot .. '/tmp/' .. hashed_tmp_storage_ffprobe
 
-        os.execute("ffprobe -v quiet -print_format json -show_format -show_streams " .. tmp_storage_file_path .. " > " .. tmp_storage_ffprobe_path)
+        -- os.execute("ffprobe -v quiet -print_format json -show_format -show_streams " .. tmp_storage_file_path .. " > " .. tmp_storage_ffprobe_path)
 
     else
         -- It's neither an image nor a video file. Just move it to its temporary storage location.
