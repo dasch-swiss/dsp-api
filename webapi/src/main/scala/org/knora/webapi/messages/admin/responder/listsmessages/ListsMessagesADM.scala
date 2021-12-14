@@ -441,7 +441,7 @@ case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteR
  *
  * @param iri the IRI of the list that is checked.
  */
-case class CanDeleteListResponseADM(iri: IRI, canDelete: Boolean) extends ListItemDeleteResponseADM {
+case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean) extends ListItemDeleteResponseADM {
 
   def toJsValue: JsValue = canDeleteListResponseADMFormat.write(this)
 }
