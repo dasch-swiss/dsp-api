@@ -105,7 +105,7 @@ object Cardinalities {
       cardinalitiesToDelete: Map[SmartIri, Cardinality.KnoraCardinalityInfo] =
         deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema).directCardinalities
 
-      isDefinedOnClassFutureList: Future[List[Boolean]] = Future
+      isDefinedOnClassList: List[Boolean] <- Future
         .sequence(cardinalitiesToDelete.map { p =>
           for {
             isDefined: Boolean <- isCardinalityDefinedOnClass(
@@ -116,13 +116,9 @@ object Cardinalities {
               internalOntologyIri
             )
           } yield isDefined
-        }.toList)
+        })
 
-      atLeastOneCardinalityNotDefinedOnClassFuture: Future[Boolean] = isDefinedOnClassFutureList.map(list =>
-        list.contains(false)
-      )
-
-      atLeastOneCardinalityNotDefinedOnClass <- atLeastOneCardinalityNotDefinedOnClassFuture
+      atLeastOneCardinalityNotDefinedOnClass: Boolean = isDefinedOnClassList.contains(false)
 
       // Check if property is used in resources of this class
 
@@ -266,7 +262,7 @@ object Cardinalities {
       cardinalitiesToDelete: Map[SmartIri, Cardinality.KnoraCardinalityInfo] =
         deleteCardinalitiesFromClassRequest.classInfoContent.toOntologySchema(InternalSchema).directCardinalities
 
-      isDefinedOnClassFutureList: Future[List[Boolean]] = Future
+      isDefinedOnClassList: List[Boolean] <- Future
         .sequence(cardinalitiesToDelete.map { p =>
           for {
             isDefined: Boolean <- isCardinalityDefinedOnClass(
@@ -277,14 +273,9 @@ object Cardinalities {
               internalOntologyIri
             )
           } yield isDefined
-        }.toList)
+        })
 
-      atLeastOneCardinalityNotDefinedOnClassFuture: Future[Boolean] = isDefinedOnClassFutureList.map(list =>
-        list.contains(false)
-      )
-
-      atLeastOneCardinalityNotDefinedOnClass <- atLeastOneCardinalityNotDefinedOnClassFuture
-      _ = if (atLeastOneCardinalityNotDefinedOnClass) {
+      _ = if (isDefinedOnClassList.contains(false)) {
         throw BadRequestException(
           "The cardinality is not defined directly on the class and cannot be deleted."
         )
@@ -528,7 +519,7 @@ object Cardinalities {
    * @param cardinalityInfo the cardinality that should be defined for the property.
    * @param internalClassIri the class we are checking against.
    * @param internalOntologyIri the ontology containing the class.
-   * @return Future of `true` if the cardinality is defined on the class, Future of `false` otherwise
+   * @return `true` if the cardinality is defined on the class, `false` otherwise
    */
   def isCardinalityDefinedOnClass(
     cacheData: Cache.OntologyCacheData,
