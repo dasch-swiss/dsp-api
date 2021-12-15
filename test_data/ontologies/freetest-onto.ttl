@@ -118,7 +118,7 @@
                       "Author"@en ;
            knora-base:subjectClassConstraint :FreeTest ;
            knora-base:objectClassConstraint knora-base:TextValue ;
-           salahs-gui:guiElement salsah-gui:SimpleText .
+           salsah-gui:guiElement salsah-gui:SimpleText .
 
 :hasScientificEditor rdf:type owl:ObjectProperty ;
            rdfs:subPropertyOf :hasAuthor ;
@@ -128,7 +128,7 @@
                       "Scientific editor"@en ;
            knora-base:subjectClassConstraint :FreeTest ;
            knora-base:objectClassConstraint knora-base:TextValue ;
-           salahs-gui:guiElement salsah-gui:SimpleText .
+           salsah-gui:guiElement salsah-gui:SimpleText .
 
 
 :FreeTest rdf:type owl:Class ;
