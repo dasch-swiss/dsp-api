@@ -116,7 +116,7 @@ object Cardinalities {
               internalOntologyIri
             )
           } yield isDefined
-        })
+        }.toList)
 
       atLeastOneCardinalityNotDefinedOnClass: Boolean = isDefinedOnClassList.contains(false)
 
@@ -273,7 +273,7 @@ object Cardinalities {
               internalOntologyIri
             )
           } yield isDefined
-        })
+        }.toList)
 
       _ = if (isDefinedOnClassList.contains(false)) {
         throw BadRequestException(
