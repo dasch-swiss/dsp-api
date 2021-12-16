@@ -49,12 +49,12 @@ def dependencies():
             ),
 
             # Logging
-            "com.typesafe.scala-logging:scala-logging_2.13:3.9.3",
-            "ch.qos.logback:logback-classic:1.2.3",
-            "ch.qos.logback:logback-core:1.2.3",
-            "org.slf4j:log4j-over-slf4j:1.7.29",
-            "org.slf4j:jcl-over-slf4j:1.7.29",
-            "org.slf4j:slf4j-api:1.7.29",
+            "com.typesafe.scala-logging:scala-logging_2.13:3.9.4",
+            "ch.qos.logback:logback-classic:1.2.8",
+            "ch.qos.logback:logback-core:1.2.8",
+            "org.slf4j:log4j-over-slf4j:1.7.32",
+            "org.slf4j:jcl-over-slf4j:1.7.32",
+            "org.slf4j:slf4j-api:1.7.32",
 
             # metrics
             "io.kamon:kamon-core_2.13:2.1.5",
