@@ -7,7 +7,6 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 import java.util.UUID
-
 import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
@@ -20,6 +19,7 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.{
   CalendarNameGregorian,
+  ConstructResponseUtilV2,
   DatePrecisionYear,
   KnoraSystemInstances,
   PermissionUtilADM
@@ -35,6 +35,7 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.iiif.MockSipiConnector
 import org.knora.webapi.util.MutableTestIri
 
+import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
@@ -224,13 +225,30 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     propertyIriInResult: SmartIri,
     valueIri: IRI,
     customDeleteDate: Option[Instant] = None,
+    deleteComment: Option[String] = None,
     requestingUser: UserADM
   ): Unit = {
-    val resource = getResourceWithValues(
-      resourceIri = resourceIri,
-      propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
+    responderManager ! ResourcesGetRequestV2(
+      resourceIris = Seq(resourceIri),
+      targetSchema = ApiV2Complex,
+      featureFactoryConfig = defaultFeatureFactoryConfig,
       requestingUser = requestingUser
     )
+
+    val resource = expectMsgPF(timeout) { case getResponse: ReadResourcesSequenceV2 =>
+      getResponse.toResource(resourceIri)
+    }
+    //  ensure the resource was not deleted
+    resource.deletionInfo should be(None)
+
+    val deletedValues = resource.values.getOrElse(
+      OntologyConstants.KnoraBase.DeletedValue.toSmartIri,
+      throw AssertionException(
+        s"Resource <$resourceIri> does not have any deleted values, even though value <$valueIri> should be deleted."
+      )
+    )
+    val deletedValue = deletedValues.collectFirst { case v if v.valueIri == valueIri => v }
+      .getOrElse(throw AssertionException(s"Value <$valueIri> was not among the deleted resources"))
 
     checkLastModDate(
       resourceIri = resourceIri,
@@ -238,38 +256,18 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       maybeUpdatedLastModDate = resource.lastModificationDate
     )
 
-    val propertyValues: Seq[ReadValueV2] =
-      getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
+    val deletionInfo = deletedValue.deletionInfo.getOrElse(
+      throw AssertionException(s"Value <$valueIri> does not have deletion information")
+    )
 
-    propertyValues.find(_.valueIri == valueIri) match {
-      case Some(_) => throw AssertionException(s"Value <$valueIri was not deleted>")
-      case None    => ()
+    customDeleteDate match {
+      case Some(deleteDate) => deletionInfo.deleteDate should equal(deleteDate)
+      case None             => ()
     }
 
-    // If a custom delete date was used, check that it was saved correctly.
-    customDeleteDate match {
-      case Some(deleteDate) =>
-        val sparqlQuery: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-          .getDeleteDate(
-            triplestore = settings.triplestoreType,
-            entityIri = valueIri
-          )
-          .toString()
-
-        storeManager ! SparqlSelectRequest(sparqlQuery)
-
-        expectMsgPF(timeout) { case sparqlSelectResponse: SparqlSelectResult =>
-          val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
-
-          val savedDeleteDate: Instant = stringFormatter.xsdDateTimeStampToInstant(
-            savedDeleteDateStr,
-            throw AssertionException(s"Couldn't parse delete date from triplestore: $savedDeleteDateStr")
-          )
-
-          assert(savedDeleteDate == deleteDate)
-        }
-
-      case None => ()
+    deleteComment match {
+      case Some(comment) => deletionInfo.maybeDeleteComment.get should equal(comment)
+      case None          => ()
     }
   }
 
@@ -4316,11 +4314,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
+      val valueIri = intValueIri.get
       responderManager ! DeleteValueRequestV2(
         resourceIri = resourceIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         propertyIri = propertyIri,
-        valueIri = intValueIri.get,
+        valueIri = valueIri,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
         deleteComment = Some("this value was incorrect"),
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -4329,6 +4328,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       expectMsgType[SuccessResponseV2](timeout)
+
+      // TODO-BL: see what happens with value ARKs
 
       checkValueIsDeleted(
         resourceIri = resourceIri,
@@ -4345,6 +4346,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
       val deleteDate: Instant = Instant.now
+      val deleteComment = Some("this value was incorrect")
 
       responderManager ! DeleteValueRequestV2(
         resourceIri = resourceIri,
@@ -4352,7 +4354,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = propertyIri,
         valueIri = intValueForRsyncIri.get,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-        deleteComment = Some("this value was incorrect"),
+        deleteComment = deleteComment,
         deleteDate = Some(deleteDate),
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
@@ -4368,6 +4370,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIriInResult = propertyIri,
         valueIri = intValueForRsyncIri.get,
         customDeleteDate = Some(deleteDate),
+        deleteComment = deleteComment,
         requestingUser = anythingUser1
       )
     }

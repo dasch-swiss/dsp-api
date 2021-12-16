@@ -1507,8 +1507,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           .toString()
       )
 
-      // _ = println(resourceRequestSparql)
-
       resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
         sparql = resourceRequestSparql,
         featureFactoryConfig = featureFactoryConfig

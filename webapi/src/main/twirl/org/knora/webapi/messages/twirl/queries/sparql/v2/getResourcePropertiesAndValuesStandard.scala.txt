@@ -208,7 +208,6 @@ CONSTRUCT {
 
                     ?resource ?resourceValueProperty ?valueObject .
                     ?resourceValueProperty rdfs:subPropertyOf* knora-base:hasValue .
-                    ?valueObject knora-base:isDeleted false .
 
                     @maybePropertyIri match {
                         case Some(propertyIri) => {

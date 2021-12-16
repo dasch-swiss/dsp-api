@@ -570,17 +570,27 @@ case class ReadResourceV2(
    * @return
    */
   def withDeletedValues(): ReadResourceV2 = {
-    val valuesWithDeletedValues: Map[SmartIri, Seq[ReadValueV2]] = this.values.map { case (k, v) =>
-      val withDeletedValues = v.map { case value =>
-        value.deletionInfo match {
-          // value is deleted -> return DeletedValue instead
-          case Some(del) => value.asDeletedValue()
-          // not deleted -> value remains
-          case None => value
-        }
-      }
-      (k, withDeletedValues)
-    }
+    implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+    val delIri: SmartIri = OntologyConstants.KnoraBase.DeletedValue.toSmartIri
+    val valuesWithDeletedValues: Map[SmartIri, Seq[ReadValueV2]] =
+      this.values.toList
+        .foldLeft(Seq.empty[(SmartIri, ReadValueV2)])((aggregator, valueMap) =>
+          valueMap match {
+            case (iri: SmartIri, valueSequence: Seq[ReadValueV2]) => {
+              val withDeletedSeq = valueSequence
+                .map(value =>
+                  value.deletionInfo match {
+                    case Some(_) =>
+                      println()
+                      (delIri, value.asDeletedValue())
+                    case None => (iri, value)
+                  }
+                )
+              aggregator ++ withDeletedSeq
+            }
+          }
+        )
+        .groupMap(_._1)(_._2)
     this.copy(
       values = valuesWithDeletedValues
     )

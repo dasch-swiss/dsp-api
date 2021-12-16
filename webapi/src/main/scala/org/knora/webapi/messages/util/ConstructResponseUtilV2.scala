@@ -1644,9 +1644,10 @@ object ConstructResponseUtilV2 {
 
     // iterate over visibleResourceIris and construct the response in the correct order
     val readResourceFutures: Vector[Future[ReadResourceV2]] = visibleResourceIris.map { resourceIri: IRI =>
+      val data = mainResourcesAndValueRdfData.resources(resourceIri)
       constructReadResourceV2(
         resourceIri = resourceIri,
-        resourceWithValueRdfData = mainResourcesAndValueRdfData.resources(resourceIri),
+        resourceWithValueRdfData = data,
         mappings = mappings,
         queryStandoff = queryStandoff,
         versionDate = versionDate,
@@ -1656,7 +1657,6 @@ object ConstructResponseUtilV2 {
         settings = settings,
         requestingUser = requestingUser
       )
-
     }.toVector
 
     for {
