@@ -19,7 +19,6 @@ import org.knora.webapi.messages.util.rdf.SparqlSelectResult
 import org.knora.webapi.messages.util.search.gravsearch.GravsearchParser
 import org.knora.webapi.messages.util.{
   CalendarNameGregorian,
-  ConstructResponseUtilV2,
   DatePrecisionYear,
   KnoraSystemInstances,
   PermissionUtilADM
@@ -35,7 +34,6 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.iiif.MockSipiConnector
 import org.knora.webapi.util.MutableTestIri
 
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
 /**
@@ -221,8 +219,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private def checkValueIsDeleted(
     resourceIri: IRI,
     maybePreviousLastModDate: Option[Instant],
-    propertyIriForGravsearch: SmartIri,
-    propertyIriInResult: SmartIri,
     valueIri: IRI,
     customDeleteDate: Option[Instant] = None,
     deleteComment: Option[String] = None,
@@ -4329,13 +4325,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgType[SuccessResponseV2](timeout)
 
-      // TODO-BL: see what happens with value ARKs
-
       checkValueIsDeleted(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
         valueIri = intValueIri.get,
         requestingUser = anythingUser1
       )
@@ -4366,8 +4358,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       checkValueIsDeleted(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
         valueIri = intValueForRsyncIri.get,
         customDeleteDate = Some(deleteDate),
         deleteComment = deleteComment,
@@ -4413,8 +4403,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       checkValueIsDeleted(
         resourceIri = zeitglöckleinIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
         valueIri = zeitglöckleinCommentWithStandoffIri.get,
         requestingUser = incunabulaUser
       )
@@ -4427,7 +4415,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = incunabulaUser
       )
 
-      assert(resource.values.get(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri).isEmpty)
+      assert(!resource.values.contains(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri))
     }
 
     "delete a link between two resources" in {
@@ -4452,8 +4440,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       checkValueIsDeleted(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = linkPropertyIri,
-        propertyIriInResult = linkValuePropertyIri,
         valueIri = linkValueIri.get,
         requestingUser = anythingUser1
       )
