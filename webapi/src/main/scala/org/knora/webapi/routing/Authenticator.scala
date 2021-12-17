@@ -327,7 +327,8 @@ trait Authenticator extends InstrumentationSupport {
                 domain = cookieDomain,
                 path = Some("/"),
                 httpOnly = true,
-                expires = Some(DateTime(1970, 1, 1, 0, 0, 0))
+                expires = Some(DateTime(1970, 1, 1, 0, 0, 0)),
+                maxAge = Some(0)
               )
             )
           ),
