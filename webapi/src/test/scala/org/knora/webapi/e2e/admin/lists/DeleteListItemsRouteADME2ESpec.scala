@@ -186,7 +186,7 @@ class DeleteListItemsRouteADME2ESpec
         listIri.convertTo[String] should be(unusedList)
       }
 
-      "return FALSE for unused list" in {
+      "return FALSE for used list" in {
         val usedList = "http://rdfh.ch/lists/0001/treeList01"
         val usedListEncoded = java.net.URLEncoder.encode(usedList, "utf-8")
         val request = Get(baseApiUrl + s"/admin/lists/candelete/" + usedListEncoded) ~> addCredentials(

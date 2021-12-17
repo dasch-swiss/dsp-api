@@ -994,7 +994,7 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         response.canDeleteList should be(true)
       }
 
-      "retrn TRUE for a child node that is not in use" in {
+      "retrun TRUE for a child node that is not in use" in {
         val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
         responderManager ! CanDeleteListRequestADM(
           iri = nodeIri,

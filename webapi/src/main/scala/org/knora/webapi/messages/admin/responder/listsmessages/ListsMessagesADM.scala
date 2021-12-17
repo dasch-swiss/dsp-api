@@ -437,7 +437,7 @@ case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteR
 }
 
 /**
- * Checks if a list can be deleted.
+ * Checks if a list can be deleted (none of its nodes is used in data).
  *
  * @param iri the IRI of the list that is checked.
  */

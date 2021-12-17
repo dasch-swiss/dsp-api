@@ -1763,10 +1763,12 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
     } yield taskResult
   }
 
+  /**
+   * Checks if a list can be deleted (none of its nodes is used in data).
+   */
   private def canDeleteListRequestADM(
     iri: IRI
-  ): Future[CanDeleteListResponseADM] = {
-    var canDelete = false
+  ): Future[CanDeleteListResponseADM] =
     for {
       sparqlQuery <- Future(
         org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -1780,11 +1782,11 @@ class ListsResponderADM(responderData: ResponderData) extends Responder(responde
       response: SparqlSelectResult <- (storeManager ? SparqlSelectRequest(sparqlQuery))
         .mapTo[SparqlSelectResult]
 
-      _ = if (response.results.bindings.isEmpty) {
-        canDelete = true
-      }
+      canDelete =
+        if (response.results.bindings.isEmpty) true
+        else false
+
     } yield CanDeleteListResponseADM(iri, canDelete)
-  }
 
   /**
    * Delete a node (root or child). If a root node is given, check for its usage in data and ontology. If not used,

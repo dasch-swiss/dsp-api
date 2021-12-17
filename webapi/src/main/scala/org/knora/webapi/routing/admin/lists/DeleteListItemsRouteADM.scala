@@ -65,13 +65,13 @@ class DeleteListItemsRouteADM(routeData: KnoraRouteData)
   }
 
   /**
-   * Checks if a list (and its children) is unused and if can be deleted.
+   * Checks if a list can be deleted (none of its nodes is used in data).
    */
   private def canDeleteList(featureFactoryConfig: FeatureFactoryConfig): Route =
     path(ListsBasePath / "candelete" / Segment) { iri =>
       get { requestContext =>
         val listIri =
-          stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid param list IRI: $iri"))
+          stringFormatter.validateAndEscapeIri(iri, throw BadRequestException(s"Invalid list IRI: $iri"))
 
         val requestMessage: Future[CanDeleteListRequestADM] = for {
           requestingUser <- getUserADM(requestContext, featureFactoryConfig)

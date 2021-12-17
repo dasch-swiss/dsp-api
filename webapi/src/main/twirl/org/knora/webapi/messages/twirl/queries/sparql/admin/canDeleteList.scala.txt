@@ -6,7 +6,7 @@
 @import org.knora.webapi.IRI
 
 @**
- * Checks if a list (and its children) is unused and if can be deleted.
+ * Checks if a list can be deleted (none of its nodes is used in data).
  *
  * @param triplestore the name of the triplestore being used.
  * @param listIri the IRI of the list to be checked.
@@ -19,11 +19,11 @@ PREFIX knora-base: <http://www.knora.org/ontology/knora-base#>
 SELECT DISTINCT ?isUsed
 
 WHERE {
-  BIND(IRI("@listIri") AS ?nodeToBeDeleted)
+  BIND(IRI("@listIri") AS ?listToBeChecked)
   BIND(true AS ?isUsed)
 
   {
-    ?nodeToBeDeleted knora-base:hasSubListNode* ?subNode .
-    ?valueUsingNode knora-base:valueHasListNode ?subNode .
+    ?listToBeChecked knora-base:hasSubListNode* ?childNode .
+    ?valueUsingNode knora-base:valueHasListNode ?childNode .
   }
 }
