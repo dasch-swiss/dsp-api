@@ -222,7 +222,8 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     valueIri: IRI,
     customDeleteDate: Option[Instant] = None,
     deleteComment: Option[String] = None,
-    requestingUser: UserADM
+    requestingUser: UserADM,
+    isLinkValue: Boolean = false
   ): Unit = {
     responderManager ! ResourcesGetRequestV2(
       resourceIris = Seq(resourceIri),
@@ -243,27 +244,41 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         s"Resource <$resourceIri> does not have any deleted values, even though value <$valueIri> should be deleted."
       )
     )
-    val deletedValue = deletedValues.collectFirst { case v if v.valueIri == valueIri => v }
-      .getOrElse(throw AssertionException(s"Value <$valueIri> was not among the deleted resources"))
 
-    checkLastModDate(
-      resourceIri = resourceIri,
-      maybePreviousLastModDate = maybePreviousLastModDate,
-      maybeUpdatedLastModDate = resource.lastModificationDate
-    )
+    if (!isLinkValue) {
+      // not a LinkValue, so the value should be a DeletedValue of the resource
+      val deletedValue = deletedValues.collectFirst { case v if v.valueIri == valueIri => v }
+        .getOrElse(throw AssertionException(s"Value <$valueIri> was not among the deleted resources"))
 
-    val deletionInfo = deletedValue.deletionInfo.getOrElse(
-      throw AssertionException(s"Value <$valueIri> does not have deletion information")
-    )
+      checkLastModDate(
+        resourceIri = resourceIri,
+        maybePreviousLastModDate = maybePreviousLastModDate,
+        maybeUpdatedLastModDate = resource.lastModificationDate
+      )
 
-    customDeleteDate match {
-      case Some(deleteDate) => deletionInfo.deleteDate should equal(deleteDate)
-      case None             => ()
-    }
+      val deletionInfo = deletedValue.deletionInfo.getOrElse(
+        throw AssertionException(s"Value <$valueIri> does not have deletion information")
+      )
 
-    deleteComment match {
-      case Some(comment) => deletionInfo.maybeDeleteComment.get should equal(comment)
-      case None          => ()
+      customDeleteDate match {
+        case Some(deleteDate) => deletionInfo.deleteDate should equal(deleteDate)
+        case None             => ()
+      }
+
+      deleteComment match {
+        case Some(comment) => deletionInfo.maybeDeleteComment.get should equal(comment)
+        case None          => ()
+      }
+    } else {
+      // The value is a LinkValue, so there should be a DeletedValue having a PreviousValue with the IRI of the value.
+      if (
+        !deletedValues.exists(v =>
+          v.previousValueIri match {
+            case Some(previousValueIRI) => previousValueIRI == valueIri
+            case None                   => false
+          }
+        )
+      ) throw AssertionException(s"ListValue <$valueIri> was not deleted correctly.")
     }
   }
 
@@ -4423,12 +4438,13 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
       val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+      val linkValueIRI = linkValueIri.get
 
       responderManager ! DeleteValueRequestV2(
         resourceIri = resourceIri,
         resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
         propertyIri = linkValuePropertyIri,
-        valueIri = linkValueIri.get,
+        valueIri = linkValueIRI,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
@@ -4440,8 +4456,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       checkValueIsDeleted(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        valueIri = linkValueIri.get,
-        requestingUser = anythingUser1
+        valueIri = linkValueIRI,
+        requestingUser = anythingUser1,
+        isLinkValue = true
       )
     }
 
