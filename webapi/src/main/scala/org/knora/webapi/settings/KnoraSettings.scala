@@ -382,7 +382,7 @@ class KnoraSettingsImpl(config: Config, log: LoggingAdapter) extends Extension {
 
 object KnoraSettings extends ExtensionId[KnoraSettingsImpl] with ExtensionIdProvider {
 
-  override def lookup(): KnoraSettings.type = KnoraSettings
+  override def lookup: KnoraSettings.type = KnoraSettings
 
   override def createExtension(system: ExtendedActorSystem) =
     new KnoraSettingsImpl(system.settings.config, akka.event.Logging(system, this.getClass))
