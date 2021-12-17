@@ -490,7 +490,3 @@ The response to requesting a deleted resource will look as the following example
   ]
 }
 ```
-
-Deleted values will not be replaced by `knora-api:DeletedValue` but returned as the initial value, if a resource or
-value is requested with a timestamp, so that it is possible to get the full and unchanged history of a resource. In this
-case, the value will still be with `"knora-api:isDeleted": true`.
