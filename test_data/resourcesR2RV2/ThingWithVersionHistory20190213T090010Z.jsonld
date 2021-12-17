@@ -1,33 +1,5 @@
 
 {
-    "anything:hasOtherThingValue": {
-        "knora-api:arkUrl": {
-            "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO/IZGOjVqxTfSNO4ieKyp0SAZ",
-            "@type": "xsd:anyURI"
-        },
-        "knora-api:versionArkUrl": {
-            "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO/IZGOjVqxTfSNO4ieKyp0SAZ.20190213T090010Z",
-            "@type": "xsd:anyURI"
-        },
-        "knora-api:userHasPermission": "V",
-        "knora-api:valueCreationDate": {
-            "@value": "2019-02-13T09:00:10Z",
-            "@type": "xsd:dateTimeStamp"
-        },
-        "knora-api:deleteDate": {
-            "@type": "xsd:dateTimeStamp",
-            "@value": "2019-02-13T09:00:10Z"
-        },
-        "knora-api:attachedToUser": {
-            "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
-        },
-        "knora-api:valueHasUUID": "IZGOjVqxTfSNO4ieKyp0SA",
-        "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
-        "knora-api:isDeleted": true,
-        "@type": "knora-api:DeletedValue",
-        "http://www.knora.org/ontology/knora-base#DeletedValue": "DeletedValue",
-        "@id": "http://rdfh.ch/0001/thing-with-history/values/3b"
-    },
     "knora-api:lastModificationDate": {
         "@value": "2019-02-13T09:05:10Z",
         "@type": "xsd:dateTimeStamp"
@@ -40,7 +12,6 @@
     "knora-api:attachedToProject": {
         "@id": "http://rdfh.ch/projects/0001"
     },
-    "knora-api:userHasPermission": "V",
     "knora-api:attachedToUser": {
         "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
     },
@@ -97,6 +68,35 @@
         "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO.20190213T090010Z",
         "@type": "xsd:anyURI"
     },
+    "knora-api:DeletedValue": {
+        "knora-api:arkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO/IZGOjVqxTfSNO4ieKyp0SAZ",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:versionArkUrl": {
+            "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/thing=with=historyO/IZGOjVqxTfSNO4ieKyp0SAZ.20190213T090010Z",
+            "@type": "xsd:anyURI"
+        },
+        "knora-api:userHasPermission": "V",
+        "knora-api:valueCreationDate": {
+            "@value": "2019-02-13T09:00:10Z",
+            "@type": "xsd:dateTimeStamp"
+        },
+        "knora-api:deleteDate": {
+            "@type": "xsd:dateTimeStamp",
+            "@value": "2019-02-13T09:00:10Z"
+        },
+        "knora-api:attachedToUser": {
+            "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+        },
+        "knora-api:valueHasUUID": "IZGOjVqxTfSNO4ieKyp0SA",
+        "knora-api:hasPermissions": "V knora-admin:UnknownUser|M knora-admin:ProjectMember",
+        "knora-api:isDeleted": true,
+        "@type": "knora-api:DeletedValue",
+        "http://www.knora.org/ontology/knora-base#DeletedValue": "DeletedValue",
+        "@id": "http://rdfh.ch/0001/thing-with-history/values/3b"
+    },
+    "knora-api:userHasPermission": "V",
     "knora-api:versionDate": {
         "@value": "2019-02-13T09:00:10Z",
         "@type": "xsd:dateTimeStamp"

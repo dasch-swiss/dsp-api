@@ -2749,7 +2749,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       resourceFullRepAtCreationTime: ReadResourcesSequenceV2 <- getResourcesV2(
         resourceIris = Seq(resourceIri),
         versionDate = Some(versionHist.versionDate),
-        withDeleted = true,
         showDeletedValues = true,
         targetSchema = ApiV2Complex,
         schemaOptions = Set.empty[SchemaOption],
