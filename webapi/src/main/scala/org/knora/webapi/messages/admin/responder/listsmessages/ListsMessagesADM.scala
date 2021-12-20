@@ -332,6 +332,16 @@ case class ListItemDeleteRequestADM(
   apiRequestID: UUID
 ) extends ListsResponderRequestADM
 
+/**
+ * Request checks if a list is unused and can be deleted. A successful response will be a [[CanDeleteListResponseADM]]
+ *
+ * @param iri                  the IRI of the list node (root or child).
+ * @param featureFactoryConfig the feature factory configuration.
+ * @param requestingUser       the user making the request.
+ */
+case class CanDeleteListRequestADM(iri: IRI, featureFactoryConfig: FeatureFactoryConfig, requestingUser: UserADM)
+    extends ListsResponderRequestADM
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Responses
 
@@ -424,6 +434,16 @@ case class ListDeleteResponseADM(iri: IRI, deleted: Boolean) extends ListItemDel
 case class ChildNodeDeleteResponseADM(node: ListNodeADM) extends ListItemDeleteResponseADM {
 
   def toJsValue: JsValue = listNodeDeleteResponseADMFormat.write(this)
+}
+
+/**
+ * Checks if a list can be deleted (none of its nodes is used in data).
+ *
+ * @param iri the IRI of the list that is checked.
+ */
+case class CanDeleteListResponseADM(listIri: IRI, canDeleteList: Boolean) extends ListItemDeleteResponseADM {
+
+  def toJsValue: JsValue = canDeleteListResponseADMFormat.write(this)
 }
 
 /**
@@ -1320,4 +1340,6 @@ trait ListADMJsonProtocol extends SprayJsonSupport with DefaultJsonProtocol with
     jsonFormat(ChildNodeDeleteResponseADM, "node")
   implicit val listDeleteResponseADMFormat: RootJsonFormat[ListDeleteResponseADM] =
     jsonFormat(ListDeleteResponseADM, "iri", "deleted")
+  implicit val canDeleteListResponseADMFormat: RootJsonFormat[CanDeleteListResponseADM] =
+    jsonFormat(CanDeleteListResponseADM, "listIri", "canDeleteList")
 }

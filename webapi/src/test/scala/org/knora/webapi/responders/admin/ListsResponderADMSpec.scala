@@ -944,5 +944,79 @@ class ListsResponderADMSpec extends CoreSpec(ListsResponderADMSpec.config) with 
         received.deleted should be(true)
       }
     }
+
+    "used to query if list can be deleted" should {
+      "return FALSE for a node that is in use" in {
+        val nodeInUseIri = "http://rdfh.ch/lists/0001/treeList01"
+        responderManager ! CanDeleteListRequestADM(
+          iri = nodeInUseIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser
+        )
+        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
+        response.listIri should be(nodeInUseIri)
+        response.canDeleteList should be(false)
+      }
+
+      "return FALSE for a node that is unused but has a child which is used" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/treeList03"
+        responderManager ! CanDeleteListRequestADM(
+          iri = nodeIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser
+        )
+        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
+        response.listIri should be(nodeIri)
+        response.canDeleteList should be(false)
+      }
+
+      "return FALSE for a node used as object of salsah-gui:guiAttribute (i.e. 'hlist=<nodeIri>') but not as object of knora-base:valueHasListNode" in {
+        val nodeInUseInOntologyIri = "http://rdfh.ch/lists/0001/treeList"
+        responderManager ! CanDeleteListRequestADM(
+          iri = nodeInUseInOntologyIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser
+        )
+        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
+        response.listIri should be(nodeInUseInOntologyIri)
+        response.canDeleteList should be(false)
+      }
+
+      "return TRUE for a middle child node that is not in use" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList012"
+        responderManager ! CanDeleteListRequestADM(
+          iri = nodeIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser
+        )
+        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
+        response.listIri should be(nodeIri)
+        response.canDeleteList should be(true)
+      }
+
+      "retrun TRUE for a child node that is not in use" in {
+        val nodeIri = "http://rdfh.ch/lists/0001/notUsedList02"
+        responderManager ! CanDeleteListRequestADM(
+          iri = nodeIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser
+        )
+        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
+        response.listIri should be(nodeIri)
+        response.canDeleteList should be(true)
+      }
+
+      "delete a list (i.e. root node) that is not in use in ontology" in {
+        val listIri = "http://rdfh.ch/lists/0001/notUsedList"
+        responderManager ! CanDeleteListRequestADM(
+          iri = listIri,
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          requestingUser = SharedTestDataADM.anythingAdminUser
+        )
+        val response: CanDeleteListResponseADM = expectMsgType[CanDeleteListResponseADM](timeout)
+        response.listIri should be(listIri)
+        response.canDeleteList should be(true)
+      }
+    }
   }
 }
