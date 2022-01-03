@@ -924,7 +924,7 @@ HTTP POST to http://host/v2/ontologies
 {
   "knora-api:ontologyName" : "ONTOLOGY_NAME",
   "knora-api:attachedToProject" : {
-    "@id" : "PROJECT_IRI",
+    "@id" : "PROJECT_IRI"
   },
   "rdfs:label" : "ONTOLOGY_NAME",
   "@context" : {
@@ -1068,7 +1068,7 @@ HTTP POST to http://host/v2/ontologies/classes
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [
     {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
@@ -1084,7 +1084,7 @@ HTTP POST to http://host/v2/ontologies/classes
         "@id" : "BASE_CLASS_IRI"
       }
     }
-  } ],
+  ],
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
@@ -1121,7 +1121,7 @@ HTTP POST to http://host/v2/ontologies/classes
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [
     {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
@@ -1143,7 +1143,7 @@ HTTP POST to http://host/v2/ontologies/classes
         }
       } ]
     }
-  } ],
+  ],
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
@@ -1187,7 +1187,7 @@ HTTP PUT to http://host/v2/ontologies/classes
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [
     {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
@@ -1196,7 +1196,7 @@ HTTP PUT to http://host/v2/ontologies/classes
         "@value" : "LABEL"
       }
     }
-  } ],
+  ],
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
@@ -1226,7 +1226,7 @@ HTTP PUT to http://host/v2/ontologies/classes
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [
     {
       "@id" : "CLASS_IRI",
       "@type" : "owl:Class",
@@ -1235,7 +1235,7 @@ HTTP PUT to http://host/v2/ontologies/classes
         "@value" : "COMMENT"
       }
     }
-  } ],
+  ],
   "@context" : {
     "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
@@ -1264,7 +1264,7 @@ HTTP POST to http://host/v2/ontologies/properties
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [
     {
       "@id" : "PROPERTY_IRI",
       "@type" : "owl:ObjectProperty",
@@ -1287,10 +1287,10 @@ HTTP POST to http://host/v2/ontologies/properties
       },
       "salsah-gui:guiElement" : {
         "@id" : "GUI_ELEMENT_IRI"
-      }
+      },
       "salsah-gui:guiAttribute" : [ "GUI_ATTRIBUTE" ]
     }
-  } ],
+  ],
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
@@ -1353,7 +1353,7 @@ HTTP PUT to http://host/v2/ontologies/properties
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [
     {
       "@id" : "PROPERTY_IRI",
       "@type" : "owl:ObjectProperty",
@@ -1362,7 +1362,7 @@ HTTP PUT to http://host/v2/ontologies/properties
         "@value" : "LABEL"
       }
     }
-  } ],
+  ],
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
@@ -1391,7 +1391,7 @@ HTTP PUT to http://host/v2/ontologies/properties
     "@type" : "xsd:dateTimeStamp",
     "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
+  "@graph" : [
     {
       "@id" : "PROPERTY_IRI",
       "@type" : "owl:ObjectProperty",
@@ -1400,7 +1400,7 @@ HTTP PUT to http://host/v2/ontologies/properties
         "@value" : "COMMENT"
       }
     }
-  } ],
+  ],
   "@context" : {
     "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
@@ -1423,28 +1423,34 @@ HTTP PUT to http://host/v2/ontologies/properties/guielement
 
 ```json
 {
-  "@id" : "ONTOLOGY_IRI",
-  "@type" : "owl:Ontology",
-  "knora-api:lastModificationDate" : {
-    "@type" : "xsd:dateTimeStamp",
-    "@value" : "ONTOLOGY_LAST_MODIFICATION_DATE"
+  "@id": "ONTOLOGY_IRI",
+  "@type": "owl:Ontology",
+  "knora-api:lastModificationDate": {
+    "@type": "xsd:dateTimeStamp",
+    "@value": "ONTOLOGY_LAST_MODIFICATION_DATE"
   },
-  "@graph" : [ {
-    "@id" : "PROPERTY_IRI",
-    "@type" : "owl:ObjectProperty",
-    "salsah-gui:guiElement" : {
-      "@id" : "salsah-gui:Textarea"
-    },
-    "salsah-gui:guiAttribute" : [ "cols=80", "rows=24" ]
-  } ],
-  "@context" : {
-    "rdf" : "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "knora-api" : "http://api.knora.org/ontology/knora-api/v2#",
-    "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
-    "owl" : "http://www.w3.org/2002/07/owl#",
-    "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#"
+  "@graph": [
+    {
+      "@id": "PROPERTY_IRI",
+      "@type": "owl:ObjectProperty",
+      "salsah-gui:guiElement": {
+        "@id": "salsah-gui:Textarea"
+      },
+      "salsah-gui:guiAttribute": [
+        "cols=80",
+        "rows=24"
+      ]
+    }
+  ],
+  "@context": {
+    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
+    "salsah-gui": "http://api.knora.org/ontology/salsah-gui/v2#",
+    "owl": "http://www.w3.org/2002/07/owl#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "xsd": "http://www.w3.org/2001/XMLSchema#"
   }
+}
 ```
 
 To remove the values of `salsah-gui:guiElement` and `salsah-gui:guiAttribute` from
@@ -1683,7 +1689,7 @@ using the predicate `salsah-gui:guiOrder`, whose object is an integer:
     "salsah-gui" : "http://api.knora.org/ontology/salsah-gui/v2#",
     "owl" : "http://www.w3.org/2002/07/owl#",
     "rdfs" : "http://www.w3.org/2000/01/rdf-schema#",
-    "xsd" : "http://www.w3.org/2001/XMLSchema#",
+    "xsd" : "http://www.w3.org/2001/XMLSchema#"
   }
 }
 ```
