@@ -4009,7 +4009,7 @@ object LinkValueContentV2 extends ValueContentReaderV2[LinkValueContentV2] {
  * Generic representation of a deleted value.
  *
  * @param ontologySchema the ontology schema
- * @param comment optional comment
+ * @param comment        optional comment
  */
 case class DeletedValueContentV2(ontologySchema: OntologySchema, comment: Option[String] = None)
     extends ValueContentV2 {

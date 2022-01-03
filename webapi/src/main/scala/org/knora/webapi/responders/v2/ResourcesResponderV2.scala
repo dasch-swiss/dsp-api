@@ -1614,10 +1614,10 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       }
 
       // Check if resources are deleted, if so, replace them with DeletedResource
-      responseWithoutDeletedResources = apiResponse.resources match {
-        case l =>
-          if (apiResponse.resources.nonEmpty) {
-            val newList = l.map { resource =>
+      responseWithDeletedResourcesReplaced = apiResponse.resources match {
+        case resourceList =>
+          if (resourceList.nonEmpty) {
+            val resourceListWithDeletedResourcesReplaced = resourceList.map { resource =>
               resource.deletionInfo match {
                 // Resource deleted -> return DeletedResource instead
                 case Some(_) => resource.asDeletedResource()
@@ -1629,13 +1629,13 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
                   else resource.withDeletedValues()
               }
             }
-            apiResponse.copy(resources = newList)
+            apiResponse.copy(resources = resourceListWithDeletedResourcesReplaced)
           } else {
             apiResponse
           }
       }
 
-    } yield responseWithoutDeletedResources
+    } yield responseWithDeletedResourcesReplaced
 
   }
 
@@ -1690,22 +1690,22 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       )
 
       // Check if resources are deleted, if so, replace them with DeletedResource
-      responseWithoutDeletedResources = apiResponse.resources match {
-        case l =>
-          if (apiResponse.resources.nonEmpty) {
-            val newList = l.map { resource =>
+      responseWithDeletedResourcesReplaced = apiResponse.resources match {
+        case resourceList =>
+          if (resourceList.nonEmpty) {
+            val resourceListWithDeletedResourcesReplaced = resourceList.map { resource =>
               resource.deletionInfo match {
                 case Some(_) => resource.asDeletedResource()
                 case None    => resource.withDeletedValues()
               }
             }
-            apiResponse.copy(resources = newList)
+            apiResponse.copy(resources = resourceListWithDeletedResourcesReplaced)
           } else {
             apiResponse
           }
       }
 
-    } yield responseWithoutDeletedResources
+    } yield responseWithDeletedResourcesReplaced
   }
 
   /**
