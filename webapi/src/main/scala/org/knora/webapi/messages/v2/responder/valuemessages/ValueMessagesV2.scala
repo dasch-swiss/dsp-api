@@ -759,7 +759,7 @@ sealed trait ReadValueV2 extends IOValueV2 {
   /**
    * Return a `knora-base:DeletedValue` representation of the present value.
    *
-   * @return A ReadValueV2 object identical to the current one (includding the IRI),
+   * @return A ReadValueV2 object identical to the current one (including the IRI),
    *         but with valueContent of type [[DeletedValueContentV2]].
    */
   def asDeletedValue(): ReadValueV2 =
