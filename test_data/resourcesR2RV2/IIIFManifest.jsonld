@@ -1,3 +1,4 @@
+
 {
     "id": "http://rdfh.ch/0001/thing-with-pages/manifest",
     "@context": "http://iiif.io/api/presentation/3/context.json",
@@ -31,12 +32,12 @@
                                 "height": 256,
                                 "service": [
                                     {
-                                        "id": "http://0.0.0.0:1024",
+                                        "id": "IIIF_BASE_URL",
                                         "type": "ImageService3",
                                         "profile": "level1"
                                     }
                                 ],
-                                "id": "http://0.0.0.0:1024/0001/page1.jp2/full/512,256/0/default.jpg",
+                                "id": "IIIF_BASE_URL/0001/page1.jp2/full/512,256/0/default.jpg",
                                 "type": "Image",
                                 "width": 512
                             }
@@ -69,12 +70,12 @@
                                 "height": 256,
                                 "service": [
                                     {
-                                        "id": "http://0.0.0.0:1024",
+                                        "id": "IIIF_BASE_URL",
                                         "type": "ImageService3",
                                         "profile": "level1"
                                     }
                                 ],
-                                "id": "http://0.0.0.0:1024/0001/page2.jp2/full/512,256/0/default.jpg",
+                                "id": "IIIF_BASE_URL/0001/page2.jp2/full/512,256/0/default.jpg",
                                 "type": "Image",
                                 "width": 512
                             }
