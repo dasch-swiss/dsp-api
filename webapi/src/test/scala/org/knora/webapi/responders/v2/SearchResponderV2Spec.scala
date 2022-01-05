@@ -260,7 +260,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         compareReadResourcesSequenceV2Response(
-          expected = searchResponderV2SpecFullData.fulltextSearchForListNodeLabel,
+          expected = searchResponderV2SpecFullData.expectedResultFulltextSearchForListNodeLabel,
           received = response
         )
       }
@@ -283,7 +283,7 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
         compareReadResourcesSequenceV2Response(
-          expected = searchResponderV2SpecFullData.fulltextSearchForListSubNodeLabel,
+          expected = searchResponderV2SpecFullData.expectedResultFulltextSearchForListNodeLabelWithSubnodes,
           received = response
         )
       }

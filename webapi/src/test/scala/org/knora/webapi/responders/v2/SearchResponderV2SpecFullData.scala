@@ -2075,7 +2075,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
     querySchema = Some(ApiV2Simple)
   )
 
-  val fulltextSearchForListNodeLabel: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
+  val expectedResultFulltextSearchForListNodeLabel: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
     resources = Vector(
       bookTemplateReadResource.copy(
         label = "instance of a book with a list value",
@@ -2096,7 +2096,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
     )
   )
 
-  val fulltextSearchForListSubNodeLabel: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
+  val expectedResultFulltextSearchForListNodeLabelWithSubnodes: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
     resources = Vector(
       bookTemplateReadResource.copy(
         label = "Lord of the Rings",
