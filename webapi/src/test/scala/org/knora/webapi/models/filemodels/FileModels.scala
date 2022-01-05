@@ -25,9 +25,7 @@ import java.time.Instant
 import java.util.UUID
 
 import spray.json._
-import DefaultJsonProtocol._
-
-// TODO: update docstrings
+import spray.json.DefaultJsonProtocol._
 
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,
@@ -37,11 +35,11 @@ sealed abstract case class UploadFileRequest private (
   /**
    * Create a JSON-LD serialization of the request. This can be used for e2e and integration tests.
    *
+   * @param className    the class name of the resource. Optional.
+   * @param ontologyName the name of the ontology to be prefixed to the class name. Defaults to `"knora-api"`
+   * @param shortcode    the shortcode of the project to which the resource should be added. Defaults to `"0001"`
    * @return JSON-LD serialization of the request.
    */
-  //   * @param className               the class name of the resource. Optional.
-  //   * @param ontologyName            the name of the ontology to be prefixed to the class name. Defaults to `"knora-api"`
-  //   * @param shortcode               the shortcode of the project to which the resource should be added. Defaults to `"0001"`
   def toJsonLd(
     shortcode: String = "0001",
     ontologyName: String = "knora-api",
@@ -68,24 +66,30 @@ sealed abstract case class UploadFileRequest private (
        |  $context}""".stripMargin
   }
 
-  //   * @param resourceIri             the custom IRI of the resource. Optional. Defaults to None. If None, a random IRI is generated
-  //   * @param comment                 comment. Optional.
-  //   * @param internalMimeType        internal mime type as determined by SIPI. Optional.
-  //   * @param originalMimeType        original mime type previous to uploading to SIPI. Optional.
-  //   * @param originalFilename        original filename previous to uploading to SIPI. Optional.
-  //   * @param customValueIri          custom IRI for the value. Optional. Defaults to None.
-  //   *                                If None, an IRI will be generated.
-  //   * @param customValueUUID         custom UUID for the value. Optional. Defaults to None.
-  //   *                                If None, a UUID will be generated.
-  //   * @param customValueCreationDate custom creation date for the value. Optional. Defaults to None.
-  //   *                                If None, the current instant will be used.
-  //   * @param valuePermissions        custom permissions for the value. Optional. Defaults to None.
-  //   *                                If `None`, the default permissions will be used.
-  //   * @param label                   the resource label
-  //   * @param resourcePermissions     permissions for the resource. Optional. If none, the default permissions are used.
-  //   * @param project                 the project to which the resource belongs. Optional. Defaults to None.
-  //   *                                If None, [[SharedTestDataADM.anythingProject]] is used.
-
+  /**
+   * Represents the present [[UploadFileRequest]] as a [[CreateResourceV2]].
+   *
+   * Various custom values can be supplied. If not, reasonable default values for testing purposes will be used.
+   *
+   * @param resourceIri             the custom IRI of the resource. Optional. Defaults to None. If None, a random IRI is generated
+   * @param comment                 comment. Optional.
+   * @param internalMimeType        internal mime type as determined by SIPI. Optional.
+   * @param originalMimeType        original mime type previous to uploading to SIPI. Optional.
+   * @param originalFilename        original filename previous to uploading to SIPI. Optional.
+   * @param customValueIri          custom IRI for the value. Optional. Defaults to None.
+   *                                If None, an IRI will be generated.
+   * @param customValueUUID         custom UUID for the value. Optional. Defaults to None.
+   *                                If None, a UUID will be generated.
+   * @param customValueCreationDate custom creation date for the value. Optional. Defaults to None.
+   *                                If None, the current instant will be used.
+   * @param valuePermissions        custom permissions for the value. Optional. Defaults to None.
+   *                                If `None`, the default permissions will be used.
+   * @param label                   the resource label
+   * @param resourcePermissions     permissions for the resource. Optional. If none, the default permissions are used.
+   * @param project                 the project to which the resource belongs. Optional. Defaults to None.
+   *                                If None, [[SharedTestDataADM.anythingProject]] is used.
+   * @return a [[CreateResourceV2]] representation of the [[UploadFileRequest]]
+   */
   def toMessage(
     resourceIri: Option[String] = None,
     internalMimeType: Option[String] = None,
