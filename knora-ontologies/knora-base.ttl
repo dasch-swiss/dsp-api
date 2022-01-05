@@ -2801,3 +2801,21 @@
 
 
        rdfs:comment "The base class of classes representing Knora values"@en .
+
+
+
+###  http://www.knora.org/ontology/knora-base#DeletedResource
+
+:DeletedResource rdf:type owl:Class ;
+                 rdfs:subClassOf :Resource ;
+                 rdfs:label "Deleted Resource"@en ;
+                 rdfs:comment "Generic representation of a deleted resource that can therefore not be displayed"@en .
+
+
+
+###  http://www.knora.org/ontology/knora-base#DeletedValue
+
+:DeletedValue rdf:type owl:Class ;
+                 rdfs:subClassOf :Value ;
+                 rdfs:label "Deleted Value"@en ;
+                 rdfs:comment "Generic representation of a deleted value that can therefore not be displayed"@en .

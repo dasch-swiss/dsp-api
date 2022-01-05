@@ -177,6 +177,8 @@ object OntologyConstants {
     val IsEditable: IRI = KnoraBasePrefixExpansion + "isEditable"
 
     val Resource: IRI = KnoraBasePrefixExpansion + "Resource"
+    val DeletedResource: IRI = KnoraBasePrefixExpansion + "DeletedResource"
+    val DeletedValue: IRI = KnoraBasePrefixExpansion + "DeletedValue"
     val Representation: IRI = KnoraBasePrefixExpansion + "Representation"
     val AudioRepresentation: IRI = KnoraBasePrefixExpansion + "AudioRepresentation"
     val DDDRepresentation: IRI = KnoraBasePrefixExpansion + "DDDRepresentation"
@@ -774,6 +776,7 @@ object OntologyConstants {
     val Author: IRI = KnoraApiV2PrefixExpansion + "author"
 
     val Resource: IRI = KnoraApiV2PrefixExpansion + "Resource"
+    val DeletedResource: IRI = KnoraApiV2PrefixExpansion + "DeletedResource"
     val Region: IRI = KnoraApiV2PrefixExpansion + "Region"
     val Representation: IRI = KnoraApiV2PrefixExpansion + "Representation"
     val StillImageRepresentation: IRI = KnoraApiV2PrefixExpansion + "StillImageRepresentation"

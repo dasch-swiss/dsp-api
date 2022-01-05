@@ -224,6 +224,7 @@ test-data/v2/resources/create-resource-with-values-request.json
 test-data/v2/resources/delete-resource-request.json
 test-data/v2/resources/delete-resource-response.json
 test-data/v2/resources/delete-resource-with-custom-delete-date-request.json
+test-data/v2/resources/deleted-resource-preview-response.json
 test-data/v2/resources/erase-resource-request.json
 test-data/v2/resources/resource-graph.json
 test-data/v2/resources/resource-preview.json
