@@ -24,27 +24,23 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import java.time.Instant
 import java.util.UUID
 
+// TODO: update docstrings
+
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,
-  internalFilename: String,
-  className: String,
-  ontologyName: String,
-  shortcode: String,
-  resourceIri: String,
-  dimX: Option[Int],
-  dimY: Option[Int],
-  pageCount: Option[Int],
-  comment: Option[String],
-  internalMimeType: Option[String],
-  originalFilename: Option[String],
-  originalMimeType: Option[String],
-  customValueIri: Option[SmartIri],
-  customValueUUID: Option[UUID],
-  customValueCreationDate: Option[Instant],
-  valuePermissions: Option[String],
-  label: String,
-  resourcePermissions: Option[String],
-  project: ProjectADM
+  internalFilename: String
+//  resourceIri: String,
+//  comment: Option[String],
+//  internalMimeType: Option[String],
+//  originalFilename: Option[String],
+//  originalMimeType: Option[String],
+//  customValueIri: Option[SmartIri],
+//  customValueUUID: Option[UUID],
+//  customValueCreationDate: Option[Instant],
+//  valuePermissions: Option[String],
+//  label: String,
+//  resourcePermissions: Option[String],
+//  project: ProjectADM
 ) {
 
   /**
@@ -52,13 +48,24 @@ sealed abstract case class UploadFileRequest private (
    *
    * @return JSON-LD serialization of the request.
    */
-  def toJsonLd: String = {
+  //   * @param className               the class name of the resource. Optional.
+  //   * @param ontologyName            the name of the ontology to be prefixed to the class name. Defaults to `"knora-api"`
+  //   * @param shortcode               the shortcode of the project to which the resource should be added. Defaults to `"0001"`
+  def toJsonLd(
+    shortcode: String = "0001",
+    ontologyName: String = "knora-api",
+    className: Option[String] = None
+  ): String = {
     val fileValuePropertyName = FileModelUtil.getFileValuePropertyName(fileType)
     val fileValueType = FileModelUtil.getFileValueType(fileType)
     val context = FileModelUtil.getJsonLdContext(ontologyName)
+    val classNameWithDefaults = className match {
+      case Some(v) => v
+      case None    => FileModelUtil.getDefaultClassName(fileType)
+    }
 
     s"""{
-       |  "@type" : "$ontologyName:$className",
+       |  "@type" : "$ontologyName:$classNameWithDefaults",
        |  "$fileValuePropertyName" : {
        |    "@type" : "$fileValueType",
        |    "knora-api:fileValueHasFilename" : "$internalFilename"
@@ -70,13 +77,26 @@ sealed abstract case class UploadFileRequest private (
        |  $context}""".stripMargin
   }
 
-  def toMessage: CreateResourceV2 = {
+  def toMessage(
+    resourceIri: String,
+    internalMimeType: Option[String],
+    originalFilename: Option[String],
+    originalMimeType: Option[String],
+    comment: Option[String],
+    customValueIri: Option[SmartIri],
+    customValueUUID: Option[UUID],
+    customValueCreationDate: Option[Instant],
+    valuePermissions: Option[String],
+    label: String,
+    resourcePermissions: Option[String],
+    project: ProjectADM
+  ): CreateResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
     val resourceClassIri: SmartIri = FileModelUtil.getFileRepresentationClassIri(fileType)
     val fileValuePropertyIri: SmartIri = FileModelUtil.getFileRepresentationPropertyIri(fileType)
     val valueContent = fileType match {
-      case FileType.DocumentFile =>
+      case FileType.DocumentFile(pageCount, dimX, dimY) =>
         DocumentFileValueContentV2(
           ontologySchema = ApiV2Complex,
           fileValue = FileValueV2(
@@ -93,7 +113,7 @@ sealed abstract case class UploadFileRequest private (
           dimY = dimY,
           comment = comment
         )
-      case FileType.StillImageFile =>
+      case FileType.StillImageFile(dimX, dimY) =>
         StillImageFileValueContentV2(
           ontologySchema = ApiV2Complex,
           fileValue = FileValueV2(
@@ -102,11 +122,11 @@ sealed abstract case class UploadFileRequest private (
             originalFilename = originalFilename,
             originalMimeType = originalMimeType
           ),
-          dimX = dimX.get,
-          dimY = dimY.get,
+          dimX = dimX,
+          dimY = dimY,
           comment = comment
         )
-      case FileType.MovingImageFile =>
+      case FileType.MovingImageFile(dimX, dimY) =>
         MovingImageFileValueContentV2(
           ontologySchema = ApiV2Complex,
           fileValue = FileValueV2(
@@ -115,8 +135,8 @@ sealed abstract case class UploadFileRequest private (
             originalFilename = originalFilename,
             originalMimeType = internalMimeType
           ),
-          dimX = dimX.get,
-          dimY = dimY.get
+          dimX = dimX,
+          dimY = dimY
         )
       case FileType.TextFile =>
         TextFileValueContentV2(
@@ -193,16 +213,7 @@ object UploadFileRequest {
    *
    * @param fileType                the [[FileType]] of the resource.
    * @param internalFilename        the internal file name assigned by SIPI.
-   * @param className               the class name of the resource. Optional.
-   * @param ontologyName            the name of the ontology to be prefixed to the class name. Defaults to `"knora-api"`
-   * @param shortcode               the shortcode of the project to which the resource should be added. Defaults to `"0001"`
    * @param resourceIri             the custom IRI of the resource. Optional. Defaults to None. If None, a random IRI is generated
-   * @param dimX                    the width of the file, if applicable. Optional. Defaults to None.
-   *                                If None, the file type specific default is used.
-   * @param dimY                    the height of the file, if applicable. Optional. Defaults to None.
-   *                                If None, the file type specific default is used.
-   * @param pageCount               the page count of the file, if applicable. Optional. Defaults to None.
-   *                                If None, the file type specific default is used.
    * @param comment                 comment. Optional.
    * @param internalMimeType        internal mime type as determined by SIPI. Optional.
    * @param originalMimeType        original mime type previous to uploading to SIPI. Optional.
@@ -225,76 +236,53 @@ object UploadFileRequest {
 
   def make(
     fileType: FileType,
-    internalFilename: String,
-    className: Option[String] = None,
-    ontologyName: String = "knora-api",
-    shortcode: String = "0001",
-    resourceIri: Option[String] = None,
-    dimX: Option[Int] = None,
-    dimY: Option[Int] = None,
-    pageCount: Option[Int] = None,
-    comment: Option[String] = None,
-    internalMimeType: Option[String] = None,
-    originalFilename: Option[String] = None,
-    originalMimeType: Option[String] = None,
-    customValueIri: Option[SmartIri] = None,
-    customValueUUID: Option[UUID] = None,
-    customValueCreationDate: Option[Instant] = None,
-    valuePermissions: Option[String] = None,
-    label: String = "test label",
-    resourcePermissions: Option[String] = None,
-    project: Option[ProjectADM] = None
-  ): UploadFileRequest = {
-    val classNameWithDefaults = className match {
-      case Some(v) => v
-      case None    => FileModelUtil.getDefaultClassName(fileType)
-    }
-    val iri = resourceIri match {
-      case Some(value) => value
-      case None        => stringFormatter.makeRandomResourceIri(shortcode)
-    }
-    val (dimXWithDefaults, dimYWithDefaults) = fileType match {
-      case FileType.DocumentFile | FileType.StillImageFile | FileType.MovingImageFile =>
-        (dimX, dimY) match {
-          case (Some(x), Some(y)) => (Some(x), Some(y))
-          case _                  => (Some(100), Some(100))
-        }
-      case FileType.TextFile | FileType.AudioFile | FileType.ArchiveFile => (None, None)
-    }
-    val pageCountWithDefaults = fileType match {
-      case FileType.DocumentFile =>
-        pageCount match {
-          case Some(value) => Some(value)
-          case None        => Some(1)
-        }
-      case _ => None
-    }
+    internalFilename: String
+//    className: Option[String] = None,
+//    ontologyName: String = "knora-api",
+//    shortcode: String = "0001",
+//    resourceIri: Option[String] = None,
+//    comment: Option[String] = None,
+//    internalMimeType: Option[String] = None,
+//    originalFilename: Option[String] = None,
+//    originalMimeType: Option[String] = None,
+//    customValueIri: Option[SmartIri] = None,
+//    customValueUUID: Option[UUID] = None,
+//    customValueCreationDate: Option[Instant] = None,
+//    valuePermissions: Option[String] = None,
+//    label: String = "test label",
+//    resourcePermissions: Option[String] = None,
+//    project: Option[ProjectADM] = None
+  ): UploadFileRequest =
+//    val classNameWithDefaults = className match {
+//      case Some(v) => v
+//      case None    => FileModelUtil.getDefaultClassName(fileType)
+//    }
+//    val iri = resourceIri match {
+//      case Some(value) => value
+//      case None        => stringFormatter.makeRandomResourceIri(shortcode)
+//    }
     new UploadFileRequest(
       fileType = fileType,
-      internalFilename = internalFilename,
-      className = classNameWithDefaults,
-      ontologyName = ontologyName,
-      shortcode = shortcode,
-      resourceIri = iri,
-      dimX = dimXWithDefaults,
-      dimY = dimYWithDefaults,
-      pageCount = pageCountWithDefaults,
-      comment = comment,
-      internalMimeType = internalMimeType,
-      originalFilename = originalFilename,
-      originalMimeType = originalMimeType,
-      customValueIri = customValueIri,
-      customValueUUID = customValueUUID,
-      customValueCreationDate = customValueCreationDate,
-      valuePermissions = valuePermissions,
-      label = label,
-      resourcePermissions = resourcePermissions,
-      project = project match {
-        case Some(p) => p
-        case None    => SharedTestDataADM.anythingProject
-      }
+      internalFilename = internalFilename
+//      className = classNameWithDefaults,
+//      ontologyName = ontologyName,
+//      shortcode = shortcode,
+//      resourceIri = iri,
+//      comment = comment,
+//      internalMimeType = internalMimeType,
+//      originalFilename = originalFilename,
+//      originalMimeType = originalMimeType,
+//      customValueIri = customValueIri,
+//      customValueUUID = customValueUUID,
+//      customValueCreationDate = customValueCreationDate,
+//      valuePermissions = valuePermissions,
+//      label = label,
+//      resourcePermissions = resourcePermissions,
+//      project = project match {
+//        case Some(p) => p
+//        case None    => SharedTestDataADM.anythingProject
+//      }
     ) {}
-  }
 }
 
 sealed abstract case class ChangeFileRequest private (

@@ -1,6 +1,7 @@
 package org.knora.webapi.models.filemodels
 
 import org.knora.webapi.CoreSpec
+import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.messages.IriConversions._
@@ -48,93 +49,57 @@ class FileModelsSpec extends CoreSpec {
       "create a valid representation of a DocumentRepresentation with default values" in {
         val internalFilename = "document-file.pdf"
         val documentRepresentation = UploadFileRequest.make(
-          fileType = FileType.DocumentFile,
+          fileType = FileType.DocumentFile(),
           internalFilename = internalFilename
         )
-        documentRepresentation.fileType should equal(FileType.DocumentFile)
+        documentRepresentation.fileType match {
+          case FileType.DocumentFile(pg, x, y) =>
+            pg should equal(Some(1))
+            x should equal(Some(100))
+            y should equal(Some(100))
+          case _ =>
+            throw AssertionException(s"FileType ${documentRepresentation.fileType} did not match DocumentFile(_, _, _)")
+        }
         documentRepresentation.internalFilename should equal(internalFilename)
-        documentRepresentation.internalMimeType should equal(None)
-        documentRepresentation.dimX should equal(Some(100))
-        documentRepresentation.dimY should equal(Some(100))
-        documentRepresentation.resourcePermissions should equal(None)
-        documentRepresentation.customValueUUID should equal(None)
-        documentRepresentation.project should equal(SharedTestDataADM.anythingProject)
-        documentRepresentation.customValueIri should equal(None)
-        documentRepresentation.className should equal(FileModelUtil.getDefaultClassName(FileType.DocumentFile))
-        documentRepresentation.comment should equal(None)
-        documentRepresentation.customValueCreationDate should equal(None)
-        documentRepresentation.label should equal("test label")
-        documentRepresentation.ontologyName should equal("knora-api")
-        documentRepresentation.originalFilename should equal(None)
-        documentRepresentation.originalMimeType should equal(None)
-        documentRepresentation.pageCount should equal(Some(1))
-        documentRepresentation.resourceIri should not equal (None)
-        documentRepresentation.shortcode should equal("0001")
-        documentRepresentation.valuePermissions should equal(None)
       }
 
       "create a valid representation of a DocumentRepresentation with custom values" in {
+//        val project = SharedTestDataADM.beolProject
+//        val resourceIri = stringFormatter.makeRandomResourceIri(project.shortcode)
+//        val comment = Some("This is a custom comment")
+//        val className = Some("biblio:ThingDocument")
+//        val ontologyName = "biblio"
+//        val internalMimetype = Some("application/msword")
+//        val originalFilename = Some("document-file.docm")
+//        val originalMimetype = Some("application/vnd.ms-word.document.macroEnabled.12")
+//        val customValueIri = Some("http://www.knora.org/ontology/0801/biblio#hasThingDocumentValue".toSmartIri)
+//        val customValueUUID = Some(UUID.randomUUID())
+//        val customValueCreationDate = Some(Instant.now())
+//        val valuePermissions = Some("V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember")
+//        val label = "a custom label"
+//        val resourcePermissions = Some("V knora-admin:UnknownUser|M knora-admin:ProjectMember,knora-admin:KnownUser")
+//
         val internalFilename = "document-file.doc"
-        val project = SharedTestDataADM.beolProject
-        val resourceIri = stringFormatter.makeRandomResourceIri(project.shortcode)
-        val comment = Some("This is a custom comment")
-        val className = Some("biblio:ThingDocument")
-        val ontologyName = "biblio"
         val dimX = Some(20)
         val dimY = Some(30)
         val pageCount = Some(550)
-        val internalMimetype = Some("application/msword")
-        val originalFilename = Some("document-file.docm")
-        val originalMimetype = Some("application/vnd.ms-word.document.macroEnabled.12")
-        val customValueIri = Some("http://www.knora.org/ontology/0801/biblio#hasThingDocumentValue".toSmartIri)
-        val customValueUUID = Some(UUID.randomUUID())
-        val customValueCreationDate = Some(Instant.now())
-        val valuePermissions = Some("V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember")
-        val label = "a custom label"
-        val resourcePermissions = Some("V knora-admin:UnknownUser|M knora-admin:ProjectMember,knora-admin:KnownUser")
-
         val documentRepresentation = UploadFileRequest.make(
-          fileType = FileType.DocumentFile,
-          internalFilename = internalFilename,
-          resourceIri = Some(resourceIri),
-          comment = comment,
-          className = className,
-          ontologyName = ontologyName,
-          shortcode = project.shortcode,
-          dimX = dimX,
-          dimY = dimY,
-          pageCount = pageCount,
-          internalMimeType = internalMimetype,
-          originalFilename = originalFilename,
-          originalMimeType = originalMimetype,
-          customValueIri = customValueIri,
-          customValueUUID = customValueUUID,
-          customValueCreationDate = customValueCreationDate,
-          valuePermissions = valuePermissions,
-          label = label,
-          resourcePermissions = resourcePermissions,
-          project = Some(project)
+          fileType = FileType.DocumentFile(
+            pageCount = pageCount,
+            dimX = dimX,
+            dimY = dimY
+          ),
+          internalFilename = internalFilename
         )
-        documentRepresentation.fileType should equal(FileType.DocumentFile)
+        documentRepresentation.fileType match {
+          case FileType.DocumentFile(pg, x, y) =>
+            pg should equal(pageCount)
+            x should equal(dimX)
+            y should equal(dimY)
+          case _ =>
+            throw AssertionException(s"FileType ${documentRepresentation.fileType} did not match DocumentFile(_, _, _)")
+        }
         documentRepresentation.internalFilename should equal(internalFilename)
-        documentRepresentation.internalMimeType should equal(internalMimetype)
-        documentRepresentation.dimX should equal(dimX)
-        documentRepresentation.dimY should equal(dimY)
-        documentRepresentation.resourcePermissions should equal(resourcePermissions)
-        documentRepresentation.customValueUUID should equal(customValueUUID)
-        documentRepresentation.project should equal(project)
-        documentRepresentation.customValueIri should equal(customValueIri)
-        documentRepresentation.className should equal(className.get)
-        documentRepresentation.comment should equal(comment)
-        documentRepresentation.customValueCreationDate should equal(customValueCreationDate)
-        documentRepresentation.label should equal(label)
-        documentRepresentation.ontologyName should equal(ontologyName)
-        documentRepresentation.originalFilename should equal(originalFilename)
-        documentRepresentation.originalMimeType should equal(originalMimetype)
-        documentRepresentation.pageCount should equal(pageCount)
-        documentRepresentation.resourceIri should equal(resourceIri)
-        documentRepresentation.shortcode should equal(project.shortcode)
-        documentRepresentation.valuePermissions should equal(valuePermissions)
       }
     }
 
@@ -142,10 +107,10 @@ class FileModelsSpec extends CoreSpec {
       "correctly serialize a DocumentRepresentation with default values" in {
         val internalFilename = "document-file.pdf"
         val documentRepresentation = UploadFileRequest.make(
-          fileType = FileType.DocumentFile,
+          fileType = FileType.DocumentFile(),
           internalFilename = internalFilename
         )
-        val json = documentRepresentation.toJsonLd
+        val json = documentRepresentation.toJsonLd()
         val expectedJson = """{
                              |  "@type" : "knora-api:DocumentRepresentation",
                              |  "knora-api:hasDocumentFileValue" : {
