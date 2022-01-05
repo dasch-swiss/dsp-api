@@ -266,6 +266,29 @@ class SearchResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
+    "search for list label and find sub-nodes" in {
+
+      responderManager ! FulltextSearchRequestV2(
+        searchValue = "novel",
+        offset = 0,
+        limitToProject = None,
+        limitToResourceClass = None,
+        limitToStandoffClass = None,
+        returnFiles = false,
+        targetSchema = ApiV2Complex,
+        schemaOptions = SchemaOptions.ForStandoffWithTextValues,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = SharedTestDataADM.anythingUser1
+      )
+
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        compareReadResourcesSequenceV2Response(
+          expected = searchResponderV2SpecFullData.fulltextSearchForListSubNodeLabel,
+          received = response
+        )
+      }
+    }
+
   }
 
 }
