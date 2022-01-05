@@ -24,23 +24,14 @@ import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import java.time.Instant
 import java.util.UUID
 
+import spray.json._
+import DefaultJsonProtocol._
+
 // TODO: update docstrings
 
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,
   internalFilename: String
-//  resourceIri: String,
-//  comment: Option[String],
-//  internalMimeType: Option[String],
-//  originalFilename: Option[String],
-//  originalMimeType: Option[String],
-//  customValueIri: Option[SmartIri],
-//  customValueUUID: Option[UUID],
-//  customValueCreationDate: Option[Instant],
-//  valuePermissions: Option[String],
-//  label: String,
-//  resourcePermissions: Option[String],
-//  project: ProjectADM
 ) {
 
   /**
@@ -77,22 +68,48 @@ sealed abstract case class UploadFileRequest private (
        |  $context}""".stripMargin
   }
 
+  //   * @param resourceIri             the custom IRI of the resource. Optional. Defaults to None. If None, a random IRI is generated
+  //   * @param comment                 comment. Optional.
+  //   * @param internalMimeType        internal mime type as determined by SIPI. Optional.
+  //   * @param originalMimeType        original mime type previous to uploading to SIPI. Optional.
+  //   * @param originalFilename        original filename previous to uploading to SIPI. Optional.
+  //   * @param customValueIri          custom IRI for the value. Optional. Defaults to None.
+  //   *                                If None, an IRI will be generated.
+  //   * @param customValueUUID         custom UUID for the value. Optional. Defaults to None.
+  //   *                                If None, a UUID will be generated.
+  //   * @param customValueCreationDate custom creation date for the value. Optional. Defaults to None.
+  //   *                                If None, the current instant will be used.
+  //   * @param valuePermissions        custom permissions for the value. Optional. Defaults to None.
+  //   *                                If `None`, the default permissions will be used.
+  //   * @param label                   the resource label
+  //   * @param resourcePermissions     permissions for the resource. Optional. If none, the default permissions are used.
+  //   * @param project                 the project to which the resource belongs. Optional. Defaults to None.
+  //   *                                If None, [[SharedTestDataADM.anythingProject]] is used.
+
   def toMessage(
-    resourceIri: String,
-    internalMimeType: Option[String],
-    originalFilename: Option[String],
-    originalMimeType: Option[String],
-    comment: Option[String],
-    customValueIri: Option[SmartIri],
-    customValueUUID: Option[UUID],
-    customValueCreationDate: Option[Instant],
-    valuePermissions: Option[String],
-    label: String,
-    resourcePermissions: Option[String],
-    project: ProjectADM
+    resourceIri: Option[String] = None,
+    internalMimeType: Option[String] = None,
+    originalFilename: Option[String] = None,
+    originalMimeType: Option[String] = None,
+    comment: Option[String] = None,
+    customValueIri: Option[SmartIri] = None,
+    customValueUUID: Option[UUID] = None,
+    customValueCreationDate: Option[Instant] = None,
+    valuePermissions: Option[String] = None,
+    label: String = "test label",
+    resourcePermissions: Option[String] = None,
+    project: Option[ProjectADM] = None
   ): CreateResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
+    val projectADM = project match {
+      case Some(p) => p
+      case None    => SharedTestDataADM.anythingProject
+    }
+    val iri = resourceIri match {
+      case Some(value) => value
+      case None        => stringFormatter.makeRandomResourceIri(projectADM.shortcode)
+    }
     val resourceClassIri: SmartIri = FileModelUtil.getFileRepresentationClassIri(fileType)
     val fileValuePropertyIri: SmartIri = FileModelUtil.getFileRepresentationPropertyIri(fileType)
     val valueContent = fileType match {
@@ -186,11 +203,11 @@ sealed abstract case class UploadFileRequest private (
     val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(fileValuePropertyIri -> values)
 
     CreateResourceV2(
-      resourceIri = Some(resourceIri.toSmartIri),
+      resourceIri = Some(iri.toSmartIri),
       resourceClassIri = resourceClassIri,
       label = label,
       values = inputValues,
-      projectADM = project,
+      projectADM = projectADM,
       permissions = resourcePermissions
     )
   }
@@ -211,25 +228,8 @@ object UploadFileRequest {
   /**
    * Smart constructor for instantiating a [[UploadFileRequest]].
    *
-   * @param fileType                the [[FileType]] of the resource.
-   * @param internalFilename        the internal file name assigned by SIPI.
-   * @param resourceIri             the custom IRI of the resource. Optional. Defaults to None. If None, a random IRI is generated
-   * @param comment                 comment. Optional.
-   * @param internalMimeType        internal mime type as determined by SIPI. Optional.
-   * @param originalMimeType        original mime type previous to uploading to SIPI. Optional.
-   * @param originalFilename        original filename previous to uploading to SIPI. Optional.
-   * @param customValueIri          custom IRI for the value. Optional. Defaults to None.
-   *                                If None, an IRI will be generated.
-   * @param customValueUUID         custom UUID for the value. Optional. Defaults to None.
-   *                                If None, a UUID will be generated.
-   * @param customValueCreationDate custom creation date for the value. Optional. Defaults to None.
-   *                                If None, the current instant will be used.
-   * @param valuePermissions        custom permissions for the value. Optional. Defaults to None.
-   *                                If `None`, the default permissions will be used.
-   * @param label                   the resource label
-   * @param resourcePermissions     permissions for the resource. Optional. If none, the default permissions are used.
-   * @param project                 the project to which the resource belongs. Optional. Defaults to None.
-   *                                If None, [[SharedTestDataADM.anythingProject]] is used.
+   * @param fileType         the [[FileType]] of the resource.
+   * @param internalFilename the internal file name assigned by SIPI.
    * @return returns a [[UploadFileRequest]] object storing all information needed to generate a Message
    *         or JSON-LD serialization that can be used to generate the respective resource in the API.
    */
@@ -237,53 +237,14 @@ object UploadFileRequest {
   def make(
     fileType: FileType,
     internalFilename: String
-//    className: Option[String] = None,
-//    ontologyName: String = "knora-api",
-//    shortcode: String = "0001",
-//    resourceIri: Option[String] = None,
-//    comment: Option[String] = None,
-//    internalMimeType: Option[String] = None,
-//    originalFilename: Option[String] = None,
-//    originalMimeType: Option[String] = None,
-//    customValueIri: Option[SmartIri] = None,
-//    customValueUUID: Option[UUID] = None,
-//    customValueCreationDate: Option[Instant] = None,
-//    valuePermissions: Option[String] = None,
-//    label: String = "test label",
-//    resourcePermissions: Option[String] = None,
-//    project: Option[ProjectADM] = None
   ): UploadFileRequest =
-//    val classNameWithDefaults = className match {
-//      case Some(v) => v
-//      case None    => FileModelUtil.getDefaultClassName(fileType)
-//    }
-//    val iri = resourceIri match {
-//      case Some(value) => value
-//      case None        => stringFormatter.makeRandomResourceIri(shortcode)
-//    }
     new UploadFileRequest(
       fileType = fileType,
       internalFilename = internalFilename
-//      className = classNameWithDefaults,
-//      ontologyName = ontologyName,
-//      shortcode = shortcode,
-//      resourceIri = iri,
-//      comment = comment,
-//      internalMimeType = internalMimeType,
-//      originalFilename = originalFilename,
-//      originalMimeType = originalMimeType,
-//      customValueIri = customValueIri,
-//      customValueUUID = customValueUUID,
-//      customValueCreationDate = customValueCreationDate,
-//      valuePermissions = valuePermissions,
-//      label = label,
-//      resourcePermissions = resourcePermissions,
-//      project = project match {
-//        case Some(p) => p
-//        case None    => SharedTestDataADM.anythingProject
-//      }
     ) {}
 }
+
+// TODO: same for ChangeFileRequest
 
 sealed abstract case class ChangeFileRequest private (
   fileType: FileType,

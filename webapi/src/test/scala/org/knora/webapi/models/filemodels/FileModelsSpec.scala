@@ -1,13 +1,20 @@
 package org.knora.webapi.models.filemodels
 
-import org.knora.webapi.CoreSpec
+import org.knora.webapi.{ApiV2Complex, CoreSpec}
 import org.knora.webapi.exceptions.AssertionException
 import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.util.ErrorHandlingMap
+import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceV2, CreateValueInNewResourceV2}
+import org.knora.webapi.messages.v2.responder.valuemessages.{DocumentFileValueContentV2, FileValueV2}
 
 import java.time.Instant
 import java.util.UUID
+import spray.json._
+import spray.json.DefaultJsonProtocol._
+
+import scala.collection.immutable.{AbstractMap, SeqMap, SortedMap}
 
 class FileModelsSpec extends CoreSpec {
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -45,7 +52,9 @@ class FileModelsSpec extends CoreSpec {
     }
   }
   "FileModels," when {
+
     "creating an UploadFileRequest," should {
+
       "create a valid representation of a DocumentRepresentation with default values" in {
         val internalFilename = "document-file.pdf"
         val documentRepresentation = UploadFileRequest.make(
@@ -104,33 +113,79 @@ class FileModelsSpec extends CoreSpec {
     }
 
     "generating a JSON-LD representation of a UploadFileRequest," should {
+
       "correctly serialize a DocumentRepresentation with default values" in {
         val internalFilename = "document-file.pdf"
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(),
           internalFilename = internalFilename
         )
-        val json = documentRepresentation.toJsonLd()
-        val expectedJson = """{
-                             |  "@type" : "knora-api:DocumentRepresentation",
-                             |  "knora-api:hasDocumentFileValue" : {
-                             |    "@type" : "knora-api:DocumentFileValue",
-                             |    "knora-api:fileValueHasFilename" : "document-file.pdf"
-                             |  },
-                             |  "knora-api:attachedToProject" : {
-                             |    "@id" : "http://rdfh.ch/projects/0001"
-                             |  },
-                             |  "rdfs:label" : "test label",
-                             |  "@context" : {
-                             |    "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-                             |    "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
-                             |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
-                             |    "xsd": "http://www.w3.org/2001/XMLSchema#"
-                             |  }
-                             |}""".stripMargin
-        json should equal(expectedJson)
+        val json = documentRepresentation.toJsonLd().parseJson
+        val expectedJSON = Map(
+          "@type" -> "knora-api:DocumentRepresentation".toJson,
+          "knora-api:hasDocumentFileValue" -> Map(
+            "@type" -> "knora-api:DocumentFileValue",
+            "knora-api:fileValueHasFilename" -> "document-file.pdf"
+          ).toJson,
+          "knora-api:attachedToProject" -> Map(
+            "@id" -> "http://rdfh.ch/projects/0001"
+          ).toJson,
+          "rdfs:label" -> "test label".toJson,
+          "@context" -> Map(
+            "rdf" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#",
+            "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#",
+            "xsd" -> "http://www.w3.org/2001/XMLSchema#"
+          ).toJson
+        ).toJson
+        json should equal(expectedJSON)
       }
 
     }
+
+    "generating a message representation of a UploadFileRequest," should {
+
+      "correctly serialize a DocumentRepresentation with default values" in {
+        val internalFilename = "document-file.pdf"
+        val documentRepresentation = UploadFileRequest.make(
+          fileType = FileType.DocumentFile(),
+          internalFilename = internalFilename
+        )
+        val msg = documentRepresentation.toMessage()
+
+        msg.resourceClassIri should equal(FileModelUtil.getFileRepresentationClassIri(FileType.DocumentFile()))
+        msg.label should equal("test label")
+        msg.values should equal(
+          Map(
+            FileModelUtil.getFileRepresentationPropertyIri(FileType.DocumentFile()) -> List(
+              CreateValueInNewResourceV2(
+                valueContent = DocumentFileValueContentV2(
+                  ontologySchema = ApiV2Complex,
+                  fileValue = FileValueV2(
+                    internalFilename = internalFilename,
+                    internalMimeType = "application/pdf",
+                    originalFilename = None,
+                    originalMimeType = Some("application/pdf")
+                  ),
+                  pageCount = Some(1),
+                  dimX = Some(100),
+                  dimY = Some(100),
+                  comment = None
+                ),
+                customValueIri = None,
+                customValueUUID = None,
+                customValueCreationDate = None,
+                permissions = None
+              )
+            )
+          )
+        )
+        msg.projectADM should equal(SharedTestDataADM.anythingProject)
+        msg.permissions should equal(None)
+
+      }
+
+    }
+
   }
 }
