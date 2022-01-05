@@ -18,6 +18,41 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
   implicit lazy val system: ActorSystem = ActorSystem("webapi")
 
+  val booksBookIri: String = "http://www.knora.org/ontology/0001/books#Book"
+  val booksHasTextType: String = "http://www.knora.org/ontology/0001/books#hasTextType"
+  val testUser1: String = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+  val testUser2: String = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ"
+  val bookTemplateReadResource: ReadResourceV2 = ReadResourceV2(
+    label = "",
+    resourceIri = "",
+    permissions =
+      "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    userPermission = ChangeRightsPermission,
+    attachedToUser = testUser1,
+    resourceClassIri = booksBookIri.toSmartIri,
+    projectADM = SharedTestDataADM.anythingProject,
+    creationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
+    values = Map(),
+    lastModificationDate = None,
+    versionDate = None,
+    deletionInfo = None
+  )
+  val listValueTemplateReadOtherValue: ReadOtherValueV2 = ReadOtherValueV2(
+    valueContent = HierarchicalListValueContentV2(
+      ontologySchema = InternalSchema,
+      valueHasListNode = ""
+    ),
+    valueIri = "",
+    valueHasUUID = stringFormatter.decodeUuid("d34d34d3-4d34-d34d-3496-2b2dfef6a5b9"),
+    permissions =
+      "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
+    userPermission = ModifyPermission,
+    previousValueIri = None,
+    valueCreationDate = Instant.parse("2018-05-29T16:42:04.381Z"),
+    attachedToUser = testUser2,
+    deletionInfo = None
+  )
+
   val fulltextSearchForNarr: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
     resources = Vector(
       ReadResourceV2(
@@ -980,7 +1015,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
         resourceIri = "http://rdfh.ch/0001/a-thing-with-text-values",
         permissions = "CR knora-admin:Creator|V knora-admin:ProjectMember",
         userPermission = ChangeRightsPermission,
-        attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+        attachedToUser = testUser1,
         resourceClassIri = "http://www.knora.org/ontology/0001/anything#Thing".toSmartIri,
         projectADM = SharedTestDataADM.anythingProject,
         creationDate = Instant.parse("2016-03-02T15:05:10Z"),
@@ -1390,7 +1425,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               userPermission = ChangeRightsPermission,
               previousValueIri = None,
               valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
-              attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+              attachedToUser = testUser1,
               deletionInfo = None
             ),
             ReadTextValueV2(
@@ -1797,7 +1832,7 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
               userPermission = ChangeRightsPermission,
               previousValueIri = None,
               valueCreationDate = Instant.parse("2016-03-02T15:05:54Z"),
-              attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
+              attachedToUser = testUser1,
               deletionInfo = None
             )
           )
@@ -2042,109 +2077,58 @@ class SearchResponderV2SpecFullData(implicit stringFormatter: StringFormatter) {
 
   val fulltextSearchForListNodeLabel: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
     resources = Vector(
-      ReadResourceV2(
+      bookTemplateReadResource.copy(
         label = "instance of a book with a list value",
         resourceIri = "http://rdfh.ch/0001/book-instance-02",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = ChangeRightsPermission,
-        attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-        resourceClassIri = "http://www.knora.org/ontology/0001/books#Book".toSmartIri,
-        projectADM = SharedTestDataADM.anythingProject,
-        creationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
         values = Map(
-          "http://www.knora.org/ontology/0001/books#hasTextType".toSmartIri -> Vector(
-            ReadOtherValueV2(
+          booksHasTextType.toSmartIri -> Vector(
+            listValueTemplateReadOtherValue.copy(
               valueContent = HierarchicalListValueContentV2(
                 ontologySchema = InternalSchema,
                 valueHasListNode = "http://rdfh.ch/lists/0001/ynm02-03"
               ),
               valueIri = "http://rdfh.ch/0001/book-instance-02/values/has-list-value-01",
-              valueHasUUID = stringFormatter.decodeUuid("d34d34d3-4d34-d34d-3496-2b2dfef6a5b9"),
-              permissions =
-                "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-              userPermission = ModifyPermission,
-              previousValueIri = None,
-              valueCreationDate = Instant.parse("2018-05-29T16:42:04.381Z"),
-              attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
-              deletionInfo = None
+              valueHasUUID = stringFormatter.decodeUuid("d34d34d3-4d34-d34d-3496-2b2dfef6a5b9")
             )
           )
-        ),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
+        )
       )
     )
   )
 
   val fulltextSearchForListSubNodeLabel: ReadResourcesSequenceV2 = ReadResourcesSequenceV2(
     resources = Vector(
-      ReadResourceV2(
+      bookTemplateReadResource.copy(
         label = "Lord of the Rings",
         resourceIri = "http://rdfh.ch/0001/book-instance-03",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = ChangeRightsPermission,
-        attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-        resourceClassIri = "http://www.knora.org/ontology/0001/books#Book".toSmartIri,
-        projectADM = SharedTestDataADM.anythingProject,
-        creationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
         values = Map(
-          "http://www.knora.org/ontology/0001/books#hasTextType".toSmartIri -> Vector(
-            ReadOtherValueV2(
+          booksHasTextType.toSmartIri -> Vector(
+            listValueTemplateReadOtherValue.copy(
               valueContent = HierarchicalListValueContentV2(
                 ontologySchema = InternalSchema,
                 valueHasListNode = "http://rdfh.ch/lists/0001/ynm02-04"
               ),
               valueIri = "http://rdfh.ch/0001/book-instance-03/values/has-list-value-02",
-              valueHasUUID = stringFormatter.decodeUuid("d34d3496-2b2d-fef6-a5b9-efdf6a7b5ab3"),
-              permissions =
-                "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-              userPermission = ModifyPermission,
-              previousValueIri = None,
-              valueCreationDate = Instant.parse("2018-05-29T16:42:04.381Z"),
-              attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
-              deletionInfo = None
+              valueHasUUID = stringFormatter.decodeUuid("d34d3496-2b2d-fef6-a5b9-efdf6a7b5ab3")
             )
           )
-        ),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
+        )
       ),
-      ReadResourceV2(
+      bookTemplateReadResource.copy(
         label = "Treasure Island",
         resourceIri = "http://rdfh.ch/0001/book-instance-04",
-        permissions =
-          "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-        userPermission = ChangeRightsPermission,
-        attachedToUser = "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q",
-        resourceClassIri = "http://www.knora.org/ontology/0001/books#Book".toSmartIri,
-        projectADM = SharedTestDataADM.anythingProject,
-        creationDate = Instant.parse("2019-11-29T10:00:00.673298Z"),
         values = Map(
-          "http://www.knora.org/ontology/0001/books#hasTextType".toSmartIri -> Vector(
-            ReadOtherValueV2(
+          booksHasTextType.toSmartIri -> Vector(
+            listValueTemplateReadOtherValue.copy(
               valueContent = HierarchicalListValueContentV2(
                 ontologySchema = InternalSchema,
                 valueHasListNode = "http://rdfh.ch/lists/0001/ynm02-05"
               ),
               valueIri = "http://rdfh.ch/0001/book-instance-04/values/has-list-value-03",
-              valueHasUUID = stringFormatter.decodeUuid("d34962b2-dfef-6a5b-9efd-a76f7a7b6ead"),
-              permissions =
-                "CR knora-admin:Creator|M knora-admin:ProjectMember|V knora-admin:KnownUser|RV knora-admin:UnknownUser",
-              userPermission = ModifyPermission,
-              previousValueIri = None,
-              valueCreationDate = Instant.parse("2018-05-29T16:42:04.381Z"),
-              attachedToUser = "http://rdfh.ch/users/BhkfBc3hTeS_IDo-JgXRbQ",
-              deletionInfo = None
+              valueHasUUID = stringFormatter.decodeUuid("d34962b2-dfef-6a5b-9efd-a76f7a7b6ead")
             )
           )
-        ),
-        lastModificationDate = None,
-        versionDate = None,
-        deletionInfo = None
+        )
       )
     )
   )
