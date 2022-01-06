@@ -124,7 +124,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
       entity(as[CreateUserApiRequestADM]) { apiRequest => requestContext =>
         // get all values from request and make value objects from it
         val user: UserCreatePayloadADM =
-          UserCreatePayloadADM.create(
+          UserCreatePayloadADM(
             id = stringFormatter.validateOptionalUserIri(apiRequest.id, throw BadRequestException(s"Invalid user IRI")),
             username = Username.create(apiRequest.username).fold(error => throw error, value => value),
             email = Email.create(apiRequest.email).fold(error => throw error, value => value),

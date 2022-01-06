@@ -235,7 +235,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
       "CREATE the user and return it's profile if the supplied email is unique " in {
         responderManager ! UserCreateRequestADM(
-          userCreatePayloadADM = UserCreatePayloadADM.create(
+          userCreatePayloadADM = UserCreatePayloadADM(
             username = Username.create("donald.duck").fold(error => throw error, value => value),
             email = Email
               .create("donald.duck@example.com")
@@ -262,7 +262,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
       "return a 'DuplicateValueException' if the supplied 'username' is not unique" in {
         responderManager ! UserCreateRequestADM(
-          userCreatePayloadADM = UserCreatePayloadADM.create(
+          userCreatePayloadADM = UserCreatePayloadADM(
             username = Username.create("root").fold(error => throw error, value => value),
             email = Email
               .create("root2@example.com")
@@ -283,7 +283,7 @@ class UsersResponderADMSpec extends CoreSpec(UsersResponderADMSpec.config) with 
 
       "return a 'DuplicateValueException' if the supplied 'email' is not unique" in {
         responderManager ! UserCreateRequestADM(
-          userCreatePayloadADM = UserCreatePayloadADM.create(
+          userCreatePayloadADM = UserCreatePayloadADM(
             username = Username.create("root2").fold(error => throw error, value => value),
             email = Email
               .create("root@example.com")

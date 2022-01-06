@@ -1687,18 +1687,18 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     def createNewUserTask(userCreatePayloadADM: UserCreatePayloadADM) =
       for {
         // check if username is unique
-        usernameTaken: Boolean <- userByUsernameExists(userCreatePayloadADM.username)
+        usernameTaken: Boolean <- userByUsernameExists(Some(userCreatePayloadADM.username))
         _ = if (usernameTaken) {
           throw DuplicateValueException(
-            s"User with the username '${userCreatePayloadADM.username.get.value}' already exists"
+            s"User with the username '${userCreatePayloadADM.username.value}' already exists"
           )
         }
 
         // check if email is unique
-        emailTaken: Boolean <- userByEmailExists(userCreatePayloadADM.email)
+        emailTaken: Boolean <- userByEmailExists(Some(userCreatePayloadADM.email))
         _ = if (emailTaken) {
           throw DuplicateValueException(
-            s"User with the email '${userCreatePayloadADM.email.get.value}' already exists"
+            s"User with the email '${userCreatePayloadADM.email.value}' already exists"
           )
         }
 
@@ -1708,7 +1708,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
 
         // hash password
         encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
-        hashedPassword = encoder.encode(userCreatePayloadADM.password.get.value)
+        hashedPassword = encoder.encode(userCreatePayloadADM.password.value)
 
         // Create the new user.
         createNewUserSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -1718,38 +1718,38 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             userIri = userIri,
             userClassIri = OntologyConstants.KnoraAdmin.User,
             username = stringFormatter.toSparqlEncodedString(
-              userCreatePayloadADM.username.get.value,
+              userCreatePayloadADM.username.value,
               errorFun = throw BadRequestException(
-                s"The supplied username: '${userCreatePayloadADM.username.get.value}' is not valid."
+                s"The supplied username: '${userCreatePayloadADM.username.value}' is not valid."
               )
             ),
             email = stringFormatter.toSparqlEncodedString(
-              userCreatePayloadADM.email.get.value,
+              userCreatePayloadADM.email.value,
               errorFun = throw BadRequestException(
-                s"The supplied email: '${userCreatePayloadADM.email.get.value}' is not valid."
+                s"The supplied email: '${userCreatePayloadADM.email.value}' is not valid."
               )
             ),
             password = hashedPassword,
             givenName = stringFormatter.toSparqlEncodedString(
-              userCreatePayloadADM.givenName.get.value,
+              userCreatePayloadADM.givenName.value,
               errorFun = throw BadRequestException(
-                s"The supplied given name: '${userCreatePayloadADM.givenName.get.value}' is not valid."
+                s"The supplied given name: '${userCreatePayloadADM.givenName.value}' is not valid."
               )
             ),
             familyName = stringFormatter.toSparqlEncodedString(
-              userCreatePayloadADM.familyName.get.value,
+              userCreatePayloadADM.familyName.value,
               errorFun = throw BadRequestException(
-                s"The supplied family name: '${userCreatePayloadADM.familyName.get.value}' is not valid."
+                s"The supplied family name: '${userCreatePayloadADM.familyName.value}' is not valid."
               )
             ),
-            status = userCreatePayloadADM.status.get.value,
+            status = userCreatePayloadADM.status.value,
             preferredLanguage = stringFormatter.toSparqlEncodedString(
-              userCreatePayloadADM.lang.get.value,
+              userCreatePayloadADM.lang.value,
               errorFun = throw BadRequestException(
-                s"The supplied language: '${userCreatePayloadADM.lang.get.value}' is not valid."
+                s"The supplied language: '${userCreatePayloadADM.lang.value}' is not valid."
               )
             ),
-            systemAdmin = userCreatePayloadADM.systemAdmin.get.value
+            systemAdmin = userCreatePayloadADM.systemAdmin.value
           )
           .toString
 

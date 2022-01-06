@@ -33,7 +33,7 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
    * @return                        a [[UserCreatePayloadADM]]
    */
   private def createUserCreatePayloadADM(createUserApiRequestADM: CreateUserApiRequestADM): UserCreatePayloadADM =
-    UserCreatePayloadADM.create(
+    UserCreatePayloadADM(
       id = stringFormatter
         .validateOptionalUserIri(createUserApiRequestADM.id, throw BadRequestException(s"Invalid user IRI")),
       username = Username.create(createUserApiRequestADM.username).fold(error => throw error, value => value),
@@ -91,14 +91,14 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       val userCreatePayloadADM = createUserCreatePayloadADM(request)
 
       userCreatePayloadADM.id should equal(request.id)
-      userCreatePayloadADM.username.get.value should equal(request.username)
-      userCreatePayloadADM.email.get.value should equal(request.email)
-      userCreatePayloadADM.password.get.value should equal(request.password)
-      userCreatePayloadADM.givenName.get.value should equal(request.givenName)
-      userCreatePayloadADM.familyName.get.value should equal(request.familyName)
-      userCreatePayloadADM.status.get.value should equal(request.status)
-      userCreatePayloadADM.lang.get.value should equal(request.lang)
-      userCreatePayloadADM.systemAdmin.get.value should equal(request.systemAdmin)
+      userCreatePayloadADM.username.value should equal(request.username)
+      userCreatePayloadADM.email.value should equal(request.email)
+      userCreatePayloadADM.password.value should equal(request.password)
+      userCreatePayloadADM.givenName.value should equal(request.givenName)
+      userCreatePayloadADM.familyName.value should equal(request.familyName)
+      userCreatePayloadADM.status.value should equal(request.status)
+      userCreatePayloadADM.lang.value should equal(request.lang)
+      userCreatePayloadADM.systemAdmin.value should equal(request.systemAdmin)
 
       val otherRequest = createUserApiRequestADM(
         id = Some("http://rdfh.ch/users/notdonald"),
@@ -115,24 +115,24 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       val otherUserCreatePayloadADM = createUserCreatePayloadADM(otherRequest)
 
       otherUserCreatePayloadADM.id should equal(otherRequest.id)
-      otherUserCreatePayloadADM.username.get.value should equal(otherRequest.username)
-      otherUserCreatePayloadADM.email.get.value should equal(otherRequest.email)
-      otherUserCreatePayloadADM.password.get.value should equal(otherRequest.password)
-      otherUserCreatePayloadADM.givenName.get.value should equal(otherRequest.givenName)
-      otherUserCreatePayloadADM.familyName.get.value should equal(otherRequest.familyName)
-      otherUserCreatePayloadADM.status.get.value should equal(otherRequest.status)
-      otherUserCreatePayloadADM.lang.get.value should equal(otherRequest.lang)
-      otherUserCreatePayloadADM.systemAdmin.get.value should equal(otherRequest.systemAdmin)
+      otherUserCreatePayloadADM.username.value should equal(otherRequest.username)
+      otherUserCreatePayloadADM.email.value should equal(otherRequest.email)
+      otherUserCreatePayloadADM.password.value should equal(otherRequest.password)
+      otherUserCreatePayloadADM.givenName.value should equal(otherRequest.givenName)
+      otherUserCreatePayloadADM.familyName.value should equal(otherRequest.familyName)
+      otherUserCreatePayloadADM.status.value should equal(otherRequest.status)
+      otherUserCreatePayloadADM.lang.value should equal(otherRequest.lang)
+      otherUserCreatePayloadADM.systemAdmin.value should equal(otherRequest.systemAdmin)
 
       otherUserCreatePayloadADM.id should not equal request.id
-      otherUserCreatePayloadADM.username.get.value should not equal request.username
-      otherUserCreatePayloadADM.email.get.value should not equal request.email
-      otherUserCreatePayloadADM.password.get.value should not equal request.password
-      otherUserCreatePayloadADM.givenName.get.value should not equal request.givenName
-      otherUserCreatePayloadADM.familyName.get.value should not equal request.familyName
-      otherUserCreatePayloadADM.status.get.value should not equal request.status
-      otherUserCreatePayloadADM.lang.get.value should not equal request.lang
-      otherUserCreatePayloadADM.systemAdmin.get.value should not equal request.systemAdmin
+      otherUserCreatePayloadADM.username.value should not equal request.username
+      otherUserCreatePayloadADM.email.value should not equal request.email
+      otherUserCreatePayloadADM.password.value should not equal request.password
+      otherUserCreatePayloadADM.givenName.value should not equal request.givenName
+      otherUserCreatePayloadADM.familyName.value should not equal request.familyName
+      otherUserCreatePayloadADM.status.value should not equal request.status
+      otherUserCreatePayloadADM.lang.value should not equal request.lang
+      otherUserCreatePayloadADM.systemAdmin.value should not equal request.systemAdmin
     }
 
     "throw 'BadRequestException' if 'username' is missing" in {
