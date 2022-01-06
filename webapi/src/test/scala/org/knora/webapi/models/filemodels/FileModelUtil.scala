@@ -56,11 +56,15 @@ object FileModelUtil {
     case FileType.ArchiveFile           => "knora-api:ArchiveFileValue"
   }
 
-  def getJsonLdContext(ontology: String): String = {
+  def getJsonLdContext(ontology: String, ontologyIRI: Option[String] = None): String = {
     val ontologies = ontology match {
       case "anything" =>
         FileModelConstants.defaultJsonLdContextMap + ("anything" -> "http://0.0.0.0:3333/ontology/0001/anything/v2#")
-      case _ => FileModelConstants.defaultJsonLdContextMap
+      case prefix =>
+        ontologyIRI match {
+          case Some(iri) => FileModelConstants.defaultJsonLdContextMap + (prefix -> iri)
+          case None      => FileModelConstants.defaultJsonLdContextMap
+        }
     }
     val lines = ontologies.toList
       .map(x => s"""    "${x._1}": "${x._2}\"""")

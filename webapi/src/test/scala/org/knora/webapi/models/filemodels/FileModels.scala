@@ -29,7 +29,8 @@ import spray.json.DefaultJsonProtocol._
 
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,
-  internalFilename: String
+  internalFilename: String,
+  label: String
 ) {
 
   /**
@@ -43,11 +44,12 @@ sealed abstract case class UploadFileRequest private (
   def toJsonLd(
     shortcode: String = "0001",
     ontologyName: String = "knora-api",
-    className: Option[String] = None
+    className: Option[String] = None,
+    ontologyIRI: Option[String] = None
   ): String = {
     val fileValuePropertyName = FileModelUtil.getFileValuePropertyName(fileType)
     val fileValueType = FileModelUtil.getFileValueType(fileType)
-    val context = FileModelUtil.getJsonLdContext(ontologyName)
+    val context = FileModelUtil.getJsonLdContext(ontologyName, ontologyIRI)
     val classNameWithDefaults = className match {
       case Some(v) => v
       case None    => FileModelUtil.getDefaultClassName(fileType)
@@ -62,7 +64,7 @@ sealed abstract case class UploadFileRequest private (
        |  "knora-api:attachedToProject" : {
        |    "@id" : "http://rdfh.ch/projects/$shortcode"
        |  },
-       |  "rdfs:label" : "test label",
+       |  "rdfs:label" : "$label",
        |  $context}""".stripMargin
   }
 
@@ -84,7 +86,6 @@ sealed abstract case class UploadFileRequest private (
    *                                If None, the current instant will be used.
    * @param valuePermissions        custom permissions for the value. Optional. Defaults to None.
    *                                If `None`, the default permissions will be used.
-   * @param label                   the resource label
    * @param resourcePermissions     permissions for the resource. Optional. If none, the default permissions are used.
    * @param project                 the project to which the resource belongs. Optional. Defaults to None.
    *                                If None, [[SharedTestDataADM.anythingProject]] is used.
@@ -100,7 +101,6 @@ sealed abstract case class UploadFileRequest private (
     customValueUUID: Option[UUID] = None,
     customValueCreationDate: Option[Instant] = None,
     valuePermissions: Option[String] = None,
-    label: String = "test label",
     resourcePermissions: Option[String] = None,
     project: Option[ProjectADM] = None
   ): CreateResourceV2 = {
@@ -240,11 +240,13 @@ object UploadFileRequest {
 
   def make(
     fileType: FileType,
-    internalFilename: String
+    internalFilename: String,
+    label: String = "test label"
   ): UploadFileRequest =
     new UploadFileRequest(
       fileType = fileType,
-      internalFilename = internalFilename
+      internalFilename = internalFilename,
+      label = label
     ) {}
 }
 
