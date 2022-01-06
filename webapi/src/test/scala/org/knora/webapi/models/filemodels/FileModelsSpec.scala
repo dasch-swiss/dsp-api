@@ -92,13 +92,15 @@ class FileModelsSpec extends CoreSpec {
         val dimX = Some(20)
         val dimY = Some(30)
         val pageCount = Some(550)
+        val customLabel = "a custom label"
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(
             pageCount = pageCount,
             dimX = dimX,
             dimY = dimY
           ),
-          internalFilename = internalFilename
+          internalFilename = internalFilename,
+          label = customLabel
         )
         documentRepresentation.fileType match {
           case FileType.DocumentFile(pg, x, y) =>
@@ -109,6 +111,7 @@ class FileModelsSpec extends CoreSpec {
             throw AssertionException(s"FileType ${documentRepresentation.fileType} did not match DocumentFile(_, _, _)")
         }
         documentRepresentation.internalFilename should equal(internalFilename)
+        documentRepresentation.label should equal(customLabel)
       }
 
       "create a valid representation of a StillImageRepresentation with default values" in {

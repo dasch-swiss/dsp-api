@@ -509,7 +509,7 @@ class KnoraSipiIntegrationV2ITSpec
       val uploadedFile: SipiUploadResponseEntry = sipiUploadResponse.uploadedFiles.head
       uploadedFile.originalFilename should ===(trp88OriginalFilename)
 
-      // JSON describing the new image to Knora.
+      // JSON describing the new image to the API.
       val jsonLdEntity = ChangeFileRequest
         .make(
           fileType = FileType.StillImageFile(),

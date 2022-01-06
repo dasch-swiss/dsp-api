@@ -5,8 +5,19 @@
 
 package org.knora.webapi.models.filemodels
 
+import org.knora.webapi.ApiV2Complex
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.v2.responder.valuemessages.{
+  ArchiveFileValueContentV2,
+  AudioFileValueContentV2,
+  DocumentFileValueContentV2,
+  FileValueContentV2,
+  FileValueV2,
+  MovingImageFileValueContentV2,
+  StillImageFileValueContentV2,
+  TextFileValueContentV2
+}
 
 object FileModelUtil {
   private implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
@@ -55,6 +66,105 @@ object FileModelUtil {
     case FileType.AudioFile             => "knora-api:AudioFileValue"
     case FileType.ArchiveFile           => "knora-api:ArchiveFileValue"
   }
+
+  def getFileValueTypeIRI(fileType: FileType): SmartIri = fileType match {
+    case FileType.DocumentFile(_, _, _) => OntologyConstants.KnoraApiV2Complex.DocumentFileValue.toSmartIri
+    case FileType.StillImageFile(_, _)  => OntologyConstants.KnoraApiV2Complex.StillImageFileValue.toSmartIri
+    case FileType.MovingImageFile(_, _) => OntologyConstants.KnoraApiV2Complex.MovingImageFileValue.toSmartIri
+    case FileType.TextFile              => OntologyConstants.KnoraApiV2Complex.TextFileValue.toSmartIri
+    case FileType.AudioFile             => OntologyConstants.KnoraApiV2Complex.AudioFileValue.toSmartIri
+    case FileType.ArchiveFile           => OntologyConstants.KnoraApiV2Complex.AudioFileValue.toSmartIri
+  }
+
+  def getFileValueContent(
+    fileType: FileType,
+    internalFilename: String,
+    internalMimeType: Option[String],
+    originalFilename: Option[String],
+    originalMimeType: Option[String],
+    comment: Option[String]
+  ): FileValueContentV2 =
+    fileType match {
+      case FileType.DocumentFile(pageCount, dimX, dimY) =>
+        DocumentFileValueContentV2(
+          ontologySchema = ApiV2Complex,
+          fileValue = FileValueV2(
+            internalFilename = internalFilename,
+            internalMimeType = internalMimeType match {
+              case Some(v) => v
+              case None    => "application/pdf"
+            },
+            originalFilename = originalFilename,
+            originalMimeType = Some("application/pdf")
+          ),
+          pageCount = pageCount,
+          dimX = dimX,
+          dimY = dimY,
+          comment = comment
+        )
+      case FileType.StillImageFile(dimX, dimY) =>
+        StillImageFileValueContentV2(
+          ontologySchema = ApiV2Complex,
+          fileValue = FileValueV2(
+            internalFilename = internalFilename,
+            internalMimeType = internalMimeType match {
+              case Some(v) => v
+              case None    => "image/jp2"
+            },
+            originalFilename = originalFilename,
+            originalMimeType = originalMimeType
+          ),
+          dimX = dimX,
+          dimY = dimY,
+          comment = comment
+        )
+      case FileType.MovingImageFile(dimX, dimY) =>
+        MovingImageFileValueContentV2(
+          ontologySchema = ApiV2Complex,
+          fileValue = FileValueV2(
+            internalFilename = internalFilename,
+            internalMimeType = internalMimeType.get,
+            originalFilename = originalFilename,
+            originalMimeType = internalMimeType
+          ),
+          dimX = dimX,
+          dimY = dimY
+        )
+      case FileType.TextFile =>
+        TextFileValueContentV2(
+          ontologySchema = ApiV2Complex,
+          fileValue = FileValueV2(
+            internalFilename = internalFilename,
+            internalMimeType = internalMimeType.get,
+            originalFilename = originalFilename,
+            originalMimeType = internalMimeType
+          )
+        )
+      case FileType.AudioFile =>
+        AudioFileValueContentV2(
+          ontologySchema = ApiV2Complex,
+          fileValue = FileValueV2(
+            internalFilename = internalFilename,
+            internalMimeType = internalMimeType.get,
+            originalFilename = originalFilename,
+            originalMimeType = internalMimeType
+          )
+        )
+      case FileType.ArchiveFile =>
+        ArchiveFileValueContentV2(
+          ontologySchema = ApiV2Complex,
+          fileValue = FileValueV2(
+            internalFilename = internalFilename,
+            internalMimeType = internalMimeType match {
+              case Some(v) => v
+              case None    => "application/zip"
+            },
+            originalFilename = originalFilename,
+            originalMimeType = internalMimeType
+          ),
+          comment = comment
+        )
+    }
 
   def getJsonLdContext(ontology: String, ontologyIRI: Option[String] = None): String = {
     val ontologies = ontology match {

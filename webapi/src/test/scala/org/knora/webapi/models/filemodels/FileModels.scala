@@ -6,8 +6,10 @@
 package org.knora.webapi.models.filemodels
 
 import org.knora.webapi.ApiV2Complex
+import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
+import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceV2, CreateValueInNewResourceV2}
 import org.knora.webapi.messages.v2.responder.valuemessages.{
   ArchiveFileValueContentV2,
@@ -16,14 +18,17 @@ import org.knora.webapi.messages.v2.responder.valuemessages.{
   FileValueV2,
   MovingImageFileValueContentV2,
   StillImageFileValueContentV2,
-  TextFileValueContentV2
+  TextFileValueContentV2,
+  UpdateValueContentV2,
+  UpdateValueRequestV2,
+  UpdateValueResponseV2
 }
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
+import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import java.time.Instant
 import java.util.UUID
-
 import spray.json._
 import spray.json.DefaultJsonProtocol._
 
@@ -116,84 +121,14 @@ sealed abstract case class UploadFileRequest private (
     }
     val resourceClassIri: SmartIri = FileModelUtil.getFileRepresentationClassIri(fileType)
     val fileValuePropertyIri: SmartIri = FileModelUtil.getFileRepresentationPropertyIri(fileType)
-    val valueContent = fileType match {
-      case FileType.DocumentFile(pageCount, dimX, dimY) =>
-        DocumentFileValueContentV2(
-          ontologySchema = ApiV2Complex,
-          fileValue = FileValueV2(
-            internalFilename = internalFilename,
-            internalMimeType = internalMimeType match {
-              case Some(v) => v
-              case None    => "application/pdf"
-            },
-            originalFilename = originalFilename,
-            originalMimeType = Some("application/pdf")
-          ),
-          pageCount = pageCount,
-          dimX = dimX,
-          dimY = dimY,
-          comment = comment
-        )
-      case FileType.StillImageFile(dimX, dimY) =>
-        StillImageFileValueContentV2(
-          ontologySchema = ApiV2Complex,
-          fileValue = FileValueV2(
-            internalFilename = internalFilename,
-            internalMimeType = "image/jp2",
-            originalFilename = originalFilename,
-            originalMimeType = originalMimeType
-          ),
-          dimX = dimX,
-          dimY = dimY,
-          comment = comment
-        )
-      case FileType.MovingImageFile(dimX, dimY) =>
-        MovingImageFileValueContentV2(
-          ontologySchema = ApiV2Complex,
-          fileValue = FileValueV2(
-            internalFilename = internalFilename,
-            internalMimeType = internalMimeType.get,
-            originalFilename = originalFilename,
-            originalMimeType = internalMimeType
-          ),
-          dimX = dimX,
-          dimY = dimY
-        )
-      case FileType.TextFile =>
-        TextFileValueContentV2(
-          ontologySchema = ApiV2Complex,
-          fileValue = FileValueV2(
-            internalFilename = internalFilename,
-            internalMimeType = internalMimeType.get,
-            originalFilename = originalFilename,
-            originalMimeType = internalMimeType
-          )
-        )
-      case FileType.AudioFile =>
-        AudioFileValueContentV2(
-          ontologySchema = ApiV2Complex,
-          fileValue = FileValueV2(
-            internalFilename = internalFilename,
-            internalMimeType = internalMimeType.get,
-            originalFilename = originalFilename,
-            originalMimeType = internalMimeType
-          )
-        )
-      case FileType.ArchiveFile =>
-        ArchiveFileValueContentV2(
-          ontologySchema = ApiV2Complex,
-          fileValue = FileValueV2(
-            internalFilename = internalFilename,
-            internalMimeType = internalMimeType match {
-              case Some(v) => v
-              case None    => "application/zip"
-            },
-            originalFilename = originalFilename,
-            originalMimeType = internalMimeType
-          ),
-          comment = comment
-        )
-    }
+    val valueContent = FileModelUtil.getFileValueContent(
+      fileType = fileType,
+      internalFilename = internalFilename,
+      internalMimeType = internalMimeType,
+      originalFilename = originalFilename,
+      originalMimeType = originalMimeType,
+      comment = comment
+    )
 
     val values = List(
       CreateValueInNewResourceV2(
@@ -234,10 +169,10 @@ object UploadFileRequest {
    *
    * @param fileType         the [[FileType]] of the resource.
    * @param internalFilename the internal file name assigned by SIPI.
+   * @param label            the rdf:label
    * @return returns a [[UploadFileRequest]] object storing all information needed to generate a Message
    *         or JSON-LD serialization that can be used to generate the respective resource in the API.
    */
-
   def make(
     fileType: FileType,
     internalFilename: String,
@@ -281,6 +216,48 @@ sealed abstract case class ChangeFileRequest private (
        |  },
        |  $context
        |}""".stripMargin
+  }
+
+  def toMessage(
+    featureFactoryConfig: FeatureFactoryConfig,
+    internalMimeType: Option[String] = None,
+    originalFilename: Option[String] = None,
+    originalMimeType: Option[String] = None,
+    comment: Option[String] = None,
+    requestingUser: UserADM = SharedTestDataADM.rootUser,
+    permissions: Option[String] = None,
+    valueCreationDate: Option[Instant] = None,
+    newValueVersionIri: Option[SmartIri] = None,
+    resourceClassIRI: Option[SmartIri] = None
+  ): UpdateValueRequestV2 = {
+    val propertyIRI = FileModelUtil.getFileRepresentationPropertyIri(fileType)
+    val resourceClassIRIWithDefault = resourceClassIRI match {
+      case Some(value) => value
+      case None        => FileModelUtil.getFileValueTypeIRI(fileType)
+    }
+    val valueContent = FileModelUtil.getFileValueContent(
+      fileType = fileType,
+      internalFilename = internalFilename,
+      internalMimeType = internalMimeType,
+      originalFilename = originalFilename,
+      originalMimeType = originalMimeType,
+      comment = comment
+    )
+    UpdateValueRequestV2(
+      updateValue = UpdateValueContentV2(
+        resourceIri = resourceIRI,
+        resourceClassIri = resourceClassIRIWithDefault,
+        propertyIri = propertyIRI,
+        valueIri = valueIRI,
+        valueContent = valueContent,
+        permissions = permissions,
+        valueCreationDate = valueCreationDate,
+        newValueVersionIri = newValueVersionIri
+      ),
+      featureFactoryConfig = featureFactoryConfig,
+      requestingUser = requestingUser,
+      apiRequestID = UUID.randomUUID
+    )
   }
 }
 
