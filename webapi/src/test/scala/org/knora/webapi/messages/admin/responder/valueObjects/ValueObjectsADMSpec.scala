@@ -34,16 +34,15 @@ class ValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
    */
   private def createUserCreatePayloadADM(createUserApiRequestADM: CreateUserApiRequestADM): UserCreatePayloadADM =
     UserCreatePayloadADM(
-      id = stringFormatter
-        .validateOptionalUserIri(createUserApiRequestADM.id, throw BadRequestException(s"Invalid user IRI")),
-      username = Username.create(createUserApiRequestADM.username).fold(error => throw error, value => value),
-      email = Email.create(createUserApiRequestADM.email).fold(error => throw error, value => value),
-      givenName = GivenName.create(createUserApiRequestADM.givenName).fold(error => throw error, value => value),
-      familyName = FamilyName.create(createUserApiRequestADM.familyName).fold(error => throw error, value => value),
-      password = Password.create(createUserApiRequestADM.password).fold(error => throw error, value => value),
+      id = UserIRI.make(createUserApiRequestADM.id).fold(e => throw e.head, v => v),
+      username = Username.make(createUserApiRequestADM.username).fold(e => throw e.head, v => v),
+      email = Email.make(createUserApiRequestADM.email).fold(e => throw e.head, v => v),
+      givenName = GivenName.make(createUserApiRequestADM.givenName).fold(e => throw e.head, v => v),
+      familyName = FamilyName.make(createUserApiRequestADM.familyName).fold(e => throw e.head, v => v),
+      password = Password.make(createUserApiRequestADM.password).fold(e => throw e.head, v => v),
       status = Status.make(createUserApiRequestADM.status).fold(error => throw error.head, value => value),
-      lang = LanguageCode.create(createUserApiRequestADM.lang).fold(error => throw error, value => value),
-      systemAdmin = SystemAdmin.create(createUserApiRequestADM.systemAdmin).fold(error => throw error, value => value)
+      lang = LanguageCode.make(createUserApiRequestADM.lang).fold(e => throw e.head, v => v),
+      systemAdmin = SystemAdmin.make(createUserApiRequestADM.systemAdmin).fold(e => throw e.head, v => v)
     )
 
   /**

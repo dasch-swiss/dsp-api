@@ -9,22 +9,24 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{PathMatcher, Route}
 import io.swagger.annotations._
 import org.knora.webapi.annotation.ApiMayChange
-import org.knora.webapi.exceptions.{BadRequestException}
+import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePasswordPayloadADM, _}
 import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Username,
   Email,
-  GivenName,
   FamilyName,
+  GivenName,
+  LanguageCode,
   Password,
   Status,
-  LanguageCode,
-  SystemAdmin
+  SystemAdmin,
+  Username,
+  UserIRI
 }
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
+import zio.prelude.Validation
 
 import java.util.UUID
 import javax.ws.rs.Path
@@ -123,25 +125,46 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     post {
       entity(as[CreateUserApiRequestADM]) { apiRequest => requestContext =>
         // get all values from request and make value objects from it
-        val user: UserCreatePayloadADM =
-          UserCreatePayloadADM(
-            id = stringFormatter.validateOptionalUserIri(apiRequest.id, throw BadRequestException(s"Invalid user IRI")),
-            username = Username.create(apiRequest.username).fold(error => throw error, value => value),
-            email = Email.create(apiRequest.email).fold(error => throw error, value => value),
-            givenName = GivenName.create(apiRequest.givenName).fold(error => throw error, value => value),
-            familyName = FamilyName.create(apiRequest.familyName).fold(error => throw error, value => value),
-            password = Password.create(apiRequest.password).fold(error => throw error, value => value),
-            status = Status.make(apiRequest.status).fold(error => throw error.head, value => value),
-            lang = LanguageCode.create(apiRequest.lang).fold(error => throw error, value => value),
-            systemAdmin = SystemAdmin.create(apiRequest.systemAdmin).fold(error => throw error, value => value)
-          )
+//        val user: UserCreatePayloadADM =
+//          UserCreatePayloadADM(
+//            id = stringFormatter.validateOptionalUserIri(apiRequest.id, throw BadRequestException(s"Invalid user IRI")),
+//            username = Username.make(apiRequest.username),
+//            email = Email.create(apiRequest.email).fold(error => throw error, value => value),
+//            givenName = GivenName.create(apiRequest.givenName).fold(error => throw error, value => value),
+//            familyName = FamilyName.create(apiRequest.familyName).fold(error => throw error, value => value),
+//            password = Password.create(apiRequest.password).fold(error => throw error, value => value),
+//            status = Status.make(apiRequest.status).fold(error => throw error.head, value => value),
+//            lang = LanguageCode.create(apiRequest.lang).fold(error => throw error, value => value),
+//            systemAdmin = SystemAdmin.create(apiRequest.systemAdmin).fold(error => throw error, value => value)
+//          )
+        val id = UserIRI.make(apiRequest.id)
+        val username = Username.make(apiRequest.username)
+        val email = Email.make(apiRequest.email)
+        val givenName = GivenName.make(apiRequest.givenName)
+        val familyName = FamilyName.make(apiRequest.familyName)
+        val password = Password.make(apiRequest.password)
+        val status = Status.make(apiRequest.status)
+        val languageCode = LanguageCode.make(apiRequest.lang)
+        val systemAdmin = SystemAdmin.make(apiRequest.systemAdmin)
+
+        val validatedUserCreatePayload: Validation[Throwable, UserCreatePayloadADM] =
+          Validation.validateWith(
+            id,
+            username,
+            email,
+            givenName,
+            familyName,
+            password,
+            status,
+            languageCode,
+            systemAdmin
+          )(UserCreatePayloadADM)
+
         val requestMessage: Future[UserCreateRequestADM] = for {
-          requestingUser <- getUserADM(
-            requestContext = requestContext,
-            featureFactoryConfig = featureFactoryConfig
-          )
+          payload <- toFuture(validatedUserCreatePayload)
+          requestingUser <- getUserADM(requestContext, featureFactoryConfig)
         } yield UserCreateRequestADM(
-          userCreatePayloadADM = user,
+          userCreatePayloadADM = payload,
           featureFactoryConfig = featureFactoryConfig,
           requestingUser = requestingUser,
           apiRequestID = UUID.randomUUID()
@@ -267,34 +290,19 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             throw BadRequestException("Changes to built-in users are not allowed.")
           }
 
-          val maybeChangedUsername = apiRequest.username match {
-            case Some(username) => Some(Username.create(username).fold(error => throw error, value => value))
-            case None           => None
-          }
-          val maybeChangedEmail = apiRequest.email match {
-            case Some(email) => Some(Email.create(email).fold(error => throw error, value => value))
-            case None        => None
-          }
-          val maybeChangedGivenName = apiRequest.givenName match {
-            case Some(givenName) => Some(GivenName.create(givenName).fold(error => throw error, value => value))
-            case None            => None
-          }
-          val maybeChangedFamilyName = apiRequest.familyName match {
-            case Some(familyName) => Some(FamilyName.create(familyName).fold(error => throw error, value => value))
-            case None             => None
-          }
-          val maybeChangedLang = apiRequest.lang match {
-            case Some(lang) => Some(LanguageCode.create(lang).fold(error => throw error, value => value))
-            case None       => None
-          }
+          val maybeUsername = Username.make(apiRequest.username).fold(e => throw e.head, v => v)
+          val maybeEmail = Email.make(apiRequest.email).fold(e => throw e.head, v => v)
+          val maybeGivenName = GivenName.make(apiRequest.givenName).fold(e => throw e.head, v => v)
+          val maybeFamilyName = FamilyName.make(apiRequest.familyName).fold(e => throw e.head, v => v)
+          val maybeLanguageCode = LanguageCode.make(apiRequest.lang).fold(e => throw e.head, v => v)
 
           val userUpdatePayload: UserUpdateBasicInformationPayloadADM =
             UserUpdateBasicInformationPayloadADM(
-              username = maybeChangedUsername,
-              email = maybeChangedEmail,
-              givenName = maybeChangedGivenName,
-              familyName = maybeChangedFamilyName,
-              lang = maybeChangedLang
+              maybeUsername,
+              maybeEmail,
+              maybeGivenName,
+              maybeFamilyName,
+              maybeLanguageCode
             )
 
           /* the api request is already checked at time of creation. see case class. */
@@ -345,11 +353,11 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           }
 
           val requesterPassword = apiRequest.requesterPassword match {
-            case Some(password) => Password.create(password).fold(error => throw error, value => value)
+            case Some(password) => Password.make(password).fold(e => throw e.head, v => v)
             case None           => throw BadRequestException("The requester's password is missing.")
           }
           val changedPassword = apiRequest.newPassword match {
-            case Some(password) => Password.create(password).fold(error => throw error, value => value)
+            case Some(password) => Password.make(password).fold(e => throw e.head, v => v)
             case None           => throw BadRequestException("The new password is missing.")
           }
 
@@ -498,7 +506,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           }
 
           val newSystemAdmin = apiRequest.systemAdmin match {
-            case Some(systemAdmin) => SystemAdmin.create(systemAdmin).fold(error => throw error, value => value)
+            case Some(systemAdmin) => SystemAdmin.make(systemAdmin).fold(e => throw e.head, v => v)
             case None              => throw BadRequestException("The systemAdmin is missing.")
           }
 

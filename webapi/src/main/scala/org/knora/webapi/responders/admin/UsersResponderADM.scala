@@ -510,8 +510,8 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // hash the new password
         encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
         newHashedPassword = Password
-          .create(encoder.encode(userUpdatePasswordPayload.newPassword.value))
-          .fold(error => throw error, value => value)
+          .make(encoder.encode(userUpdatePasswordPayload.newPassword.value))
+          .fold(e => throw e.head, value => value)
 
         // update the users password as SystemUser
         result <- updateUserPasswordADM(
@@ -1703,7 +1703,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         }
 
         // check the custom IRI; if not given, create an unused IRI
-        customUserIri: Option[SmartIri] = userCreatePayloadADM.id.map(iri => iri.toSmartIri)
+        customUserIri: Option[SmartIri] = userCreatePayloadADM.id.map(_.value.toSmartIri)
         userIri: IRI <- checkOrCreateEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
 
         // hash password

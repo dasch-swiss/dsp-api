@@ -3,6 +3,7 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 import org.knora.webapi.LanguageCodes
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException}
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.usersmessages.UserErrorMessagesADM._
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 
@@ -13,10 +14,39 @@ import scala.util.matching.Regex
 /** User value objects */
 
 /**
+ * UserIRI value object.
+ */
+sealed abstract case class UserIRI private (value: String)
+object UserIRI { self =>
+  private val sf = StringFormatter.getGeneralInstance
+
+  def make(value: String): Validation[Throwable, UserIRI] =
+    if (value.isEmpty) {
+      Validation.fail(BadRequestException(USER_IRI_MISSING_ERROR))
+    } else {
+      if (value.nonEmpty && !sf.isKnoraGroupIriStr(value)) {
+        Validation.fail(BadRequestException(USER_IRI_INVALID_ERROR))
+      } else {
+        val validatedValue = Validation(
+          sf.validateAndEscapeIri(value, throw BadRequestException(USER_IRI_INVALID_ERROR))
+        )
+
+        validatedValue.map(new UserIRI(_) {})
+      }
+    }
+
+  def make(value: Option[String]): Validation[Throwable, Option[UserIRI]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
+    }
+}
+
+/**
  * User Username value object.
  */
 sealed abstract case class Username private (value: String)
-object Username {
+object Username { self =>
 
   /**
    * A regex that matches a valid username
@@ -28,15 +58,20 @@ object Username {
   private val UsernameRegex: Regex =
     """^(?=.{4,50}$)(?![_.])(?!.*[_.]{2})[a-zA-Z0-9._]+(?<![_.])$""".r
 
-  def create(value: String): Either[Throwable, Username] =
+  def make(value: String): Validation[Throwable, Username] =
     if (value.isEmpty) {
-      Left(BadRequestException("Missing username"))
+      Validation.fail(BadRequestException("Missing username"))
     } else {
       UsernameRegex.findFirstIn(value) match {
-        case Some(value) =>
-          Right(new Username(value) {})
-        case None => Left(BadRequestException("Invalid username"))
+        case Some(value) => Validation.succeed(new Username(value) {})
+        case None        => Validation.fail(BadRequestException("Invalid username"))
       }
+    }
+
+  def make(value: Option[String]): Validation[Throwable, Option[Username]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -44,17 +79,23 @@ object Username {
  * User Email value object.
  */
 sealed abstract case class Email private (value: String)
-object Email {
+object Email { self =>
   private val EmailRegex: Regex = """^.+@.+$""".r // TODO use proper validation
 
-  def create(value: String): Either[Throwable, Email] =
+  def make(value: String): Validation[Throwable, Email] =
     if (value.isEmpty) {
-      Left(BadRequestException("Missing email"))
+      Validation.fail(BadRequestException("Missing email"))
     } else {
       EmailRegex.findFirstIn(value) match {
-        case Some(value) => Right(new Email(value) {})
-        case None        => Left(BadRequestException("Invalid email"))
+        case Some(value) => Validation.succeed(new Email(value) {})
+        case None        => Validation.fail(BadRequestException("Invalid email"))
       }
+    }
+
+  def make(value: Option[String]): Validation[Throwable, Option[Email]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -62,17 +103,23 @@ object Email {
  * User Password value object.
  */
 sealed abstract case class Password private (value: String)
-object Password {
+object Password { self =>
   private val PasswordRegex: Regex = """^[\s\S]*$""".r //TODO: add password validation
 
-  def create(value: String): Either[Throwable, Password] =
+  def make(value: String): Validation[Throwable, Password] =
     if (value.isEmpty) {
-      Left(BadRequestException("Missing password"))
+      Validation.fail(BadRequestException("Missing password"))
     } else {
       PasswordRegex.findFirstIn(value) match {
-        case Some(value) => Right(new Password(value) {})
-        case None        => Left(BadRequestException("Invalid password"))
+        case Some(value) => Validation.succeed(new Password(value) {})
+        case None        => Validation.fail(BadRequestException("Invalid password"))
       }
+    }
+
+  def make(value: Option[String]): Validation[Throwable, Option[Password]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -80,13 +127,19 @@ object Password {
  * User GivenName value object.
  */
 sealed abstract case class GivenName private (value: String)
-object GivenName {
+object GivenName { self =>
   // TODO use proper validation for value
-  def create(value: String): Either[Throwable, GivenName] =
+  def make(value: String): Validation[Throwable, GivenName] =
     if (value.isEmpty) {
-      Left(BadRequestException("Missing given name"))
+      Validation.fail(BadRequestException("Missing given name"))
     } else {
-      Right(new GivenName(value) {})
+      Validation.succeed(new GivenName(value) {})
+    }
+
+  def make(value: Option[String]): Validation[Throwable, Option[GivenName]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -94,13 +147,19 @@ object GivenName {
  * User FamilyName value object.
  */
 sealed abstract case class FamilyName private (value: String)
-object FamilyName {
+object FamilyName { self =>
   // TODO use proper validation for value
-  def create(value: String): Either[Throwable, FamilyName] =
+  def make(value: String): Validation[Throwable, FamilyName] =
     if (value.isEmpty) {
-      Left(BadRequestException("Missing family name"))
+      Validation.fail(BadRequestException("Missing family name"))
     } else {
-      Right(new FamilyName(value) {})
+      Validation.succeed(new FamilyName(value) {})
+    }
+
+  def make(value: Option[String]): Validation[Throwable, Option[FamilyName]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -108,14 +167,20 @@ object FamilyName {
  * User LanguageCode value object.
  */
 sealed abstract case class LanguageCode private (value: String)
-object LanguageCode {
-  def create(value: String): Either[Throwable, LanguageCode] =
+object LanguageCode { self =>
+  def make(value: String): Validation[Throwable, LanguageCode] =
     if (value.isEmpty) {
-      Left(BadRequestException("Missing language code"))
+      Validation.fail(BadRequestException("Missing language code"))
     } else if (!LanguageCodes.SupportedLanguageCodes.contains(value)) {
-      Left(BadRequestException("Invalid language code"))
+      Validation.fail(BadRequestException("Invalid language code"))
     } else {
-      Right(new LanguageCode(value) {})
+      Validation.succeed(new LanguageCode(value) {})
+    }
+
+  def make(value: Option[String]): Validation[Throwable, Option[LanguageCode]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -124,8 +189,8 @@ object LanguageCode {
  */
 sealed abstract case class SystemAdmin private (value: Boolean)
 object SystemAdmin {
-  def create(value: Boolean): Either[Throwable, SystemAdmin] =
-    Right(new SystemAdmin(value) {})
+  def make(value: Boolean): Validation[Throwable, SystemAdmin] =
+    Validation.succeed(new SystemAdmin(value) {})
 }
 
 /** Project value objects */
