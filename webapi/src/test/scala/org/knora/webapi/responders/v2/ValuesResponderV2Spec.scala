@@ -29,6 +29,7 @@ import org.knora.webapi.messages.v2.responder.searchmessages.GravsearchRequestV2
 import org.knora.webapi.messages.v2.responder.standoffmessages._
 import org.knora.webapi.messages.v2.responder.valuemessages._
 import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.models.filemodels.{ChangeFileRequest, FileType}
 import org.knora.webapi.settings.{KnoraDispatchers, _}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.store.iiif.MockSipiConnector
@@ -4128,31 +4129,26 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
     "not update a still image file value without changing it" in {
       val resourceIri: IRI = aThingPictureIri
       stillImageFileValueIri.set("http://rdfh.ch/0001/a-thing-picture/values/goZ7JFRNSeqF-dNxsqAS7Q")
+      val fileType = FileType.StillImageFile(dimX = 512, dimY = 256)
+      val internalFilename = "B1D0OkEgfFp-Cew2Seur7Wi.jp2"
+      val valueIri = stillImageFileValueIri.get
 
-      val valueContent = StillImageFileValueContentV2(
-        ontologySchema = ApiV2Complex,
-        fileValue = FileValueV2(
-          internalFilename = "B1D0OkEgfFp-Cew2Seur7Wi.jp2",
-          internalMimeType = "image/jp2",
-          originalFilename = Some("test.tiff"),
-          originalMimeType = Some("image/tiff")
-        ),
-        dimX = 512,
-        dimY = 256
-      )
-
-      val updateValueRequest = UpdateValueRequestV2(
-        UpdateValueContentV2(
+      val updateValueRequest = ChangeFileRequest
+        .make(
+          fileType = fileType,
+          internalFilename = internalFilename,
           resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-          propertyIri = OntologyConstants.KnoraApiV2Complex.HasStillImageFileValue.toSmartIri,
-          valueIri = stillImageFileValueIri.get,
-          valueContent = valueContent
-        ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
-      )
+          valueIri = valueIri,
+          ontologyName = "anything"
+        )
+        .toMessage(
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          internalMimeType = Some("image/jp2"),
+          originalFilename = Some("test.tiff"),
+          originalMimeType = Some("image/tiff"),
+          resourceClassIRI = Some("http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri),
+          requestingUser = anythingUser1
+        )
 
       responderManager ! updateValueRequest
 
@@ -4178,31 +4174,32 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       // Update the value.
+      val dimX = 512
+      val dimY = 256
+      val internalFilename = "updated-filename.jp2"
+      val internalMimeType = "image/jp2"
+      val originalFilename = Some("test.tiff")
+      val originalMimeType = Some("image/tiff")
 
-      val valueContent = StillImageFileValueContentV2(
-        ontologySchema = ApiV2Complex,
-        fileValue = FileValueV2(
-          internalFilename = "updated-filename.jp2",
-          internalMimeType = "image/jp2",
-          originalFilename = Some("test.tiff"),
-          originalMimeType = Some("image/tiff")
-        ),
-        dimX = 512,
-        dimY = 256
-      )
-
-      responderManager ! UpdateValueRequestV2(
-        UpdateValueContentV2(
+      val changeFileRequest = ChangeFileRequest
+        .make(
+          fileType = FileType.StillImageFile(dimX = dimX, dimY = dimY),
+          internalFilename = internalFilename,
           resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
-          propertyIri = propertyIri,
           valueIri = stillImageFileValueIri.get,
-          valueContent = valueContent
-        ),
-        featureFactoryConfig = defaultFeatureFactoryConfig,
-        requestingUser = anythingUser1,
-        apiRequestID = UUID.randomUUID
-      )
+          ontologyName = "anything"
+        )
+      val changeFileMessage = changeFileRequest
+        .toMessage(
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          resourceClassIRI = Some("http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri),
+          internalMimeType = Some(internalMimeType),
+          originalMimeType = originalMimeType,
+          originalFilename = originalFilename
+        )
+      responderManager ! changeFileMessage
+
+      println(changeFileMessage)
 
       expectMsgPF(timeout) { case updateValueResponse: UpdateValueResponseV2 =>
         stillImageFileValueIri.set(updateValueResponse.valueIri)
@@ -4219,13 +4216,20 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = anythingUser1
       )
 
+      updatedValueFromTriplestore.valueIri should equal(stillImageFileValueIri.get)
       updatedValueFromTriplestore.valueContent match {
         case savedValue: StillImageFileValueContentV2 =>
-          savedValue should ===(valueContent)
-          updatedValueFromTriplestore.permissions should ===(previousValueFromTriplestore.permissions)
+          savedValue.comment should be(None)
+          savedValue.dimX should equal(dimX)
+          savedValue.dimY should equal(dimY)
+          savedValue.fileValue.internalFilename should equal(internalFilename)
+          savedValue.fileValue.internalMimeType should equal(internalMimeType)
+          savedValue.fileValue.originalMimeType should equal(originalMimeType)
+          savedValue.fileValue.originalFilename should equal(originalFilename)
 
         case _ => throw AssertionException(s"Expected still image file value, got $updatedValueFromTriplestore")
       }
+      updatedValueFromTriplestore.permissions should equal(previousValueFromTriplestore.permissions)
 
     }
 
