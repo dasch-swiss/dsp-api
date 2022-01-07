@@ -8,15 +8,10 @@ import zio.prelude.Validation
 
 import scala.util.matching.Regex
 
-// TODO-mpro: this is so far shared value object file, consider to slice it
-
-/** User value objects */
-
 /**
  * UserIRI value object.
  */
 sealed abstract case class UserIRI private (value: String)
-
 object UserIRI { self =>
   private val sf = StringFormatter.getGeneralInstance
 
@@ -24,11 +19,11 @@ object UserIRI { self =>
     if (value.isEmpty) {
       Validation.fail(BadRequestException(USER_IRI_MISSING_ERROR))
     } else {
-      if (value.nonEmpty && !sf.isKnoraGroupIriStr(value)) {
+      if (value.nonEmpty && !sf.isKnoraUserIriStr(value)) {
         Validation.fail(BadRequestException(USER_IRI_INVALID_ERROR))
       } else {
         val validatedValue = Validation(
-          sf.validateAndEscapeIri(value, throw BadRequestException(USER_IRI_INVALID_ERROR))
+          sf.validateAndEscapeUserIri(value, throw BadRequestException(USER_IRI_INVALID_ERROR))
         )
 
         validatedValue.map(new UserIRI(_) {})
@@ -43,10 +38,9 @@ object UserIRI { self =>
 }
 
 /**
- * User Username value object.
+ * Username value object.
  */
 sealed abstract case class Username private (value: String)
-
 object Username { self =>
 
   /**
@@ -61,11 +55,11 @@ object Username { self =>
 
   def make(value: String): Validation[Throwable, Username] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException("Missing username"))
+      Validation.fail(BadRequestException(USERNAME_MISSING_ERROR))
     } else {
       UsernameRegex.findFirstIn(value) match {
         case Some(value) => Validation.succeed(new Username(value) {})
-        case None        => Validation.fail(BadRequestException("Invalid username"))
+        case None        => Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
       }
     }
 
@@ -77,20 +71,19 @@ object Username { self =>
 }
 
 /**
- * User Email value object.
+ * Email value object.
  */
 sealed abstract case class Email private (value: String)
-
 object Email { self =>
   private val EmailRegex: Regex = """^.+@.+$""".r // TODO use proper validation
 
   def make(value: String): Validation[Throwable, Email] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException("Missing email"))
+      Validation.fail(BadRequestException(EMAIL_MISSING_ERROR))
     } else {
       EmailRegex.findFirstIn(value) match {
         case Some(value) => Validation.succeed(new Email(value) {})
-        case None        => Validation.fail(BadRequestException("Invalid email"))
+        case None        => Validation.fail(BadRequestException(EMAIL_INVALID_ERROR))
       }
     }
 
@@ -102,20 +95,19 @@ object Email { self =>
 }
 
 /**
- * User Password value object.
+ * Password value object.
  */
 sealed abstract case class Password private (value: String)
-
 object Password { self =>
   private val PasswordRegex: Regex = """^[\s\S]*$""".r //TODO: add password validation
 
   def make(value: String): Validation[Throwable, Password] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException("Missing password"))
+      Validation.fail(BadRequestException(PASSWORD_MISSING_ERROR))
     } else {
       PasswordRegex.findFirstIn(value) match {
         case Some(value) => Validation.succeed(new Password(value) {})
-        case None        => Validation.fail(BadRequestException("Invalid password"))
+        case None        => Validation.fail(BadRequestException(PASSWORD_INVALID_ERROR))
       }
     }
 
@@ -127,15 +119,14 @@ object Password { self =>
 }
 
 /**
- * User GivenName value object.
+ * GivenName value object.
  */
 sealed abstract case class GivenName private (value: String)
-
 object GivenName { self =>
   // TODO use proper validation for value
   def make(value: String): Validation[Throwable, GivenName] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException("Missing given name"))
+      Validation.fail(BadRequestException(GIVEN_NAME_MISSING_ERROR))
     } else {
       Validation.succeed(new GivenName(value) {})
     }
@@ -148,15 +139,14 @@ object GivenName { self =>
 }
 
 /**
- * User FamilyName value object.
+ * FamilyName value object.
  */
 sealed abstract case class FamilyName private (value: String)
-
 object FamilyName { self =>
   // TODO use proper validation for value
   def make(value: String): Validation[Throwable, FamilyName] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException("Missing family name"))
+      Validation.fail(BadRequestException(FAMILY_NAME_MISSING_ERROR))
     } else {
       Validation.succeed(new FamilyName(value) {})
     }
@@ -169,16 +159,15 @@ object FamilyName { self =>
 }
 
 /**
- * User LanguageCode value object.
+ * LanguageCode value object.
  */
 sealed abstract case class LanguageCode private (value: String)
-
 object LanguageCode { self =>
   def make(value: String): Validation[Throwable, LanguageCode] =
     if (value.isEmpty) {
-      Validation.fail(BadRequestException("Missing language code"))
+      Validation.fail(BadRequestException(LANGUAGE_CODE_MISSING_ERROR))
     } else if (!LanguageCodes.SupportedLanguageCodes.contains(value)) {
-      Validation.fail(BadRequestException("Invalid language code"))
+      Validation.fail(BadRequestException(LANGUAGE_CODE_INVALID_ERROR))
     } else {
       Validation.succeed(new LanguageCode(value) {})
     }
@@ -191,10 +180,9 @@ object LanguageCode { self =>
 }
 
 /**
- * User SystemAdmin value object.
+ * SystemAdmin value object.
  */
 sealed abstract case class SystemAdmin private (value: Boolean)
-
 object SystemAdmin {
   def make(value: Boolean): Validation[Throwable, SystemAdmin] =
     Validation.succeed(new SystemAdmin(value) {})

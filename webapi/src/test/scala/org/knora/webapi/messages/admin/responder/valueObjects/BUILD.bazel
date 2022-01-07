@@ -10,6 +10,7 @@ scala_test(
         "GroupsValueObjectsADMSpec.scala",
         "IriValueObjectsADMSpec.scala",
         "ListsValueObjectsADMSpec.scala",
+        "UsersValueObjectsADMSpec.scala",
         "ValueObjectsADMSpec.scala",
     ],
     data = [
