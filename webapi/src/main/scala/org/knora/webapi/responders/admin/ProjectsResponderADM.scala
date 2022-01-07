@@ -880,7 +880,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
       }
       // we are changing the project, so lets get rid of the cached copy
-      // invalidateCachedProjectADM isn't clearing cache as expected
       _ = storeManager ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser)
 
       /* Update project */
@@ -1440,28 +1439,4 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       res
     }
   }
-
-  /**
-   * Removes the project from cache.
-   */
-  private def invalidateCachedProjectADM(maybeProject: Option[ProjectADM]): Future[Boolean] =
-    if (cacheServiceSettings.cacheServiceEnabled) {
-      val keys: Set[String] =
-        Seq(maybeProject.map(_.id), maybeProject.map(_.shortname), maybeProject.map(_.shortcode)).flatten.toSet
-      // only send to Redis if keys are not empty
-      if (keys.nonEmpty) {
-        val result = (storeManager ? CacheServiceRemoveValues(keys)).mapTo[Boolean]
-        result.map { res =>
-          log.debug("invalidateCachedProjectADM - result: {}", res)
-          res
-        }
-      } else {
-        // since there was nothing to remove, we can immediately return
-        FastFuture.successful(true)
-      }
-    } else {
-      // caching is turned off, so nothing to do.
-      FastFuture.successful(true)
-    }
-
 }
