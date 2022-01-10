@@ -12,7 +12,7 @@ final case class UserCreatePayloadADM(
   givenName: GivenName,
   familyName: FamilyName,
   password: Password,
-  status: Status,
+  status: UserStatus,
   lang: LanguageCode,
   systemAdmin: SystemAdmin
   //  TODO-mpro: fields below not reflected in docs - why are these here Ivan?

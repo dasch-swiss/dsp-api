@@ -21,7 +21,7 @@ import org.knora.webapi.messages.admin.responder.valueObjects.{
   GivenName,
   FamilyName,
   Password,
-  Status,
+  UserStatus,
   LanguageCode,
   SystemAdmin
 }
@@ -244,7 +244,7 @@ case class UserChangePasswordRequestADM(
  */
 case class UserChangeStatusRequestADM(
   userIri: IRI,
-  status: Status,
+  status: UserStatus,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID
@@ -839,7 +839,7 @@ case class UserChangeRequestADM(
   email: Option[Email] = None,
   givenName: Option[GivenName] = None,
   familyName: Option[FamilyName] = None,
-  status: Option[Status] = None,
+  status: Option[UserStatus] = None,
   lang: Option[LanguageCode] = None,
   projects: Option[Seq[IRI]] = None,
   projectsAdmin: Option[Seq[IRI]] = None,

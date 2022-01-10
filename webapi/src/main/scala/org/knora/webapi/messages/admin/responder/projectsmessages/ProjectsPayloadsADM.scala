@@ -1,28 +1,18 @@
 package org.knora.webapi.messages.admin.responder.projectsmessages
 
-import org.knora.webapi.IRI
-import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Shortname,
-  Longname,
-  Shortcode,
-  ProjectDescription,
-  Keywords,
-  Logo,
-  Status,
-  Selfjoin
-}
+import org.knora.webapi.messages.admin.responder.valueObjects._
 
 /**
  * Project creation payload
  */
 final case class ProjectsPayloadsADM(
-  id: Option[IRI] = None,
+  id: Option[ProjectIRI] = None,
   shortname: Shortname,
   shortcode: Shortcode,
-  longname: Option[Longname],
+  longname: Option[Longname] = None,
   description: ProjectDescription,
   keywords: Keywords,
-  logo: Option[Logo],
-  status: Status,
-  selfjoin: Selfjoin
+  logo: Option[Logo] = None,
+  status: ProjectStatus,
+  selfjoin: ProjectSelfJoin
 )

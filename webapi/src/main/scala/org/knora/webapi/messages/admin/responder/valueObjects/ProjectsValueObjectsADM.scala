@@ -92,7 +92,7 @@ object Longname { self =>
 }
 
 /**
- * Project Description value object.
+ * ProjectDescription value object.
  */
 sealed abstract case class ProjectDescription private (value: Seq[StringLiteralV2])
 object ProjectDescription {
@@ -136,19 +136,19 @@ object Logo { self =>
 }
 
 /**
- * Selfjoin value object.
+ * ProjectSelfjoin value object.
  */
-sealed abstract case class Selfjoin private (value: Boolean)
-object Selfjoin {
-  def make(value: Boolean): Validation[Throwable, Selfjoin] =
-    Validation.succeed(new Selfjoin(value) {})
+sealed abstract case class ProjectSelfJoin private (value: Boolean)
+object ProjectSelfJoin {
+  def make(value: Boolean): Validation[Throwable, ProjectSelfJoin] =
+    Validation.succeed(new ProjectSelfJoin(value) {})
 }
 
 /**
- * Status value object.
+ * ProjectStatus value object.
  */
-sealed abstract case class Status private (value: Boolean)
-object Status {
-  def make(value: Boolean): Validation[Throwable, Status] =
-    Validation.succeed(new Status(value) {})
+sealed abstract case class ProjectStatus private (value: Boolean)
+object ProjectStatus {
+  def make(value: Boolean): Validation[Throwable, ProjectStatus] =
+    Validation.succeed(new ProjectStatus(value) {})
 }

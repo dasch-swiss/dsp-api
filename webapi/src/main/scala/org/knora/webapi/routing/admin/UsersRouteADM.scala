@@ -19,7 +19,7 @@ import org.knora.webapi.messages.admin.responder.valueObjects.{
   GivenName,
   LanguageCode,
   Password,
-  Status,
+  UserStatus,
   SystemAdmin,
   Username,
   UserIRI
@@ -143,7 +143,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         val givenName = GivenName.make(apiRequest.givenName)
         val familyName = FamilyName.make(apiRequest.familyName)
         val password = Password.make(apiRequest.password)
-        val status = Status.make(apiRequest.status)
+        val status = UserStatus.make(apiRequest.status)
         val languageCode = LanguageCode.make(apiRequest.lang)
         val systemAdmin = SystemAdmin.make(apiRequest.systemAdmin)
 
@@ -408,7 +408,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
           }
 
           val newStatus = apiRequest.status match {
-            case Some(status) => Status.make(status).fold(error => throw error.head, value => value)
+            case Some(status) => UserStatus.make(status).fold(error => throw error.head, value => value)
             case None         => throw BadRequestException("The status is missing.")
           }
 
@@ -458,7 +458,7 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
         }
 
         /* update existing user's status to false */
-        val status = Status.make(false).fold(error => throw error.head, value => value)
+        val status = UserStatus.make(false).fold(error => throw error.head, value => value)
 
         val requestMessage: Future[UserChangeStatusRequestADM] = for {
           requestingUser <- getUserADM(

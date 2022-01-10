@@ -21,14 +21,15 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects.{
-  ProjectDescription,
   Keywords,
   Logo,
   Longname,
-  Selfjoin,
+  ProjectDescription,
+  ProjectIRI,
+  ProjectSelfJoin,
+  ProjectStatus,
   Shortcode,
-  Shortname,
-  Status
+  Shortname
 }
 import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
@@ -139,19 +140,15 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     post {
       entity(as[CreateProjectApiRequestADM]) { apiRequest => requestContext =>
         // zio prelude: validation
-        val id = Validation(
-          stringFormatter
-            .validateAndEscapeOptionalProjectIri(apiRequest.id, throw BadRequestException(s"Invalid project IRI"))
-        )
-//        TODO-mpro: why id, longname and logo are not options below?
+        val id = ProjectIRI.make(apiRequest.id)
         val shortname = Shortname.make(apiRequest.shortname)
         val shortcode = Shortcode.make(apiRequest.shortcode)
         val longname = Longname.make(apiRequest.longname)
         val description = ProjectDescription.make(apiRequest.description)
         val keywords = Keywords.make(apiRequest.keywords)
         val logo = Logo.make(apiRequest.logo)
-        val status = Status.make(apiRequest.status)
-        val selfjoin = Selfjoin.make(apiRequest.selfjoin)
+        val status = ProjectStatus.make(apiRequest.status)
+        val selfjoin = ProjectSelfJoin.make(apiRequest.selfjoin)
 
         val projectCreatePayload: Validation[Throwable, ProjectsPayloadsADM] =
           Validation.validateWith(id, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)(

@@ -16,7 +16,7 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, Group
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserChangeRequestADM, _}
-import org.knora.webapi.messages.admin.responder.valueObjects.{Username, Email, Password, Status, SystemAdmin}
+import org.knora.webapi.messages.admin.responder.valueObjects.{Username, Email, Password, UserStatus, SystemAdmin}
 import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceGetUserADM,
   CacheServicePutUserADM,
@@ -548,7 +548,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def changeUserStatusADM(
     userIri: IRI,
-    status: Status,
+    status: UserStatus,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
@@ -561,7 +561,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
      */
     def changeUserStatusTask(
       userIri: IRI,
-      status: Status,
+      status: UserStatus,
       requestingUser: UserADM,
       apiRequestID: UUID
     ): Future[UserOperationResponseADM] =

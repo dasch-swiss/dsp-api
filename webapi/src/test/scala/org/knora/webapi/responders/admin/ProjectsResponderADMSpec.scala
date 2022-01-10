@@ -15,7 +15,6 @@ import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, NotFoundException}
-
 import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{
   AdministrativePermissionADM,
@@ -29,14 +28,14 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.valueObjects.{
-  ProjectDescription,
   Keywords,
   Logo,
   Longname,
-  Selfjoin,
+  ProjectDescription,
+  ProjectSelfJoin,
+  ProjectStatus,
   Shortcode,
-  Shortname,
-  Status
+  Shortname
 }
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
@@ -63,9 +62,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
   private val rootUser = SharedTestDataADM.rootUser
 
   "The ProjectsResponderADM" when {
-
     "used to query for project information" should {
-
       "return information for every project" in {
 
         responderManager ! ProjectsGetRequestADM(
@@ -79,7 +76,6 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return information about a project identified by IRI" in {
-
         /* Incunabula project */
         responderManager ! ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeIri = Some(SharedTestDataADM.incunabulaProject.id)),
@@ -116,7 +112,6 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
 
       "return 'NotFoundException' when the project IRI is unknown" in {
-
         responderManager ! ProjectGetRequestADM(
           identifier = ProjectIdentifierADM(maybeIri = Some("http://rdfh.ch/projects/notexisting")),
           featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -146,7 +141,6 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
     }
 
     "used to query project's restricted view settings" should {
-
       val expectedResult = ProjectRestrictedViewSettingsADM(size = Some("!512,512"), watermark = Some("path_to_image"))
 
       "return restricted view settings using project IRI" in {
@@ -206,7 +200,6 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
     }
 
     "used to modify project information" should {
-
       val newProjectIri = new MutableTestIri
 
       "CREATE a project and return the project info if the supplied shortname is unique" in {
@@ -221,8 +214,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = Status.make(true).fold(error => throw error.head, value => value),
-            selfjoin = Selfjoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
+            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
@@ -319,8 +312,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = Status.make(true).fold(error => throw error.head, value => value),
-            selfjoin = Selfjoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
+            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
@@ -353,8 +346,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq(keywordWithSpecialCharacter)).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = Status.make(true).fold(error => throw error.head, value => value),
-            selfjoin = Selfjoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
+            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
@@ -386,8 +379,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = Status.make(true).fold(error => throw error.head, value => value),
-            selfjoin = Selfjoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
+            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
@@ -407,8 +400,8 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
             logo = Logo.make(Some("/fu/bar/baz.jpg")).fold(error => throw error.head, value => value),
-            status = Status.make(true).fold(error => throw error.head, value => value),
-            selfjoin = Selfjoin.make(false).fold(error => throw error.head, value => value)
+            status = ProjectStatus.make(true).fold(error => throw error.head, value => value),
+            selfjoin = ProjectSelfJoin.make(false).fold(error => throw error.head, value => value)
           ),
           featureFactoryConfig = defaultFeatureFactoryConfig,
           SharedTestDataADM.rootUser,
@@ -724,5 +717,4 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       }
     }
   }
-
 }

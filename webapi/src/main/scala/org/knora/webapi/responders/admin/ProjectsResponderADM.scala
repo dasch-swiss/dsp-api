@@ -1098,7 +1098,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         }
 
         // check the custom IRI; if not given, create an unused IRI
-        customProjectIri: Option[SmartIri] = createProjectRequest.id.map(iri => iri.toSmartIri)
+        customProjectIri: Option[SmartIri] = createProjectRequest.id.map(_.value).map(_.toSmartIri)
         newProjectIRI: IRI <- checkOrCreateEntityIri(
           customProjectIri,
           stringFormatter.makeRandomProjectIri(createProjectRequest.shortcode.value)

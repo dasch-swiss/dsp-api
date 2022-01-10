@@ -95,30 +95,6 @@ object Email { self =>
 }
 
 /**
- * Password value object.
- */
-sealed abstract case class Password private (value: String)
-object Password { self =>
-  private val PasswordRegex: Regex = """^[\s\S]*$""".r //TODO: add password validation
-
-  def make(value: String): Validation[Throwable, Password] =
-    if (value.isEmpty) {
-      Validation.fail(BadRequestException(PASSWORD_MISSING_ERROR))
-    } else {
-      PasswordRegex.findFirstIn(value) match {
-        case Some(value) => Validation.succeed(new Password(value) {})
-        case None        => Validation.fail(BadRequestException(PASSWORD_INVALID_ERROR))
-      }
-    }
-
-  def make(value: Option[String]): Validation[Throwable, Option[Password]] =
-    value match {
-      case Some(v) => self.make(v).map(Some(_))
-      case None    => Validation.succeed(None)
-    }
-}
-
-/**
  * GivenName value object.
  */
 sealed abstract case class GivenName private (value: String)
@@ -156,6 +132,39 @@ object FamilyName { self =>
       case Some(v) => self.make(v).map(Some(_))
       case None    => Validation.succeed(None)
     }
+}
+
+/**
+ * Password value object.
+ */
+sealed abstract case class Password private (value: String)
+object Password { self =>
+  private val PasswordRegex: Regex = """^[\s\S]*$""".r //TODO: add password validation
+
+  def make(value: String): Validation[Throwable, Password] =
+    if (value.isEmpty) {
+      Validation.fail(BadRequestException(PASSWORD_MISSING_ERROR))
+    } else {
+      PasswordRegex.findFirstIn(value) match {
+        case Some(value) => Validation.succeed(new Password(value) {})
+        case None        => Validation.fail(BadRequestException(PASSWORD_INVALID_ERROR))
+      }
+    }
+
+  def make(value: Option[String]): Validation[Throwable, Option[Password]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
+    }
+}
+
+/**
+ * UserStatus value object.
+ */
+sealed abstract case class UserStatus private (value: Boolean)
+object UserStatus {
+  def make(value: Boolean): Validation[Throwable, UserStatus] =
+    Validation.succeed(new UserStatus(value) {})
 }
 
 /**
