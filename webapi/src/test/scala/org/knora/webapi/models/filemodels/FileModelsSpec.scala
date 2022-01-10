@@ -408,5 +408,6 @@ class FileModelsSpec extends CoreSpec {
 
     }
 
+    // TODO: tests for ChangeFileRequest
   }
 }

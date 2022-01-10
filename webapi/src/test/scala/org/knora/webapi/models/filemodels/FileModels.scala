@@ -5,32 +5,17 @@
 
 package org.knora.webapi.models.filemodels
 
-import org.knora.webapi.ApiV2Complex
-import org.knora.webapi.feature.{FeatureFactoryConfig, KnoraSettingsFeatureFactoryConfig}
+import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectADM
 import org.knora.webapi.messages.admin.responder.usersmessages.UserADM
 import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceV2, CreateValueInNewResourceV2}
-import org.knora.webapi.messages.v2.responder.valuemessages.{
-  ArchiveFileValueContentV2,
-  AudioFileValueContentV2,
-  DocumentFileValueContentV2,
-  FileValueV2,
-  MovingImageFileValueContentV2,
-  StillImageFileValueContentV2,
-  TextFileValueContentV2,
-  UpdateValueContentV2,
-  UpdateValueRequestV2,
-  UpdateValueResponseV2
-}
+import org.knora.webapi.messages.v2.responder.valuemessages.{UpdateValueContentV2, UpdateValueRequestV2}
 import org.knora.webapi.messages.{SmartIri, StringFormatter}
-import org.knora.webapi.settings.KnoraSettings
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 
 import java.time.Instant
 import java.util.UUID
-import spray.json._
-import spray.json.DefaultJsonProtocol._
 
 sealed abstract case class UploadFileRequest private (
   fileType: FileType,
@@ -44,6 +29,7 @@ sealed abstract case class UploadFileRequest private (
    * @param className    the class name of the resource. Optional.
    * @param ontologyName the name of the ontology to be prefixed to the class name. Defaults to `"knora-api"`
    * @param shortcode    the shortcode of the project to which the resource should be added. Defaults to `"0001"`
+   * @param ontologyIRI  IRI of the ontology, to which the prefix should resolve. Optional.
    * @return JSON-LD serialization of the request.
    */
   def toJsonLd(
@@ -92,10 +78,12 @@ sealed abstract case class UploadFileRequest private (
    * @param valuePermissions        custom permissions for the value. Optional. Defaults to None.
    *                                If `None`, the default permissions will be used.
    * @param resourcePermissions     permissions for the resource. Optional. If none, the default permissions are used.
+   * @param resourceCreationDate    custom creation date of the resource. Optional.
+   * @param valuePropertyIRI        property IRI of the value. Optional.
+   * @param resourceClassIRI        resource class IRI. Optional.
    * @param project                 the project to which the resource belongs. Optional. Defaults to None.
    *                                If None, [[SharedTestDataADM.anythingProject]] is used.
    * @return a [[CreateResourceV2]] representation of the [[UploadFileRequest]]
-   * @param resourceCreationDate
    */
   def toMessage(
     resourceIri: Option[String] = None,
@@ -196,8 +184,6 @@ object UploadFileRequest {
     ) {}
 }
 
-// TODO: same for ChangeFileRequest
-
 sealed abstract case class ChangeFileRequest private (
   fileType: FileType,
   internalFilename: String,
@@ -229,6 +215,19 @@ sealed abstract case class ChangeFileRequest private (
        |}""".stripMargin
   }
 
+  /**
+   * @param featureFactoryConfig the featureFactoryConfig
+   * @param internalMimeType     internal mimetype, as provided by SIPI. Optional.
+   * @param originalFilename     original filename before the upload. Optional.
+   * @param originalMimeType     file mimetype before the upload. Optional.
+   * @param comment              rdfs:comment to the change. Optional.
+   * @param requestingUser       the user issuing the request. Optional.
+   * @param permissions          permissions of the updated file value. Optional.
+   * @param valueCreationDate    custom creation date of the updated value. Optional.
+   * @param newValueVersionIri   custom IRI of the new version of the value. Optional.
+   * @param resourceClassIRI     the resource class IRI. Optional.
+   * @return
+   */
   def toMessage(
     featureFactoryConfig: FeatureFactoryConfig,
     internalMimeType: Option[String] = None,
