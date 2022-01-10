@@ -16,6 +16,11 @@ import spray.json.DefaultJsonProtocol._
 class FileModelsSpec extends CoreSpec {
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
   private val fileNamePDF = "document-file.pdf"
+  private val fileNameImage = "image.jp2"
+  private val fileNameVideo = "video.mp4"
+  private val fileNameAudio = "audio.mpeg"
+  private val fileNameText = "text.txt"
+  private val fileNameArchive = "archive.zip"
 
   "FileModelsUtil," when {
 
@@ -116,10 +121,9 @@ class FileModelsSpec extends CoreSpec {
       }
 
       "create a valid representation of a StillImageRepresentation with default values" in {
-        val internalFilename = "image.jp2"
         val stillImageRepresentation = UploadFileRequest.make(
           fileType = FileType.StillImageFile(),
-          internalFilename = internalFilename
+          internalFilename = fileNameImage
         )
         stillImageRepresentation.fileType match {
           case FileType.StillImageFile(x, y) =>
@@ -130,14 +134,13 @@ class FileModelsSpec extends CoreSpec {
               s"FileType ${stillImageRepresentation.fileType} did not match StillImageFile(_, _)"
             )
         }
-        stillImageRepresentation.internalFilename should equal(internalFilename)
+        stillImageRepresentation.internalFilename should equal(fileNameImage)
       }
 
       "create a valid representation of a StillImageRepresentation with custom values" in {
-        val internalFilename = "image.jp2"
         val stillImageRepresentation = UploadFileRequest.make(
           fileType = FileType.StillImageFile(dimX = 10, dimY = 10),
-          internalFilename = internalFilename
+          internalFilename = fileNameImage
         )
         stillImageRepresentation.fileType match {
           case FileType.StillImageFile(x, y) =>
@@ -148,14 +151,13 @@ class FileModelsSpec extends CoreSpec {
               s"FileType ${stillImageRepresentation.fileType} did not match StillImageFile(_, _)"
             )
         }
-        stillImageRepresentation.internalFilename should equal(internalFilename)
+        stillImageRepresentation.internalFilename should equal(fileNameImage)
       }
 
       "create a valid representation of a MovingImageRepresentation with default values" in {
-        val internalFilename = "video.mp4"
         val movingImageRepresentation = UploadFileRequest.make(
           fileType = FileType.MovingImageFile(),
-          internalFilename = internalFilename
+          internalFilename = fileNameVideo
         )
         movingImageRepresentation.fileType match {
           case FileType.MovingImageFile(x, y) =>
@@ -166,14 +168,13 @@ class FileModelsSpec extends CoreSpec {
               s"FileType ${movingImageRepresentation.fileType} did not match MovingImageFile(_, _)"
             )
         }
-        movingImageRepresentation.internalFilename should equal(internalFilename)
+        movingImageRepresentation.internalFilename should equal(fileNameVideo)
       }
 
       "create a valid representation of a MovingImageRepresentation with custom values" in {
-        val internalFilename = "video.mp4"
         val movingImageRepresentation = UploadFileRequest.make(
           fileType = FileType.MovingImageFile(10, 11),
-          internalFilename = internalFilename
+          internalFilename = fileNameVideo
         )
         movingImageRepresentation.fileType match {
           case FileType.MovingImageFile(x, y) =>
@@ -184,37 +185,34 @@ class FileModelsSpec extends CoreSpec {
               s"FileType ${movingImageRepresentation.fileType} did not match MovingImageFile(_, _)"
             )
         }
-        movingImageRepresentation.internalFilename should equal(internalFilename)
+        movingImageRepresentation.internalFilename should equal(fileNameVideo)
       }
 
       "create a valid representation of a AudioRepresentation" in {
-        val internalFilename = "audio.mpeg"
         val audioRepresentation = UploadFileRequest.make(
           fileType = FileType.AudioFile,
-          internalFilename = internalFilename
+          internalFilename = fileNameAudio
         )
         audioRepresentation.fileType should equal(FileType.AudioFile)
-        audioRepresentation.internalFilename should equal(internalFilename)
+        audioRepresentation.internalFilename should equal(fileNameAudio)
       }
 
       "create a valid representation of a TextRepresentation" in {
-        val internalFilename = "text.txt"
         val textRepresentation = UploadFileRequest.make(
           fileType = FileType.TextFile,
-          internalFilename = internalFilename
+          internalFilename = fileNameText
         )
         textRepresentation.fileType should equal(FileType.TextFile)
-        textRepresentation.internalFilename should equal(internalFilename)
+        textRepresentation.internalFilename should equal(fileNameText)
       }
 
       "create a valid representation of a ArchiveRepresentation" in {
-        val internalFilename = "archive.zip"
         val archiveRepresentation = UploadFileRequest.make(
           fileType = FileType.ArchiveFile,
-          internalFilename = internalFilename
+          internalFilename = fileNameArchive
         )
         archiveRepresentation.fileType should equal(FileType.ArchiveFile)
-        archiveRepresentation.internalFilename should equal(internalFilename)
+        archiveRepresentation.internalFilename should equal(fileNameArchive)
       }
 
     }
@@ -409,5 +407,167 @@ class FileModelsSpec extends CoreSpec {
     }
 
     // TODO: tests for ChangeFileRequest
+    "creating a ChangeFileRequest," should {
+
+      "create a valid representation of a DocumentRepresentation with default values" in {
+        val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
+        val valueIRI = stringFormatter.makeRandomResourceIri("0000")
+
+        val change = ChangeFileRequest.make(
+          fileType = FileType.DocumentFile(),
+          internalFilename = fileNamePDF,
+          resourceIri = resourceIRI,
+          valueIri = valueIRI
+        )
+        change.fileType match {
+          case FileType.DocumentFile(pg, x, y) =>
+            pg should equal(Some(1))
+            x should equal(Some(100))
+            y should equal(Some(100))
+          case _ => throw AssertionException(s"FileType ${change.fileType} did not match DocumentFile(_, _, _)")
+        }
+        change.internalFilename should equal(fileNamePDF)
+        change.valueIRI should equal(valueIRI)
+        change.resourceIRI should equal(resourceIRI)
+        change.className should equal("DocumentRepresentation")
+        change.ontologyName should equal("knora-api")
+      }
+
+      "create a valid representation of a DocumentRepresentation with custom values" in {
+        val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
+        val valueIRI = stringFormatter.makeRandomResourceIri("0000")
+        val pageCount = Some(33)
+        val dimX = Some(44)
+        val dimY = Some(55)
+        val className = "CustomDocumentResource"
+        val ontologyName = "anything"
+
+        val change = ChangeFileRequest.make(
+          fileType = FileType.DocumentFile(
+            pageCount = pageCount,
+            dimX = dimX,
+            dimY = dimY
+          ),
+          internalFilename = fileNamePDF,
+          resourceIri = resourceIRI,
+          valueIri = valueIRI,
+          className = Some(className),
+          ontologyName = ontologyName
+        )
+        change.fileType match {
+          case FileType.DocumentFile(pg, x, y) =>
+            pg should equal(pageCount)
+            x should equal(dimX)
+            y should equal(dimY)
+          case _ => throw AssertionException(s"FileType ${change.fileType} did not match DocumentFile(_, _, _)")
+        }
+        change.internalFilename should equal(fileNamePDF)
+        change.valueIRI should equal(valueIRI)
+        change.resourceIRI should equal(resourceIRI)
+        change.className should equal(className)
+        change.ontologyName should equal(ontologyName)
+      }
+
+      "create a valid representation of a StillImageRepresentation with default values" in {
+        val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
+        val valueIRI = stringFormatter.makeRandomResourceIri("0000")
+
+        val change = ChangeFileRequest.make(
+          fileType = FileType.StillImageFile(),
+          internalFilename = fileNameImage,
+          resourceIri = resourceIRI,
+          valueIri = valueIRI
+        )
+        change.fileType match {
+          case FileType.StillImageFile(x, y) =>
+            x should equal(100)
+            y should equal(100)
+          case _ => throw AssertionException(s"FileType ${change.fileType} did not match StillImageFile(_, _)")
+        }
+        change.internalFilename should equal(fileNameImage)
+        change.valueIRI should equal(valueIRI)
+        change.resourceIRI should equal(resourceIRI)
+        change.className should equal("StillImageRepresentation")
+        change.ontologyName should equal("knora-api")
+      }
+
+      "create a valid representation of a MovingImageRepresentation with default values" in {
+        val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
+        val valueIRI = stringFormatter.makeRandomResourceIri("0000")
+
+        val change = ChangeFileRequest.make(
+          fileType = FileType.MovingImageFile(),
+          internalFilename = fileNameVideo,
+          resourceIri = resourceIRI,
+          valueIri = valueIRI
+        )
+        change.fileType match {
+          case FileType.MovingImageFile(x, y) =>
+            x should equal(100)
+            y should equal(100)
+          case _ => throw AssertionException(s"FileType ${change.fileType} did not match MovingImageFile(_, _)")
+        }
+        change.internalFilename should equal(fileNameVideo)
+        change.valueIRI should equal(valueIRI)
+        change.resourceIRI should equal(resourceIRI)
+        change.className should equal("MovingImageRepresentation")
+        change.ontologyName should equal("knora-api")
+      }
+
+      "create a valid representation of a AudioRepresentation with default values" in {
+        val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
+        val valueIRI = stringFormatter.makeRandomResourceIri("0000")
+
+        val change = ChangeFileRequest.make(
+          fileType = FileType.AudioFile,
+          internalFilename = fileNameAudio,
+          resourceIri = resourceIRI,
+          valueIri = valueIRI
+        )
+        change.fileType should equal(FileType.AudioFile)
+        change.internalFilename should equal(fileNameAudio)
+        change.valueIRI should equal(valueIRI)
+        change.resourceIRI should equal(resourceIRI)
+        change.className should equal("AudioRepresentation")
+        change.ontologyName should equal("knora-api")
+      }
+
+      "create a valid representation of a TextRepresentation with default values" in {
+        val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
+        val valueIRI = stringFormatter.makeRandomResourceIri("0000")
+
+        val change = ChangeFileRequest.make(
+          fileType = FileType.TextFile,
+          internalFilename = fileNameText,
+          resourceIri = resourceIRI,
+          valueIri = valueIRI
+        )
+        change.fileType should equal(FileType.TextFile)
+        change.internalFilename should equal(fileNameText)
+        change.valueIRI should equal(valueIRI)
+        change.resourceIRI should equal(resourceIRI)
+        change.className should equal("TextRepresentation")
+        change.ontologyName should equal("knora-api")
+      }
+
+      "create a valid representation of a ArchiveRepresentation with default values" in {
+        val resourceIRI = stringFormatter.makeRandomResourceIri("0000")
+        val valueIRI = stringFormatter.makeRandomResourceIri("0000")
+
+        val change = ChangeFileRequest.make(
+          fileType = FileType.ArchiveFile,
+          internalFilename = fileNameArchive,
+          resourceIri = resourceIRI,
+          valueIri = valueIRI
+        )
+        change.fileType should equal(FileType.ArchiveFile)
+        change.internalFilename should equal(fileNameArchive)
+        change.valueIRI should equal(valueIRI)
+        change.resourceIRI should equal(resourceIRI)
+        change.className should equal("ArchiveRepresentation")
+        change.ontologyName should equal("knora-api")
+      }
+
+    }
   }
 }
