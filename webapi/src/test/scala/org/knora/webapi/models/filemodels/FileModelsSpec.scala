@@ -15,6 +15,7 @@ import spray.json.DefaultJsonProtocol._
 
 class FileModelsSpec extends CoreSpec {
   implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
+  private val fileNamePDF = "document-file.pdf"
 
   "FileModelsUtil," when {
 
@@ -71,10 +72,9 @@ class FileModelsSpec extends CoreSpec {
     "creating an UploadFileRequest," should {
 
       "create a valid representation of a DocumentRepresentation with default values" in {
-        val internalFilename = "document-file.pdf"
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(),
-          internalFilename = internalFilename
+          internalFilename = fileNamePDF
         )
         documentRepresentation.fileType match {
           case FileType.DocumentFile(pg, x, y) =>
@@ -84,7 +84,7 @@ class FileModelsSpec extends CoreSpec {
           case _ =>
             throw AssertionException(s"FileType ${documentRepresentation.fileType} did not match DocumentFile(_, _, _)")
         }
-        documentRepresentation.internalFilename should equal(internalFilename)
+        documentRepresentation.internalFilename should equal(fileNamePDF)
       }
 
       "create a valid representation of a DocumentRepresentation with custom values" in {
@@ -221,17 +221,16 @@ class FileModelsSpec extends CoreSpec {
     "generating a JSON-LD representation of a UploadFileRequest," should {
 
       "correctly serialize a DocumentRepresentation with default values" in {
-        val internalFilename = "document-file.pdf"
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(),
-          internalFilename = internalFilename
+          internalFilename = fileNamePDF
         )
         val json = documentRepresentation.toJsonLd().parseJson
         val expectedJSON = Map(
           "@type" -> "knora-api:DocumentRepresentation".toJson,
           "knora-api:hasDocumentFileValue" -> Map(
             "@type" -> "knora-api:DocumentFileValue",
-            "knora-api:fileValueHasFilename" -> "document-file.pdf"
+            "knora-api:fileValueHasFilename" -> fileNamePDF
           ).toJson,
           "knora-api:attachedToProject" -> Map(
             "@id" -> "http://rdfh.ch/projects/0001"
@@ -251,13 +250,12 @@ class FileModelsSpec extends CoreSpec {
         val className = Some("ThingDocument")
         val ontologyName = "biblio"
         val shortcode = SharedTestDataADM.beolProject.shortcode
-        val internalFilename = "document-file.pdf"
         val ontologyIRI = SharedTestDataADM.beolProject.ontologies.find(_.endsWith(ontologyName))
         val label = "a custom label"
 
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(pageCount = None, dimX = Some(20), dimY = None),
-          internalFilename = internalFilename,
+          internalFilename = fileNamePDF,
           label = label
         )
         val json = documentRepresentation
@@ -272,7 +270,7 @@ class FileModelsSpec extends CoreSpec {
           "@type" -> s"$ontologyName:${className.get}".toJson,
           "knora-api:hasDocumentFileValue" -> Map(
             "@type" -> "knora-api:DocumentFileValue",
-            "knora-api:fileValueHasFilename" -> internalFilename
+            "knora-api:fileValueHasFilename" -> fileNamePDF
           ).toJson,
           "knora-api:attachedToProject" -> Map(
             "@id" -> s"http://rdfh.ch/projects/$shortcode"
@@ -294,10 +292,9 @@ class FileModelsSpec extends CoreSpec {
     "generating a message representation of a UploadFileRequest," should {
 
       "correctly serialize a DocumentRepresentation with default values" in {
-        val internalFilename = "document-file.pdf"
         val documentRepresentation = UploadFileRequest.make(
           fileType = FileType.DocumentFile(),
-          internalFilename = internalFilename
+          internalFilename = fileNamePDF
         )
         val msg = documentRepresentation.toMessage()
 
@@ -310,7 +307,7 @@ class FileModelsSpec extends CoreSpec {
                 valueContent = DocumentFileValueContentV2(
                   ontologySchema = ApiV2Complex,
                   fileValue = FileValueV2(
-                    internalFilename = internalFilename,
+                    internalFilename = fileNamePDF,
                     internalMimeType = "application/pdf",
                     originalFilename = None,
                     originalMimeType = Some("application/pdf")
