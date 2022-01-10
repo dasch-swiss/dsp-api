@@ -29,7 +29,7 @@ import org.knora.webapi.messages.admin.responder.permissionsmessages.{
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
 import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Description,
+  ProjectDescription,
   Keywords,
   Logo,
   Longname,
@@ -216,7 +216,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make(shortCode).fold(error => throw error.head, value => value), // lower case
             longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
-            description = Description
+            description = ProjectDescription
               .make(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
@@ -314,7 +314,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortname = Shortname.make("newproject2").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("1112").fold(error => throw error.head, value => value), // lower case
             longname = Some(Longname.make("project longname").fold(error => throw error.head, value => value)),
-            description = Description
+            description = ProjectDescription
               .make(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
@@ -348,7 +348,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortcode = Shortcode.make("1312").fold(error => throw error.head, value => value), // lower case
             longname =
               Longname.make(Some(longnameWithSpecialCharacter)).fold(error => throw error.head, value => value),
-            description = Description
+            description = ProjectDescription
               .make(Seq(StringLiteralV2(value = descriptionWithSpecialCharacter, language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq(keywordWithSpecialCharacter)).fold(error => throw error.head, value => value),
@@ -381,7 +381,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
             longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
-            description = Description
+            description = ProjectDescription
               .make(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),
@@ -402,7 +402,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
             shortname = Shortname.make("newproject3").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
             longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
-            description = Description
+            description = ProjectDescription
               .make(Seq(StringLiteralV2(value = "project description", language = Some("en"))))
               .fold(error => throw error.head, value => value),
             keywords = Keywords.make(Seq("keywords")).fold(error => throw error.head, value => value),

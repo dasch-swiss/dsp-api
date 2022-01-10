@@ -21,7 +21,7 @@ import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Description,
+  ProjectDescription,
   Keywords,
   Logo,
   Longname,
@@ -147,7 +147,7 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
         val shortname = Shortname.make(apiRequest.shortname)
         val shortcode = Shortcode.make(apiRequest.shortcode)
         val longname = Longname.make(apiRequest.longname)
-        val description = Description.make(apiRequest.description)
+        val description = ProjectDescription.make(apiRequest.description)
         val keywords = Keywords.make(apiRequest.keywords)
         val logo = Logo.make(apiRequest.logo)
         val status = Status.make(apiRequest.status)
