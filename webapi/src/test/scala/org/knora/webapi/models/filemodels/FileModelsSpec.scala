@@ -406,7 +406,6 @@ class FileModelsSpec extends CoreSpec {
 
     }
 
-    // TODO: tests for ChangeFileRequest
     "creating a ChangeFileRequest," should {
 
       "create a valid representation of a DocumentRepresentation with default values" in {
@@ -568,6 +567,14 @@ class FileModelsSpec extends CoreSpec {
         change.ontologyName should equal("knora-api")
       }
 
+    }
+
+    "generating a JSON-LD representation of a ChangeFileRequest," should {
+      // TODO
+    }
+
+    "generating a message representation of a ChangeFileRequest," should {
+      // TODO
     }
   }
 }
