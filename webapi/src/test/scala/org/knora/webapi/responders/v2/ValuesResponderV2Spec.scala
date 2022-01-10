@@ -48,11 +48,15 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private val aThingIri = "http://rdfh.ch/0001/a-thing"
   private val aThingPictureIri = "http://rdfh.ch/0001/a-thing-picture"
   private val sierraIri = "http://rdfh.ch/0001/0C-0L1kORryKzJAJxxRyRQ"
+  private val thingPictureClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture"
 
   private val incunabulaUser = SharedTestDataADM.incunabulaMemberUser
   private val incunabulaCreatorUser = SharedTestDataADM.incunabulaCreatorUser
   private val anythingUser1 = SharedTestDataADM.anythingUser1
   private val anythingUser2 = SharedTestDataADM.anythingUser2
+
+  private val mimeTypeTIFF = "image/tiff"
+  private val mimeTypeJP2 = "image/jp2"
 
   /* we need to run our app with the mocked sipi actor */
   override lazy val appActor: ActorRef = system.actorOf(
@@ -4143,10 +4147,10 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         )
         .toMessage(
           featureFactoryConfig = defaultFeatureFactoryConfig,
-          internalMimeType = Some("image/jp2"),
+          internalMimeType = Some(mimeTypeJP2),
           originalFilename = Some("test.tiff"),
-          originalMimeType = Some("image/tiff"),
-          resourceClassIRI = Some("http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri),
+          originalMimeType = Some(mimeTypeTIFF),
+          resourceClassIRI = Some(thingPictureClassIri.toSmartIri),
           requestingUser = anythingUser1
         )
 
@@ -4177,9 +4181,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val dimX = 512
       val dimY = 256
       val internalFilename = "updated-filename.jp2"
-      val internalMimeType = "image/jp2"
+      val internalMimeType = mimeTypeJP2
       val originalFilename = Some("test.tiff")
-      val originalMimeType = Some("image/tiff")
+      val originalMimeType = Some(mimeTypeTIFF)
 
       val changeFileRequest = ChangeFileRequest
         .make(
@@ -4192,7 +4196,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val changeFileMessage = changeFileRequest
         .toMessage(
           featureFactoryConfig = defaultFeatureFactoryConfig,
-          resourceClassIRI = Some("http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri),
+          resourceClassIRI = Some(thingPictureClassIri.toSmartIri),
           internalMimeType = Some(internalMimeType),
           originalMimeType = originalMimeType,
           originalFilename = originalFilename
@@ -4241,9 +4245,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         ontologySchema = ApiV2Complex,
         fileValue = FileValueV2(
           internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
-          internalMimeType = "image/jp2",
+          internalMimeType = mimeTypeJP2,
           originalFilename = Some("test.tiff"),
-          originalMimeType = Some("image/tiff")
+          originalMimeType = Some(mimeTypeTIFF)
         ),
         dimX = 512,
         dimY = 256
@@ -4253,7 +4257,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       responderManager ! UpdateValueRequestV2(
         UpdateValueContentV2(
           resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+          resourceClassIri = thingPictureClassIri.toSmartIri,
           propertyIri = propertyIri,
           valueIri = stillImageFileValueIri.get,
           valueContent = valueContent
@@ -4276,9 +4280,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         ontologySchema = ApiV2Complex,
         fileValue = FileValueV2(
           internalFilename = MockSipiConnector.FAILURE_FILENAME, // tells the mock Sipi responder to simulate failure
-          internalMimeType = "image/jp2",
+          internalMimeType = mimeTypeJP2,
           originalFilename = Some("test.tiff"),
-          originalMimeType = Some("image/tiff")
+          originalMimeType = Some(mimeTypeTIFF)
         ),
         dimX = 512,
         dimY = 256
@@ -4288,7 +4292,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       responderManager ! UpdateValueRequestV2(
         UpdateValueContentV2(
           resourceIri = resourceIri,
-          resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#ThingPicture".toSmartIri,
+          resourceClassIri = thingPictureClassIri.toSmartIri,
           propertyIri = propertyIri,
           valueIri = stillImageFileValueIri.get,
           valueContent = valueContent
