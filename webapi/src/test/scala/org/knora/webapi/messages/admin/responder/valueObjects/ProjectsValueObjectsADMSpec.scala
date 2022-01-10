@@ -11,9 +11,9 @@ import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessage
 import zio.prelude.Validation
 
 /**
- * This spec is used to test the [[IriValueObjectsADM]] value objects creation.
+ * This spec is used to test the [[ProjectsValueObjectsADM]] value objects creation.
  */
-class IriValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
+class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   "ProjectIRI value object" when {
 //    TODO: check string formatter project iri validation because passing just "http://rdfh.ch/projects/@@@@@@" works
     val validProjectIri = "http://rdfh.ch/projects/0001"

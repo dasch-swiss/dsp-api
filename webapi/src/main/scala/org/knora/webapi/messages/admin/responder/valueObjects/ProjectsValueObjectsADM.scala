@@ -2,10 +2,41 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.exceptions.{AssertionException, BadRequestException}
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM.{
+  PROJECT_IRI_INVALID_ERROR,
+  PROJECT_IRI_MISSING_ERROR
+}
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 
-/** Project value objects */
+/**
+ * ProjectIRI value object.
+ */
+sealed abstract case class ProjectIRI private (value: String)
+object ProjectIRI { self =>
+  val sf = StringFormatter.getGeneralInstance
+
+  def make(value: String): Validation[Throwable, ProjectIRI] =
+    if (value.isEmpty) {
+      Validation.fail(BadRequestException(PROJECT_IRI_MISSING_ERROR))
+    } else {
+      if (value.nonEmpty && !sf.isKnoraProjectIriStr(value)) {
+        Validation.fail(BadRequestException(PROJECT_IRI_INVALID_ERROR))
+      } else {
+        val validatedValue = Validation(
+          sf.validateAndEscapeProjectIri(value, throw BadRequestException(PROJECT_IRI_INVALID_ERROR))
+        )
+
+        validatedValue.map(new ProjectIRI(_) {})
+      }
+    }
+
+  def make(value: Option[String]): Validation[Throwable, Option[ProjectIRI]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
+    }
+}
 
 /**
  * Project Shortcode value object.
