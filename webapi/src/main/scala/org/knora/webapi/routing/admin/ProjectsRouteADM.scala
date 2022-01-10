@@ -153,9 +153,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
         val status = Status.make(apiRequest.status)
         val selfjoin = Selfjoin.make(apiRequest.selfjoin)
 
-        val projectCreatePayload: Validation[Throwable, ProjectCreatePayloadADM] =
+        val projectCreatePayload: Validation[Throwable, ProjectsPayloadsADM] =
           Validation.validateWith(id, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)(
-            ProjectCreatePayloadADM
+            ProjectsPayloadsADM
           )
 
         val requestMessage: Future[ProjectCreateRequestADM] = for {

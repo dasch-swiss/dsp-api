@@ -989,7 +989,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * @throws BadRequestException     in the case when the shortcode is invalid.
    */
   private def projectCreateRequestADM(
-    createProjectRequest: ProjectCreatePayloadADM,
+    createProjectRequest: ProjectsPayloadsADM,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
@@ -1069,7 +1069,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       } yield ()
 
     def projectCreateTask(
-      createProjectRequest: ProjectCreatePayloadADM,
+      createProjectRequest: ProjectsPayloadsADM,
       requestingUser: UserADM
     ): Future[ProjectOperationResponseADM] =
       for {

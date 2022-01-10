@@ -13,9 +13,9 @@ import org.knora.webapi.messages.admin.responder.valueObjects.{
 }
 
 /**
- * Project payload
+ * Project creation payload
  */
-final case class ProjectCreatePayloadADM(
+final case class ProjectsPayloadsADM(
   id: Option[IRI] = None,
   shortname: Shortname,
   shortcode: Shortcode,

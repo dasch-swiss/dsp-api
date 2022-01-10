@@ -1,17 +1,6 @@
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-import org.knora.webapi.IRI
-import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Email,
-  FamilyName,
-  GivenName,
-  LanguageCode,
-  Password,
-  Status,
-  SystemAdmin,
-  UserIRI,
-  Username
-}
+import org.knora.webapi.messages.admin.responder.valueObjects._
 
 /**
  * User creation payload
