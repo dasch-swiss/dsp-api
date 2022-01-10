@@ -95,7 +95,10 @@ object FileModelUtil {
               case None    => "application/pdf"
             },
             originalFilename = originalFilename,
-            originalMimeType = Some("application/pdf")
+            originalMimeType = originalMimeType match {
+              case Some(_) => originalMimeType
+              case None    => Some("application/pdf")
+            }
           ),
           pageCount = pageCount,
           dimX = dimX,

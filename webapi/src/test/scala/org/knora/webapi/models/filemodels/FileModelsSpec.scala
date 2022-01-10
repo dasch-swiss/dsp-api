@@ -54,7 +54,7 @@ class FileModelsSpec extends CoreSpec {
                                 |    "knora-api": "http://api.knora.org/ontology/knora-api/v2#",
                                 |    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
                                 |    "xsd": "http://www.w3.org/2001/XMLSchema#",
-                                |    "biblio": "http://www.knora.org/ontology/0801/biblio",
+                                |    "biblio": "http://www.knora.org/ontology/0801/biblio"
                                 |  }
                                 |""".stripMargin
 
@@ -67,6 +67,7 @@ class FileModelsSpec extends CoreSpec {
 
     }
   }
+
   "FileModels," when {
 
     "creating an UploadFileRequest," should {
@@ -330,20 +331,79 @@ class FileModelsSpec extends CoreSpec {
       }
 
       "correctly serialize a DocumentRepresentation with custom values" in {
+        val pageCount = None
+        val dimX = Some(20)
+        val dimY = None
+        val project = SharedTestDataADM.beolProject
+        val shortcode = project.shortcode
+        val label = "a custom label"
+        val resourceIRI = stringFormatter.makeRandomResourceIri(shortcode)
+        val comment = Some("This is a custom comment")
+        val internalMimetype = Some("application/msword")
+        val originalFilename = Some("document-file.docm")
+        val originalMimeType = Some("application/vnd.ms-word.document.macroEnabled.12")
+        val customValueIRI = Some(stringFormatter.makeRandomResourceIri(shortcode).toSmartIri)
+        val customValueUUID = Some(UUID.randomUUID())
+        val customValueCreationDate = Some(Instant.now())
+        val valuePermissions = Some("V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember")
+        val resourcePermissions = Some("V knora-admin:UnknownUser|M knora-admin:ProjectMember,knora-admin:KnownUser")
+        val valuePropertyIRI = "http://www.knora.org/ontology/0801/biblio#hasThingDocumentValue".toSmartIri
+        val resourceClassIRI = "http://www.knora.org/ontology/0801/biblio#Book".toSmartIri
+        val customResourceCreationDate = Some(Instant.now())
 
-        //        val project = SharedTestDataADM.beolProject
-        //        val resourceIri = stringFormatter.makeRandomResourceIri(project.shortcode)
-        //        val comment = Some("This is a custom comment")
-        //        val internalMimetype = Some("application/msword")
-        //        val originalFilename = Some("document-file.docm")
-        //        val originalMimetype = Some("application/vnd.ms-word.document.macroEnabled.12")
-        //        val customValueIri = Some("http://www.knora.org/ontology/0801/biblio#hasThingDocumentValue".toSmartIri)
-        //        val customValueUUID = Some(UUID.randomUUID())
-        //        val customValueCreationDate = Some(Instant.now())
-        //        val valuePermissions = Some("V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember")
-        //        val resourcePermissions = Some("V knora-admin:UnknownUser|M knora-admin:ProjectMember,knora-admin:KnownUser")
+        val documentRepresentation = UploadFileRequest.make(
+          fileType = FileType.DocumentFile(pageCount = pageCount, dimX = dimX, dimY = dimY),
+          internalFilename = fileNamePDF,
+          label = label
+        )
+        val msg = documentRepresentation.toMessage(
+          resourceIri = Some(resourceIRI),
+          comment = comment,
+          internalMimeType = internalMimetype,
+          originalFilename = originalFilename,
+          originalMimeType = originalMimeType,
+          customValueIri = customValueIRI,
+          customValueUUID = customValueUUID,
+          customValueCreationDate = customValueCreationDate,
+          valuePermissions = valuePermissions,
+          resourcePermissions = resourcePermissions,
+          resourceCreationDate = customResourceCreationDate,
+          resourceClassIRI = Some(resourceClassIRI),
+          valuePropertyIRI = Some(valuePropertyIRI),
+          project = Some(project)
+        )
 
-        // TODO: implement
+        msg.resourceIri should equal(Some(resourceIRI.toSmartIri))
+        msg.label should equal(label)
+        msg.permissions should equal(resourcePermissions)
+        msg.projectADM should equal(project)
+        msg.creationDate should equal(customResourceCreationDate)
+        msg.resourceClassIri should equal(resourceClassIRI)
+        msg.values should equal(
+          Map(
+            valuePropertyIRI -> List(
+              CreateValueInNewResourceV2(
+                valueContent = DocumentFileValueContentV2(
+                  ontologySchema = ApiV2Complex,
+                  fileValue = FileValueV2(
+                    internalFilename = fileNamePDF,
+                    internalMimeType = internalMimetype.get,
+                    originalFilename = originalFilename,
+                    originalMimeType = originalMimeType
+                  ),
+                  pageCount = pageCount,
+                  dimX = dimX,
+                  dimY = dimY,
+                  comment = comment
+                ),
+                customValueIri = customValueIRI,
+                customValueUUID = customValueUUID,
+                customValueCreationDate = customValueCreationDate,
+                permissions = valuePermissions
+              )
+            )
+          )
+        )
       }
 
     }

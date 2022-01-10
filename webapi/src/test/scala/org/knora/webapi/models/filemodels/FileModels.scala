@@ -95,6 +95,7 @@ sealed abstract case class UploadFileRequest private (
    * @param project                 the project to which the resource belongs. Optional. Defaults to None.
    *                                If None, [[SharedTestDataADM.anythingProject]] is used.
    * @return a [[CreateResourceV2]] representation of the [[UploadFileRequest]]
+   * @param resourceCreationDate
    */
   def toMessage(
     resourceIri: Option[String] = None,
@@ -107,20 +108,29 @@ sealed abstract case class UploadFileRequest private (
     customValueCreationDate: Option[Instant] = None,
     valuePermissions: Option[String] = None,
     resourcePermissions: Option[String] = None,
+    resourceCreationDate: Option[Instant] = None,
+    resourceClassIRI: Option[SmartIri] = None,
+    valuePropertyIRI: Option[SmartIri] = None,
     project: Option[ProjectADM] = None
   ): CreateResourceV2 = {
     implicit val stringFormatter: StringFormatter = StringFormatter.getGeneralInstance
 
-    val projectADM = project match {
+    val projectOrDefault = project match {
       case Some(p) => p
       case None    => SharedTestDataADM.anythingProject
     }
-    val iri = resourceIri match {
+    val resourceIRIOrDefault = resourceIri match {
       case Some(value) => value
-      case None        => stringFormatter.makeRandomResourceIri(projectADM.shortcode)
+      case None        => stringFormatter.makeRandomResourceIri(projectOrDefault.shortcode)
     }
-    val resourceClassIri: SmartIri = FileModelUtil.getFileRepresentationClassIri(fileType)
-    val fileValuePropertyIri: SmartIri = FileModelUtil.getFileRepresentationPropertyIri(fileType)
+    val resourceClassIRIOrDefault: SmartIri = resourceClassIRI match {
+      case Some(iri) => iri
+      case None      => FileModelUtil.getFileRepresentationClassIri(fileType)
+    }
+    val fileValuePropertyIRIOrDefault: SmartIri = valuePropertyIRI match {
+      case Some(iri) => iri
+      case None      => FileModelUtil.getFileRepresentationPropertyIri(fileType)
+    }
     val valueContent = FileModelUtil.getFileValueContent(
       fileType = fileType,
       internalFilename = internalFilename,
@@ -139,15 +149,16 @@ sealed abstract case class UploadFileRequest private (
         permissions = valuePermissions
       )
     )
-    val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(fileValuePropertyIri -> values)
+    val inputValues: Map[SmartIri, Seq[CreateValueInNewResourceV2]] = Map(fileValuePropertyIRIOrDefault -> values)
 
     CreateResourceV2(
-      resourceIri = Some(iri.toSmartIri),
-      resourceClassIri = resourceClassIri,
+      resourceIri = Some(resourceIRIOrDefault.toSmartIri),
+      resourceClassIri = resourceClassIRIOrDefault,
       label = label,
       values = inputValues,
-      projectADM = projectADM,
-      permissions = resourcePermissions
+      projectADM = projectOrDefault,
+      permissions = resourcePermissions,
+      creationDate = resourceCreationDate
     )
   }
 }
