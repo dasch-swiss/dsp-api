@@ -2,7 +2,7 @@ package org.knora.webapi.messages.admin.responder.usersmessages
 
 import org.knora.webapi.messages.admin.responder.valueObjects._
 
-//TODO-mpro: add change payload because balow is used also for udpate user
+//TODO-mpro: add change payload because below is used also for update user
 
 /**
  * User creation payload

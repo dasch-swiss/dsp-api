@@ -47,7 +47,6 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
   "The ProjectsResponderADM" when {
     "used to query for project information" should {
       "return information for every project" in {
-
         responderManager ! ProjectsGetRequestADM(
           featureFactoryConfig = defaultFeatureFactoryConfig,
           requestingUser = rootUser
