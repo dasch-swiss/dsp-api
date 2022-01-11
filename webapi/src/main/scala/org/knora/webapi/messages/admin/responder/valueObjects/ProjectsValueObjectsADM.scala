@@ -6,8 +6,6 @@ import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsErrorM
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 
-// TODO: some missing validation some missing option handling
-
 /**
  * ProjectIRI value object.
  */
@@ -41,7 +39,7 @@ object ProjectIRI { self =>
  * Project Shortcode value object.
  */
 sealed abstract case class Shortcode private (value: String)
-object Shortcode {
+object Shortcode { self =>
   val stringFormatter = StringFormatter.getGeneralInstance
 
   def make(value: String): Validation[Throwable, Shortcode] =
@@ -53,13 +51,19 @@ object Shortcode {
       )
       validatedValue.map(new Shortcode(_) {})
     }
+
+  def make(value: Option[String]): Validation[Throwable, Option[Shortcode]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
+    }
 }
 
 /**
  * Project Shortname value object.
  */
 sealed abstract case class Shortname private (value: String)
-object Shortname {
+object Shortname { self =>
   val stringFormatter = StringFormatter.getGeneralInstance
 
   def make(value: String): Validation[Throwable, Shortname] =
@@ -70,6 +74,12 @@ object Shortname {
         stringFormatter.validateAndEscapeProjectShortname(value, throw BadRequestException(SHORTNAME_INVALID_ERROR))
       )
       validatedValue.map(new Shortname(_) {})
+    }
+
+  def make(value: Option[String]): Validation[Throwable, Option[Shortname]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -84,6 +94,7 @@ object Longname { self =>
     } else {
       Validation.succeed(new Longname(value) {})
     }
+
   def make(value: Option[String]): Validation[Throwable, Option[Longname]] =
     value match {
       case None    => Validation.succeed(None)
@@ -95,12 +106,18 @@ object Longname { self =>
  * ProjectDescription value object.
  */
 sealed abstract case class ProjectDescription private (value: Seq[StringLiteralV2])
-object ProjectDescription {
+object ProjectDescription { self =>
   def make(value: Seq[StringLiteralV2]): Validation[Throwable, ProjectDescription] =
     if (value.isEmpty) {
       Validation.fail(BadRequestException(PROJECT_DESCRIPTION_MISSING_ERROR))
     } else {
       Validation.succeed(new ProjectDescription(value) {})
+    }
+
+  def make(value: Option[Seq[StringLiteralV2]]): Validation[Throwable, Option[ProjectDescription]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -108,12 +125,18 @@ object ProjectDescription {
  * Project Keywords value object.
  */
 sealed abstract case class Keywords private (value: Seq[String])
-object Keywords {
+object Keywords { self =>
   def make(value: Seq[String]): Validation[Throwable, Keywords] =
     if (value.isEmpty) {
       Validation.fail(BadRequestException(KEYWORDS_MISSING_ERROR))
     } else {
       Validation.succeed(new Keywords(value) {})
+    }
+
+  def make(value: Option[Seq[String]]): Validation[Throwable, Option[Keywords]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 
@@ -139,16 +162,28 @@ object Logo { self =>
  * ProjectSelfjoin value object.
  */
 sealed abstract case class ProjectSelfJoin private (value: Boolean)
-object ProjectSelfJoin {
+object ProjectSelfJoin { self =>
   def make(value: Boolean): Validation[Throwable, ProjectSelfJoin] =
     Validation.succeed(new ProjectSelfJoin(value) {})
+
+  def make(value: Option[Boolean]): Validation[Throwable, Option[ProjectSelfJoin]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
+    }
 }
 
 /**
  * ProjectStatus value object.
  */
 sealed abstract case class ProjectStatus private (value: Boolean)
-object ProjectStatus {
+object ProjectStatus { self =>
   def make(value: Boolean): Validation[Throwable, ProjectStatus] =
     Validation.succeed(new ProjectStatus(value) {})
+
+  def make(value: Option[Boolean]): Validation[Throwable, Option[ProjectStatus]] =
+    value match {
+      case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
+    }
 }

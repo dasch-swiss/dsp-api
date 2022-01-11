@@ -75,7 +75,7 @@ object Username { self =>
  */
 sealed abstract case class Email private (value: String)
 object Email { self =>
-  private val EmailRegex: Regex = """^.+@.+$""".r // TODO use proper validation
+  private val EmailRegex: Regex = """^.+@.+$""".r
 
   def make(value: String): Validation[Throwable, Email] =
     if (value.isEmpty) {
