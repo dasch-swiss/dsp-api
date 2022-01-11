@@ -9,38 +9,21 @@
  */
 package org.knora.webapi.responders.admin
 
-import java.util.UUID
 import akka.actor.Status.Failure
 import akka.testkit.ImplicitSender
 import com.typesafe.config.{Config, ConfigFactory}
 import org.knora.webapi._
 import org.knora.webapi.exceptions.{BadRequestException, DuplicateValueException, NotFoundException}
-import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
-import org.knora.webapi.messages.admin.responder.permissionsmessages.{
-  AdministrativePermissionADM,
-  AdministrativePermissionsForProjectGetRequestADM,
-  AdministrativePermissionsForProjectGetResponseADM,
-  DefaultObjectAccessPermissionADM,
-  DefaultObjectAccessPermissionsForProjectGetRequestADM,
-  DefaultObjectAccessPermissionsForProjectGetResponseADM,
-  PermissionADM
-}
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.UserInformationTypeADM
-import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Keywords,
-  Logo,
-  Longname,
-  ProjectDescription,
-  ProjectSelfJoin,
-  ProjectStatus,
-  Shortcode,
-  Shortname
-}
+import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.store.triplestoremessages._
+import org.knora.webapi.messages.{OntologyConstants, StringFormatter}
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.util.MutableTestIri
 
+import java.util.UUID
 import scala.concurrent.duration._
 
 object ProjectsResponderADMSpec {
@@ -205,7 +188,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
       "CREATE a project and return the project info if the supplied shortname is unique" in {
         val shortCode = "111c"
         responderManager ! ProjectCreateRequestADM(
-          createRequest = ProjectsPayloadsADM(
+          createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make(shortCode).fold(error => throw error.head, value => value), // lower case
             longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
@@ -303,7 +286,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
       "CREATE a project and return the project info if the supplied shortname and shortcode is unique" in {
         responderManager ! ProjectCreateRequestADM(
-          createRequest = ProjectsPayloadsADM(
+          createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("newproject2").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("1112").fold(error => throw error.head, value => value), // lower case
             longname = Some(Longname.make("project longname").fold(error => throw error.head, value => value)),
@@ -336,7 +319,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
         val descriptionWithSpecialCharacter = "project \\\"description\\\""
         val keywordWithSpecialCharacter = "new \\\"keyword\\\""
         responderManager ! ProjectCreateRequestADM(
-          createRequest = ProjectsPayloadsADM(
+          createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("project_with_character").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("1312").fold(error => throw error.head, value => value), // lower case
             longname =
@@ -370,7 +353,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
       "return a 'DuplicateValueException' during creation if the supplied project shortname is not unique" in {
         responderManager ! ProjectCreateRequestADM(
-          createRequest = ProjectsPayloadsADM(
+          createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("newproject").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
             longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),
@@ -391,7 +374,7 @@ class ProjectsResponderADMSpec extends CoreSpec(ProjectsResponderADMSpec.config)
 
       "return a 'DuplicateValueException' during creation if the supplied project shortname is unique but the shortcode is not" in {
         responderManager ! ProjectCreateRequestADM(
-          createRequest = ProjectsPayloadsADM(
+          createRequest = ProjectCreatePayloadADM(
             shortname = Shortname.make("newproject3").fold(error => throw error.head, value => value),
             shortcode = Shortcode.make("111C").fold(error => throw error.head, value => value), // lower case
             longname = Longname.make(Some("project longname")).fold(error => throw error.head, value => value),

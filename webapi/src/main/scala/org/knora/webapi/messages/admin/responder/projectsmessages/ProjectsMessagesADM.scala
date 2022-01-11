@@ -356,7 +356,7 @@ case class ProjectDataGetRequestADM(
  * @param apiRequestID         the ID of the API request.
  */
 case class ProjectCreateRequestADM(
-  createRequest: ProjectsPayloadsADM,
+  createRequest: ProjectCreatePayloadADM,
   featureFactoryConfig: FeatureFactoryConfig,
   requestingUser: UserADM,
   apiRequestID: UUID

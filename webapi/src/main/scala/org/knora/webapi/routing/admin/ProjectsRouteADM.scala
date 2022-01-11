@@ -20,18 +20,7 @@ import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.projectsmessages._
-import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Keywords,
-  Logo,
-  Longname,
-  ProjectDescription,
-  ProjectIRI,
-  ProjectSelfJoin,
-  ProjectStatus,
-  Shortcode,
-  Shortname
-}
-import org.knora.webapi.messages.store.cacheservicemessages.CacheServiceFlushDB
+import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import zio.prelude.Validation
 
@@ -150,9 +139,9 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
         val status = ProjectStatus.make(apiRequest.status)
         val selfjoin = ProjectSelfJoin.make(apiRequest.selfjoin)
 
-        val projectCreatePayload: Validation[Throwable, ProjectsPayloadsADM] =
+        val projectCreatePayload: Validation[Throwable, ProjectCreatePayloadADM] =
           Validation.validateWith(id, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)(
-            ProjectsPayloadsADM
+            ProjectCreatePayloadADM
           )
 
         val requestMessage: Future[ProjectCreateRequestADM] = for {

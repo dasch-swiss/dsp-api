@@ -5,7 +5,7 @@ import org.knora.webapi.messages.admin.responder.valueObjects._
 /**
  * Project creation payload
  */
-final case class ProjectsPayloadsADM(
+final case class ProjectCreatePayloadADM(
   id: Option[ProjectIRI] = None,
   shortname: Shortname,
   shortcode: Shortcode,

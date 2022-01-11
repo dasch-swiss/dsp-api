@@ -868,7 +868,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     if (parametersCount == 0) throw BadRequestException("No data would be changed. Aborting update request.")
 
     for {
-
       maybeCurrentProject: Option[ProjectADM] <- getSingleProjectADM(
         identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
         featureFactoryConfig = featureFactoryConfig,
@@ -989,7 +988,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
    * @throws BadRequestException     in the case when the shortcode is invalid.
    */
   private def projectCreateRequestADM(
-    createProjectRequest: ProjectsPayloadsADM,
+    createProjectRequest: ProjectCreatePayloadADM,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
@@ -1069,11 +1068,10 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       } yield ()
 
     def projectCreateTask(
-      createProjectRequest: ProjectsPayloadsADM,
+      createProjectRequest: ProjectCreatePayloadADM,
       requestingUser: UserADM
     ): Future[ProjectOperationResponseADM] =
       for {
-
         // check if the supplied shortname is unique
         shortnameExists <- projectByShortnameExists(createProjectRequest.shortname.value)
         _ = if (shortnameExists) {
