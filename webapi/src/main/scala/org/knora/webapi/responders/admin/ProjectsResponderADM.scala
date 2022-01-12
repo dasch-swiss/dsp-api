@@ -5,9 +5,6 @@
 
 package org.knora.webapi.responders.admin
 
-import java.io.{BufferedInputStream, BufferedOutputStream}
-import java.nio.file.{Files, Path}
-import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -16,6 +13,7 @@ import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{
   UserADM,
@@ -23,12 +21,10 @@ import org.knora.webapi.messages.admin.responder.usersmessages.{
   UserIdentifierADM,
   UserInformationTypeADM
 }
-import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceFlushDB,
   CacheServiceGetProjectADM,
-  CacheServicePutProjectADM,
-  CacheServiceRemoveValues
+  CacheServicePutProjectADM
 }
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
@@ -38,10 +34,13 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.{
   OntologyMetadataGetByProjectRequestV2,
   ReadOntologyMetadataV2
 }
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
 
+import java.io.{BufferedInputStream, BufferedOutputStream}
+import java.nio.file.{Files, Path}
+import java.util.UUID
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 

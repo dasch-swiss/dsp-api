@@ -99,7 +99,6 @@ object Email { self =>
  */
 sealed abstract case class GivenName private (value: String)
 object GivenName { self =>
-  // TODO use proper validation for value
   def make(value: String): Validation[Throwable, GivenName] =
     if (value.isEmpty) {
       Validation.fail(BadRequestException(GIVEN_NAME_MISSING_ERROR))
@@ -119,7 +118,6 @@ object GivenName { self =>
  */
 sealed abstract case class FamilyName private (value: String)
 object FamilyName { self =>
-  // TODO use proper validation for value
   def make(value: String): Validation[Throwable, FamilyName] =
     if (value.isEmpty) {
       Validation.fail(BadRequestException(FAMILY_NAME_MISSING_ERROR))
@@ -139,7 +137,7 @@ object FamilyName { self =>
  */
 sealed abstract case class Password private (value: String)
 object Password { self =>
-  private val PasswordRegex: Regex = """^[\s\S]*$""".r //TODO: add password validation
+  private val PasswordRegex: Regex = """^[\s\S]*$""".r
 
   def make(value: String): Validation[Throwable, Password] =
     if (value.isEmpty) {

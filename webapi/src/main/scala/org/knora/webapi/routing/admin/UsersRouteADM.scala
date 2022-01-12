@@ -12,18 +12,8 @@ import org.knora.webapi.annotation.ApiMayChange
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersADMJsonProtocol._
-import org.knora.webapi.messages.admin.responder.usersmessages.{UserUpdatePasswordPayloadADM, _}
-import org.knora.webapi.messages.admin.responder.valueObjects.{
-  Email,
-  FamilyName,
-  GivenName,
-  LanguageCode,
-  Password,
-  UserStatus,
-  SystemAdmin,
-  Username,
-  UserIRI
-}
+import org.knora.webapi.messages.admin.responder.usersmessages._
+import org.knora.webapi.messages.admin.responder.valueObjects._
 import org.knora.webapi.messages.util.KnoraSystemInstances
 import org.knora.webapi.routing.{Authenticator, KnoraRoute, KnoraRouteData, RouteUtilADM}
 import zio.prelude.Validation
@@ -125,18 +115,6 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     post {
       entity(as[CreateUserApiRequestADM]) { apiRequest => requestContext =>
         // get all values from request and make value objects from it
-//        val user: UserCreatePayloadADM =
-//          UserCreatePayloadADM(
-//            id = stringFormatter.validateOptionalUserIri(apiRequest.id, throw BadRequestException(s"Invalid user IRI")),
-//            username = Username.make(apiRequest.username),
-//            email = Email.create(apiRequest.email).fold(error => throw error, value => value),
-//            givenName = GivenName.create(apiRequest.givenName).fold(error => throw error, value => value),
-//            familyName = FamilyName.create(apiRequest.familyName).fold(error => throw error, value => value),
-//            password = Password.create(apiRequest.password).fold(error => throw error, value => value),
-//            status = Status.make(apiRequest.status).fold(error => throw error.head, value => value),
-//            lang = LanguageCode.create(apiRequest.lang).fold(error => throw error, value => value),
-//            systemAdmin = SystemAdmin.create(apiRequest.systemAdmin).fold(error => throw error, value => value)
-//          )
         val id = UserIRI.make(apiRequest.id)
         val username = Username.make(apiRequest.username)
         val email = Email.make(apiRequest.email)
