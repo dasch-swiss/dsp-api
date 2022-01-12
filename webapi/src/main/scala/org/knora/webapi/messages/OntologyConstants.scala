@@ -215,6 +215,8 @@ object OntologyConstants {
     val LinkObj: IRI = KnoraBasePrefixExpansion + "LinkObj"
     val HasLinkTo: IRI = KnoraBasePrefixExpansion + "hasLinkTo"
     val HasLinkToValue: IRI = KnoraBasePrefixExpansion + "hasLinkToValue"
+    val IsPartOf: IRI = KnoraBasePrefixExpansion + "isPartOf"
+    val IsPartOfValue: IRI = KnoraBasePrefixExpansion + "isPartOfValue"
     val Region: IRI = KnoraBasePrefixExpansion + "Region"
     val IsRegionOf: IRI = KnoraBasePrefixExpansion + "isRegionOf"
 
