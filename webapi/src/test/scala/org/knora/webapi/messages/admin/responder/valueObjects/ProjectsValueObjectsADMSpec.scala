@@ -103,7 +103,6 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
   "Longname value object" when {
     val validLongname = "That's the project longname"
-//    val invalidLongname = ""
 
     "created using empty value" should {
       "throw BadRequestException" in {
@@ -112,13 +111,6 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
         )
       }
     }
-//    "created using invalid value" should {
-//      "throw BadRequestException" in {
-//        Longname.make(invalidLongname) should equal(
-//          Validation.fail(BadRequestException(SHORTNAME_INVALID_ERROR))
-//        )
-//      }
-//    }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
         Longname.make(validLongname).toOption.get.value should not equal
@@ -132,7 +124,6 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
   "ProjectDescription value object" when {
     val validProjectDescription = Seq(StringLiteralV2(value = "Valid description", language = Some("en")))
-    //    val invalidProjectDescription = ""
 
     "created using empty value" should {
       "throw BadRequestException" in {
@@ -141,13 +132,6 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
         )
       }
     }
-    //    "created using invalid value" should {
-    //      "throw BadRequestException" in {
-    //        ProjectDescription.make(invalidProjectDescription) should equal(
-    //          Validation.fail(BadRequestException(PROJECT_DESCRIPTION_INVALID_ERROR))
-    //        )
-    //      }
-    //    }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
         ProjectDescription.make(validProjectDescription).toOption.get.value should not equal
@@ -161,7 +145,6 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
   "Keywords value object" when {
     val validKeywords = Seq("key", "word")
-    //    val invalidKeywords = ""
 
     "created using empty value" should {
       "throw BadRequestException" in {
@@ -170,13 +153,6 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
         )
       }
     }
-    //    "created using invalid value" should {
-    //      "throw BadRequestException" in {
-    //        ProjectDescription.make(invalidKeywords) should equal(
-    //          Validation.fail(BadRequestException(KEYWORDS_INVALID_ERROR))
-    //        )
-    //      }
-    //    }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
         Keywords.make(validKeywords).toOption.get.value should not equal
@@ -190,7 +166,6 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
   "Logo value object" when {
     val validLogo = "/fu/bar/baz.jpg"
-    //    val invalidLogo = ""
 
     "created using empty value" should {
       "throw BadRequestException" in {
@@ -199,13 +174,6 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
         )
       }
     }
-    //    "created using invalid value" should {
-    //      "throw BadRequestException" in {
-    //        Logo.make(invalidLogo) should equal(
-    //          Validation.fail(BadRequestException(LOGO_INVALID_ERROR))
-    //        )
-    //      }
-    //    }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
         Logo.make(validLogo).toOption.get.value should not equal

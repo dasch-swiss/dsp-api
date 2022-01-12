@@ -134,20 +134,12 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
   "Password value object" when {
     val validPassword = "pass-word"
-    val invalidPassword = "user!@#$%^&*()_+"
 
     "created using empty value" should {
       "throw BadRequestException" in {
         Password.make("") should equal(Validation.fail(BadRequestException(PASSWORD_MISSING_ERROR)))
       }
     }
-//    "created using invalid value" should {
-//      "throw BadRequestException for password created with bad forbidden characters" in {
-//        Password.make(invalidPassword) should equal(
-//          Validation.fail(BadRequestException(PASSWORD_INVALID_ERROR))
-//        )
-//      }
-//    }
     "created using valid characters" should {
       "not throw BadRequestExceptions" in {
         Password.make(validPassword) should not equal Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
@@ -160,7 +152,6 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
   "GivenName value object" when {
     val validGivenName = "John"
-//    val invalidGivenName = ""
 
     "created using empty value" should {
       "throw BadRequestException" in {
@@ -169,13 +160,6 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
         )
       }
     }
-//    "created using invalid value" should {
-//      "throw BadRequestException" in {
-//        GivenName.make(invalidGivenName) should equal(
-//          Validation.fail(BadRequestException(GIVEN_NAME_INVALID_ERROR))
-//        )
-//      }
-//    }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
         GivenName.make(validGivenName).toOption.get.value should not equal
@@ -189,7 +173,6 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
 
   "FamilyName value object" when {
     val validFamilyName = "Rambo"
-    //    val invalidFamilyName = ""
 
     "created using empty value" should {
       "throw BadRequestException" in {
@@ -198,13 +181,6 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
         )
       }
     }
-    //    "created using invalid value" should {
-    //      "throw BadRequestException" in {
-    //        FamilyName.make(invalidGivenName) should equal(
-    //          Validation.fail(BadRequestException(FAMILY_NAME_INVALID_ERROR))
-    //        )
-    //      }
-    //    }
     "created using valid value" should {
       "not throw BadRequestExceptions" in {
         FamilyName.make(validFamilyName).toOption.get.value should not equal
