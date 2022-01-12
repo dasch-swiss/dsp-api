@@ -133,7 +133,7 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   }
 
   "Password value object" when {
-    val validPassword = "pass-word"
+    val validassword = "pass-word"
 
     "created using empty value" should {
       "throw BadRequestException" in {
@@ -142,10 +142,10 @@ class UsersValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
     }
     "created using valid characters" should {
       "not throw BadRequestExceptions" in {
-        Password.make(validPassword) should not equal Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
+        Password.make(validassword) should not equal Validation.fail(BadRequestException(USERNAME_INVALID_ERROR))
       }
       "return value passed to value object" in {
-        Password.make(validPassword).toOption.get.value should equal(validPassword)
+        Password.make(validassword).toOption.get.value should equal(validassword)
       }
     }
   }
