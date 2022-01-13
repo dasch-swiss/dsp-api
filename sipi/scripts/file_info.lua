@@ -41,6 +41,7 @@ local APPLICATION_ZIP = "application/zip"
 local APPLICATION_TAR = "application/x-tar"
 local APPLICATION_ISO = "application/x-iso9660-image"
 local APPLICATION_GZIP = "application/gzip"
+local APPLICATION_7Z = "application/x-7z-compressed"
 local VIDEO_MP4 = "video/mp4"
 
 
@@ -80,7 +81,8 @@ local document_mime_types = {
 local archive_mime_types = {
     APPLICATION_TAR,
     APPLICATION_ZIP,
-    APPLICATION_GZIP
+    APPLICATION_GZIP,
+    APPLICATION_7Z
 }
 
 local video_mime_types = {
@@ -115,7 +117,8 @@ local document_extensions = {
 local archive_extensions = {
     "zip",
     "tar",
-    "gz"
+    "gz",
+    "7z"
 }
 
 local video_extensions = {
