@@ -1124,7 +1124,7 @@ class KnoraSipiIntegrationV2ITSpec
 
       val jsonLdEntity = UploadFileRequest
         .make(fileType = FileType.ArchiveFile, internalFilename = uploadedFile.internalFilename)
-        .toJsonLd
+        .toJsonLd()
 
       val request = Post(
         s"$baseApiUrl/v2/resources",
