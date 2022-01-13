@@ -5,7 +5,7 @@
 
 package org.knora.webapi.messages.admin.responder.usersmessages
 
-object UserErrorMessagesADM {
+object UsersErrorMessagesADM {
   val USER_IRI_MISSING_ERROR = "User IRI cannot be empty."
   val USER_IRI_INVALID_ERROR = "User IRI is invalid."
   val USERNAME_MISSING_ERROR = "Username cannot be empty."

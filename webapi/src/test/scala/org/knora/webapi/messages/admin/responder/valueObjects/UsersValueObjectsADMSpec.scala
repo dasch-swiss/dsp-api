@@ -7,7 +7,7 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.UnitSpec
 import org.knora.webapi.exceptions.BadRequestException
-import org.knora.webapi.messages.admin.responder.usersmessages.UserErrorMessagesADM._
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersErrorMessagesADM._
 import zio.prelude.Validation
 
 /**

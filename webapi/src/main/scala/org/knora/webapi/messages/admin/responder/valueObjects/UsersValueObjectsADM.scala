@@ -3,7 +3,7 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 import org.knora.webapi.LanguageCodes
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
-import org.knora.webapi.messages.admin.responder.usersmessages.UserErrorMessagesADM._
+import org.knora.webapi.messages.admin.responder.usersmessages.UsersErrorMessagesADM._
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
