@@ -22,7 +22,7 @@ object GroupIRI { self =>
     if (value.isEmpty) {
       Validation.fail(BadRequestException(GROUP_IRI_MISSING_ERROR))
     } else {
-      if (value.nonEmpty && !sf.isKnoraGroupIriStr(value)) {
+      if (!sf.isKnoraGroupIriStr(value)) {
         Validation.fail(BadRequestException(GROUP_IRI_INVALID_ERROR))
       } else {
         val validatedValue = Validation(

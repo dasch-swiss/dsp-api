@@ -22,7 +22,7 @@ object ListIRI { self =>
     if (value.isEmpty) {
       Validation.fail(BadRequestException(LIST_NODE_IRI_MISSING_ERROR))
     } else {
-      if (value.nonEmpty && !sf.isKnoraListIriStr(value)) {
+      if (!sf.isKnoraListIriStr(value)) {
         Validation.fail(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
       } else {
         val validatedValue = Validation(

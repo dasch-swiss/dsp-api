@@ -350,7 +350,7 @@ case class ProjectDataGetRequestADM(
 /**
  * Requests the creation of a new project.
  *
- * @param createRequest        the [[ProjectsPayloadsADM]] information for creation a new project.
+ * @param createRequest        the [[ProjectCreatePayloadADM]] information for the creation of a new project.
  * @param featureFactoryConfig the feature factory configuration.
  * @param requestingUser       the user making the request.
  * @param apiRequestID         the ID of the API request.

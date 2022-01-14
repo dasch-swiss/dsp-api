@@ -22,7 +22,7 @@ object ProjectIRI { self =>
     if (value.isEmpty) {
       Validation.fail(BadRequestException(PROJECT_IRI_MISSING_ERROR))
     } else {
-      if (value.nonEmpty && !sf.isKnoraProjectIriStr(value)) {
+      if (!sf.isKnoraProjectIriStr(value)) {
         Validation.fail(BadRequestException(PROJECT_IRI_INVALID_ERROR))
       } else {
         val validatedValue = Validation(
@@ -158,8 +158,8 @@ object Logo { self =>
     }
   def make(value: Option[String]): Validation[Throwable, Option[Logo]] =
     value match {
-      case None    => Validation.succeed(None)
       case Some(v) => self.make(v).map(Some(_))
+      case None    => Validation.succeed(None)
     }
 }
 

@@ -16,7 +16,6 @@ import zio.prelude.Validation
  */
 class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
   "ProjectIRI value object" when {
-//    TODO: check string formatter project iri validation because passing just "http://rdfh.ch/projects/@@@@@@" works
     val validProjectIri = "http://rdfh.ch/projects/0001"
 
     "created using empty value" should {
@@ -39,6 +38,9 @@ class ProjectsValueObjectsADMSpec extends UnitSpec(ValueObjectsADMSpec.config) {
       }
       "return value passed to value object" in {
         ProjectIRI.make(validProjectIri).toOption.get.value should equal(validProjectIri)
+        ProjectIRI.make(validProjectIri) should not equal Validation.fail(
+          BadRequestException(PROJECT_IRI_INVALID_ERROR)
+        )
       }
     }
   }

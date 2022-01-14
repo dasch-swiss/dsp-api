@@ -24,7 +24,7 @@ object UserIRI { self =>
     if (value.isEmpty) {
       Validation.fail(BadRequestException(USER_IRI_MISSING_ERROR))
     } else {
-      if (value.nonEmpty && !sf.isKnoraUserIriStr(value)) {
+      if (!sf.isKnoraUserIriStr(value)) {
         Validation.fail(BadRequestException(USER_IRI_INVALID_ERROR))
       } else {
         val validatedValue = Validation(
