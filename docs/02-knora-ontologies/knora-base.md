@@ -569,8 +569,23 @@ containing metadata about the link. We can visualise the result as the following
 ![Figure 2](knora-base-fig2.dot.png "Figure 2")
 
 Knora allows a user to see a link if the requesting user has permission to see the source and target resources as well
-as the
-`kb:LinkValue`.
+as the `kb:LinkValue`.
+
+### Part-of (part-whole) relation between resources
+A special case of linked resources are _part-of related resources_, i.e. a resource consisting of several other resources. 
+In order to create a part-of relation between two resources, the resource that is part of another resource needs to have
+a property that is a subproperty of `kb:isPartOf`. This property needs to point to the resource class it is part of via 
+its predicate `knora-api:objectType`.
+`kb:isPartOf` itself is a subproperty of `kb:hasLinkTo`. Same as described above for link properties, a corresponding 
+part-of value property is created automatically. This value property has the same name as the part-of property with 
+`Value` appended. For example, if in an ontology `data` a property `data:partOf` was defined, the corresponding value 
+property would be named `data:partOfValue`. This newly created property `data:partOfValue` is defined as a subproperty 
+of `kb:isPartOfValue`.
+
+Part-of relations are recommended for resources of type `StillImageRepresentation`. In that case, the resource that is 
+part of another resource needs to have a property that is a subproperty of `knora-api:seqnum` with an integer as value. 
+A client can then use this information to leaf through the parts of the compound resource (p.ex. to leaf through the 
+pages of a book like in [this](https://docs.dasch.swiss/DSP-API/01-introduction/example-project/#resource-classes) example).
 
 ### Text with Standoff Markup
 
