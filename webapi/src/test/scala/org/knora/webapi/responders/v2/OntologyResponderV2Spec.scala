@@ -2381,11 +2381,11 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(StringLiteralV2("Thing as a whole", Some("en")))
+            objects = Seq(StringLiteralV2("Thing as part", Some("en")))
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(StringLiteralV2("A thing that has multiple parts", Some("en")))
+            objects = Seq(StringLiteralV2("Thing that is part of something else", Some("en")))
           )
         ),
         subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
@@ -2504,7 +2504,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val property = externalOntology.properties(partOfPropertyIri)
-        //property.entityInfoContent should ===(partOfPropertyInfoContent)
         // check that partOf is a subproperty of knora-api:isPartOf
         property.entityInfoContent.subPropertyOf.contains(
           OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri
@@ -2520,43 +2519,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       // Check that the corresponding partOfValue was created
       val partOfValuePropertyIri = AnythingOntologyIri.makeEntityIri("partOfValue")
 
-      val partOfValuePropertyInfoContent = partOfPropertyInfoContent.copy(
-        propertyIri = partOfValuePropertyIri,
-        predicates = Map(
-          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
-          ),
-          OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("partThing")))
-          ),
-          OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri))
-          ),
-          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(
-              StringLiteralV2("is part of", Some("en")),
-              StringLiteralV2("ist Teil von", Some("de"))
-            )
-          ),
-          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(
-              StringLiteralV2("Represents a part of a whole relation", Some("en")),
-              StringLiteralV2("Repräsentiert eine Teil-Ganzes-Beziehung", Some("de"))
-            )
-          ),
-          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
-            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Searchbox".toSmartIri))
-          )
-        ),
-        subPropertyOf = Set(OntologyConstants.KnoraBase.IsPartOfValue.toSmartIri)
-      )
-
       val partOfValuePropGetRequest = PropertiesGetRequestV2(
         propertyIris = Set(partOfValuePropertyIri),
         allLanguages = true,
@@ -2569,7 +2531,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
         assert(externalOntology.properties.size == 1)
         val property = externalOntology.properties(partOfValuePropertyIri)
-        //property.entityInfoContent should ===(partOfValuePropertyInfoContent)
+        // check that partOfValue is a subproperty of knora-api:isPartOfValue
         property.entityInfoContent.subPropertyOf.contains(
           OntologyConstants.KnoraApiV2Complex.IsPartOfValue.toSmartIri
         ) should ===(true)
