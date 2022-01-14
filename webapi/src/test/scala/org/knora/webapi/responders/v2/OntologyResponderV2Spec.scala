@@ -2366,7 +2366,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
-    "create a classes anything:wholeThing and anything:partThing with a isPartOf relation" in {
+    "create classes anything:wholeThing and anything:partThing with a isPartOf relation and its corresponding value property" in {
 
       // Create class partThing
 
