@@ -1,3 +1,8 @@
+/*
+ * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.exceptions.BadRequestException
@@ -11,7 +16,7 @@ import zio.prelude.Validation
  */
 sealed abstract case class ProjectIRI private (value: String)
 object ProjectIRI { self =>
-  val sf = StringFormatter.getGeneralInstance
+  val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   def make(value: String): Validation[Throwable, ProjectIRI] =
     if (value.isEmpty) {
@@ -40,14 +45,14 @@ object ProjectIRI { self =>
  */
 sealed abstract case class Shortcode private (value: String)
 object Shortcode { self =>
-  val stringFormatter = StringFormatter.getGeneralInstance
+  val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   def make(value: String): Validation[Throwable, Shortcode] =
     if (value.isEmpty) {
       Validation.fail(BadRequestException(SHORTCODE_MISSING_ERROR))
     } else {
       val validatedValue: Validation[Throwable, String] = Validation(
-        stringFormatter.validateProjectShortcode(value, throw BadRequestException(SHORTCODE_INVALID_ERROR))
+        sf.validateProjectShortcode(value, throw BadRequestException(SHORTCODE_INVALID_ERROR))
       )
       validatedValue.map(new Shortcode(_) {})
     }
@@ -64,14 +69,14 @@ object Shortcode { self =>
  */
 sealed abstract case class Shortname private (value: String)
 object Shortname { self =>
-  val stringFormatter = StringFormatter.getGeneralInstance
+  val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   def make(value: String): Validation[Throwable, Shortname] =
     if (value.isEmpty) {
       Validation.fail(BadRequestException(SHORTNAME_MISSING_ERROR))
     } else {
       val validatedValue = Validation(
-        stringFormatter.validateAndEscapeProjectShortname(value, throw BadRequestException(SHORTNAME_INVALID_ERROR))
+        sf.validateAndEscapeProjectShortname(value, throw BadRequestException(SHORTNAME_INVALID_ERROR))
       )
       validatedValue.map(new Shortname(_) {})
     }

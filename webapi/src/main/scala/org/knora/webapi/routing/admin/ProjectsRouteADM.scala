@@ -129,15 +129,15 @@ class ProjectsRouteADM(routeData: KnoraRouteData)
     post {
       entity(as[CreateProjectApiRequestADM]) { apiRequest => requestContext =>
         // zio prelude: validation
-        val id = ProjectIRI.make(apiRequest.id)
-        val shortname = Shortname.make(apiRequest.shortname)
-        val shortcode = Shortcode.make(apiRequest.shortcode)
-        val longname = Longname.make(apiRequest.longname)
-        val description = ProjectDescription.make(apiRequest.description)
-        val keywords = Keywords.make(apiRequest.keywords)
-        val logo = Logo.make(apiRequest.logo)
-        val status = ProjectStatus.make(apiRequest.status)
-        val selfjoin = ProjectSelfJoin.make(apiRequest.selfjoin)
+        val id: Validation[Throwable, Option[ProjectIRI]] = ProjectIRI.make(apiRequest.id)
+        val shortname: Validation[Throwable, Shortname] = Shortname.make(apiRequest.shortname)
+        val shortcode: Validation[Throwable, Shortcode] = Shortcode.make(apiRequest.shortcode)
+        val longname: Validation[Throwable, Option[Longname]] = Longname.make(apiRequest.longname)
+        val description: Validation[Throwable, ProjectDescription] = ProjectDescription.make(apiRequest.description)
+        val keywords: Validation[Throwable, Keywords] = Keywords.make(apiRequest.keywords)
+        val logo: Validation[Throwable, Option[Logo]] = Logo.make(apiRequest.logo)
+        val status: Validation[Throwable, ProjectStatus] = ProjectStatus.make(apiRequest.status)
+        val selfjoin: Validation[Throwable, ProjectSelfJoin] = ProjectSelfJoin.make(apiRequest.selfjoin)
 
         val projectCreatePayload: Validation[Throwable, ProjectCreatePayloadADM] =
           Validation.validateWith(id, shortname, shortcode, longname, description, keywords, logo, status, selfjoin)(

@@ -115,15 +115,15 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
     post {
       entity(as[CreateUserApiRequestADM]) { apiRequest => requestContext =>
         // get all values from request and make value objects from it
-        val id = UserIRI.make(apiRequest.id)
-        val username = Username.make(apiRequest.username)
-        val email = Email.make(apiRequest.email)
-        val givenName = GivenName.make(apiRequest.givenName)
-        val familyName = FamilyName.make(apiRequest.familyName)
-        val password = Password.make(apiRequest.password)
-        val status = UserStatus.make(apiRequest.status)
-        val languageCode = LanguageCode.make(apiRequest.lang)
-        val systemAdmin = SystemAdmin.make(apiRequest.systemAdmin)
+        val id: Validation[Throwable, Option[UserIRI]] = UserIRI.make(apiRequest.id)
+        val username: Validation[Throwable, Username] = Username.make(apiRequest.username)
+        val email: Validation[Throwable, Email] = Email.make(apiRequest.email)
+        val givenName: Validation[Throwable, GivenName] = GivenName.make(apiRequest.givenName)
+        val familyName: Validation[Throwable, FamilyName] = FamilyName.make(apiRequest.familyName)
+        val password: Validation[Throwable, Password] = Password.make(apiRequest.password)
+        val status: Validation[Throwable, UserStatus] = UserStatus.make(apiRequest.status)
+        val languageCode: Validation[Throwable, LanguageCode] = LanguageCode.make(apiRequest.lang)
+        val systemAdmin: Validation[Throwable, SystemAdmin] = SystemAdmin.make(apiRequest.systemAdmin)
 
         val validatedUserCreatePayload: Validation[Throwable, UserCreatePayloadADM] =
           Validation.validateWith(
@@ -268,11 +268,13 @@ class UsersRouteADM(routeData: KnoraRouteData) extends KnoraRoute(routeData) wit
             throw BadRequestException("Changes to built-in users are not allowed.")
           }
 
-          val maybeUsername = Username.make(apiRequest.username).fold(e => throw e.head, v => v)
-          val maybeEmail = Email.make(apiRequest.email).fold(e => throw e.head, v => v)
-          val maybeGivenName = GivenName.make(apiRequest.givenName).fold(e => throw e.head, v => v)
-          val maybeFamilyName = FamilyName.make(apiRequest.familyName).fold(e => throw e.head, v => v)
-          val maybeLanguageCode = LanguageCode.make(apiRequest.lang).fold(e => throw e.head, v => v)
+          val maybeUsername: Option[Username] = Username.make(apiRequest.username).fold(e => throw e.head, v => v)
+          val maybeEmail: Option[Email] = Email.make(apiRequest.email).fold(e => throw e.head, v => v)
+          val maybeGivenName: Option[GivenName] = GivenName.make(apiRequest.givenName).fold(e => throw e.head, v => v)
+          val maybeFamilyName: Option[FamilyName] =
+            FamilyName.make(apiRequest.familyName).fold(e => throw e.head, v => v)
+          val maybeLanguageCode: Option[LanguageCode] =
+            LanguageCode.make(apiRequest.lang).fold(e => throw e.head, v => v)
 
           val userUpdatePayload: UserUpdateBasicInformationPayloadADM =
             UserUpdateBasicInformationPayloadADM(
