@@ -25,7 +25,8 @@ jobs:
         with:
           path: ~/.bazel_disk_cache
           key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
-      - uses: joschi/setup-jdk@v2
+      - name: setup java version
+        uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
@@ -57,7 +58,8 @@ jobs:
         with:
           path: ~/.bazel_disk_cache
           key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
-      - uses: joschi/setup-jdk@v2
+      - name: setup java version
+        uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
@@ -89,7 +91,8 @@ jobs:
         with:
           path: ~/.bazel_disk_cache
           key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
-      - uses: joschi/setup-jdk@v2
+      - name: setup java version
+        uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
@@ -123,7 +126,8 @@ jobs:
         with:
           path: ~/.bazel_disk_cache
           key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
-      - uses: joschi/setup-jdk@v2
+      - name: setup java version
+        uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
@@ -152,7 +156,8 @@ jobs:
         with:
           path: ~/.bazel_disk_cache
           key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
-      - uses: joschi/setup-jdk@v2
+      - name: setup java version
+        uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
@@ -184,7 +189,8 @@ jobs:
         with:
           path: ~/.bazel_disk_cache
           key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
-      - uses: joschi/setup-jdk@v2
+      - name: setup java version
+        uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
@@ -261,7 +267,8 @@ jobs:
         with:
           path: ~/.bazel_disk_cache
           key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
-      - uses: joschi/setup-jdk@v2
+      - name: setup java version
+        uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
