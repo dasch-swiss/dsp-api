@@ -10,7 +10,8 @@ jobs:
     name: Build Everything
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - name: checkout source
+        uses: actions/checkout@v1
         with:
           fetch-depth: 15
       - name: get current time
@@ -30,7 +31,7 @@ jobs:
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Run build everything
+      - name: run build everything
         run: bazel build //...
 
 # ------------------------------------------
@@ -41,7 +42,8 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - name: checkout source
+        uses: actions/checkout@v1
         with:
           fetch-depth: 15
       - name: get current time
@@ -59,9 +61,9 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
-      - name: Install requirements
+      - name: install requirements
         run: sudo apt-get install ca-certificates-java expect redis-tools unzip
-      - name: Generate api-client-test-data
+      - name: generate api-client-test-data
         run: make client-test-data
 
 # ------------------------------------------
@@ -72,7 +74,7 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: checkout source
         uses: actions/checkout@v1
         with:
           fetch-depth: 15
@@ -98,7 +100,7 @@ jobs:
         with:
           path: ~/.bazel_disk_cache
           key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.date.outputs.date }} }}
-      - name: Run API unit tests
+      - name: run API unit tests
         run: make test-unit
 
   api-e2e-tests:
@@ -106,7 +108,7 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: checkout source
         uses: actions/checkout@v1
         with:
           fetch-depth: 15
@@ -135,7 +137,7 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: checkout source
         uses: actions/checkout@v1
         with:
           fetch-depth: 15
@@ -167,7 +169,7 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: checkout source
         uses: actions/checkout@v1
         with:
           fetch-depth: 15
@@ -197,7 +199,8 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: checkout source
+        uses: actions/checkout@v1
         with:
           fetch-depth: 1
       - name: Install dependencies
@@ -243,7 +246,8 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
-      - uses: actions/checkout@v1
+      - name: checkout source
+        uses: actions/checkout@v1
         with:
           fetch-depth: 50
       - name: get current time
@@ -261,7 +265,7 @@ jobs:
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
-      - name: Install requirements
+      - name: install requirements
         run: sudo apt-get install ca-certificates-java expect redis-tools unzip
       - name: Install dependencies
         run: |
@@ -269,16 +273,16 @@ jobs:
           pip install -r docs/requirements.txt
           npm install --global typedoc
           sudo apt-get install graphviz
-      - name: Generate api-client-test-data
+      - name: generate api-client-test-data
         run: make client-test-data
-      - name: Add api-client-test-data to release assets
+      - name: add api-client-test-data to release assets
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GH_TOKEN }}
           file: client-test-data.zip
           tag: ${{ github.ref }}
           overwrite: true
-      - name: Build and publish all images to Dockerhub
+      - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make docker-publish
@@ -290,7 +294,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
-      - name: Send notification to google chat room "DSP releases"
+      - name: send notification to google chat room "DSP releases"
         uses: lakto/google-chat-action@main
         with:
           url: ${{ secrets.GOOGLE_CHAT_DSP_RELEASES_WEBHOOK_URL }}
@@ -304,17 +308,17 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
-      - name: Checkout main
-        uses: actions/checkout@v2
+      - name: checkout source
+        uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: Install dependencies
+      - name: install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
           npm install --global typedoc
           sudo apt-get install graphviz
-      - name: Deploy docs
+      - name: deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@1.16
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
