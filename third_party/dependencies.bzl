@@ -10,7 +10,7 @@ def dependencies():
     # e.g., to reference use: @maven//com_typesafe_akka_akka_actor_2_13
     #
     # ATTENTION: Transitive dependencies need to be explicitly added
-    # to query: bazel query @maven//:all --output=build
+    # to query: bazel query @maven//:all --output=build > dependencies.bzl
     # or: bazel query @maven//:all | sort
     #
     maven_install(
@@ -50,11 +50,12 @@ def dependencies():
 
             # Logging
             "com.typesafe.scala-logging:scala-logging_2.13:3.9.4",
-            "ch.qos.logback:logback-classic:1.2.3",
-            "ch.qos.logback:logback-core:1.2.3",
+            "ch.qos.logback:logback-classic:1.2.9",
+            "ch.qos.logback:logback-core:1.2.9",
             "org.slf4j:log4j-over-slf4j:1.7.32",
             "org.slf4j:jcl-over-slf4j:1.7.32",
             "org.slf4j:slf4j-api:1.7.32",
+            "org.apache.logging.log4j:log4j:2.17.0", # needed by apache-jena-libs. explicitly setting latest version (log4shell) to override the one used by jena.
 
             # metrics
             "io.kamon:kamon-core_2.13:2.1.5",
@@ -103,8 +104,9 @@ def dependencies():
             # provides akka jackson (json) support
             "de.heikoseeberger:akka-http-circe_2.13:1.36.0",
             "com.fasterxml.jackson.module:jackson-module-scala_2.13:2.12.3",
-            "com.apicatalog:titanium-json-ld:0.8.5",
             "javax.json:javax.json-api:1.1.4",
+            # TODO: DEV-335 upgrade titanium to 1.1.0 and jakarta-json to 2.0.1
+            "com.apicatalog:titanium-json-ld:0.8.5",
             "org.glassfish:jakarta.json:1.1.6",
 
             # swagger (api documentation)

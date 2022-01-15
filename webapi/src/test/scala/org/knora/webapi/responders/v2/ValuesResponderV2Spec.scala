@@ -7,7 +7,6 @@ package org.knora.webapi.responders.v2
 
 import java.time.Instant
 import java.util.UUID
-
 import akka.actor.{ActorRef, Props}
 import akka.testkit.ImplicitSender
 import org.knora.webapi._
@@ -220,56 +219,66 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
   private def checkValueIsDeleted(
     resourceIri: IRI,
     maybePreviousLastModDate: Option[Instant],
-    propertyIriForGravsearch: SmartIri,
-    propertyIriInResult: SmartIri,
     valueIri: IRI,
     customDeleteDate: Option[Instant] = None,
-    requestingUser: UserADM
+    deleteComment: Option[String] = None,
+    requestingUser: UserADM,
+    isLinkValue: Boolean = false
   ): Unit = {
-    val resource = getResourceWithValues(
-      resourceIri = resourceIri,
-      propertyIrisForGravsearch = Seq(propertyIriForGravsearch),
+    responderManager ! ResourcesGetRequestV2(
+      resourceIris = Seq(resourceIri),
+      targetSchema = ApiV2Complex,
+      featureFactoryConfig = defaultFeatureFactoryConfig,
       requestingUser = requestingUser
     )
 
-    checkLastModDate(
-      resourceIri = resourceIri,
-      maybePreviousLastModDate = maybePreviousLastModDate,
-      maybeUpdatedLastModDate = resource.lastModificationDate
+    val resource = expectMsgPF(timeout) { case getResponse: ReadResourcesSequenceV2 =>
+      getResponse.toResource(resourceIri)
+    }
+    //  ensure the resource was not deleted
+    resource.deletionInfo should be(None)
+
+    val deletedValues = resource.values.getOrElse(
+      OntologyConstants.KnoraBase.DeletedValue.toSmartIri,
+      throw AssertionException(
+        s"Resource <$resourceIri> does not have any deleted values, even though value <$valueIri> should be deleted."
+      )
     )
 
-    val propertyValues: Seq[ReadValueV2] =
-      getValuesFromResource(resource = resource, propertyIriInResult = propertyIriInResult)
+    if (!isLinkValue) {
+      // not a LinkValue, so the value should be a DeletedValue of the resource
+      val deletedValue = deletedValues.collectFirst { case v if v.valueIri == valueIri => v }
+        .getOrElse(throw AssertionException(s"Value <$valueIri> was not among the deleted resources"))
 
-    propertyValues.find(_.valueIri == valueIri) match {
-      case Some(_) => throw AssertionException(s"Value <$valueIri was not deleted>")
-      case None    => ()
-    }
+      checkLastModDate(
+        resourceIri = resourceIri,
+        maybePreviousLastModDate = maybePreviousLastModDate,
+        maybeUpdatedLastModDate = resource.lastModificationDate
+      )
 
-    // If a custom delete date was used, check that it was saved correctly.
-    customDeleteDate match {
-      case Some(deleteDate) =>
-        val sparqlQuery: String = org.knora.webapi.messages.twirl.queries.sparql.v2.txt
-          .getDeleteDate(
-            triplestore = settings.triplestoreType,
-            entityIri = valueIri
-          )
-          .toString()
+      val deletionInfo = deletedValue.deletionInfo.getOrElse(
+        throw AssertionException(s"Value <$valueIri> does not have deletion information")
+      )
 
-        storeManager ! SparqlSelectRequest(sparqlQuery)
+      customDeleteDate match {
+        case Some(deleteDate) => deletionInfo.deleteDate should equal(deleteDate)
+        case None             => ()
+      }
 
-        expectMsgPF(timeout) { case sparqlSelectResponse: SparqlSelectResult =>
-          val savedDeleteDateStr = sparqlSelectResponse.getFirstRow.rowMap("deleteDate")
-
-          val savedDeleteDate: Instant = stringFormatter.xsdDateTimeStampToInstant(
-            savedDeleteDateStr,
-            throw AssertionException(s"Couldn't parse delete date from triplestore: $savedDeleteDateStr")
-          )
-
-          assert(savedDeleteDate == deleteDate)
-        }
-
-      case None => ()
+      deleteComment match {
+        case Some(comment) => deletionInfo.maybeDeleteComment.get should equal(comment)
+        case None          => ()
+      }
+    } else {
+      // The value is a LinkValue, so there should be a DeletedValue having a PreviousValue with the IRI of the value.
+      if (
+        !deletedValues.exists(v =>
+          v.previousValueIri match {
+            case Some(previousValueIRI) => previousValueIRI == valueIri
+            case None                   => false
+          }
+        )
+      ) throw AssertionException(s"ListValue <$valueIri> was not deleted correctly.")
     }
   }
 
@@ -4316,11 +4325,12 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
 
+      val valueIri = intValueIri.get
       responderManager ! DeleteValueRequestV2(
         resourceIri = resourceIri,
         resourceClassIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#Thing".toSmartIri,
         propertyIri = propertyIri,
-        valueIri = intValueIri.get,
+        valueIri = valueIri,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
         deleteComment = Some("this value was incorrect"),
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -4333,8 +4343,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       checkValueIsDeleted(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
         valueIri = intValueIri.get,
         requestingUser = anythingUser1
       )
@@ -4345,6 +4353,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val propertyIri: SmartIri = "http://0.0.0.0:3333/ontology/0001/anything/v2#hasInteger".toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
       val deleteDate: Instant = Instant.now
+      val deleteComment = Some("this value was incorrect")
 
       responderManager ! DeleteValueRequestV2(
         resourceIri = resourceIri,
@@ -4352,7 +4361,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         propertyIri = propertyIri,
         valueIri = intValueForRsyncIri.get,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.IntValue.toSmartIri,
-        deleteComment = Some("this value was incorrect"),
+        deleteComment = deleteComment,
         deleteDate = Some(deleteDate),
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingUser1,
@@ -4364,10 +4373,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       checkValueIsDeleted(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
         valueIri = intValueForRsyncIri.get,
         customDeleteDate = Some(deleteDate),
+        deleteComment = deleteComment,
         requestingUser = anythingUser1
       )
     }
@@ -4410,8 +4418,6 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       checkValueIsDeleted(
         resourceIri = zeitglöckleinIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = propertyIri,
-        propertyIriInResult = propertyIri,
         valueIri = zeitglöckleinCommentWithStandoffIri.get,
         requestingUser = incunabulaUser
       )
@@ -4424,7 +4430,7 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
         requestingUser = incunabulaUser
       )
 
-      assert(resource.values.get(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri).isEmpty)
+      assert(!resource.values.contains(OntologyConstants.KnoraApiV2Complex.HasStandoffLinkToValue.toSmartIri))
     }
 
     "delete a link between two resources" in {
@@ -4432,12 +4438,13 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       val linkPropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkTo.toSmartIri
       val linkValuePropertyIri: SmartIri = OntologyConstants.KnoraApiV2Complex.HasLinkToValue.toSmartIri
       val maybeResourceLastModDate: Option[Instant] = getResourceLastModificationDate(resourceIri, anythingUser1)
+      val linkValueIRI = linkValueIri.get
 
       responderManager ! DeleteValueRequestV2(
         resourceIri = resourceIri,
         resourceClassIri = OntologyConstants.KnoraApiV2Complex.LinkObj.toSmartIri,
         propertyIri = linkValuePropertyIri,
-        valueIri = linkValueIri.get,
+        valueIri = linkValueIRI,
         valueTypeIri = OntologyConstants.KnoraApiV2Complex.LinkValue.toSmartIri,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = incunabulaUser,
@@ -4449,10 +4456,9 @@ class ValuesResponderV2Spec extends CoreSpec() with ImplicitSender {
       checkValueIsDeleted(
         resourceIri = resourceIri,
         maybePreviousLastModDate = maybeResourceLastModDate,
-        propertyIriForGravsearch = linkPropertyIri,
-        propertyIriInResult = linkValuePropertyIri,
-        valueIri = linkValueIri.get,
-        requestingUser = anythingUser1
+        valueIri = linkValueIRI,
+        requestingUser = anythingUser1,
+        isLinkValue = true
       )
     }
 

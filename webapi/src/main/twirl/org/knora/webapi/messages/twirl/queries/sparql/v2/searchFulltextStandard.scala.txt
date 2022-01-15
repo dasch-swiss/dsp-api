@@ -103,12 +103,16 @@ WHERE {
     }
 
     OPTIONAL {
-        ?matchingSubject a ?valueObjectType .
+        # get all list nodes that match the search term
+        ?matchingSubject a knora-base:ListNode .
 
-        ?valueObjectType rdfs:subClassOf *knora-base:ListNode .
+        # get sub-node(s) of that node(s) (recursively)
+        ?matchingSubject knora-base:hasSubListNode* ?subListNode .
 
-        ?listValue knora-base:valueHasListNode ?matchingSubject .
+        # get all values that point to the node(s) and sub-node(s)
+        ?listValue knora-base:valueHasListNode ?subListNode .
 
+        # get all resources that have that values
         ?subjectWithListValue ?predicate ?listValue .
 
         FILTER NOT EXISTS {

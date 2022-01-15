@@ -64,3 +64,4 @@ dependencies.txt
 /.metals
 /sipi/images/082E/*
 /sipi/images/originals/082E/*
+/dependencies.bzl

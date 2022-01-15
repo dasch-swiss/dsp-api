@@ -39,7 +39,6 @@ nav:
           - Introduction: 03-apis/api-v2/introduction.md
           - Authentication: 03-apis/api-v2/authentication.md
           - Knora IRIs: 03-apis/api-v2/knora-iris.md
-          - Metadata:  03-apis/api-v2/metadata.md
           - Reading and Searching Resources: 03-apis/api-v2/reading-and-searching-resources.md
           - Reading the User's Permissions on Resources and Values: 03-apis/api-v2/reading-user-permissions.md
           - Getting Lists: 03-apis/api-v2/getting-lists.md
