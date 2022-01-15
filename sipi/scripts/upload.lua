@@ -228,7 +228,7 @@ for file_index, file_params in pairs(server.uploads) do
 end
 
 -- Clean up old temporary files.
--- clean_temp_dir()
+clean_temp_dir()
 -- Return the file upload data in the response.
 local response = {}
 response["uploadedFiles"] = file_upload_data
