@@ -13,11 +13,13 @@ jobs:
       - uses: actions/checkout@v1
         with:
           fetch-depth: 15
+      - name: set current date as env variable
+        run: echo "CURRENT_DATE::$(date +'%Y-%m-%d')" >> $GITHUB_ENV
       - name: use daily bazel disk cache
         uses: actions/cache@v2
         with:
           path: ~/.bazel_disk_cache
-          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.date.outputs.date }} }}
+          key: ${{ runner.OS }}-bazel_disk_cache-$CURRENT_DATE
       - uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
