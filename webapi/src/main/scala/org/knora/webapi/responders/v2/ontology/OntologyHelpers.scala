@@ -1950,10 +1950,18 @@ object OntologyHelpers {
           objects = Seq(SmartIriLiteralV2(OntologyConstants.KnoraBase.LinkValue.toSmartIri))
         ))
 
+    val subPropertyOf: SmartIri = internalPropertyDef.subPropertyOf match {
+      case subProps if subProps.contains(OntologyConstants.KnoraBase.IsPartOf.toSmartIri) =>
+        OntologyConstants.KnoraBase.IsPartOfValue.toSmartIri
+      case subProps if subProps.contains(OntologyConstants.KnoraBase.HasLinkTo.toSmartIri) =>
+        OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri
+      case _ => OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri
+    }
+
     internalPropertyDef.copy(
       propertyIri = linkValuePropIri,
       predicates = newPredicates,
-      subPropertyOf = Set(OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri)
+      subPropertyOf = Set(subPropertyOf)
     )
   }
 
