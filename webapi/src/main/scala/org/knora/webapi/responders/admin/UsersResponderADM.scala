@@ -16,7 +16,7 @@ import org.knora.webapi.messages.admin.responder.groupsmessages.{GroupADM, Group
 import org.knora.webapi.messages.admin.responder.permissionsmessages.{PermissionDataGetADM, PermissionsDataADM}
 import org.knora.webapi.messages.admin.responder.projectsmessages.{ProjectADM, ProjectGetADM, ProjectIdentifierADM}
 import org.knora.webapi.messages.admin.responder.usersmessages.{UserChangeRequestADM, _}
-import org.knora.webapi.messages.admin.responder.valueObjects.{Username, Email, Password, Status, SystemAdmin}
+import org.knora.webapi.messages.admin.responder.valueObjects.{Username, Email, Password, UserStatus, SystemAdmin}
 import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceGetUserADM,
   CacheServicePutUserADM,
@@ -510,8 +510,8 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
         // hash the new password
         encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
         newHashedPassword = Password
-          .create(encoder.encode(userUpdatePasswordPayload.newPassword.value))
-          .fold(error => throw error, value => value)
+          .make(encoder.encode(userUpdatePasswordPayload.newPassword.value))
+          .fold(e => throw e.head, value => value)
 
         // update the users password as SystemUser
         result <- updateUserPasswordADM(
@@ -548,7 +548,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
    */
   private def changeUserStatusADM(
     userIri: IRI,
-    status: Status,
+    status: UserStatus,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM,
     apiRequestID: UUID
@@ -561,7 +561,7 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
      */
     def changeUserStatusTask(
       userIri: IRI,
-      status: Status,
+      status: UserStatus,
       requestingUser: UserADM,
       apiRequestID: UUID
     ): Future[UserOperationResponseADM] =
@@ -1687,28 +1687,28 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
     def createNewUserTask(userCreatePayloadADM: UserCreatePayloadADM) =
       for {
         // check if username is unique
-        usernameTaken: Boolean <- userByUsernameExists(userCreatePayloadADM.username)
+        usernameTaken: Boolean <- userByUsernameExists(Some(userCreatePayloadADM.username))
         _ = if (usernameTaken) {
           throw DuplicateValueException(
-            s"User with the username '${userCreatePayloadADM.username.get.value}' already exists"
+            s"User with the username '${userCreatePayloadADM.username.value}' already exists"
           )
         }
 
         // check if email is unique
-        emailTaken: Boolean <- userByEmailExists(userCreatePayloadADM.email)
+        emailTaken: Boolean <- userByEmailExists(Some(userCreatePayloadADM.email))
         _ = if (emailTaken) {
           throw DuplicateValueException(
-            s"User with the email '${userCreatePayloadADM.email.get.value}' already exists"
+            s"User with the email '${userCreatePayloadADM.email.value}' already exists"
           )
         }
 
         // check the custom IRI; if not given, create an unused IRI
-        customUserIri: Option[SmartIri] = userCreatePayloadADM.id.map(iri => iri.toSmartIri)
+        customUserIri: Option[SmartIri] = userCreatePayloadADM.id.map(_.value.toSmartIri)
         userIri: IRI <- checkOrCreateEntityIri(customUserIri, stringFormatter.makeRandomPersonIri)
 
         // hash password
         encoder = new BCryptPasswordEncoder(settings.bcryptPasswordStrength)
-        hashedPassword = encoder.encode(userCreatePayloadADM.password.get.value)
+        hashedPassword = encoder.encode(userCreatePayloadADM.password.value)
 
         // Create the new user.
         createNewUserSparqlString = org.knora.webapi.messages.twirl.queries.sparql.admin.txt
@@ -1718,38 +1718,38 @@ class UsersResponderADM(responderData: ResponderData) extends Responder(responde
             userIri = userIri,
             userClassIri = OntologyConstants.KnoraAdmin.User,
             username = stringFormatter.toSparqlEncodedString(
-              userCreatePayloadADM.username.get.value,
+              userCreatePayloadADM.username.value,
               errorFun = throw BadRequestException(
-                s"The supplied username: '${userCreatePayloadADM.username.get.value}' is not valid."
+                s"The supplied username: '${userCreatePayloadADM.username.value}' is not valid."
               )
             ),
             email = stringFormatter.toSparqlEncodedString(
-              userCreatePayloadADM.email.get.value,
+              userCreatePayloadADM.email.value,
               errorFun = throw BadRequestException(
-                s"The supplied email: '${userCreatePayloadADM.email.get.value}' is not valid."
+                s"The supplied email: '${userCreatePayloadADM.email.value}' is not valid."
               )
             ),
             password = hashedPassword,
             givenName = stringFormatter.toSparqlEncodedString(
-              userCreatePayloadADM.givenName.get.value,
+              userCreatePayloadADM.givenName.value,
               errorFun = throw BadRequestException(
-                s"The supplied given name: '${userCreatePayloadADM.givenName.get.value}' is not valid."
+                s"The supplied given name: '${userCreatePayloadADM.givenName.value}' is not valid."
               )
             ),
             familyName = stringFormatter.toSparqlEncodedString(
-              userCreatePayloadADM.familyName.get.value,
+              userCreatePayloadADM.familyName.value,
               errorFun = throw BadRequestException(
-                s"The supplied family name: '${userCreatePayloadADM.familyName.get.value}' is not valid."
+                s"The supplied family name: '${userCreatePayloadADM.familyName.value}' is not valid."
               )
             ),
-            status = userCreatePayloadADM.status.get.value,
+            status = userCreatePayloadADM.status.value,
             preferredLanguage = stringFormatter.toSparqlEncodedString(
-              userCreatePayloadADM.lang.get.value,
+              userCreatePayloadADM.lang.value,
               errorFun = throw BadRequestException(
-                s"The supplied language: '${userCreatePayloadADM.lang.get.value}' is not valid."
+                s"The supplied language: '${userCreatePayloadADM.lang.value}' is not valid."
               )
             ),
-            systemAdmin = userCreatePayloadADM.systemAdmin.get.value
+            systemAdmin = userCreatePayloadADM.systemAdmin.value
           )
           .toString
 

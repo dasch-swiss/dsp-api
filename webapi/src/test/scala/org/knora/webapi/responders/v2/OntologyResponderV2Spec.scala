@@ -2366,6 +2366,183 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       }
     }
 
+    "create classes anything:wholeThing and anything:partThing with a isPartOf relation and its corresponding value property" in {
+
+      // Create class partThing
+
+      val partThingClassIri = AnythingOntologyIri.makeEntityIri("partThing")
+
+      val partThingClassInfoContent = ClassInfoContentV2(
+        classIri = partThingClassIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(StringLiteralV2("Thing as part", Some("en")))
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(StringLiteralV2("Thing that is part of something else", Some("en")))
+          )
+        ),
+        subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreateClassRequestV2(
+        classInfoContent = partThingClassInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        anythingLastModDate = newAnythingLastModDate
+      }
+
+      // Create class wholeThing
+
+      val wholeThingClassIri = AnythingOntologyIri.makeEntityIri("wholeThing")
+
+      val wholeThingClassInfoContent = ClassInfoContentV2(
+        classIri = wholeThingClassIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(StringLiteralV2("Thing as a whole", Some("en")))
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(StringLiteralV2("A thing that has multiple parts", Some("en")))
+          )
+        ),
+        subClassOf = Set(OntologyConstants.KnoraApiV2Complex.Resource.toSmartIri),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreateClassRequestV2(
+        classInfoContent = wholeThingClassInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        anythingLastModDate = newAnythingLastModDate
+      }
+
+      // Create property partOf with subject partThing and object wholeThing
+
+      val partOfPropertyIri = AnythingOntologyIri.makeEntityIri("partOf")
+
+      val partOfPropertyInfoContent = PropertyInfoContentV2(
+        propertyIri = partOfPropertyIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+          ),
+          OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("partThing")))
+          ),
+          OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(AnythingOntologyIri.makeEntityIri("wholeThing")))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(
+              StringLiteralV2("is part of", Some("en")),
+              StringLiteralV2("ist Teil von", Some("de"))
+            )
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(
+              StringLiteralV2("Represents a part of a whole relation", Some("en")),
+              StringLiteralV2("Repräsentiert eine Teil-Ganzes-Beziehung", Some("de"))
+            )
+          ),
+          OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.SalsahGuiApiV2WithValueObjects.GuiElementProp.toSmartIri,
+            objects = Seq(SmartIriLiteralV2("http://api.knora.org/ontology/salsah-gui/v2#Searchbox".toSmartIri))
+          )
+        ),
+        subPropertyOf = Set(OntologyConstants.KnoraBase.IsPartOf.toSmartIri),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreatePropertyRequestV2(
+        propertyInfoContent = partOfPropertyInfoContent,
+        lastModificationDate = anythingLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        assert(externalOntology.properties.size == 1)
+        val property = externalOntology.properties(partOfPropertyIri)
+        // check that partOf is a subproperty of knora-api:isPartOf
+        property.entityInfoContent.subPropertyOf.contains(
+          OntologyConstants.KnoraApiV2Complex.IsPartOf.toSmartIri
+        ) should ===(true)
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newAnythingLastModDate.isAfter(anythingLastModDate))
+        anythingLastModDate = newAnythingLastModDate
+      }
+
+      // Check that the corresponding partOfValue was created
+      val partOfValuePropertyIri = AnythingOntologyIri.makeEntityIri("partOfValue")
+
+      val partOfValuePropGetRequest = PropertiesGetRequestV2(
+        propertyIris = Set(partOfValuePropertyIri),
+        allLanguages = true,
+        requestingUser = anythingAdminUser
+      )
+
+      responderManager ! partOfValuePropGetRequest
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        assert(externalOntology.properties.size == 1)
+        val property = externalOntology.properties(partOfValuePropertyIri)
+        // check that partOfValue is a subproperty of knora-api:isPartOfValue
+        property.entityInfoContent.subPropertyOf.contains(
+          OntologyConstants.KnoraApiV2Complex.IsPartOfValue.toSmartIri
+        ) should ===(true)
+        val metadata = externalOntology.ontologyMetadata
+        val newAnythingLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        anythingLastModDate = newAnythingLastModDate
+      }
+    }
+
     "change the metadata of the 'anything' ontology" in {
       val newLabel = "The modified anything ontology"
 

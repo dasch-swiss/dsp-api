@@ -5,9 +5,6 @@
 
 package org.knora.webapi.responders.admin
 
-import java.io.{BufferedInputStream, BufferedOutputStream}
-import java.nio.file.{Files, Path}
-import java.util.UUID
 import akka.http.scaladsl.util.FastFuture
 import akka.pattern._
 import org.knora.webapi._
@@ -16,6 +13,7 @@ import org.knora.webapi.exceptions._
 import org.knora.webapi.feature.FeatureFactoryConfig
 import org.knora.webapi.instrumentation.InstrumentationSupport
 import org.knora.webapi.messages.IriConversions._
+import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.admin.responder.projectsmessages._
 import org.knora.webapi.messages.admin.responder.usersmessages.{
   UserADM,
@@ -23,12 +21,10 @@ import org.knora.webapi.messages.admin.responder.usersmessages.{
   UserIdentifierADM,
   UserInformationTypeADM
 }
-import org.knora.webapi.messages.admin.responder.permissionsmessages._
 import org.knora.webapi.messages.store.cacheservicemessages.{
   CacheServiceFlushDB,
   CacheServiceGetProjectADM,
-  CacheServicePutProjectADM,
-  CacheServiceRemoveValues
+  CacheServicePutProjectADM
 }
 import org.knora.webapi.messages.store.triplestoremessages._
 import org.knora.webapi.messages.util.rdf._
@@ -38,10 +34,13 @@ import org.knora.webapi.messages.v2.responder.ontologymessages.{
   OntologyMetadataGetByProjectRequestV2,
   ReadOntologyMetadataV2
 }
-import org.knora.webapi.messages.{OntologyConstants, SmartIri, StringFormatter}
+import org.knora.webapi.messages.{OntologyConstants, SmartIri}
 import org.knora.webapi.responders.Responder.handleUnexpectedMessage
 import org.knora.webapi.responders.{IriLocker, Responder}
 
+import java.io.{BufferedInputStream, BufferedOutputStream}
+import java.nio.file.{Files, Path}
+import java.util.UUID
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
@@ -868,7 +867,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
     if (parametersCount == 0) throw BadRequestException("No data would be changed. Aborting update request.")
 
     for {
-
       maybeCurrentProject: Option[ProjectADM] <- getSingleProjectADM(
         identifier = ProjectIdentifierADM(maybeIri = Some(projectIri)),
         featureFactoryConfig = featureFactoryConfig,
@@ -880,7 +878,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         throw NotFoundException(s"Project '$projectIri' not found. Aborting update request.")
       }
       // we are changing the project, so lets get rid of the cached copy
-      // invalidateCachedProjectADM isn't clearing cache as expected
       _ = storeManager ? CacheServiceFlushDB(KnoraSystemInstances.Users.SystemUser)
 
       /* Update project */
@@ -1074,7 +1071,6 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       requestingUser: UserADM
     ): Future[ProjectOperationResponseADM] =
       for {
-
         // check if the supplied shortname is unique
         shortnameExists <- projectByShortnameExists(createProjectRequest.shortname.value)
         _ = if (shortnameExists) {
@@ -1099,7 +1095,7 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
         }
 
         // check the custom IRI; if not given, create an unused IRI
-        customProjectIri: Option[SmartIri] = createProjectRequest.id.map(iri => iri.toSmartIri)
+        customProjectIri: Option[SmartIri] = createProjectRequest.id.map(_.value).map(_.toSmartIri)
         newProjectIRI: IRI <- checkOrCreateEntityIri(
           customProjectIri,
           stringFormatter.makeRandomProjectIri(createProjectRequest.shortcode.value)
@@ -1440,28 +1436,4 @@ class ProjectsResponderADM(responderData: ResponderData) extends Responder(respo
       res
     }
   }
-
-  /**
-   * Removes the project from cache.
-   */
-  private def invalidateCachedProjectADM(maybeProject: Option[ProjectADM]): Future[Boolean] =
-    if (cacheServiceSettings.cacheServiceEnabled) {
-      val keys: Set[String] =
-        Seq(maybeProject.map(_.id), maybeProject.map(_.shortname), maybeProject.map(_.shortcode)).flatten.toSet
-      // only send to Redis if keys are not empty
-      if (keys.nonEmpty) {
-        val result = (storeManager ? CacheServiceRemoveValues(keys)).mapTo[Boolean]
-        result.map { res =>
-          log.debug("invalidateCachedProjectADM - result: {}", res)
-          res
-        }
-      } else {
-        // since there was nothing to remove, we can immediately return
-        FastFuture.successful(true)
-      }
-    } else {
-      // caching is turned off, so nothing to do.
-      FastFuture.successful(true)
-    }
-
 }
