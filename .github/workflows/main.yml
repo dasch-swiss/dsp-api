@@ -10,39 +10,30 @@ jobs:
     name: Build Everything
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - name: checkout source
+        uses: actions/checkout@v1
         with:
-          fetch-depth: 1
-      - uses: joschi/setup-jdk@v2
+          fetch-depth: 15
+      - name: get current time
+        uses: josStorer/get-current-time@v2
+        id: current-time
+        with:
+          format: YYYY-MM-DD
+          utcOffset: "+02:00"
+      - name: use daily bazel disk cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.bazel_disk_cache
+          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
+      - name: setup java version
+        uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Set up Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12'
-      - name: Install dependencies
-        run: |
-          npm install --global @bazel/bazelisk
-      - name: cache maven artifacts
-        uses: actions/cache@v1
-        with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
-      - name: Disk Free
-        run: df -h
-      - name: Run build everything
-        run: make build
+      - name: run build everything
+        run: bazel build //...
 
 # ------------------------------------------
 # ------------------------------------------
@@ -52,16 +43,29 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - name: checkout source
+        uses: actions/checkout@v1
         with:
-          fetch-depth: 50
-      - uses: joschi/setup-jdk@v2
+          fetch-depth: 15
+      - name: get current time
+        uses: josStorer/get-current-time@v2
+        id: current-time
+        with:
+          format: YYYY-MM-DD
+          utcOffset: "+02:00"
+      - name: use daily bazel disk cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.bazel_disk_cache
+          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
+      - name: setup java version
+        uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
-      - name: Install requirements
+      - name: install requirements
         run: sudo apt-get install ca-certificates-java expect redis-tools unzip
-      - name: Generate api-client-test-data
+      - name: generate api-client-test-data
         run: make client-test-data
 
 # ------------------------------------------
@@ -72,41 +76,34 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: checkout source
         uses: actions/checkout@v1
         with:
-          fetch-depth: 150
-      - uses: joschi/setup-jdk@v2
+          fetch-depth: 15
+      - name: get current time
+        uses: josStorer/get-current-time@v2
+        id: current-time
+        with:
+          format: YYYY-MM-DD
+          utcOffset: "+02:00"
+      - name: use daily bazel disk cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.bazel_disk_cache
+          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
+      - name: setup java version
+        uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
+      - name: use daily bazel disk cache
+        uses: actions/cache@v2
         with:
-          python-version: 3.8
-      - name: Set up Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12'
-      - name: Install dependencies
-        run: |
-          npm install --global @bazel/bazelisk
-      - name: cache maven artifacts
-        uses: actions/cache@v1
-        with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
-      - name: Print env file
-        run: |
-          make env-file
-          make print-env-file
-      - name: Run API unit tests
+          path: ~/.bazel_disk_cache
+          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.date.outputs.date }} }}
+      - name: run API unit tests
         run: make test-unit
 
   api-e2e-tests:
@@ -114,43 +111,28 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: checkout source
         uses: actions/checkout@v1
         with:
-          fetch-depth: 1
-      - uses: joschi/setup-jdk@v2
+          fetch-depth: 15
+      - name: get current time
+        uses: josStorer/get-current-time@v2
+        id: current-time
+        with:
+          format: YYYY-MM-DD
+          utcOffset: "+02:00"
+      - name: use daily bazel disk cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.bazel_disk_cache
+          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
+      - name: setup java version
+        uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
       - name: install requirements
         run: sudo apt-get install ca-certificates-java expect redis-tools unzip
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Set up Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12'
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r docs/requirements.txt
-          npm install --global typedoc
-          npm install --global @bazel/bazelisk
-      - name: cache maven artifacts
-        uses: actions/cache@v1
-        with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
-      - name: print env file
-        run: |
-          make env-file
-          make print-env-file
       - name: run API E2E tests
         run: make test-e2e
 
@@ -159,40 +141,29 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: checkout source
         uses: actions/checkout@v1
         with:
-          fetch-depth: 1
-      - uses: joschi/setup-jdk@v2
+          fetch-depth: 15
+      - name: get current time
+        uses: josStorer/get-current-time@v2
+        id: current-time
+        with:
+          format: YYYY-MM-DD
+          utcOffset: "+02:00"
+      - name: use daily bazel disk cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.bazel_disk_cache
+          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
+      - name: setup java version
+        uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
-      - name: install requirements
-        run: sudo apt-get install ca-certificates-java expect
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Set up Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12'
       - name: Install dependencies
         run: |
-          npm install --global @bazel/bazelisk
-      - name: cache maven artifacts
-        uses: actions/cache@v1
-        with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
-      - name: print env file
-        run: |
-          make env-file
-          make print-env-file
+          sudo apt-get install ca-certificates-java expect
       - name: run API integration tests
         run: |
           make test-docker
@@ -203,63 +174,46 @@ jobs:
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: checkout source
         uses: actions/checkout@v1
         with:
-          fetch-depth: 1
-      - uses: joschi/setup-jdk@v2
+          fetch-depth: 15
+      - name: get current time
+        uses: josStorer/get-current-time@v2
+        id: current-time
+        with:
+          format: YYYY-MM-DD
+          utcOffset: "+02:00"
+      - name: use daily bazel disk cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.bazel_disk_cache
+          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
+      - name: setup java version
+        uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
-      - name: install requirements
-        run: sudo apt-get install ca-certificates-java expect
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Set up Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12'
       - name: Install dependencies
         run: |
-          npm install --global @bazel/bazelisk
-      - name: cache maven artifacts
-        uses: actions/cache@v1
-        with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
-      - name: install requirements
-        run: sudo apt-get install expect
+          sudo apt-get install ca-certificates-java expect
       - name: test repository upgrade
         run: make test-repository-upgrade
 
   docs-build-test:
-    name: Docs Build Test
+    name: Build Docs Testrun
     needs: compile
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: checkout source
+        uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Set up Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
           npm install --global typedoc
-          npm install --global @bazel/bazelisk
           sudo apt-get install graphviz
       - name: run docs build
         run: make docs-build
@@ -298,49 +252,44 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
-      - uses: actions/checkout@v1
+      - name: checkout source
+        uses: actions/checkout@v1
         with:
           fetch-depth: 50
-      - uses: joschi/setup-jdk@v2
+      - name: get current time
+        uses: josStorer/get-current-time@v2
+        id: current-time
+        with:
+          format: YYYY-MM-DD
+          utcOffset: "+02:00"
+      - name: use daily bazel disk cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.bazel_disk_cache
+          key: ${{ runner.OS }}-bazel_disk_cache-${{ steps.current-time.outputs.formattedTime }}
+      - name: setup java version
+        uses: joschi/setup-jdk@v2
         with:
           java-version: '11' # The OpenJDK version to make available on the path
           architecture: 'x64' # defaults to 'x64'
-      - name: Install requirements
+      - name: install requirements
         run: sudo apt-get install ca-certificates-java expect redis-tools unzip
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Set up Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12'
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
           npm install --global typedoc
-          npm install --global @bazel/bazelisk
           sudo apt-get install graphviz
-      - name: Generate api-client-test-data
+      - name: generate api-client-test-data
         run: make client-test-data
-      - name: Add api-client-test-data to release assets
+      - name: add api-client-test-data to release assets
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GH_TOKEN }}
           file: client-test-data.zip
           tag: ${{ github.ref }}
           overwrite: true
-      - name: Cache maven artifacts
-        uses: actions/cache@v1
-        with:
-          path: ~/.ivy2
-          key: ${{ runner.OS }}-build-${{ hashFiles('**/KnoraBuild.sbt') }}
-          restore-keys: |
-            ${{ runner.OS }}-build-${{ env.cache-name }}-
-            ${{ runner.OS }}-build-
-            ${{ runner.OS }}-
-      - name: Build and publish all images to Dockerhub
+      - name: build and publish all images to Dockerhub
         run: |
           echo ${{ secrets.DOCKER_HUB_TOKEN }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
           make docker-publish
@@ -352,7 +301,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
-      - name: Send notification to google chat room "DSP releases"
+      - name: send notification to google chat room "DSP releases"
         uses: lakto/google-chat-action@main
         with:
           url: ${{ secrets.GOOGLE_CHAT_DSP_RELEASES_WEBHOOK_URL }}
@@ -366,26 +315,17 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'release' && startsWith(github.ref, 'refs/tags')
     steps:
-      - name: Checkout main
-        uses: actions/checkout@v2
+      - name: checkout source
+        uses: actions/checkout@v1
         with:
           fetch-depth: 1
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.8
-      - name: Set up Node
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12'
-      - name: Install dependencies
+      - name: install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
           npm install --global typedoc
-          npm install --global @bazel/bazelisk
           sudo apt-get install graphviz
-      - name: Deploy docs
+      - name: deploy docs
         uses: mhausenblas/mkdocs-deploy-gh-pages@1.16
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
