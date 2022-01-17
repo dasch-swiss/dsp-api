@@ -282,6 +282,7 @@ object RouteUtilV1 {
   private val videoMimeTypes: Set[String] = Set(
     "video/mp4"
   )
+  // TODO: add ArchiveRepresentation
 
   /**
    * Converts file metadata from Sipi into a [[FileValueV1]].
@@ -295,7 +296,8 @@ object RouteUtilV1 {
     filename: String,
     fileMetadataResponse: GetFileMetadataResponse,
     projectShortcode: String
-  ): FileValueV1 =
+  ): FileValueV1 = {
+    println(fileMetadataResponse)
     if (imageMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
       StillImageFileValueV1(
         internalFilename = filename,
@@ -351,4 +353,6 @@ object RouteUtilV1 {
     } else {
       throw BadRequestException(s"MIME type ${fileMetadataResponse.internalMimeType} not supported in Knora API v1")
     }
+  }
+  // TODO: add ArchiveRepresentation
 }
