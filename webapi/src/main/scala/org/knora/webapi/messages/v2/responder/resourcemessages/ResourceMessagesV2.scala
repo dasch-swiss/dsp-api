@@ -556,8 +556,8 @@ case class ReadResourceV2(
       permissions = this.permissions,
       userPermission = this.userPermission,
       values = Map.empty,
-      creationDate = Instant.now(),
-      lastModificationDate = None,
+      creationDate = this.creationDate,
+      lastModificationDate = this.lastModificationDate,
       versionDate = None,
       deletionInfo = this.deletionInfo
     )
