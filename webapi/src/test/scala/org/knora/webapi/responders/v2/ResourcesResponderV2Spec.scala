@@ -53,6 +53,7 @@ object ResourcesResponderV2Spec {
 
   private val aThingIri = "http://rdfh.ch/0001/a-thing"
   private var aThingLastModificationDate = Instant.now
+  private val aThingCreationDate = Instant.parse("2016-03-02T15:05:10Z")
 
   private val resourceIriToErase = new MutableTestIri
   private val firstValueIriToErase = new MutableTestIri
@@ -1969,6 +1970,8 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
         val resource = response.resources.head
         resource.resourceClassIri should equal(OntologyConstants.KnoraBase.DeletedResource.toSmartIri)
         resource.deletionInfo should not be (None)
+        resource.lastModificationDate should not be (None)
+        resource.creationDate should equal(aThingCreationDate)
         println(resource)
       }
     }
