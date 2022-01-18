@@ -53,6 +53,7 @@ object ResourcesResponderV2Spec {
 
   private val aThingIri = "http://rdfh.ch/0001/a-thing"
   private var aThingLastModificationDate = Instant.now
+  private val aThingCreationDate = Instant.parse("2016-03-02T15:05:10Z")
 
   private val resourceIriToErase = new MutableTestIri
   private val firstValueIriToErase = new MutableTestIri
@@ -1960,17 +1961,20 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgType[SuccessResponseV2](timeout)
 
-      // We should now be unable to request the resource.
-
       responderManager ! ResourcesGetRequestV2(
         resourceIris = Seq(aThingIri),
         targetSchema = ApiV2Complex,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingUser1
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        response.resources.size should equal(1)
+        val resource = response.resources.head
+        resource.resourceClassIri should equal(OntologyConstants.KnoraBase.DeletedResource.toSmartIri)
+        resource.deletionInfo should not be (None)
+        resource.lastModificationDate should not be (None)
+        resource.creationDate should equal(aThingCreationDate)
+        println(resource)
       }
     }
 
@@ -1993,21 +1997,21 @@ class ResourcesResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgType[SuccessResponseV2](timeout)
 
-      // We should now be unable to request the resource.
-
       responderManager ! ResourcesGetRequestV2(
         resourceIris = Seq(resourceIri),
         targetSchema = ApiV2Complex,
         featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = SharedTestDataADM.anythingUser1
       )
-
-      expectMsgPF(timeout) { case msg: akka.actor.Status.Failure =>
-        msg.cause.isInstanceOf[NotFoundException] should ===(true)
+      expectMsgPF(timeout) { case response: ReadResourcesSequenceV2 =>
+        response.resources.size should equal(1)
+        val resource = response.resources.head
+        resource.resourceClassIri should equal(OntologyConstants.KnoraBase.DeletedResource.toSmartIri)
+        resource.deletionInfo match {
+          case Some(v) => v.deleteDate should equal(deleteDate)
+          case None    => throw AssertionException("Missing deletionInfo on DeletedResource")
+        }
       }
-
-      val savedDeleteDate: Instant = getDeleteDate(resourceIri)
-      assert(savedDeleteDate == deleteDate)
     }
 
     "not accept custom resource permissions that would give the requesting user a higher permission on a resource than the default" in {

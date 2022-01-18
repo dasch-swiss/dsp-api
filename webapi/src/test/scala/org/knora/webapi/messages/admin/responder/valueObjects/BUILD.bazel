@@ -8,8 +8,9 @@ scala_test(
     size = "small",  # 60s
     srcs = [
         "GroupsValueObjectsADMSpec.scala",
-        "IriValueObjectsADMSpec.scala",
+        "ProjectsValueObjectsADMSpec.scala",
         "ListsValueObjectsADMSpec.scala",
+        "UsersValueObjectsADMSpec.scala",
         "ValueObjectsADMSpec.scala",
     ],
     data = [

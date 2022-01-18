@@ -60,7 +60,7 @@ container_pull(
 # get openjdk
 container_pull(
     name = "openjdk11",
-    digest = "sha256:07a404dc9d910d35d89f8c4ab31016162f820ebfd3ae88d2a10f9d4755b60364",  # 5.11.2021
+    digest = "sha256:14605eb0f24ce726e13c4a85862325083dee3ab13da847b7af20d0df5966c176",  # 29.11.2021
     registry = "docker.io",
     repository = "eclipse-temurin",
     # tag = "11-jre-focal", # Ubuntu 20.04
@@ -104,7 +104,7 @@ http_archive(
 # scala_config(scala_version = "2.11.12")
 load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
 
-scala_config(scala_version = "2.13.6")
+scala_config(scala_version = "2.13.7")
 
 # register default and our custom scala toolchain
 load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")

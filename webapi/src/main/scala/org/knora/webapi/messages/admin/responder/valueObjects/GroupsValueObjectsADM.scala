@@ -16,13 +16,13 @@ import zio.prelude.Validation
  */
 sealed abstract case class GroupIRI private (value: String)
 object GroupIRI { self =>
-  private val sf = StringFormatter.getGeneralInstance
+  private val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   def make(value: String): Validation[Throwable, GroupIRI] =
     if (value.isEmpty) {
       Validation.fail(BadRequestException(GROUP_IRI_MISSING_ERROR))
     } else {
-      if (value.nonEmpty && !sf.isKnoraGroupIriStr(value)) {
+      if (!sf.isKnoraGroupIriStr(value)) {
         Validation.fail(BadRequestException(GROUP_IRI_INVALID_ERROR))
       } else {
         val validatedValue = Validation(
@@ -45,7 +45,7 @@ object GroupIRI { self =>
  */
 sealed abstract case class GroupName private (value: String)
 object GroupName { self =>
-  private val sf = StringFormatter.getGeneralInstance
+  private val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   def make(value: String): Validation[Throwable, GroupName] =
     if (value.isEmpty) {
@@ -70,7 +70,7 @@ object GroupName { self =>
  */
 sealed abstract case class GroupDescriptions private (value: Seq[StringLiteralV2])
 object GroupDescriptions { self =>
-  private val sf = StringFormatter.getGeneralInstance
+  private val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   def make(value: Seq[StringLiteralV2]): Validation[Throwable, GroupDescriptions] =
     if (value.isEmpty) {

@@ -14,15 +14,15 @@ HTTP POST to http://host/v2/resources
 ```
 
 The body of the request is a JSON-LD document in the
-[complex API schema](introduction.md#api-schema), specifying the type,`rdfs:label`, and its Knora resource properties and their values. The representation of the
-resource is the same as when it is returned in a `GET` request, except that its `knora-api:attachedToUser` is not given,
-and the resource IRI and those of its values can be optionally specified. The format of the values submitted
-is described in [Editing Values](editing-values.md). If there are multiple values for a property,
-these must be given in an array.
+[complex API schema](introduction.md#api-schema), specifying the type,`rdfs:label`, and its Knora resource properties
+and their values. The representation of the resource is the same as when it is returned in a `GET` request, except that
+its `knora-api:attachedToUser` is not given, and the resource IRI and those of its values can be optionally specified.
+The format of the values submitted is described in [Editing Values](editing-values.md). If there are multiple values for
+a property, these must be given in an array.
 
 For example, here is a request to create a resource with various value types:
 
-```jsonld
+```json
 {
   "@type" : "anything:Thing",
   "anything:hasBoolean" : {
@@ -120,12 +120,12 @@ For example, here is a request to create a resource with various value types:
 }
 ```
 
-Permissions for the new resource can be given by adding `knora-api:hasPermissions`, a custom creation date
-can be specified by adding `knora-api:creationDate`
-(an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)), and the
-resource's creator can be specfied by adding `knora-api:attachedToUser`. For example:
+Permissions for the new resource can be given by adding `knora-api:hasPermissions`, a custom creation date can be
+specified by adding `knora-api:creationDate`
+(an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)), and the resource's creator can be specfied
+by adding `knora-api:attachedToUser`. For example:
 
-```jsonld
+```json
 {
   "@type" : "anything:Thing",
   "anything:hasBoolean" : {
@@ -157,36 +157,34 @@ resource's creator can be specfied by adding `knora-api:attachedToUser`. For exa
 The format of the object of `knora-api:hasPermissions` is described in
 [Permissions](../../02-knora-ontologies/knora-base.md#permissions).
 
-If permissions are not given, configurable default permissions are used
-(see [Default Object Access Permissions](../../05-internals/design/api-admin/administration.md#default-object-access-permissions)).
+If permissions are not given, configurable default permissions are used (see
+[Default Object Access Permissions](../../05-internals/design/api-admin/administration.md#default-object-access-permissions)
+).
 
-To create a resource, the user must have permission to create resources
-of that class in that project.
+To create a resource, the user must have permission to create resources of that class in that project.
 
-The predicate `knora-api:attachedToUser` can be used to specify a creator other
-than the requesting user only if the requesting user is an administrator of the
-project or a system administrator. The specified creator must also
-have permission to create resources of that class in that project.
+The predicate `knora-api:attachedToUser` can be used to specify a creator other than the requesting user only if the
+requesting user is an administrator of the project or a system administrator. The specified creator must also have
+permission to create resources of that class in that project.
 
-In addition to the creation date, in the body of the request, it is possible to specify a custom IRI (of [Knora IRI](knora-iris.md#iris-for-data) form) for a resource through
-the `@id` attribute which will then be assigned to the resource; otherwise the resource will get a unique random IRI.
+In addition to the creation date, in the body of the request, it is possible to specify a custom IRI (
+of [Knora IRI](knora-iris.md#iris-for-data) form) for a resource through the `@id` attribute which will then be assigned
+to the resource; otherwise the resource will get a unique random IRI.
 
 A custom resource IRI must be `http://rdfh.ch/PROJECT_SHORTCODE/` (where `PROJECT_SHORTCODE`
-is the shortcode of the project that the resource belongs to), plus a custom ID string.
- 
+is the shortcode of the project that the resource belongs to) plus a custom ID string.
+
 Similarly, it is possible to assign a custom IRI to the values using their `@id` attributes; if not given, random IRIs
 will be assigned to the values.
 
-A custom value IRI must be the IRI of the containing resource, followed
-by a `/values/` and a custom ID string.
+A custom value IRI must be the IRI of the containing resource, followed by a `/values/` and a custom ID string.
 
-An optional custom UUID of a value can also be given by adding `knora-api:valueHasUUID`.
-Each custom UUID must be [base64url-encoded](https://tools.ietf.org/html/rfc4648#section-5), without padding. Each value of the new resource
-can also have a custom creation date specified by adding `knora-api:creationDate` 
-(an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)).
-For example:
+An optional custom UUID of a value can also be given by adding `knora-api:valueHasUUID`. Each custom UUID must
+be [base64url-encoded](https://tools.ietf.org/html/rfc4648#section-5) without padding. Each value of the new resource
+can also have a custom creation date specified by adding `knora-api:creationDate`
+(an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp)). For example:
 
-```jsonld
+```json
 {
    "@id" : "http://rdfh.ch/0001/oveR1dQltEUwNrls9Lu5Rw",
    "@type" : "anything:Thing",
@@ -217,7 +215,7 @@ For example:
   }
 }
 ```
- 
+
 The response is a JSON-LD document containing a
 [preview](reading-and-searching-resources.md#get-the-preview-of-a-resource-by-iri)
 of the resource.
@@ -244,17 +242,21 @@ The request body is a JSON-LD object containing the following information about 
 
 - `@id`: the resource's IRI
 - `@type`: the resource's class IRI
-- `knora-api:lastModificationDate`: an `xsd:dateTimeStamp` representing the last modification date that is currently attached to the resource, if any. This is used to make sure that the resource has not been modified by someone else since you last read it.
+- `knora-api:lastModificationDate`: an `xsd:dateTimeStamp` representing the last modification date that is currently
+  attached to the resource, if any. This is used to make sure that the resource has not been modified by someone else
+  since you last read it.
 
-The submitted JSON-LD object must also contain one or more of the following predicates, representing the metadata you want to change:
+The submitted JSON-LD object must also contain one or more of the following predicates, representing the metadata you
+want to change:
 
 - `rdfs:label`: a string
-- `knora-api:hasPermissions`, in the format described in [Permissions](../../02-knora-ontologies/knora-base.md#permissions)
+- `knora-api:hasPermissions`, in the format described
+  in [Permissions](../../02-knora-ontologies/knora-base.md#permissions)
 - `knora-api:newModificationDate`: an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp).
 
 Here is an example:
 
-```jsonld
+```json
 {
   "@id" : "http://rdfh.ch/0001/a-thing",
   "@type" : "anything:Thing",
@@ -278,8 +280,8 @@ Here is an example:
 }
 ```
 
-If you submit a `knora-api:lastModificationDate` that is different from the resource's actual last modification
-date, you will get an HTTP 409 (Conflict) error.
+If you submit a `knora-api:lastModificationDate` that is different from the resource's actual last modification date,
+you will get an HTTP 409 (Conflict) error.
 
 If you submit a `knora-api:newModificationDate` that is earlier than the resource's `knora-api:lastModificationDate`,
 you will get an HTTP 400 (Bad Request) error.
@@ -288,8 +290,8 @@ A successful response is an HTTP 200 (OK) status containing the resource's metad
 
 ## Deleting a Resource
 
-Knora does not normally delete resources; instead, it marks them as deleted, which means
-that they do not appear in normal query results.
+Knora does not normally delete resources; instead, it marks them as deleted, which means that they do not appear in
+normal query results.
 
 To mark a resource as deleted, use this route:
 
@@ -301,9 +303,11 @@ The request body is a JSON-LD object containing the following information about 
 
 - `@id`: the resource's IRI
 - `@type`: the resource's class IRI
-- `knora-api:lastModificationDate`: an `xsd:dateTimeStamp` representing the last modification date that is currently attached to the resource, if any. This is used to make sure that the resource has not been modified by someone else since you last read it.
+- `knora-api:lastModificationDate`: an `xsd:dateTimeStamp` representing the last modification date that is currently
+  attached to the resource, if any. This is used to make sure that the resource has not been modified by someone else
+  since you last read it.
 
-```jsonld
+```json
 {
   "@id" : "http://rdfh.ch/0001/a-thing",
   "@type" : "anything:Thing",
@@ -322,56 +326,93 @@ The request body is a JSON-LD object containing the following information about 
 }
 ```
 
-The optional property `knora-api:deleteComment` specifies a comment to be attached to the
-resource, explaining why it has been marked as deleted.
+The optional property `knora-api:deleteComment` specifies a comment to be attached to the resource, explaining why it
+has been marked as deleted.
 
 The optional property `knora-api:deleteDate`
 (an [xsd:dateTimeStamp](https://www.w3.org/TR/xmlschema11-2/#dateTimeStamp))
-indicates when the resource was marked as deleted; if not given, the current
-time is used.
+indicates when the resource was marked as deleted; if not given, the current time is used.
 
-The response is a JSON-LD document containing the predicate `knora-api:result`
-with a confirmation message.
+The response is a JSON-LD document containing the predicate `knora-api:result` with a confirmation message.
+
+### Requesting Deleted Resources
+
+Resources marked as deleted are not found in search queries. It is however possible to request them directly or from an
+ARK URL. In these instances, the API will not return the deleted resource, but instead a generic resource of type 
+`knora-base:DeletedResource`. This resource will be similar to the requested resource, having e.g. the same IRI.
+The resource will contain the deletion date and optionally the deletion comment.
+
+The response to requesting a deleted resource will look as the following example:
+
+```json
+{
+    "rdfs:label": "Deleted Resource",
+    "knora-api:versionArkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thingO.20211214T084407677335Z",
+        "@type": "xsd:anyURI"
+    },
+    "knora-api:attachedToProject": {
+        "@id": "http://rdfh.ch/projects/0001"
+    },
+    "knora-api:userHasPermission": "CR",
+    "knora-api:attachedToUser": {
+        "@id": "http://rdfh.ch/users/9XBCrDV3SRa7kS1WwynB4Q"
+    },
+    "knora-api:hasPermissions": "CR knora-admin:ProjectMember|V knora-admin:ProjectMember",
+    "knora-api:isDeleted": true,
+    "@type": "knora-api:DeletedResource",
+    "@id": "http://rdfh.ch/0001/a-thing",
+    "knora-api:deleteComment": "This resource is too boring.",
+    "knora-api:arkUrl": {
+        "@value": "http://0.0.0.0:3336/ark:/72163/1/0001/a=thingO",
+        "@type": "xsd:anyURI"
+    },
+    "knora-api:creationDate": {
+        "@value": "2021-12-14T08:44:07.677335Z",
+        "@type": "xsd:dateTimeStamp"
+    },
+    "knora-api:deleteDate": {
+        "@type": "xsd:dateTimeStamp",
+        "@value": "2021-12-14T08:44:07.372543Z"
+    },
+    "@context": {
+        "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
+        "knora-api": "http://api.knora.org/ontology/knora-api/v2#"
+    }
+}
+```
 
 ### Links to Deleted Resources
 
 If resource `A` has a link to resource `B`, and resource
-`B` is later marked as deleted, `A`'s link will still exist. DSP-API
-v2 will still return the link when `A` is queried, but without any information
-about `B` (except for `B`'s IRI). If `A`'s link is necessary to
-meet the requirements of a cardinality, marking `B` as deleted will
-not violate the cardinality.
+`B` is later marked as deleted, `A`'s link will still exist. DSP-API v2 will still return the link when `A` is queried,
+but without any information about `B` (except for `B`'s IRI). If `A`'s link is necessary to meet the requirements of a
+cardinality, marking `B` as deleted will not violate the cardinality.
 
-The reason for this design is that `A` and `B` might be in
-different projects, and each project must retain control of its resources
-and be able to mark them as deleted, even if they are used by another
-project. In future, Knora may be able to notify the owner of `A` in this
-case.
+The reason for this design is that `A` and `B` might be in different projects, and each project must retain control of
+its resources and be able to mark them as deleted, even if they are used by another project.
 
 ## Erasing a Resource from the Triplestore
 
-Normally, resources are not actually removed from the triplestore; they are
-only marked as deleted (see [Deleting a Resource](#deleting-a-resource)).
-However, sometimes it is necessary to erase a resource from the triplestore.
-To do so, use this route:
+Normally, resources are not actually removed from the triplestore; they are only marked as deleted (see
+[Deleting a Resource](#deleting-a-resource)). However, sometimes it is necessary to erase a resource from the
+triplestore. To do so, use this route:
 
 ```
 HTTP POST to http://host/v2/resources/erase
 ```
 
-The request body is the same as for [Deleting a Resource](#deleting-a-resource),
-except that `knora-api:deleteComment` is not relevant and will be ignored.
+The request body is the same as for [Deleting a Resource](#deleting-a-resource), except that `knora-api:deleteComment`
+is not relevant and will be ignored.
 
-To do this, a user must be a system administrator or an administrator of the
-project containing the resource. The user's permissions on the resource are
-not otherwise checked.
+To do this, a user must be a system administrator or an administrator of the project containing the resource. The user's
+permissions on the resource are not otherwise checked.
 
-A resource cannot be erased if any other resource has a link to it. Any such
-links must first be changed or marked as deleted
-(see [Updating a Value](editing-values.md#updating-a-value) and
-[Deleting a Value](editing-values.md#deleting-a-value)). Then,
-when the resource is erased, the deleted link values that referred to
-it will also be erased.
+A resource cannot be erased if any other resource has a link to it. Any such links must first be changed or marked as
+deleted (see [Updating a Value](editing-values.md#updating-a-value) and
+[Deleting a Value](editing-values.md#deleting-a-value)). Then, when the resource is erased, the deleted link values that
+referred to it will also be erased.
 
-This operation cannot be undone (except by restoring the repository from a
-backup), so use it with care.
+This operation cannot be undone (except by restoring the repository from a backup), so use it with care.

@@ -105,6 +105,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         valueUuid,
         versionDate,
         withDeleted,
+        showDeletedValues = false,
         targetSchema,
         schemaOptions,
         featureFactoryConfig,
@@ -1506,8 +1507,6 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
           .toString()
       )
 
-      // _ = println(resourceRequestSparql)
-
       resourceRequestResponse: SparqlExtendedConstructResponse <- (storeManager ? SparqlExtendedConstructRequest(
         sparql = resourceRequestSparql,
         featureFactoryConfig = featureFactoryConfig
@@ -1542,7 +1541,8 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
     propertyIri: Option[SmartIri] = None,
     valueUuid: Option[UUID] = None,
     versionDate: Option[Instant] = None,
-    withDeleted: Boolean = false,
+    withDeleted: Boolean = true,
+    showDeletedValues: Boolean = false,
     targetSchema: ApiV2Schema,
     schemaOptions: Set[SchemaOption],
     featureFactoryConfig: FeatureFactoryConfig,
@@ -1606,14 +1606,36 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         case Some(definedValueUuid) =>
           if (!apiResponse.resources.exists(_.values.values.exists(_.exists(_.valueHasUUID == definedValueUuid)))) {
             throw NotFoundException(
-              s"Value with UUID ${stringFormatter.base64EncodeUuid(definedValueUuid)} not found (maybe you do not have permission to see it, or it is marked as deleted)"
+              s"Value with UUID ${stringFormatter.base64EncodeUuid(definedValueUuid)} not found (maybe you do not have permission to see it)"
             )
           }
 
         case None => ()
       }
 
-    } yield apiResponse
+      // Check if resources are deleted, if so, replace them with DeletedResource
+      responseWithDeletedResourcesReplaced = apiResponse.resources match {
+        case resourceList =>
+          if (resourceList.nonEmpty) {
+            val resourceListWithDeletedResourcesReplaced = resourceList.map { resource =>
+              resource.deletionInfo match {
+                // Resource deleted -> return DeletedResource instead
+                case Some(_) => resource.asDeletedResource()
+                // Resource not deleted -> return resource
+                case None =>
+                  // deleted values should be shown -> resource can be returned
+                  if (showDeletedValues) resource
+                  // deleted Values should not be shown -> replace them with generic DeletedValue
+                  else resource.withDeletedValues()
+              }
+            }
+            apiResponse.copy(resources = resourceListWithDeletedResourcesReplaced)
+          } else {
+            apiResponse
+          }
+      }
+
+    } yield responseWithDeletedResourcesReplaced
 
   }
 
@@ -1628,7 +1650,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
    */
   private def getResourcePreviewV2(
     resourceIris: Seq[IRI],
-    withDeleted: Boolean = false,
+    withDeleted: Boolean = true,
     targetSchema: ApiV2Schema,
     featureFactoryConfig: FeatureFactoryConfig,
     requestingUser: UserADM
@@ -1666,7 +1688,24 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
         targetResourceIris = resourceIris.toSet,
         resourcesSequence = apiResponse
       )
-    } yield apiResponse
+
+      // Check if resources are deleted, if so, replace them with DeletedResource
+      responseWithDeletedResourcesReplaced = apiResponse.resources match {
+        case resourceList =>
+          if (resourceList.nonEmpty) {
+            val resourceListWithDeletedResourcesReplaced = resourceList.map { resource =>
+              resource.deletionInfo match {
+                case Some(_) => resource.asDeletedResource()
+                case None    => resource.withDeletedValues()
+              }
+            }
+            apiResponse.copy(resources = resourceListWithDeletedResourcesReplaced)
+          } else {
+            apiResponse
+          }
+      }
+
+    } yield responseWithDeletedResourcesReplaced
   }
 
   /**
@@ -2710,7 +2749,7 @@ class ResourcesResponderV2(responderData: ResponderData) extends ResponderWithSt
       resourceFullRepAtCreationTime: ReadResourcesSequenceV2 <- getResourcesV2(
         resourceIris = Seq(resourceIri),
         versionDate = Some(versionHist.versionDate),
-        withDeleted = true,
+        showDeletedValues = true,
         targetSchema = ApiV2Complex,
         schemaOptions = Set.empty[SchemaOption],
         featureFactoryConfig = featureFactoryConfig,

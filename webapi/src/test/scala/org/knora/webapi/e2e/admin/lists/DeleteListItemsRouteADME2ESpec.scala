@@ -166,6 +166,52 @@ class DeleteListItemsRouteADME2ESpec
         )
       )
     }
+  }
 
+  "Candeletelist route (/admin/lists/candelete)" when {
+    "used to query if list can be deleted" should {
+      "return TRUE for unused list" in {
+        val unusedList = "http://rdfh.ch/lists/0001/notUsedList"
+        val unusedListEncoded = java.net.URLEncoder.encode(unusedList, "utf-8")
+        val request = Get(baseApiUrl + s"/admin/lists/candelete/" + unusedListEncoded) ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password)
+        )
+
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+
+        val canDelete = AkkaHttpUtils.httpResponseToJson(response).fields("canDeleteList")
+        canDelete.convertTo[Boolean] should be(true)
+        val listIri = AkkaHttpUtils.httpResponseToJson(response).fields("listIri")
+        listIri.convertTo[String] should be(unusedList)
+      }
+
+      "return FALSE for used list" in {
+        val usedList = "http://rdfh.ch/lists/0001/treeList01"
+        val usedListEncoded = java.net.URLEncoder.encode(usedList, "utf-8")
+        val request = Get(baseApiUrl + s"/admin/lists/candelete/" + usedListEncoded) ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password)
+        )
+
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.OK)
+
+        val canDelete = AkkaHttpUtils.httpResponseToJson(response).fields("canDeleteList")
+        canDelete.convertTo[Boolean] should be(false)
+        val listIri = AkkaHttpUtils.httpResponseToJson(response).fields("listIri")
+        listIri.convertTo[String] should be(usedList)
+      }
+
+      "return exception for bad list iri" in {
+        val badlistIri = "bad list Iri"
+        val badListIriEncoded = java.net.URLEncoder.encode(badlistIri, "utf-8")
+        val request = Get(baseApiUrl + s"/admin/lists/candelete/" + badListIriEncoded) ~> addCredentials(
+          BasicHttpCredentials(rootCreds.email, rootCreds.password)
+        )
+
+        val response: HttpResponse = singleAwaitingRequest(request)
+        response.status should be(StatusCodes.BadRequest)
+      }
+    }
   }
 }

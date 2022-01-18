@@ -22,7 +22,7 @@ object ListIRI { self =>
     if (value.isEmpty) {
       Validation.fail(BadRequestException(LIST_NODE_IRI_MISSING_ERROR))
     } else {
-      if (value.nonEmpty && !sf.isKnoraListIriStr(value)) {
+      if (!sf.isKnoraListIriStr(value)) {
         Validation.fail(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
       } else {
         val validatedValue = Validation(
@@ -45,7 +45,7 @@ object ListIRI { self =>
  */
 sealed abstract case class ListName private (value: String)
 object ListName { self =>
-  val sf = StringFormatter.getGeneralInstance
+  val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   def make(value: String): Validation[Throwable, ListName] =
     if (value.isEmpty) {
@@ -89,7 +89,7 @@ object Position { self =>
  */
 sealed abstract case class Labels private (value: Seq[StringLiteralV2])
 object Labels { self =>
-  val sf = StringFormatter.getGeneralInstance
+  val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   def make(value: Seq[StringLiteralV2]): Validation[Throwable, Labels] =
     if (value.isEmpty) {
@@ -116,7 +116,7 @@ object Labels { self =>
  */
 sealed abstract case class Comments private (value: Seq[StringLiteralV2])
 object Comments { self =>
-  val sf = StringFormatter.getGeneralInstance
+  val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   def make(value: Seq[StringLiteralV2]): Validation[Throwable, Comments] =
     if (value.isEmpty) {
