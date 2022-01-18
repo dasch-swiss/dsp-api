@@ -20,10 +20,11 @@ import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.v1.responder.valuemessages.{
-  MovingImageFileValueV1,
+  ArchiveFileValueV1,
   AudioFileValueV1,
   DocumentFileValueV1,
   FileValueV1,
+  MovingImageFileValueV1,
   StillImageFileValueV1,
   TextFileValueV1
 }
@@ -258,11 +259,11 @@ object RouteUtilV1 {
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "application/vnd.ms-powerpoint",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    "application/zip",
-    "application/x-tar",
-    "application/x-iso9660-image",
-    "application/gzip"
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+//    "application/zip",
+//    "application/x-tar",
+//    "application/x-iso9660-image",
+//    "application/gzip"
   )
 
   /**
@@ -282,7 +283,16 @@ object RouteUtilV1 {
   private val videoMimeTypes: Set[String] = Set(
     "video/mp4"
   )
-  // TODO: add ArchiveRepresentation
+
+  /**
+   * MIME types used in Sipi to store archive files.
+   */
+  private val archiveMimeTypes: Set[String] = Set(
+    "application/zip",
+    "application/x-tar",
+    "application/gzip",
+    "application/x-7z-compressed"
+  )
 
   /**
    * Converts file metadata from Sipi into a [[FileValueV1]].
@@ -296,8 +306,7 @@ object RouteUtilV1 {
     filename: String,
     fileMetadataResponse: GetFileMetadataResponse,
     projectShortcode: String
-  ): FileValueV1 = {
-    println(fileMetadataResponse)
+  ): FileValueV1 =
     if (imageMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
       StillImageFileValueV1(
         internalFilename = filename,
@@ -350,9 +359,15 @@ object RouteUtilV1 {
         dimY =
           fileMetadataResponse.height.getOrElse(throw SipiException(s"Sipi did not return the height of the video"))
       )
+    } else if (archiveMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
+      ArchiveFileValueV1(
+        internalFilename = filename,
+        internalMimeType = fileMetadataResponse.internalMimeType,
+        originalFilename = fileMetadataResponse.originalFilename,
+        originalMimeType = fileMetadataResponse.originalMimeType,
+        projectShortcode = projectShortcode
+      )
     } else {
       throw BadRequestException(s"MIME type ${fileMetadataResponse.internalMimeType} not supported in Knora API v1")
     }
-  }
-  // TODO: add ArchiveRepresentation
 }

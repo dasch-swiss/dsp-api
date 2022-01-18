@@ -81,6 +81,8 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         makeVideoFileValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.DocumentFileValue =>
         makeDocumentFileValue(valueProps, projectShortcode, responderManager, userProfile)
+      case OntologyConstants.KnoraBase.ArchiveFileValue =>
+        makeArchiveFileValue(valueProps, projectShortcode, responderManager, userProfile)
       case OntologyConstants.KnoraBase.LinkValue => makeLinkValue(valueProps, responderManager, userProfile)
     }
   }
@@ -105,6 +107,15 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
    */
   def makeSipiDocumentGetUrlFromFilename(documentFileValueV1: DocumentFileValueV1): String =
     s"${settings.externalSipiIIIFGetUrl}/${documentFileValueV1.projectShortcode}/${documentFileValueV1.internalFilename}/file"
+
+  /**
+   * Creates a URL for accessing a archive file via Sipi.
+   *
+   * @param archiveFileValueV1 the archive file value.
+   * @return a Sipi  URL.
+   */
+  def makeSipiArchiveGetUrlFromFilename(archiveFileValueV1: ArchiveFileValueV1): String =
+    s"${settings.externalSipiIIIFGetUrl}/${archiveFileValueV1.projectShortcode}/${archiveFileValueV1.internalFilename}/file"
 
   /**
    * Creates a URL for accessing a text file via Sipi.
@@ -195,6 +206,13 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
           nx = documentFileValueV1.dimX,
           ny = documentFileValueV1.dimY,
           path = makeSipiDocumentGetUrlFromFilename(documentFileValueV1)
+        )
+
+      case archiveFileValueV1: ArchiveFileValueV1 =>
+        LocationV1(
+          format_name = mimeType2V1Format(archiveFileValueV1.internalMimeType),
+          origname = archiveFileValueV1.originalFilename,
+          path = makeSipiArchiveGetUrlFromFilename(archiveFileValueV1)
         )
 
       case textFileValue: TextFileValueV1 =>
@@ -397,6 +415,8 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
       case _: TextFileValueV1 => basicObjectResponse
 
       case _: DocumentFileValueV1 => basicObjectResponse
+
+      case _: ArchiveFileValueV1 => basicObjectResponse
 
       case _: AudioFileValueV1 => basicObjectResponse
 
@@ -912,6 +932,30 @@ class ValueUtilV1(private val settings: KnoraSettingsImpl) {
         pageCount = predicates.get(OntologyConstants.KnoraBase.PageCount).flatMap(_.literals.headOption.map(_.toInt)),
         dimX = predicates.get(OntologyConstants.KnoraBase.DimX).flatMap(_.literals.headOption.map(_.toInt)),
         dimY = predicates.get(OntologyConstants.KnoraBase.DimY).flatMap(_.literals.headOption.map(_.toInt))
+      )
+    )
+  }
+
+  /**
+   * Converts a [[ValueProps]] into a [[ArchiveFileValueV1]].
+   *
+   * @param valueProps a [[ValueProps]] representing the SPARQL query results to be converted.
+   * @return a [[ArchiveFileValueV1]].
+   */
+  private def makeArchiveFileValue(
+    valueProps: ValueProps,
+    projectShortcode: String,
+    responderManager: ActorRef,
+    userProfile: UserADM
+  )(implicit timeout: Timeout, executionContext: ExecutionContext): Future[ApiValueV1] = {
+    val predicates = valueProps.literalData
+
+    Future(
+      ArchiveFileValueV1(
+        internalMimeType = predicates(OntologyConstants.KnoraBase.InternalMimeType).literals.head,
+        internalFilename = predicates(OntologyConstants.KnoraBase.InternalFilename).literals.head,
+        originalFilename = predicates.get(OntologyConstants.KnoraBase.OriginalFilename).map(_.literals.head),
+        projectShortcode = projectShortcode
       )
     )
   }

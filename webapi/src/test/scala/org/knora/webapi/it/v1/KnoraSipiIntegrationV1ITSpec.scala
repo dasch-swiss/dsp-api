@@ -850,9 +850,9 @@ class KnoraSipiIntegrationV1ITSpec
       uploadedZipFile.originalFilename should ===(minimalZipOriginalFilename)
 
       // Create a resource for the Zip file.
-      val createDocumentResourceParams = JsObject(
+      val archiveResourceParams = JsObject(
         Map(
-          "restype_id" -> JsString("http://www.knora.org/ontology/0001/anything#ThingDocument"),
+          "restype_id" -> JsString("http://www.knora.org/ontology/knora-base#ArchiveRepresentation"),
           "label" -> JsString("Zip file"),
           "project_id" -> JsString("http://rdfh.ch/projects/0001"),
           "properties" -> JsObject(),
@@ -863,7 +863,7 @@ class KnoraSipiIntegrationV1ITSpec
       // Send the JSON in a POST request to the Knora API server.
       val createDocumentResourceRequest: HttpRequest = Post(
         baseApiUrl + "/v1/resources",
-        HttpEntity(ContentTypes.`application/json`, createDocumentResourceParams.compactPrint)
+        HttpEntity(ContentTypes.`application/json`, archiveResourceParams.compactPrint)
       ) ~> addCredentials(BasicHttpCredentials(userEmail, password))
 
       val createDocumentResourceResponseJson: JsObject = getResponseJson(createDocumentResourceRequest)
