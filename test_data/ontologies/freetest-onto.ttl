@@ -203,11 +203,19 @@
                                                                          [ rdf:type
                                                                                    owl:Restriction ;
                                                                            owl:onProperty
+                                                                                   :hasOtherCUSP ;
+                                                                           owl:minCardinality
+                                                                                   "0"^^xsd:nonNegativeInteger ;
+                                                                           salsah-gui:guiOrder
+                                                                                   "1"^^xsd:nonNegativeInteger ],
+                                                                         [ rdf:type
+                                                                                   owl:Restriction ;
+                                                                           owl:onProperty
                                                                                    :hasOtherCUSPValue ;
                                                                            owl:minCardinality
                                                                                    "0"^^xsd:nonNegativeInteger ;
                                                                            salsah-gui:guiOrder
-                                                                                   "1"^^xsd:nonNegativeInteger ] ;
+                                                                                   "2"^^xsd:nonNegativeInteger ] ;
     rdfs:label                                                           "CUSP de"@de,
                                                                          "CUSP fr"@fr,
                                                                          "CUSP it"@it,
