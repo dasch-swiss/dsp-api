@@ -152,6 +152,13 @@
     rdfs:label      "Wissenschaftlicher Autor"@de, "Scientific author"@en ;
     rdfs:comment    """A scientific author"""@en .
 
+
+:BelletristicAuthor
+    rdf:type        owl:Class ;
+    rdfs:subClassOf :Author ;
+    rdfs:label      "Belletristischer Autor"@de, "Belletristic author"@en ;
+    rdfs:comment    """A belletristic author"""@en .
+
 :hasName
     rdf:type                         owl:ObjectProperty ;
     rdfs:subPropertyOf               knora-base:hasValue ;
@@ -231,6 +238,13 @@
     rdfs:label                                                           "Wissenschaftliches Buch"@de,
                                                                          "Scientific book"@en ;
     rdfs:comment                                                         """A comment for a scientific book"""@en .
+
+:BelletristicBook
+    rdf:type                                                             owl:Class ;
+    rdfs:subClassOf                                                      :Book ;
+    rdfs:label                                                           "Belletristisches Buch"@de,
+                                                                         "Belletristic book"@en ;
+    rdfs:comment                                                         """A comment for a belletristic book"""@en .
 
 :hasOtherCULP
     rdf:type                          owl:ObjectProperty ;
