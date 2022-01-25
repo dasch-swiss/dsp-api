@@ -180,7 +180,6 @@
 :hasScientificAuthor
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                :hasAuthor ;
-    rdfs:subPropertyOf                knora-base:hasLinkTo ;
     rdfs:label                        "Wissenschaftlicher Autor"@de, "Scientific author"@en ;
     knora-base:subjectClassConstraint :ScientificBook ;
     knora-base:objectClassConstraint  :ScientificAuthor ;
@@ -189,7 +188,6 @@
 :hasScientificAuthorValue
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                :hasAuthorValue ;
-    rdfs:subPropertyOf                knora-base:hasLinkToValue ;
     rdfs:label                        "Wissenschaftlicher Autor"@de, "Scientific author"@en ;
     knora-base:subjectClassConstraint :ScientificBook ;
     knora-base:objectClassConstraint  knora-base:LinkValue ;
