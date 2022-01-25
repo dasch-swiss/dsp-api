@@ -136,7 +136,7 @@
     rdfs:comment    """A comment for FTRC."""@de .
 
 
-:FTAuthor
+:Author
     rdf:type        owl:Class ;
     rdfs:subClassOf knora-base:Resource, [ rdf:type            owl:Restriction ;
                                            owl:onProperty      :hasName ;
@@ -146,9 +146,9 @@
     rdfs:comment    """An author"""@en .
 
 
-:FTScientificAuthor
+:ScientificAuthor
     rdf:type        owl:Class ;
-    rdfs:subClassOf :FTAuthor ;
+    rdfs:subClassOf :Author ;
     rdfs:label      "Wissenschaftlicher Autor"@de, "Scientific author"@en ;
     rdfs:comment    """A scientific author"""@en .
 
@@ -166,7 +166,7 @@
     rdfs:subPropertyOf                knora-base:hasLinkTo ;
     rdfs:label                        "Autor"@de, "Auteur"@fr, "Autore"@it, "Author"@en ;
     knora-base:subjectClassConstraint :Book ;
-    knora-base:objectClassConstraint  :FTAuthor ;
+    knora-base:objectClassConstraint  :Author ;
     salsah-gui:guiElement             salsah-gui:Searchbox .
 
 :hasAuthorValue
@@ -183,7 +183,7 @@
     rdfs:subPropertyOf                knora-base:hasLinkTo ;
     rdfs:label                        "Wissenschaftlicher Autor"@de, "Scientific author"@en ;
     knora-base:subjectClassConstraint :ScientificBook ;
-    knora-base:objectClassConstraint  :FTScientificAuthor ;
+    knora-base:objectClassConstraint  :ScientificAuthor ;
     salsah-gui:guiElement             salsah-gui:Searchbox .
 
 :hasScientificAuthorValue
