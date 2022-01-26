@@ -1955,7 +1955,13 @@ object OntologyHelpers {
         OntologyConstants.KnoraBase.IsPartOfValue.toSmartIri
       case subProps if subProps.contains(OntologyConstants.KnoraBase.HasLinkTo.toSmartIri) =>
         OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri
-      case _ => OntologyConstants.KnoraBase.HasLinkToValue.toSmartIri
+      case subProps
+          if subProps.size == 1 => // if subPropertyOf is neither isPartOf nor HasLinkTo it inherits from a custom link property
+        internalPropertyDef.subPropertyOf.head.fromLinkPropToLinkValueProp
+      case _ =>
+        throw BadRequestException(
+          s"Can't create link value property $linkValuePropIri. Probably because it has several super properties."
+        )
     }
 
     internalPropertyDef.copy(
