@@ -946,7 +946,7 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
     }
 
-    "create a subproperty of an existing link property and check if the correct link value properties were created" in {
+    "create a subproperty of an existing custom link property and add it to a resource class, check if the correct link and link value properties were added to the class" in {
 
       responderManager ! OntologyMetadataGetByProjectRequestV2(
         projectIris = Set(anythingProjectIri),
@@ -963,45 +963,33 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         .lastModificationDate
         .get
 
-      // Create a new subproperty freetest:hasBelletristicAuthor of freetest:hasAuthor (which is a link property) linking
-      // freetest:BelletristicBook and freetest:BelletristicAuthor
+      // Create class freetest:ComicBook which is a subclass of freetest:Book
 
-      val propertyIri = FreeTestOntologyIri.makeEntityIri("hasBelletristicAuthor")
+      val comicBookClassIri = FreeTestOntologyIri.makeEntityIri("ComicBook")
 
-      val propertyInfoContent = PropertyInfoContentV2(
-        propertyIri = propertyIri,
+      val comicBookClassInfoContent = ClassInfoContentV2(
+        classIri = comicBookClassIri,
         predicates = Map(
           OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
-          ),
-          OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(FreeTestOntologyIri.makeEntityIri("BelletristicBook")))
-          ),
-          OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
-            predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
-            objects = Seq(SmartIriLiteralV2(FreeTestOntologyIri.makeEntityIri("BelletristicAuthor")))
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
           ),
           OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
-            objects = Seq(
-              StringLiteralV2("Belletristic author", Some("en"))
-            )
+            objects = Seq(StringLiteralV2("Comic Book", Some("en")))
           ),
           OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
             predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
-            objects = Seq(
-              StringLiteralV2("A belletristic author of a belletristic book", Some("en"))
-            )
+            objects = Seq(StringLiteralV2("A comic book", Some("en")))
           )
         ),
-        subPropertyOf = Set(FreeTestOntologyIri.makeEntityIri("hasAuthor")),
+        directCardinalities = Map(),
+        subClassOf = Set(FreeTestOntologyIri.makeEntityIri("Book")),
         ontologySchema = ApiV2Complex
       )
 
-      responderManager ! CreatePropertyRequestV2(
-        propertyInfoContent = propertyInfoContent,
+      responderManager ! CreateClassRequestV2(
+        classInfoContent = comicBookClassInfoContent,
         lastModificationDate = freetestLastModDate,
         apiRequestID = UUID.randomUUID,
         featureFactoryConfig = defaultFeatureFactoryConfig,
@@ -1010,10 +998,6 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        val property = externalOntology.properties(propertyIri)
-        assert(property.isLinkProp)
-        assert(!property.isLinkValueProp)
-        externalOntology.properties(propertyIri).entityInfoContent should ===(propertyInfoContent)
         val metadata = externalOntology.ontologyMetadata
         val newFreetestLastModDate = metadata.lastModificationDate.getOrElse(
           throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
@@ -1022,25 +1006,110 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
         freetestLastModDate = newFreetestLastModDate
       }
 
-      // Check that the link value property was created.
+      // Create class freetest:ComicAuthor which is a subclass of feetest:Author
 
-      val linkValuePropIri = propertyIri.fromLinkPropToLinkValueProp
+      val comicAuthorClassIri = FreeTestOntologyIri.makeEntityIri("ComicAuthor")
 
-      responderManager ! PropertiesGetRequestV2(
-        propertyIris = Set(linkValuePropIri),
-        allLanguages = true,
+      val comicAuthorClassInfoContent = ClassInfoContentV2(
+        classIri = comicAuthorClassIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.Class.toSmartIri))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(StringLiteralV2("Comic Author", Some("en")))
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(StringLiteralV2("A comic author", Some("en")))
+          )
+        ),
+        directCardinalities = Map(),
+        subClassOf = Set(FreeTestOntologyIri.makeEntityIri("Author")),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreateClassRequestV2(
+        classInfoContent = comicAuthorClassInfoContent,
+        lastModificationDate = freetestLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
         requestingUser = anythingAdminUser
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
         val externalOntology = msg.toOntologySchema(ApiV2Complex)
-        val readPropertyInfo: ReadPropertyInfoV2 = externalOntology.properties.values.head
-        assert(readPropertyInfo.entityInfoContent.propertyIri == linkValuePropIri)
-        assert(!readPropertyInfo.isLinkProp)
-        assert(readPropertyInfo.isLinkValueProp)
+        val metadata = externalOntology.ontologyMetadata
+        val newFreetestLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreetestLastModDate
       }
 
-      // Add this new subproperty to a class
+      // Create property freetest:hasComicBookAuthor which is a subproperty of freetest:hasAuthor and links freetest:ComicBook and freetest:ComicAuthor
+
+      val comicAuthorPropertyIri = FreeTestOntologyIri.makeEntityIri("hasComicAuthor")
+
+      val comicAuthorPropertyInfoContent = PropertyInfoContentV2(
+        propertyIri = comicAuthorPropertyIri,
+        predicates = Map(
+          OntologyConstants.Rdf.Type.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdf.Type.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(OntologyConstants.Owl.ObjectProperty.toSmartIri))
+          ),
+          OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.KnoraApiV2Complex.SubjectType.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(FreeTestOntologyIri.makeEntityIri("ComicBook")))
+          ),
+          OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.KnoraApiV2Complex.ObjectType.toSmartIri,
+            objects = Seq(SmartIriLiteralV2(FreeTestOntologyIri.makeEntityIri("ComicAuthor")))
+          ),
+          OntologyConstants.Rdfs.Label.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Label.toSmartIri,
+            objects = Seq(
+              StringLiteralV2("Comic author", Some("en"))
+            )
+          ),
+          OntologyConstants.Rdfs.Comment.toSmartIri -> PredicateInfoV2(
+            predicateIri = OntologyConstants.Rdfs.Comment.toSmartIri,
+            objects = Seq(
+              StringLiteralV2("A comic author of a comic book", Some("en"))
+            )
+          )
+        ),
+        subPropertyOf = Set(FreeTestOntologyIri.makeEntityIri("hasAuthor")),
+        ontologySchema = ApiV2Complex
+      )
+
+      responderManager ! CreatePropertyRequestV2(
+        propertyInfoContent = comicAuthorPropertyInfoContent,
+        lastModificationDate = freetestLastModDate,
+        apiRequestID = UUID.randomUUID,
+        featureFactoryConfig = defaultFeatureFactoryConfig,
+        requestingUser = anythingAdminUser
+      )
+
+      expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
+        val externalOntology = msg.toOntologySchema(ApiV2Complex)
+        val property = externalOntology.properties(comicAuthorPropertyIri)
+        assert(property.isLinkProp)
+        assert(!property.isLinkValueProp)
+        externalOntology.properties(comicAuthorPropertyIri).entityInfoContent should ===(
+          comicAuthorPropertyInfoContent
+        )
+        val metadata = externalOntology.ontologyMetadata
+        val newFreetestLastModDate = metadata.lastModificationDate.getOrElse(
+          throw AssertionException(s"${metadata.ontologyIri} has no last modification date")
+        )
+        assert(newFreetestLastModDate.isAfter(freetestLastModDate))
+        freetestLastModDate = newFreetestLastModDate
+      }
+
+      // Add new subproperty freetest:hasComicBookAuthor to class freetest:ComicBook
 
       responderManager ! AddCardinalitiesToClassRequestV2(
         classInfoContent = ClassInfoContentV2(
@@ -1050,10 +1119,10 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
               objects = Vector(SmartIriLiteralV2(value = "http://www.w3.org/2002/07/owl#Class".toSmartIri))
             )
           ),
-          classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#BelletristicBook".toSmartIri,
+          classIri = "http://0.0.0.0:3333/ontology/0001/freetest/v2#ComicBook".toSmartIri,
           ontologySchema = ApiV2Complex,
           directCardinalities = Map(
-            "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasBelletristicAuthor".toSmartIri -> KnoraCardinalityInfo(
+            "http://0.0.0.0:3333/ontology/0001/freetest/v2#hasComicAuthor".toSmartIri -> KnoraCardinalityInfo(
               cardinality = Cardinality.MayHaveOne
             )
           )
@@ -1065,22 +1134,22 @@ class OntologyResponderV2Spec extends CoreSpec() with ImplicitSender {
       )
 
       expectMsgPF(timeout) { case msg: ReadOntologyV2 =>
-        val scientificBookClass =
-          msg.classes("http://www.knora.org/ontology/0001/freetest#BelletristicBook".toSmartIri)
-        val linkProperties = scientificBookClass.linkProperties
-        val linkValueProperties = scientificBookClass.linkValueProperties
+        val comicBookClass =
+          msg.classes("http://www.knora.org/ontology/0001/freetest#ComicBook".toSmartIri)
+        val linkProperties = comicBookClass.linkProperties
+        val linkValueProperties = comicBookClass.linkValueProperties
         assert(
           linkProperties.contains(
-            "http://www.knora.org/ontology/0001/freetest#hasBelletristicAuthor".toSmartIri
+            "http://www.knora.org/ontology/0001/freetest#hasComicAuthor".toSmartIri
           )
         )
         assert(
           linkValueProperties.contains(
-            "http://www.knora.org/ontology/0001/freetest#hasBelletristicAuthorValue".toSmartIri
+            "http://www.knora.org/ontology/0001/freetest#hasComicAuthorValue".toSmartIri
           )
         )
         assert(
-          !linkValueProperties.contains(
+          !linkProperties.contains(
             "http://www.knora.org/ontology/0001/freetest#hasAuthor".toSmartIri
           )
         )
