@@ -162,7 +162,7 @@
 :hasName
     rdf:type                         owl:ObjectProperty ;
     rdfs:subPropertyOf               knora-base:hasValue ;
-    rdfs:label                       "Text"@de, "Texte"@fr, "Testo"@it, "Text"@en ;
+    rdfs:label                       "Name"@de, "Nom"@fr, "Nome"@it, "Name"@en ;
     knora-base:objectClassConstraint knora-base:TextValue ;
     salsah-gui:guiElement            salsah-gui:SimpleText ;
     salsah-gui:guiAttribute          "size=80", "maxlength=255" .
@@ -187,7 +187,6 @@
 :hasScientificAuthor
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                :hasAuthor ;
-    rdfs:subPropertyOf                knora-base:hasLinkTo ;
     rdfs:label                        "Wissenschaftlicher Autor"@de, "Scientific author"@en ;
     knora-base:subjectClassConstraint :ScientificBook ;
     knora-base:objectClassConstraint  :ScientificAuthor ;
@@ -196,7 +195,6 @@
 :hasScientificAuthorValue
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                :hasAuthorValue ;
-    rdfs:subPropertyOf                knora-base:hasLinkToValue ;
     rdfs:label                        "Wissenschaftlicher Autor"@de, "Scientific author"@en ;
     knora-base:subjectClassConstraint :ScientificBook ;
     knora-base:objectClassConstraint  knora-base:LinkValue ;
@@ -249,8 +247,8 @@
 :hasOtherCULP
     rdf:type                          owl:ObjectProperty ;
     rdfs:subPropertyOf                knora-base:hasLinkTo ;
-    rdfs:label                        "Ein anderes CUSP"@de, "Une autre CUSP"@fr, "Un'altra CUSP"@it,
-                                      "Another CUSP"@en ;
+    rdfs:label                        "Ein anderes CULP"@de, "Une autre CULP"@fr, "Un'altra CULP"@it,
+                                      "Another CULP"@en ;
     knora-base:subjectClassConstraint :ClassUsingLinkProperties ;
     knora-base:objectClassConstraint  :ClassUsingLinkProperties ;
     salsah-gui:guiElement             salsah-gui:Searchbox .
@@ -280,6 +278,6 @@
                                                                                           "0"^^xsd:nonNegativeInteger ;
                                                                            salsah-gui:guiOrder
                                                                                           "4"^^xsd:nonNegativeInteger ] ;
-    rdfs:label                                                           "CUSP de"@de, "CUSP fr"@fr, "CUSP it"@it,
-                                                                         "CUSP en"@en ;
-    rdfs:comment                                                         """A comment for CUSP."""@de .
+    rdfs:label                                                           "CULP de"@de, "CULP fr"@fr, "CULP it"@it,
+                                                                         "CULP en"@en ;
+    rdfs:comment                                                         """A comment for CULP."""@de .
