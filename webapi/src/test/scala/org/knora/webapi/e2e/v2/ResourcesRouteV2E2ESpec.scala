@@ -2210,8 +2210,6 @@ class ResourcesRouteV2E2ESpec extends E2ESpec(ResourcesRouteV2E2ESpec.config) {
 
       assert(responseJson == expectedJson)
     }
-
-    // TODO: add E2E test for FileRepresentations using the new models
   }
 }
 

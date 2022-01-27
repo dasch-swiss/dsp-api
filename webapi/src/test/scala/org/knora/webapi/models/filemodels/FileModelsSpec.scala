@@ -570,11 +570,21 @@ class FileModelsSpec extends CoreSpec {
     }
 
     "generating a JSON-LD representation of a ChangeFileRequest," should {
-      // TODO
+      "correctly serialize a DocumentRepresentation with default values" in {
+        // TODO
+      }
+      "correctly serialize a DocumentRepresentation with custom values" in {
+        // TODO
+      }
     }
 
     "generating a message representation of a ChangeFileRequest," should {
-      // TODO
+      "correctly serialize a DocumentRepresentation with default values" in {
+        // TODO
+      }
+      "correctly serialize a DocumentRepresentation with custom values" in {
+        // TODO
+      }
     }
   }
 }
