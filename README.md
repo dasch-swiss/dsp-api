@@ -6,10 +6,10 @@
 
 [Knora](https://www.knora.org/) is a server application for storing, sharing, and working with primary sources and data in the humanities.
 
-It is developed by the [Data and Service Center for the Humanities](https://dasch.swiss)
+It is developed by the [Swiss National Data and Service Center for the Humanities](https://dasch.swiss)
 at the [University of Basel](https://www.unibas.ch), and is supported by the
 [Swiss Academy of Humanities and Social Sciences](https://www.sagw.ch) and
-the [Swiss National Science Foundation](https://snf.ch) .
+the [Swiss National Science Foundation](https://snf.ch).
 
 Knora is [free software](http://www.gnu.org/philosophy/free-sw.en.html),
 released under the [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
