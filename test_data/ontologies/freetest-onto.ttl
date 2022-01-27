@@ -152,6 +152,7 @@
     rdfs:label      "Wissenschaftlicher Autor"@de, "Scientific author"@en ;
     rdfs:comment    """A scientific author"""@en .
 
+
 :hasName
     rdf:type                         owl:ObjectProperty ;
     rdfs:subPropertyOf               knora-base:hasValue ;
