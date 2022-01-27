@@ -6,7 +6,12 @@ import org.knora.webapi.messages.StringFormatter
 import org.knora.webapi.sharedtestdata.SharedTestDataADM
 import org.knora.webapi.messages.IriConversions._
 import org.knora.webapi.messages.v2.responder.resourcemessages.{CreateResourceV2, CreateValueInNewResourceV2}
-import org.knora.webapi.messages.v2.responder.valuemessages.{DocumentFileValueContentV2, FileValueV2}
+import org.knora.webapi.messages.v2.responder.valuemessages.{
+  DocumentFileValueContentV2,
+  FileValueV2,
+  UpdateValueContentV2,
+  UpdateValueRequestV2
+}
 
 import java.time.Instant
 import java.util.UUID
@@ -570,20 +575,158 @@ class FileModelsSpec extends CoreSpec {
     }
 
     "generating a JSON-LD representation of a ChangeFileRequest," should {
+
       "correctly serialize a DocumentRepresentation with default values" in {
-        // TODO
+        val resourceIRI = stringFormatter.makeRandomResourceIri("7777")
+        val valueIRI = stringFormatter.makeRandomResourceIri("7777")
+
+        val documentRepresentation = ChangeFileRequest.make(
+          fileType = FileType.DocumentFile(),
+          internalFilename = fileNamePDF,
+          resourceIri = resourceIRI,
+          valueIri = valueIRI
+        )
+        val json = documentRepresentation.toJsonLd.parseJson
+        val expectedJSON = Map(
+          "@id" -> resourceIRI.toJson,
+          "@type" -> "knora-api:DocumentRepresentation".toJson,
+          "knora-api:hasDocumentFileValue" -> Map(
+            "@id" -> valueIRI,
+            "@type" -> "knora-api:DocumentFileValue",
+            "knora-api:fileValueHasFilename" -> fileNamePDF
+          ).toJson,
+          "@context" -> Map(
+            "rdf" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#",
+            "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#",
+            "xsd" -> "http://www.w3.org/2001/XMLSchema#"
+          ).toJson
+        ).toJson
+        json should equal(expectedJSON)
       }
+
       "correctly serialize a DocumentRepresentation with custom values" in {
-        // TODO
+        val resourceIRI = stringFormatter.makeRandomResourceIri("7777")
+        val valueIRI = stringFormatter.makeRandomResourceIri("7777")
+        val className = "CustomDocumentRepresentation"
+        val prefix = "onto"
+
+        val documentRepresentation = ChangeFileRequest.make(
+          fileType = FileType.DocumentFile(),
+          internalFilename = fileNamePDF,
+          resourceIri = resourceIRI,
+          valueIri = valueIRI,
+          className = Some(className),
+          ontologyName = prefix
+        )
+        val json = documentRepresentation.toJsonLd.parseJson
+        val expectedJSON = Map(
+          "@id" -> resourceIRI.toJson,
+          "@type" -> s"$prefix:$className".toJson,
+          "knora-api:hasDocumentFileValue" -> Map(
+            "@id" -> valueIRI,
+            "@type" -> "knora-api:DocumentFileValue",
+            "knora-api:fileValueHasFilename" -> fileNamePDF
+          ).toJson,
+          "@context" -> Map(
+            "rdf" -> "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            "knora-api" -> "http://api.knora.org/ontology/knora-api/v2#",
+            "rdfs" -> "http://www.w3.org/2000/01/rdf-schema#",
+            "xsd" -> "http://www.w3.org/2001/XMLSchema#"
+          ).toJson
+        ).toJson
+        json should equal(expectedJSON)
       }
     }
 
     "generating a message representation of a ChangeFileRequest," should {
+
       "correctly serialize a DocumentRepresentation with default values" in {
-        // TODO
+        val resourceIRI = stringFormatter.makeRandomResourceIri("7777")
+        val valueIRI = stringFormatter.makeRandomResourceIri("7777")
+
+        val documentRepresentation = ChangeFileRequest.make(
+          fileType = FileType.DocumentFile(),
+          internalFilename = fileNamePDF,
+          resourceIri = resourceIRI,
+          valueIri = valueIRI
+        )
+        val msg = documentRepresentation.toMessage(featureFactoryConfig = defaultFeatureFactoryConfig)
+        msg.updateValue should equal(
+          UpdateValueContentV2(
+            resourceIri = resourceIRI,
+            resourceClassIri = "http://api.knora.org/ontology/knora-api/v2#DocumentFileValue".toSmartIri,
+            propertyIri = "http://api.knora.org/ontology/knora-api/v2#hasDocumentFileValue".toSmartIri,
+            valueIri = valueIRI,
+            valueContent = FileModelUtil.getFileValueContent(
+              fileType = FileType.DocumentFile(),
+              internalFilename = fileNamePDF,
+              internalMimeType = Some("application/pdf"),
+              originalFilename = None,
+              originalMimeType = Some("application/pdf"),
+              comment = None
+            ),
+            permissions = None,
+            valueCreationDate = None,
+            newValueVersionIri = None
+          )
+        )
       }
+
       "correctly serialize a DocumentRepresentation with custom values" in {
-        // TODO
+        val resourceIRI = stringFormatter.makeRandomResourceIri("7777")
+        val valueIRI = stringFormatter.makeRandomResourceIri("7777")
+        val className = "CustomDocumentRepresentation"
+        val prefix = "onto"
+        val fileName = "wordfile.docx"
+        val internalMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        val originalFileName = "original-wordfile.doc"
+        val originalMimetype = "application/msword"
+        val customComment = "a comment on this word file"
+        val valuePermission = Some("V knora-admin:UnknownUser,knora-admin:KnownUser|M knora-admin:ProjectMember")
+        val customValueCreationDate = Some(Instant.now())
+        val customValueVersionIRI = Some(stringFormatter.makeRandomResourceIri("7777").toSmartIri)
+        val resourceClassIRI = "http://www.knora.org/ontology/0801/biblio#Book".toSmartIri
+
+        val documentRepresentation = ChangeFileRequest.make(
+          fileType = FileType.DocumentFile(),
+          internalFilename = fileName,
+          resourceIri = resourceIRI,
+          valueIri = valueIRI,
+          className = Some(className),
+          ontologyName = prefix
+        )
+        val msg = documentRepresentation.toMessage(
+          featureFactoryConfig = defaultFeatureFactoryConfig,
+          internalMimeType = Some(internalMimeType),
+          originalFilename = Some(originalFileName),
+          originalMimeType = Some(originalMimetype),
+          comment = Some(customComment),
+          permissions = valuePermission,
+          valueCreationDate = customValueCreationDate,
+          newValueVersionIri = customValueVersionIRI,
+          resourceClassIRI = Some(resourceClassIRI)
+        )
+        println(msg)
+        msg.updateValue should equal(
+          UpdateValueContentV2(
+            resourceIri = resourceIRI,
+            resourceClassIri = resourceClassIRI,
+            propertyIri = "http://api.knora.org/ontology/knora-api/v2#hasDocumentFileValue".toSmartIri,
+            valueIri = valueIRI,
+            valueContent = FileModelUtil.getFileValueContent(
+              fileType = FileType.DocumentFile(),
+              internalFilename = fileName,
+              internalMimeType = Some(internalMimeType),
+              originalFilename = Some(originalFileName),
+              originalMimeType = Some(originalMimetype),
+              comment = Some(customComment)
+            ),
+            permissions = valuePermission,
+            valueCreationDate = customValueCreationDate,
+            newValueVersionIri = customValueVersionIRI
+          )
+        )
       }
     }
   }
