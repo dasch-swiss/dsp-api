@@ -1,5 +1,18 @@
 # Changelog
 
+### [17.3.1](https://www.github.com/dasch-swiss/dsp-api/compare/v17.3.0...v17.3.1) (2022-01-28)
+
+
+### Bug Fixes
+
+* **ontology:** Sub-properties of link values aren't created correctly (DEV-426) ([#1985](https://www.github.com/dasch-swiss/dsp-api/issues/1985)) ([70a8b08](https://www.github.com/dasch-swiss/dsp-api/commit/70a8b08e0bd18a8affc89c6136f166ca21a5f27f))
+
+
+### Maintenance
+
+* **deps:** bump fuseki image to 2.0.7 (DEV-389) ([#1983](https://www.github.com/dasch-swiss/dsp-api/issues/1983)) ([fcbfb1d](https://www.github.com/dasch-swiss/dsp-api/commit/fcbfb1dcdf3c8273618bc3288ecb7bf236104c65))
+* **license:** update the license (DEV-374) ([#1981](https://www.github.com/dasch-swiss/dsp-api/issues/1981)) ([044fdc5](https://www.github.com/dasch-swiss/dsp-api/commit/044fdc56cec038ed3fea1c00cb39563976005b9b))
+
 ## [17.3.0](https://www.github.com/dasch-swiss/dsp-api/compare/v17.2.0...v17.3.0) (2022-01-17)
 
 
