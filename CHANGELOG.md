@@ -1,5 +1,37 @@
 # Changelog
 
+### [17.3.1](https://www.github.com/dasch-swiss/dsp-api/compare/v17.3.0...v17.3.1) (2022-01-28)
+
+
+### Bug Fixes
+
+* **ontology:** Sub-properties of link values aren't created correctly (DEV-426) ([#1985](https://www.github.com/dasch-swiss/dsp-api/issues/1985)) ([70a8b08](https://www.github.com/dasch-swiss/dsp-api/commit/70a8b08e0bd18a8affc89c6136f166ca21a5f27f))
+
+
+### Maintenance
+
+* **deps:** bump fuseki image to 2.0.7 (DEV-389) ([#1983](https://www.github.com/dasch-swiss/dsp-api/issues/1983)) ([fcbfb1d](https://www.github.com/dasch-swiss/dsp-api/commit/fcbfb1dcdf3c8273618bc3288ecb7bf236104c65))
+* **license:** update the license (DEV-374) ([#1981](https://www.github.com/dasch-swiss/dsp-api/issues/1981)) ([044fdc5](https://www.github.com/dasch-swiss/dsp-api/commit/044fdc56cec038ed3fea1c00cb39563976005b9b))
+
+## [17.3.0](https://www.github.com/dasch-swiss/dsp-api/compare/v17.2.0...v17.3.0) (2022-01-17)
+
+
+### Bug Fixes
+
+* **ontology:** DSP-API creates wrong partOfValue property (DEV-216) ([#1978](https://www.github.com/dasch-swiss/dsp-api/issues/1978)) ([27b5c86](https://www.github.com/dasch-swiss/dsp-api/commit/27b5c866f29795f49dbf584ca20245e90d210d13))
+* **resource:** return sensible CreationDate for DeletedResource ([#1979](https://www.github.com/dasch-swiss/dsp-api/issues/1979)) ([1658103](https://www.github.com/dasch-swiss/dsp-api/commit/1658103d27051b5920b68b01f6b863be7c55e5ab))
+
+
+### Enhancements
+
+* **resource:** add support for 7z files in ArchiveRepresentation (DEV-322) ([#1977](https://www.github.com/dasch-swiss/dsp-api/issues/1977)) ([729689c](https://www.github.com/dasch-swiss/dsp-api/commit/729689c7111bc907f1b108242475ae2fe342b2a7))
+
+
+### Maintenance
+
+* **admin:** refactor projects & users value objects (DEV-240) ([#1976](https://www.github.com/dasch-swiss/dsp-api/issues/1976)) ([563d252](https://www.github.com/dasch-swiss/dsp-api/commit/563d25255d3621f8b2d803e5133a9974eb000c0a))
+* **CI:** add disk cache and other cleanup (DEV-388) ([#1982](https://www.github.com/dasch-swiss/dsp-api/issues/1982)) ([e590d12](https://www.github.com/dasch-swiss/dsp-api/commit/e590d12c58fafffe3428f99f17a952c6700fb4fd))
+
 ## [17.2.0](https://www.github.com/dasch-swiss/dsp-api/compare/v17.1.0...v17.2.0) (2022-01-10)
 
 

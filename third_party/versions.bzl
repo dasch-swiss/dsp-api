@@ -14,6 +14,6 @@ SIPI_IMAGE_DIGEST = "sha256:7cc15decdfba70ef2894aea71a9315e1a66a8d99becc42baf8ae
 
 # Jena Fuseki - digest takes precedence!
 FUSEKI_REPOSITORY = "daschswiss/apache-jena-fuseki"
-FUSEKI_VERSION = "2.0.5"  # contains Fuseki 4.3.2 (with log4j 2.16.0)
+FUSEKI_VERSION = "2.0.7"  # contains Fuseki 4.3.2 (with log4j 2.16.0)
 FUSEKI_IMAGE = FUSEKI_REPOSITORY
-FUSEKI_IMAGE_DIGEST = "sha256:224b044b0486d78df123507efa1579d17c8455cabc26111dc1848c2049f57700"
+FUSEKI_IMAGE_DIGEST = "sha256:fea8c556fca76c6beab2589018babd778d55dbdffef725fd2de784646cca0638"
