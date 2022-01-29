@@ -84,26 +84,25 @@ load(
     "container_pull",
 )
 
-# get distroless java
-container_pull(
-    name = "java_base",
-    # 'tag' is also supported, but digest is encouraged for reproducibility.
-    digest = "sha256:deadbeef",
-    registry = "gcr.io",
-    repository = "distroless/java",
-)
-
 # get openjdk
 container_pull(
-    name = "openjdk11",
-    digest = "sha256:14605eb0f24ce726e13c4a85862325083dee3ab13da847b7af20d0df5966c176",  # 29.11.2021
+    name = "openjdk11_amd64",
+    digest = "sha256:967349ef166d630bceda0370507b096edd6e7220e62e4539db70f04c04c2295f",  # 7.01.2022
+    registry = "docker.io",
+    repository = "eclipse-temurin",
+    # tag = "11-jre-focal", # Ubuntu 20.04
+)
+
+container_pull(
+    name = "openjdk11_arm64",
+    digest = "sha256:e46fac3005d08732931de9671864683f6adf3a3eb0f8a7e8ac27d1bff1955a5c",  # 7.01.2022
     registry = "docker.io",
     repository = "eclipse-temurin",
     # tag = "11-jre-focal", # Ubuntu 20.04
 )
 
 # get sipi
-load("//third_party:versions.bzl", "FUSEKI_IMAGE_DIGEST", "FUSEKI_REPOSITORY", "SIPI_IMAGE_DIGEST", "SIPI_REPOSITORY")
+load("//third_party:versions.bzl", "FUSEKI_IMAGE_DIGEST_AMD64", "FUSEKI_IMAGE_DIGEST_ARM64", "FUSEKI_REPOSITORY", "SIPI_IMAGE_DIGEST", "SIPI_REPOSITORY")
 
 container_pull(
     name = "sipi",
@@ -113,8 +112,15 @@ container_pull(
 )
 
 container_pull(
-    name = "jenafuseki",
-    digest = FUSEKI_IMAGE_DIGEST,
+    name = "jenafuseki_amd64",
+    digest = FUSEKI_IMAGE_DIGEST_AMD64,
+    registry = "docker.io",
+    repository = FUSEKI_REPOSITORY,
+)
+
+container_pull(
+    name = "jenafuseki_arm64",
+    digest = FUSEKI_IMAGE_DIGEST_ARM64,
     registry = "docker.io",
     repository = FUSEKI_REPOSITORY,
 )
