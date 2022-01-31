@@ -1215,7 +1215,6 @@ class StringFormatterSpec extends CoreSpec() {
   }
 
   "The StringFormatter class for User and Project" should {
-
     "validate project IRI" in {
       stringFormatter.validateAndEscapeProjectIri(
         SharedTestDataADM.incunabulaProject.id,
@@ -1295,7 +1294,6 @@ class StringFormatterSpec extends CoreSpec() {
     }
 
     "validate username" in {
-
       // 4 - 50 characters long
       an[AssertionException] should be thrownBy {
         stringFormatter.validateAndEscapeUsername("abc", throw AssertionException("not valid"))
@@ -1344,7 +1342,6 @@ class StringFormatterSpec extends CoreSpec() {
     }
 
     "validate email" in {
-
       stringFormatter.validateEmailAndThrow("donald.duck@example.com", throw AssertionException("not valid")) should be(
         "donald.duck@example.com"
       )
@@ -1361,30 +1358,18 @@ class StringFormatterSpec extends CoreSpec() {
       uuid should be(base4DecodedUuid)
     }
 
-    "check if UUID version which IRI was created from is correct, otherwise throw an exception" in {
-//      val iri = "http://rdfh.ch/0001/55UrkgTKR2SEQgnsLWI9mg"
-//      val encodedUUID = stringFormatter.base64DecodeUuid(iri.split("/").last)
-//      println(7777, encodedUUID.version())
+    "return TRUE if IRI contains UUID version 4 or 5, otherwise return FALSE" in {
       val iri3 = "http://rdfh.ch/0000/rKAU0FNjPUKWqOT8MEW_UQ"
       val iri4 = "http://rdfh.ch/0001/cmfk1DMHRBiR4-_6HXpEFA"
       val iri5 = "http://rdfh.ch/080C/Ef9heHjPWDS7dMR_gGax2Q"
+
       val testIRIFromVersion3UUID = stringFormatter.isUUIDVersion4Or5(iri3)
       val testIRIFromVersion4UUID = stringFormatter.isUUIDVersion4Or5(iri4)
       val testIRIFromVersion5UUID = stringFormatter.isUUIDVersion4Or5(iri5)
 
-//      val encodedUUID = stringFormatter.base64DecodeUuid(iri3.split("/").last)
-//      println(777777, encodedUUID, encodedUUID.version())
-
       testIRIFromVersion3UUID should be(false)
       testIRIFromVersion4UUID should be(true)
       testIRIFromVersion5UUID should be(true)
-
-      an[BadRequestException] should be thrownBy {
-        stringFormatter.validateAndEscapeIri(
-          iri3,
-          throw BadRequestException("Bad UUID used to create IRI. Only versions 4 or 5 are supported.")
-        )
-      }
     }
   }
 }

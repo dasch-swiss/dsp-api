@@ -47,6 +47,7 @@ import scala.util.{Failure, Success, Try}
  * Provides instances of [[StringFormatter]], as well as string formatting constants.
  */
 object StringFormatter {
+  val UUID_INVALID_ERROR = "Invalid UUID used to create IRI. Only versions 4 or 5 are supported."
 
   // A non-printing delimiter character, Unicode INFORMATION SEPARATOR ONE, that should never occur in data.
   val INFORMATION_SEPARATOR_ONE = '\u001F'
@@ -1642,24 +1643,12 @@ class StringFormatter private (
    */
   def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI = {
     val urlEncodedStr = encodeAllowEscapes(s)
-//    only IRI starting with "http://rdfh.ch/" contains UUID segment which can be checked by isUUIDVersion4Or5 method
-    val isIRI = s.startsWith(s"http://${IriDomain}")
 
-    if (isIRI && !isUUIDVersion4Or5(urlEncodedStr)) {
-      throw BadRequestException(s"Bad UUID used to create IRI. Only versions 4 or 5 are supported.")
+    if (urlValidator.isValid(urlEncodedStr)) {
+      urlEncodedStr
     } else {
-      if (urlValidator.isValid(urlEncodedStr)) {
-        urlEncodedStr
-      } else {
-        errorFun
-      }
+      errorFun
     }
-
-//    if (urlValidator.isValid(urlEncodedStr)) {
-//      urlEncodedStr
-//    } else {
-//      errorFun
-//    }
   }
 
   def isUUIDVersion4Or5(s: String): Boolean = {
@@ -1670,7 +1659,6 @@ class StringFormatter private (
       true
     } else {
       false
-
     }
   }
 
