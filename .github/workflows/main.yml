@@ -1,6 +1,9 @@
 name: CI
 
 on:
+  schedule:
+    # run every midnight (on main) so that the first compile of the day from main is cached
+    - cron: '0 0 * * *'
   push:
   release:
     types: [published]
