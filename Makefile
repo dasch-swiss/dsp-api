@@ -113,7 +113,7 @@ stack-up-long-timeout: docker-build env-file ## starts the knora-stack waiting a
 	docker-compose -f docker-compose.yml up -d db
 	$(CURRENT_DIR)/webapi/scripts/wait-for-db.sh
 	docker-compose -f docker-compose.yml up -d
-	$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh -z 300
+	$(CURRENT_DIR)/webapi/scripts/wait-for-knora.sh -t 600
 
 .PHONY: stack-up-fast
 stack-up-fast: docker-build-knora-api-image env-file ## starts the knora-stack by skipping rebuilding most of the images (only api image is rebuilt).
@@ -250,6 +250,9 @@ test-repository-upgrade: init-db-test-minimal ## runs DB upgrade integration tes
 	# call target which restarts the API and emits error if API does not start
 	# after a certain time. at startup, data should be upgraded.
 	@$(MAKE) -f $(THIS_FILE) stack-up-long-timeout
+	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
+	@$(MAKE) -f $(THIS_FILE) stack-logs-db-no-follow
+
 
 .PHONY: test
 test: docker-build ## runs all test targets.
