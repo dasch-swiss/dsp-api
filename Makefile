@@ -250,9 +250,6 @@ test-repository-upgrade: init-db-test-minimal ## runs DB upgrade integration tes
 	# call target which restarts the API and emits error if API does not start
 	# after a certain time. at startup, data should be upgraded.
 	@$(MAKE) -f $(THIS_FILE) stack-up-long-timeout
-	@$(MAKE) -f $(THIS_FILE) stack-logs-api-no-follow
-	@$(MAKE) -f $(THIS_FILE) stack-logs-db-no-follow
-
 
 .PHONY: test
 test: docker-build ## runs all test targets.

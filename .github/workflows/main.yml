@@ -199,6 +199,11 @@ jobs:
           sudo apt-get install ca-certificates-java expect
       - name: test repository upgrade
         run: make test-repository-upgrade
+      - name: print out container logs on failure
+        if: ${{ failure() }}
+        run: |
+          make stack-logs-api-no-follow
+          make stack-logs-db-no-follow
 
   docs-build-test:
     name: Build Docs Testrun
