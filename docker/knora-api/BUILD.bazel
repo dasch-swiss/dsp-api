@@ -5,7 +5,10 @@ load("@io_bazel_rules_docker//container:container.bzl", "container_image", "cont
 # builds the docker image
 container_image(
     name = "image",
-    base = "@openjdk11//image",
+    base = select({
+        "@platforms//cpu:arm64": "@openjdk11_arm64//image",
+        "//conditions:default": "@openjdk11_amd64//image",
+    }),
     cmd = [
         "java",
         "-jar",

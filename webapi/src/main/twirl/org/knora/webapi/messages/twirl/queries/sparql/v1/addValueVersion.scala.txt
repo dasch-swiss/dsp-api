@@ -1,5 +1,5 @@
 @*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  *@
 
@@ -356,6 +356,27 @@ DELETE {
                 }
 
                 @documentFileValue.originalMimeType match {
+                    case Some(definedOriginalMimeType) => {
+                        ?newValue knora-base:originalMimeType """@definedOriginalMimeType""" .
+                    }
+
+                    case None => {}
+                }
+            }
+
+            case archiveFileValue: ArchiveFileValueV1 => {
+                ?newValue knora-base:internalFilename """@archiveFileValue.internalFilename""" .
+                ?newValue knora-base:internalMimeType """@archiveFileValue.internalMimeType""" .
+
+                @archiveFileValue.originalFilename match {
+                    case Some(definedOriginalFilename) => {
+                        ?newValue knora-base:originalFilename """@definedOriginalFilename""" .
+                    }
+
+                    case None => {}
+                }
+
+                @archiveFileValue.originalMimeType match {
                     case Some(definedOriginalMimeType) => {
                         ?newValue knora-base:originalMimeType """@definedOriginalMimeType""" .
                     }

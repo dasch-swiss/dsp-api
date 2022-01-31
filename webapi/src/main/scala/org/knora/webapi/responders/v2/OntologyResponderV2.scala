@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -2644,11 +2644,26 @@ class OntologyResponderV2(responderData: ResponderData) extends Responder(respon
               ontology.properties ++ maybeLinkValuePropertyCacheEntry + (internalPropertyIri -> readPropertyInfo)
           )
 
+        // if a link value property was created, add its subproperty relation to the ontology's subPropertyOfRelations map
+        // note: this is only needed for the special case of link properties that are subproperties of custom link properties
+
+        maybeSubPropertyOfRelationsForLinkValueProperty: Option[(SmartIri, Set[SmartIri])] =
+          maybeLinkValuePropertyCacheEntry.map { case (smartIri: SmartIri, readPropertyInfoV2: ReadPropertyInfoV2) =>
+            smartIri -> readPropertyInfoV2.entityInfoContent.subPropertyOf
+          }
+
+        newSubPropertyOfRelations: Map[SmartIri, Set[SmartIri]] =
+          maybeSubPropertyOfRelationsForLinkValueProperty match {
+            case Some(smartIriSetOfSmartIris: (SmartIri, Set[SmartIri])) =>
+              Map(internalPropertyIri -> allKnoraSuperPropertyIris, smartIriSetOfSmartIris)
+            case None =>
+              Map(internalPropertyIri -> allKnoraSuperPropertyIris)
+          }
+
         _ = Cache.storeCacheData(
           cacheData.copy(
             ontologies = cacheData.ontologies + (internalOntologyIri -> updatedOntology),
-            subPropertyOfRelations =
-              cacheData.subPropertyOfRelations + (internalPropertyIri -> allKnoraSuperPropertyIris)
+            subPropertyOfRelations = cacheData.subPropertyOfRelations ++ newSubPropertyOfRelations
           )
         )
 

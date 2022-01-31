@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
+ * Copyright © 2021 - 2022 Swiss National Data and Service Center for the Humanities and/or DaSCH Service Platform contributors.
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -20,10 +20,11 @@ import org.knora.webapi.messages.store.sipimessages.GetFileMetadataResponse
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2
 import org.knora.webapi.messages.util.standoff.StandoffTagUtilV2.TextWithStandoffTagsV2
 import org.knora.webapi.messages.v1.responder.valuemessages.{
-  MovingImageFileValueV1,
+  ArchiveFileValueV1,
   AudioFileValueV1,
   DocumentFileValueV1,
   FileValueV1,
+  MovingImageFileValueV1,
   StillImageFileValueV1,
   TextFileValueV1
 }
@@ -258,11 +259,7 @@ object RouteUtilV1 {
     "application/vnd.ms-excel",
     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     "application/vnd.ms-powerpoint",
-    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-    "application/zip",
-    "application/x-tar",
-    "application/x-iso9660-image",
-    "application/gzip"
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
   )
 
   /**
@@ -281,6 +278,16 @@ object RouteUtilV1 {
    */
   private val videoMimeTypes: Set[String] = Set(
     "video/mp4"
+  )
+
+  /**
+   * MIME types used in Sipi to store archive files.
+   */
+  private val archiveMimeTypes: Set[String] = Set(
+    "application/zip",
+    "application/x-tar",
+    "application/gzip",
+    "application/x-7z-compressed"
   )
 
   /**
@@ -347,6 +354,14 @@ object RouteUtilV1 {
         dimX = fileMetadataResponse.width.getOrElse(throw SipiException(s"Sipi did not return the width of the video")),
         dimY =
           fileMetadataResponse.height.getOrElse(throw SipiException(s"Sipi did not return the height of the video"))
+      )
+    } else if (archiveMimeTypes.contains(fileMetadataResponse.internalMimeType)) {
+      ArchiveFileValueV1(
+        internalFilename = filename,
+        internalMimeType = fileMetadataResponse.internalMimeType,
+        originalFilename = fileMetadataResponse.originalFilename,
+        originalMimeType = fileMetadataResponse.originalMimeType,
+        projectShortcode = projectShortcode
       )
     } else {
       throw BadRequestException(s"MIME type ${fileMetadataResponse.internalMimeType} not supported in Knora API v1")
