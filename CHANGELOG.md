@@ -1,5 +1,12 @@
 # Changelog
 
+### [17.3.2](https://www.github.com/dasch-swiss/dsp-api/compare/v17.3.1...v17.3.2) (2022-01-31)
+
+
+### Maintenance
+
+* add support for building native API and Fuseki Docker images on Apple M1 (DEV-435) ([#1987](https://www.github.com/dasch-swiss/dsp-api/issues/1987)) ([ab80e72](https://www.github.com/dasch-swiss/dsp-api/commit/ab80e72047dd0ce7fc18e874a2712074908c2d7b))
+
 ### [17.3.1](https://www.github.com/dasch-swiss/dsp-api/compare/v17.3.0...v17.3.1) (2022-01-28)
 
 
