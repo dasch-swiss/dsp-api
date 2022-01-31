@@ -898,7 +898,7 @@ class StringFormatter private (
    *                      about the IRI being constructed.
    * @param errorFun      a function that throws an exception. It will be called if the IRI is invalid.
    */
-  private class SmartIriImpl(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo], errorFun: => Nothing) extends SmartIri {
+  class SmartIriImpl(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo], errorFun: => Nothing) extends SmartIri {
     def this(iriStr: IRI) = this(iriStr, None, throw DataConversionException(s"Couldn't parse IRI: $iriStr"))
 
     def this(iriStr: IRI, parsedIriInfo: Option[SmartIriInfo]) =
@@ -1642,11 +1642,35 @@ class StringFormatter private (
    */
   def validateAndEscapeIri(s: String, errorFun: => Nothing): IRI = {
     val urlEncodedStr = encodeAllowEscapes(s)
+//    only IRI starting with "http://rdfh.ch/" contains UUID segment which can be checked by isUUIDVersion4Or5 method
+    val isIRI = s.startsWith(s"http://${IriDomain}")
 
-    if (urlValidator.isValid(urlEncodedStr)) {
-      urlEncodedStr
+    if (isIRI && !isUUIDVersion4Or5(urlEncodedStr)) {
+      throw BadRequestException(s"Bad UUID used to create IRI. Only versions 4 or 5 are supported.")
     } else {
-      errorFun
+      if (urlValidator.isValid(urlEncodedStr)) {
+        urlEncodedStr
+      } else {
+        errorFun
+      }
+    }
+
+//    if (urlValidator.isValid(urlEncodedStr)) {
+//      urlEncodedStr
+//    } else {
+//      errorFun
+//    }
+  }
+
+  def isUUIDVersion4Or5(s: String): Boolean = {
+    val encodedUUID = s.split("/").last
+    val decodedUUIDVersion = decodeUuid(encodedUUID).version()
+
+    if (decodedUUIDVersion == 4 || decodedUUIDVersion == 5) {
+      true
+    } else {
+      false
+
     }
   }
 
