@@ -8,7 +8,9 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 import org.knora.webapi.LanguageCodes
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.usersmessages.UsersErrorMessagesADM._
+import org.knora.webapi.messages.admin.responder.valueObjects.GroupIRI.sf
 import zio.prelude.Validation
 
 import scala.util.matching.Regex
@@ -24,8 +26,12 @@ object UserIRI { self =>
     if (value.isEmpty) {
       Validation.fail(BadRequestException(USER_IRI_MISSING_ERROR))
     } else {
+      val isUUID: Boolean = sf.couldBeUuid(value.split("/").last)
+
       if (!sf.isKnoraUserIriStr(value)) {
         Validation.fail(BadRequestException(USER_IRI_INVALID_ERROR))
+      } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
+        Validation.fail(BadRequestException(UUID_INVALID_ERROR))
       } else {
         val validatedValue = Validation(
           sf.validateAndEscapeUserIri(value, throw BadRequestException(USER_IRI_INVALID_ERROR))

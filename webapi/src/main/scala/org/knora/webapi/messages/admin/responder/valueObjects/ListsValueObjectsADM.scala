@@ -7,7 +7,9 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.listsmessages.ListsErrorMessagesADM._
+import org.knora.webapi.messages.admin.responder.valueObjects.GroupIRI.sf
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 
@@ -22,8 +24,12 @@ object ListIRI { self =>
     if (value.isEmpty) {
       Validation.fail(BadRequestException(LIST_NODE_IRI_MISSING_ERROR))
     } else {
+      val isUUID: Boolean = sf.couldBeUuid(value.split("/").last)
+
       if (!sf.isKnoraListIriStr(value)) {
         Validation.fail(BadRequestException(LIST_NODE_IRI_INVALID_ERROR))
+      } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
+        Validation.fail(BadRequestException(UUID_INVALID_ERROR))
       } else {
         val validatedValue = Validation(
           sf.validateAndEscapeIri(value, throw BadRequestException(LIST_NODE_IRI_INVALID_ERROR))

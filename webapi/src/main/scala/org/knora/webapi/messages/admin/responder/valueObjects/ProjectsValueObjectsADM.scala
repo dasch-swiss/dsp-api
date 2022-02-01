@@ -7,7 +7,9 @@ package org.knora.webapi.messages.admin.responder.valueObjects
 
 import org.knora.webapi.exceptions.BadRequestException
 import org.knora.webapi.messages.StringFormatter
+import org.knora.webapi.messages.StringFormatter.UUID_INVALID_ERROR
 import org.knora.webapi.messages.admin.responder.projectsmessages.ProjectsErrorMessagesADM._
+import org.knora.webapi.messages.admin.responder.valueObjects.GroupIRI.sf
 import org.knora.webapi.messages.store.triplestoremessages.StringLiteralV2
 import zio.prelude.Validation
 
@@ -16,14 +18,18 @@ import zio.prelude.Validation
  */
 sealed abstract case class ProjectIRI private (value: String)
 object ProjectIRI { self =>
-  val sf: StringFormatter = StringFormatter.getGeneralInstance
+  private val sf: StringFormatter = StringFormatter.getGeneralInstance
 
   def make(value: String): Validation[Throwable, ProjectIRI] =
     if (value.isEmpty) {
       Validation.fail(BadRequestException(PROJECT_IRI_MISSING_ERROR))
     } else {
+      val isUUID: Boolean = sf.couldBeUuid(value.split("/").last)
+
       if (!sf.isKnoraProjectIriStr(value)) {
         Validation.fail(BadRequestException(PROJECT_IRI_INVALID_ERROR))
+      } else if (isUUID && !sf.isUUIDVersion4Or5(value)) {
+        Validation.fail(BadRequestException(UUID_INVALID_ERROR))
       } else {
         val validatedValue = Validation(
           sf.validateAndEscapeProjectIri(value, throw BadRequestException(PROJECT_IRI_INVALID_ERROR))

@@ -1651,17 +1651,6 @@ class StringFormatter private (
     }
   }
 
-  def isUUIDVersion4Or5(s: String): Boolean = {
-    val encodedUUID = s.split("/").last
-    val decodedUUIDVersion = decodeUuid(encodedUUID).version()
-
-    if (decodedUUIDVersion == 4 || decodedUUIDVersion == 5) {
-      true
-    } else {
-      false
-    }
-  }
-
   /**
    * Check that an optional string represents a valid IRI.
    *
@@ -2972,6 +2961,22 @@ class StringFormatter private (
     } else {
       errorFun
     }
+
+  /**
+   * Checks if UUID used to create IRI has correct version (4 and 5 are allowed).
+   * @param s the string (IRI) to be checked.
+   * @return TRUE for correct versions, FALSE for incorrect.
+   */
+  def isUUIDVersion4Or5(s: String): Boolean = {
+    val encodedUUID = s.split("/").last
+    val decodedUUIDVersion = decodeUuid(encodedUUID).version()
+
+    if (decodedUUIDVersion == 4 || decodedUUIDVersion == 5) {
+      true
+    } else {
+      false
+    }
+  }
 
   /**
    * Checks if a string is the right length to be a canonical or Base64-encoded UUID.
